@@ -170,6 +170,26 @@ class RenderPassForward extends RenderPass {
         return index;
     }
 
+    // Collect before-passes from cameras whose first render action lives in this
+    // RenderPassForward. Uses the existing firstCameraUse flag (set by LayerComposition)
+    // to guarantee each camera's before-passes are scheduled exactly once, even when
+    // multiple RenderPassForward instances reference the same camera (e.g. CameraFrame's
+    // scenePass vs afterPass).
+    updateCameraBeforePasses() {
+        for (let i = 0; i < this.renderActions.length; i++) {
+            const ra = this.renderActions[i];
+            if (ra.firstCameraUse) {
+                const camera = ra.camera?.camera;
+                if (camera) {
+                    const { beforePasses } = camera;
+                    for (let j = 0; j < beforePasses.length; j++) {
+                        this.beforePasses.push(beforePasses[j].pass);
+                    }
+                }
+            }
+        }
+    }
+
     updateDirectionalShadows() {
         // add directional shadow passes if needed for the cameras used in this render pass
         const { renderer, renderActions } = this;
@@ -219,6 +239,7 @@ class RenderPassForward extends RenderPass {
 
     frameUpdate() {
         super.frameUpdate();
+        this.updateCameraBeforePasses();
         this.updateDirectionalShadows();
         this.updateClears();
     }
@@ -264,7 +285,7 @@ class RenderPassForward extends RenderPass {
             }
         }
 
-        // remove shadow before-passes
+        // remove dynamically added before-passes (camera before-passes, shadows)
         this.beforePasses.length = 0;
     }
 

@@ -1,17 +1,24 @@
 import { Texture } from '../../platform/graphics/texture.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Compute } from '../../platform/graphics/compute.js';
+import { Shader } from '../../platform/graphics/shader.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
+import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_INDIRECT,
     FILTER_NEAREST,
-    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F
+    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F,
+    SHADERLANGUAGE_WGSL,
+    SHADERSTAGE_COMPUTE,
+    UNIFORMTYPE_FLOAT,
+    UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
+import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+import { computeGsplatLocalRasterizeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-rasterize.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js'
- * @import { Shader } from '../../platform/graphics/shader.js'
  */
 
 const MAX_CHUNKS_PER_TILE = 8;
@@ -70,8 +77,8 @@ class GSplatLocalDispatchSet {
     /** @type {Compute} */
     chunkSortCompute;
 
-    /** @type {Compute} */
-    rasterizeCompute;
+    /** @type {Map<string, {shader: Shader, bindGroupFormat: BindGroupFormat, compute: Compute}>} */
+    _rasterizeVariants = new Map();
 
     /** @type {PrefixSumKernel} */
     prefixSumKernel;
@@ -117,9 +124,6 @@ class GSplatLocalDispatchSet {
 
     /** @type {Texture|null} Pick mode: depth output (rgba16float) */
     pickDepthTexture = null;
-
-    /** @type {BindGroupFormat|null} Mode-specific rasterize bind group format */
-    rasterizeBindGroupFormat = null;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -266,8 +270,86 @@ class GSplatLocalDispatchSet {
         this._countComputeFisheye = null;
     }
 
+    /**
+     * Returns the cached rasterize Compute for the given variant key, lazily creating the shader,
+     * bind group format, and Compute on first use.
+     *
+     * @param {string} key - Variant key (e.g. 'color', 'pick').
+     * @returns {Compute} The cached Compute instance.
+     */
+    getRasterizeCompute(key) {
+        let variant = this._rasterizeVariants.get(key);
+        if (!variant) {
+            const pickMode = key === 'pick';
+            const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(pickMode);
+            const compute = new Compute(this.device, shader, `GSplatRasterize-${key}`);
+            variant = { shader, bindGroupFormat, compute };
+            this._rasterizeVariants.set(key, variant);
+        }
+        return variant.compute;
+    }
+
+    /**
+     * Creates the rasterize shader + bind group format for a given mode.
+     *
+     * @param {boolean} pickMode - Whether to create the pick variant.
+     * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The shader and format.
+     * @private
+     */
+    _createRasterizeShaderAndFormat(pickMode) {
+        const device = this.device;
+
+        const ubf = new UniformBufferFormat(device, [
+            new UniformFormat('screenWidth', UNIFORMTYPE_UINT),
+            new UniformFormat('screenHeight', UNIFORMTYPE_UINT),
+            new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
+            new UniformFormat('nearClip', UNIFORMTYPE_FLOAT),
+            new UniformFormat('farClip', UNIFORMTYPE_FLOAT),
+            new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT)
+        ]);
+
+        const sharedBindings = [
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('rasterizeTileList', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
+        ];
+
+        const outputBindings = pickMode ? [
+            new BindStorageTextureFormat('pickIdTexture', PIXELFORMAT_R32U),
+            new BindStorageTextureFormat('pickDepthTexture', PIXELFORMAT_RGBA16F)
+        ] : [
+            new BindStorageTextureFormat('outputTexture', PIXELFORMAT_RGBA16F)
+        ];
+
+        const bgf = new BindGroupFormat(device, [...sharedBindings, ...outputBindings]);
+
+        const cdefines = pickMode ? new Map([['PICK_MODE', '']]) : undefined;
+        const cincludes = pickMode ? undefined : new Map([['decodePS', shaderChunksWGSL.decodePS]]);
+
+        const shader = new Shader(device, {
+            name: pickMode ? 'GSplatLocalRasterizePick' : 'GSplatLocalRasterize',
+            shaderLanguage: SHADERLANGUAGE_WGSL,
+            cshader: computeGsplatLocalRasterizeSource,
+            cdefines,
+            cincludes,
+            computeBindGroupFormat: bgf,
+            computeUniformBufferFormats: { uniforms: ubf }
+        });
+
+        return { shader, bindGroupFormat: bgf };
+    }
+
     destroy() {
         this.destroyCountResources();
+
+        for (const { shader, bindGroupFormat, compute } of this._rasterizeVariants.values()) {
+            compute.destroy();
+            shader.destroy();
+            bindGroupFormat.destroy();
+        }
 
         this._tileSplatCountsBuffer?.destroy();
         this._tileWriteCursorsBuffer?.destroy();
@@ -285,8 +367,6 @@ class GSplatLocalDispatchSet {
         this.outputTexture?.destroy();
         this.pickIdTexture?.destroy();
         this.pickDepthTexture?.destroy();
-
-        this.rasterizeBindGroupFormat?.destroy();
     }
 }
 

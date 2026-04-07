@@ -69,10 +69,11 @@ class Camera {
     framePasses = [];
 
     /**
-     * Frame passes that execute before this camera's main rendering. These are added to the
-     * frame graph at first camera use, before any render actions or framePasses.
+     * Frame passes that execute before this camera's main scene rendering. Each entry contains
+     * a pass and metadata controlling scheduling. Entries are picked up by the RenderPassForward
+     * that renders this camera's layers.
      *
-     * @type {FramePass[]}
+     * @type {{ pass: FramePass, requiresDepth: boolean }[]}
      */
     beforePasses = [];
 

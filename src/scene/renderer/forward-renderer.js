@@ -919,26 +919,12 @@ class ForwardRenderer extends Renderer {
                     }
                 });
 
-                // schedule before passes from the camera
-                const beforePasses = camera.camera.beforePasses;
-                for (let j = 0; j < beforePasses.length; j++) {
-                    frameGraph.addRenderPass(beforePasses[j]);
-                }
-
                 // schedule frame passes from the camera
                 camera.camera.framePasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);
                 });
 
             } else {
-
-                // schedule before passes on first use of this camera
-                if (renderAction.firstCameraUse) {
-                    const beforePasses = camera.camera.beforePasses;
-                    for (let j = 0; j < beforePasses.length; j++) {
-                        frameGraph.addRenderPass(beforePasses[j]);
-                    }
-                }
 
                 const isDepthLayer = layer.id === LAYERID_DEPTH;
                 const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
