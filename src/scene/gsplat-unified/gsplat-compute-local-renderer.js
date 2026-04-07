@@ -2,11 +2,11 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
-import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST,
-    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
+    PIXELFORMAT_RGBA16U,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
     UNIFORMTYPE_FLOAT,
@@ -16,11 +16,9 @@ import {
 import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
-import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
 import { computeGsplatLocalTileCountSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-count.js';
 import { computeGsplatLocalScatterSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-scatter.js';
-import { computeGsplatLocalRasterizeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-rasterize.js';
 import { computeGsplatLocalTileSortSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-sort.js';
 import { computeGsplatLocalClassifySource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-classify.js';
 import { computeGsplatLocalBucketSortSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-bucket-sort.js';
@@ -166,15 +164,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     /** @type {BindGroupFormat} */
     _chunkSortBindGroupFormat;
 
-    /** @type {Shader} */
-    _rasterizeColorShader;
-
-    /** @type {Shader|null} */
-    _rasterizePickShader = null;
-
-    /** @type {BindGroupFormat} */
-    _rasterizeColorBindGroupFormat;
-
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GraphNode} node - The graph node.
@@ -221,9 +210,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._copyBindGroupFormat.destroy();
         this._chunkSortShader.destroy();
         this._chunkSortBindGroupFormat.destroy();
-        this._rasterizeColorShader.destroy();
-        this._rasterizePickShader?.destroy();
-        this._rasterizeColorBindGroupFormat.destroy();
 
         this._projCacheBuffer?.destroy();
         this._tileEntriesBuffer?.destroy();
@@ -287,10 +273,11 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
     /** @private */
     _registerFramePass() {
-        const beforePasses = this.cameraNode.camera?.camera?.beforePasses;
-        if (beforePasses) {
-            if (beforePasses.indexOf(this.framePass) === -1) {
-                beforePasses.push(this.framePass);
+        const camera = this.cameraNode.camera?.camera;
+        if (camera) {
+            const exists = camera.beforePasses.some(e => e.pass === this.framePass);
+            if (!exists) {
+                camera.beforePasses.push({ pass: this.framePass, requiresDepth: false });
             }
             this._needsFramePassRegister = false;
         } else {
@@ -301,11 +288,11 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     /** @private */
     _unregisterFramePass() {
         this._needsFramePassRegister = false;
-        const beforePasses = this.cameraNode.camera?.camera?.beforePasses;
-        if (beforePasses) {
-            const idx = beforePasses.indexOf(this.framePass);
+        const camera = this.cameraNode.camera?.camera;
+        if (camera) {
+            const idx = camera.beforePasses.findIndex(e => e.pass === this.framePass);
             if (idx !== -1) {
-                beforePasses.splice(idx, 1);
+                camera.beforePasses.splice(idx, 1);
             }
         }
     }
@@ -590,26 +577,28 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         device.computeDispatch([set.chunkSortCompute], pickMode ? 'GSplatPickChunkSort' : 'GSplatLocalChunkSort');
 
         // --- Pass 5: Rasterize ---
-        set.rasterizeCompute.setParameter('screenWidth', width);
-        set.rasterizeCompute.setParameter('screenHeight', height);
-        set.rasterizeCompute.setParameter('numTilesX', numTilesX);
-        set.rasterizeCompute.setParameter('nearClip', cam.nearClip);
-        set.rasterizeCompute.setParameter('farClip', cam.farClip);
-        set.rasterizeCompute.setParameter('alphaClip', alphaClip);
-        set.rasterizeCompute.setParameter('tileEntries', this._tileEntriesBuffer);
-        set.rasterizeCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
-        set.rasterizeCompute.setParameter('projCache', this._projCacheBuffer);
-        set.rasterizeCompute.setParameter('rasterizeTileList', set._rasterizeTileListBuffer);
-        set.rasterizeCompute.setParameter('tileListCounts', set._tileListCountsBuffer);
+        const variantKey = pickMode ? 'pick' : 'color';
+        const rasterizeCompute = set.getRasterizeCompute(variantKey);
+        rasterizeCompute.setParameter('screenWidth', width);
+        rasterizeCompute.setParameter('screenHeight', height);
+        rasterizeCompute.setParameter('numTilesX', numTilesX);
+        rasterizeCompute.setParameter('nearClip', cam.nearClip);
+        rasterizeCompute.setParameter('farClip', cam.farClip);
+        rasterizeCompute.setParameter('alphaClip', alphaClip);
+        rasterizeCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+        rasterizeCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        rasterizeCompute.setParameter('projCache', this._projCacheBuffer);
+        rasterizeCompute.setParameter('rasterizeTileList', set._rasterizeTileListBuffer);
+        rasterizeCompute.setParameter('tileListCounts', set._tileListCountsBuffer);
         if (pickMode) {
-            set.rasterizeCompute.setParameter('pickIdTexture', set.pickIdTexture);
-            set.rasterizeCompute.setParameter('pickDepthTexture', set.pickDepthTexture);
+            rasterizeCompute.setParameter('pickIdTexture', set.pickIdTexture);
+            rasterizeCompute.setParameter('pickDepthTexture', set.pickDepthTexture);
         } else {
-            set.rasterizeCompute.setParameter('outputTexture', set.outputTexture);
+            rasterizeCompute.setParameter('outputTexture', set.outputTexture);
         }
 
-        set.rasterizeCompute.setupIndirectDispatch(indirectSlot + 2);
-        device.computeDispatch([set.rasterizeCompute], pickMode ? 'GSplatPickRasterize' : 'GSplatLocalRasterize');
+        rasterizeCompute.setupIndirectDispatch(indirectSlot + 2);
+        device.computeDispatch([rasterizeCompute], pickMode ? 'GSplatPickRasterize' : 'GSplatLocalRasterize');
 
         this._lastDrawSlot = drawSlot;
         this._lastNumTilesX = numTilesX;
@@ -828,10 +817,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             });
         }
 
-        // --- Rasterize (color) ---
-        const { shader: rasterizeColorShader, bindGroupFormat: rasterizeColorBGF } = this._createRasterizeShaderAndFormat(false);
-        this._rasterizeColorShader = rasterizeColorShader;
-        this._rasterizeColorBindGroupFormat = rasterizeColorBGF;
     }
 
     /**
@@ -919,59 +904,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     }
 
     /**
-     * Creates the rasterize shader + bind group format.
-     *
-     * @param {boolean} pickMode - Whether to create the pick variant.
-     * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The shader and format.
-     * @private
-     */
-    _createRasterizeShaderAndFormat(pickMode) {
-        const device = this.device;
-
-        const ubf = new UniformBufferFormat(device, [
-            new UniformFormat('screenWidth', UNIFORMTYPE_UINT),
-            new UniformFormat('screenHeight', UNIFORMTYPE_UINT),
-            new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
-            new UniformFormat('nearClip', UNIFORMTYPE_FLOAT),
-            new UniformFormat('farClip', UNIFORMTYPE_FLOAT),
-            new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT)
-        ]);
-
-        const sharedBindings = [
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('rasterizeTileList', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
-        ];
-
-        const outputBindings = pickMode ? [
-            new BindStorageTextureFormat('pickIdTexture', PIXELFORMAT_R32U),
-            new BindStorageTextureFormat('pickDepthTexture', PIXELFORMAT_RGBA16F)
-        ] : [
-            new BindStorageTextureFormat('outputTexture', PIXELFORMAT_RGBA16F)
-        ];
-
-        const bgf = new BindGroupFormat(device, [...sharedBindings, ...outputBindings]);
-
-        const cdefines = pickMode ? new Map([['PICK_MODE', '']]) : undefined;
-        const cincludes = pickMode ? undefined : new Map([['decodePS', shaderChunksWGSL.decodePS]]);
-
-        const shader = new Shader(device, {
-            name: pickMode ? 'GSplatLocalRasterizePick' : 'GSplatLocalRasterize',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: computeGsplatLocalRasterizeSource,
-            cdefines,
-            cincludes,
-            computeBindGroupFormat: bgf,
-            computeUniformBufferFormats: { uniforms: ubf }
-        });
-
-        return { shader, bindGroupFormat: bgf };
-    }
-
-    /**
      * Creates a dispatch set with its 8 Compute instances.
      *
      * @param {boolean} pickMode - Whether this set is for picking.
@@ -1001,18 +933,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         // ChunkSort: shared shader
         set.chunkSortCompute = new Compute(device, this._chunkSortShader, pickMode ? 'GSplatPickChunkSort' : 'GSplatLocalChunkSort');
-
-        // Rasterize: mode-specific shader and BGF
-        if (pickMode) {
-            if (!this._rasterizePickShader) {
-                const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(true);
-                this._rasterizePickShader = shader;
-                set.rasterizeBindGroupFormat = bindGroupFormat;
-            }
-            set.rasterizeCompute = new Compute(device, this._rasterizePickShader, 'GSplatPickRasterize');
-        } else {
-            set.rasterizeCompute = new Compute(device, this._rasterizeColorShader, 'GSplatLocalRasterize');
-        }
 
         return set;
     }
