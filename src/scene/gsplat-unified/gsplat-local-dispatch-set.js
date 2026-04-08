@@ -2,14 +2,16 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
-import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_INDIRECT,
     FILTER_NEAREST,
     PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F,
+    SAMPLETYPE_UNFILTERABLE_FLOAT,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
+    TEXTUREDIMENSION_2D,
     UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
@@ -274,14 +276,15 @@ class GSplatLocalDispatchSet {
      * Returns the cached rasterize Compute for the given variant key, lazily creating the shader,
      * bind group format, and Compute on first use.
      *
-     * @param {string} key - Variant key (e.g. 'color', 'pick').
+     * @param {boolean} pickMode - Whether to use the pick variant.
+     * @param {boolean} depthTest - Whether to enable depth testing against scene geometry.
      * @returns {Compute} The cached Compute instance.
      */
-    getRasterizeCompute(key) {
+    getRasterizeCompute(pickMode, depthTest) {
+        const key = pickMode ? 'pick' : (depthTest ? 'color-depth' : 'color');
         let variant = this._rasterizeVariants.get(key);
         if (!variant) {
-            const pickMode = key === 'pick';
-            const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(pickMode);
+            const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(pickMode, depthTest);
             const compute = new Compute(this.device, shader, `GSplatRasterize-${key}`);
             variant = { shader, bindGroupFormat, compute };
             this._rasterizeVariants.set(key, variant);
@@ -293,10 +296,11 @@ class GSplatLocalDispatchSet {
      * Creates the rasterize shader + bind group format for a given mode.
      *
      * @param {boolean} pickMode - Whether to create the pick variant.
+     * @param {boolean} depthTest - Whether to enable depth testing against scene geometry.
      * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The shader and format.
      * @private
      */
-    _createRasterizeShaderAndFormat(pickMode) {
+    _createRasterizeShaderAndFormat(pickMode, depthTest = false) {
         const device = this.device;
 
         const ubf = new UniformBufferFormat(device, [
@@ -324,16 +328,27 @@ class GSplatLocalDispatchSet {
             new BindStorageTextureFormat('outputTexture', PIXELFORMAT_RGBA16F)
         ];
 
-        const bgf = new BindGroupFormat(device, [...sharedBindings, ...outputBindings]);
+        const depthBindings = depthTest ? [
+            new BindTextureFormat('sceneDepthMap', SHADERSTAGE_COMPUTE, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, false)
+        ] : [];
 
-        const cdefines = pickMode ? new Map([['PICK_MODE', '']]) : undefined;
+        const bgf = new BindGroupFormat(device, [...sharedBindings, ...outputBindings, ...depthBindings]);
+
+        const cdefines = new Map();
+        if (pickMode) cdefines.set('PICK_MODE', '');
+        if (depthTest) cdefines.set('DEPTH_TEST', '');
+
         const cincludes = pickMode ? undefined : new Map([['decodePS', shaderChunksWGSL.decodePS]]);
 
+        let name = 'GSplatLocalRasterize';
+        if (pickMode) name = 'GSplatLocalRasterizePick';
+        else if (depthTest) name = 'GSplatLocalRasterizeDepth';
+
         const shader = new Shader(device, {
-            name: pickMode ? 'GSplatLocalRasterizePick' : 'GSplatLocalRasterize',
+            name,
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatLocalRasterizeSource,
-            cdefines,
+            cdefines: cdefines.size > 0 ? cdefines : undefined,
             cincludes,
             computeBindGroupFormat: bgf,
             computeUniformBufferFormats: { uniforms: ubf }

@@ -35,6 +35,16 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Occluder' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'occluder' },
+                    value: observer.get('occluder') || false
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Environment' },
                 jsx(SelectInput, {
                     type: 'string',

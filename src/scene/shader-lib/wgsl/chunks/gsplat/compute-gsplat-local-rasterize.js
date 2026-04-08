@@ -38,18 +38,25 @@ struct Uniforms {
     @group(0) @binding(7) var pickDepthTexture: texture_storage_2d<rgba16float, write>;
 #else
     @group(0) @binding(6) var outputTexture: texture_storage_2d<rgba16float, write>;
+    #ifdef DEPTH_TEST
+        @group(0) @binding(7) var sceneDepthMap: texture_2d<f32>;
+    #endif
 #endif
 
 var<workgroup> sharedCenterScreen: array<vec2f, 64>;
 var<workgroup> sharedCoeffs: array<vec3f, 64>;
 
 // Pick mode stores per-splat opacity, ID and depth; color mode stores packed RGBA.
+// Depth test mode also needs per-splat view depth for occlusion against scene geometry.
 #ifdef PICK_MODE
     var<workgroup> sharedOpacity: array<half, 64>;
     var<workgroup> sharedPickId: array<u32, 64>;
     var<workgroup> sharedViewDepth: array<f32, 64>;
 #else
     var<workgroup> sharedColor: array<half4, 64>;
+    #ifdef DEPTH_TEST
+        var<workgroup> sharedViewDepth: array<f32, 64>;
+    #endif
 #endif
 
 var<workgroup> doneCount: atomic<u32>;
@@ -119,23 +126,49 @@ fn main(
     let p01 = p00 + vec2f(0.0, 1.0);
     let p11 = p00 + vec2f(1.0, 1.0);
 
-    // Per-pixel state for the 2x2 quad. Pick mode tracks transmittance, pick IDs,
-    // and alpha-weighted depth accumulators. Color mode tracks color and transmittance.
+    // Per-pixel state for the 2x2 quad.
+
+    // transmittance
+    var T00: half = half(1.0); var T10: half = half(1.0);
+    var T01: half = half(1.0); var T11: half = half(1.0);
+
     #ifdef PICK_MODE
-        var T00: half = half(1.0); var T10: half = half(1.0);
-        var T01: half = half(1.0); var T11: half = half(1.0);
+        // front-most pick ID per pixel
         var pickId00: u32 = 0xFFFFFFFFu; var pickId10: u32 = 0xFFFFFFFFu;
         var pickId01: u32 = 0xFFFFFFFFu; var pickId11: u32 = 0xFFFFFFFFu;
+
+        // alpha-weighted depth accumulators
         var dAcc00: f32 = 0.0; var dAcc10: f32 = 0.0;
         var dAcc01: f32 = 0.0; var dAcc11: f32 = 0.0;
+
+        // alpha-weighted weight accumulators
         var wAcc00: f32 = 0.0; var wAcc10: f32 = 0.0;
         var wAcc01: f32 = 0.0; var wAcc11: f32 = 0.0;
         let clipH = half(uniforms.alphaClip);
     #else
-        var c00 = half3(0.0); var T00: half = half(1.0);
-        var c10 = half3(0.0); var T10: half = half(1.0);
-        var c01 = half3(0.0); var T01: half = half(1.0);
-        var c11 = half3(0.0); var T11: half = half(1.0);
+        // accumulated color
+        var c00 = half3(0.0); var c10 = half3(0.0);
+        var c01 = half3(0.0); var c11 = half3(0.0);
+
+        #ifdef DEPTH_TEST
+            // Load per-pixel linear scene depth for the 2x2 quad (x=00, y=10, z=01, w=11).
+            // Splats behind this depth are skipped during rasterization.
+            var sceneDepth = vec4f(1e20);
+            let depthY0 = uniforms.screenHeight - 1u - basePixel.y;
+            let depthY1 = depthY0 - 1u;
+            if (basePixel.x < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
+                sceneDepth.x = textureLoad(sceneDepthMap, vec2i(vec2u(basePixel.x, depthY0)), 0).r;
+            }
+            if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
+                sceneDepth.y = textureLoad(sceneDepthMap, vec2i(vec2u(basePixel.x + 1u, depthY0)), 0).r;
+            }
+            if (basePixel.x < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
+                sceneDepth.z = textureLoad(sceneDepthMap, vec2i(vec2u(basePixel.x, depthY1)), 0).r;
+            }
+            if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
+                sceneDepth.w = textureLoad(sceneDepthMap, vec2i(vec2u(basePixel.x + 1u, depthY1)), 0).r;
+            }
+        #endif
     #endif
 
     let tileCount = tEnd - tStart;
@@ -171,6 +204,10 @@ fn main(
                 let rg = unpack2x16float(projCache[base + 5u]);
                 let ba = unpack2x16float(projCache[base + 6u]);
                 sharedColor[localIdx] = half4(half(rg.x), half(rg.y), half(ba.x), half(ba.y));
+
+                #ifdef DEPTH_TEST
+                    sharedViewDepth[localIdx] = bitcast<f32>(projCache[base + 7u]);
+                #endif
             #endif
         }
 
@@ -195,13 +232,28 @@ fn main(
                 #else
                     let splatColor = sharedColor[i];
 
-                    evalSplat(p00, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c00, &T00);
-                    evalSplat(p10, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c10, &T10);
-                    evalSplat(p01, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c01, &T01);
-                    evalSplat(p11, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c11, &T11);
+                    #ifdef DEPTH_TEST
+                        let splatDepth = sharedViewDepth[i];
+
+                        // Splats are front-to-back; if behind all four depth samples, all remaining splats will be too.
+                        if (all(vec4f(splatDepth) > sceneDepth)) {
+                            threadDone = true;
+                            break;
+                        }
+
+                        if (splatDepth <= sceneDepth.x) { evalSplat(p00, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c00, &T00); }
+                        if (splatDepth <= sceneDepth.y) { evalSplat(p10, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c10, &T10); }
+                        if (splatDepth <= sceneDepth.z) { evalSplat(p01, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c01, &T01); }
+                        if (splatDepth <= sceneDepth.w) { evalSplat(p11, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c11, &T11); }
+                    #else
+                        evalSplat(p00, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c00, &T00);
+                        evalSplat(p10, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c10, &T10);
+                        evalSplat(p01, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c01, &T01);
+                        evalSplat(p11, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c11, &T11);
+                    #endif
                 #endif
 
-                if (T00 < ALPHA_THRESHOLD && T10 < ALPHA_THRESHOLD && T01 < ALPHA_THRESHOLD && T11 < ALPHA_THRESHOLD) {
+                if (all(vec4<half>(T00, T10, T01, T11) < half4(ALPHA_THRESHOLD))) {
                     threadDone = true;
                     break;
                 }
