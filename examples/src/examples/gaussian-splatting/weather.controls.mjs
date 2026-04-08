@@ -60,7 +60,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     precision: 0,
                     step: 1
                 })
-            ),
+            )
         ),
         jsx(
             Panel,

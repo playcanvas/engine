@@ -95,12 +95,6 @@ assetListLoader.load(() => {
     gsplatEntity.gsplat.lodBaseDistance = 5;
     gsplatEntity.gsplat.lodMultiplier = 4;
 
-    const lodPreset = pc.platform.mobile
-        ? { range: [3, 5] }
-        : { range: [1, 5] };
-    app.scene.gsplat.lodRangeMin = lodPreset.range[0];
-    app.scene.gsplat.lodRangeMax = lodPreset.range[1];
-
     // Procedural weather
     const weatherEntity = new pc.Entity('Weather');
     weatherEntity.addComponent('script');
