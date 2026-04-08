@@ -51,6 +51,7 @@ class RenderPassPrepass extends RenderPass {
 
     destroy() {
         super.destroy();
+        this.camera.shaderParams.sceneDepthMapLinear = false;
         this.renderTarget?.destroy();
         this.renderTarget = null;
         this.linearDepthTexture?.destroy();

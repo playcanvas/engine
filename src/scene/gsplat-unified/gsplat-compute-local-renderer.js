@@ -277,7 +277,10 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         if (camera) {
             const exists = camera.beforePasses.some(e => e.pass === this.framePass);
             if (!exists) {
-                camera.beforePasses.push({ pass: this.framePass, requiresDepth: false });
+                // Schedule the compute splat pass before this camera's scene rendering.
+                // requiresDepth hints that a depth prepass should run first, so the
+                // rasterize shader can skip splats behind opaque geometry.
+                camera.beforePasses.push({ pass: this.framePass, requiresDepth: true });
             }
             this._needsFramePassRegister = false;
         } else {
@@ -577,8 +580,14 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         device.computeDispatch([set.chunkSortCompute], pickMode ? 'GSplatPickChunkSort' : 'GSplatLocalChunkSort');
 
         // --- Pass 5: Rasterize ---
-        const variantKey = pickMode ? 'pick' : 'color';
-        const rasterizeCompute = set.getRasterizeCompute(variantKey);
+        // Select the shader variant based on pick mode and depth availability. Depth testing
+        // against the scene linear depth texture is only used in color mode when the depth
+        // prepass has run (indicated by sceneDepthMapLinear) and the texture is bound.
+        const hasLinearDepth = cam.shaderParams.sceneDepthMapLinear;
+        const sceneDepthMap = hasLinearDepth ? device.scope.resolve('uSceneDepthMap').value : null;
+        const useDepth = !pickMode && sceneDepthMap;
+        const rasterizeCompute = set.getRasterizeCompute(pickMode, useDepth);
+
         rasterizeCompute.setParameter('screenWidth', width);
         rasterizeCompute.setParameter('screenHeight', height);
         rasterizeCompute.setParameter('numTilesX', numTilesX);
@@ -595,6 +604,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             rasterizeCompute.setParameter('pickDepthTexture', set.pickDepthTexture);
         } else {
             rasterizeCompute.setParameter('outputTexture', set.outputTexture);
+            if (useDepth) {
+                rasterizeCompute.setParameter('sceneDepthMap', sceneDepthMap);
+            }
         }
 
         rasterizeCompute.setupIndirectDispatch(indirectSlot + 2);

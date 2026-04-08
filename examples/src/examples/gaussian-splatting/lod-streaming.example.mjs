@@ -236,9 +236,35 @@ assetListLoader.load(async () => {
         focusPoint: focusPoint
     });
 
+    // Orange occluder cube (hidden by default, toggled via UI)
+    const cube = new pc.Entity('orange-cube');
+    cube.addComponent('render', { type: 'box' });
+    const orangeMat = new pc.StandardMaterial();
+    orangeMat.diffuse = new pc.Color(0, 0, 0);
+    orangeMat.emissive = new pc.Color(1, 0.5, 0);
+    orangeMat.update();
+    cube.render.meshInstances[0].material = orangeMat;
+    cube.setLocalPosition(6, 1, -2);
+    cube.setLocalScale(2, 2, 2);
+    cube.enabled = false;
+    app.root.addChild(cube);
     // CameraFrame for HDR linear rendering (created lazily on first enable)
     /** @type {pc.CameraFrame|null} */
     let cameraFrame = null;
+
+    // Enable depth prepass so the compute splat rasterizer can depth-test
+    // against scene geometry (e.g. the occluder cube).
+    const applyOccluder = () => {
+        const enabled = !!data.get('occluder');
+        cube.enabled = enabled;
+        if (cameraFrame) {
+            cameraFrame.rendering.sceneDepthMap = enabled;
+            cameraFrame.update();
+        }
+    };
+
+    data.set('occluder', false);
+    data.on('occluder:set', applyOccluder);
 
     const applyToneMapping = () => {
         const tm = data.get('toneMapping');
@@ -256,6 +282,7 @@ assetListLoader.load(async () => {
             if (!cameraFrame) {
                 cameraFrame = new pc.CameraFrame(app, camera.camera);
                 cameraFrame.rendering.toneMapping = data.get('toneMapping');
+                applyOccluder();
             }
             cameraFrame.enabled = true;
             cameraFrame.update();
