@@ -5,7 +5,11 @@ export const computeGsplatLocalRasterizeSource = /* wgsl */`
 
 #include "halfTypesCS"
 #ifndef PICK_MODE
-#include "decodePS"
+    #include "decodePS"
+    #if FOG != NONE
+        #include "fogMathPS"
+        #include "gammaPS"
+    #endif
 #endif
 
 const CACHE_STRIDE: u32 = 8u;
@@ -24,6 +28,12 @@ struct Uniforms {
     nearClip: f32,
     farClip: f32,
     alphaClip: f32,
+    #if FOG != NONE
+        fog_color: vec3f,
+        fog_start: f32,
+        fog_end: f32,
+        fog_density: f32,
+    #endif
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 @group(0) @binding(1) var<storage, read> tileEntries: array<u32>;
@@ -203,7 +213,22 @@ fn main(
             #else
                 let rg = unpack2x16float(projCache[base + 5u]);
                 let ba = unpack2x16float(projCache[base + 6u]);
-                sharedColor[localIdx] = half4(half(rg.x), half(rg.y), half(ba.x), half(ba.y));
+
+                #if FOG != NONE
+                    let viewDepth = bitcast<f32>(projCache[base + 7u]);
+                    #if (FOG == LINEAR)
+                        let fogFactor = evaluateFogFactorLinear(viewDepth, uniforms.fog_start, uniforms.fog_end);
+                    #elif (FOG == EXP)
+                        let fogFactor = evaluateFogFactorExp(viewDepth, uniforms.fog_density);
+                    #elif (FOG == EXP2)
+                        let fogFactor = evaluateFogFactorExp2(viewDepth, uniforms.fog_density);
+                    #endif
+                    var foggedColor = decodeGamma3(vec3f(rg.x, rg.y, ba.x));
+                    foggedColor = mix(uniforms.fog_color, foggedColor, fogFactor);
+                    sharedColor[localIdx] = half4(half3(gammaCorrectOutput(foggedColor)), half(ba.y));
+                #else
+                    sharedColor[localIdx] = half4(half(rg.x), half(rg.y), half(ba.x), half(ba.y));
+                #endif
 
                 #ifdef DEPTH_TEST
                     sharedViewDepth[localIdx] = bitcast<f32>(projCache[base + 7u]);

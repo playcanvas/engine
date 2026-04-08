@@ -1,5 +1,7 @@
 export default /* wgsl */`
 
+#include "fogMathPS"
+
 var<private> dBlendModeFogFactor : f32 = 1.0;
 
 #if (FOG != NONE)
@@ -13,28 +15,39 @@ var<private> dBlendModeFogFactor : f32 = 1.0;
     #endif
 #endif
 
-fn getFogFactor() -> f32 {
-
-    let depth = pcPosition.z / pcPosition.w;
-
-    var fogFactor : f32 = 0.0;
+#ifdef VERTEXSHADER
+    fn getFogFactor(depth: f32) -> f32 {
+#else
+    fn getFogFactor() -> f32 {
+        let depth = pcPosition.z / pcPosition.w;
+#endif
 
     #if (FOG == LINEAR)
-        fogFactor = (uniform.fog_end - depth) / (uniform.fog_end - uniform.fog_start);
+        return evaluateFogFactorLinear(depth, uniform.fog_start, uniform.fog_end);
     #elif (FOG == EXP)
-        fogFactor = exp(-depth * uniform.fog_density);
+        return evaluateFogFactorExp(depth, uniform.fog_density);
     #elif (FOG == EXP2)
-        fogFactor = exp(-depth * depth * uniform.fog_density * uniform.fog_density);
-    #endif
-
-    return clamp(fogFactor, 0.0, 1.0);
-}
-
-fn addFog(color : vec3f) -> vec3f {
-    #if (FOG != NONE)
-        return mix(uniform.fog_color * dBlendModeFogFactor, color, getFogFactor());
+        return evaluateFogFactorExp2(depth, uniform.fog_density);
     #else
-        return color;
+        return 1.0;
     #endif
 }
+
+#ifdef VERTEXSHADER
+    fn addFog(color: vec3f, depth: f32) -> vec3f {
+        #if (FOG != NONE)
+            return mix(uniform.fog_color * dBlendModeFogFactor, color, getFogFactor(depth));
+        #else
+            return color;
+        #endif
+    }
+#else
+    fn addFog(color: vec3f) -> vec3f {
+        #if (FOG != NONE)
+            return mix(uniform.fog_color * dBlendModeFogFactor, color, getFogFactor());
+        #else
+            return color;
+        #endif
+    }
+#endif
 `;

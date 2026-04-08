@@ -1506,7 +1506,8 @@ class GSplatManager {
         }
 
         // renderer per-frame update (material syncing, deferred setup)
-        this.renderer.frameUpdate(this.scene.gsplat, this.scene.exposure);
+        const fogParams = this.cameraNode.camera.fogParams ?? this.scene.fog;
+        this.renderer.frameUpdate(this.scene.gsplat, this.scene.exposure, fogParams);
 
         // camera tracking only after first sort
         if (sortedState?.sortedBefore) {

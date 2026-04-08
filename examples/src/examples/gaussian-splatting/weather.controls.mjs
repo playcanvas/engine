@@ -16,9 +16,34 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     link: { observer, path: 'preset' },
                     type: 'string',
                     options: [
+                        { v: 'none', t: 'None' },
                         { v: 'snow', t: 'Snow' },
                         { v: 'rain', t: 'Rain' }
                     ]
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Fog Density' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'fogDensity' },
+                    min: 0,
+                    max: 0.5,
+                    precision: 3,
+                    step: 0.001
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Exposure' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'exposure' },
+                    min: 0,
+                    max: 5,
+                    precision: 2,
+                    step: 0.05
                 })
             )
         ),

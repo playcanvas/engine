@@ -113,7 +113,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         clr.a = clr.a * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
         output.gaussianColor = half4(half3(rampColor), clr.a);
     #else
-        output.gaussianColor = half4(half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)))), clr.w);
+        output.gaussianColor = half4(half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)), -center.view.z)), clr.w);
     #endif
 
     #ifndef DITHER_NONE

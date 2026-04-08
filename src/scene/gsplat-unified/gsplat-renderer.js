@@ -9,6 +9,7 @@ import { FisheyeProjection } from './fisheye-projection.js';
  * @import { GraphNode } from '../graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
+ * @import { FogParams } from '../fog-params.js'
  */
 
 /**
@@ -136,8 +137,9 @@ class GSplatRenderer {
      *
      * @param {object} params - The gsplat parameters.
      * @param {number} [exposure] - Scene exposure value.
+     * @param {FogParams} [fogParams] - Fog parameters.
      */
-    frameUpdate(params, exposure) {
+    frameUpdate(params, exposure, fogParams) {
     }
 
     /**
