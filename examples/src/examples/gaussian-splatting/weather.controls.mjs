@@ -1,0 +1,164 @@
+/**
+ * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
+    const { BindingTwoWay, Label, LabelGroup, Panel, SliderInput, ColorPicker, SelectInput, VectorInput } = ReactPCUI;
+    return fragment(
+        jsx(
+            Panel,
+            { headerText: 'Preset' },
+            jsx(
+                LabelGroup,
+                { text: 'Type' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'preset' },
+                    type: 'string',
+                    options: [
+                        { v: 'snow', t: 'Snow' },
+                        { v: 'rain', t: 'Rain' }
+                    ]
+                })
+            )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Animation' },
+            jsx(
+                LabelGroup,
+                { text: 'Speed' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'speed' },
+                    min: 0,
+                    max: 40,
+                    precision: 2,
+                    step: 0.1
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Drift' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'drift' },
+                    min: 0,
+                    max: 1,
+                    precision: 2,
+                    step: 0.01
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Angle' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'angle' },
+                    min: 0,
+                    max: 360,
+                    precision: 0,
+                    step: 1
+                })
+            ),
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Particle Properties' },
+            jsx(
+                LabelGroup,
+                { text: 'Color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'color' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Opacity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'opacity' },
+                    min: 0,
+                    max: 1,
+                    precision: 2,
+                    step: 0.05
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Min Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'particleMinSize' },
+                    min: 0,
+                    max: 1,
+                    precision: 2,
+                    step: 0.01
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Max Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'particleMaxSize' },
+                    min: 0,
+                    max: 1,
+                    precision: 2,
+                    step: 0.01
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Elongate' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'elongate' },
+                    min: 1,
+                    max: 20,
+                    precision: 1,
+                    step: 0.5
+                })
+            )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Grid (rebuilds)' },
+            jsx(
+                LabelGroup,
+                { text: 'Extents' },
+                jsx(VectorInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'extents' },
+                    dimensions: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Density' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'density' },
+                    min: 0.5,
+                    max: 4,
+                    precision: 1,
+                    step: 0.1
+                })
+            )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Stats' },
+            jsx(
+                LabelGroup,
+                { text: 'Particles' },
+                jsx(Label, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'particles' },
+                    value: observer.get('particles')
+                })
+            )
+        )
+    );
+};
