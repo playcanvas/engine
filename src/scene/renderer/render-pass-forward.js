@@ -183,7 +183,7 @@ class RenderPassForward extends RenderPass {
                 if (camera) {
                     const { beforePasses } = camera;
                     for (let j = 0; j < beforePasses.length; j++) {
-                        this.beforePasses.push(beforePasses[j].pass);
+                        this.beforePasses.push(beforePasses[j]);
                     }
                 }
             }

@@ -275,12 +275,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _registerFramePass() {
         const camera = this.cameraNode.camera?.camera;
         if (camera) {
-            const exists = camera.beforePasses.some(e => e.pass === this.framePass);
-            if (!exists) {
-                // Schedule the compute splat pass before this camera's scene rendering.
-                // requiresDepth hints that a depth prepass should run first, so the
-                // rasterize shader can skip splats behind opaque geometry.
-                camera.beforePasses.push({ pass: this.framePass, requiresDepth: true });
+            // Schedule the compute splat pass before this camera's scene rendering.
+            if (!camera.beforePasses.includes(this.framePass)) {
+                camera.beforePasses.push(this.framePass);
             }
             this._needsFramePassRegister = false;
         } else {
@@ -293,7 +290,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._needsFramePassRegister = false;
         const camera = this.cameraNode.camera?.camera;
         if (camera) {
-            const idx = camera.beforePasses.findIndex(e => e.pass === this.framePass);
+            const idx = camera.beforePasses.indexOf(this.framePass);
             if (idx !== -1) {
                 camera.beforePasses.splice(idx, 1);
             }

@@ -69,11 +69,10 @@ class Camera {
     framePasses = [];
 
     /**
-     * Frame passes that execute before this camera's main scene rendering. Each entry contains
-     * a pass and metadata controlling scheduling. Entries are picked up by the RenderPassForward
-     * that renders this camera's layers.
+     * Frame passes that execute before this camera's main scene rendering. Entries are picked up
+     * by the RenderPassForward that renders this camera's layers.
      *
-     * @type {{ pass: FramePass, requiresDepth: boolean }[]}
+     * @type {FramePass[]}
      */
     beforePasses = [];
 
