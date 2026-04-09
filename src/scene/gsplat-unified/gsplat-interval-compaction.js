@@ -9,7 +9,9 @@ import {
     BUFFERUSAGE_COPY_SRC,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
+    UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_UINT,
+    UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
 import { computeGsplatIntervalCullSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-interval-cull.js';
@@ -83,7 +85,10 @@ class GSplatIntervalCompaction {
     _uploadedVersion = -1;
 
     /** @type {Compute|null} */
-    _cullCompute = null;
+    _cullComputePerspective = null;
+
+    /** @type {Compute|null} */
+    _cullComputeFisheye = null;
 
     /** @type {Compute|null} */
     _scatterCompute = null;
@@ -92,16 +97,16 @@ class GSplatIntervalCompaction {
     _writeIndirectArgsCompute = null;
 
     /** @type {BindGroupFormat|null} */
-    _cullBindGroupFormat = null;
+    _cullBindGroupFormatPerspective = null;
+
+    /** @type {BindGroupFormat|null} */
+    _cullBindGroupFormatFisheye = null;
 
     /** @type {BindGroupFormat|null} */
     _scatterBindGroupFormat = null;
 
     /** @type {BindGroupFormat|null} */
     _writeArgsBindGroupFormat = null;
-
-    /** @type {UniformBufferFormat|null} */
-    _cullUniformBufferFormat = null;
 
     /** @type {UniformBufferFormat|null} */
     _scatterUniformBufferFormat = null;
@@ -149,7 +154,6 @@ class GSplatIntervalCompaction {
         this._scatterBindGroupFormat = null;
         this._writeIndirectArgsCompute = null;
         this._writeArgsBindGroupFormat = null;
-        this._cullUniformBufferFormat = null;
         this._scatterUniformBufferFormat = null;
         this._writeArgsUniformBufferFormat = null;
     }
@@ -158,10 +162,14 @@ class GSplatIntervalCompaction {
      * @private
      */
     _destroyCullPass() {
-        this._cullCompute?.shader?.destroy();
-        this._cullBindGroupFormat?.destroy();
-        this._cullCompute = null;
-        this._cullBindGroupFormat = null;
+        this._cullComputePerspective?.shader?.destroy();
+        this._cullBindGroupFormatPerspective?.destroy();
+        this._cullComputePerspective = null;
+        this._cullBindGroupFormatPerspective = null;
+        this._cullComputeFisheye?.shader?.destroy();
+        this._cullBindGroupFormatFisheye?.destroy();
+        this._cullComputeFisheye = null;
+        this._cullBindGroupFormatFisheye = null;
     }
 
     /**
@@ -186,18 +194,17 @@ class GSplatIntervalCompaction {
     }
 
     /**
-     * Ensures the cull compute pass exists.
+     * Creates a cull compute pass for the given mode.
      *
+     * @param {boolean} fisheye - Whether to create the fisheye (cone) variant.
+     * @returns {{ compute: Compute, bindGroupFormat: BindGroupFormat }} The created compute and bind group format.
      * @private
      */
-    _ensureCullPass() {
-        if (this._cullCompute) {
-            return;
-        }
-
+    _createCullPass(fisheye) {
         const device = this.device;
+        const suffix = fisheye ? 'Fisheye' : '';
 
-        this._cullBindGroupFormat = new BindGroupFormat(device, [
+        const bindGroupFormat = new BindGroupFormat(device, [
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('intervals', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('countBuffer', SHADERSTAGE_COMPUTE, false),
@@ -205,23 +212,58 @@ class GSplatIntervalCompaction {
             new BindStorageBufferFormat('transformsBuffer', SHADERSTAGE_COMPUTE, true)
         ]);
 
-        this._cullUniformBufferFormat = new UniformBufferFormat(device, [
-            new UniformFormat('frustumPlanes', UNIFORMTYPE_VEC4, 6),
-            new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
-        ]);
+        const cdefines = new Map([['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]]);
+        if (fisheye) {
+            cdefines.set('GSPLAT_FISHEYE', '');
+        }
+
+        const uniformBufferFormat = fisheye ?
+            new UniformBufferFormat(device, [
+                new UniformFormat('cameraWorldPos', UNIFORMTYPE_VEC3),
+                new UniformFormat('maxTheta', UNIFORMTYPE_FLOAT),
+                new UniformFormat('cameraForward', UNIFORMTYPE_VEC3),
+                new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
+            ]) :
+            new UniformBufferFormat(device, [
+                new UniformFormat('frustumPlanes', UNIFORMTYPE_VEC4, 6),
+                new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
+            ]);
 
         const shader = new Shader(device, {
-            name: 'GSplatIntervalCull',
+            name: `GSplatIntervalCull${suffix}`,
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatIntervalCullSource,
-            cdefines: new Map([
-                ['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]
-            ]),
-            computeBindGroupFormat: this._cullBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: this._cullUniformBufferFormat }
+            cdefines: cdefines,
+            computeBindGroupFormat: bindGroupFormat,
+            computeUniformBufferFormats: { uniforms: uniformBufferFormat }
         });
 
-        this._cullCompute = new Compute(device, shader, 'GSplatIntervalCull');
+        const compute = new Compute(device, shader, `GSplatIntervalCull${suffix}`);
+        return { compute, bindGroupFormat };
+    }
+
+    /**
+     * Returns the cached cull Compute for the given mode, lazily creating it on first use.
+     *
+     * @param {boolean} fisheye - Whether fisheye is active.
+     * @returns {Compute} The cached Compute instance.
+     * @private
+     */
+    _getCullCompute(fisheye) {
+        if (fisheye) {
+            if (!this._cullComputeFisheye) {
+                const { compute, bindGroupFormat } = this._createCullPass(true);
+                this._cullComputeFisheye = compute;
+                this._cullBindGroupFormatFisheye = bindGroupFormat;
+            }
+            return this._cullComputeFisheye;
+        }
+        if (!this._cullComputePerspective) {
+            const { compute, bindGroupFormat } = this._createCullPass(false);
+            this._cullComputePerspective = compute;
+            this._cullBindGroupFormatPerspective = bindGroupFormat;
+        }
+        return this._cullComputePerspective;
     }
 
     /**
@@ -369,21 +411,28 @@ class GSplatIntervalCompaction {
      * @param {GSplatFrustumCuller} frustumCuller - Frustum culler providing bounds/transforms storage buffers and frustum planes.
      * @param {number} numIntervals - Total number of intervals.
      * @param {number} totalActiveSplats - Total active splats across all intervals.
+     * @param {boolean} fisheyeEnabled - Whether fisheye cone culling should be used instead of frustum planes.
      */
-    dispatchCompact(frustumCuller, numIntervals, totalActiveSplats) {
+    dispatchCompact(frustumCuller, numIntervals, totalActiveSplats, fisheyeEnabled) {
         if (numIntervals === 0) return;
 
         this._ensureCapacity(numIntervals, totalActiveSplats);
-        this._ensureCullPass();
+
+        const cullCompute = this._getCullCompute(fisheyeEnabled);
 
         // --- Pass 1: Interval cull + count ---
-        const cullCompute = this._cullCompute;
-
         cullCompute.setParameter('intervals', this.intervalsBuffer);
         cullCompute.setParameter('countBuffer', this.countBuffer);
         cullCompute.setParameter('boundsBuffer', frustumCuller.boundsBuffer);
         cullCompute.setParameter('transformsBuffer', frustumCuller.transformsBuffer);
-        cullCompute.setParameter('frustumPlanes[0]', frustumCuller.frustumPlanes);
+
+        if (fisheyeEnabled) {
+            cullCompute.setParameter('cameraWorldPos', frustumCuller.fisheyeCameraPos);
+            cullCompute.setParameter('maxTheta', frustumCuller.fisheyeMaxTheta);
+            cullCompute.setParameter('cameraForward', frustumCuller.fisheyeCameraForward);
+        } else {
+            cullCompute.setParameter('frustumPlanes[0]', frustumCuller.frustumPlanes);
+        }
 
         cullCompute.setParameter('numIntervals', numIntervals);
 

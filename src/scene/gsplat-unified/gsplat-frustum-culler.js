@@ -76,6 +76,27 @@ class GSplatFrustumCuller {
     frustumPlanes = new Float32Array(24);
 
     /**
+     * Camera world position for fisheye cone culling (xyz).
+     *
+     * @type {Float32Array}
+     */
+    fisheyeCameraPos = new Float32Array(3);
+
+    /**
+     * Camera forward direction (normalized) for fisheye cone culling (xyz).
+     *
+     * @type {Float32Array}
+     */
+    fisheyeCameraForward = new Float32Array(3);
+
+    /**
+     * Maximum visible angle from forward direction for fisheye cone culling.
+     *
+     * @type {number}
+     */
+    fisheyeMaxTheta = Math.PI;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      */
     constructor(device) {
@@ -198,6 +219,23 @@ class GSplatFrustumCuller {
             planes[p * 4 + 2] = plane.normal.z;
             planes[p * 4 + 3] = plane.distance;
         }
+    }
+
+    /**
+     * Sets fisheye cone culling data for the interval cull shader.
+     *
+     * @param {import('../../core/math/vec3.js').Vec3} cameraPos - Camera world position.
+     * @param {import('../../core/math/vec3.js').Vec3} cameraForward - Camera forward direction (normalized).
+     * @param {number} maxTheta - Maximum visible angle from forward direction in radians.
+     */
+    setFisheyeData(cameraPos, cameraForward, maxTheta) {
+        this.fisheyeCameraPos[0] = cameraPos.x;
+        this.fisheyeCameraPos[1] = cameraPos.y;
+        this.fisheyeCameraPos[2] = cameraPos.z;
+        this.fisheyeCameraForward[0] = cameraForward.x;
+        this.fisheyeCameraForward[1] = cameraForward.y;
+        this.fisheyeCameraForward[2] = cameraForward.z;
+        this.fisheyeMaxTheta = maxTheta;
     }
 }
 

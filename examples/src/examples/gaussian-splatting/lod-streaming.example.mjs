@@ -76,6 +76,44 @@ const config = {
     focusPoint: [12, 3, 0]
 };
 
+// HDRI environment presets (Poly Haven, infinite projection)
+/** @type {Record<string, { url: string, exposure: number } | null>} */
+const ENV_PRESETS = {
+    'none': null,
+    'rosendal': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/rosendal_park_sunset_puresky_2k.hdr',
+        exposure: 0.06
+    },
+    'industrial-sunset': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/industrial_sunset_puresky_2k.hdr',
+        exposure: 0.8
+    },
+    'partly-cloudy': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr',
+        exposure: 0.9
+    },
+    'moonlit': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_moon_noon_puresky_2k.hdr',
+        exposure: 0.4
+    },
+    'sunflowers': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/sunflowers_puresky_2k.hdr',
+        exposure: 0.8
+    },
+    'table-mountain': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/table_mountain_2_puresky_2k.hdr',
+        exposure: 1
+    },
+    'cloud-layers': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/cloud_layers_2k.hdr',
+        exposure: 1
+    },
+    'night': {
+        url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_night_puresky_2k.hdr',
+        exposure: 0.2
+    }
+};
+
 // LOD preset definitions
 /** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
 const LOD_PRESETS = {
@@ -150,10 +188,13 @@ assetListLoader.load(async () => {
         app.scene.gsplat.dataFormat = data.get('compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
     });
 
+    const MAX_PERSPECTIVE_FOV = 140;
+
     // initialize UI settings (must be after observer registration)
+    data.set('fisheye', 0);
     data.set('cameraFov', 75);
     data.set('toneMapping', pc.TONEMAP_LINEAR);
-    data.set('exposure', 1.5);
+    data.set('exposure', 1);
     data.set('minPixelSize', 2);
     data.set('minContribution', 3);
     data.set('radialSorting', true);
@@ -163,6 +204,8 @@ assetListLoader.load(async () => {
     data.set('debugLod', false);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
     data.set('splatBudget', pc.platform.mobile ? 1 : 4);
+    data.set('environment', 'none');
+    data.set('fogDensity', 0);
     data.set('url', '');
     data.set('orientation', 270);
 
@@ -171,7 +214,7 @@ assetListLoader.load(async () => {
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        clearColor: new pc.Color(1, 1, 1),
         fov: 75,
         toneMapping: pc.TONEMAP_LINEAR
     });
@@ -194,14 +237,162 @@ assetListLoader.load(async () => {
         focusPoint: focusPoint
     });
 
-    data.on('cameraFov:set', () => {
-        camera.camera.fov = data.get('cameraFov');
+    // Orange occluder cube (hidden by default, toggled via UI)
+    const cube = new pc.Entity('orange-cube');
+    cube.addComponent('render', { type: 'box' });
+    const orangeMat = new pc.StandardMaterial();
+    orangeMat.diffuse = new pc.Color(0, 0, 0);
+    orangeMat.emissive = new pc.Color(1, 0.5, 0);
+    orangeMat.update();
+    cube.render.meshInstances[0].material = orangeMat;
+    cube.setLocalPosition(6, 1, -2);
+    cube.setLocalScale(2, 2, 2);
+    cube.enabled = false;
+    app.root.addChild(cube);
+    // CameraFrame for HDR linear rendering (created lazily on first enable)
+    /** @type {pc.CameraFrame|null} */
+    let cameraFrame = null;
+
+    // Enable depth prepass so the compute splat rasterizer can depth-test
+    // against scene geometry (e.g. the occluder cube).
+    const applyOccluder = () => {
+        const enabled = !!data.get('occluder');
+        cube.enabled = enabled;
+        if (cameraFrame) {
+            cameraFrame.rendering.sceneDepthMap = enabled;
+            cameraFrame.update();
+        }
+    };
+
+    data.set('occluder', false);
+    data.on('occluder:set', applyOccluder);
+
+    const applyToneMapping = () => {
+        const tm = data.get('toneMapping');
+        if (cameraFrame?.enabled) {
+            cameraFrame.rendering.toneMapping = tm;
+            cameraFrame.update();
+        } else {
+            camera.camera.toneMapping = tm;
+        }
+    };
+
+    data.set('cameraFrame', false);
+    data.on('cameraFrame:set', () => {
+        if (data.get('cameraFrame')) {
+            if (!cameraFrame) {
+                cameraFrame = new pc.CameraFrame(app, camera.camera);
+                cameraFrame.rendering.toneMapping = data.get('toneMapping');
+                applyOccluder();
+            }
+            cameraFrame.enabled = true;
+            cameraFrame.update();
+        } else if (cameraFrame) {
+            cameraFrame.destroy();
+            cameraFrame = null;
+        }
+        applyToneMapping();
     });
-    data.on('toneMapping:set', () => {
-        camera.camera.toneMapping = data.get('toneMapping');
+
+    const applyFov = () => {
+        const fov = data.get('cameraFov');
+        camera.camera.fov = (data.get('fisheye') === 0) ? Math.min(fov, MAX_PERSPECTIVE_FOV) : fov;
+    };
+    data.on('cameraFov:set', applyFov);
+    data.on('fisheye:set', () => {
+        const fisheye = data.get('fisheye');
+        app.scene.gsplat.fisheye = fisheye;
+        app.scene.sky.fisheye = fisheye;
+        applyFov();
     });
+    data.on('toneMapping:set', applyToneMapping);
     data.on('exposure:set', () => {
         app.scene.exposure = data.get('exposure');
+    });
+
+    data.on('fogDensity:set', () => {
+        const density = data.get('fogDensity');
+        if (density > 0) {
+            app.scene.fog.type = pc.FOG_EXP;
+            app.scene.fog.density = density;
+            app.scene.fog.color.copy(camera.camera.clearColor);
+        } else {
+            app.scene.fog.type = pc.FOG_NONE;
+        }
+    });
+
+    // Poly Haven credit overlay (shown when an HDRI is active)
+    const phCredit = document.createElement('a');
+    phCredit.href = 'https://polyhaven.com';
+    phCredit.target = '_blank';
+    phCredit.rel = 'noopener';
+    phCredit.textContent = 'HDRI by Poly Haven';
+    Object.assign(phCredit.style, {
+        position: 'fixed',
+        bottom: '6px',
+        right: '10px',
+        zIndex: '11',
+        font: '400 16px/1 sans-serif',
+        color: 'rgba(255,255,255,0.25)',
+        textDecoration: 'none',
+        pointerEvents: 'auto',
+        display: 'none'
+    });
+    phCredit.onmouseenter = () => {
+        phCredit.style.color = 'rgba(255,255,255,0.5)';
+    };
+    phCredit.onmouseleave = () => {
+        phCredit.style.color = 'rgba(255,255,255,0.25)';
+    };
+    document.body.appendChild(phCredit);
+    app.on('destroy', () => phCredit.remove());
+
+    // HDRI environment loading
+    /** @type {Map<string, { skybox: pc.Texture, envAtlas: pc.Texture }>} */
+    const hdriCache = new Map();
+
+    const applyEnvironment = async (/** @type {string} */ name) => {
+        const preset = ENV_PRESETS[name];
+        if (!preset) {
+            app.scene.skybox = null;
+            app.scene.envAtlas = null;
+            phCredit.style.display = 'none';
+            data.set('exposure', 1);
+            return;
+        }
+
+        if (!hdriCache.has(preset.url)) {
+            const asset = new pc.Asset('hdri', 'texture', { url: preset.url }, { mipmaps: false });
+            await new Promise((resolve, reject) => {
+                asset.on('load', resolve);
+                asset.on('error', (/** @type {string} */ err) => {
+                    console.error('Failed to load HDRI:', err);
+                    reject(err);
+                });
+                app.assets.add(asset);
+                app.assets.load(asset);
+            });
+
+            const source = asset.resource;
+            const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
+            const lighting = pc.EnvLighting.generateLightingSource(source);
+            const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+            lighting.destroy();
+            hdriCache.set(preset.url, { skybox, envAtlas });
+        }
+
+        const cached = /** @type {{ skybox: pc.Texture, envAtlas: pc.Texture }} */ (hdriCache.get(preset.url));
+        app.scene.skybox = cached.skybox;
+        app.scene.envAtlas = cached.envAtlas;
+        app.scene.sky.type = pc.SKYTYPE_INFINITE;
+        data.set('exposure', preset.exposure ?? 1);
+        phCredit.style.display = 'block';
+    };
+
+    data.on('environment:set', () => {
+        applyEnvironment(data.get('environment')).catch((err) => {
+            console.warn('Environment load failed:', err);
+        });
     });
 
     // Gsplat loading state

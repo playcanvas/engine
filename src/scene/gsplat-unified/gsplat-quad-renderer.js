@@ -37,6 +37,9 @@ class GSplatQuadRenderer extends GSplatRenderer {
     /** @type {boolean} */
     forceCopyMaterial = true;
 
+    /** @private */
+    _lastFisheyeEnabled = false;
+
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GraphNode} node - The graph node.
@@ -73,6 +76,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this._internalDefines.add('PICK_CUSTOM_ID');
         this._internalDefines.add('GSPLAT_INDIRECT_DRAW');
         this._internalDefines.add('GSPLAT_SEPARATE_OPACITY');
+        this._internalDefines.add('GSPLAT_FISHEYE');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -281,6 +285,32 @@ class GSplatQuadRenderer extends GSplatRenderer {
         // Update colorRampIntensity parameter every frame when overdraw is enabled
         if (params.colorRamp) {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);
+        }
+
+        // Update fisheye projection
+        const cam = this.cameraNode.camera;
+        this.fisheyeProj.update(params.fisheye, cam.fov, cam.projectionMatrix);
+
+        const fisheyeEnabled = this.fisheyeProj.enabled;
+        if (fisheyeEnabled !== this._lastFisheyeEnabled) {
+            this._lastFisheyeEnabled = fisheyeEnabled;
+            this._material.setDefine('GSPLAT_FISHEYE', fisheyeEnabled);
+            this._material.update();
+        }
+
+        if (fisheyeEnabled) {
+            const fp = this.fisheyeProj;
+            this._material.setParameter('fisheye_k', fp.k);
+            this._material.setParameter('fisheye_inv_k', fp.invK);
+            this._material.setParameter('fisheye_projMat00', fp.projMat00);
+            this._material.setParameter('fisheye_projMat11', fp.projMat11);
+        }
+
+        const noFog = !params.useFog;
+        if (noFog !== this._lastNoFog) {
+            this._lastNoFog = noFog;
+            this._material.setDefine('GSPLAT_NO_FOG', noFog);
+            this._material.update();
         }
 
         // Check if work buffer format has changed (extra streams added)

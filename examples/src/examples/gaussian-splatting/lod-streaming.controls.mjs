@@ -32,6 +32,49 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: 270, t: '270°' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Occluder' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'occluder' },
+                    value: observer.get('occluder') || false
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Environment' },
+                jsx(SelectInput, {
+                    type: 'string',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'environment' },
+                    value: observer.get('environment') || 'none',
+                    options: [
+                        { v: 'none', t: 'None' },
+                        { v: 'rosendal', t: 'Rosendal Sunset' },
+                        { v: 'industrial-sunset', t: 'Industrial Sunset' },
+                        { v: 'partly-cloudy', t: 'Partly Cloudy' },
+                        { v: 'moonlit', t: 'Moonlit Sky' },
+                        { v: 'sunflowers', t: 'Sunflowers' },
+                        { v: 'table-mountain', t: 'Table Mountain' },
+                        { v: 'cloud-layers', t: 'Cloud Layers' },
+                        { v: 'night', t: 'Night Sky' }
+                    ]
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Fog Density' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'fogDensity' },
+                    min: 0,
+                    max: 0.5,
+                    precision: 3,
+                    step: 0.001
+                })
             )
         ),
         jsx(
@@ -39,13 +82,35 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Camera' },
             jsx(
                 LabelGroup,
+                { text: 'Camera Frame' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'cameraFrame' },
+                    value: observer.get('cameraFrame') || false
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'FOV' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'cameraFov' },
                     min: 10,
-                    max: 120,
+                    max: 360,
                     precision: 0
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Fisheye' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'fisheye' },
+                    min: 0,
+                    max: 1,
+                    precision: 4,
+                    step: 0.0001
                 })
             ),
             jsx(

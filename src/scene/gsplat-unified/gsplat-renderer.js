@@ -1,5 +1,6 @@
 import gsplatOutputVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatOutput.js';
 import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+import { FisheyeProjection } from './fisheye-projection.js';
 
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
@@ -8,6 +9,7 @@ import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-w
  * @import { GraphNode } from '../graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
+ * @import { FogParams } from '../fog-params.js'
  */
 
 /**
@@ -43,6 +45,16 @@ class GSplatRenderer {
      * @protected
      */
     _workBufferFormatVersion = -1;
+
+    /**
+     * Fisheye projection helper shared by all renderer paths.
+     * The manager calls update() during culling; renderers read the computed values
+     * when binding uniforms.
+     *
+     * @type {FisheyeProjection}
+     * @ignore
+     */
+    fisheyeProj = new FisheyeProjection();
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -125,8 +137,9 @@ class GSplatRenderer {
      *
      * @param {object} params - The gsplat parameters.
      * @param {number} [exposure] - Scene exposure value.
+     * @param {FogParams} [fogParams] - Fog parameters.
      */
-    frameUpdate(params, exposure) {
+    frameUpdate(params, exposure, fogParams) {
     }
 
     /**

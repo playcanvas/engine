@@ -69,8 +69,8 @@ class Camera {
     framePasses = [];
 
     /**
-     * Frame passes that execute before this camera's main rendering. These are added to the
-     * frame graph at first camera use, before any render actions or framePasses.
+     * Frame passes that execute before this camera's main scene rendering. Entries are picked up
+     * by the RenderPassForward that renders this camera's layers.
      *
      * @type {FramePass[]}
      */

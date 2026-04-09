@@ -472,6 +472,14 @@ class GSplatParams {
     colorRampIntensity = 1;
 
     /**
+     * Whether to apply scene fog to Gaussian splats. When false, splats ignore fog settings
+     * even if the scene or camera has fog configured. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    useFog = true;
+
+    /**
      * Enables debug colorization to visualize when spherical harmonics are evaluated.
      * When true, each update pass renders with a random color to visualize the behavior
      * of colorUpdateDistance and colorUpdateAngle thresholds. Defaults to false.
@@ -629,6 +637,57 @@ class GSplatParams {
      */
     get twoDimensional() {
         return !!this._material.getDefine('GSPLAT_2DGS');
+    }
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _fisheye = 0;
+
+    /**
+     * Controls the fisheye projection strength for Gaussian splats. The value is in the
+     * range [0, 1]:
+     *
+     * - 0: Standard rectilinear (perspective) projection.
+     * - (0, 1]: Increasing barrel distortion, producing a wider field of view with a
+     *   "little planet" effect at higher values.
+     *
+     * Enabling fisheye for the first time has a small one-off cost as new shaders are
+     * compiled. Subsequent switches between 0 and non-zero are instantaneous.
+     *
+     * Only supported with perspective cameras. Has no effect with orthographic projection.
+     *
+     * Note: This only affects Gaussian splat rendering. Other objects in the scene (meshes,
+     * sprites, etc.) continue to use the standard camera projection and are not distorted.
+     *
+     * For best results, enable {@link GSplatParams#radialSorting} when using fisheye projection
+     * to avoid sorting artifacts caused by the wide field of view.
+     *
+     * Defaults to 0.
+     *
+     * @type {number}
+     */
+    set fisheye(value) {
+        if (this._fisheye !== value) {
+            const wasEnabled = this._fisheye > 0;
+            this._fisheye = value;
+
+            const isEnabled = value > 0;
+            if (wasEnabled !== isEnabled) {
+                this._material.setDefine('GSPLAT_FISHEYE', isEnabled);
+                this._material.update();
+            }
+        }
+    }
+
+    /**
+     * Gets the fisheye projection strength.
+     *
+     * @type {number}
+     */
+    get fisheye() {
+        return this._fisheye;
     }
 
     /**

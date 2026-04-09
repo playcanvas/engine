@@ -770,7 +770,7 @@ class Scene extends EventHandler {
     }
 
     destroy() {
-        this._resetSkyMesh();
+        this._sky.destroy();
         this.root = null;
         this.off();
     }

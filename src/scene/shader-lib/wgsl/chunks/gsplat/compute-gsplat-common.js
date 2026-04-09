@@ -42,23 +42,59 @@ fn computeSplatCov(
     minPixelSize: f32,
     isOrtho: u32,
     alphaClip: f32,
-    minContribution: f32
+    minContribution: f32,
+    #ifdef GSPLAT_FISHEYE
+        fisheye_k: f32,
+        fisheye_inv_k: f32,
+        fisheye_projMat00: f32,
+        fisheye_projMat11: f32,
+    #endif
 ) -> SplatCov2D {
     var result: SplatCov2D;
     result.valid = false;
 
     let viewCenter = (viewMatrix * vec4f(worldCenter, 1.0)).xyz;
 
-    if (viewCenter.z > 0.0) {
-        return result;
-    }
+    #ifdef GSPLAT_FISHEYE
 
-    let clip = viewProj * vec4f(worldCenter, 1.0);
-    let ndc = clip.xy / clip.w;
-    let screen = vec2f(
-        (ndc.x * 0.5 + 0.5) * viewportWidth,
-        (ndc.y * 0.5 + 0.5) * viewportHeight
-    );
+        // Generalized fisheye: g(θ) = k·tan(θ/k)
+        let fv = viewCenter;
+        let r_xy = length(fv.xy);
+        let neg_z = -fv.z;
+        let theta = atan2(r_xy, neg_z);
+
+        // Cull near the singularity at θ = k·π/2, and at camera origin
+        let maxTheta = min(fisheye_k * 1.5707963, 3.13);
+        if (theta > maxTheta - 0.01 || dot(fv, fv) < 0.0001) {
+            return result;
+        }
+
+        let tk = theta * fisheye_inv_k;
+        let sin_tk = sin(tk);
+        let cos_tk = cos(tk);
+        let g_theta = fisheye_k * sin_tk / cos_tk;
+        let fisheye_s = select(select(0.0, 1.0 / neg_z, neg_z > 0.0), g_theta / r_xy, r_xy > 1e-4);
+
+        let fndc = vec2f(fisheye_projMat00 * fisheye_s * fv.x, fisheye_projMat11 * fisheye_s * fv.y);
+        let screen = vec2f(
+            (fndc.x * 0.5 + 0.5) * viewportWidth,
+            (fndc.y * 0.5 + 0.5) * viewportHeight
+        );
+
+    #else
+
+        if (viewCenter.z > 0.0) {
+            return result;
+        }
+
+        let clip = viewProj * vec4f(worldCenter, 1.0);
+        let ndc = clip.xy / clip.w;
+        let screen = vec2f(
+            (ndc.x * 0.5 + 0.5) * viewportWidth,
+            (ndc.y * 0.5 + 0.5) * viewportHeight
+        );
+
+    #endif
 
     let rot: half3x3 = quatToMat3(rotation);
     let s: vec3f = vec3f(scale);
@@ -68,30 +104,48 @@ fn computeSplatCov(
         s.z * vec3f(rot[2])
     ));
 
-    let ortho = isOrtho == 1u;
-    let v = select(viewCenter.xyz, vec3f(0.0, 0.0, 1.0), ortho);
-    let vz = select(min(v.z, -0.001), v.z, ortho);
-    let J1 = focal / vz;
-    let J2 = -J1 / vz * v.xy;
-
-    // Compute TT columns directly without materializing full J and W matrices.
-    // Original code:
-    //   let J = mat3x3f(vec3f(J1, 0.0, J2.x), vec3f(0.0, J1, J2.y), vec3f(0.0, 0.0, 0.0));
-    //   let W = transpose(mat3x3f(viewMatrix[0].xyz, viewMatrix[1].xyz, viewMatrix[2].xyz));
-    //   let TT = W * J;
     let w0 = vec3f(viewMatrix[0].x, viewMatrix[1].x, viewMatrix[2].x);
     let w1 = vec3f(viewMatrix[0].y, viewMatrix[1].y, viewMatrix[2].y);
     let w2 = vec3f(viewMatrix[0].z, viewMatrix[1].z, viewMatrix[2].z);
-    let tt0 = J1 * w0 + J2.x * w2;
-    let tt1 = J1 * w1 + J2.y * w2;
+
+    #ifdef GSPLAT_FISHEYE
+
+        // Fisheye Jacobian for g(θ) = k·tan(θ/k)
+        let fisheyeFocal = viewportWidth * fisheye_projMat00;
+        let g_prime = 1.0 / (cos_tk * cos_tk);
+        let d2 = dot(fv, fv);
+        let r_sq = max(r_xy * r_xy, 1e-8);
+        let K_coeff = select(0.0, (g_prime * neg_z / d2 - fisheye_s) / r_sq, r_xy > 1e-4);
+
+        let Jxx = fisheyeFocal * (fisheye_s + K_coeff * fv.x * fv.x);
+        let Jxy = fisheyeFocal * K_coeff * fv.x * fv.y;
+        let Jyy = fisheyeFocal * (fisheye_s + K_coeff * fv.y * fv.y);
+        let Jzx = fisheyeFocal * g_prime * fv.x / d2;
+        let Jzy = fisheyeFocal * g_prime * fv.y / d2;
+
+        let tt0 = Jxx * w0 + Jxy * w1 + Jzx * w2;
+        let tt1 = Jxy * w0 + Jyy * w1 + Jzy * w2;
+
+    #else
+
+        let ortho = isOrtho == 1u;
+        let v = select(viewCenter.xyz, vec3f(0.0, 0.0, 1.0), ortho);
+        let vz = select(min(v.z, -0.001), v.z, ortho);
+        let J1 = focal / vz;
+        let J2 = -J1 / vz * v.xy;
+
+        // Compute TT columns directly without materializing full J and W matrices.
+        // Original code:
+        //   let J = mat3x3f(vec3f(J1, 0.0, J2.x), vec3f(0.0, J1, J2.y), vec3f(0.0, 0.0, 0.0));
+        //   let W = transpose(mat3x3f(viewMatrix[0].xyz, viewMatrix[1].xyz, viewMatrix[2].xyz));
+        //   let TT = W * J;
+        let tt0 = J1 * w0 + J2.x * w2;
+        let tt1 = J1 * w1 + J2.y * w2;
+
+    #endif
 
     // Fused covariance: cov = TT^T * Vrk * TT = TT^T * (M^T * M) * TT = (M * TT)^T * (M * TT).
     // Compute B = M * TT then cov = B^T * B, avoiding the intermediate Vrk (mat3x3f) matrix.
-    // Original code:
-    //   let covA = vec3f(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
-    //   let covB = vec3f(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
-    //   let Vrk = mat3x3f(vec3f(covA.x, covA.y, covA.z), ...);
-    //   let cov = transpose(TT) * Vrk * TT;
     let b0 = M * tt0;
     let b1 = M * tt1;
 
@@ -150,7 +204,11 @@ fn computeSplatCov(
     result.a = scaledCov.x;
     result.b = scaledCov.y;
     result.c = scaledCov.z;
-    result.viewDepth = -viewCenter.z;
+    #ifdef GSPLAT_FISHEYE
+        result.viewDepth = sqrt(d2);
+    #else
+        result.viewDepth = -viewCenter.z;
+    #endif
     result.valid = true;
     return result;
 }
