@@ -60,7 +60,16 @@ assetListLoader.load(() => {
     // Array of available effects (extensible for future effects)
     const effects = ['radial', 'rain', 'grid'];
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
     // Default to radial effect
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('effect', 'radial');
 
     // Create hotel gsplat with unified set to true

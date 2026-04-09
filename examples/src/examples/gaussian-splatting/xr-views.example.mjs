@@ -84,6 +84,14 @@ assetListLoader.load(() => {
     camera.script?.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('exaggeratedStereo', false);
 
     // Interpupillary distance (~63mm), half for each eye offset from center

@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, SelectInput } = ReactPCUI;
     return fragment(
         jsx(
             LabelGroup,
@@ -19,16 +19,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     { v: 2, t: 'Raster (GPU Sort)' },
                     { v: 3, t: 'Compute' }
                 ]
-            })
-        ),
-        jsx(
-            LabelGroup,
-            { text: 'Unified' },
-            jsx(BooleanInput, {
-                type: 'toggle',
-                binding: new BindingTwoWay(),
-                link: { observer, path: 'unified' },
-                value: observer.get('unified')
             })
         )
     );

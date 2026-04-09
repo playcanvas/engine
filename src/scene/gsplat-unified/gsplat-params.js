@@ -168,7 +168,6 @@ class GSplatParams {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else if ((value === GSPLAT_RENDERER_RASTER_GPU_SORT || value === GSPLAT_RENDERER_COMPUTE) &&
                 !this._device.isWebGPU) {
-                Debug.warnOnce(`GSplatParams: renderer mode ${value} requires WebGPU, falling back to GSPLAT_RENDERER_RASTER_CPU_SORT.`);
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else {
                 this._currentRenderer = value;

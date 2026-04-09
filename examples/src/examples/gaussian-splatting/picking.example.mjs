@@ -83,6 +83,15 @@ assetListLoader.load(() => {
         });
     }
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
     // Enable gsplat ID for unified picking
     app.scene.gsplat.enableIds = true;
     app.scene.gsplat.alphaClip = 0.2;
