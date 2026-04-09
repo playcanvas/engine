@@ -634,7 +634,7 @@ class GSplatManager {
         }
 
         // compute dirtiness of non-octree placements compared to existing layerPlacements
-        this.layerPlacementsDirty = this.layerPlacements.length !== tempNonOctreePlacements.size;
+        this.layerPlacementsDirty ||= this.layerPlacements.length !== tempNonOctreePlacements.size;
         if (!this.layerPlacementsDirty) {
             for (let i = 0; i < this.layerPlacements.length; i++) {
                 const existing = this.layerPlacements[i];
