@@ -13,7 +13,8 @@ import {
     SHADERSTAGE_COMPUTE,
     TEXTUREDIMENSION_2D,
     UNIFORMTYPE_FLOAT,
-    UNIFORMTYPE_UINT
+    UNIFORMTYPE_UINT,
+    UNIFORMTYPE_VEC3
 } from '../../platform/graphics/constants.js';
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
@@ -278,13 +279,16 @@ class GSplatLocalDispatchSet {
      *
      * @param {boolean} pickMode - Whether to use the pick variant.
      * @param {boolean} depthTest - Whether to enable depth testing against scene geometry.
+     * @param {string} [fogType] - Fog type string: 'none', 'linear', 'exp', or 'exp2'.
      * @returns {Compute} The cached Compute instance.
      */
-    getRasterizeCompute(pickMode, depthTest) {
-        const key = pickMode ? 'pick' : (depthTest ? 'color-depth' : 'color');
+    getRasterizeCompute(pickMode, depthTest, fogType = 'none') {
+        let key = pickMode ? 'pick' : 'color';
+        if (depthTest) key += '-depth';
+        if (fogType !== 'none') key += `-fog-${fogType}`;
         let variant = this._rasterizeVariants.get(key);
         if (!variant) {
-            const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(pickMode, depthTest);
+            const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(pickMode, depthTest, fogType);
             const compute = new Compute(this.device, shader, `GSplatRasterize-${key}`);
             variant = { shader, bindGroupFormat, compute };
             this._rasterizeVariants.set(key, variant);
@@ -297,20 +301,31 @@ class GSplatLocalDispatchSet {
      *
      * @param {boolean} pickMode - Whether to create the pick variant.
      * @param {boolean} depthTest - Whether to enable depth testing against scene geometry.
+     * @param {string} [fogType] - Fog type string: 'none', 'linear', 'exp', or 'exp2'.
      * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The shader and format.
      * @private
      */
-    _createRasterizeShaderAndFormat(pickMode, depthTest = false) {
+    _createRasterizeShaderAndFormat(pickMode, depthTest = false, fogType = 'none') {
         const device = this.device;
+        const hasFog = fogType !== 'none';
 
-        const ubf = new UniformBufferFormat(device, [
+        const uniforms = [
             new UniformFormat('screenWidth', UNIFORMTYPE_UINT),
             new UniformFormat('screenHeight', UNIFORMTYPE_UINT),
             new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
             new UniformFormat('nearClip', UNIFORMTYPE_FLOAT),
             new UniformFormat('farClip', UNIFORMTYPE_FLOAT),
             new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT)
-        ]);
+        ];
+        if (hasFog) {
+            uniforms.push(
+                new UniformFormat('fog_color', UNIFORMTYPE_VEC3),
+                new UniformFormat('fog_start', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fog_end', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fog_density', UNIFORMTYPE_FLOAT)
+            );
+        }
+        const ubf = new UniformBufferFormat(device, uniforms);
 
         const sharedBindings = [
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
@@ -337,8 +352,14 @@ class GSplatLocalDispatchSet {
         const cdefines = new Map();
         if (pickMode) cdefines.set('PICK_MODE', '');
         if (depthTest) cdefines.set('DEPTH_TEST', '');
+        cdefines.set('GAMMA', 'SRGB'); // assumes splat colors are in gamma space, will need to change when we get linear splats
+        cdefines.set('FOG', hasFog ? fogType.toUpperCase() : 'NONE');
 
         const cincludes = pickMode ? undefined : new Map([['decodePS', shaderChunksWGSL.decodePS]]);
+        if (hasFog && cincludes) {
+            cincludes.set('fogMathPS', shaderChunksWGSL.fogMathPS);
+            cincludes.set('gammaPS', shaderChunksWGSL.gammaPS);
+        }
 
         let name = 'GSplatLocalRasterize';
         if (pickMode) name = 'GSplatLocalRasterizePick';

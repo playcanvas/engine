@@ -205,6 +205,7 @@ assetListLoader.load(async () => {
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
     data.set('splatBudget', pc.platform.mobile ? 1 : 4);
     data.set('environment', 'none');
+    data.set('fogDensity', 0);
     data.set('url', '');
     data.set('orientation', 270);
 
@@ -307,6 +308,17 @@ assetListLoader.load(async () => {
     data.on('toneMapping:set', applyToneMapping);
     data.on('exposure:set', () => {
         app.scene.exposure = data.get('exposure');
+    });
+
+    data.on('fogDensity:set', () => {
+        const density = data.get('fogDensity');
+        if (density > 0) {
+            app.scene.fog.type = pc.FOG_EXP;
+            app.scene.fog.density = density;
+            app.scene.fog.color.copy(camera.camera.clearColor);
+        } else {
+            app.scene.fog.type = pc.FOG_NONE;
+        }
     });
 
     // Poly Haven credit overlay (shown when an HDRI is active)

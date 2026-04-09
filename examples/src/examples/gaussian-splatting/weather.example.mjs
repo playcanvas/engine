@@ -116,31 +116,58 @@ assetListLoader.load(() => {
     const sliderToSize = v => PSIZE_LO + v * PSIZE_RANGE;
 
     const presets = {
+        none: {
+            speed: 0,
+            drift: 0,
+            angle: 0,
+            opacity: 0,
+            color: [1, 1, 1],
+            elongate: 1,
+            particleMinSize: 0,
+            particleMaxSize: 0,
+            fogDensity: 0,
+            exposure: 1
+        },
         snow: {
             speed: 2.0,
-            drift: 0.15,
+            drift: 0.4,
             angle: 0,
             opacity: 0.8,
             color: [1, 1, 1],
             elongate: 1,
             particleMinSize: 0.006,
-            particleMaxSize: 0.012
+            particleMaxSize: 0.012,
+            fogDensity: 0.03,
+            exposure: 0.8
         },
         rain: {
             speed: 10,
             drift: 0,
             angle: 0,
             opacity: 0.57,
-            color: [0.62, 0.62, 0.62],
+            color: [0.812, 0.812, 0.812],
             elongate: 20,
             particleMinSize: 0.003,
-            particleMaxSize: 0.003
+            particleMaxSize: 0.003,
+            fogDensity: 0.02,
+            exposure: 0.5
+        }
+    };
+
+    const applyFog = (density) => {
+        if (density > 0) {
+            app.scene.fog.type = pc.FOG_EXP;
+            app.scene.fog.density = density;
+            app.scene.fog.color.set(1, 1, 1);
+        } else {
+            app.scene.fog.type = pc.FOG_NONE;
         }
     };
 
     const applyPreset = (name) => {
         const p = presets[name];
         if (!p) return;
+        weatherEntity.enabled = name !== 'none';
         data.set('speed', p.speed);
         data.set('drift', p.drift);
         data.set('angle', p.angle);
@@ -149,9 +176,24 @@ assetListLoader.load(() => {
         data.set('elongate', p.elongate);
         data.set('particleMinSize', sizeToSlider(p.particleMinSize));
         data.set('particleMaxSize', sizeToSlider(p.particleMaxSize));
+        data.set('fogDensity', p.fogDensity);
+        data.set('exposure', p.exposure);
+
+        weather.speed = p.speed;
+        weather.drift = p.drift;
+        weather.opacity = p.opacity;
+        weather.color = p.color;
+        weather.elongate = p.elongate;
+        weather.particleMinSize = p.particleMinSize;
+        weather.particleMaxSize = p.particleMaxSize;
+        weatherEntity.setLocalEulerAngles(p.angle, 0, 0);
+        applyFog(p.fogDensity);
+        app.scene.exposure = p.exposure;
     };
 
     // Initialize UI data
+    data.set('exposure', 1);
+    data.set('useFog', true);
     data.set('preset', 'snow');
     applyPreset('snow');
     data.set('extents', [weather.extents.x, weather.extents.y, weather.extents.z]);
@@ -187,6 +229,15 @@ assetListLoader.load(() => {
     });
     data.on('particleMaxSize:set', () => {
         weather.particleMaxSize = sliderToSize(data.get('particleMaxSize'));
+    });
+    data.on('fogDensity:set', () => {
+        applyFog(data.get('fogDensity'));
+    });
+    data.on('exposure:set', () => {
+        app.scene.exposure = data.get('exposure');
+    });
+    data.on('useFog:set', () => {
+        app.scene.gsplat.useFog = data.get('useFog');
     });
 
     // Grid config — requires rebuild

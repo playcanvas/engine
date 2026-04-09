@@ -13,9 +13,13 @@ float dBlendModeFogFactor = 1.0;
     #endif
 #endif
 
-float getFogFactor() {
+#ifdef VERTEXSHADER
+    float getFogFactor(float depth) {
+#else
+    float getFogFactor() {
+        float depth = gl_FragCoord.z / gl_FragCoord.w;
+#endif
 
-    float depth = gl_FragCoord.z / gl_FragCoord.w;
     float fogFactor = 0.0;
 
     #if (FOG == LINEAR)
@@ -29,12 +33,19 @@ float getFogFactor() {
     return clamp(fogFactor, 0.0, 1.0);
 }
 
-vec3 addFog(vec3 color) {
-
-    #if (FOG != NONE)
-        return mix(fog_color * dBlendModeFogFactor, color, getFogFactor());
-    #endif
-
-    return color;
-}
+#ifdef VERTEXSHADER
+    vec3 addFog(vec3 color, float depth) {
+        #if (FOG != NONE)
+            return mix(fog_color * dBlendModeFogFactor, color, getFogFactor(depth));
+        #endif
+        return color;
+    }
+#else
+    vec3 addFog(vec3 color) {
+        #if (FOG != NONE)
+            return mix(fog_color * dBlendModeFogFactor, color, getFogFactor());
+        #endif
+        return color;
+    }
+#endif
 `;

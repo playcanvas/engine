@@ -306,6 +306,13 @@ class GSplatQuadRenderer extends GSplatRenderer {
             this._material.setParameter('fisheye_projMat11', fp.projMat11);
         }
 
+        const noFog = !params.useFog;
+        if (noFog !== this._lastNoFog) {
+            this._lastNoFog = noFog;
+            this._material.setDefine('GSPLAT_NO_FOG', noFog);
+            this._material.update();
+        }
+
         // Check if work buffer format has changed (extra streams added)
         this._syncWithWorkBufferFormat();
 

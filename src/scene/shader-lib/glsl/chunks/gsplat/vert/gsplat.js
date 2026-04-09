@@ -105,7 +105,7 @@ void main(void) {
         clr.a *= (1.0 / 32.0) * colorRampIntensity;
         gaussianColor = vec4(rampColor, clr.a);
     #else
-        gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0)), clr.w);
+        gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0), -center.view.z), clr.w);
     #endif
 
     #ifndef DITHER_NONE

@@ -13,7 +13,8 @@ import {
     UNIFORMTYPE_MAT4,
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
-import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
+import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, FOG_NONE } from '../constants.js';
+import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
@@ -50,6 +51,8 @@ const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
 const _dispatchSize = new Vec2();
+const _fogColorLinear = new Color();
+const _fogColorArray = new Float32Array(3);
 
 /**
  * Renders splats using a tiled compute pipeline with per-tile binning and local sorting.
@@ -241,7 +244,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         super.setRenderMode(renderMode);
     }
 
-    frameUpdate(gsplat, exposure) {
+    frameUpdate(gsplat, exposure, fogParams) {
         if (this._needsFramePassRegister) {
             this._registerFramePass();
         }
@@ -250,6 +253,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._alphaClip = gsplat.alphaClip;
         this._exposure = exposure ?? 1.0;
         this._fisheye = gsplat.fisheye;
+        this._fogParams = fogParams ?? null;
 
         const formatHash = this.workBuffer.format.hash;
         if (formatHash !== this._formatHash) {
@@ -583,7 +587,10 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const hasLinearDepth = cam.shaderParams.sceneDepthMapLinear;
         const sceneDepthMap = hasLinearDepth ? device.scope.resolve('uSceneDepthMap').value : null;
         const useDepth = !pickMode && sceneDepthMap;
-        const rasterizeCompute = set.getRasterizeCompute(pickMode, useDepth);
+
+        const fogParams = this._fogParams;
+        const fogType = (fogParams && fogParams.type !== FOG_NONE) ? fogParams.type : 'none';
+        const rasterizeCompute = set.getRasterizeCompute(pickMode, useDepth, fogType);
 
         rasterizeCompute.setParameter('screenWidth', width);
         rasterizeCompute.setParameter('screenHeight', height);
@@ -591,6 +598,17 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         rasterizeCompute.setParameter('nearClip', cam.nearClip);
         rasterizeCompute.setParameter('farClip', cam.farClip);
         rasterizeCompute.setParameter('alphaClip', alphaClip);
+
+        if (fogType !== 'none') {
+            _fogColorLinear.linear(fogParams.color);
+            _fogColorArray[0] = _fogColorLinear.r;
+            _fogColorArray[1] = _fogColorLinear.g;
+            _fogColorArray[2] = _fogColorLinear.b;
+            rasterizeCompute.setParameter('fog_color', _fogColorArray);
+            rasterizeCompute.setParameter('fog_start', fogParams.start);
+            rasterizeCompute.setParameter('fog_end', fogParams.end);
+            rasterizeCompute.setParameter('fog_density', fogParams.density);
+        }
         rasterizeCompute.setParameter('tileEntries', this._tileEntriesBuffer);
         rasterizeCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
         rasterizeCompute.setParameter('projCache', this._projCacheBuffer);

@@ -39,6 +39,7 @@ import falloffInvSquaredPS from '../chunks/lit/frag/falloffInvSquared.js';
 import falloffLinearPS from '../chunks/lit/frag/falloffLinear.js';
 import floatAsUintPS from '../chunks/common/frag/float-as-uint.js';
 import fogPS from '../chunks/common/frag/fog.js';
+import fogMathPS from '../chunks/common/shared/fogMath.js';
 import fresnelSchlickPS from '../chunks/lit/frag/fresnelSchlick.js';
 import fullscreenQuadVS from '../chunks/common/vert/fullscreenQuad.js';
 import gammaPS from '../chunks/common/frag/gamma.js';
@@ -199,6 +200,7 @@ const shaderChunksWGSL = {
     falloffLinearPS,
     floatAsUintPS,
     fogPS,
+    fogMathPS,
     fresnelSchlickPS,
     frontendCodePS: '',  // empty chunk, supplied by the shader generator
     frontendDeclPS: '',  // empty chunk, supplied by the shader generator

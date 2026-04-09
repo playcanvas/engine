@@ -63,6 +63,18 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: 'night', t: 'Night Sky' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Fog Density' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'fogDensity' },
+                    min: 0,
+                    max: 0.5,
+                    precision: 3,
+                    step: 0.001
+                })
             )
         ),
         jsx(
