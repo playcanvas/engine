@@ -2,7 +2,6 @@ import {
     PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
     PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
 } from '../../platform/graphics/constants.js';
-import { Debug } from '../../core/debug.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import {
