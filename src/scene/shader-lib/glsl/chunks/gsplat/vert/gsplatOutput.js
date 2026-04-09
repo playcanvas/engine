@@ -5,17 +5,21 @@ export default /* glsl */`
 #include "gammaPS"
 #include "fogPS"
 
+#if FOG != NONE && !defined(GSPLAT_NO_FOG)
+    #define GSPLAT_FOG
+#endif
+
 // prepare the output color for the given gamma-space color
 vec3 prepareOutputFromGamma(vec3 gammaColor, float depth) {
     vec3 color = gammaColor;
 
     // decode to linear when we need linear-space processing
-    #if TONEMAP != NONE || GAMMA == NONE || FOG != NONE
+    #if TONEMAP != NONE || GAMMA == NONE || defined(GSPLAT_FOG)
         color = decodeGamma(color);
     #endif
 
     // apply fog in linear space
-    #if FOG != NONE
+    #ifdef GSPLAT_FOG
         color = addFog(color, depth);
     #endif
 
@@ -25,7 +29,7 @@ vec3 prepareOutputFromGamma(vec3 gammaColor, float depth) {
     #endif
 
     // encode to gamma when needed
-    #if TONEMAP != NONE || (GAMMA != NONE && FOG != NONE)
+    #if TONEMAP != NONE || (GAMMA != NONE && defined(GSPLAT_FOG))
         color = gammaCorrectOutput(color);
     #endif
 

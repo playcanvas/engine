@@ -472,6 +472,14 @@ class GSplatParams {
     colorRampIntensity = 1;
 
     /**
+     * Whether to apply scene fog to Gaussian splats. When false, splats ignore fog settings
+     * even if the scene or camera has fog configured. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    useFog = true;
+
+    /**
      * Enables debug colorization to visualize when spherical harmonics are evaluated.
      * When true, each update pass renders with a random color to visualize the behavior
      * of colorUpdateDistance and colorUpdateAngle thresholds. Defaults to false.

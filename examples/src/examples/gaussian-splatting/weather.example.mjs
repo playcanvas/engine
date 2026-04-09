@@ -193,6 +193,7 @@ assetListLoader.load(() => {
 
     // Initialize UI data
     data.set('exposure', 1);
+    data.set('useFog', true);
     data.set('preset', 'snow');
     applyPreset('snow');
     data.set('extents', [weather.extents.x, weather.extents.y, weather.extents.z]);
@@ -234,6 +235,9 @@ assetListLoader.load(() => {
     });
     data.on('exposure:set', () => {
         app.scene.exposure = data.get('exposure');
+    });
+    data.on('useFog:set', () => {
+        app.scene.gsplat.useFog = data.get('useFog');
     });
 
     // Grid config — requires rebuild

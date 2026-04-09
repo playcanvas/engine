@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, Label, LabelGroup, Panel, SliderInput, ColorPicker, SelectInput, VectorInput } = ReactPCUI;
+    const { BindingTwoWay, BooleanInput, Label, LabelGroup, Panel, SliderInput, ColorPicker, SelectInput, VectorInput } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
@@ -44,6 +44,14 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 5,
                     precision: 2,
                     step: 0.05
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Splat Fog' },
+                jsx(BooleanInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'useFog' }
                 })
             )
         ),

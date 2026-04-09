@@ -5,17 +5,21 @@ export default /* wgsl */`
 #include "gammaPS"
 #include "fogPS"
 
+#if FOG != NONE && !defined(GSPLAT_NO_FOG)
+    #define GSPLAT_FOG
+#endif
+
 // prepare the output color for the given gamma-space color
 fn prepareOutputFromGamma(gammaColor: vec3f, depth: f32) -> vec3f {
     var color = gammaColor;
 
     // decode to linear when we need linear-space processing
-    #if TONEMAP != NONE || GAMMA == NONE || FOG != NONE
+    #if TONEMAP != NONE || GAMMA == NONE || defined(GSPLAT_FOG)
         color = decodeGamma3(color);
     #endif
 
     // apply fog in linear space
-    #if FOG != NONE
+    #ifdef GSPLAT_FOG
         color = addFog(color, depth);
     #endif
 
@@ -25,7 +29,7 @@ fn prepareOutputFromGamma(gammaColor: vec3f, depth: f32) -> vec3f {
     #endif
 
     // encode to gamma when needed
-    #if TONEMAP != NONE || (GAMMA != NONE && FOG != NONE)
+    #if TONEMAP != NONE || (GAMMA != NONE && defined(GSPLAT_FOG))
         color = gammaCorrectOutput(color);
     #endif
 

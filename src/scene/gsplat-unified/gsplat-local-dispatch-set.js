@@ -353,7 +353,7 @@ class GSplatLocalDispatchSet {
         if (pickMode) cdefines.set('PICK_MODE', '');
         if (depthTest) cdefines.set('DEPTH_TEST', '');
         cdefines.set('GAMMA', 'SRGB'); // assumes splat colors are in gamma space, will need to change when we get linear splats
-        if (hasFog) cdefines.set('FOG', fogType.toUpperCase());
+        cdefines.set('FOG', hasFog ? fogType.toUpperCase() : 'NONE');
 
         const cincludes = pickMode ? undefined : new Map([['decodePS', shaderChunksWGSL.decodePS]]);
         if (hasFog && cincludes) {
