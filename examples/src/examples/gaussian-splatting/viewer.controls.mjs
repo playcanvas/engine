@@ -9,6 +9,26 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     return fragment(
         jsx(
             Panel,
+            { headerText: 'Renderer' },
+            jsx(
+                LabelGroup,
+                { text: 'Renderer' },
+                jsx(SelectInput, {
+                    type: 'number',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'renderer' },
+                    value: observer.get('renderer') ?? 0,
+                    options: [
+                        { v: 0, t: 'Auto' },
+                        { v: 1, t: 'Raster (CPU Sort)' },
+                        { v: 2, t: 'Raster (GPU Sort)' },
+                        { v: 3, t: 'Compute' }
+                    ]
+                })
+            )
+        ),
+        jsx(
+            Panel,
             { headerText: 'Scene' },
             jsx(
                 LabelGroup,

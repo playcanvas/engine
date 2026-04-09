@@ -172,7 +172,7 @@ assetListLoader.load(async () => {
         app.scene.gsplat.renderer = data.get('renderer');
         const current = app.scene.gsplat.currentRenderer;
         if (current !== data.get('renderer')) {
-            data.set('renderer', current);
+            setTimeout(() => data.set('renderer', current), 0);
         }
     });
     data.on('minPixelSize:set', () => {

@@ -191,7 +191,16 @@ assetListLoader.load(() => {
         app.scene.exposure = p.exposure;
     };
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
     // Initialize UI data
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('exposure', 1);
     data.set('useFog', true);
     data.set('preset', 'snow');

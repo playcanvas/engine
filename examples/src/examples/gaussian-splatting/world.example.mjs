@@ -88,11 +88,6 @@ const assets = {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
 
-    // Use GPU sorting on desktop (experimental, WebGPU only)
-    if (!pc.platform.mobile) {
-        app.scene.gsplat.renderer = pc.GSPLAT_RENDERER_RASTER_GPU_SORT;
-    }
-
     app.start();
 
     // setup skydome
@@ -113,7 +108,16 @@ assetListLoader.load(() => {
     app.scene.gsplat.colorUpdateDistanceLodScale = 2;
     app.scene.gsplat.colorUpdateAngleLodScale = 2;
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
     // initialize UI settings
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('debugLod', false);
     data.set('splatBudget', pc.platform.mobile ? 1 : 4);
 
