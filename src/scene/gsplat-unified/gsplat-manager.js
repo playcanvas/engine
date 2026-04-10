@@ -179,8 +179,9 @@ class GSplatManager {
     indirectDrawSlot = -1;
 
     /**
-     * Indirect dispatch slot index for key gen (first of 3 consecutive slots).
-     * Slot +0 = key gen, slot +1 = sort, slot +2 = place-entries.
+     * Indirect dispatch slot index for GPU-sort indirect dispatch args.
+     * Slot +0 = key gen, slot +1 = sort. The compute local renderer builds
+     * its own indirect args in private buffers and does not use these slots.
      *
      * @type {number}
      */
@@ -1650,8 +1651,8 @@ class GSplatManager {
         this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, this.renderer.fisheyeProj.enabled);
 
         // Extract the visible count from the prefix sum into sortElementCountBuffer.
-        // writeIndirectArgs is the only path that does this. The local renderer uses
-        // dispatch slot +2 (place-entries) for indirect dispatch.
+        // writeIndirectArgs is the only path that does this. The local compute renderer
+        // prepares its own indirect dispatch args in private buffers.
         this.allocateAndWriteIntervalIndirectArgs(numIntervals);
 
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);

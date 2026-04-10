@@ -19,6 +19,7 @@ export const computeGsplatLocalTileCountLargeSource = /* wgsl */`
 
 const CACHE_STRIDE: u32 = 8u;
 const WG_SIZE: u32 = 256u;
+const MAX_TILE_ENTRIES: u32 = 0xFFFFu;
 
 @group(0) @binding(0) var<storage, read> projCache: array<u32>;
 @group(0) @binding(1) var<storage, read_write> tileSplatCounts: array<atomic<u32>>;
@@ -135,8 +136,24 @@ fn main(
         if (tileIntersectsEllipse(tMin, tMax, screen, cx, cy, cz, radiusFactor)) {
             let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
             let localOff = atomicAdd(&tileSplatCounts[tileIdx], 1u);
-            pairBuffer[myBase + j] = (tileIdx << 16u) | (localOff & 0xFFFFu);
-            j++;
+            if (localOff < MAX_TILE_ENTRIES) {
+                pairBuffer[myBase + j] = (tileIdx << 16u) | (localOff & 0xFFFFu);
+                j++;
+            }
+        }
+    }
+
+    // If any pairs were dropped by the cap, correct the stored count via workgroup sum.
+    wgPairCounts[lid] = j;
+    workgroupBarrier();
+    if (lid == 0u) {
+        var actualTotal: u32 = 0u;
+        for (var i: u32 = 0u; i < WG_SIZE; i++) {
+            actualTotal += wgPairCounts[i];
+        }
+        let storedCount = splatPairCount[threadIdx] & 0x7FFFFFFFu;
+        if (actualTotal != storedCount) {
+            splatPairCount[threadIdx] = actualTotal | 0x80000000u;
         }
     }
 }

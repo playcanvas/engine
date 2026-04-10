@@ -15,6 +15,7 @@ import {
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
 import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, FOG_NONE } from '../constants.js';
+import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
@@ -44,6 +45,7 @@ import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComp
  */
 
 const TILE_SIZE = 16;
+const MAX_TILES = 65535; // tile index must fit in 16 bits for pair packing (tileIdx << 16 | localOffset)
 const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5; // floor for _tileEntryMultiplier (min tile entries per splat)
 const CACHE_STRIDE = 8;
 const MAX_CHUNKS_PER_TILE = 8;
@@ -562,8 +564,16 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         if (!this._compactedSplatIds || !this._sortElementCountBuffer || numSplats === 0) return;
 
         const device = this.device;
-        const numTilesX = Math.ceil(width / TILE_SIZE);
-        const numTilesY = Math.ceil(height / TILE_SIZE);
+        let numTilesX = Math.ceil(width / TILE_SIZE);
+        let numTilesY = Math.ceil(height / TILE_SIZE);
+
+        if (numTilesX * numTilesY > MAX_TILES) {
+            Debug.warnOnce('GSplatComputeLocalRenderer: render target exceeds maximum supported tile count (65535). Tile coverage will be clamped, causing rendering artifacts at screen edges.');
+            const scale = Math.sqrt(MAX_TILES / (numTilesX * numTilesY));
+            numTilesX = Math.max(1, Math.floor(numTilesX * scale));
+            numTilesY = Math.max(1, Math.floor(numTilesY * scale));
+        }
+
         const numTiles = numTilesX * numTilesY;
 
         this._ensureSharedBuffers(numSplats);

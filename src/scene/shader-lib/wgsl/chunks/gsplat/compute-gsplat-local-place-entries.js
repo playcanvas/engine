@@ -29,15 +29,23 @@ fn main(@builtin(global_invocation_id) gid: vec3u, @builtin(num_workgroups) numW
     let count = rawCount;
 
     let start = splatPairStart[threadIdx];
+    let pairLen = arrayLength(&pairBuffer);
+    let tileEntriesLen = arrayLength(&tileEntries);
 
     for (var j: u32 = 0u; j < count; j++) {
-        let packed = pairBuffer[start + j];
+        let pairIdx = start + j;
+        if (pairIdx >= pairLen) { break; }
+
+        let packed = pairBuffer[pairIdx];
         let tileIdx = packed >> 16u;
         let localOff = packed & 0xFFFFu;
 
         // tileSplatCounts has been prefix-summed, so it holds the start offset for each tile.
         // localOff is the within-tile position assigned by atomicAdd during the count pass.
-        tileEntries[tileSplatCounts[tileIdx] + localOff] = threadIdx;
+        let entryIdx = tileSplatCounts[tileIdx] + localOff;
+        if (entryIdx < tileEntriesLen) {
+            tileEntries[entryIdx] = threadIdx;
+        }
     }
 }
 `;

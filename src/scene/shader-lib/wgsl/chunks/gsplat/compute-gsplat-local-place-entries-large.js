@@ -38,12 +38,21 @@ fn main(
     }
 
     let start = splatPairStart[threadIdx];
+    let pairLen = arrayLength(&pairBuffer);
+    let tileEntriesLen = arrayLength(&tileEntries);
 
     for (var j = lid; j < pairCount; j += WG_SIZE) {
-        let packed = pairBuffer[start + j];
+        let pairIdx = start + j;
+        if (pairIdx >= pairLen) { break; }
+
+        let packed = pairBuffer[pairIdx];
         let tileIdx = packed >> 16u;
         let localOff = packed & 0xFFFFu;
-        tileEntries[tileSplatCounts[tileIdx] + localOff] = threadIdx;
+
+        let entryIdx = tileSplatCounts[tileIdx] + localOff;
+        if (entryIdx < tileEntriesLen) {
+            tileEntries[entryIdx] = threadIdx;
+        }
     }
 }
 `;
