@@ -1,6 +1,7 @@
 // Single-thread compute shader that reads the visible splat count from the
-// prefix sum buffer and writes indirect draw arguments, indirect sort dispatch
-// arguments, numSplats for the vertex shader, and sortElementCount for sort shaders.
+// prefix sum buffer and writes indirect draw arguments, indirect dispatch
+// arguments (key gen, sort), numSplats for the vertex shader,
+// and sortElementCount for sort shaders.
 //
 // The visible count is obtained from prefixSumBuffer[totalSplats]. After the
 // exclusive prefix sum over N+1 elements (N flags + 1 sentinel), the value at
