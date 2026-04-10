@@ -77,30 +77,34 @@ let _randomColorRaw = null;
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
  * stored and rendered from.
  *
- * GPU sorting (WebGPU only):
- *   1. [culling] Frustum cull: a fragment shader tests each bounding sphere against frustum
- *      planes and writes results into a bit-packed nodeVisibilityTexture (1 bit per sphere).
- *   2. Interval compaction: operates on contiguous intervals of splats (one per octree node)
- *      rather than individual pixels. A cull/count pass writes each interval's splat count
- *      (or 0 if culled) into a count buffer. A prefix sum produces output offsets. A scatter
- *      pass expands visible intervals into compactedSplatIds (flat list of work-buffer pixel
- *      indices). The last prefix sum element gives visibleCount.
- *   3. Generate sort keys: an indirect compute dispatch (visibleCount threads) reads each
+ * Shared culling + compaction (GPU sorting and compute renderer, WebGPU only):
+ *   Interval compaction operates on contiguous intervals of splats (one per octree node).
+ *   1. Cull + count (compute): each interval's bounding sphere is tested against frustum
+ *      planes (or a fisheye cone). The pass writes the interval's splat count (or 0 if
+ *      culled) into a count buffer.
+ *   2. Prefix sum: exclusive prefix sum over the count buffer produces output offsets.
+ *      The last element gives visibleCount.
+ *   3. Scatter (compute): one workgroup per interval expands visible intervals into
+ *      compactedSplatIds (flat list of work-buffer pixel indices).
+ *
+ * Raster renderer — GPU sorting (WebGPU, {@link GSplatQuadRenderer}):
+ *   Uses shared steps 1-3 above, then:
+ *   4. Generate sort keys: an indirect compute dispatch (visibleCount threads) reads each
  *      compactedSplatIds[i] to look up the splat's depth and writes a sort key to keysBuffer.
- *   4. Radix sort: an indirect GPU radix sort over keysBuffer, with compactedSplatIds supplied
+ *   5. Radix sort: an indirect GPU radix sort over keysBuffer, with compactedSplatIds supplied
  *      as initial values, produces a buffer of sorted splat IDs directly.
- *   5. Render: the vertex shader reads sortedSplatIds[vertexId] → splatId.
+ *   6. Render: the vertex shader reads sortedSplatIds[vertexId] → splatId.
  *
- * CPU sorting (WebGPU):
+ * Raster renderer — CPU sorting (WebGPU and WebGL, {@link GSplatQuadRenderer}):
  *   1. Sort on worker: camera position and splat centers are sent to a web worker which
- *      performs a radix sort and returns the sorted order as orderBuffer (storage buffer).
- *   2. Interval compaction with frustum culling (same as GPU path steps 1-2).
- *   3. Render: the vertex shader reads compactedSplatIds[vertexId] → splatId.
+ *      performs a counting sort and returns the sorted order as orderBuffer.
+ *   2. Render: the vertex shader reads orderBuffer[vertexId] → splatId.
+ *      No culling or compaction is used.
  *
- * CPU sorting (WebGL):
- *   1. Sort on worker: same as the WebGPU CPU path, producing orderBuffer (texture).
- *   2. Render: the vertex shader reads orderBuffer[vertexId] → splatId directly.
- *      No culling or compaction is available on WebGL.
+ * Compute tiled renderer (WebGPU only, {@link GSplatComputeLocalRenderer}):
+ *   Uses shared steps 1-3 above, then runs a fully compute-based tiled pipeline:
+ *   project splats into a cache, bin into screen tiles, sort per-tile by depth, and rasterize
+ *   front-to-back. See {@link GSplatComputeLocalRenderer} for the full pass breakdown.
  *
  * @ignore
  */
@@ -175,8 +179,8 @@ class GSplatManager {
     indirectDrawSlot = -1;
 
     /**
-     * Indirect dispatch slot index for key gen (first of 2 consecutive slots).
-     * Slot 0 = key gen (256 threads/workgroup), slot 1 = sort (1024 elements/workgroup).
+     * Indirect dispatch slot index for key gen (first of 3 consecutive slots).
+     * Slot +0 = key gen, slot +1 = sort, slot +2 = place-entries.
      *
      * @type {number}
      */
@@ -1646,8 +1650,8 @@ class GSplatManager {
         this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, this.renderer.fisheyeProj.enabled);
 
         // Extract the visible count from the prefix sum into sortElementCountBuffer.
-        // writeIndirectArgs is the only path that does this; the indirect draw/dispatch
-        // slots are unused by the local renderer but required by the API.
+        // writeIndirectArgs is the only path that does this. The local renderer uses
+        // dispatch slot +2 (place-entries) for indirect dispatch.
         this.allocateAndWriteIntervalIndirectArgs(numIntervals);
 
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);

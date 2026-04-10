@@ -1,4 +1,3 @@
-import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
@@ -6,6 +5,8 @@ import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } fro
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST,
+    BUFFERUSAGE_COPY_SRC,
+    BUFFERUSAGE_INDIRECT,
     PIXELFORMAT_RGBA16U,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
@@ -19,7 +20,9 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
 import { computeGsplatLocalTileCountSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-count.js';
-import { computeGsplatLocalScatterSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-scatter.js';
+import { computeGsplatLocalTileCountLargeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-count-large.js';
+import { computeGsplatLocalPlaceEntriesSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-place-entries.js';
+import { computeGsplatLocalPlaceEntriesLargeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-place-entries-large.js';
 import { computeGsplatLocalTileSortSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-sort.js';
 import { computeGsplatLocalClassifySource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-classify.js';
 import { computeGsplatLocalBucketSortSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-bucket-sort.js';
@@ -42,20 +45,57 @@ import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComp
 
 const TILE_SIZE = 16;
 const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5; // floor for _tileEntryMultiplier (min tile entries per splat)
-const COUNT_WORKGROUP_SIZE = 256;
 const CACHE_STRIDE = 8;
 const MAX_CHUNKS_PER_TILE = 8;
 const SHRINK_THRESHOLD = 200; // consecutive low-usage readbacks before considering multiplier shrink
 const ENTRY_HEADROOM_MULTIPLIER = 1.5; // headroom factor applied to measured entry demand
+const INITIAL_LARGE_SPLAT_CAPACITY = 4096; // initial large-splat ID buffer capacity (grow-only)
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
-const _dispatchSize = new Vec2();
 const _fogColorLinear = new Color();
 const _fogColorArray = new Float32Array(3);
 
 /**
  * Renders splats using a tiled compute pipeline with per-tile binning and local sorting.
+ * Receives a compacted splat ID list from {@link GSplatIntervalCompaction}, projects each
+ * splat into a projection cache, bins them into screen-space tiles via a fused
+ * count+pair-write pass, classifies tiles by size, sorts each tile by depth (with bucket
+ * pre-sort for large tiles), then rasterizes front-to-back. Pipeline:
+ *
+ *   1. Tile count: project each visible splat, write projection cache (screen pos, conic,
+ *      color, depth). Iterate overlapping tiles twice: first to count intersections and
+ *      build a 6x5 bitmask, then after a workgroup prefix sum + single global atomicAdd,
+ *      to perform capped atomicAdd on per-tile counters and write (tileIdx, localOffset)
+ *      pairs into a contiguous pair buffer. Large splats (AABB > 64 tiles) are deferred
+ *      to a cooperative pass — their IDs are appended to a largeSplatIds buffer.
+ *   1b. Large tile count: one workgroup (256 threads) per deferred large splat reads
+ *      projCache, recomputes the AABB, and cooperatively iterates tiles. Same pair-buffer
+ *      and tileSplatCounts writes as pass 1. Sets the high bit of splatPairCount to flag
+ *      these splats for the cooperative place-entries pass.
+ *   2. Prefix sum: exclusive prefix sum over per-tile counts produces offsets + total.
+ *   3. Place entries: each thread reads its (tileIdx, localOffset) pairs from the pair
+ *      buffer and writes its splat index into tileEntries at deterministic positions
+ *      (prefix-summed offset + localOffset). No atomics, no projCache reads. Skips large
+ *      splats (high bit of splatPairCount).
+ *   3b. Large place entries: cooperative pass — one workgroup (256 threads) per large
+ *      splat, same dispatch as 1b. Reads pairs and writes tileEntries in parallel.
+ *   3.5. Classify: scan tiles, build small/large/rasterize tile lists, assign compact
+ *        overflow scratch offsets for large tiles, write indirect args.
+ *   4b. Bucket pre-sort: logarithmic-depth bucket histogram + scatter for large tiles
+ *       (>4096 entries), using overflow scratch in the unified tileEntries buffer, packs
+ *       whole buckets into <=4096 chunks (indirect dispatch).
+ *   4b.5. Copy chunk sort indirect dispatch args (separate pass for inter-pass barrier).
+ *   4a. Small tile sort: bitonic sort for tiles with 1..4096 entries (indirect dispatch).
+ *   4c. Chunk sort: bitonic sort on each chunk from bucket pre-sort (indirect dispatch).
+ *   5. Rasterize: one workgroup per non-empty tile reads its sorted entry range, loads
+ *      from the projection cache via shared memory, and blends front-to-back with
+ *      early-out (indirect dispatch).
+ *
+ * The tileEntries buffer is unified: main tile entry lists occupy [0, totalEntries),
+ * overflow scratch for bucket sort occupies [totalEntries, totalEntries + overflowUsed).
+ * Buffer capacity adapts dynamically via async GPU readback of actual usage.
+ *
  * Supports both color and pick dispatch via two {@link GSplatLocalDispatchSet} instances.
  * Splat/entry-dependent buffers (projCache, tileEntries) are shared between dispatch sets
  * with a submitVersion guard to prevent resizing within the same command encoder.
@@ -110,6 +150,35 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     /** @type {StorageBuffer|null} */
     _tileEntriesBuffer = null;
 
+    // Pair buffer for scatter-free tile binning: stores packed (tileIdx << 16 | localOffset)
+    // per splat-tile intersection. Same size as tileEntries (one u32 per pair).
+
+    /** @type {StorageBuffer|null} */
+    _pairBuffer = null;
+
+    /** @type {StorageBuffer|null} */
+    _globalPairCounterBuffer = null;
+
+    /** @type {StorageBuffer|null} */
+    _splatPairStartBuffer = null;
+
+    /** @type {StorageBuffer|null} */
+    _splatPairCountBuffer = null;
+
+    // --- Large-splat deferred processing buffers ---
+
+    /** @type {StorageBuffer|null} */
+    _largeSplatIdsBuffer = null;
+
+    /** @type {StorageBuffer|null} */
+    _largeSplatCountBuffer = null;
+
+    /** @type {number} */
+    _largeSplatIdsCapacity = INITIAL_LARGE_SPLAT_CAPACITY;
+
+    /** @type {number} */
+    _allocatedLargeSplatCapacity = 0;
+
     /** @type {number} */
     _allocatedSplatCapacity = 0;
 
@@ -132,10 +201,46 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _fisheye = 0;
 
     /** @type {Shader} */
-    _scatterShader;
+    _placeEntriesShader;
 
     /** @type {BindGroupFormat} */
-    _scatterBindGroupFormat;
+    _placeEntriesBindGroupFormat;
+
+    /** @type {Shader} */
+    _placeEntryPrepShader;
+
+    /** @type {BindGroupFormat} */
+    _placeEntryPrepBindGroupFormat;
+
+    /** @type {StorageBuffer|null} */
+    _placeEntryPrepDispatchBuffer = null;
+
+    /** @type {Compute|null} */
+    _placeEntryPrepCompute = null;
+
+    /** @type {Shader} */
+    _largeSplatShader;
+
+    /** @type {BindGroupFormat} */
+    _largeSplatBindGroupFormat;
+
+    /** @type {Shader} */
+    _largeSplatPrepShader;
+
+    /** @type {BindGroupFormat} */
+    _largeSplatPrepBindGroupFormat;
+
+    /** @type {StorageBuffer|null} */
+    _largeSplatDispatchBuffer = null;
+
+    /** @type {Compute|null} */
+    _largeSplatPrepCompute = null;
+
+    /** @type {Shader} */
+    _largePlaceEntriesShader;
+
+    /** @type {BindGroupFormat} */
+    _largePlaceEntriesBindGroupFormat;
 
     /** @type {Shader} */
     _classifyShader;
@@ -201,8 +306,18 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._mainSet.destroy();
         this._pickSet?.destroy();
 
-        this._scatterShader.destroy();
-        this._scatterBindGroupFormat.destroy();
+        this._placeEntriesShader.destroy();
+        this._placeEntriesBindGroupFormat.destroy();
+        this._placeEntryPrepShader.destroy();
+        this._placeEntryPrepBindGroupFormat.destroy();
+        this._placeEntryPrepDispatchBuffer?.destroy();
+        this._largeSplatShader.destroy();
+        this._largeSplatBindGroupFormat.destroy();
+        this._largeSplatPrepShader.destroy();
+        this._largeSplatPrepBindGroupFormat.destroy();
+        this._largeSplatDispatchBuffer?.destroy();
+        this._largePlaceEntriesShader.destroy();
+        this._largePlaceEntriesBindGroupFormat.destroy();
         this._classifyShader.destroy();
         this._classifyBindGroupFormat.destroy();
         this._sortShader.destroy();
@@ -216,6 +331,12 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         this._projCacheBuffer?.destroy();
         this._tileEntriesBuffer?.destroy();
+        this._pairBuffer?.destroy();
+        this._globalPairCounterBuffer?.destroy();
+        this._splatPairStartBuffer?.destroy();
+        this._splatPairCountBuffer?.destroy();
+        this._largeSplatIdsBuffer?.destroy();
+        this._largeSplatCountBuffer?.destroy();
 
         this.tileComposite.destroy();
 
@@ -335,22 +456,45 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         if (!canResize) return;
 
-        // Splat capacity (projCache)
+        // Splat capacity (projCache + per-splat pair metadata)
         if (numSplats > this._allocatedSplatCapacity) {
             this._projCacheBuffer?.destroy();
+            this._splatPairStartBuffer?.destroy();
+            this._splatPairCountBuffer?.destroy();
             this._allocatedSplatCapacity = numSplats;
             this._projCacheBuffer = new StorageBuffer(device, numSplats * CACHE_STRIDE * 4);
+            this._splatPairStartBuffer = new StorageBuffer(device, numSplats * 4);
+            this._splatPairCountBuffer = new StorageBuffer(device, numSplats * 4);
         }
 
-        // Entry capacity (tileEntries)
+        // Global pair counter (fixed size, allocated once)
+        if (!this._globalPairCounterBuffer) {
+            this._globalPairCounterBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
+        }
+
+        // Large-splat count buffer (fixed size, allocated once)
+        if (!this._largeSplatCountBuffer) {
+            this._largeSplatCountBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
+        }
+
+        // Large-splat ID buffer (grow-only)
+        if (this._largeSplatIdsCapacity > this._allocatedLargeSplatCapacity) {
+            this._largeSplatIdsBuffer?.destroy();
+            this._allocatedLargeSplatCapacity = this._largeSplatIdsCapacity;
+            this._largeSplatIdsBuffer = new StorageBuffer(device, this._largeSplatIdsCapacity * 4);
+        }
+
+        // Entry capacity (tileEntries + pairBuffer — both sized identically)
         const requiredEntryCapacity = Math.ceil(numSplats * this._tileEntryMultiplier);
         const needsGrow = requiredEntryCapacity > this._allocatedEntryCapacity;
         const needsShrink = this._allocatedEntryCapacity > 0 &&
             requiredEntryCapacity * 2 < this._allocatedEntryCapacity;
         if (needsGrow || needsShrink) {
             this._tileEntriesBuffer?.destroy();
+            this._pairBuffer?.destroy();
             this._allocatedEntryCapacity = requiredEntryCapacity;
             this._tileEntriesBuffer = new StorageBuffer(device, requiredEntryCapacity * 4, BUFFERUSAGE_COPY_DST);
+            this._pairBuffer = new StorageBuffer(device, requiredEntryCapacity * 4);
         }
 
         this._lastBufferSubmitVersion = device.submitVersion;
@@ -447,13 +591,29 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const createCountShader = (pick, fisheye) => this._createCountShaderAndFormat(pick, fisheye);
         const countCompute = set.getCountCompute(fisheyeEnabled, createCountShader);
 
-        // --- Pass 1: Per-tile count + projection cache ---
+        // Prep dispatch: compute indirect dispatch dimensions from the visible count
+        // (sortElementCount[0]). Both the count and place-entries passes use @workgroup_size(256),
+        // so they share the same dispatch args.
+        this._placeEntryPrepCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
+        this._placeEntryPrepCompute.setParameter('dispatchArgs', this._placeEntryPrepDispatchBuffer);
+        this._placeEntryPrepCompute.setupDispatch(1, 1, 1);
+        device.computeDispatch([this._placeEntryPrepCompute], 'GSplatLocalDispatchPrep');
+
+        // --- Pass 1: Per-tile count + projection cache + pair buffer writes ---
         set._tileSplatCountsBuffer.clear();
+        this._globalPairCounterBuffer.clear();
+        this._largeSplatCountBuffer.clear();
 
         countCompute.setParameter('compactedSplatIds', this._compactedSplatIds);
         countCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
         countCompute.setParameter('projCache', this._projCacheBuffer);
         countCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        countCompute.setParameter('pairBuffer', this._pairBuffer);
+        countCompute.setParameter('globalPairCounter', this._globalPairCounterBuffer);
+        countCompute.setParameter('splatPairStart', this._splatPairStartBuffer);
+        countCompute.setParameter('splatPairCount', this._splatPairCountBuffer);
+        countCompute.setParameter('largeSplatIds', this._largeSplatIdsBuffer);
+        countCompute.setParameter('largeSplatCount', this._largeSplatCountBuffer);
         for (const stream of wb.format.streams) {
             countCompute.setParameter(stream.name, wb.getTexture(stream.name));
         }
@@ -484,32 +644,67 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             countCompute.setParameter('fisheye_projMat11', fp.projMat11);
         }
 
-        const countWorkgroups = Math.ceil(numSplats / COUNT_WORKGROUP_SIZE);
-        Compute.calcDispatchSize(countWorkgroups, _dispatchSize);
-        countCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
+        countCompute.setupIndirectDispatch(0, this._placeEntryPrepDispatchBuffer);
         device.computeDispatch([countCompute], pickMode ? 'GSplatPickTileCount' : 'GSplatLocalTileCount');
+
+        // --- Pass 1b: Large-splat prep + cooperative tile count ---
+        // Compute indirect dispatch dimensions for the large-splat pass (one workgroup
+        // per large splat), then dispatch. Writes to the same tileSplatCounts, pairBuffer,
+        // and splatPairStart/Count as the main count pass.
+        this._largeSplatPrepCompute.setParameter('largeSplatCount', this._largeSplatCountBuffer);
+        this._largeSplatPrepCompute.setParameter('dispatchArgs', this._largeSplatDispatchBuffer);
+        this._largeSplatPrepCompute.setParameter('largeSplatIds', this._largeSplatIdsBuffer);
+        this._largeSplatPrepCompute.setupDispatch(1, 1, 1);
+        device.computeDispatch([this._largeSplatPrepCompute], pickMode ? 'GSplatPickLargeSplatPrep' : 'GSplatLocalLargeSplatPrep');
+
+        set.largeSplatCompute.setParameter('projCache', this._projCacheBuffer);
+        set.largeSplatCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        set.largeSplatCompute.setParameter('pairBuffer', this._pairBuffer);
+        set.largeSplatCompute.setParameter('globalPairCounter', this._globalPairCounterBuffer);
+        set.largeSplatCompute.setParameter('splatPairStart', this._splatPairStartBuffer);
+        set.largeSplatCompute.setParameter('splatPairCount', this._splatPairCountBuffer);
+        set.largeSplatCompute.setParameter('largeSplatIds', this._largeSplatIdsBuffer);
+        set.largeSplatCompute.setParameter('largeSplatCount', this._largeSplatCountBuffer);
+        set.largeSplatCompute.setParameter('numTilesX', numTilesX);
+        set.largeSplatCompute.setParameter('numTilesY', numTilesY);
+        set.largeSplatCompute.setParameter('viewportWidth', width);
+        set.largeSplatCompute.setParameter('viewportHeight', height);
+        set.largeSplatCompute.setParameter('alphaClip', alphaClip);
+
+        set.largeSplatCompute.setupIndirectDispatch(0, this._largeSplatDispatchBuffer);
+        device.computeDispatch([set.largeSplatCompute], pickMode ? 'GSplatPickLargeTileCount' : 'GSplatLocalLargeTileCount');
 
         // --- Pass 2: Prefix sum ---
         set.prefixSumKernel.resize(set._tileSplatCountsBuffer, numTiles + 1);
         set.prefixSumKernel.dispatch(device);
 
-        // --- Pass 3: Scatter ---
-        set._tileWriteCursorsBuffer.clear();
+        // --- Pass 3: Place entries (scatter-free) ---
+        // Reads (tileIdx, localOffset) pairs written by the count pass and places splat
+        // indices into tileEntries at positions determined by the prefix-summed tile offsets.
+        // No atomics, no projCache reads, no intersection recomputation.
+        set.placeEntriesCompute.setParameter('pairBuffer', this._pairBuffer);
+        set.placeEntriesCompute.setParameter('splatPairStart', this._splatPairStartBuffer);
+        set.placeEntriesCompute.setParameter('splatPairCount', this._splatPairCountBuffer);
+        set.placeEntriesCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        set.placeEntriesCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+        set.placeEntriesCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
 
-        set.scatterCompute.setParameter('projCache', this._projCacheBuffer);
-        set.scatterCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
-        set.scatterCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
-        set.scatterCompute.setParameter('tileWriteCursors', set._tileWriteCursorsBuffer);
-        set.scatterCompute.setParameter('tileEntries', this._tileEntriesBuffer);
-        set.scatterCompute.setParameter('numTilesX', numTilesX);
-        set.scatterCompute.setParameter('numTilesY', numTilesY);
-        set.scatterCompute.setParameter('maxEntries', maxEntries);
-        set.scatterCompute.setParameter('viewportWidth', width);
-        set.scatterCompute.setParameter('viewportHeight', height);
-        set.scatterCompute.setParameter('alphaClip', alphaClip);
+        // Reuse the same indirect dispatch buffer from the prep pass above.
+        set.placeEntriesCompute.setupIndirectDispatch(0, this._placeEntryPrepDispatchBuffer);
+        device.computeDispatch([set.placeEntriesCompute], pickMode ? 'GSplatPickPlaceEntries' : 'GSplatLocalPlaceEntries');
 
-        set.scatterCompute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
-        device.computeDispatch([set.scatterCompute], pickMode ? 'GSplatPickScatter' : 'GSplatLocalScatter');
+        // --- Pass 3b: Cooperative place entries for large splats ---
+        // Reuses the same indirect dispatch as LargeTileCount (one workgroup per large splat).
+        set.largePlaceEntriesCompute.setParameter('pairBuffer', this._pairBuffer);
+        set.largePlaceEntriesCompute.setParameter('splatPairStart', this._splatPairStartBuffer);
+        set.largePlaceEntriesCompute.setParameter('splatPairCount', this._splatPairCountBuffer);
+        set.largePlaceEntriesCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+        set.largePlaceEntriesCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+        set.largePlaceEntriesCompute.setParameter('largeSplatIds', this._largeSplatIdsBuffer);
+        set.largePlaceEntriesCompute.setParameter('largeSplatCount', this._largeSplatCountBuffer);
+
+        set.largePlaceEntriesCompute.setupIndirectDispatch(0, this._largeSplatDispatchBuffer);
+        device.computeDispatch([set.largePlaceEntriesCompute], pickMode ? 'GSplatPickLargePlaceEntries' : 'GSplatLocalLargePlaceEntries');
 
         // --- Pass 3.5: Classify ---
         set._tileListCountsBuffer.clear();
@@ -646,8 +841,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         const readback1 = set._tileSplatCountsBuffer.read(numTiles * 4, 4);
         const readback2 = set._tileListCountsBuffer.read(3 * 4, 4);
+        const readback3 = this._largeSplatCountBuffer.read(0, 4);
 
-        Promise.all([readback1, readback2]).then(([r1, r2]) => {
+        Promise.all([readback1, readback2, readback3]).then(([r1, r2, r3]) => {
             const totalEntries = new Uint32Array(r1.buffer, r1.byteOffset, 1)[0];
             const totalOverflow = new Uint32Array(r2.buffer, r2.byteOffset, 1)[0];
             const needed = totalEntries + totalOverflow;
@@ -658,6 +854,12 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             }
 
             this._lastReadbackEntryCount = needed;
+
+            // Grow the large-splat ID buffer if demand exceeded capacity (grow-only)
+            const largeSplatDemand = new Uint32Array(r3.buffer, r3.byteOffset, 1)[0];
+            if (largeSplatDemand > this._largeSplatIdsCapacity) {
+                this._largeSplatIdsCapacity = Math.ceil(largeSplatDemand * 1.2);
+            }
         }).catch(() => {
             // readback failed, ignore
         });
@@ -701,35 +903,153 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         // Count shader/format are created lazily by each dispatch set's getCountCompute()
 
-        // --- Scatter ---
+        // --- PlaceEntries (replaces the old scatter pass) ---
+        this._placeEntriesBindGroupFormat = new BindGroupFormat(device, [
+            new BindStorageBufferFormat('pairBuffer', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('splatPairStart', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('splatPairCount', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true)
+        ]);
+        this._placeEntriesShader = new Shader(device, {
+            name: 'GSplatLocalPlaceEntries',
+            shaderLanguage: SHADERLANGUAGE_WGSL,
+            cshader: computeGsplatLocalPlaceEntriesSource,
+            computeBindGroupFormat: this._placeEntriesBindGroupFormat
+        });
+
+        // --- PlaceEntryPrep: tiny 1-thread shader that reads the visible count and writes
+        // dispatch args for place-entries into a local buffer. This avoids relying on the
+        // device-level indirect dispatch buffer written earlier in the frame. ---
         {
+            const maxDim = device.limits.maxComputeWorkgroupsPerDimension || 65535;
+            const prepSource = /* wgsl */`
+@group(0) @binding(0) var<storage, read> sortElementCount: array<u32>;
+@group(0) @binding(1) var<storage, read_write> dispatchArgs: array<u32>;
+
+@compute @workgroup_size(1)
+fn main() {
+    let count = sortElementCount[0];
+    let wgCount = (count + 255u) / 256u;
+    let maxDim = ${maxDim}u;
+    if (wgCount <= maxDim) {
+        dispatchArgs[0] = wgCount;
+        dispatchArgs[1] = 1u;
+    } else {
+        let y = (wgCount + maxDim - 1u) / maxDim;
+        let x = (wgCount + y - 1u) / y;
+        dispatchArgs[0] = x;
+        dispatchArgs[1] = y;
+    }
+    dispatchArgs[2] = 1u;
+}
+`;
+            this._placeEntryPrepBindGroupFormat = new BindGroupFormat(device, [
+                new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('dispatchArgs', SHADERSTAGE_COMPUTE)
+            ]);
+            this._placeEntryPrepShader = new Shader(device, {
+                name: 'GSplatLocalPlaceEntryPrep',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: prepSource,
+                computeBindGroupFormat: this._placeEntryPrepBindGroupFormat
+            });
+
+            this._placeEntryPrepDispatchBuffer = new StorageBuffer(device, 3 * 4, BUFFERUSAGE_INDIRECT);
+            this._placeEntryPrepCompute = new Compute(device, this._placeEntryPrepShader);
+        }
+
+        // --- Large-splat cooperative tile count ---
+        {
+            const cincludes = this._createCommonIncludes();
+
             const ubf = new UniformBufferFormat(device, [
                 new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
                 new UniformFormat('numTilesY', UNIFORMTYPE_UINT),
-                new UniformFormat('maxEntries', UNIFORMTYPE_UINT),
                 new UniformFormat('viewportWidth', UNIFORMTYPE_FLOAT),
                 new UniformFormat('viewportHeight', UNIFORMTYPE_FLOAT),
                 new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT)
             ]);
-            this._scatterBindGroupFormat = new BindGroupFormat(device, [
+
+            this._largeSplatBindGroupFormat = new BindGroupFormat(device, [
                 new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
-                new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true),
-                new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
-                new BindStorageBufferFormat('tileWriteCursors', SHADERSTAGE_COMPUTE),
-                new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('pairBuffer', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('globalPairCounter', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('splatPairStart', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('splatPairCount', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('largeSplatIds', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('largeSplatCount', SHADERSTAGE_COMPUTE, true),
                 new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
             ]);
-            const cincludes = new Map();
-            cincludes.set('gsplatTileIntersectCS', computeGsplatTileIntersectSource);
-            this._scatterShader = new Shader(device, {
-                name: 'GSplatLocalScatter',
+
+            this._largeSplatShader = new Shader(device, {
+                name: 'GSplatLocalTileCountLarge',
                 shaderLanguage: SHADERLANGUAGE_WGSL,
-                cshader: computeGsplatLocalScatterSource,
+                cshader: computeGsplatLocalTileCountLargeSource,
                 cincludes,
-                computeBindGroupFormat: this._scatterBindGroupFormat,
+                computeBindGroupFormat: this._largeSplatBindGroupFormat,
                 computeUniformBufferFormats: { uniforms: ubf }
             });
         }
+
+        // --- Large-splat prep: reads largeSplatCount and computes indirect dispatch args ---
+        {
+            const maxDim = device.limits.maxComputeWorkgroupsPerDimension || 65535;
+            const largePrepSource = /* wgsl */`
+@group(0) @binding(0) var<storage, read> largeSplatCount: array<u32>;
+@group(0) @binding(1) var<storage, read_write> dispatchArgs: array<u32>;
+@group(0) @binding(2) var<storage, read> largeSplatIds: array<u32>;
+
+@compute @workgroup_size(1)
+fn main() {
+    let count = min(largeSplatCount[0], arrayLength(&largeSplatIds));
+    let maxDim = ${maxDim}u;
+    if (count <= maxDim) {
+        dispatchArgs[0] = count;
+        dispatchArgs[1] = 1u;
+    } else {
+        let y = (count + maxDim - 1u) / maxDim;
+        let x = (count + y - 1u) / y;
+        dispatchArgs[0] = x;
+        dispatchArgs[1] = y;
+    }
+    dispatchArgs[2] = 1u;
+}
+`;
+            this._largeSplatPrepBindGroupFormat = new BindGroupFormat(device, [
+                new BindStorageBufferFormat('largeSplatCount', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('dispatchArgs', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('largeSplatIds', SHADERSTAGE_COMPUTE, true)
+            ]);
+            this._largeSplatPrepShader = new Shader(device, {
+                name: 'GSplatLocalLargeSplatPrep',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: largePrepSource,
+                computeBindGroupFormat: this._largeSplatPrepBindGroupFormat
+            });
+
+            this._largeSplatDispatchBuffer = new StorageBuffer(device, 3 * 4, BUFFERUSAGE_INDIRECT);
+            this._largeSplatPrepCompute = new Compute(device, this._largeSplatPrepShader);
+        }
+
+        // --- Large-splat cooperative place entries ---
+        this._largePlaceEntriesBindGroupFormat = new BindGroupFormat(device, [
+            new BindStorageBufferFormat('pairBuffer', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('splatPairStart', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('splatPairCount', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('largeSplatIds', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('largeSplatCount', SHADERSTAGE_COMPUTE, true)
+        ]);
+        this._largePlaceEntriesShader = new Shader(device, {
+            name: 'GSplatLocalPlaceEntriesLarge',
+            shaderLanguage: SHADERLANGUAGE_WGSL,
+            cshader: computeGsplatLocalPlaceEntriesLargeSource,
+            computeBindGroupFormat: this._largePlaceEntriesBindGroupFormat
+        });
 
         // --- Classify ---
         {
@@ -891,7 +1211,13 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE),
             new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('pairBuffer', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('globalPairCounter', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('splatPairStart', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('splatPairCount', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('largeSplatIds', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('largeSplatCount', SHADERSTAGE_COMPUTE)
         ];
 
         const bindGroupFormat = new BindGroupFormat(device, [
@@ -943,8 +1269,14 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         // Count compute is created lazily by set.getCountCompute()
 
-        // Scatter: shared shader
-        set.scatterCompute = new Compute(device, this._scatterShader, pickMode ? 'GSplatPickScatter' : 'GSplatLocalScatter');
+        // PlaceEntries: shared shader (replaces the old atomic scatter pass)
+        set.placeEntriesCompute = new Compute(device, this._placeEntriesShader, pickMode ? 'GSplatPickPlaceEntries' : 'GSplatLocalPlaceEntries');
+
+        // LargeSplat: cooperative tile count for deferred large splats
+        set.largeSplatCompute = new Compute(device, this._largeSplatShader, pickMode ? 'GSplatPickLargeTileCount' : 'GSplatLocalLargeTileCount');
+
+        // LargePlaceEntries: cooperative place entries for deferred large splats
+        set.largePlaceEntriesCompute = new Compute(device, this._largePlaceEntriesShader, pickMode ? 'GSplatPickLargePlaceEntries' : 'GSplatLocalLargePlaceEntries');
 
         // Classify: shared shader
         set.classifyCompute = new Compute(device, this._classifyShader, pickMode ? 'GSplatPickClassify' : 'GSplatLocalClassify');

@@ -63,7 +63,13 @@ class GSplatLocalDispatchSet {
     _countComputeFisheye = null;
 
     /** @type {Compute} */
-    scatterCompute;
+    placeEntriesCompute;
+
+    /** @type {Compute} */
+    largeSplatCompute;
+
+    /** @type {Compute} */
+    largePlaceEntriesCompute;
 
     /** @type {Compute} */
     classifyCompute;
@@ -88,9 +94,6 @@ class GSplatLocalDispatchSet {
 
     /** @type {StorageBuffer|null} */
     _tileSplatCountsBuffer = null;
-
-    /** @type {StorageBuffer|null} */
-    _tileWriteCursorsBuffer = null;
 
     /** @type {StorageBuffer|null} */
     _smallTileListBuffer = null;
@@ -197,7 +200,6 @@ class GSplatLocalDispatchSet {
         if (requiredTileSlots <= this._allocatedTileCapacity) return;
 
         this._tileSplatCountsBuffer?.destroy();
-        this._tileWriteCursorsBuffer?.destroy();
         this._smallTileListBuffer?.destroy();
         this._largeTileListBuffer?.destroy();
         this._largeTileOverflowBasesBuffer?.destroy();
@@ -209,7 +211,6 @@ class GSplatLocalDispatchSet {
 
         this._allocatedTileCapacity = requiredTileSlots;
         this._tileSplatCountsBuffer = new StorageBuffer(this.device, requiredTileSlots * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
-        this._tileWriteCursorsBuffer = new StorageBuffer(this.device, numTiles * 4, BUFFERUSAGE_COPY_DST);
         this._smallTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
         this._largeTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
         this._largeTileOverflowBasesBuffer = new StorageBuffer(this.device, numTiles * 4);
@@ -388,7 +389,6 @@ class GSplatLocalDispatchSet {
         }
 
         this._tileSplatCountsBuffer?.destroy();
-        this._tileWriteCursorsBuffer?.destroy();
         this._smallTileListBuffer?.destroy();
         this._largeTileListBuffer?.destroy();
         this._largeTileOverflowBasesBuffer?.destroy();
