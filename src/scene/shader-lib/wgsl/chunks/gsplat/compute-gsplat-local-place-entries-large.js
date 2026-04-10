@@ -17,7 +17,7 @@ const WG_SIZE: u32 = 256u;
 @group(0) @binding(3) var<storage, read> tileSplatCounts: array<u32>;
 @group(0) @binding(4) var<storage, read_write> tileEntries: array<u32>;
 @group(0) @binding(5) var<storage, read> largeSplatIds: array<u32>;
-@group(0) @binding(6) var<storage, read> largeSplatCount: array<u32>;
+@group(0) @binding(6) var<storage, read> countersBuffer: array<u32>;
 
 @compute @workgroup_size(256)
 fn main(
@@ -26,7 +26,7 @@ fn main(
     @builtin(local_invocation_index) lid: u32
 ) {
     let largeSplatIdx = wgId.y * numWorkgroups.x + wgId.x;
-    let numLarge = min(largeSplatCount[0], arrayLength(&largeSplatIds));
+    let numLarge = min(countersBuffer[1], arrayLength(&largeSplatIds));
     if (largeSplatIdx >= numLarge) {
         return;
     }

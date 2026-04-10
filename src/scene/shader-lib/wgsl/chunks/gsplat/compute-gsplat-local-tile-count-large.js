@@ -17,18 +17,17 @@ export const computeGsplatLocalTileCountLargeSource = /* wgsl */`
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"
 
-const CACHE_STRIDE: u32 = 8u;
+const CACHE_STRIDE: u32 = 7u;
 const WG_SIZE: u32 = 256u;
 const MAX_TILE_ENTRIES: u32 = 0xFFFFu;
 
 @group(0) @binding(0) var<storage, read> projCache: array<u32>;
 @group(0) @binding(1) var<storage, read_write> tileSplatCounts: array<atomic<u32>>;
 @group(0) @binding(2) var<storage, read_write> pairBuffer: array<u32>;
-@group(0) @binding(3) var<storage, read_write> globalPairCounter: array<atomic<u32>>;
+@group(0) @binding(3) var<storage, read_write> countersBuffer: array<atomic<u32>>;
 @group(0) @binding(4) var<storage, read_write> splatPairStart: array<u32>;
 @group(0) @binding(5) var<storage, read_write> splatPairCount: array<u32>;
 @group(0) @binding(6) var<storage, read> largeSplatIds: array<u32>;
-@group(0) @binding(7) var<storage, read> largeSplatCount: array<u32>;
 
 struct Uniforms {
     numTilesX: u32,
@@ -37,7 +36,7 @@ struct Uniforms {
     viewportHeight: f32,
     alphaClip: f32,
 }
-@group(0) @binding(8) var<uniform> uniforms: Uniforms;
+@group(0) @binding(7) var<uniform> uniforms: Uniforms;
 
 var<workgroup> wgPairCounts: array<u32, WG_SIZE>;
 var<workgroup> wgPairOffsets: array<u32, WG_SIZE>;
@@ -50,42 +49,55 @@ fn main(
     @builtin(local_invocation_index) lid: u32
 ) {
     let largeSplatIdx = wgId.y * numWorkgroups.x + wgId.x;
-    let count = min(largeSplatCount[0], arrayLength(&largeSplatIds));
-    if (largeSplatIdx >= count) {
-        return;
-    }
+    let count = min(atomicLoad(&countersBuffer[1]), arrayLength(&largeSplatIds));
 
-    let threadIdx = largeSplatIds[largeSplatIdx];
+    // atomicLoad is non-uniform per WGSL rules, so early return would make
+    // subsequent workgroupBarrier calls non-uniform. Use an active flag instead;
+    // inactive workgroups still participate in barriers but skip all real work.
+    let isActive = largeSplatIdx < count;
 
-    let cacheBase = threadIdx * CACHE_STRIDE;
-    let screen = vec2f(bitcast<f32>(projCache[cacheBase + 0u]), bitcast<f32>(projCache[cacheBase + 1u]));
-    let cx = bitcast<f32>(projCache[cacheBase + 2u]);
-    let cy = bitcast<f32>(projCache[cacheBase + 3u]);
-    let cz = bitcast<f32>(projCache[cacheBase + 4u]);
-    let opacity = unpack2x16float(projCache[cacheBase + 6u]).y;
-
-    let eval = computeSplatTileEval(screen, cx, cy, cz, half(opacity),
-                                    uniforms.viewportWidth, uniforms.viewportHeight,
-                                    uniforms.alphaClip);
-    let radiusFactor = eval.radiusFactor;
-
-    let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
-    let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
-    let minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
-    let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
-
-    // Guard against degenerate AABBs where maxTile < minTile. This can happen
-    // when capScale-driven radius shrinkage makes the tile-eval AABB smaller than
-    // the frustum-cull AABB. The u32 cast of the negative difference would wrap
-    // to ~4 billion, causing the tile loops to iterate for millions of iterations
-    // per thread and hang the GPU.
+    var threadIdx = u32(0);
+    var minTileX = 0i;
+    var maxTileX = 0i;
+    var minTileY = 0i;
+    var maxTileY = 0i;
     var aabbW = u32(0);
-    var aabbH = u32(0);
     var totalTiles = u32(0);
-    if (maxTileX >= minTileX && maxTileY >= minTileY) {
-        aabbW = u32(maxTileX - minTileX + 1i);
-        aabbH = u32(maxTileY - minTileY + 1i);
-        totalTiles = aabbW * aabbH;
+    var screen = vec2f(0.0);
+    var cx = 0.0f;
+    var cy = 0.0f;
+    var cz = 0.0f;
+    var radiusFactor = 0.0f;
+
+    if (isActive) {
+        threadIdx = largeSplatIds[largeSplatIdx];
+
+        let cacheBase = threadIdx * CACHE_STRIDE;
+        screen = vec2f(bitcast<f32>(projCache[cacheBase + 0u]), bitcast<f32>(projCache[cacheBase + 1u]));
+        cx = bitcast<f32>(projCache[cacheBase + 2u]);
+        cy = bitcast<f32>(projCache[cacheBase + 3u]);
+        cz = bitcast<f32>(projCache[cacheBase + 4u]);
+        let opacity = unpack2x16float(projCache[cacheBase + 6u]).y;
+
+        let eval = computeSplatTileEval(screen, cx, cy, cz, half(opacity),
+                                        uniforms.viewportWidth, uniforms.viewportHeight,
+                                        uniforms.alphaClip);
+        radiusFactor = eval.radiusFactor;
+
+        minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
+        maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
+        minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
+        maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
+
+        // Guard against degenerate AABBs where maxTile < minTile. This can happen
+        // when capScale-driven radius shrinkage makes the tile-eval AABB smaller than
+        // the frustum-cull AABB. The u32 cast of the negative difference would wrap
+        // to ~4 billion, causing the tile loops to iterate for millions of iterations
+        // per thread and hang the GPU.
+        if (maxTileX >= minTileX && maxTileY >= minTileY) {
+            aabbW = u32(maxTileX - minTileX + 1i);
+            totalTiles = aabbW * u32(maxTileY - minTileY + 1i);
+        }
     }
 
     // --- Phase 1: each thread counts its intersecting tiles ---
@@ -106,14 +118,14 @@ fn main(
     wgPairCounts[lid] = myHitCount;
     workgroupBarrier();
 
-    if (lid == 0u) {
+    if (lid == 0u && isActive) {
         var sum: u32 = 0u;
         for (var i: u32 = 0u; i < WG_SIZE; i++) {
             wgPairOffsets[i] = sum;
             sum += wgPairCounts[i];
         }
         if (sum > 0u) {
-            wgBase = atomicAdd(&globalPairCounter[0], sum);
+            wgBase = atomicAdd(&countersBuffer[0], sum);
         } else {
             wgBase = 0u;
         }
@@ -146,7 +158,7 @@ fn main(
     // If any pairs were dropped by the cap, correct the stored count via workgroup sum.
     wgPairCounts[lid] = j;
     workgroupBarrier();
-    if (lid == 0u) {
+    if (lid == 0u && isActive) {
         var actualTotal: u32 = 0u;
         for (var i: u32 = 0u; i < WG_SIZE; i++) {
             actualTotal += wgPairCounts[i];

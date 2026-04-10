@@ -12,7 +12,7 @@ export const computeGsplatLocalRasterizeSource = /* wgsl */`
     #endif
 #endif
 
-const CACHE_STRIDE: u32 = 8u;
+const CACHE_STRIDE: u32 = 7u;
 const BATCH_SIZE: u32 = 64u;
 const WORKGROUP_SIZE: u32 = 64u;
 const ALPHA_THRESHOLD: half = half(1.0) / half(255.0);
@@ -41,15 +41,16 @@ struct Uniforms {
 @group(0) @binding(3) var<storage, read> projCache: array<u32>;
 @group(0) @binding(4) var<storage, read> rasterizeTileList: array<u32>;
 @group(0) @binding(5) var<storage, read> tileListCounts: array<u32>;
+@group(0) @binding(6) var<storage, read> depthBuffer: array<u32>;
 
 // Mode-specific output textures appended after the shared bindings.
 #ifdef PICK_MODE
-    @group(0) @binding(6) var pickIdTexture: texture_storage_2d<r32uint, write>;
-    @group(0) @binding(7) var pickDepthTexture: texture_storage_2d<rgba16float, write>;
+    @group(0) @binding(7) var pickIdTexture: texture_storage_2d<r32uint, write>;
+    @group(0) @binding(8) var pickDepthTexture: texture_storage_2d<rgba16float, write>;
 #else
-    @group(0) @binding(6) var outputTexture: texture_storage_2d<rgba16float, write>;
+    @group(0) @binding(7) var outputTexture: texture_storage_2d<rgba16float, write>;
     #ifdef DEPTH_TEST
-        @group(0) @binding(7) var sceneDepthMap: texture_2d<f32>;
+        @group(0) @binding(8) var sceneDepthMap: texture_2d<f32>;
     #endif
 #endif
 
@@ -209,13 +210,13 @@ fn main(
             #ifdef PICK_MODE
                 sharedPickId[localIdx] = projCache[base + 5u];
                 sharedOpacity[localIdx] = half(unpack2x16float(projCache[base + 6u]).y);
-                sharedViewDepth[localIdx] = bitcast<f32>(projCache[base + 7u]);
+                sharedViewDepth[localIdx] = bitcast<f32>(depthBuffer[cacheIdx]);
             #else
                 let rg = unpack2x16float(projCache[base + 5u]);
                 let ba = unpack2x16float(projCache[base + 6u]);
 
                 #if FOG != NONE
-                    let viewDepth = bitcast<f32>(projCache[base + 7u]);
+                    let viewDepth = bitcast<f32>(depthBuffer[cacheIdx]);
                     #if (FOG == LINEAR)
                         let fogFactor = evaluateFogFactorLinear(viewDepth, uniforms.fog_start, uniforms.fog_end);
                     #elif (FOG == EXP)
@@ -231,7 +232,7 @@ fn main(
                 #endif
 
                 #ifdef DEPTH_TEST
-                    sharedViewDepth[localIdx] = bitcast<f32>(projCache[base + 7u]);
+                    sharedViewDepth[localIdx] = bitcast<f32>(depthBuffer[cacheIdx]);
                 #endif
             #endif
         }

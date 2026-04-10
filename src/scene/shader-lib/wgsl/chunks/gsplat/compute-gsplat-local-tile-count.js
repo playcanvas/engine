@@ -24,7 +24,7 @@ export const computeGsplatLocalTileCountSource = /* wgsl */`
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"
 
-const CACHE_STRIDE: u32 = 8u;
+const CACHE_STRIDE: u32 = 7u;
 const WG_SIZE: u32 = 256u;
 
 // Caps the 16-bit localOffset field in packed pairs (tileIdx << 16 | localOffset).
@@ -73,12 +73,13 @@ struct Uniforms {
 // Pair buffer bindings for the scatter-free approach.
 // pairBuffer stores packed (tileIdx << 16 | localOffset) per splat-tile intersection.
 // splatPairStart/splatPairCount let the PlaceEntries pass locate each splat's pairs.
+// countersBuffer packs two atomic counters: [0] = global pair counter, [1] = large splat count.
 @group(0) @binding(5) var<storage, read_write> pairBuffer: array<u32>;
-@group(0) @binding(6) var<storage, read_write> globalPairCounter: array<atomic<u32>>;
+@group(0) @binding(6) var<storage, read_write> countersBuffer: array<atomic<u32>>;
 @group(0) @binding(7) var<storage, read_write> splatPairStart: array<u32>;
 @group(0) @binding(8) var<storage, read_write> splatPairCount: array<u32>;
 @group(0) @binding(9) var<storage, read_write> largeSplatIds: array<u32>;
-@group(0) @binding(10) var<storage, read_write> largeSplatCount: array<atomic<u32>>;
+@group(0) @binding(10) var<storage, read_write> depthBuffer: array<u32>;
 
 #include "gsplatComputeSplatCS"
 #include "gsplatFormatDeclCS"
@@ -173,7 +174,7 @@ fn main(
                 projCache[base + 6u] = pack2x16float(vec2f(rgb.z, opacity));
             #endif
 
-                projCache[base + 7u] = bitcast<u32>(proj.viewDepth);
+                depthBuffer[threadIdx] = bitcast<u32>(proj.viewDepth);
 
                 screen = proj.screen;
                 let eval = computeSplatTileEval(screen, cx, cy, cz, half(opacity),
@@ -199,7 +200,7 @@ fn main(
                 var deferredToLarge = false;
                 if (maxTileX >= minTileX && maxTileY >= minTileY &&
                     aabbW * u32(maxTileY - minTileY + 1i) > LARGE_AABB_THRESHOLD) {
-                    let idx = atomicAdd(&largeSplatCount[0], 1u);
+                    let idx = atomicAdd(&countersBuffer[1], 1u);
                     if (idx < arrayLength(&largeSplatIds)) {
                         largeSplatIds[idx] = threadIdx;
                         deferredToLarge = true;
@@ -262,7 +263,7 @@ fn main(
             sum += wgPairCounts[i];
         }
         if (sum > 0u) {
-            wgBase = atomicAdd(&globalPairCounter[0], sum);
+            wgBase = atomicAdd(&countersBuffer[0], sum);
         } else {
             wgBase = 0u;
         }
