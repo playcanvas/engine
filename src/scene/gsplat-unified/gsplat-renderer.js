@@ -1,6 +1,6 @@
 import gsplatOutputVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatOutput.js';
 import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
-import { FisheyeProjection } from './fisheye-projection.js';
+import { FisheyeProjection } from '../graphics/fisheye-projection.js';
 
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'

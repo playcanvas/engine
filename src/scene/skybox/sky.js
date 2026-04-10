@@ -1,6 +1,6 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { SKYTYPE_INFINITE } from '../constants.js';
-import { FisheyeProjection } from '../gsplat-unified/fisheye-projection.js';
+import { FisheyeProjection } from '../graphics/fisheye-projection.js';
 import { GraphNode } from '../graph-node.js';
 import { SkyMesh } from './sky-mesh.js';
 
