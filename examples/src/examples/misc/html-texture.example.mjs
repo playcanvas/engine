@@ -7,7 +7,7 @@
 // Fallback: when device.supportsHtmlTextures is false, a static 2D canvas with
 // hand-drawn placeholder graphics is used as the texture source instead.
 //
-import { deviceType } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -16,6 +16,15 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 canvas.setAttribute('layoutsubtree', 'true');
 
 window.focus();
+
+const assets = {
+    envatlas: new pc.Asset(
+        'env-atlas',
+        'texture',
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+    )
+};
 
 const gfxOptions = {
     deviceTypes: [deviceType]
@@ -32,7 +41,6 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
-app.start();
 
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -166,34 +174,49 @@ if (device.supportsHtmlTextures) {
     console.warn('HTML textures are not supported - using canvas fallback');
 }
 
-// Create material with the HTML texture
-const material = new pc.StandardMaterial();
-material.diffuseMap = htmlTexture;
-material.update();
+const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+assetListLoader.load(() => {
+    app.start();
 
-const box = new pc.Entity('cube');
-box.addComponent('render', {
-    type: 'box',
-    material: material
-});
-app.root.addChild(box);
+    // setup skydome
+    app.scene.envAtlas = assets.envatlas.resource;
+    app.scene.skyboxMip = 0;
+    app.scene.skyboxIntensity = 2;
+    app.scene.exposure = 1.5;
 
-const camera = new pc.Entity('camera');
-camera.addComponent('camera', {
-    clearColor: new pc.Color(1, 1, 1)
-});
-app.root.addChild(camera);
-camera.setPosition(0, 0, 3);
+    // Create metallic material with the HTML texture for mirror-like reflections
+    const material = new pc.StandardMaterial();
+    material.diffuseMap = htmlTexture;
+    material.useMetalness = true;
+    material.metalness = 0.7;
+    material.gloss = 0.9;
+    material.update();
 
-app.scene.ambientLight = new pc.Color(0.3, 0.3, 0.3);
+    const box = new pc.Entity('cube');
+    box.addComponent('render', {
+        type: 'box',
+        material: material
+    });
+    app.root.addChild(box);
 
-const light = new pc.Entity('light');
-light.addComponent('light');
-app.root.addChild(light);
-light.setEulerAngles(45, 0, 0);
+    const camera = new pc.Entity('camera');
+    camera.addComponent('camera', {
+        clearColor: new pc.Color(0.2, 0.2, 0.2)
+    });
+    app.root.addChild(camera);
+    camera.setPosition(0, 0, 3);
 
-app.on('update', (/** @type {number} */ dt) => {
-    box.rotate(3 * dt, 5 * dt, 6 * dt);
+    const light = new pc.Entity('light');
+    light.addComponent('light', {
+        type: 'directional',
+        intensity: 1.5
+    });
+    app.root.addChild(light);
+    light.setEulerAngles(45, 30, 0);
+
+    app.on('update', (/** @type {number} */ dt) => {
+        box.rotate(3 * dt, 5 * dt, 6 * dt);
+    });
 });
 
 export { app };
