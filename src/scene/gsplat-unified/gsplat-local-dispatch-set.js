@@ -334,7 +334,8 @@ class GSplatLocalDispatchSet {
             new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('projCache', SHADERSTAGE_COMPUTE, true),
             new BindStorageBufferFormat('rasterizeTileList', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
+            new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('depthBuffer', SHADERSTAGE_COMPUTE, true)
         ];
 
         const outputBindings = pickMode ? [
