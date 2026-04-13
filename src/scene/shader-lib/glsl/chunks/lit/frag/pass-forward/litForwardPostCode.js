@@ -13,12 +13,15 @@ export default /* glsl */`
         #include "metalnessModulatePS"
     #endif
 
-    #if LIT_FRESNEL_MODEL == SCHLICK
-        #include "fresnelSchlickPS"
-    #endif
-
     #ifdef LIT_IRIDESCENCE
         #include "iridescenceDiffractionPS"
+    #endif
+#endif
+
+// fresnel is also needed by refraction
+#if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
+    #if LIT_FRESNEL_MODEL == SCHLICK
+        #include "fresnelSchlickPS"
     #endif
 #endif
 
