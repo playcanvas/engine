@@ -605,7 +605,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const countCompute = set.getCountCompute(fisheyeEnabled, createCountShader);
 
         // Prep dispatch: compute indirect dispatch dimensions from the visible count.
-        // Writes two dispatch slots: slot 0 for tile-count (2 splats/thread, half workgroups),
+        // Writes two dispatch slots: slot 0 for tile-count (SPLATS_PER_THREAD splats/thread),
         // slot 1 for place-entries (1 splat/thread, full workgroups).
         this._placeEntryPrepCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
         this._placeEntryPrepCompute.setParameter('dispatchArgs', this._placeEntryPrepDispatchBuffer);

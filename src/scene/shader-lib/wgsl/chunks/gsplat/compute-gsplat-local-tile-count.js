@@ -115,11 +115,10 @@ fn main(
     var cyArr: array<f32, {SPLATS_PER_THREAD}>;
     var czArr: array<f32, {SPLATS_PER_THREAD}>;
     var radiusFactorArr: array<f32, {SPLATS_PER_THREAD}>;
-    var aabbWArr: array<u32, {SPLATS_PER_THREAD}>;
 
     for (var i: u32 = 0u; i < {SPLATS_PER_THREAD}; i++) {
-        maxTileXArr[i] = -1i;
-        maxTileYArr[i] = -1i;
+        pairCounts[i] = 0u;
+        bitmasks[i] = 0u;
     }
 
     // =========================================================================
@@ -206,7 +205,6 @@ fn main(
                 maxTileXArr[s] = maxTileX;
                 minTileYArr[s] = minTileY;
                 maxTileYArr[s] = maxTileY;
-                aabbWArr[s] = aabbW;
 
                 // Defer large splats to the cooperative large-splat pass where
                 // 256 threads process them in parallel, avoiding wavefront divergence.
