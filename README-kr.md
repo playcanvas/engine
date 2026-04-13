@@ -92,10 +92,11 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 * 🧊 **그래픽** - WebGL2와 WebGPU로 구축된 고도의 2D+3D 그래픽 엔진
 * 🏃 **애니메이션** - 캐릭터나 장면에 대한 강력한 스테이트 기반 애니메이션
 * ⚛️ **물리** - 3D 리지드 바디 물리 엔진 [ammo.js](https://github.com/kripken/ammo.js)
-* 🎮 **입력** - 마우스, 키보드, 터치, 게임패드, VR 컨트롤러의 API
+* 🎮 **입력** - 마우스, 키보드, 터치, 게임패드 API
 * 🔊 **사운드** - Web Audio API를 이용한 3D 위치정보 사운드
 * 📦 **에셋** - [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/), [Basis](https://github.com/BinomialLLC/basis_universal) 압축 기술을 이용한 비동기형 스트리밍 시스템
 * 📜 **스크립트** - TypeScript와 JavaScript 지원
+* 🥽 **XR** - [WebXR](https://developer.playcanvas.com/user-manual/xr/)을 통한 몰입형 AR 및 VR 경험 기본 지원
 * 💠 **가우시안 스플래팅** - [3D 가우시안 스플랫](https://developer.playcanvas.com/user-manual/graphics/gaussian-splatting/) 로딩 및 렌더링 기본 지원
 
 ## 에코시스템

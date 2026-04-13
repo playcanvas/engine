@@ -92,10 +92,11 @@ PlayCanvasはフル機能のゲームエンジンです。
 * 🧊 **グラフィックス** - WebGL2とWebGPUで構築された高度な2D + 3Dグラフィックスエンジン
 * 🏃 **アニメーション** - キャラクターやシーンに対する強力なステートベースのアニメーション
 * ⚛️ **物理** - 3Dリジッドボディ物理エンジン [ammo.js](https://github.com/kripken/ammo.js)
-* 🎮 **インプット** - マウス、キーボード、タッチ、ゲームパッド、VRコントローラのAPI
+* 🎮 **インプット** - マウス、キーボード、タッチ、ゲームパッドのAPI
 * 🔊 **サウンド** - Web Audio APIを利用した3D位置情報サウンド
 * 📦 **アセット** - [glTF 2.0](https://www.khronos.org/gltf/)、[Draco](https://google.github.io/draco/)、[Basis](https://github.com/BinomialLLC/basis_universal) の圧縮技術を利用した非同期型ストリーミングシステム
 * 📜 **スクリプト** - TypeScriptとJavaScriptをサポート
+* 🥽 **XR** - [WebXR](https://developer.playcanvas.com/user-manual/xr/)による没入型ARおよびVR体験のビルトインサポート
 * 💠 **ガウシアンスプラッティング** - [3Dガウシアンスプラット](https://developer.playcanvas.com/user-manual/graphics/gaussian-splatting/)のロードとレンダリングをネイティブサポート
 
 ## エコシステム
