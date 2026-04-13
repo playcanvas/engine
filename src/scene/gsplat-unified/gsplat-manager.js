@@ -939,6 +939,7 @@ class GSplatManager {
 
         // Calculate camera movement deltas for color updates
         const { translationDelta } = this.calculateColorCameraDeltas();
+        const hasCameraMovement = translationDelta > 0;
 
         // check each splat for full or color update
         let uploadedBlocks = 0;
@@ -961,7 +962,7 @@ class GSplatManager {
                 // Splat moved, need to re-sort
                 this.sortNeeded = true;
 
-            } else if (splat.hasSphericalHarmonics) {
+            } else if (hasCameraMovement && splat.hasSphericalHarmonics) {
 
                 _splatsWithSH.push(splat);
 
