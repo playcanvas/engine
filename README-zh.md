@@ -104,7 +104,7 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 以你喜欢的方式使用 PlayCanvas 进行开发：
 
 | 包 | 描述 |
-| - | ---- |
+| --- | ---- |
 | [`playcanvas`](https://www.npmjs.com/package/playcanvas) | 核心引擎（当前页面） |
 | [`@playcanvas/react`](https://www.npmjs.com/package/@playcanvas/react) | PlayCanvas 的 React 渲染器 |
 | [`@playcanvas/web-components`](https://www.npmjs.com/package/@playcanvas/web-components) | 通过自定义元素实现声明式 3D |
