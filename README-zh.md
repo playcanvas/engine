@@ -90,14 +90,14 @@ app.start();
 PlayCanvas 是一款优秀的全功能游戏引擎。
 
 - 🧊 **图形** - 基于 WebGL2 和 WebGPU 的超前 2D + 3D 图形引擎
-- 🏃 **动画** - 基于状态的强大动画功能，有效展现动画角色和随机场景属性
+- 💠 **高斯泼溅** - 原生支持加载和渲染 [3D 高斯泼溅](https://developer.playcanvas.com/user-manual/graphics/gaussian-splatting/)
+- 🥽 **XR** - 通过 [WebXR](https://developer.playcanvas.com/user-manual/xr/) 内置支持沉浸式 AR 和 VR 体验
 - ⚛️ **物理** - 一体化的 3D 刚体物理引擎 [ammo.js](https://github.com/kripken/ammo.js)
+- 🏃 **动画** - 基于状态的强大动画功能，有效展现动画角色和随机场景属性
 - 🎮 **输入** - 支持鼠标、键盘、触控和游戏控制器 API
 - 🔊 **声音** - 基于 Web Audio API 的 3D 音效
 - 📦 **资源** - 使用 [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/) 以及 [Basis](https://github.com/BinomialLLC/basis_universal) 的异步流媒体系统
 - 📜 **代码** - 支持 TypeScript 以及 JavaScript
-- 🥽 **XR** - 通过 [WebXR](https://developer.playcanvas.com/user-manual/xr/) 内置支持沉浸式 AR 和 VR 体验
-- 💠 **高斯泼溅** - 原生支持加载和渲染 [3D 高斯泼溅](https://developer.playcanvas.com/user-manual/graphics/gaussian-splatting/)
 
 ## 生态系统
 

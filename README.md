@@ -90,14 +90,14 @@ A full guide to setting up a local development environment based on the PlayCanv
 PlayCanvas is a fully-featured game engine.
 
 * 🧊 **Graphics** - Advanced 2D + 3D graphics engine built on WebGL2 & WebGPU
-* 🏃 **Animation** - Powerful state-based animations for characters and arbitrary scene properties
+* 💠 **Gaussian Splatting** - First-class support for loading and rendering [3D Gaussian Splats](https://developer.playcanvas.com/user-manual/graphics/gaussian-splatting/)
+* 🥽 **XR** - Built-in support for immersive AR and VR experiences via [WebXR](https://developer.playcanvas.com/user-manual/xr/)
 * ⚛️ **Physics** - Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
+* 🏃 **Animation** - Powerful state-based animations for characters and arbitrary scene properties
 * 🎮 **Input** - Mouse, keyboard, touch and gamepad APIs
 * 🔊 **Sound** - 3D positional sounds built on the Web Audio API
 * 📦 **Assets** - Asynchronous streaming system built on [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/) and [Basis](https://github.com/BinomialLLC/basis_universal) compression
 * 📜 **Scripts** - Write game behaviors in TypeScript or JavaScript
-* 🥽 **XR** - Built-in support for immersive AR and VR experiences via [WebXR](https://developer.playcanvas.com/user-manual/xr/)
-* 💠 **Gaussian Splatting** - First-class support for loading and rendering [3D Gaussian Splats](https://developer.playcanvas.com/user-manual/graphics/gaussian-splatting/)
 
 ## Ecosystem
 
