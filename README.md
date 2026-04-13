@@ -23,7 +23,7 @@ PlayCanvas is an open-source game engine built on WebGL2 and WebGPU. Use it to c
 npm install playcanvas
 ```
 
-Or scaffold a full project in seconds:
+Or scaffold a full project in seconds with [`create-playcanvas`](https://github.com/playcanvas/create-playcanvas):
 
 ```sh
 npm create playcanvas@latest
