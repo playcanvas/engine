@@ -110,10 +110,7 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
     // set up SH update parameters
-    app.scene.gsplat.colorUpdateDistance = 1;
-    app.scene.gsplat.colorUpdateAngle = 4;
-    app.scene.gsplat.colorUpdateDistanceLodScale = 2;
-    app.scene.gsplat.colorUpdateAngleLodScale = 2;
+    app.scene.gsplat.colorUpdateAngle = 10;
 
     data.on('renderer:set', () => {
         app.scene.gsplat.renderer = data.get('renderer');
