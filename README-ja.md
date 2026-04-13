@@ -108,6 +108,7 @@ PlayCanvasはフル機能のゲームエンジンです。
 | [`@playcanvas/react`](https://www.npmjs.com/package/@playcanvas/react) | PlayCanvas用Reactレンダラー |
 | [`@playcanvas/web-components`](https://www.npmjs.com/package/@playcanvas/web-components) | カスタム要素による宣言的3D |
 | [`create-playcanvas`](https://www.npmjs.com/package/create-playcanvas) | プロジェクトスキャフォールディングCLI |
+| [PlayCanvasエディター](https://github.com/playcanvas/editor) | ブラウザベースのビジュアルエディター |
 
 ## ショーケース
 
@@ -139,10 +140,3 @@ npm install
 | `npm run build` | すべてのエンジンビルドターゲットと型宣言をビルドする       | `build`    |
 | `npm run docs`  | エンジンの[APIリファレンスドキュメント](https://api.playcanvas.com/engine/)をビルドする | `docs`     |
 
-## PlayCanvasエディター
-
-PlayCanvas エンジンは、HTML5 アプリやゲームを作成するためのオープンソースのエンジンです。エンジンに加えて、[PlayCanvasエディター](https://playcanvas.com/)があります。
-
-[![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
-
-エディター関連のバグや問題については、[Editor's repo](https://github.com/playcanvas/editor)を参照してください。

@@ -108,6 +108,7 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 | [`@playcanvas/react`](https://www.npmjs.com/package/@playcanvas/react) | PlayCanvas용 React 렌더러 |
 | [`@playcanvas/web-components`](https://www.npmjs.com/package/@playcanvas/web-components) | 커스텀 엘리먼트를 통한 선언적 3D |
 | [`create-playcanvas`](https://www.npmjs.com/package/create-playcanvas) | 프로젝트 스캐폴딩 CLI |
+| [PlayCanvas 에디터](https://github.com/playcanvas/editor) | 브라우저 기반 비주얼 에디터 |
 
 ## 프로젝트 쇼케이스
 
@@ -139,10 +140,3 @@ npm install
 | `npm run build` | 모든 엔진 빌드 대상과 타입 선언을 빌드합니다 | `build`    |
 | `npm run docs`  | 엔진 [API 참조 문서](https://api.playcanvas.com/engine/)를 빌드합니다     | `docs`     |
 
-## PlayCanvas 에디터
-
-PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔진입니다. 엔진 외에 [PlayCanvas 에디터](https://playcanvas.com/)가 있습니다.
-
-[![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
-
-에디터 관련 버그나 문제는 [Editor's repo](https://github.com/playcanvas/editor)를 참조하십시오.

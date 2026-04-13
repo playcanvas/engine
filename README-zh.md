@@ -108,6 +108,7 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 | [`@playcanvas/react`](https://www.npmjs.com/package/@playcanvas/react) | PlayCanvas 的 React 渲染器 |
 | [`@playcanvas/web-components`](https://www.npmjs.com/package/@playcanvas/web-components) | 通过自定义元素实现声明式 3D |
 | [`create-playcanvas`](https://www.npmjs.com/package/create-playcanvas) | 项目脚手架 CLI |
+| [PlayCanvas 编辑器](https://github.com/playcanvas/editor) | 基于浏览器的可视化编辑器 |
 
 ## 项目展示
 
@@ -139,8 +140,3 @@ npm install
 | `npm run build` | 构建所有引擎构建目标和类型声明 | `build`    |
 | `npm run docs`  | 构建引擎[API参考文档](https://api.playcanvas.com/engine/)   | `docs`     |
 
-## PlayCanvas 平台
-
-PlayCanvas 引擎是一款可以基于浏览器的用于制作游戏以及 3D 可视化的开源引擎。除此之外，我们还开发了[PlayCanvas 开发平台](https://playcanvas.com/)， 为我们的用户提供了可视化编辑器，资源管理，代码编辑，代码托管以及发布等服务。
-
-[![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)

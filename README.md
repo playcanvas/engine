@@ -108,6 +108,7 @@ Build with PlayCanvas your way:
 | [`@playcanvas/react`](https://www.npmjs.com/package/@playcanvas/react) | React renderer for PlayCanvas |
 | [`@playcanvas/web-components`](https://www.npmjs.com/package/@playcanvas/web-components) | Declarative 3D via Custom Elements |
 | [`create-playcanvas`](https://www.npmjs.com/package/create-playcanvas) | Project scaffolding CLI |
+| [PlayCanvas Editor](https://github.com/playcanvas/editor) | Browser-based visual editor |
 
 ## Project Showcase
 
@@ -139,10 +140,3 @@ Now you can run various build options:
 | `npm run build` | Build all engine flavors and type declarations                        | `build`    |
 | `npm run docs`  | Build engine [API reference docs](https://api.playcanvas.com/engine/) | `docs`     |
 
-## PlayCanvas Editor
-
-The PlayCanvas Engine is an open-source engine that you can use to create HTML5 apps/games. In addition to the engine, we also make the [PlayCanvas Editor](https://playcanvas.com/):
-
-[![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
-
-For Editor-related bugs and issues, please refer to the [Editor's repo](https://github.com/playcanvas/editor).
