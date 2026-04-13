@@ -1,21 +1,24 @@
 // Per-splat projection + projection cache write + atomic per-tile counting + pair buffer writes.
 //
-// This pass merges what was previously two separate dispatches (count + scatter) into one.
-// The old scatter pass re-read projCache and recomputed tile intersections just to place
-// splat indices into per-tile entry lists via global atomics — redundant and expensive.
+// Each thread processes SPLATS_PER_THREAD consecutive splats to reduce workgroup count and
+// amortize launch overhead. At 40M splats the launch limiter was 74% at N=1, meaning the GPU
+// spent 3/4 of its time scheduling workgroups instead of running them.
 //
-// New approach: iterate tiles twice within the same dispatch.
-//   Loop 1 (count-only): counts overlapping tiles per splat and builds a 6x5 bitmask
-//     recording which tiles passed the intersection test. Pure ALU, no atomics.
-//   Workgroup barrier: prefix sum over per-thread pair counts, then one global atomicAdd
-//     per workgroup to allocate a contiguous block in the pair buffer.
-//   Loop 2 (count + pair-write): performs atomicAdd on tileSplatCounts and writes
-//     (tileIdx, localOffset) pairs to the pair buffer. Uses the bitmask to skip intersection
-//     recomputation for AABBs within 6x5 tiles (covers ~95% of splats). Larger AABBs use
-//     the bitmask for the first 6x5 region and recompute intersection for the remainder.
+// Hybrid architecture: per-thread atomicAdd for pair buffer reservation (no barrier, no
+// shared memory) combined with register arrays to keep all Phase 2 data in registers,
+// avoiding projCache reads that cause L1 cache pressure.
 //
-// All projection data (screen, cx/cy/cz, radiusFactor, tile AABB) persists in registers
-// across the workgroup barrier, so the second loop only re-evaluates cheap bitmask lookups.
+// Bitmask: 8x4 = 32 bits in a single u32. The bit index localY * 8 + localX compiles
+// to a pure shift (localY << 3 | localX). Tiles outside the 8x4 region fall back to
+// intersection recomputation. Splats over 64 tiles are deferred to the cooperative
+// large-splat pass.
+//
+// Structure:
+//   Phase 1 — loop over N splats: project, write projCache/depthBuffer, count tiles,
+//             build bitmask. All per-splat state stored in register arrays.
+//   Atomic  — one atomicAdd per thread to reserve pair buffer space (no barrier).
+//   Phase 2 — for each splat, write pairs using register arrays and bitmask.
+//             Zero projCache reads — all data stays in registers.
 //
 // The pair buffer is later consumed by a lightweight PlaceEntries pass that writes
 // tileEntries using prefix-summed offsets — zero atomics, zero projCache reads.
@@ -25,15 +28,14 @@ export const computeGsplatLocalTileCountSource = /* wgsl */`
 #include "gsplatTileIntersectCS"
 
 const CACHE_STRIDE: u32 = 7u;
-const WG_SIZE: u32 = 256u;
 
 // Caps the 16-bit localOffset field in packed pairs (tileIdx << 16 | localOffset).
 const MAX_TILE_ENTRIES: u32 = 0xFFFFu;
 
-// 6x5 = 30 bits fits in a single u32 bitmask. Covers ~95% of splats without needing
-// to recompute the intersection test in the second tile loop.
-const BITMASK_W: u32 = 6u;
-const BITMASK_H: u32 = 5u;
+// 8x4 = 32 bits fits in a single u32 bitmask. The bit index localY * 8 + localX
+// compiles to a pure shift (localY << 3 | localX), avoiding any multiply.
+const BITMASK_W: u32 = 8u;
+const BITMASK_H: u32 = 4u;
 
 // Splats whose AABB exceeds this many tiles are deferred to a cooperative
 // large-splat pass where 256 threads handle them in parallel, eliminating
@@ -85,13 +87,6 @@ struct Uniforms {
 #include "gsplatFormatDeclCS"
 #include "gsplatFormatReadCS"
 
-// Shared memory for workgroup-level pair buffer allocation.
-// Each thread publishes its pair count; a serial prefix sum computes offsets;
-// the leader thread reserves a contiguous global block with a single atomicAdd.
-var<workgroup> wgPairCounts: array<u32, WG_SIZE>;
-var<workgroup> wgPairOffsets: array<u32, WG_SIZE>;
-var<workgroup> wgBase: u32;
-
 // NOTE on tile entry cap: if a tile exceeds MAX_TILE_ENTRIES (65535), the atomicAdd
 // count overcounts. Impact: the prefix sum allocates extra tileEntries slots that go
 // unwritten (wasting capacity), and the rasterize pass processes stale/zero entries in
@@ -102,34 +97,45 @@ var<workgroup> wgBase: u32;
 @compute @workgroup_size(256)
 fn main(
     @builtin(global_invocation_id) gid: vec3u,
-    @builtin(num_workgroups) numWorkgroups: vec3u,
-    @builtin(local_invocation_index) localIdx: u32
+    @builtin(num_workgroups) numWorkgroups: vec3u
 ) {
-    let threadIdx = gid.y * (numWorkgroups.x * 256u) + gid.x;
+    let baseIdx = (gid.y * (numWorkgroups.x * 256u) + gid.x) * {SPLATS_PER_THREAD};
     let numVisible = sortElementCount[0];
 
-    // Threads beyond numVisible still participate in the workgroup prefix sum
-    // and barrier — they just contribute zero pairs.
-    var myPairCount: u32 = 0u;
-    var bitmask: u32 = 0u;
-    var minTileX: i32 = 0i;
-    var maxTileX: i32 = -1i;
-    var minTileY: i32 = 0i;
-    var maxTileY: i32 = -1i;
-    var screen: vec2f = vec2f(0.0);
-    var cx: f32 = 0.0;
-    var cy: f32 = 0.0;
-    var cz: f32 = 0.0;
-    var radiusFactor: f32 = 0.0;
-    var aabbW: u32 = 0u;
-    var isVisible: bool = false;
+    // Per-splat state persisted across the atomic reservation in register arrays.
+    // The compiler unrolls the constant-bound loops and promotes these to registers.
+    var pairCounts: array<u32, {SPLATS_PER_THREAD}>;
+    var bitmasks: array<u32, {SPLATS_PER_THREAD}>;
+    var minTileXArr: array<i32, {SPLATS_PER_THREAD}>;
+    var maxTileXArr: array<i32, {SPLATS_PER_THREAD}>;
+    var minTileYArr: array<i32, {SPLATS_PER_THREAD}>;
+    var maxTileYArr: array<i32, {SPLATS_PER_THREAD}>;
+    var screenArr: array<vec2f, {SPLATS_PER_THREAD}>;
+    var cxArr: array<f32, {SPLATS_PER_THREAD}>;
+    var cyArr: array<f32, {SPLATS_PER_THREAD}>;
+    var czArr: array<f32, {SPLATS_PER_THREAD}>;
+    var radiusFactorArr: array<f32, {SPLATS_PER_THREAD}>;
 
-    if (threadIdx < numVisible) {
+    for (var i: u32 = 0u; i < {SPLATS_PER_THREAD}; i++) {
+        pairCounts[i] = 0u;
+        bitmasks[i] = 0u;
+    }
+
+    // =========================================================================
+    // Phase 1: Project + count tiles for all splats
+    // =========================================================================
+    var totalPairs: u32 = 0u;
+
+    for (var s: u32 = 0u; s < {SPLATS_PER_THREAD}; s++) {
+        let threadIdx = baseIdx + s;
+        if (threadIdx >= numVisible) { continue; }
+
         let splatId = compactedSplatIds[threadIdx];
-
         setSplat(splatId);
         let center = getCenter();
         let opacity = getOpacity();
+
+        var isVisible = false;
 
         if (opacity >= uniforms.alphaClip) {
             let rotation = half4(getRotation());
@@ -152,9 +158,9 @@ fn main(
 
                 let det = proj.a * proj.c - proj.b * proj.b;
                 let invDet = 1.0 / det;
-                cx = 4.0 * proj.c * invDet;
-                cy = -4.0 * proj.b * invDet;
-                cz = 4.0 * proj.a * invDet;
+                let cx = 4.0 * proj.c * invDet;
+                let cy = -4.0 * proj.b * invDet;
+                let cz = 4.0 * proj.a * invDet;
 
                 let base = threadIdx * CACHE_STRIDE;
                 projCache[base + 0u] = bitcast<u32>(proj.screen.x);
@@ -176,18 +182,29 @@ fn main(
 
                 depthBuffer[threadIdx] = bitcast<u32>(proj.viewDepth);
 
-                screen = proj.screen;
+                let screen = proj.screen;
                 let eval = computeSplatTileEval(screen, cx, cy, cz, half(opacity),
                                                 uniforms.viewportWidth, uniforms.viewportHeight,
                                                 uniforms.alphaClip);
-                radiusFactor = eval.radiusFactor;
+                let radiusFactor = eval.radiusFactor;
 
-                minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
-                maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
-                minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
-                maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
+                let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
+                let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
+                let minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
+                let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
 
-                aabbW = u32(maxTileX - minTileX + 1i);
+                let aabbW = u32(maxTileX - minTileX + 1i);
+
+                // Store per-splat state for Phase 2
+                screenArr[s] = screen;
+                cxArr[s] = cx;
+                cyArr[s] = cy;
+                czArr[s] = cz;
+                radiusFactorArr[s] = radiusFactor;
+                minTileXArr[s] = minTileX;
+                maxTileXArr[s] = maxTileX;
+                minTileYArr[s] = minTileY;
+                maxTileYArr[s] = maxTileY;
 
                 // Defer large splats to the cooperative large-splat pass where
                 // 256 threads process them in parallel, avoiding wavefront divergence.
@@ -208,117 +225,101 @@ fn main(
                 }
 
                 if (!deferredToLarge) {
+                    var myPairCount: u32 = 0u;
+                    var bitmask: u32 = 0u;
 
-                // Fast path: 1x1 AABB — the splat definitely intersects its only tile,
-                // skip the intersection test entirely.
-                if (minTileX == maxTileX && minTileY == maxTileY) {
-                    myPairCount = 1u;
-                    bitmask = 1u;
-                } else {
-
-                // --- Loop 1: count-only + bitmask ---
-                // Pure ALU — no atomics, no memory writes. Records which tiles within the
-                // AABB pass the ellipse intersection test. The bitmask avoids recomputing
-                // intersections in Loop 2. Always populated for the first 6x5 tiles of the
-                // AABB regardless of AABB size.
-                for (var ty = minTileY; ty <= maxTileY; ty++) {
-                    for (var tx = minTileX; tx <= maxTileX; tx++) {
-                        let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
-                        let tMax = tMin + vec2f(f32(TILE_SIZE));
-                        if (tileIntersectsEllipse(tMin, tMax, screen, cx, cy, cz, radiusFactor)) {
-                            myPairCount++;
-                            let localX = u32(tx - minTileX);
-                            let localY = u32(ty - minTileY);
-                            if (localX < BITMASK_W && localY < BITMASK_H) {
-                                let bitIdx = localY * BITMASK_W + localX;
-                                bitmask |= (1u << bitIdx);
+                    if (minTileX == maxTileX && minTileY == maxTileY) {
+                        myPairCount = 1u;
+                        bitmask = 1u;
+                    } else {
+                        for (var ty = minTileY; ty <= maxTileY; ty++) {
+                            for (var tx = minTileX; tx <= maxTileX; tx++) {
+                                let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
+                                let tMax = tMin + vec2f(f32(TILE_SIZE));
+                                if (tileIntersectsEllipse(tMin, tMax, screen, cx, cy, cz, radiusFactor)) {
+                                    myPairCount++;
+                                    let localX = u32(tx - minTileX);
+                                    let localY = u32(ty - minTileY);
+                                    if (localX < BITMASK_W && localY < BITMASK_H) {
+                                        let bitIdx = localY * BITMASK_W + localX;
+                                        bitmask |= (1u << bitIdx);
+                                    }
+                                }
                             }
                         }
                     }
-                }
 
-                } // end else (non-1x1)
-                } // end if (!deferredToLarge)
+                    pairCounts[s] = myPairCount;
+                    bitmasks[s] = bitmask;
+                    totalPairs += myPairCount;
+                }
             }
         }
 
-        // Zero out opacity marker for invisible splats so downstream passes skip them
         if (!isVisible) {
             projCache[threadIdx * CACHE_STRIDE + 6u] = 0u;
         }
     }
 
-    // --- Workgroup prefix sum + global pair buffer allocation ---
-    // All threads (including inactive ones beyond numVisible) participate in the barrier.
-    // The prefix sum computes per-thread offsets within the workgroup's pair block.
-    // A single global atomicAdd per workgroup reserves a contiguous region, reducing
-    // global atomic contention from ~44M (old scatter) to ~60K (one per workgroup).
-    wgPairCounts[localIdx] = myPairCount;
-    workgroupBarrier();
-
-    if (localIdx == 0u) {
-        var sum: u32 = 0u;
-        for (var i: u32 = 0u; i < WG_SIZE; i++) {
-            wgPairOffsets[i] = sum;
-            sum += wgPairCounts[i];
-        }
-        if (sum > 0u) {
-            wgBase = atomicAdd(&countersBuffer[0], sum);
-        } else {
-            wgBase = 0u;
-        }
+    // =========================================================================
+    // Per-thread pair buffer reservation (no barrier, no shared memory)
+    // =========================================================================
+    var pairBase: u32 = 0u;
+    if (totalPairs > 0u) {
+        pairBase = atomicAdd(&countersBuffer[0], totalPairs);
     }
-    workgroupBarrier();
 
-    if (myPairCount == 0u) {
-        if (threadIdx < numVisible) {
+    // =========================================================================
+    // Phase 2: Write pairs for all splats using register arrays (zero projCache reads)
+    // =========================================================================
+    var runningOffset: u32 = 0u;
+
+    for (var s: u32 = 0u; s < {SPLATS_PER_THREAD}; s++) {
+        let threadIdx = baseIdx + s;
+        if (threadIdx >= numVisible) { continue; }
+
+        if (pairCounts[s] == 0u) {
             splatPairStart[threadIdx] = 0u;
             splatPairCount[threadIdx] = 0u;
+            continue;
         }
-        return;
-    }
 
-    let myBase = wgBase + wgPairOffsets[localIdx];
+        let splatBase = pairBase + runningOffset;
+        splatPairStart[threadIdx] = splatBase;
+        splatPairCount[threadIdx] = pairCounts[s];
 
-    splatPairStart[threadIdx] = myBase;
-    splatPairCount[threadIdx] = myPairCount;
+        var j: u32 = 0u;
+        for (var ty = minTileYArr[s]; ty <= maxTileYArr[s]; ty++) {
+            for (var tx = minTileXArr[s]; tx <= maxTileXArr[s]; tx++) {
 
-    // --- Loop 2: atomicAdd on tileSplatCounts + pair writes ---
-    // Uses the bitmask from Loop 1 to skip intersection tests for splats fitting
-    // in the 6x5 region. For larger AABBs, the bitmask covers the first 6x5 rows/columns
-    // and intersection is recomputed only for tiles outside that region.
-    var j: u32 = 0u;
-    for (var ty = minTileY; ty <= maxTileY; ty++) {
-        for (var tx = minTileX; tx <= maxTileX; tx++) {
+                let localX = u32(tx - minTileXArr[s]);
+                let localY = u32(ty - minTileYArr[s]);
 
-            let localX = u32(tx - minTileX);
-            let localY = u32(ty - minTileY);
+                var hits: bool;
+                if (localX < BITMASK_W && localY < BITMASK_H) {
+                    let bitIdx = localY * BITMASK_W + localX;
+                    hits = (bitmasks[s] & (1u << bitIdx)) != 0u;
+                } else {
+                    let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
+                    let tMax = tMin + vec2f(f32(TILE_SIZE));
+                    hits = tileIntersectsEllipse(tMin, tMax, screenArr[s], cxArr[s], cyArr[s], czArr[s], radiusFactorArr[s]);
+                }
 
-            var hits: bool;
-            if (localX < BITMASK_W && localY < BITMASK_H) {
-                let bitIdx = localY * BITMASK_W + localX;
-                hits = (bitmask & (1u << bitIdx)) != 0u;
-            } else {
-                let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
-                let tMax = tMin + vec2f(f32(TILE_SIZE));
-                hits = tileIntersectsEllipse(tMin, tMax, screen, cx, cy, cz, radiusFactor);
-            }
-
-            if (hits) {
-                let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
-                let localOff = atomicAdd(&tileSplatCounts[tileIdx], 1u);
-                if (localOff < MAX_TILE_ENTRIES) {
-                    pairBuffer[myBase + j] = (tileIdx << 16u) | (localOff & 0xFFFFu);
-                    j++;
+                if (hits) {
+                    let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
+                    let localOff = atomicAdd(&tileSplatCounts[tileIdx], 1u);
+                    if (localOff < MAX_TILE_ENTRIES) {
+                        pairBuffer[splatBase + j] = (tileIdx << 16u) | (localOff & 0xFFFFu);
+                        j++;
+                    }
                 }
             }
         }
-    }
 
-    // If some pairs were dropped by the cap, update the stored count to reflect
-    // only the pairs actually written.
-    if (j != myPairCount) {
-        splatPairCount[threadIdx] = j;
+        if (j != pairCounts[s]) {
+            splatPairCount[threadIdx] = j;
+        }
+        runningOffset += pairCounts[s];
     }
 }
 `;

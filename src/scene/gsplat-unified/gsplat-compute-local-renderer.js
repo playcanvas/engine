@@ -20,6 +20,8 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
+import { computeGsplatLocalDispatchPrepSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-dispatch-prep.js';
+import { computeGsplatLocalDispatchPrepLargeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-dispatch-prep-large.js';
 import { computeGsplatLocalTileCountSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-count.js';
 import { computeGsplatLocalTileCountLargeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-count-large.js';
 import { computeGsplatLocalPlaceEntriesSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-place-entries.js';
@@ -48,6 +50,9 @@ const TILE_SIZE = 16;
 const MAX_TILES = 65535; // tile index must fit in 16 bits for pair packing (tileIdx << 16 | localOffset)
 const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5; // floor for _tileEntryMultiplier (min tile entries per splat)
 const CACHE_STRIDE = 7;
+// Splats processed per thread in the tile-count pass. Higher values reduce workgroup count
+// (lowering launch limiter) but increase register pressure (lowering occupancy).
+const SPLATS_PER_THREAD = 8;
 const MAX_CHUNKS_PER_TILE = 8;
 const SHRINK_THRESHOLD = 200; // consecutive low-usage readbacks before considering multiplier shrink
 const ENTRY_HEADROOM_MULTIPLIER = 1.5; // headroom factor applied to measured entry demand
@@ -599,9 +604,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const createCountShader = (pick, fisheye) => this._createCountShaderAndFormat(pick, fisheye);
         const countCompute = set.getCountCompute(fisheyeEnabled, createCountShader);
 
-        // Prep dispatch: compute indirect dispatch dimensions from the visible count
-        // (sortElementCount[0]). Both the count and place-entries passes use @workgroup_size(256),
-        // so they share the same dispatch args.
+        // Prep dispatch: compute indirect dispatch dimensions from the visible count.
+        // Writes two dispatch slots: slot 0 for tile-count (SPLATS_PER_THREAD splats/thread),
+        // slot 1 for place-entries (1 splat/thread, full workgroups).
         this._placeEntryPrepCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
         this._placeEntryPrepCompute.setParameter('dispatchArgs', this._placeEntryPrepDispatchBuffer);
         this._placeEntryPrepCompute.setupDispatch(1, 1, 1);
@@ -695,8 +700,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.placeEntriesCompute.setParameter('tileEntries', this._tileEntriesBuffer);
         set.placeEntriesCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
 
-        // Reuse the same indirect dispatch buffer from the prep pass above.
-        set.placeEntriesCompute.setupIndirectDispatch(0, this._placeEntryPrepDispatchBuffer);
+        // Slot 1 of the prep buffer holds the full (1 splat/thread) dispatch dimensions.
+        set.placeEntriesCompute.setupIndirectDispatch(1, this._placeEntryPrepDispatchBuffer);
         device.computeDispatch([set.placeEntriesCompute], pickMode ? 'GSplatPickPlaceEntries' : 'GSplatLocalPlaceEntries');
 
         // --- Pass 3b: Cooperative place entries for large splats ---
@@ -931,27 +936,13 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         // device-level indirect dispatch buffer written earlier in the frame. ---
         {
             const maxDim = device.limits.maxComputeWorkgroupsPerDimension || 65535;
-            const prepSource = /* wgsl */`
-@group(0) @binding(0) var<storage, read> sortElementCount: array<u32>;
-@group(0) @binding(1) var<storage, read_write> dispatchArgs: array<u32>;
+            const splatsPerWg = 256 * SPLATS_PER_THREAD;
+            const prepDefines = new Map();
+            prepDefines.set('{MAX_DIM}', maxDim.toString());
+            prepDefines.set('{SPLATS_PER_WG}', splatsPerWg.toString());
+            prepDefines.set('{SPLATS_PER_WG_MINUS_1}', (splatsPerWg - 1).toString());
+            prepDefines.set('{SPLATS_PER_THREAD}', SPLATS_PER_THREAD.toString());
 
-@compute @workgroup_size(1)
-fn main() {
-    let count = sortElementCount[0];
-    let wgCount = (count + 255u) / 256u;
-    let maxDim = ${maxDim}u;
-    if (wgCount <= maxDim) {
-        dispatchArgs[0] = wgCount;
-        dispatchArgs[1] = 1u;
-    } else {
-        let y = (wgCount + maxDim - 1u) / maxDim;
-        let x = (wgCount + y - 1u) / y;
-        dispatchArgs[0] = x;
-        dispatchArgs[1] = y;
-    }
-    dispatchArgs[2] = 1u;
-}
-`;
             this._placeEntryPrepBindGroupFormat = new BindGroupFormat(device, [
                 new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true),
                 new BindStorageBufferFormat('dispatchArgs', SHADERSTAGE_COMPUTE)
@@ -959,11 +950,12 @@ fn main() {
             this._placeEntryPrepShader = new Shader(device, {
                 name: 'GSplatLocalPlaceEntryPrep',
                 shaderLanguage: SHADERLANGUAGE_WGSL,
-                cshader: prepSource,
+                cshader: computeGsplatLocalDispatchPrepSource,
+                cdefines: prepDefines,
                 computeBindGroupFormat: this._placeEntryPrepBindGroupFormat
             });
 
-            this._placeEntryPrepDispatchBuffer = new StorageBuffer(device, 3 * 4, BUFFERUSAGE_INDIRECT);
+            this._placeEntryPrepDispatchBuffer = new StorageBuffer(device, 6 * 4, BUFFERUSAGE_INDIRECT);
             this._placeEntryPrepCompute = new Compute(device, this._placeEntryPrepShader);
         }
 
@@ -1003,27 +995,9 @@ fn main() {
         // --- Large-splat prep: reads countersBuffer[1] (large splat count) and computes indirect dispatch args ---
         {
             const maxDim = device.limits.maxComputeWorkgroupsPerDimension || 65535;
-            const largePrepSource = /* wgsl */`
-@group(0) @binding(0) var<storage, read> countersBuffer: array<u32>;
-@group(0) @binding(1) var<storage, read_write> dispatchArgs: array<u32>;
-@group(0) @binding(2) var<storage, read> largeSplatIds: array<u32>;
+            const largePrepDefines = new Map();
+            largePrepDefines.set('{MAX_DIM}', maxDim.toString());
 
-@compute @workgroup_size(1)
-fn main() {
-    let count = min(countersBuffer[1], arrayLength(&largeSplatIds));
-    let maxDim = ${maxDim}u;
-    if (count <= maxDim) {
-        dispatchArgs[0] = count;
-        dispatchArgs[1] = 1u;
-    } else {
-        let y = (count + maxDim - 1u) / maxDim;
-        let x = (count + y - 1u) / y;
-        dispatchArgs[0] = x;
-        dispatchArgs[1] = y;
-    }
-    dispatchArgs[2] = 1u;
-}
-`;
             this._largeSplatPrepBindGroupFormat = new BindGroupFormat(device, [
                 new BindStorageBufferFormat('countersBuffer', SHADERSTAGE_COMPUTE, true),
                 new BindStorageBufferFormat('dispatchArgs', SHADERSTAGE_COMPUTE),
@@ -1032,7 +1006,8 @@ fn main() {
             this._largeSplatPrepShader = new Shader(device, {
                 name: 'GSplatLocalLargeSplatPrep',
                 shaderLanguage: SHADERLANGUAGE_WGSL,
-                cshader: largePrepSource,
+                cshader: computeGsplatLocalDispatchPrepLargeSource,
+                cdefines: largePrepDefines,
                 computeBindGroupFormat: this._largeSplatPrepBindGroupFormat
             });
 
@@ -1237,6 +1212,7 @@ fn main() {
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
 
         const cdefines = new Map();
+        cdefines.set('{SPLATS_PER_THREAD}', SPLATS_PER_THREAD.toString());
         if (fisheyeEnabled) {
             cdefines.set('GSPLAT_FISHEYE', '');
         }
