@@ -140,4 +140,3 @@ npm install
 | --------------- | --------------------------- | ---------- |
 | `npm run build` | 构建所有引擎构建目标和类型声明 | `build`    |
 | `npm run docs`  | 构建引擎[API参考文档](https://api.playcanvas.com/engine/)   | `docs`     |
-

@@ -140,4 +140,3 @@ Now you can run various build options:
 | --------------- | --------------------------------------------------------------------- | ---------- |
 | `npm run build` | Build all engine flavors and type declarations                        | `build`    |
 | `npm run docs`  | Build engine [API reference docs](https://api.playcanvas.com/engine/) | `docs`     |
-
