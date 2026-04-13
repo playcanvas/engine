@@ -348,10 +348,10 @@ class GSplatWorkBuffer {
      * @param {GraphNode} cameraNode - The camera node.
      * @param {number[][]|undefined} colorsByLod - Array of RGB colors per LOD. Index by lodIndex; if a
      * shorter array is provided, index 0 will be reused as fallback.
+     * @param {Set<number>|null} [changedAllocIds] - Set of changed allocIds for partial render.
      */
-    renderColor(splats, cameraNode, colorsByLod) {
-        // render only color using color-only render pass
-        if (this.colorRenderPass.update(splats, cameraNode, colorsByLod)) {
+    renderColor(splats, cameraNode, colorsByLod, changedAllocIds = null) {
+        if (this.colorRenderPass.update(splats, cameraNode, colorsByLod, changedAllocIds)) {
             this.colorRenderPass.render();
         }
     }
