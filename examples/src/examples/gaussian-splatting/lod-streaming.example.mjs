@@ -7,6 +7,13 @@ import * as pc from 'playcanvas';
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
 
+// allow overriding scene url and orientation via hash query params, e.g.
+// #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
+const hashQuery = (window.top?.location.hash || window.location.hash || '').split('?')[1] || '';
+const hashParams = new URLSearchParams(hashQuery);
+const paramUrl = hashParams.get('url');
+const paramOrientation = hashParams.get('orientation');
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -206,8 +213,8 @@ assetListLoader.load(async () => {
     data.set('splatBudget', pc.platform.mobile ? 1 : 4);
     data.set('environment', 'none');
     data.set('fogDensity', 0);
-    data.set('url', '');
-    data.set('orientation', 270);
+    data.set('url', paramUrl || '');
+    data.set('orientation', paramOrientation ? parseFloat(paramOrientation) : 270);
 
     const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 
@@ -491,8 +498,8 @@ assetListLoader.load(async () => {
         }
     };
 
-    // Initial load
-    await loadGsplat(null);
+    // Initial load (use URL from hash params if provided)
+    await loadGsplat(paramUrl || null);
 
     data.on('lodPreset:set', applyPreset);
 
