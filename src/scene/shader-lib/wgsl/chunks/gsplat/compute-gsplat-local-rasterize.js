@@ -1,6 +1,11 @@
 // Tile rasterizer for the local compute renderer. One workgroup per tile, reads
 // per-tile entry ranges from the prefix sum buffer and splat data from the projection cache.
-// Nearly identical to the global rasterizer but uses prefix-sum offsets instead of paired ranges.
+//
+// Each batch loads 64 splats into shared memory (1 per thread), then all 64 threads
+// evaluate them against their 2×2 pixel quads. Per-thread early-out skips evaluation
+// once all 4 pixels saturate; no workgroup-level early-out is used because WGSL lacks
+// a fused barrier+vote intrinsic (like CUDA's __syncthreads_count), and emulating it
+// with atomics+barriers costs more than the wasted branchless ALU on saturated pixels.
 export const computeGsplatLocalRasterizeSource = /* wgsl */`
 
 #include "halfTypesCS"
@@ -14,7 +19,6 @@ export const computeGsplatLocalRasterizeSource = /* wgsl */`
 
 const CACHE_STRIDE: u32 = 7u;
 const BATCH_SIZE: u32 = 64u;
-const WORKGROUP_SIZE: u32 = 64u;
 const ALPHA_THRESHOLD: half = half(1.0) / half(255.0);
 const EXP4: half = exp(half(-4.0));
 const INV_EXP4: half = half(1.0) / (half(1.0) - EXP4);
@@ -69,9 +73,6 @@ var<workgroup> sharedCoeffs: array<vec3f, 64>;
         var<workgroup> sharedViewDepth: array<f32, 64>;
     #endif
 #endif
-
-var<workgroup> doneCount: atomic<u32>;
-var<workgroup> doneCountShared: u32;
 
 // Evaluate a single splat for picking. Records the front-most pick ID (first splat above
 // alphaClip) and accumulates alpha-weighted depth for sub-pixel depth reconstruction.
@@ -189,10 +190,6 @@ fn main(
 
     for (var batch: u32 = 0u; batch < numBatches; batch++) {
 
-        if (localIdx == 0u) {
-            atomicStore(&doneCount, 0u);
-        }
-
         let batchOffset = batch * BATCH_SIZE + localIdx;
         if (batchOffset < tileCount) {
             let cacheIdx = tileEntries[tStart + batchOffset];
@@ -286,17 +283,7 @@ fn main(
             }
         }
 
-        if (threadDone) {
-            atomicAdd(&doneCount, 1u);
-        }
         workgroupBarrier();
-        if (localIdx == 0u) {
-            doneCountShared = atomicLoad(&doneCount);
-        }
-        let totalDone = workgroupUniformLoad(&doneCountShared);
-        if (totalDone == WORKGROUP_SIZE) {
-            break;
-        }
     }
 
     // Write results for the 2x2 pixel quad owned by this thread.
