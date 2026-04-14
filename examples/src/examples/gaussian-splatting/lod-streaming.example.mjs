@@ -188,8 +188,8 @@ assetListLoader.load(async () => {
     data.on('minContribution:set', () => {
         app.scene.gsplat.minContribution = data.get('minContribution');
     });
-    data.on('debugLod:set', () => {
-        app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+    data.on('debug:set', () => {
+        app.scene.gsplat.debug = data.get('debug');
     });
     data.on('compact:set', () => {
         app.scene.gsplat.dataFormat = data.get('compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
@@ -208,7 +208,7 @@ assetListLoader.load(async () => {
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('culling', device.isWebGPU);
     data.set('compact', true);
-    data.set('debugLod', false);
+    data.set('debug', pc.GSPLAT_DEBUG_NONE);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
     data.set('splatBudget', pc.platform.mobile ? 1 : 4);
     data.set('environment', 'none');

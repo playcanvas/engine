@@ -8,7 +8,8 @@ import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import {
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
-    GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE
+    GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
+    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -206,31 +207,50 @@ class GSplatParams {
     dirty = false;
 
     /**
-     * @type {boolean}
+     * @type {number}
      * @private
      */
-    _colorizeLod = false;
+    _debug = GSPLAT_DEBUG_NONE;
 
     /**
-     * Enables colorization by selected LOD level when rendering GSplat objects. Defaults to false.
-     * Marks params dirty on change.
+     * Debug rendering mode for Gaussian splats. Can be:
      *
-     * @type {boolean}
+     * - {@link GSPLAT_DEBUG_NONE}: Normal rendering (default).
+     * - {@link GSPLAT_DEBUG_LOD}: Colorize splats by their selected LOD level.
+     * - {@link GSPLAT_DEBUG_SH_UPDATE}: Random color per SH update pass to visualize update
+     * frequency.
+     *
+     * Only one debug mode can be active at a time. Defaults to {@link GSPLAT_DEBUG_NONE}.
+     *
+     * @type {number}
      */
-    set colorizeLod(value) {
-        if (this._colorizeLod !== value) {
-            this._colorizeLod = value;
-            this.dirty = true;
+    set debug(value) {
+        if (this._debug !== value) {
+            const prev = this._debug;
+            this._debug = value;
+
+            if (value === GSPLAT_DEBUG_LOD || prev === GSPLAT_DEBUG_LOD) {
+                this.dirty = true;
+            }
         }
     }
 
+    get debug() {
+        return this._debug;
+    }
+
+    /** @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_LOD} instead. */
+    set colorizeLod(value) {
+        Debug.deprecated('GSplatParams#colorizeLod is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_LOD instead.');
+        this.debug = value ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
+    }
+
     /**
-     * Gets colorize-by-LOD flag.
-     *
-     * @returns {boolean} Current enabled state.
+     * @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_LOD} instead.
+     * @returns {boolean} Whether LOD colorization is enabled.
      */
     get colorizeLod() {
-        return this._colorizeLod;
+        return this._debug === GSPLAT_DEBUG_LOD;
     }
 
     /**
@@ -478,14 +498,19 @@ class GSplatParams {
      */
     useFog = true;
 
+    /** @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead. */
+    set colorizeColorUpdate(value) {
+        Debug.deprecated('GSplatParams#colorizeColorUpdate is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_SH_UPDATE instead.');
+        this.debug = value ? GSPLAT_DEBUG_SH_UPDATE : GSPLAT_DEBUG_NONE;
+    }
+
     /**
-     * Enables debug colorization to visualize when spherical harmonics are evaluated.
-     * When true, each update pass renders with a random color to visualize the behavior
-     * of colorUpdateAngle thresholds. Defaults to false.
-     *
-     * @type {boolean}
+     * @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead.
+     * @returns {boolean} Whether SH update colorization is enabled.
      */
-    colorizeColorUpdate = false;
+    get colorizeColorUpdate() {
+        return this._debug === GSPLAT_DEBUG_SH_UPDATE;
+    }
 
     /**
      * Viewing angle threshold in degrees for triggering spherical harmonics color updates.
