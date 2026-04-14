@@ -115,13 +115,11 @@ assetListLoader.load(() => {
 
     // initialize UI settings
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('debugLod', false);
+    data.set('debug', pc.GSPLAT_DEBUG_NONE);
     data.set('splatBudget', pc.platform.mobile ? 1 : 4);
 
-    app.scene.gsplat.colorizeLod = !!data.get('debugLod');
-
-    data.on('debugLod:set', () => {
-        app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+    data.on('debug:set', () => {
+        app.scene.gsplat.debug = data.get('debug');
     });
 
     const applySplatBudget = () => {

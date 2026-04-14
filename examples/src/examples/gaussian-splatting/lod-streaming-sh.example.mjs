@@ -122,20 +122,12 @@ assetListLoader.load(() => {
 
     // initialize UI settings
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('debugLod', false);
-    data.set('colorizeSH', false);
+    data.set('debug', pc.GSPLAT_DEBUG_NONE);
     data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
     data.set('splatBudget', pc.platform.mobile ? 1 : 3);
 
-    app.scene.gsplat.colorizeLod = !!data.get('debugLod');
-    app.scene.gsplat.colorizeColorUpdate = !!data.get('colorizeSH');
-
-    data.on('debugLod:set', () => {
-        app.scene.gsplat.colorizeLod = !!data.get('debugLod');
-    });
-
-    data.on('colorizeSH:set', () => {
-        app.scene.gsplat.colorizeColorUpdate = !!data.get('colorizeSH');
+    data.on('debug:set', () => {
+        app.scene.gsplat.debug = data.get('debug');
     });
 
     const entity = new pc.Entity(config.name || 'gsplat');

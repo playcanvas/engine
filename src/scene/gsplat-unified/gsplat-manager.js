@@ -17,7 +17,8 @@ import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
-    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE
+    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
+    GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE
 } from '../constants.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
@@ -1119,9 +1120,9 @@ class GSplatManager {
      * @returns {Array<number[]>|undefined} Color array for debug visualization, or undefined for normal rendering
      */
     getDebugColors() {
-        if (this.scene.gsplat.colorizeColorUpdate) {
+        const debug = this.scene.gsplat.debug;
+        if (debug === GSPLAT_DEBUG_SH_UPDATE) {
             _randomColorRaw ??= [];
-            // Random color for this update pass - use same color for all LOD levels
             const r = Math.random();
             const g = Math.random();
             const b = Math.random();
@@ -1132,8 +1133,7 @@ class GSplatManager {
                 _randomColorRaw[i][2] = b;
             }
             return _randomColorRaw;
-        } else if (this.scene.gsplat.colorizeLod) {
-            // LOD colors
+        } else if (debug === GSPLAT_DEBUG_LOD) {
             return _lodColorsRaw;
         }
         return undefined;

@@ -1246,3 +1246,28 @@ export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
  * @category Graphics
  */
 export const GSPLAT_RENDERER_COMPUTE = 3;
+
+/**
+ * No debug rendering for Gaussian splats. Normal rendering mode.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_NONE = 0;
+
+/**
+ * Debug rendering that colorizes Gaussian splats by their selected LOD level.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_LOD = 1;
+
+/**
+ * Debug rendering that assigns a random color per spherical harmonics update pass,
+ * visualizing when SH color updates occur.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_SH_UPDATE = 2;
