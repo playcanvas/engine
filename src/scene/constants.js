@@ -1271,3 +1271,13 @@ export const GSPLAT_DEBUG_LOD = 1;
  * @category Graphics
  */
 export const GSPLAT_DEBUG_SH_UPDATE = 2;
+
+/**
+ * Debug heatmap rendering for the compute rasterizer. Visualizes the average number of splats
+ * processed per pixel in each tile as a blue-to-red color ramp. Only supported with
+ * {@link GSPLAT_RENDERER_COMPUTE}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_HEATMAP = 3;

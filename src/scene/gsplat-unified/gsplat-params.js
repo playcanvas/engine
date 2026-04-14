@@ -9,7 +9,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
-    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE
+    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -219,6 +219,8 @@ class GSplatParams {
      * - {@link GSPLAT_DEBUG_LOD}: Colorize splats by their selected LOD level.
      * - {@link GSPLAT_DEBUG_SH_UPDATE}: Random color per SH update pass to visualize update
      * frequency.
+     * - {@link GSPLAT_DEBUG_HEATMAP}: Heatmap visualization of average splats processed per
+     * pixel in each tile. Only supported with {@link GSPLAT_RENDERER_COMPUTE}.
      *
      * Only one debug mode can be active at a time. Defaults to {@link GSPLAT_DEBUG_NONE}.
      *
@@ -229,7 +231,8 @@ class GSplatParams {
             const prev = this._debug;
             this._debug = value;
 
-            if (value === GSPLAT_DEBUG_LOD || prev === GSPLAT_DEBUG_LOD) {
+            if (value === GSPLAT_DEBUG_LOD || prev === GSPLAT_DEBUG_LOD ||
+                value === GSPLAT_DEBUG_HEATMAP || prev === GSPLAT_DEBUG_HEATMAP) {
                 this.dirty = true;
             }
         }

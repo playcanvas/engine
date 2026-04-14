@@ -281,15 +281,17 @@ class GSplatLocalDispatchSet {
      * @param {boolean} pickMode - Whether to use the pick variant.
      * @param {boolean} depthTest - Whether to enable depth testing against scene geometry.
      * @param {string} [fogType] - Fog type string: 'none', 'linear', 'exp', or 'exp2'.
+     * @param {boolean} [heatmap] - Whether to enable heatmap debug visualization.
      * @returns {Compute} The cached Compute instance.
      */
-    getRasterizeCompute(pickMode, depthTest, fogType = 'none') {
+    getRasterizeCompute(pickMode, depthTest, fogType = 'none', heatmap = false) {
         let key = pickMode ? 'pick' : 'color';
         if (depthTest) key += '-depth';
         if (fogType !== 'none') key += `-fog-${fogType}`;
+        if (heatmap) key += '-heatmap';
         let variant = this._rasterizeVariants.get(key);
         if (!variant) {
-            const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(pickMode, depthTest, fogType);
+            const { shader, bindGroupFormat } = this._createRasterizeShaderAndFormat(pickMode, depthTest, fogType, heatmap);
             const compute = new Compute(this.device, shader, `GSplatRasterize-${key}`);
             variant = { shader, bindGroupFormat, compute };
             this._rasterizeVariants.set(key, variant);
@@ -303,10 +305,11 @@ class GSplatLocalDispatchSet {
      * @param {boolean} pickMode - Whether to create the pick variant.
      * @param {boolean} depthTest - Whether to enable depth testing against scene geometry.
      * @param {string} [fogType] - Fog type string: 'none', 'linear', 'exp', or 'exp2'.
+     * @param {boolean} [heatmap] - Whether to enable heatmap debug visualization.
      * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The shader and format.
      * @private
      */
-    _createRasterizeShaderAndFormat(pickMode, depthTest = false, fogType = 'none') {
+    _createRasterizeShaderAndFormat(pickMode, depthTest = false, fogType = 'none', heatmap = false) {
         const device = this.device;
         const hasFog = fogType !== 'none';
 
@@ -354,6 +357,7 @@ class GSplatLocalDispatchSet {
         const cdefines = new Map();
         if (pickMode) cdefines.set('PICK_MODE', '');
         if (depthTest) cdefines.set('DEPTH_TEST', '');
+        if (heatmap) cdefines.set('HEATMAP_MODE', '');
         cdefines.set('GAMMA', 'SRGB'); // assumes splat colors are in gamma space, will need to change when we get linear splats
         cdefines.set('FOG', hasFog ? fogType.toUpperCase() : 'NONE');
 
