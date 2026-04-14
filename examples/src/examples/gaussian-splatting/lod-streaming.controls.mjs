@@ -227,7 +227,8 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     options: [
                         { v: 0, t: 'None' },
                         { v: 1, t: 'LOD' },
-                        { v: 2, t: 'SH Update' }
+                        { v: 2, t: 'SH Update' },
+                        { v: 3, t: 'Heatmap' }
                     ]
                 })
             ),

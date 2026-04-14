@@ -60,6 +60,9 @@ struct Uniforms {
 
 var<workgroup> sharedCenterScreen: array<vec2f, 64>;
 var<workgroup> sharedCoeffs: array<vec3f, 64>;
+#ifdef HEATMAP_MODE
+    var<workgroup> sharedHeatCount: atomic<u32>;
+#endif
 
 // Pick mode stores per-splat opacity, ID and depth; color mode stores packed RGBA.
 // Depth test mode also needs per-splat view depth for occlusion against scene geometry.
@@ -101,6 +104,20 @@ fn evalSplatPick(pixelCoord: vec2f, center: vec2f, coeffX: f32, coeffY: f32, coe
     }
 
     *T = newT;
+}
+#endif
+
+#ifdef HEATMAP_MODE
+fn heatmapColor(v: f32) -> vec3f {
+    let t = saturate(v / 2000.0);
+    if (t < 0.2) {
+        return mix(vec3f(0.0, 0.0, 1.0), vec3f(0.0, 1.0, 1.0), t * 5.0);
+    } else if (t < 0.4) {
+        return mix(vec3f(0.0, 1.0, 1.0), vec3f(1.0, 1.0, 0.0), (t - 0.2) * 5.0);
+    } else if (t < 0.6) {
+        return mix(vec3f(1.0, 1.0, 0.0), vec3f(1.0, 0.0, 0.0), (t - 0.4) * 5.0);
+    }
+    return mix(vec3f(1.0, 0.0, 0.0), vec3f(0.15, 0.0, 0.0), (t - 0.6) * 2.5);
 }
 #endif
 
@@ -178,6 +195,12 @@ fn main(
     #endif
 
     let tileCount = tEnd - tStart;
+
+    #ifdef HEATMAP_MODE
+        if (localIdx == 0u) { atomicStore(&sharedHeatCount, 0u); }
+        workgroupBarrier();
+        var processedCount: u32 = 0u;
+    #endif
 
     let numBatches = (tileCount + BATCH_SIZE - 1u) / BATCH_SIZE;
     var threadDone = false;
@@ -288,6 +311,10 @@ fn main(
                     c11 += splatColor.rgb * weight.w;
                     T = select(T, newT, valid);
 
+                    #ifdef HEATMAP_MODE
+                        processedCount += 1u;
+                    #endif
+
                     if (all(T < half4(ALPHA_THRESHOLD))) {
                         threadDone = true;
                         break;
@@ -299,44 +326,65 @@ fn main(
         workgroupBarrier();
     }
 
-    // Write results for the 2x2 pixel quad owned by this thread.
-    // Pick mode: store the front-most pick ID and (accumulated depth, weight) per pixel.
-    // Color mode: convert accumulated gamma-space color to linear via decodeGamma3 and store
-    // to the rgba16float output texture; alpha holds total opacity (1 - transmittance).
-    if (basePixel.x < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
-        #ifdef PICK_MODE
-            textureStore(pickIdTexture, basePixel, vec4u(pickId00, 0u, 0u, 0u));
-            textureStore(pickDepthTexture, basePixel, vec4f(dAcc00, wAcc00, 0.0, 0.0));
-        #else
-            textureStore(outputTexture, basePixel, vec4f(decodeGamma3(vec3f(c00)), f32(half(1.0) - T.x)));
-        #endif
-    }
-    if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
-        let px10 = vec2u(basePixel.x + 1u, basePixel.y);
-        #ifdef PICK_MODE
-            textureStore(pickIdTexture, px10, vec4u(pickId10, 0u, 0u, 0u));
-            textureStore(pickDepthTexture, px10, vec4f(dAcc10, wAcc10, 0.0, 0.0));
-        #else
-            textureStore(outputTexture, px10, vec4f(decodeGamma3(vec3f(c10)), f32(half(1.0) - T.y)));
-        #endif
-    }
-    if (basePixel.x < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
-        let px01 = vec2u(basePixel.x, basePixel.y + 1u);
-        #ifdef PICK_MODE
-            textureStore(pickIdTexture, px01, vec4u(pickId01, 0u, 0u, 0u));
-            textureStore(pickDepthTexture, px01, vec4f(dAcc01, wAcc01, 0.0, 0.0));
-        #else
-            textureStore(outputTexture, px01, vec4f(decodeGamma3(vec3f(c01)), f32(half(1.0) - T.z)));
-        #endif
-    }
-    if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
-        let px11 = vec2u(basePixel.x + 1u, basePixel.y + 1u);
-        #ifdef PICK_MODE
-            textureStore(pickIdTexture, px11, vec4u(pickId11, 0u, 0u, 0u));
-            textureStore(pickDepthTexture, px11, vec4f(dAcc11, wAcc11, 0.0, 0.0));
-        #else
-            textureStore(outputTexture, px11, vec4f(decodeGamma3(vec3f(c11)), f32(half(1.0) - T.w)));
-        #endif
-    }
+    #ifdef HEATMAP_MODE
+        atomicAdd(&sharedHeatCount, processedCount);
+        workgroupBarrier();
+        let avgCount = f32(atomicLoad(&sharedHeatCount)) / 64.0;
+        let heatColor = vec4f(heatmapColor(avgCount), 1.0);
+        if (basePixel.x < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
+            textureStore(outputTexture, basePixel, heatColor);
+        }
+        if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
+            textureStore(outputTexture, vec2u(basePixel.x + 1u, basePixel.y), heatColor);
+        }
+        if (basePixel.x < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
+            textureStore(outputTexture, vec2u(basePixel.x, basePixel.y + 1u), heatColor);
+        }
+        if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
+            textureStore(outputTexture, vec2u(basePixel.x + 1u, basePixel.y + 1u), heatColor);
+        }
+    #else
+
+        // Write results for the 2x2 pixel quad owned by this thread.
+        // Pick mode: store the front-most pick ID and (accumulated depth, weight) per pixel.
+        // Color mode: convert accumulated gamma-space color to linear via decodeGamma3 and store
+        // to the rgba16float output texture; alpha holds total opacity (1 - transmittance).
+        if (basePixel.x < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
+            #ifdef PICK_MODE
+                textureStore(pickIdTexture, basePixel, vec4u(pickId00, 0u, 0u, 0u));
+                textureStore(pickDepthTexture, basePixel, vec4f(dAcc00, wAcc00, 0.0, 0.0));
+            #else
+                textureStore(outputTexture, basePixel, vec4f(decodeGamma3(vec3f(c00)), f32(half(1.0) - T.x)));
+            #endif
+        }
+        if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
+            let px10 = vec2u(basePixel.x + 1u, basePixel.y);
+            #ifdef PICK_MODE
+                textureStore(pickIdTexture, px10, vec4u(pickId10, 0u, 0u, 0u));
+                textureStore(pickDepthTexture, px10, vec4f(dAcc10, wAcc10, 0.0, 0.0));
+            #else
+                textureStore(outputTexture, px10, vec4f(decodeGamma3(vec3f(c10)), f32(half(1.0) - T.y)));
+            #endif
+        }
+        if (basePixel.x < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
+            let px01 = vec2u(basePixel.x, basePixel.y + 1u);
+            #ifdef PICK_MODE
+                textureStore(pickIdTexture, px01, vec4u(pickId01, 0u, 0u, 0u));
+                textureStore(pickDepthTexture, px01, vec4f(dAcc01, wAcc01, 0.0, 0.0));
+            #else
+                textureStore(outputTexture, px01, vec4f(decodeGamma3(vec3f(c01)), f32(half(1.0) - T.z)));
+            #endif
+        }
+        if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
+            let px11 = vec2u(basePixel.x + 1u, basePixel.y + 1u);
+            #ifdef PICK_MODE
+                textureStore(pickIdTexture, px11, vec4u(pickId11, 0u, 0u, 0u));
+                textureStore(pickDepthTexture, px11, vec4f(dAcc11, wAcc11, 0.0, 0.0));
+            #else
+                textureStore(outputTexture, px11, vec4f(decodeGamma3(vec3f(c11)), f32(half(1.0) - T.w)));
+            #endif
+        }
+
+    #endif
 }
 `;

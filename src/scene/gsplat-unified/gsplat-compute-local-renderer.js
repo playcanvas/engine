@@ -14,7 +14,7 @@ import {
     UNIFORMTYPE_MAT4,
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
-import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, FOG_NONE } from '../constants.js';
+import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, FOG_NONE, GSPLAT_DEBUG_HEATMAP } from '../constants.js';
 import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
@@ -383,6 +383,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._exposure = exposure ?? 1.0;
         this._fisheye = gsplat.fisheye;
         this._fogParams = fogParams ?? null;
+        this._debugMode = gsplat.debug;
 
         const formatHash = this.workBuffer.format.hash;
         if (formatHash !== this._formatHash) {
@@ -796,7 +797,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         const fogParams = this._fogParams;
         const fogType = (fogParams && fogParams.type !== FOG_NONE) ? fogParams.type : 'none';
-        const rasterizeCompute = set.getRasterizeCompute(pickMode, useDepth, fogType);
+        const heatmap = !pickMode && this._debugMode === GSPLAT_DEBUG_HEATMAP;
+        const rasterizeCompute = set.getRasterizeCompute(pickMode, useDepth, fogType, heatmap);
 
         rasterizeCompute.setParameter('screenWidth', width);
         rasterizeCompute.setParameter('screenHeight', height);
