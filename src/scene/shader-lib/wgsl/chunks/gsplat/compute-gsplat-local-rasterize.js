@@ -102,17 +102,6 @@ fn evalSplatPick(pixelCoord: vec2f, center: vec2f, coeffX: f32, coeffY: f32, coe
 
     *T = newT;
 }
-#else
-fn evalSplat(pixelCoord: vec2f, center: vec2f, coeffX: f32, coeffY: f32, coeffXY: f32, splatColor: half4, colorAccum: ptr<function, half3>, T: ptr<function, half>) {
-    let dx = pixelCoord - center;
-    let power = coeffX * dx.x * dx.x + coeffXY * dx.x * dx.y + coeffY * dx.y * dx.y;
-    let gauss = (half(exp(power)) - EXP4) * INV_EXP4;
-    let alpha = half(min(half(0.99), splatColor.a * gauss));
-    let newT = *T * (half(1.0) - alpha);
-    let cond = half(power > -4.0 && alpha > ALPHA_THRESHOLD && *T >= ALPHA_THRESHOLD);
-    *colorAccum += splatColor.rgb * alpha * (*T) * cond;
-    *T = cond * newT + (half(1.0) - cond) * (*T);
-}
 #endif
 
 @compute @workgroup_size(8, 8)
@@ -140,11 +129,10 @@ fn main(
 
     // Per-pixel state for the 2x2 quad.
 
-    // transmittance
-    var T00: half = half(1.0); var T10: half = half(1.0);
-    var T01: half = half(1.0); var T11: half = half(1.0);
-
     #ifdef PICK_MODE
+        var T00: half = half(1.0); var T10: half = half(1.0);
+        var T01: half = half(1.0); var T11: half = half(1.0);
+
         // front-most pick ID per pixel
         var pickId00: u32 = 0xFFFFFFFFu; var pickId10: u32 = 0xFFFFFFFFu;
         var pickId01: u32 = 0xFFFFFFFFu; var pickId11: u32 = 0xFFFFFFFFu;
@@ -158,7 +146,13 @@ fn main(
         var wAcc01: f32 = 0.0; var wAcc11: f32 = 0.0;
         let clipH = half(uniforms.alphaClip);
     #else
-        // accumulated color
+        // Transmittance for the 2x2 quad packed as vec4<half> (x=00, y=10, z=01, w=11).
+        // Tracking how much light passes through the splat stack at that pixel. Packing
+        // them into a single vec4 lets the compiler use vector ALU for the branchless
+        // alpha-blending update and the all-saturated early-out test.
+        var T = half4(1.0);
+
+        // accumulated color per pixel
         var c00 = half3(0.0); var c10 = half3(0.0);
         var c01 = half3(0.0); var c11 = half3(0.0);
 
@@ -252,6 +246,11 @@ fn main(
                     evalSplatPick(p10, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId10, &dAcc10, &wAcc10, &T10);
                     evalSplatPick(p01, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId01, &dAcc01, &wAcc01, &T01);
                     evalSplatPick(p11, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId11, &dAcc11, &wAcc11, &T11);
+
+                    if (all(vec4<half>(T00, T10, T01, T11) < half4(ALPHA_THRESHOLD))) {
+                        threadDone = true;
+                        break;
+                    }
                 #else
                     let splatColor = sharedColor[i];
 
@@ -263,23 +262,37 @@ fn main(
                             threadDone = true;
                             break;
                         }
-
-                        if (splatDepth <= sceneDepth.x) { evalSplat(p00, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c00, &T00); }
-                        if (splatDepth <= sceneDepth.y) { evalSplat(p10, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c10, &T10); }
-                        if (splatDepth <= sceneDepth.z) { evalSplat(p01, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c01, &T01); }
-                        if (splatDepth <= sceneDepth.w) { evalSplat(p11, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c11, &T11); }
-                    #else
-                        evalSplat(p00, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c00, &T00);
-                        evalSplat(p10, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c10, &T10);
-                        evalSplat(p01, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c01, &T01);
-                        evalSplat(p11, center, coeffs.x, coeffs.y, coeffs.z, splatColor, &c11, &T11);
                     #endif
-                #endif
 
-                if (all(vec4<half>(T00, T10, T01, T11) < half4(ALPHA_THRESHOLD))) {
-                    threadDone = true;
-                    break;
-                }
+                    // Vectorized Gaussian evaluation for the 2x2 pixel quad. Compute dx
+                    // once from p00, build the four pixel offsets as vec4f (exploiting the
+                    // regular +1 grid), and evaluate power/gauss/alpha/transmittance as
+                    // vec4 operations to share ALU across the quad.
+                    let d = p00 - center;
+                    let dxV = vec4f(d.x, d.x + 1.0, d.x, d.x + 1.0);
+                    let dyV = vec4f(d.y, d.y, d.y + 1.0, d.y + 1.0);
+                    let power4 = coeffs.x * dxV * dxV + coeffs.z * dxV * dyV + coeffs.y * dyV * dyV;
+                    let gauss4 = (half4(exp(power4)) - half4(EXP4)) * half4(INV_EXP4);
+                    let alpha4 = min(half4(0.99), half4(splatColor.a) * gauss4);
+                    let newT = T * (half4(1.0) - alpha4);
+
+                    var valid = (power4 > vec4f(-4.0)) & (alpha4 > half4(ALPHA_THRESHOLD)) & (T >= half4(ALPHA_THRESHOLD));
+                    #ifdef DEPTH_TEST
+                        valid = valid & (vec4f(splatDepth) <= sceneDepth);
+                    #endif
+
+                    let weight = alpha4 * T * select(half4(0.0), half4(1.0), valid);
+                    c00 += splatColor.rgb * weight.x;
+                    c10 += splatColor.rgb * weight.y;
+                    c01 += splatColor.rgb * weight.z;
+                    c11 += splatColor.rgb * weight.w;
+                    T = select(T, newT, valid);
+
+                    if (all(T < half4(ALPHA_THRESHOLD))) {
+                        threadDone = true;
+                        break;
+                    }
+                #endif
             }
         }
 
@@ -295,7 +308,7 @@ fn main(
             textureStore(pickIdTexture, basePixel, vec4u(pickId00, 0u, 0u, 0u));
             textureStore(pickDepthTexture, basePixel, vec4f(dAcc00, wAcc00, 0.0, 0.0));
         #else
-            textureStore(outputTexture, basePixel, vec4f(decodeGamma3(vec3f(c00)), f32(half(1.0) - T00)));
+            textureStore(outputTexture, basePixel, vec4f(decodeGamma3(vec3f(c00)), f32(half(1.0) - T.x)));
         #endif
     }
     if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y < uniforms.screenHeight) {
@@ -304,7 +317,7 @@ fn main(
             textureStore(pickIdTexture, px10, vec4u(pickId10, 0u, 0u, 0u));
             textureStore(pickDepthTexture, px10, vec4f(dAcc10, wAcc10, 0.0, 0.0));
         #else
-            textureStore(outputTexture, px10, vec4f(decodeGamma3(vec3f(c10)), f32(half(1.0) - T10)));
+            textureStore(outputTexture, px10, vec4f(decodeGamma3(vec3f(c10)), f32(half(1.0) - T.y)));
         #endif
     }
     if (basePixel.x < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
@@ -313,7 +326,7 @@ fn main(
             textureStore(pickIdTexture, px01, vec4u(pickId01, 0u, 0u, 0u));
             textureStore(pickDepthTexture, px01, vec4f(dAcc01, wAcc01, 0.0, 0.0));
         #else
-            textureStore(outputTexture, px01, vec4f(decodeGamma3(vec3f(c01)), f32(half(1.0) - T01)));
+            textureStore(outputTexture, px01, vec4f(decodeGamma3(vec3f(c01)), f32(half(1.0) - T.z)));
         #endif
     }
     if (basePixel.x + 1u < uniforms.screenWidth && basePixel.y + 1u < uniforms.screenHeight) {
@@ -322,7 +335,7 @@ fn main(
             textureStore(pickIdTexture, px11, vec4u(pickId11, 0u, 0u, 0u));
             textureStore(pickDepthTexture, px11, vec4f(dAcc11, wAcc11, 0.0, 0.0));
         #else
-            textureStore(outputTexture, px11, vec4f(decodeGamma3(vec3f(c11)), f32(half(1.0) - T11)));
+            textureStore(outputTexture, px11, vec4f(decodeGamma3(vec3f(c11)), f32(half(1.0) - T.w)));
         #endif
     }
 }
