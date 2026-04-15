@@ -20,7 +20,7 @@ const RENDERERS = [
     { device: 'webgpu', renderer: RENDERER_COMPUTE, label: 'WebGPU Compute', shortLabel: 'Compute' }
 ];
 
-const BUDGETS = [2, 4, 6, 8, 10, 20]; // millions
+const BUDGETS = [2, 4, 6, 8, 10, 20, 30]; // millions
 
 // ── Stored results per renderer column ──
 // storedResults[col].budgetResults is length BUDGETS.length, entries are null or result object
