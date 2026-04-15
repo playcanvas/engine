@@ -90,6 +90,8 @@ assetListLoader.load(() => {
     let splatEntity = null;
 
     app.scene.gsplat.lodBehindPenalty = 3;
+    app.scene.gsplat.minPixelSize = 2;
+    app.scene.gsplat.minContribution = 2;
 
     /**
      * Calculate the bounding box of an entity.
