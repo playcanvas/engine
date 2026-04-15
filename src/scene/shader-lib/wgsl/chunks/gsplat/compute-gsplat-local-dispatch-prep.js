@@ -11,7 +11,7 @@ fn main() {
     let count = sortElementCount[0];
     let maxDim = {MAX_DIM}u;
 
-    // Slot 0: tile-count pass ({SPLATS_PER_THREAD} splats per thread)
+    // Slot 0: tile-count pass (1 splat per thread)
     let countWg = (count + {SPLATS_PER_WG_MINUS_1}u) / {SPLATS_PER_WG}u;
     if (countWg <= maxDim) {
         dispatchArgs[0] = countWg;
