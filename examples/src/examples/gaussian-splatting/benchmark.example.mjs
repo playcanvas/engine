@@ -195,17 +195,28 @@ async function runBenchmark(config) {
         app.root.addChild(logo);
     }
 
-    // Camera — side view along the X axis
+    // Camera on a pivot so it orbits slowly to force sorting each frame
+    // Pre-rotate so the original side view aligns with the midpoint of measurement
+    const cameraPivot = new pc.Entity('cameraPivot');
+    cameraPivot.setLocalPosition(0, 1.2, 0);
+    cameraPivot.setLocalEulerAngles(0, -(WARMUP_FRAMES + MEASURE_FRAMES / 2) * 0.5, 0);
+    app.root.addChild(cameraPivot);
+
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1),
         fov: 60
     });
-    camera.setLocalPosition(-4, 1.2, 0);
-    camera.lookAt(new pc.Vec3(0, 1.2, 0));
-    app.root.addChild(camera);
+    camera.setLocalPosition(-4, 0, 0);
+    camera.lookAt(new pc.Vec3(0, 0, 0));
+    cameraPivot.addChild(camera);
 
     app.start();
+
+    // Orbit 0.5 degrees per frame to keep sorting active
+    app.on('update', () => {
+        cameraPivot.rotateLocal(0, 0.5, 0);
+    });
 
     // Warmup + measurement
     const cpuTimes = [];
