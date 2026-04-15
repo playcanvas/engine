@@ -23,7 +23,7 @@ import { getApplication } from './globals.js';
  * @import { RigidBodyComponent } from './components/rigid-body/component.js'
  * @import { ScreenComponent } from './components/screen/component.js'
  * @import { ScriptComponent } from './components/script/component.js'
- * @import { ScriptType } from './script/script-type.js'
+ * @import { Script } from './script/script.js'
  * @import { ScrollViewComponent } from './components/scroll-view/component.js'
  * @import { ScrollbarComponent } from './components/scrollbar/component.js'
  * @import { SoundComponent } from './components/sound/component.js'
@@ -447,8 +447,8 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for the first script instance of specified type.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType|undefined} A script instance of specified type, if the entity or any of
+     * @param {string|typeof Script} nameOrType - The name or type of {@link Script}.
+     * @returns {Script|undefined} A script instance of specified type, if the entity or any of
      * its descendants has one. Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
@@ -462,8 +462,8 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for all script instances of specified type.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType[]} All script instances of specified type in the entity or any of its
+     * @param {string|typeof Script} nameOrType - The name or type of {@link Script}.
+     * @returns {Script[]} All script instances of specified type in the entity or any of its
      * descendants. Returns empty array if none found.
      * @example
      * // Get all "playerController" instances in the hierarchy tree that starts with this entity
