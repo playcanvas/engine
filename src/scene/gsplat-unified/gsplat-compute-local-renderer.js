@@ -50,9 +50,6 @@ const TILE_SIZE = 16;
 const MAX_TILES = 65535; // tile index must fit in 16 bits for pair packing (tileIdx << 16 | localOffset)
 const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5; // floor for _tileEntryMultiplier (min tile entries per splat)
 const CACHE_STRIDE = 7;
-// Splats processed per thread in the tile-count pass. Higher values reduce workgroup count
-// (lowering launch limiter) but increase register pressure (lowering occupancy).
-const SPLATS_PER_THREAD = 8;
 const MAX_CHUNKS_PER_TILE = 8;
 const SHRINK_THRESHOLD = 200; // consecutive low-usage readbacks before considering multiplier shrink
 const ENTRY_HEADROOM_MULTIPLIER = 1.5; // headroom factor applied to measured entry demand
@@ -606,8 +603,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const countCompute = set.getCountCompute(fisheyeEnabled, createCountShader);
 
         // Prep dispatch: compute indirect dispatch dimensions from the visible count.
-        // Writes two dispatch slots: slot 0 for tile-count (SPLATS_PER_THREAD splats/thread),
-        // slot 1 for place-entries (1 splat/thread, full workgroups).
+        // Writes two dispatch slots: slot 0 for tile-count, slot 1 for place-entries
+        // (both 1 splat/thread, 256-wide workgroups).
         this._placeEntryPrepCompute.setParameter('sortElementCount', this._sortElementCountBuffer);
         this._placeEntryPrepCompute.setParameter('dispatchArgs', this._placeEntryPrepDispatchBuffer);
         this._placeEntryPrepCompute.setupDispatch(1, 1, 1);
@@ -938,12 +935,10 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         // device-level indirect dispatch buffer written earlier in the frame. ---
         {
             const maxDim = device.limits.maxComputeWorkgroupsPerDimension || 65535;
-            const splatsPerWg = 256 * SPLATS_PER_THREAD;
             const prepDefines = new Map();
             prepDefines.set('{MAX_DIM}', maxDim.toString());
-            prepDefines.set('{SPLATS_PER_WG}', splatsPerWg.toString());
-            prepDefines.set('{SPLATS_PER_WG_MINUS_1}', (splatsPerWg - 1).toString());
-            prepDefines.set('{SPLATS_PER_THREAD}', SPLATS_PER_THREAD.toString());
+            prepDefines.set('{SPLATS_PER_WG}', '256');
+            prepDefines.set('{SPLATS_PER_WG_MINUS_1}', '255');
 
             this._placeEntryPrepBindGroupFormat = new BindGroupFormat(device, [
                 new BindStorageBufferFormat('sortElementCount', SHADERSTAGE_COMPUTE, true),
@@ -1214,7 +1209,6 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
 
         const cdefines = new Map();
-        cdefines.set('{SPLATS_PER_THREAD}', SPLATS_PER_THREAD.toString());
         if (fisheyeEnabled) {
             cdefines.set('GSPLAT_FISHEYE', '');
         }
