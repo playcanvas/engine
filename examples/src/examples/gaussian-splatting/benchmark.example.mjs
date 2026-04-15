@@ -856,8 +856,9 @@ async function runRow(budgetIndex) {
     setButtonsEnabled(false);
     setTestingMode(true);
 
+    const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
     for (let c = 0; c < RENDERERS.length; c++) {
-        await runTests(c, [budgetIndex]); // eslint-disable-line no-await-in-loop
+        await runTests(c, indices); // eslint-disable-line no-await-in-loop
     }
 
     setTestingMode(false);
@@ -876,7 +877,8 @@ async function runCell(colIndex, budgetIndex) {
     setButtonsEnabled(false);
     setTestingMode(true);
 
-    await runTests(colIndex, [budgetIndex]);
+    const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
+    await runTests(colIndex, indices);
 
     setTestingMode(false);
     setStatus('');
