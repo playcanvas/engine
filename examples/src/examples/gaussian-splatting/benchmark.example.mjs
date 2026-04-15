@@ -30,6 +30,8 @@ const storedResults = new Array(RENDERERS.length).fill(null);
 let storedComputePerfIndex = -1;
 /** @type {Record<string, string>} */
 const storedGpuInfos = {};
+let storedResolution = '';
+let highRes = false;
 let running = false;
 
 // ── UI ──
@@ -64,6 +66,20 @@ containerEl.appendChild(titleEl);
 const gpuInfoEl = document.createElement('div');
 Object.assign(gpuInfoEl.style, { marginBottom: '12px', color: '#888', fontSize: '12px', whiteSpace: 'pre' });
 containerEl.appendChild(gpuInfoEl);
+
+// High Res toggle
+const highResLabel = document.createElement('label');
+Object.assign(highResLabel.style, { display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px', color: '#aaa', fontSize: '13px', cursor: 'pointer' });
+const highResCheckbox = document.createElement('input');
+highResCheckbox.type = 'checkbox';
+highResCheckbox.checked = highRes;
+highResCheckbox.onchange = () => {
+    highRes = highResCheckbox.checked;
+};
+highResLabel.appendChild(highResCheckbox);
+highResLabel.appendChild(document.createTextNode('High Resolution'));
+containerEl.appendChild(highResLabel);
+containerEl.appendChild(document.createElement('br'));
 
 // Shared button style for header buttons
 const headerBtnCss = [
@@ -241,15 +257,16 @@ if (existingCanvas) {
  * @returns {Promise<pc.GraphicsDevice>} The device.
  */
 async function createDevice(canvas, deviceType) {
+    const opts = { antialias: false };
     if (deviceType === 'webgpu') {
-        const device = new pc.WebgpuGraphicsDevice(canvas, {});
+        const device = new pc.WebgpuGraphicsDevice(canvas, opts);
         await device.initWebGpu(
             `${rootPath}/static/lib/glslang/glslang.js`,
             `${rootPath}/static/lib/twgsl/twgsl.js`
         );
         return device;
     }
-    return new pc.WebglGraphicsDevice(canvas);
+    return new pc.WebglGraphicsDevice(canvas, opts);
 }
 
 /**
@@ -398,6 +415,8 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     document.getElementById('appInner')?.appendChild(canvas);
 
     const device = await createDevice(canvas, config.device);
+    const dpr = window.devicePixelRatio || 1;
+    device.maxPixelRatio = highRes ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
     const gpuInfo = getGpuInfo(device);
 
     const dev = /** @type {any} */ (device);
@@ -486,6 +505,9 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     camera.lookAt(new pc.Vec3(12, 3, 0));
 
     app.start();
+    app.resizeCanvas();
+
+    storedResolution = `${device.width} x ${device.height}`;
 
     let rotateCamera = false;
     app.on('update', () => {
@@ -614,6 +636,7 @@ function buildDownloadText() {
     if (storedGpuInfos.webgl2) text += `WebGL2:  ${storedGpuInfos.webgl2}\n`;
     if (storedGpuInfos.webgpu) text += `WebGPU:  ${storedGpuInfos.webgpu}\n`;
     text += `Compute Perf Index: ${storedComputePerfIndex >= 0 ? storedComputePerfIndex.toFixed(3) : '\u2014'} ms\n`;
+    if (storedResolution) text += `Resolution: ${storedResolution}${highRes ? ' (High Res)' : ''}\n`;
     text += `${'\u2550'.repeat(lineW)}\n`;
 
     // Find first column with at least one budget result for splat count line
@@ -800,7 +823,8 @@ function updateGpuInfo() {
     let text = '';
     if (storedGpuInfos.webgl2) text += `WebGL2: ${storedGpuInfos.webgl2}\n`;
     if (storedGpuInfos.webgpu) text += `WebGPU: ${storedGpuInfos.webgpu}\n`;
-    if (storedComputePerfIndex >= 0) text += `Compute Perf Index: ${storedComputePerfIndex.toFixed(3)} ms`;
+    if (storedComputePerfIndex >= 0) text += `Compute Perf Index: ${storedComputePerfIndex.toFixed(3)} ms\n`;
+    if (storedResolution) text += `Resolution: ${storedResolution}`;
     gpuInfoEl.textContent = text;
 }
 
