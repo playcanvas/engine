@@ -7,7 +7,8 @@ import replace from '@rollup/plugin-replace';
 import terser from '@rollup/plugin-terser';
 
 import { exampleMetaData } from './cache/metadata.mjs';
-import { buildJSOptions, buildTypesOption } from '../utils/rollup-build-target.mjs';
+import { buildTarget } from '../utils/esbuild-build-target.mjs';
+import { buildTypesOption } from '../utils/rollup-build-target.mjs';
 import { version } from '../utils/rollup-version-revision.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { buildShare } from './utils/plugins/rollup-build-share.mjs';
@@ -182,18 +183,41 @@ const EXAMPLE_TARGETS = exampleMetaData.flatMap(({ categoryKebab, exampleNameKeb
     return options;
 });
 
-const ENGINE_TARGETS = (() => {
+/**
+ * Build engine JS targets with esbuild before Rollup runs.
+ * Replaces the previous Rollup-based buildJSOptions calls.
+ */
+async function buildEngineJS() {
+    const builds = [];
+    const opts = {
+        moduleFormat: /** @type {'esm'} */ ('esm'),
+        bundleState: /** @type {'bundled'} */ ('bundled'),
+        input: '../src/index.js',
+        dir: 'dist/iframe'
+    };
+
+    if (NODE_ENV === 'production') {
+        builds.push(buildTarget({ ...opts, buildType: 'release' }));
+    }
+    if (NODE_ENV === 'production' || NODE_ENV === 'development') {
+        builds.push(buildTarget({ ...opts, buildType: 'debug' }));
+    }
+    if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
+        builds.push(buildTarget({ ...opts, buildType: 'profiler' }));
+    }
+
+    await Promise.all(builds);
+}
+
+const ENGINE_TYPES_TARGETS = (() => {
     /** @type {RollupOptions[]} */
     const options = [];
 
-    // Types
-    // Outputs: dist/iframe/playcanvas.d.ts
     options.push(buildTypesOption({
         root: '..',
         dir: 'dist/iframe'
     }));
 
-    // Sources
     if (ENGINE_PATH) {
         const src = path.resolve(ENGINE_PATH);
         const content = fs.readFileSync(src, 'utf8');
@@ -210,49 +234,12 @@ const ENGINE_TARGETS = (() => {
                 dest: 'dist/iframe/ENGINE_PATH/index.js'
             }));
         }
-        return options;
     }
 
-    // Builds
-    if (NODE_ENV === 'production') {
-        // Outputs: dist/iframe/playcanvas.mjs
-        options.push(
-            ...buildJSOptions({
-                moduleFormat: 'esm',
-                buildType: 'release',
-                bundleState: 'bundled',
-                input: '../src/index.js',
-                dir: 'dist/iframe'
-            })
-        );
-    }
-    if (NODE_ENV === 'production' || NODE_ENV === 'development') {
-        // Outputs: dist/iframe/playcanvas.dbg.mjs
-        options.push(
-            ...buildJSOptions({
-                moduleFormat: 'esm',
-                buildType: 'debug',
-                bundleState: 'bundled',
-                input: '../src/index.js',
-                dir: 'dist/iframe'
-            })
-        );
-    }
-    if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
-        // Outputs: dist/iframe/playcanvas.prf.mjs
-        options.push(
-            ...buildJSOptions({
-                moduleFormat: 'esm',
-                buildType: 'profiler',
-                bundleState: 'bundled',
-                input: '../src/index.js',
-                dir: 'dist/iframe'
-            })
-        );
-    }
     return options;
 })();
 
+/** @type {RollupOptions[]} */
 const APP_TARGETS = [{
     // A debug build is ~2.3MB and a release build ~0.6MB
     input: 'src/app/index.mjs',
@@ -288,9 +275,15 @@ const APP_TARGETS = [{
     ]
 }];
 
-export default [
-    ...STATIC_TARGETS,
-    ...EXAMPLE_TARGETS,
-    ...ENGINE_TARGETS,
-    ...APP_TARGETS
-];
+export default async () => {
+    if (!ENGINE_PATH) {
+        await buildEngineJS();
+    }
+
+    return [
+        ...STATIC_TARGETS,
+        ...EXAMPLE_TARGETS,
+        ...ENGINE_TYPES_TARGETS,
+        ...APP_TARGETS
+    ];
+};
