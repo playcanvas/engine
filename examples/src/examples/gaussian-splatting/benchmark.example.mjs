@@ -432,6 +432,8 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 
     app.scene.gsplat.renderer = config.renderer;
     app.scene.gsplat.splatBudget = BUDGETS[budgetIndices[0]] * 1000000;
+    app.scene.gsplat.lodBehindPenalty = 3;
+    app.scene.gsplat.radialSorting = true;
 
     if (device.gpuProfiler) {
         device.gpuProfiler.enabled = true;
@@ -454,24 +456,17 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 
     const bicycle = new pc.Entity('bicycle');
     bicycle.addComponent('gsplat', { asset: bicycleAsset, unified: true });
-    bicycle.setLocalEulerAngles(0, 0, 180);
+    bicycle.setLocalPosition(11.2, 0, -3.5);
+    bicycle.setLocalEulerAngles(0, 90, 180);
     bicycle.setLocalScale(2, 2, 2);
     app.root.addChild(bicycle);
 
-    const logoConfigs = [
-        { pos: [20, -6, 0], scale: 10 },
-        { pos: [12, -6, 4], scale: 5 },
-        { pos: [4, -3, 1], scale: 1.5 },
-        { pos: [4, -2, -3], scale: 1 }
-    ];
-    for (const cfg of logoConfigs) {
-        const logo = new pc.Entity('logo');
-        logo.addComponent('gsplat', { asset: logoAsset, unified: true });
-        logo.setLocalPosition(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
-        logo.setLocalEulerAngles(180, 90, 0);
-        logo.setLocalScale(cfg.scale, cfg.scale, cfg.scale);
-        app.root.addChild(logo);
-    }
+    const logo = new pc.Entity('logo');
+    logo.addComponent('gsplat', { asset: logoAsset, unified: true });
+    logo.setLocalPosition(8, 0, 2.6);
+    logo.setLocalEulerAngles(180, 0, 0);
+    logo.setLocalScale(2, 2, 2);
+    app.root.addChild(logo);
 
     const church = new pc.Entity('church');
     church.addComponent('gsplat', { asset: churchAsset, unified: true });
@@ -479,24 +474,23 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     app.root.addChild(church);
 
     const cameraPivot = new pc.Entity('cameraPivot');
-    cameraPivot.setLocalPosition(0, 1.2, 0);
+    cameraPivot.setLocalPosition(10.3, 2, -10);
     app.root.addChild(cameraPivot);
 
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1),
-        fov: 60
+        fov: 75
     });
-    camera.setLocalPosition(-4, 0, 0);
-    camera.lookAt(new pc.Vec3(0, 0, 0));
     cameraPivot.addChild(camera);
+    camera.lookAt(new pc.Vec3(12, 3, 0));
 
     app.start();
 
     let rotateCamera = false;
     app.on('update', () => {
         if (rotateCamera) {
-            cameraPivot.rotateLocal(0, 0.5, 0);
+            cameraPivot.rotateLocal(0, 1.0, 0);
         }
     });
 
