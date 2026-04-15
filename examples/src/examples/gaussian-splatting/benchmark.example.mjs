@@ -49,6 +49,9 @@ Object.assign(containerEl.style, {
     fontFamily: 'monospace',
     fontSize: '13px',
     overflow: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    overscrollBehavior: 'contain',
+    touchAction: 'pan-y',
     padding: '20px',
     boxSizing: 'border-box'
 });
@@ -619,6 +622,31 @@ function refreshChartAndDownload() {
         URL.revokeObjectURL(url);
     };
     chartArea.appendChild(dlBtn);
+
+    if (navigator.share) {
+        const shareBtn = document.createElement('button');
+        shareBtn.textContent = 'Share Chart';
+        Object.assign(shareBtn.style, {
+            padding: '8px 16px',
+            background: '#4a9eff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            fontSize: '13px',
+            marginLeft: '8px'
+        });
+        shareBtn.onclick = async () => {
+            const blob = await new Promise((resolve) => chartCanvas.toBlob(resolve, 'image/png'));
+            const file = new File([blob], 'gsplat-benchmark.png', { type: 'image/png' });
+            const shareData = { title: 'GSplat Benchmark', files: [file] };
+            if (navigator.canShare?.(shareData)) {
+                await navigator.share(shareData);
+            }
+        };
+        chartArea.appendChild(shareBtn);
+    }
 
     console.log(dlText);
 }
