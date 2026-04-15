@@ -1,12 +1,7 @@
 // Per-splat projection + projection cache write + atomic per-tile counting + pair buffer writes.
 //
-// Each thread processes SPLATS_PER_THREAD consecutive splats to reduce workgroup count and
-// amortize launch overhead. At 40M splats the launch limiter was 74% at N=1, meaning the GPU
-// spent 3/4 of its time scheduling workgroups instead of running them.
-//
-// Hybrid architecture: per-thread atomicAdd for pair buffer reservation (no barrier, no
-// shared memory) combined with register arrays to keep all Phase 2 data in registers,
-// avoiding projCache reads that cause L1 cache pressure.
+// Single splat per thread with per-thread atomicAdd for pair buffer reservation
+// (no barrier, no shared memory).
 //
 // Bitmask: 8x4 = 32 bits in a single u32. The bit index localY * 8 + localX compiles
 // to a pure shift (localY << 3 | localX). Tiles outside the 8x4 region fall back to
@@ -14,11 +9,9 @@
 // large-splat pass.
 //
 // Structure:
-//   Phase 1 — loop over N splats: project, write projCache/depthBuffer, count tiles,
-//             build bitmask. All per-splat state stored in register arrays.
-//   Atomic  — one atomicAdd per thread to reserve pair buffer space (no barrier).
-//   Phase 2 — for each splat, write pairs using register arrays and bitmask.
-//             Zero projCache reads — all data stays in registers.
+//   Phase 1 — project, write projCache/depthBuffer, count tiles, build bitmask.
+//   Atomic  — one atomicAdd per thread to reserve pair buffer space.
+//   Phase 2 — write pairs using bitmask. All data stays in registers from Phase 1.
 //
 // The pair buffer is later consumed by a lightweight PlaceEntries pass that writes
 // tileEntries using prefix-summed offsets — zero atomics, zero projCache reads.
@@ -99,227 +92,184 @@ fn main(
     @builtin(global_invocation_id) gid: vec3u,
     @builtin(num_workgroups) numWorkgroups: vec3u
 ) {
-    let baseIdx = (gid.y * (numWorkgroups.x * 256u) + gid.x) * {SPLATS_PER_THREAD};
+    let threadIdx = gid.y * (numWorkgroups.x * 256u) + gid.x;
     let numVisible = sortElementCount[0];
 
-    // Per-splat state persisted across the atomic reservation in register arrays.
-    // The compiler unrolls the constant-bound loops and promotes these to registers.
-    var pairCounts: array<u32, {SPLATS_PER_THREAD}>;
-    var bitmasks: array<u32, {SPLATS_PER_THREAD}>;
-    var minTileXArr: array<i32, {SPLATS_PER_THREAD}>;
-    var maxTileXArr: array<i32, {SPLATS_PER_THREAD}>;
-    var minTileYArr: array<i32, {SPLATS_PER_THREAD}>;
-    var maxTileYArr: array<i32, {SPLATS_PER_THREAD}>;
-    var screenArr: array<vec2f, {SPLATS_PER_THREAD}>;
-    var cxArr: array<f32, {SPLATS_PER_THREAD}>;
-    var cyArr: array<f32, {SPLATS_PER_THREAD}>;
-    var czArr: array<f32, {SPLATS_PER_THREAD}>;
-    var radiusFactorArr: array<f32, {SPLATS_PER_THREAD}>;
+    if (threadIdx >= numVisible) {
+        return;
+    }
 
-    for (var i: u32 = 0u; i < {SPLATS_PER_THREAD}; i++) {
-        pairCounts[i] = 0u;
-        bitmasks[i] = 0u;
+    let splatId = compactedSplatIds[threadIdx];
+    setSplat(splatId);
+    let center = getCenter();
+    let opacity = getOpacity();
+
+    if (opacity < uniforms.alphaClip) {
+        projCache[threadIdx * CACHE_STRIDE + 6u] = 0u;
+        splatPairStart[threadIdx] = 0u;
+        splatPairCount[threadIdx] = 0u;
+        return;
+    }
+
+    let rotation = half4(getRotation());
+    let scale = half3(getScale());
+
+    let proj = computeSplatCov(
+        center, rotation, scale,
+        uniforms.viewMatrix, uniforms.viewProj,
+        uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
+        uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
+        uniforms.isOrtho, uniforms.alphaClip, uniforms.minContribution,
+        #ifdef GSPLAT_FISHEYE
+            uniforms.fisheye_k, uniforms.fisheye_inv_k,
+            uniforms.fisheye_projMat00, uniforms.fisheye_projMat11,
+        #endif
+    );
+
+    if (!proj.valid) {
+        projCache[threadIdx * CACHE_STRIDE + 6u] = 0u;
+        splatPairStart[threadIdx] = 0u;
+        splatPairCount[threadIdx] = 0u;
+        return;
+    }
+
+    let det = proj.a * proj.c - proj.b * proj.b;
+    let invDet = 1.0 / det;
+    let cx = 4.0 * proj.c * invDet;
+    let cy = -4.0 * proj.b * invDet;
+    let cz = 4.0 * proj.a * invDet;
+
+    let base = threadIdx * CACHE_STRIDE;
+    projCache[base + 0u] = bitcast<u32>(proj.screen.x);
+    projCache[base + 1u] = bitcast<u32>(proj.screen.y);
+    projCache[base + 2u] = bitcast<u32>(cx);
+    projCache[base + 3u] = bitcast<u32>(cy);
+    projCache[base + 4u] = bitcast<u32>(cz);
+
+#ifdef PICK_MODE
+    let pcIdVal = loadPcId().r;
+    projCache[base + 5u] = pcIdVal;
+    projCache[base + 6u] = pack2x16float(vec2f(0.0, opacity));
+#else
+    let color = getColor();
+    var rgb = max(color, vec3f(0.0));
+    projCache[base + 5u] = pack2x16float(vec2f(rgb.x, rgb.y));
+    projCache[base + 6u] = pack2x16float(vec2f(rgb.z, opacity));
+#endif
+
+    depthBuffer[threadIdx] = bitcast<u32>(proj.viewDepth);
+
+    let screen = proj.screen;
+    let eval = computeSplatTileEval(screen, cx, cy, cz, half(opacity),
+                                    uniforms.viewportWidth, uniforms.viewportHeight,
+                                    uniforms.alphaClip);
+    let radiusFactor = eval.radiusFactor;
+
+    let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
+    let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
+    let minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
+    let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
+
+    let aabbW = u32(maxTileX - minTileX + 1i);
+
+    // Defer large splats to the cooperative large-splat pass where
+    // 256 threads process them in parallel, avoiding wavefront divergence.
+    // If the buffer overflows, fall through to normal single-thread processing.
+    // Guard: when capScale shrinks the tile-eval radius below the frustum-cull
+    // radius, maxTile can drop below minTile. The u32 cast of that negative
+    // difference wraps to ~4 billion, falsely triggering the threshold.
+    // The original loop handles this harmlessly (minTile > maxTile → 0 iters),
+    // so we must not classify these degenerate AABBs as large.
+    var deferredToLarge = false;
+    if (maxTileX >= minTileX && maxTileY >= minTileY &&
+        aabbW * u32(maxTileY - minTileY + 1i) > LARGE_AABB_THRESHOLD) {
+        let idx = atomicAdd(&countersBuffer[1], 1u);
+        if (idx < arrayLength(&largeSplatIds)) {
+            largeSplatIds[idx] = threadIdx;
+            deferredToLarge = true;
+        }
+    }
+
+    if (deferredToLarge) {
+        splatPairStart[threadIdx] = 0u;
+        splatPairCount[threadIdx] = 0u;
+        return;
     }
 
     // =========================================================================
-    // Phase 1: Project + count tiles for all splats
+    // Phase 1: Count tiles + build bitmask (pure ALU, no atomics)
     // =========================================================================
-    var totalPairs: u32 = 0u;
+    var myPairCount: u32 = 0u;
+    var bitmask: u32 = 0u;
 
-    for (var s: u32 = 0u; s < {SPLATS_PER_THREAD}; s++) {
-        let threadIdx = baseIdx + s;
-        if (threadIdx >= numVisible) { continue; }
-
-        let splatId = compactedSplatIds[threadIdx];
-        setSplat(splatId);
-        let center = getCenter();
-        let opacity = getOpacity();
-
-        var isVisible = false;
-
-        if (opacity >= uniforms.alphaClip) {
-            let rotation = half4(getRotation());
-            let scale = half3(getScale());
-
-            let proj = computeSplatCov(
-                center, rotation, scale,
-                uniforms.viewMatrix, uniforms.viewProj,
-                uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
-                uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
-                uniforms.isOrtho, uniforms.alphaClip, uniforms.minContribution,
-                #ifdef GSPLAT_FISHEYE
-                    uniforms.fisheye_k, uniforms.fisheye_inv_k,
-                    uniforms.fisheye_projMat00, uniforms.fisheye_projMat11,
-                #endif
-            );
-
-            if (proj.valid) {
-                isVisible = true;
-
-                let det = proj.a * proj.c - proj.b * proj.b;
-                let invDet = 1.0 / det;
-                let cx = 4.0 * proj.c * invDet;
-                let cy = -4.0 * proj.b * invDet;
-                let cz = 4.0 * proj.a * invDet;
-
-                let base = threadIdx * CACHE_STRIDE;
-                projCache[base + 0u] = bitcast<u32>(proj.screen.x);
-                projCache[base + 1u] = bitcast<u32>(proj.screen.y);
-                projCache[base + 2u] = bitcast<u32>(cx);
-                projCache[base + 3u] = bitcast<u32>(cy);
-                projCache[base + 4u] = bitcast<u32>(cz);
-
-            #ifdef PICK_MODE
-                let pcIdVal = loadPcId().r;
-                projCache[base + 5u] = pcIdVal;
-                projCache[base + 6u] = pack2x16float(vec2f(0.0, opacity));
-            #else
-                let color = getColor();
-                var rgb = max(color, vec3f(0.0));
-                projCache[base + 5u] = pack2x16float(vec2f(rgb.x, rgb.y));
-                projCache[base + 6u] = pack2x16float(vec2f(rgb.z, opacity));
-            #endif
-
-                depthBuffer[threadIdx] = bitcast<u32>(proj.viewDepth);
-
-                let screen = proj.screen;
-                let eval = computeSplatTileEval(screen, cx, cy, cz, half(opacity),
-                                                uniforms.viewportWidth, uniforms.viewportHeight,
-                                                uniforms.alphaClip);
-                let radiusFactor = eval.radiusFactor;
-
-                let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
-                let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));
-                let minTileY = max(0i, i32(floor(eval.splatMin.y / f32(TILE_SIZE))));
-                let maxTileY = min(i32(uniforms.numTilesY) - 1i, i32(floor(eval.splatMax.y / f32(TILE_SIZE))));
-
-                let aabbW = u32(maxTileX - minTileX + 1i);
-
-                // Store per-splat state for Phase 2
-                screenArr[s] = screen;
-                cxArr[s] = cx;
-                cyArr[s] = cy;
-                czArr[s] = cz;
-                radiusFactorArr[s] = radiusFactor;
-                minTileXArr[s] = minTileX;
-                maxTileXArr[s] = maxTileX;
-                minTileYArr[s] = minTileY;
-                maxTileYArr[s] = maxTileY;
-
-                // Defer large splats to the cooperative large-splat pass where
-                // 256 threads process them in parallel, avoiding wavefront divergence.
-                // If the buffer overflows, fall through to normal single-thread processing.
-                // Guard: when capScale shrinks the tile-eval radius below the frustum-cull
-                // radius, maxTile can drop below minTile. The u32 cast of that negative
-                // difference wraps to ~4 billion, falsely triggering the threshold.
-                // The original loop handles this harmlessly (minTile > maxTile → 0 iters),
-                // so we must not classify these degenerate AABBs as large.
-                var deferredToLarge = false;
-                if (maxTileX >= minTileX && maxTileY >= minTileY &&
-                    aabbW * u32(maxTileY - minTileY + 1i) > LARGE_AABB_THRESHOLD) {
-                    let idx = atomicAdd(&countersBuffer[1], 1u);
-                    if (idx < arrayLength(&largeSplatIds)) {
-                        largeSplatIds[idx] = threadIdx;
-                        deferredToLarge = true;
+    if (minTileX == maxTileX && minTileY == maxTileY) {
+        myPairCount = 1u;
+        bitmask = 1u;
+    } else {
+        for (var ty = minTileY; ty <= maxTileY; ty++) {
+            for (var tx = minTileX; tx <= maxTileX; tx++) {
+                let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
+                let tMax = tMin + vec2f(f32(TILE_SIZE));
+                if (tileIntersectsEllipse(tMin, tMax, screen, cx, cy, cz, radiusFactor)) {
+                    myPairCount++;
+                    let localX = u32(tx - minTileX);
+                    let localY = u32(ty - minTileY);
+                    if (localX < BITMASK_W && localY < BITMASK_H) {
+                        let bitIdx = localY * BITMASK_W + localX;
+                        bitmask |= (1u << bitIdx);
                     }
-                }
-
-                if (!deferredToLarge) {
-                    var myPairCount: u32 = 0u;
-                    var bitmask: u32 = 0u;
-
-                    if (minTileX == maxTileX && minTileY == maxTileY) {
-                        myPairCount = 1u;
-                        bitmask = 1u;
-                    } else {
-                        for (var ty = minTileY; ty <= maxTileY; ty++) {
-                            for (var tx = minTileX; tx <= maxTileX; tx++) {
-                                let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
-                                let tMax = tMin + vec2f(f32(TILE_SIZE));
-                                if (tileIntersectsEllipse(tMin, tMax, screen, cx, cy, cz, radiusFactor)) {
-                                    myPairCount++;
-                                    let localX = u32(tx - minTileX);
-                                    let localY = u32(ty - minTileY);
-                                    if (localX < BITMASK_W && localY < BITMASK_H) {
-                                        let bitIdx = localY * BITMASK_W + localX;
-                                        bitmask |= (1u << bitIdx);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    pairCounts[s] = myPairCount;
-                    bitmasks[s] = bitmask;
-                    totalPairs += myPairCount;
                 }
             }
         }
+    }
 
-        if (!isVisible) {
-            projCache[threadIdx * CACHE_STRIDE + 6u] = 0u;
-        }
+    if (myPairCount == 0u) {
+        splatPairStart[threadIdx] = 0u;
+        splatPairCount[threadIdx] = 0u;
+        return;
     }
 
     // =========================================================================
     // Per-thread pair buffer reservation (no barrier, no shared memory)
     // =========================================================================
-    var pairBase: u32 = 0u;
-    if (totalPairs > 0u) {
-        pairBase = atomicAdd(&countersBuffer[0], totalPairs);
-    }
+    let pairBase = atomicAdd(&countersBuffer[0], myPairCount);
 
     // =========================================================================
-    // Phase 2: Write pairs for all splats using register arrays (zero projCache reads)
+    // Phase 2: Write pairs using bitmask (all data in registers from Phase 1)
     // =========================================================================
-    var runningOffset: u32 = 0u;
+    splatPairStart[threadIdx] = pairBase;
+    splatPairCount[threadIdx] = myPairCount;
 
-    for (var s: u32 = 0u; s < {SPLATS_PER_THREAD}; s++) {
-        let threadIdx = baseIdx + s;
-        if (threadIdx >= numVisible) { continue; }
+    var j: u32 = 0u;
+    for (var ty = minTileY; ty <= maxTileY; ty++) {
+        for (var tx = minTileX; tx <= maxTileX; tx++) {
 
-        if (pairCounts[s] == 0u) {
-            splatPairStart[threadIdx] = 0u;
-            splatPairCount[threadIdx] = 0u;
-            continue;
-        }
+            let localX = u32(tx - minTileX);
+            let localY = u32(ty - minTileY);
 
-        let splatBase = pairBase + runningOffset;
-        splatPairStart[threadIdx] = splatBase;
-        splatPairCount[threadIdx] = pairCounts[s];
+            var hits: bool;
+            if (localX < BITMASK_W && localY < BITMASK_H) {
+                let bitIdx = localY * BITMASK_W + localX;
+                hits = (bitmask & (1u << bitIdx)) != 0u;
+            } else {
+                let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
+                let tMax = tMin + vec2f(f32(TILE_SIZE));
+                hits = tileIntersectsEllipse(tMin, tMax, screen, cx, cy, cz, radiusFactor);
+            }
 
-        var j: u32 = 0u;
-        for (var ty = minTileYArr[s]; ty <= maxTileYArr[s]; ty++) {
-            for (var tx = minTileXArr[s]; tx <= maxTileXArr[s]; tx++) {
-
-                let localX = u32(tx - minTileXArr[s]);
-                let localY = u32(ty - minTileYArr[s]);
-
-                var hits: bool;
-                if (localX < BITMASK_W && localY < BITMASK_H) {
-                    let bitIdx = localY * BITMASK_W + localX;
-                    hits = (bitmasks[s] & (1u << bitIdx)) != 0u;
-                } else {
-                    let tMin = vec2f(f32(tx) * f32(TILE_SIZE), f32(ty) * f32(TILE_SIZE));
-                    let tMax = tMin + vec2f(f32(TILE_SIZE));
-                    hits = tileIntersectsEllipse(tMin, tMax, screenArr[s], cxArr[s], cyArr[s], czArr[s], radiusFactorArr[s]);
-                }
-
-                if (hits) {
-                    let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
-                    let localOff = atomicAdd(&tileSplatCounts[tileIdx], 1u);
-                    if (localOff < MAX_TILE_ENTRIES) {
-                        pairBuffer[splatBase + j] = (tileIdx << 16u) | (localOff & 0xFFFFu);
-                        j++;
-                    }
+            if (hits) {
+                let tileIdx = u32(ty) * uniforms.numTilesX + u32(tx);
+                let localOff = atomicAdd(&tileSplatCounts[tileIdx], 1u);
+                if (localOff < MAX_TILE_ENTRIES) {
+                    pairBuffer[pairBase + j] = (tileIdx << 16u) | (localOff & 0xFFFFu);
+                    j++;
                 }
             }
         }
+    }
 
-        if (j != pairCounts[s]) {
-            splatPairCount[threadIdx] = j;
-        }
-        runningOffset += pairCounts[s];
+    if (j != myPairCount) {
+        splatPairCount[threadIdx] = j;
     }
 }
 `;
