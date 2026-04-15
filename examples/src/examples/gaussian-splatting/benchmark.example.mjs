@@ -111,7 +111,7 @@ const cornerTh = document.createElement('th');
 cornerTh.style.cssText = headerCellCss;
 const runAllBtn = document.createElement('button');
 runAllBtn.textContent = 'Run All';
-runAllBtn.style.cssText = headerBtnCss;
+runAllBtn.style.cssText = headerBtnCss.replace('#4a9eff', '#e05555');
 cornerTh.appendChild(runAllBtn);
 headTr.appendChild(cornerTh);
 
@@ -719,7 +719,7 @@ function drawChart(chartCanvas) {
     const PAD = { top: 30, right: 20, bottom: 40, left: 50 };
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
-    const COLORS = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7dc6f'];
+    const COLORS = ['#ff6b6b', '#2ecc71', '#a06bff', '#f7dc6f'];
 
     let maxVal = 0;
     for (let c = 0; c < RENDERERS.length; c++) {
