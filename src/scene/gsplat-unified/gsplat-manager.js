@@ -203,6 +203,15 @@ class GSplatManager {
     sortedVersion = 0;
 
     /**
+     * When true, suppresses ready=true in frame:ready until a fullUpdate cycle runs.
+     * Only set when octreeInstances exist and params change (dirty).
+     *
+     * @type {boolean}
+     * @private
+     */
+    _awaitingLodUpdate = false;
+
+    /**
      * Cached work buffer format version for detecting extra stream changes.
      *
      * @type {number}
@@ -1161,7 +1170,7 @@ class GSplatManager {
      * Fires the frame:ready event with current sorting and loading state.
      */
     fireFrameReadyEvent() {
-        const ready = this.sortedVersion === this.lastWorldStateVersion;
+        const ready = this.sortedVersion === this.lastWorldStateVersion && !this._awaitingLodUpdate;
 
         // Count total pending loads from octree instances (including environment)
         let loadingCount = 0;
@@ -1372,6 +1381,8 @@ class GSplatManager {
 
             // check if camera has moved/rotated enough to require LOD update
             cameraMovedOrRotatedForLod = this.testCameraMovedForLod();
+
+            this._awaitingLodUpdate = false;
         }
 
         // check if camera has moved enough to require re-sorting
@@ -1404,6 +1415,12 @@ class GSplatManager {
             // colorization) is refreshed immediately instead of trickling in over time.
             this._workBufferRebuildRequired = true;
             this.sortNeeded = true;
+
+            // Suppress ready=true in frame:ready until a fullUpdate cycle runs, so
+            // consumers can reliably detect the not-ready→ready transition after param changes.
+            if (this.octreeInstances.size > 0) {
+                this._awaitingLodUpdate = true;
+            }
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
