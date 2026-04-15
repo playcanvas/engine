@@ -494,6 +494,9 @@ class MeshInstance {
      */
     _calculateSortDistance = null;
 
+    /** @private */
+    _aabbUpdateIndex = 0;
+
     /**
      * Create a new MeshInstance instance.
      *
@@ -1090,10 +1093,11 @@ class MeshInstance {
      * date, which forward-renderer takes care of. This function should not be called elsewhere.
      *
      * @param {Camera} camera - The camera to test visibility against.
+     * @param {number} aabbUpdateIndex - An index used to detect if AABB has already been updated this frame.
      * @returns {boolean} - True if the mesh instance is visible by the camera, false otherwise.
      * @ignore
      */
-    _isVisible(camera) {
+    _isVisible(camera, aabbUpdateIndex) {
 
         if (this.visible) {
 
@@ -1102,8 +1106,11 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
-            _tempSphere.radius = this._aabb.halfExtents.length();
+            const aabb = this._aabbUpdateIndex === aabbUpdateIndex ? this._aabb : this.aabb; // this line evaluates aabb
+            this._aabbUpdateIndex = aabbUpdateIndex;
+
+            _tempSphere.center = aabb.center;
+            _tempSphere.radius = aabb.halfExtents.length();
 
             return camera.frustum.containsSphere(_tempSphere) > 0;
         }
