@@ -51,7 +51,7 @@ Object.assign(containerEl.style, {
     overflow: 'auto',
     WebkitOverflowScrolling: 'touch',
     overscrollBehavior: 'contain',
-    touchAction: 'pan-y',
+    touchAction: 'auto',
     padding: '20px',
     boxSizing: 'border-box'
 });
@@ -565,7 +565,12 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 
     window.removeEventListener('resize', resize);
     app.destroy();
+    canvas.width = 0;
+    canvas.height = 0;
     canvas.remove();
+
+    // allow GC to reclaim GPU/asset memory before the next run (helps on mobile)
+    await new Promise(resolve => setTimeout(resolve, 1000));
 }
 
 // ── Chart + download ──
