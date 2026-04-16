@@ -1292,8 +1292,7 @@ class GSplatManager {
         if (this.workBuffer.format !== currentFormat) {
             this.workBuffer.destroy();
             this.workBuffer = new GSplatWorkBuffer(this.device, currentFormat);
-            this.renderer.workBuffer = this.workBuffer;
-            this.renderer.onWorkBufferFormatChanged();
+            this.renderer.setDataSource(this.workBuffer);
             this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
             this._workBufferRebuildRequired = true;
             this.sortNeeded = true;

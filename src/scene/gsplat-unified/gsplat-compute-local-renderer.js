@@ -43,6 +43,8 @@ import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComp
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
+ * @import { GSplatFormat } from '../gsplat/gsplat-format.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  */
 
@@ -205,6 +207,16 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     /** @type {number} */
     _fisheye = 0;
 
+    /**
+     * Active data source providing format and texture access. When set via {@link setDataSource},
+     * the renderer reads format and textures from this object instead of the inherited workBuffer.
+     * Defaults to the workBuffer passed to the constructor.
+     *
+     * @type {{ format: GSplatFormat, getTexture: (name: string) => Texture }}
+     * @private
+     */
+    _dataSource;
+
     /** @type {Shader} */
     _placeEntriesShader;
 
@@ -287,6 +299,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     constructor(device, node, cameraNode, layer, workBuffer) {
         super(device, node, cameraNode, layer, workBuffer);
 
+        this._dataSource = workBuffer;
+
         this._createSharedShaders();
         this._mainSet = this._createDispatchSet(false);
 
@@ -297,6 +311,19 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             const renderMode = this.renderMode ?? 0;
             return thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD) !== 0 && this._mainSet._rasterizeTileListBuffer !== null;
         });
+    }
+
+    /**
+     * Sets the data source for format and texture access, decoupling this renderer from
+     * the work buffer. The source object must provide:
+     *
+     * - `format` — a {@link GSplatFormat} describing the texture streams and shader read code.
+     * - `getTexture(name)` — a function returning a {@link Texture} for a given stream name.
+     *
+     * @param {object} source - The data source.
+     */
+    setDataSource(source) {
+        this._dataSource = source;
     }
 
     destroy() {
@@ -382,7 +409,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._fogParams = fogParams ?? null;
         this._debugMode = gsplat.debug;
 
-        const formatHash = this.workBuffer.format.hash;
+        const formatHash = this._dataSource.format.hash;
         if (formatHash !== this._formatHash) {
             this._formatHash = formatHash;
             this._invalidateCountCompute();
@@ -582,7 +609,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         const maxEntries = this._allocatedEntryCapacity;
 
-        const wb = this.workBuffer;
+        const ds = this._dataSource;
         const camera = this.cameraNode.camera;
         const cam = camera.camera;
 
@@ -624,11 +651,11 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         countCompute.setParameter('splatPairCount', this._splatPairCountBuffer);
         countCompute.setParameter('largeSplatIds', this._largeSplatIdsBuffer);
         countCompute.setParameter('depthBuffer', this._depthBuffer);
-        for (const stream of wb.format.streams) {
-            countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+        for (const stream of ds.format.streams) {
+            countCompute.setParameter(stream.name, ds.getTexture(stream.name));
         }
-        for (const stream of wb.format.extraStreams) {
-            countCompute.setParameter(stream.name, wb.getTexture(stream.name));
+        for (const stream of ds.format.extraStreams) {
+            countCompute.setParameter(stream.name, ds.getTexture(stream.name));
         }
         countCompute.setParameter('splatTextureSize', this._textureSize);
         countCompute.setParameter('numTilesX', numTilesX);
@@ -1182,7 +1209,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         }
         const uniformBufferFormat = new UniformBufferFormat(device, uniforms);
 
-        const wbFormat = this.workBuffer.format;
+        const wbFormat = this._dataSource.format;
 
         const fixedBindings = [
             new BindStorageBufferFormat('compactedSplatIds', SHADERSTAGE_COMPUTE, true),
