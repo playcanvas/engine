@@ -69,7 +69,7 @@ class GSplatRenderer {
         this.cameraNode = cameraNode;
         this.layer = layer;
         this.workBuffer = workBuffer;
-        this._workBufferFormatVersion = workBuffer.format.extraStreamsVersion;
+        this._workBufferFormatVersion = workBuffer?.format.extraStreamsVersion ?? -1;
     }
 
     destroy() {
@@ -91,6 +91,22 @@ class GSplatRenderer {
      */
     get material() {
         return null;
+    }
+
+    /**
+     * Sets the data source providing format and texture access. The base implementation updates
+     * the workBuffer and notifies derived classes of the format change. Derived classes (e.g.
+     * the compute renderer) may override this to decouple from the work buffer entirely.
+     *
+     * The source object must provide:
+     * - `format` — a {@link GSplatFormat} describing the texture streams and shader read code.
+     * - `getTexture(name)` — a function returning a {@link Texture} for a given stream name.
+     *
+     * @param {object} source - The data source (typically a {@link GSplatWorkBuffer}).
+     */
+    setDataSource(source) {
+        this.workBuffer = source;
+        this.onWorkBufferFormatChanged();
     }
 
     /**
