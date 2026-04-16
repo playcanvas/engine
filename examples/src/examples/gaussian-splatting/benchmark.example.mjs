@@ -619,7 +619,10 @@ function refreshChartAndDownload() {
         fontSize: '13px'
     };
 
-    const downloadResults = () => {
+    const saveResultsBtn = document.createElement('button');
+    saveResultsBtn.textContent = 'Save Results (.txt)';
+    Object.assign(saveResultsBtn.style, btnStyle);
+    saveResultsBtn.onclick = () => {
         const blob = new Blob([dlText], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -628,42 +631,23 @@ function refreshChartAndDownload() {
         a.click();
         URL.revokeObjectURL(url);
     };
+    chartArea.appendChild(saveResultsBtn);
 
-    const shareResultsBtn = document.createElement('button');
-    shareResultsBtn.textContent = 'Share Results';
-    Object.assign(shareResultsBtn.style, btnStyle);
-    shareResultsBtn.onclick = async () => {
-        const file = new File([dlText], 'gsplat-benchmark.txt', { type: 'text/plain' });
-        const shareData = { title: 'GSplat Benchmark', files: [file] };
-        if (navigator.share && navigator.canShare?.(shareData)) {
-            await navigator.share(shareData);
-        } else {
-            downloadResults();
-        }
-    };
-    chartArea.appendChild(shareResultsBtn);
-
-    const shareChartBtn = document.createElement('button');
-    shareChartBtn.textContent = 'Share Chart';
-    Object.assign(shareChartBtn.style, { ...btnStyle, marginLeft: '8px' });
-    shareChartBtn.onclick = async () => {
-        const blob = await new Promise((resolve) => {
-            chartCanvas.toBlob(resolve, 'image/png');
-        });
-        const file = new File([blob], 'gsplat-benchmark.png', { type: 'image/png' });
-        const shareData = { title: 'GSplat Benchmark', files: [file] };
-        if (navigator.share && navigator.canShare?.(shareData)) {
-            await navigator.share(shareData);
-        } else {
+    const saveChartBtn = document.createElement('button');
+    saveChartBtn.textContent = 'Save Chart (.png)';
+    Object.assign(saveChartBtn.style, { ...btnStyle, marginLeft: '8px' });
+    saveChartBtn.onclick = () => {
+        chartCanvas.toBlob((blob) => {
+            if (!blob) return;
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'gsplat-benchmark.png';
+            a.download = `gsplat-benchmark-${Date.now()}.png`;
             a.click();
             URL.revokeObjectURL(url);
-        }
+        }, 'image/png');
     };
-    chartArea.appendChild(shareChartBtn);
+    chartArea.appendChild(saveChartBtn);
 
     console.log(dlText);
 }
