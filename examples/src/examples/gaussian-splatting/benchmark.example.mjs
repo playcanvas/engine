@@ -36,24 +36,26 @@ let running = false;
 
 // ── UI ──
 
+// Override main.css which sets touch-action:none on * and overflow:hidden on body
+const overrideStyle = document.createElement('style');
+overrideStyle.textContent = '*, *::before, *::after { touch-action: auto !important; } html, body { overflow: auto !important; height: auto !important; }';
+document.head.appendChild(overrideStyle);
+
+const appEl = document.getElementById('app');
+if (appEl) appEl.style.display = 'none';
+
 const containerEl = document.createElement('div');
 Object.assign(containerEl.style, {
-    position: 'fixed',
-    top: '10%',
-    left: '0',
-    width: '100%',
-    height: '90%',
+    position: 'relative',
     zIndex: '100',
     color: '#fff',
     background: '#111',
     fontFamily: 'monospace',
     fontSize: '13px',
-    overflow: 'auto',
-    WebkitOverflowScrolling: 'touch',
-    overscrollBehavior: 'contain',
-    touchAction: 'auto',
     padding: '20px',
-    boxSizing: 'border-box'
+    paddingTop: '10vh',
+    boxSizing: 'border-box',
+    minHeight: '100vh'
 });
 document.body.appendChild(containerEl);
 
@@ -187,7 +189,7 @@ Object.assign(floatingStatus.style, {
     position: 'fixed',
     top: '10%',
     left: '10px',
-    zIndex: '200',
+    zIndex: '300',
     color: '#fff',
     background: 'rgba(0, 0, 0, 0.7)',
     fontFamily: 'monospace',
@@ -413,9 +415,9 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         left: '0',
         width: '100%',
         height: '100%',
-        zIndex: '50'
+        zIndex: '200'
     });
-    document.getElementById('appInner')?.appendChild(canvas);
+    document.body.appendChild(canvas);
 
     const device = await createDevice(canvas, config.device);
     const dpr = window.devicePixelRatio || 1;
