@@ -20,7 +20,7 @@ const RENDERERS = [
     { device: 'webgpu', renderer: RENDERER_COMPUTE, label: 'WebGPU Compute', shortLabel: 'Compute' }
 ];
 
-const BUDGETS = [2, 4, 6, 8, 10, 20, 30]; // millions
+const BUDGETS = [1, 2, 4, 6, 8, 10, 20, 30]; // millions
 
 // ── Stored results per renderer column ──
 // storedResults[col].budgetResults is length BUDGETS.length, entries are null or result object
@@ -599,10 +599,7 @@ function refreshChartAndDownload() {
     drawChart(chartCanvas);
 
     const dlText = buildDownloadText();
-
-    const dlBtn = document.createElement('button');
-    dlBtn.textContent = 'Download Results';
-    Object.assign(dlBtn.style, {
+    const btnStyle = {
         padding: '8px 16px',
         background: '#4a9eff',
         color: '#fff',
@@ -611,8 +608,9 @@ function refreshChartAndDownload() {
         cursor: 'pointer',
         fontFamily: 'monospace',
         fontSize: '13px'
-    });
-    dlBtn.onclick = () => {
+    };
+
+    const downloadResults = () => {
         const blob = new Blob([dlText], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -621,34 +619,42 @@ function refreshChartAndDownload() {
         a.click();
         URL.revokeObjectURL(url);
     };
-    chartArea.appendChild(dlBtn);
 
-    if (navigator.share) {
-        const shareBtn = document.createElement('button');
-        shareBtn.textContent = 'Share Chart';
-        Object.assign(shareBtn.style, {
-            padding: '8px 16px',
-            background: '#4a9eff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontFamily: 'monospace',
-            fontSize: '13px',
-            marginLeft: '8px'
+    const shareResultsBtn = document.createElement('button');
+    shareResultsBtn.textContent = 'Share Results';
+    Object.assign(shareResultsBtn.style, btnStyle);
+    shareResultsBtn.onclick = async () => {
+        const file = new File([dlText], 'gsplat-benchmark.txt', { type: 'text/plain' });
+        const shareData = { title: 'GSplat Benchmark', files: [file] };
+        if (navigator.share && navigator.canShare?.(shareData)) {
+            await navigator.share(shareData);
+        } else {
+            downloadResults();
+        }
+    };
+    chartArea.appendChild(shareResultsBtn);
+
+    const shareChartBtn = document.createElement('button');
+    shareChartBtn.textContent = 'Share Chart';
+    Object.assign(shareChartBtn.style, { ...btnStyle, marginLeft: '8px' });
+    shareChartBtn.onclick = async () => {
+        const blob = await new Promise((resolve) => {
+            chartCanvas.toBlob(resolve, 'image/png');
         });
-        shareBtn.onclick = async () => {
-            const blob = await new Promise((resolve) => {
-                chartCanvas.toBlob(resolve, 'image/png');
-            });
-            const file = new File([blob], 'gsplat-benchmark.png', { type: 'image/png' });
-            const shareData = { title: 'GSplat Benchmark', files: [file] };
-            if (navigator.canShare?.(shareData)) {
-                await navigator.share(shareData);
-            }
-        };
-        chartArea.appendChild(shareBtn);
-    }
+        const file = new File([blob], 'gsplat-benchmark.png', { type: 'image/png' });
+        const shareData = { title: 'GSplat Benchmark', files: [file] };
+        if (navigator.share && navigator.canShare?.(shareData)) {
+            await navigator.share(shareData);
+        } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'gsplat-benchmark.png';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    };
+    chartArea.appendChild(shareChartBtn);
 
     console.log(dlText);
 }
