@@ -638,7 +638,7 @@ function refreshChartAndDownload() {
             marginLeft: '8px'
         });
         shareBtn.onclick = async () => {
-            const blob = await new Promise((resolve) => chartCanvas.toBlob(resolve, 'image/png'));
+            const blob = await new Promise(resolve => chartCanvas.toBlob(resolve, 'image/png'));
             const file = new File([blob], 'gsplat-benchmark.png', { type: 'image/png' });
             const shareData = { title: 'GSplat Benchmark', files: [file] };
             if (navigator.canShare?.(shareData)) {
