@@ -50,14 +50,39 @@ import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComp
  * @import { MeshInstance } from '../mesh-instance.js'
  */
 
+// ---- Tunable knobs (memory vs. quality / robustness trade-offs) ----
+
+// Floor for _tileEntryMultiplier (minimum tile entries per splat). Controls
+// tile-entry buffer capacity on the first few frames before GPU readback has
+// converged. Raising reduces cold-start tile clamping (missing tiles on scene
+// load / teleport) at a flat cost of numSplats * (value) * 8 bytes.
+const INITIAL_TILE_ENTRY_MULTIPLIER = 2.5;
+
+// Headroom factor applied to measured entry demand. Cushions steady-state
+// frame-to-frame spikes (camera motion, splats crossing tile boundaries) so
+// they don't exceed capacity and cause clamping.
+const ENTRY_HEADROOM_MULTIPLIER = 2.0;
+
+// Consecutive low-usage readbacks before the multiplier is allowed to shrink.
+const SHRINK_THRESHOLD = 200;
+
+// Initial capacity (in splat IDs) of the large-splat buffer, which holds IDs of
+// splats whose screen AABB covers more than 64 tiles and are deferred to the
+// cooperative tile-count / place-entries passes. Buffer is grow-only: it expands
+// on demand via readback but never shrinks, so demand exceeding this initial size
+// causes large splats to be dropped for the first few frames (missing coverage on
+// close-up views) until readback catches up. Fixed cost is (value) * 4 bytes.
+const INITIAL_LARGE_SPLAT_CAPACITY = 16384;
+
+// ---- Algorithmic invariants (must match shader code, do not change casually) ----
+
 const TILE_SIZE = 16;
 const MAX_TILES = 65535; // tile index must fit in 16 bits for pair packing (tileIdx << 16 | localOffset)
-const INITIAL_TILE_ENTRY_MULTIPLIER = 1.5; // floor for _tileEntryMultiplier (min tile entries per splat)
 const CACHE_STRIDE = 7;
 const MAX_CHUNKS_PER_TILE = 8;
-const SHRINK_THRESHOLD = 200; // consecutive low-usage readbacks before considering multiplier shrink
-const ENTRY_HEADROOM_MULTIPLIER = 1.5; // headroom factor applied to measured entry demand
-const INITIAL_LARGE_SPLAT_CAPACITY = 4096; // initial large-splat ID buffer capacity (grow-only)
+
+// ---- Module-scope scratch (reusable, never exported) ----
+
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
