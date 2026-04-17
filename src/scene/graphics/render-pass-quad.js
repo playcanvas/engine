@@ -17,7 +17,7 @@ class RenderPassQuad extends RenderPass {
         const { device } = this;
         DebugGraphics.pushGpuMarker(device, `${this.name}:${this.quad.shader.name}`);
 
-        device.setDrawStates();
+        device.setDrawStates(device.blendState);
 
         this.quad.render(this.rect, this.scissorRect);
         DebugGraphics.popGpuMarker(device);

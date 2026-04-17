@@ -250,7 +250,16 @@ assetListLoader.load(() => {
         textEntities.length = 0;
     };
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
     // Set default value and create initial lines
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('showLines', true);
     createLinesEntity();
 

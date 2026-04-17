@@ -17,6 +17,11 @@ struct SplatCenter {
     projMat00: f32,       // element [0][0] of the projection matrix
     modelCenterOriginal: vec3f,   // original model center before modification
     modelCenterModified: vec3f,   // model center after modification
+    #ifdef GSPLAT_FISHEYE
+        fisheyeSinTK: f32,     // sin(theta / k), shared with corner shader
+        fisheyeCosTK: f32,     // cos(theta / k), shared with corner shader
+        fisheyeRxy: f32,       // length(v.xy), shared with corner shader
+    #endif
 }
 
 // stores the offset from center for the current gaussian

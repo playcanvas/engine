@@ -1,4 +1,5 @@
 // @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene.
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -82,8 +83,19 @@ assetListLoader.load(() => {
         });
     }
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
     // Enable gsplat ID for unified picking
     app.scene.gsplat.enableIds = true;
+    app.scene.gsplat.alphaClip = 0.2;
+    app.scene.gsplat.minPixelSize = 1;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -92,6 +104,11 @@ assetListLoader.load(() => {
         toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(-2, -0.5, 2);
+
+    data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
+        camera.camera.projection = value ? pc.PROJECTION_ORTHOGRAPHIC : pc.PROJECTION_PERSPECTIVE;
+        camera.camera.orthoHeight = 6;
+    });
 
     // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
@@ -199,6 +216,7 @@ assetListLoader.load(() => {
                                 material: markerMaterial
                             });
                             markerSphere.setLocalScale(0.3, 0.3, 0.3);
+                            markerSphere.render.meshInstances[0].pick = false;
 
                             // parent it to the picked entity and convert world position to its local space
                             entity.entity.addChild(markerSphere);

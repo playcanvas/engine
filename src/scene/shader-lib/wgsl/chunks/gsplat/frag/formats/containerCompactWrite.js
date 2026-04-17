@@ -20,18 +20,18 @@ fn writeSplat(center: vec3f, rotation: vec4f, scale: vec3f, color: vec4f) {
         let cBitsQ = u32(clamp(p.z * 0.5 + 0.5, 0.0, 1.0) * 1023.0 + 0.5);
         let packedQuat = aBitsQ | (bBitsQ << 11u) | (cBitsQ << 22u);
 
-        writeDataTransformA(vec4u(bitcast<u32>(center.x), bitcast<u32>(center.y), bitcast<u32>(center.z), packedQuat));
-
-        // Log-encode scale (3x8 bits) + alpha (8 bits)
+        // Log-encode scale (3x8 bits) + alpha (8 bits) into dataTransformA.w
         let invLogRange = 255.0 / 21.0;
         let logMin = -12.0;
         let sxBits = select(u32(clamp((log(scale.x) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.x < 1e-10);
         let syBits = select(u32(clamp((log(scale.y) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.y < 1e-10);
         let szBits = select(u32(clamp((log(scale.z) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.z < 1e-10);
         let alphaBits = u32(clamp(color.a, 0.0, 1.0) * 255.0 + 0.5);
-        let packedScale = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
+        let packedScaleAlpha = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
 
-        writeDataTransformB(vec4u(packedScale, 0u, 0u, 0u));
+        writeDataTransformA(vec4u(bitcast<u32>(center.x), bitcast<u32>(center.y), bitcast<u32>(center.z), packedScaleAlpha));
+
+        writeDataTransformB(vec4u(packedQuat, 0u, 0u, 0u));
     #endif
 }
 `;

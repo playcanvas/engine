@@ -13,6 +13,7 @@ import { TextureUtils } from '../../platform/graphics/texture-utils.js';
  * @import { GSplatStreams } from "../gsplat/gsplat-streams.js"
  * @import { GraphNode } from '../graph-node.js';
  * @import { GSplatOctreeNode } from './gsplat-octree-node.js';
+ * @import { NodeInfo } from './gsplat-octree-instance.js';
  * @import { ScopeId } from '../../platform/graphics/scope-id.js';
  */
 
@@ -157,12 +158,9 @@ class GSplatInfo {
      * Per-node info array from the octree instance, providing allocId for each node.
      * Indexed by nodeIndex. Null for non-octree splats.
      *
-     * @type {Array<{allocId: number}>|null}
+     * @type {NodeInfo[]|null}
      */
     nodeInfos = null;
-
-    /** @type {number} */
-    colorAccumulatedRotation = 0;
 
     /** @type {number} */
     colorAccumulatedTranslation = 0;
@@ -206,7 +204,7 @@ class GSplatInfo {
      * @param {GSplatPlacement} placement - The placement of the splat.
      * @param {Function|null} [consumeRenderDirty] - Callback to consume render dirty flag.
      * @param {GSplatOctreeNode[]|null} [octreeNodes] - Octree nodes for bounds lookup.
-     * @param {Array<{allocId: number}>|null} [nodeInfos] - Per-node info array from octree instance.
+     * @param {NodeInfo[]|null} [nodeInfos] - Per-node info array from octree instance.
      */
     constructor(device, resource, placement, consumeRenderDirty = null, octreeNodes = null, nodeInfos = null) {
         Debug.assert(resource);
@@ -324,8 +322,8 @@ class GSplatInfo {
             this.intervalAllocIds.push(this.allocId);
 
             // check if we need to limit to active splats (instead of rendering all splats)
-            const totalCenters = resource.centers?.length / 3;
-            if (totalCenters && this.activeSplats < totalCenters) {
+            const totalCapacity = resource.maxSplats;
+            if (totalCapacity && this.activeSplats < totalCapacity) {
                 // Provide interval [0, numSplats) to limit sorting to active splats only
                 this.intervals[0] = 0;
                 this.intervals[1] = this.activeSplats;
@@ -450,14 +448,6 @@ class GSplatInfo {
         const renderDirty = this._consumeRenderDirty ? this._consumeRenderDirty() : false;
 
         return worldMatrixChanged || renderDirty;
-    }
-
-    resetColorAccumulators(colorUpdateAngle, colorUpdateDistance) {
-        // Use a single random factor (0 to 1) for both accumulators to keep them synchronized
-        // This ensures rotation and translation thresholds trigger at similar rates
-        const randomFactor = Math.random();
-        this.colorAccumulatedRotation = randomFactor * colorUpdateAngle;
-        this.colorAccumulatedTranslation = randomFactor * colorUpdateDistance;
     }
 
     /**

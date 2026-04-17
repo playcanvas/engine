@@ -1,8 +1,5 @@
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { BUFFER_STATIC, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
-import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { Mesh } from '../mesh.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
@@ -60,12 +57,6 @@ class GSplatResourceBase {
      * @ignore
      */
     mesh = null;
-
-    /**
-     * @type {VertexBuffer|null}
-     * @ignore
-     */
-    instanceIndices = null;
 
     /**
      * @type {number}
@@ -154,7 +145,6 @@ class GSplatResourceBase {
     _actualDestroy() {
         this.streams.destroy();
         this.mesh?.destroy();
-        this.instanceIndices?.destroy();
         this.workBufferRenderInfos.forEach(info => info.destroy());
         this.workBufferRenderInfos.clear();
     }
@@ -203,7 +193,6 @@ class GSplatResourceBase {
         if (!this.mesh) {
             this.mesh = GSplatResourceBase.createMesh(this.device);
             this.mesh.aabb.copy(this.aabb);
-            this.instanceIndices = GSplatResourceBase.createInstanceIndices(this.device, this.gsplatData.numSplats);
         }
         this._meshRefCount++;
     }
@@ -218,8 +207,6 @@ class GSplatResourceBase {
         this._meshRefCount--;
         if (this._meshRefCount < 1) {
             this.mesh = null; // mesh instances destroy mesh when their refCount reaches zero
-            this.instanceIndices?.destroy();
-            this.instanceIndices = null;
         }
     }
 
@@ -240,11 +227,6 @@ class GSplatResourceBase {
         this.configureMaterialDefines(tempMap);
         tempMap.set('GSPLAT_LOD', '');
         if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
-
-        // Set HAS_NODE_MAPPING when resource has node mapping texture (octree resources)
-        if (this.streams.textures.has('nodeMappingTexture')) {
-            tempMap.set('HAS_NODE_MAPPING', '');
-        }
 
         let definesKey = '';
         for (const [k, v] of tempMap) {
@@ -321,28 +303,6 @@ class GSplatResourceBase {
         mesh.update();
 
         return mesh;
-    }
-
-    static createInstanceIndices(device, splatCount) {
-        const splatInstanceSize = GSplatResourceBase.instanceSize;
-        const numSplats = Math.ceil(splatCount / splatInstanceSize) * splatInstanceSize;
-        const numSplatInstances = numSplats / splatInstanceSize;
-
-        const indexData = new Uint32Array(numSplatInstances);
-        for (let i = 0; i < numSplatInstances; ++i) {
-            indexData[i] = i * splatInstanceSize;
-        }
-
-        const vertexFormat = new VertexFormat(device, [
-            { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
-        ]);
-
-        const instanceIndices = new VertexBuffer(device, vertexFormat, numSplatInstances, {
-            usage: BUFFER_STATIC,
-            data: indexData.buffer
-        });
-
-        return instanceIndices;
     }
 
     static get instanceSize() {

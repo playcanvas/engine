@@ -1,5 +1,6 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { SKYTYPE_INFINITE } from '../constants.js';
+import { FisheyeProjection } from '../graphics/fisheye-projection.js';
 import { GraphNode } from '../graph-node.js';
 import { SkyMesh } from './sky-mesh.js';
 
@@ -44,6 +45,20 @@ class Sky {
     _depthWrite = false;
 
     /**
+     * @type {number}
+     * @private
+     */
+    _fisheye = 0;
+
+    /**
+     * Lazily created on first non-zero fisheye set.
+     *
+     * @type {FisheyeProjection|null}
+     * @private
+     */
+    _fisheyeProj = null;
+
+    /**
      * A graph node with a transform used to render the sky mesh. Adjust the position, rotation and
      * scale of this node to orient the sky mesh. Ignored for {@link SKYTYPE_INFINITE}.
      *
@@ -67,6 +82,13 @@ class Sky {
 
         this.centerArray = new Float32Array(3);
         this.projectedSkydomeCenterId = this.device.scope.resolve('projectedSkydomeCenter');
+
+        this._preRenderEvt = scene.on('prerender', this._onPreRender, this);
+    }
+
+    destroy() {
+        this._preRenderEvt.off();
+        this.resetSkyMesh();
     }
 
     applySettings(render) {
@@ -145,12 +167,49 @@ class Sky {
         return this._depthWrite;
     }
 
+    /**
+     * Controls the fisheye projection strength for the sky. The value is in the range [0, 1]:
+     *
+     * - 0: Standard rectilinear (perspective) projection.
+     * - (0, 1]: Increasing barrel distortion, producing a wider field of view.
+     *
+     * Only supported with {@link SKYTYPE_INFINITE}. Has no effect on dome or box sky types,
+     * and has no effect with orthographic cameras.
+     *
+     * Defaults to 0.
+     *
+     * @type {number}
+     */
+    set fisheye(value) {
+        if (this._fisheye !== value) {
+            const wasEnabled = this._fisheye > 0;
+            this._fisheye = value;
+
+            const isEnabled = value > 0;
+            if (wasEnabled !== isEnabled) {
+                this._fisheyeProj ??= new FisheyeProjection();
+                if (this._type === SKYTYPE_INFINITE) {
+                    this._setFisheyeDefine(isEnabled);
+                }
+            }
+        }
+    }
+
+    get fisheye() {
+        return this._fisheye;
+    }
+
     updateSkyMesh() {
         const texture = this.scene._getSkyboxTex();
         if (texture) {
             this.resetSkyMesh();
             this.skyMesh = new SkyMesh(this.device, this.scene, this.node, texture, this.type);
             this.skyMesh.depthWrite = this._depthWrite;
+
+            if (this._fisheye > 0 && this.type === SKYTYPE_INFINITE) {
+                this._setFisheyeDefine(true);
+            }
+
             this.scene.fire('set:skybox', texture);
         }
     }
@@ -174,6 +233,38 @@ class Sky {
             centerArray[1] = temp.y;
             centerArray[2] = temp.z;
             this.projectedSkydomeCenterId.setValue(centerArray);
+        }
+    }
+
+    /**
+     * @param {boolean} enabled - Whether to enable the SKY_FISHEYE define.
+     * @private
+     */
+    _setFisheyeDefine(enabled) {
+        if (this.skyMesh?.meshInstance) {
+            const material = this.skyMesh.meshInstance.material;
+            material.setDefine('SKY_FISHEYE', enabled);
+            material.update();
+        }
+    }
+
+    /**
+     * Per-camera prerender callback that updates fisheye uniforms for the active camera.
+     *
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} cameraComponent - The camera about to render.
+     * @private
+     */
+    _onPreRender(cameraComponent) {
+        if (this._fisheye > 0 && this._fisheyeProj && this.skyMesh?.meshInstance) {
+            const camera = cameraComponent.camera;
+            const proj = this._fisheyeProj;
+            proj.update(this._fisheye, camera.fov, camera.projectionMatrix);
+
+            const material = this.skyMesh.meshInstance.material;
+            material.setParameter('fisheye_k', proj.k);
+            material.setParameter('fisheye_invK', proj.invK);
+            material.setParameter('fisheye_projMat00', proj.projMat00);
+            material.setParameter('fisheye_projMat11', proj.projMat11);
         }
     }
 }

@@ -3,6 +3,7 @@ import { PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Layer } from '../../scene/layer.js';
+import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassPicker } from './render-pass-picker.js';
 import { math } from '../../core/math/math.js';
@@ -300,20 +301,26 @@ class Picker {
             return null;
         }
 
-        // capture the inverse view-projection matrix synchronously before awaiting
+        // capture camera state synchronously before awaiting
         const viewProjMat = new Mat4().mul2(camera.camera.projectionMatrix, camera.camera.viewMatrix);
         const invViewProj = viewProjMat.invert();
+        const near = camera.nearClip;
+        const far = camera.farClip;
+        const isOrtho = camera.projection === PROJECTION_ORTHOGRAPHIC;
 
-        const depth = await this.getPointDepthAsync(x, y);
-        if (depth === null) {
+        const linearDepth = await this.getPointDepthAsync(x, y);
+        if (linearDepth === null) {
             return null;
         }
+
+        // convert linear normalized depth [0,1] to NDC depth [0,1] for unprojection
+        const ndcDepth = isOrtho ? linearDepth : (far * linearDepth / (linearDepth * (far - near) + near));
 
         // unproject to world space using the captured matrix
         const deviceCoord = new Vec4(
             (x / this.width) * 2 - 1,
             (1 - y / this.height) * 2 - 1,
-            depth * 2 - 1,
+            ndcDepth * 2 - 1,
             1.0
         );
         invViewProj.transformVec4(deviceCoord, deviceCoord);
@@ -327,8 +334,9 @@ class Picker {
      *
      * @param {number} x - The x coordinate of the pixel to pick.
      * @param {number} y - The y coordinate of the pixel to pick.
-     * @returns {Promise<number|null>} Promise that resolves with the depth value of the picked point
-     * (in 0..1 range), or null if depth picking is not enabled or no object was picked.
+     * @returns {Promise<number|null>} Promise that resolves with the linear normalized depth value
+     * of the picked point (0 = near plane, 1 = far plane), or null if depth picking is not enabled
+     * or no object was picked.
      * @ignore
      */
     async getPointDepthAsync(x, y) {

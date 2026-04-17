@@ -8,12 +8,12 @@ import {
     ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
-import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
-import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
+import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
+import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
 
 /**
- * @import { RenderPass } from '../platform/graphics/render-pass.js'
+ * @import { FramePass } from '../platform/graphics/frame-pass.js'
  * @import { FogParams } from './fog-params.js'
  * @import { ShaderPassInfo } from './shader-pass.js'
  */
@@ -37,12 +37,12 @@ class Camera {
     shaderPassInfo = null;
 
     /**
-     * @type {RenderPassColorGrab|null}
+     * @type {FramePassColorGrab|null}
      */
     renderPassColorGrab = null;
 
     /**
-     * @type {RenderPass|null}
+     * @type {FramePassDepthGrab|null}
      */
     renderPassDepthGrab = null;
 
@@ -61,12 +61,20 @@ class Camera {
     shaderParams = new CameraShaderParams();
 
     /**
-     * Render passes used to render this camera. If empty, the camera will render using the default
-     * render passes.
+     * Frame passes used to render this camera. If empty, the camera will render using the default
+     * frame passes.
      *
-     * @type {RenderPass[]}
+     * @type {FramePass[]}
      */
-    renderPasses = [];
+    framePasses = [];
+
+    /**
+     * Frame passes that execute before this camera's main scene rendering. Entries are picked up
+     * by the RenderPassForward that renders this camera's layers.
+     *
+     * @type {FramePass[]}
+     */
+    beforePasses = [];
 
     /** @type {number} */
     jitter = 0;
@@ -138,7 +146,7 @@ class Camera {
         this.renderPassDepthGrab?.destroy();
         this.renderPassDepthGrab = null;
 
-        this.renderPasses.length = 0;
+        this.framePasses.length = 0;
     }
 
     /**
@@ -504,7 +512,7 @@ class Camera {
     _enableRenderPassColorGrab(device, enable) {
         if (enable) {
             if (!this.renderPassColorGrab) {
-                this.renderPassColorGrab = new RenderPassColorGrab(device);
+                this.renderPassColorGrab = new FramePassColorGrab(device);
             }
         } else {
             this.renderPassColorGrab?.destroy();
@@ -515,7 +523,7 @@ class Camera {
     _enableRenderPassDepthGrab(device, renderer, enable) {
         if (enable) {
             if (!this.renderPassDepthGrab) {
-                this.renderPassDepthGrab = new RenderPassDepthGrab(device, this);
+                this.renderPassDepthGrab = new FramePassDepthGrab(device, this);
             }
         } else {
             this.renderPassDepthGrab?.destroy();

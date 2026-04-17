@@ -3,13 +3,17 @@ import { Component } from 'react';
 
 import {
     DEVICETYPE_WEBGPU,
+    DEVICETYPE_WEBGPU_BARE,
     DEVICETYPE_WEBGL2,
     DEVICETYPE_NULL
 } from '../constants.mjs';
 import { jsx } from '../jsx.mjs';
 
+const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
+
 const deviceTypeNames = {
     [DEVICETYPE_WEBGPU]: 'WebGPU',
+    [DEVICETYPE_WEBGPU_BARE]: 'WebGPU Bare',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
     [DEVICETYPE_NULL]: 'Null'
 };
@@ -99,10 +103,10 @@ class DeviceSelector extends TypedComponent {
                 [DEVICETYPE_WEBGL2]: 'WebGL 2 (not supported)'
             };
             this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
-        } else if (preferredDevice === DEVICETYPE_WEBGPU && activeDevice !== DEVICETYPE_WEBGPU) {
+        } else if (isWebGPU(preferredDevice) && !isWebGPU(activeDevice)) {
             const fallbackOrder = [DEVICETYPE_WEBGL2];
             const disabledOptions = {
-                [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)'
+                [preferredDevice]: `${deviceTypeNames[preferredDevice] || 'WebGPU'} (not supported)`
             };
             this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else {
@@ -149,13 +153,17 @@ class DeviceSelector extends TypedComponent {
 
     render() {
         const { fallbackOrder, disabledOptions, activeDevice } = this.state;
+        const options = [
+            { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
+            ...(process.env.NODE_ENV === 'development' ? [
+                { t: deviceTypeNames[DEVICETYPE_WEBGPU_BARE], v: DEVICETYPE_WEBGPU_BARE }
+            ] : []),
+            { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
+            { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
+        ];
         return jsx(SelectInput, {
             id: 'deviceTypeSelectInput',
-            options: [
-                { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
-                { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
-                { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
-            ],
+            options,
             value: activeDevice,
             fallbackOrder,
             disabledOptions,

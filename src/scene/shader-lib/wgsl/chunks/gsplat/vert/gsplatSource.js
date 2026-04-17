@@ -1,6 +1,5 @@
 export default /* wgsl */`
-attribute vertex_position: vec3f;         // xy: cornerUV, z: render order offset
-attribute vertex_id_attrib: u32;          // render order base
+attribute vertex_position: vec3f;         // xy: cornerUV, z: render order offset within instance
 
 #ifdef GSPLAT_INDIRECT_DRAW
     // When using indirect draw with compaction, numSplats is written by the
@@ -16,8 +15,8 @@ attribute vertex_id_attrib: u32;          // render order base
 
 // initialize the splat source structure
 fn initSource(source: ptr<function, SplatSource>) -> bool {
-    // calculate splat order
-    source.order = vertex_id_attrib + u32(vertex_position.z);
+    // calculate splat order from instance index and vertex position offset
+    source.order = pcInstanceIndex * {GSPLAT_INSTANCE_SIZE}u + u32(vertex_position.z);
 
     // return if out of range (since the last block of splats may be partially full)
     #ifdef GSPLAT_INDIRECT_DRAW

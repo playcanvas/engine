@@ -1,14 +1,13 @@
 export default /* glsl */`
-attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset
-attribute uint vertex_id_attrib;        // render order base
+attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset within instance
 
 uniform uint numSplats;                 // total number of splats
 uniform highp usampler2D splatOrder;    // per-splat index to source gaussian
 
 // initialize the splat source structure and global splat
 bool initSource(out SplatSource source) {
-    // calculate splat order
-    source.order = vertex_id_attrib + uint(vertex_position.z);
+    // calculate splat order from instance index and vertex position offset
+    source.order = uint(gl_InstanceID) * {GSPLAT_INSTANCE_SIZE}u + uint(vertex_position.z);
 
     // return if out of range (since the last block of splats may be partially full)
     if (source.order >= numSplats) {

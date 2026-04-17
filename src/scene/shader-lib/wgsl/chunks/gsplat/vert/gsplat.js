@@ -56,7 +56,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     }
 
     // read color (~11 bit source data, use half precision)
-    var clr: half4 = half4(getColor());
+    #ifdef GSPLAT_SEPARATE_OPACITY
+        let opacity = getOpacity(); // must run before getColor() to cache color data
+        var clr: half4 = half4(vec4f(getColor(), opacity));
+    #else
+        var clr: half4 = half4(getColor());
+    #endif
 
     #if GSPLAT_AA
         clr.a = clr.a * corner.aaFactor;
@@ -108,7 +113,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         clr.a = clr.a * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
         output.gaussianColor = half4(half3(rampColor), clr.a);
     #else
-        output.gaussianColor = half4(half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)))), clr.w);
+        output.gaussianColor = half4(half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)), -center.view.z)), clr.w);
     #endif
 
     #ifndef DITHER_NONE

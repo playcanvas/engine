@@ -1,5 +1,6 @@
 // @config DESCRIPTION This example demonstrates gsplat flipbook animation using dynamically loaded splat sequence of ply files.
 // @config NO_MINISTATS
+import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -128,8 +129,16 @@ assetListLoader.load(() => {
     player.setLocalScale(80, 80, 80);
     app.root.addChild(player);
 
-    // set alpha clip value, used by shadows
-    app.scene.gsplat.material.setParameter('alphaClip', 0.1);
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
+    app.scene.gsplat.alphaClip = 0.1;
 
     // Create shadow catcher
     const shadowCatcher = new pc.Entity('ShadowCatcher');

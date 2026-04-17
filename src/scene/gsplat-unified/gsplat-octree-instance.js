@@ -61,6 +61,12 @@ class NodeInfo {
     worldDistance = 0;
 
     /**
+     * Accumulated camera translation for SH color update threshold tracking.
+     * @type {number}
+     */
+    colorAccumulatedTranslation = 0;
+
+    /**
      * Back-reference to owning GSplatOctreeInstance.
      * @type {GSplatOctreeInstance|null}
      */
@@ -255,11 +261,13 @@ class GSplatOctreeInstance {
 
     /**
      * Destroys this octree instance and clears internal references.
+     *
+     * @param {boolean} [skipRefCounting] - When true, skip decrementing file ref counts
+     * on the octree. Used when the caller handles ref counting externally via pendingReleases
+     * (e.g. during world state updates where decrements must be deferred).
      */
-    destroy() {
-        // Only decrement refs if octree is still alive
-        // Skip ref counting if octree was force-destroyed (e.g., asset unloaded)
-        if (this.octree && !this.octree.destroyed) {
+    destroy(skipRefCounting = false) {
+        if (!skipRefCounting && this.octree && !this.octree.destroyed) {
             // Decrement ref counts for all files currently in use (loaded files)
             const filesToDecRef = this.getFileDecrements();
             for (const fileIndex of filesToDecRef) {
@@ -999,4 +1007,4 @@ class GSplatOctreeInstance {
     }
 }
 
-export { GSplatOctreeInstance };
+export { GSplatOctreeInstance, NodeInfo };

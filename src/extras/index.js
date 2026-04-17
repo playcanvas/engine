@@ -15,13 +15,13 @@ export { GltfExporter } from './exporters/gltf-exporter.js';
 
 // RENDER PASSES
 export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/constants.js';
-export { RenderPassCameraFrame, CameraFrameOptions } from './render-passes/render-pass-camera-frame.js';
+export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
 export { RenderPassDepthAwareBlur } from './render-passes/render-pass-depth-aware-blur.js';
-export { RenderPassDof } from './render-passes/render-pass-dof.js';
+export { FramePassDof } from './render-passes/frame-pass-dof.js';
 export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
 export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
-export { RenderPassBloom } from './render-passes/render-pass-bloom.js';
+export { FramePassBloom } from './render-passes/frame-pass-bloom.js';
 export { RenderPassPrepass } from './render-passes/render-pass-prepass.js';
 export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';

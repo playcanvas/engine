@@ -1,14 +1,19 @@
 import {
     getGlslShaderType, getWgslShaderType,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    pixelFormatInfo,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    SAMPLETYPE_FLOAT, SAMPLETYPE_INT, SAMPLETYPE_UINT,
+    SHADERSTAGE_COMPUTE
 } from '../../platform/graphics/constants.js';
 import { hashCode } from '../../core/hash.js';
 import { Debug } from '../../core/debug.js';
 import { GSPLAT_STREAM_RESOURCE, GSPLAT_STREAM_INSTANCE } from '../constants.js';
+import { BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
 
 // Shader chunk templates for stream declarations
 import glslStreamDecl from '../shader-lib/glsl/chunks/gsplat/vert/gsplatStreamDecl.js';
 import wgslStreamDecl from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStreamDecl.js';
+import wgslComputeStreamDecl from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeStreamDecl.js';
 import glslStreamOutput from '../shader-lib/glsl/chunks/gsplat/vert/gsplatStreamOutput.js';
 import wgslStreamOutput from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStreamOutput.js';
 
@@ -49,6 +54,7 @@ const RE_SAMPLER = /\{sampler\}/g;
 const RE_TEXTURE_TYPE = /\{textureType\}/g;
 const RE_RETURN_TYPE = /\{returnType\}/g;
 const RE_FUNC_NAME = /\{funcName\}/g;
+const RE_BINDING = /\{binding\}/g;
 const RE_INDEX = /\{index\}/g;
 const RE_COLOR_SLOT = /\{colorSlot\}/g;
 const RE_DEFINE_GUARD = /\{defineGuard\}/g;
@@ -347,10 +353,14 @@ class GSplatFormat {
         for (const stream of streams) {
             const info = getShaderType(stream.format);
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+            let textureType = info.textureType ?? '';
+            if (isWebGPU && stream.format === PIXELFORMAT_RGBA32F) {
+                textureType = 'texture_2d<uff>';
+            }
             const decl = template
             .replace(RE_NAME, stream.name)
             .replace(RE_SAMPLER, info.sampler ?? '')
-            .replace(RE_TEXTURE_TYPE, info.textureType ?? '')
+            .replace(RE_TEXTURE_TYPE, textureType)
             .replace(RE_RETURN_TYPE, info.returnType)
             .replace(RE_FUNC_NAME, funcName);
             lines.push(decl);
@@ -367,6 +377,66 @@ class GSplatFormat {
      */
     getReadCode() {
         return this._read;
+    }
+
+    /**
+     * Generates compute shader input declarations with explicit binding annotations.
+     * Format texture bindings are placed at indices starting from startBinding.
+     *
+     * @param {number} startBinding - The first @group(0) @binding() index for format textures.
+     * @param {string[]} [streamNames] - Optional array of stream names to filter.
+     * @returns {string} WGSL code for compute shader declarations.
+     * @ignore
+     */
+    getComputeInputDeclarations(startBinding, streamNames) {
+        const lines = [];
+
+        let streams = [...this.streams, ...this._extraStreams];
+        if (streamNames) {
+            streams = streams.filter(s => streamNames.includes(s.name));
+        }
+
+        for (let i = 0; i < streams.length; i++) {
+            const stream = streams[i];
+            const info = getWgslShaderType(stream.format);
+            const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
+            let textureType = info.textureType ?? '';
+            if (stream.format === PIXELFORMAT_RGBA32F) {
+                textureType = 'texture_2d<uff>';
+            }
+            const decl = wgslComputeStreamDecl
+            .replace(RE_BINDING, String(startBinding + i))
+            .replace(RE_NAME, stream.name)
+            .replace(RE_TEXTURE_TYPE, textureType)
+            .replace(RE_RETURN_TYPE, info.returnType)
+            .replace(RE_FUNC_NAME, funcName);
+            lines.push(decl);
+        }
+
+        return lines.join('\n');
+    }
+
+    /**
+     * Returns an array of BindTextureFormat entries for the format's streams, suitable for
+     * appending to a compute shader's BindGroupFormat. Sample types are derived from pixel formats.
+     *
+     * @param {string[]} [streamNames] - Optional array of stream names to filter.
+     * @returns {BindTextureFormat[]} Array of bind texture format entries.
+     * @ignore
+     */
+    getComputeBindFormats(streamNames) {
+        let streams = [...this.streams, ...this._extraStreams];
+        if (streamNames) {
+            streams = streams.filter(s => streamNames.includes(s.name));
+        }
+
+        return streams.map((stream) => {
+            const info = pixelFormatInfo.get(stream.format);
+            let sampleType = SAMPLETYPE_FLOAT;
+            if (info?.isUint) sampleType = SAMPLETYPE_UINT;
+            else if (info?.isInt) sampleType = SAMPLETYPE_INT;
+            return new BindTextureFormat(stream.name, SHADERSTAGE_COMPUTE, undefined, sampleType, false);
+        });
     }
 
     /**

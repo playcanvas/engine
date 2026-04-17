@@ -1213,3 +1213,71 @@ export const GSPLATDATA_LARGE = 'large';
  * @category Graphics
  */
 export const GSPLATDATA_COMPACT = 'compact';
+
+/**
+ * Automatically selects the best rendering pipeline for the current platform.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_RENDERER_AUTO = 0;
+
+/**
+ * Rasterization-based rendering with CPU-side sorting.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_RENDERER_RASTER_CPU_SORT = 1;
+
+/**
+ * Rasterization-based rendering with compute shader sorting. WebGPU only. Experimental with
+ * limited functionality.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
+
+/**
+ * Full compute pipeline for rendering. WebGPU only. Experimental with limited functionality.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_RENDERER_COMPUTE = 3;
+
+/**
+ * No debug rendering for Gaussian splats. Normal rendering mode.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_NONE = 0;
+
+/**
+ * Debug rendering that colorizes Gaussian splats by their selected LOD level.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_LOD = 1;
+
+/**
+ * Debug rendering that assigns a random color per spherical harmonics update pass,
+ * visualizing when SH color updates occur.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_SH_UPDATE = 2;
+
+/**
+ * Debug heatmap rendering for the compute rasterizer. Visualizes the average number of splats
+ * processed per pixel in each tile as a blue-to-red color ramp. Only supported with
+ * {@link GSPLAT_RENDERER_COMPUTE}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_HEATMAP = 3;

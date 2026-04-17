@@ -259,12 +259,21 @@ class GraphicsDevice extends EventHandler {
     supportsStorageTextureRead = false;
 
     /**
+     * True if the device supports subgroup operations in shaders (WebGPU only). When supported,
+     * compute and fragment shaders can use WGSL subgroup builtins such as `subgroupBroadcast`,
+     * `subgroupAll`, `subgroupAny`, `subgroupAdd`, `subgroupShuffle`, etc. The `enable subgroups;`
+     * directive is automatically injected into WGSL shaders when this feature is available.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsSubgroups = false;
+
+    /**
      * True if the device supports the WGSL subgroup_uniformity extension, which allows
      * subgroup functionality to be considered uniform in more cases during shader compilation.
-     * When a shader uses this feature, use an `enable` directive at the top of the WGSL shader:
-     * ```wgsl
-     * enable subgroups;
-     * ```
+     * This is automatically enabled via the `enable subgroups;` directive when
+     * {@link GraphicsDevice#supportsSubgroups} is true.
      *
      * @readonly
      * @type {boolean}
@@ -273,14 +282,11 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the device supports the WGSL subgroup_id extension, which provides access to
-     * `subgroup_id` and `num_subgroups` built-in values in workgroups.
-     * When a shader uses this feature, use a `requires` directive at the top of the WGSL shader:
-     * ```wgsl
-     * requires subgroup_id;
-     * ```
+     * `subgroup_id` and `num_subgroups` built-in values in workgroups. The `requires subgroup_id;`
+     * directive is automatically injected into WGSL shaders when this feature is available.
      *
-     * @readonly
      * @type {boolean}
+     * @readonly
      */
     supportsSubgroupId = false;
 
@@ -399,6 +405,16 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     supportsShaderF16 = false;
+
+    /**
+     * True if HTML elements (e.g. `<div>`) can be used as texture sources via the HTML-in-Canvas
+     * API. When supported, an HTML element appended to a canvas with the `layoutsubtree` attribute
+     * can be passed to {@link Texture#setSource} and rendered as a live texture in the 3D scene.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsHtmlTextures = false;
 
     /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
@@ -645,6 +661,8 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
         if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
         if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
+        if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
+        if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
@@ -1054,17 +1072,18 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Reports whether a texture source is a canvas, image, video or ImageBitmap.
+     * Reports whether a texture source is a canvas, image, video, ImageBitmap, or HTML element.
      *
      * @param {*} texture - Texture source data.
-     * @returns {boolean} True if the texture is a canvas, image, video or ImageBitmap and false
-     * otherwise.
+     * @returns {boolean} True if the texture is a canvas, image, video, ImageBitmap, or HTML
+     * element and false otherwise.
      * @ignore
      */
     _isBrowserInterface(texture) {
         return this._isImageBrowserInterface(texture) ||
                 this._isImageCanvasInterface(texture) ||
-                this._isImageVideoInterface(texture);
+                this._isImageVideoInterface(texture) ||
+                this._isHTMLElementInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
@@ -1078,6 +1097,22 @@ class GraphicsDevice extends EventHandler {
 
     _isImageVideoInterface(texture) {
         return (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
+    }
+
+    /**
+     * Reports whether a texture source is a generic HTML element (not image, canvas, or video).
+     * Used for the HTML-in-Canvas proposal (texElementImage2D).
+     *
+     * @param {*} texture - Texture source data.
+     * @returns {boolean} True if the texture is an HTMLElement that is not an image, canvas, or
+     * video.
+     * @ignore
+     */
+    _isHTMLElementInterface(texture) {
+        return (typeof HTMLElement !== 'undefined' && texture instanceof HTMLElement &&
+                !(typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) &&
+                !(typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) &&
+                !(typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement));
     }
 
     /**

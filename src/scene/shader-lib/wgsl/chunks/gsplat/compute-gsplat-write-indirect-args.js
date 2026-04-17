@@ -1,16 +1,19 @@
 // Single-thread compute shader that reads the visible splat count from the
-// prefix sum buffer and writes indirect draw arguments, indirect sort dispatch
-// arguments, numSplats for the vertex shader, and sortElementCount for sort shaders.
+// prefix sum buffer and writes indirect draw arguments, indirect dispatch
+// arguments (key gen, sort), numSplats for the vertex shader,
+// and sortElementCount for sort shaders.
 //
 // The visible count is obtained from prefixSumBuffer[totalSplats]. After the
 // exclusive prefix sum over N+1 elements (N flags + 1 sentinel), the value at
 // index N equals the total number of visible splats.
 
 import indirectCoreCS from '../common/comp/indirect-core.js';
+import dispatchCoreCS from '../common/comp/dispatch-core.js';
 
 export const computeGsplatWriteIndirectArgsSource = /* wgsl */`
 
 ${indirectCoreCS}
+${dispatchCoreCS}
 
 // Prefix sum buffer (flagBuffer after in-place exclusive scan)
 @group(0) @binding(0) var<storage, read> prefixSumBuffer: array<u32>;
@@ -55,13 +58,21 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // Write numSplats for vertex shader
     numSplatsBuf[0] = count;
 
-    // Write indirect dispatch args for sort (shared slot for key gen, block sum, reorder)
-    // All use 256 threads/workgroup
-    let sortWorkgroupCount = (count + {SORT_THREADS_PER_WORKGROUP}u - 1u) / {SORT_THREADS_PER_WORKGROUP}u;
+    // Write indirect dispatch args: slot 0 = key gen, slot 1 = sort.
+    // Use 2D layout to stay within maxComputeWorkgroupsPerDimension.
     let dispatchOffset = uniforms.dispatchSlotOffset;
-    indirectDispatchArgs[dispatchOffset + 0u] = sortWorkgroupCount;
-    indirectDispatchArgs[dispatchOffset + 1u] = 1u;
+
+    let keygenWorkgroupCount = (count + {KEYGEN_THREADS_PER_WORKGROUP}u - 1u) / {KEYGEN_THREADS_PER_WORKGROUP}u;
+    let keygenDim = calcDispatch2D(keygenWorkgroupCount, {MAX_WORKGROUPS_PER_DIM}u);
+    indirectDispatchArgs[dispatchOffset + 0u] = keygenDim.x;
+    indirectDispatchArgs[dispatchOffset + 1u] = keygenDim.y;
     indirectDispatchArgs[dispatchOffset + 2u] = 1u;
+
+    let sortWorkgroupCount = (count + {SORT_ELEMENTS_PER_WORKGROUP}u - 1u) / {SORT_ELEMENTS_PER_WORKGROUP}u;
+    let sortDim = calcDispatch2D(sortWorkgroupCount, {MAX_WORKGROUPS_PER_DIM}u);
+    indirectDispatchArgs[dispatchOffset + 3u] = sortDim.x;
+    indirectDispatchArgs[dispatchOffset + 4u] = sortDim.y;
+    indirectDispatchArgs[dispatchOffset + 5u] = 1u;
 
     // Write sortElementCount for sort shaders (= visibleCount)
     sortElementCountBuf[0] = count;

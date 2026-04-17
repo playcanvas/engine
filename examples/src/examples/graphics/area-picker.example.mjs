@@ -1,4 +1,5 @@
 // @config DESCRIPTION Click on objects to detect world space intersection. Objects within the colored rectangles are highlighted.
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -123,6 +124,11 @@ assetListLoader.load(() => {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
     app.root.addChild(camera);
+
+    data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
+        camera.camera.projection = value ? pc.PROJECTION_ORTHOGRAPHIC : pc.PROJECTION_PERSPECTIVE;
+        camera.camera.orthoHeight = 15;
+    });
 
     // ------ Custom render passes with bloom ------
     const cameraFrame = new pc.CameraFrame(app, camera.camera);

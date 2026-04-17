@@ -2147,6 +2147,15 @@ export const DEVICETYPE_WEBGL2 = 'webgl2';
 export const DEVICETYPE_WEBGPU = 'webgpu';
 
 /**
+ * A WebGPU device type with no optional features requested and default spec limits. Useful for
+ * testing engine behavior on the most constrained WebGPU devices (e.g. no compressed textures, no
+ * float32-filterable, no timestamp-query).
+ *
+ * @category Graphics
+ */
+export const DEVICETYPE_WEBGPU_BARE = 'webgpu:bare';
+
+/**
  * A Null device type.
  *
  * @category Graphics

@@ -15,7 +15,7 @@ import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
-import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
+import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 
 /**
@@ -915,12 +915,12 @@ class ForwardRenderer extends Renderer {
 
                 Debug.call(() => {
                     if (camera.postEffects.effects.length > 0) {
-                        Debug.warnOnce(`Camera '${camera.entity.name}' uses render passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
+                        Debug.warnOnce(`Camera '${camera.entity.name}' uses frame passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
                     }
                 });
 
-                // schedule render passes from the camera
-                camera.camera.renderPasses.forEach((renderPass) => {
+                // schedule frame passes from the camera
+                camera.camera.framePasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);
                 });
 
@@ -969,7 +969,7 @@ class ForwardRenderer extends Renderer {
 
                     // postprocessing
                     if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
-                        const renderPass = new RenderPassPostprocessing(this.device, this, renderAction);
+                        const renderPass = new FramePassPostprocessing(this.device, this, renderAction);
                         frameGraph.addRenderPass(renderPass);
                     }
 

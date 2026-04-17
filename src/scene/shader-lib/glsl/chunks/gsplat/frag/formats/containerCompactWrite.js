@@ -20,18 +20,18 @@ void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
         uint cBitsQ = uint(clamp((p.z * 0.5 + 0.5) * 1023.0 + 0.5, 0.0, 1023.0));
         uint packedQuat = aBitsQ | (bBitsQ << 11u) | (cBitsQ << 22u);
 
-        writeDataTransformA(uvec4(floatBitsToUint(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packedQuat));
-
-        // Log-encode scale (3x8 bits) + alpha (8 bits)
+        // Log-encode scale (3x8 bits) + alpha (8 bits) into dataTransformA.w
         const float invLogRange = 255.0 / 21.0;
         const float logMin = -12.0;
         uint sxBits = scale.x < 1e-10 ? 0u : uint(clamp((log(scale.x) - logMin) * invLogRange + 0.5, 1.0, 255.0));
         uint syBits = scale.y < 1e-10 ? 0u : uint(clamp((log(scale.y) - logMin) * invLogRange + 0.5, 1.0, 255.0));
         uint szBits = scale.z < 1e-10 ? 0u : uint(clamp((log(scale.z) - logMin) * invLogRange + 0.5, 1.0, 255.0));
         uint alphaBits = uint(clamp(color.a, 0.0, 1.0) * 255.0 + 0.5);
-        uint packedScale = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
+        uint packedScaleAlpha = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
 
-        writeDataTransformB(uvec4(packedScale, 0u, 0u, 0u));
+        writeDataTransformA(uvec4(floatBitsToUint(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packedScaleAlpha));
+
+        writeDataTransformB(uvec4(packedQuat, 0u, 0u, 0u));
     #endif
 }
 `;

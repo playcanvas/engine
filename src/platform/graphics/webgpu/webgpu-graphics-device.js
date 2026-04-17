@@ -33,6 +33,7 @@ import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
 import { WebgpuUploadStream } from './webgpu-upload-stream.js';
+import { WebgpuComputeBenchmark } from './webgpu-compute-benchmark.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -197,6 +198,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
+        this.featureLevel = options.featureLevel;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }
@@ -299,9 +301,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
-        // request optional features
+        const featureLevel = this.initOptions.featureLevel;
+        const bare = featureLevel === 'bare';
+
+        // request optional features (returns false for bare mode to simulate the most constrained device)
         const requiredFeatures = [];
-        const requireFeature = (feature) => {
+        const requireFeature = bare ? () => false : (feature) => {
             const supported = this.gpuAdapter.features.has(feature);
             if (supported) {
                 requiredFeatures.push(feature);
@@ -327,18 +332,21 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
-        Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
+        this.supportsSubgroups = requireFeature('subgroups');
+        Debug.log(`WEBGPU features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`);
 
-        // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available
-        const adapterLimits = this.gpuAdapter?.limits;
+        // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
-        if (adapterLimits) {
-            for (const limitName in adapterLimits) {
-                // skip these as they fail on Windows Chrome and are not part of spec currently
-                if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
-                    continue;
+        if (!bare) {
+            const adapterLimits = this.gpuAdapter?.limits;
+            if (adapterLimits) {
+                for (const limitName in adapterLimits) {
+                    // skip these as they fail on Windows Chrome and are not part of spec currently
+                    if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
+                        continue;
+                    }
+                    requiredLimits[limitName] = adapterLimits[limitName];
                 }
-                requiredLimits[limitName] = adapterLimits[limitName];
             }
         }
 
@@ -362,6 +370,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+
+        /**
+         * Compute performance index measured at startup (milliseconds for a fixed benchmark
+         * workload). Used by GSplat auto-selection to choose between compute and V/F renderers.
+         * -1 if timestamp queries are unavailable.
+         *
+         * @type {number}
+         * @ignore
+         */
+        this.computePerfIndex = await WebgpuComputeBenchmark.run(this.wgpu, this.supportsTimestampQuery);
 
         this.initDeviceCaps();
 

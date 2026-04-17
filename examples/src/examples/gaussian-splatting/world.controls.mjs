@@ -3,8 +3,28 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SliderInput, Label } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, SliderInput, Label } = ReactPCUI;
     return fragment(
+        jsx(
+            Panel,
+            { headerText: 'Renderer' },
+            jsx(
+                LabelGroup,
+                { text: 'Renderer' },
+                jsx(SelectInput, {
+                    type: 'number',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'renderer' },
+                    value: observer.get('renderer') ?? 0,
+                    options: [
+                        { v: 0, t: 'Auto' },
+                        { v: 1, t: 'Raster (CPU Sort)' },
+                        { v: 2, t: 'Raster (GPU Sort)' },
+                        { v: 3, t: 'Compute' }
+                    ]
+                })
+            )
+        ),
         jsx(
             Panel,
             { headerText: 'Camera' },
@@ -24,12 +44,18 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Settings' },
             jsx(
                 LabelGroup,
-                { text: 'Colorize LOD' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Debug' },
+                jsx(SelectInput, {
+                    type: 'number',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'debugLod' },
-                    value: observer.get('debugLod')
+                    link: { observer, path: 'debug' },
+                    value: observer.get('debug') ?? 0,
+                    options: [
+                        { v: 0, t: 'None' },
+                        { v: 1, t: 'LOD' },
+                        { v: 2, t: 'SH Update' },
+                        { v: 3, t: 'Heatmap' }
+                    ]
                 })
             ),
             jsx(

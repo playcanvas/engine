@@ -1,5 +1,6 @@
-// @config DESCRIPTION Test example for RenderPassRadixSort - GPU radix sort using mipmap binary search
+// @config DESCRIPTION Test example for FramePassRadixSort - GPU radix sort using mipmap binary search
 // @config HIDDEN
+// @config WEBGPU_BARE_DISABLED
 import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
@@ -86,7 +87,7 @@ let currentNumElements = 0;
 let currentNumBits = 0;
 /** @type {pc.Texture|null} */
 let keysTexture = null;
-/** @type {pc.RenderPassRadixSort|null} */
+/** @type {pc.FramePassRadixSort|null} */
 let radixSort = null;
 /** @type {number[]} */
 let originalValues = [];
@@ -94,7 +95,7 @@ let originalValues = [];
 let needsRegen = true;
 
 // Create render pass instance once
-radixSort = new pc.RenderPassRadixSort(device);
+radixSort = new pc.FramePassRadixSort(device);
 
 // ==================== MATERIALS ====================
 

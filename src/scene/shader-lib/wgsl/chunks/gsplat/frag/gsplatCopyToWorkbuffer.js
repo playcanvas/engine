@@ -34,13 +34,6 @@ uniform model_rotation: vec4f;  // (x,y,z,w) format
     uniform uId: u32;
 #endif
 
-#ifdef GSPLAT_NODE_INDEX
-    uniform uBoundsBaseIndex: u32;
-    #ifdef HAS_NODE_MAPPING
-        var nodeMappingTexture: texture_2d<u32>;
-    #endif
-#endif
-
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
@@ -107,19 +100,6 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #ifdef GSPLAT_ID
         writePcId(vec4u(uniform.uId, 0u, 0u, 0u));
-    #endif
-
-    #ifdef GSPLAT_NODE_INDEX
-        #ifdef HAS_NODE_MAPPING
-            // Octree: nodeIndex is the direct bounds offset (all nodes uploaded)
-            let srcTextureWidth = i32(textureDimensions(nodeMappingTexture, 0).x);
-            let sourceCoord = vec2i(i32(originalIndex) % srcTextureWidth, i32(originalIndex) / srcTextureWidth);
-            let nodeIndex = textureLoad(nodeMappingTexture, sourceCoord, 0).r;
-            writePcNodeIndex(vec4u(uniform.uBoundsBaseIndex + nodeIndex, 0u, 0u, 0u));
-        #else
-            // Non-octree: single bounds entry
-            writePcNodeIndex(vec4u(uniform.uBoundsBaseIndex, 0u, 0u, 0u));
-        #endif
     #endif
 
     return processOutput;

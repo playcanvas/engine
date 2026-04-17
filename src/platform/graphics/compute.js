@@ -148,6 +148,14 @@ class Compute {
     }
 
     /**
+     * Frees resources associated with this compute instance.
+     */
+    destroy() {
+        this.impl?.destroy();
+        this.impl = null;
+    }
+
+    /**
      * Apply the parameters to the scope.
      *
      * @ignore
@@ -223,8 +231,8 @@ class Compute {
         if (count <= maxDimension) {
             return result.set(count, 1);
         }
-        const x = Math.floor(Math.sqrt(count));
-        return result.set(x, Math.ceil(count / x));
+        const y = Math.ceil(count / maxDimension);
+        return result.set(Math.ceil(count / y), y);
     }
 }
 

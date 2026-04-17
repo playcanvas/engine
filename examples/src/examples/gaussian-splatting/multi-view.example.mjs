@@ -1,4 +1,5 @@
 // @config DESCRIPTION Renders Gaussian Splats from multiple camera viewports simultaneously with different projection types.
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -57,6 +58,15 @@ const assets = {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
+
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
     // setup skydome
     app.scene.skyboxMip = 2;

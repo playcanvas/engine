@@ -1,11 +1,11 @@
-// Read functions for packed format - used by:
-// - GSplatFormat.createPackedFormat() for reading from GSplatContainer (RGBA16U color)
-// - Work buffer format for reading during forward rendering (RGBA16F/RGBA16U color)
-// Uses GSPLAT_COLOR_FLOAT define to switch between float and uint color reading paths
+// Read functions for large work buffer format (GSPLATDATA_LARGE, 32 bytes/splat).
+// Uses GSPLAT_COLOR_FLOAT define to switch between float and uint color reading paths.
 export default /* wgsl */`
-// cached texture fetches
+// Required call order: getCenter() first, then getOpacity() (loads and caches color),
+// then getColor() (returns cached RGB). getRotation(), getScale() can follow in any order.
 var<private> cachedTransformA: vec4u;
 var<private> cachedTransformB: vec2u;
+var<private> cachedColor: vec4f;
 
 fn getCenter() -> vec3f {
     cachedTransformA = loadDataTransformA();
@@ -13,16 +13,20 @@ fn getCenter() -> vec3f {
     return vec3f(bitcast<f32>(cachedTransformA.r), bitcast<f32>(cachedTransformA.g), bitcast<f32>(cachedTransformA.b));
 }
 
-fn getColor() -> vec4f {
+fn getOpacity() -> f32 {
     #ifdef GSPLAT_COLOR_FLOAT
-        return loadDataColor();
+        cachedColor = loadDataColor();
     #else
-        // Unpack RGBA from 4x half-float (16-bit) values stored in RGBA16U format
         let packedColor = loadDataColor();
         let packed_rg = packedColor.r | (packedColor.g << 16u);
         let packed_ba = packedColor.b | (packedColor.a << 16u);
-        return vec4f(unpack2x16float(packed_rg), unpack2x16float(packed_ba));
+        cachedColor = vec4f(unpack2x16float(packed_rg), unpack2x16float(packed_ba));
     #endif
+    return cachedColor.a;
+}
+
+fn getColor() -> vec3f {
+    return cachedColor.rgb;
 }
 
 fn getRotation() -> vec4f {

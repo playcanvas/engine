@@ -90,6 +90,8 @@ assetListLoader.load(() => {
     let splatEntity = null;
 
     app.scene.gsplat.lodBehindPenalty = 3;
+    app.scene.gsplat.minPixelSize = 2;
+    app.scene.gsplat.minContribution = 2;
 
     /**
      * Calculate the bounding box of an entity.
@@ -223,6 +225,15 @@ assetListLoader.load(() => {
 
     // Apply initial settings
     applySettings();
+
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
     // Listen for changes
     data.on('*:set', (/** @type {string} */ path) => {

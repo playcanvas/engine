@@ -284,9 +284,6 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // Set placement ID for picking (unconditionally - cheap even if shader doesn't use it)
         scope.resolve('uId').setValue(splatInfo.placementId);
 
-        // Bind per-GSplatInfo culling bounds base index
-        scope.resolve('uBoundsBaseIndex').setValue(splatInfo.boundsBaseIndex);
-
         // Apply per-instance shader parameters
         if (splatInfo.parameters) {
             for (const param of splatInfo.parameters.values()) {

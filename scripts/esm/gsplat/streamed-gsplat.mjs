@@ -1,4 +1,4 @@
-import { Script, Asset, Entity, platform } from 'playcanvas';
+import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } from 'playcanvas';
 
 class StreamedGsplat extends Script {
     static scriptName = 'streamedGsplat';
@@ -268,7 +268,7 @@ class StreamedGsplat extends Script {
 
     _toggleColorize() {
         this._colorize = !this._colorize;
-        this.app.scene.gsplat.colorizeLod = this._colorize;
+        this.app.scene.gsplat.debug = this._colorize ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
 
         const statusEl = document.getElementById('colorize-status');
         if (statusEl) {

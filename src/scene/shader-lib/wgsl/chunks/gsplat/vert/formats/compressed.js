@@ -5,7 +5,7 @@ export default /* wgsl */`
 #include "gsplatPackingPS"
 
 // manual texture declaration - uses custom UV, not splatUV
-var chunkTexture: texture_2d<f32>;
+var chunkTexture: texture_2d<uff>;
 
 // work values
 var<private> chunkDataA: vec4f;    // x: min_x, y: min_y, z: min_z, w: max_x

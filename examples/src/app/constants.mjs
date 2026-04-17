@@ -6,4 +6,6 @@ export const DEVICETYPE_WEBGL2 = 'webgl2';
 
 export const DEVICETYPE_WEBGPU = 'webgpu';
 
+export const DEVICETYPE_WEBGPU_BARE = 'webgpu:bare';
+
 export const DEVICETYPE_NULL = 'null';

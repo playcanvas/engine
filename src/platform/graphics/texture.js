@@ -1052,16 +1052,31 @@ class Texture {
     }
 
     /**
-     * Set the pixel data of the texture from a canvas, image, video DOM element. If the texture is
-     * a cubemap, the supplied source must be an array of 6 canvases, images or videos.
+     * Set the pixel data of the texture from a canvas, image, video, or HTML DOM element. If the
+     * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A
-     * canvas, image or video element, or an array of 6 canvas, image or video elements.
+     * Note: using an HTML element (e.g. `<div>`) as a source requires
+     * {@link GraphicsDevice#supportsHtmlTextures} to be true.
+     *
+     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|HTMLElement[]} source - A
+     * canvas, image, video, or HTML element, or an array of 6 canvas, image, video, or HTML
+     * elements.
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
      * than 0, represents the image source for the Nth mipmap reduction level.
      */
     setSource(source, mipLevel = 0) {
+        if (this.device._isHTMLElementInterface(source)) {
+            if (!this.device.supportsHtmlTextures) {
+                Debug.error('Texture#setSource: HTML element textures are not supported on this device. Check device.supportsHtmlTextures before calling setSource with an HTML element.');
+                return;
+            }
+            if (this._cubemap || this._volume) {
+                Debug.error('Texture#setSource: HTML element textures can only be used with 2D textures, not cubemaps or volume textures.');
+                return;
+            }
+        }
+
         let invalid = false;
         let width, height;
 
@@ -1110,6 +1125,10 @@ class Texture {
                 if (source instanceof HTMLVideoElement) {
                     width = source.videoWidth;
                     height = source.videoHeight;
+                } else if (this.device._isHTMLElementInterface(source)) {
+                    const rect = source.getBoundingClientRect();
+                    width = Math.floor(rect.width) || 1;
+                    height = Math.floor(rect.height) || 1;
                 } else {
                     width = source.width;
                     height = source.height;
