@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.18.0-preview.1",
+  "version": "2.18.0",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "Open-source WebGL/WebGPU 3D engine for the web",
