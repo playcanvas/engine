@@ -257,6 +257,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.initCapsDefines();
     }
 
+    initCapsDefines() {
+        super.initCapsDefines();
+
+        const vendor = this.gpuAdapter?.info?.vendor;
+        if (vendor) {
+            this.capsDefines.set(`VENDOR_${vendor.toUpperCase()}`, '');
+        }
+    }
+
     async initWebGpu(glslangUrl, twgslUrl) {
 
         if (!window.navigator.gpu) {
@@ -333,6 +342,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         this.supportsSubgroups = requireFeature('subgroups');
+        this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.limits?.maxSubgroupSize ?? 0) : 0;
         Debug.log(`WEBGPU features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`);
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)

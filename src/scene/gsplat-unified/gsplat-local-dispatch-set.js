@@ -86,6 +86,9 @@ class GSplatLocalDispatchSet {
     /** @type {Compute} */
     chunkSortCompute;
 
+    /** @type {Compute|null} */
+    radixSortCompute = null;
+
     /** @type {Map<string, {shader: Shader, bindGroupFormat: BindGroupFormat, compute: Compute}>} */
     _rasterizeVariants = new Map();
 
@@ -103,6 +106,9 @@ class GSplatLocalDispatchSet {
 
     /** @type {StorageBuffer|null} */
     _largeTileOverflowBasesBuffer = null;
+
+    /** @type {StorageBuffer|null} */
+    _radixTileListBuffer = null;
 
     /** @type {StorageBuffer|null} */
     _rasterizeTileListBuffer = null;
@@ -203,6 +209,7 @@ class GSplatLocalDispatchSet {
         this._smallTileListBuffer?.destroy();
         this._largeTileListBuffer?.destroy();
         this._largeTileOverflowBasesBuffer?.destroy();
+        this._radixTileListBuffer?.destroy();
         this._rasterizeTileListBuffer?.destroy();
         this._tileListCountsBuffer?.destroy();
         this._chunkRangesBuffer?.destroy();
@@ -214,8 +221,9 @@ class GSplatLocalDispatchSet {
         this._smallTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
         this._largeTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
         this._largeTileOverflowBasesBuffer = new StorageBuffer(this.device, numTiles * 4);
+        this._radixTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
         this._rasterizeTileListBuffer = new StorageBuffer(this.device, numTiles * 4);
-        this._tileListCountsBuffer = new StorageBuffer(this.device, 4 * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
+        this._tileListCountsBuffer = new StorageBuffer(this.device, 5 * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
 
         const maxChunks = numTiles * MAX_CHUNKS_PER_TILE;
         this._chunkRangesBuffer = new StorageBuffer(this.device, maxChunks * 8);
@@ -397,6 +405,7 @@ class GSplatLocalDispatchSet {
         this._smallTileListBuffer?.destroy();
         this._largeTileListBuffer?.destroy();
         this._largeTileOverflowBasesBuffer?.destroy();
+        this._radixTileListBuffer?.destroy();
         this._rasterizeTileListBuffer?.destroy();
         this._tileListCountsBuffer?.destroy();
         this._chunkRangesBuffer?.destroy();
