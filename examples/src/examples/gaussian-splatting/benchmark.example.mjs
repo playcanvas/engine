@@ -64,7 +64,7 @@ styleEl.textContent = '.bench-cell { background: #1a1a2e; border-radius: 3px; tr
 document.head.appendChild(styleEl);
 
 const titleEl = document.createElement('h2');
-titleEl.textContent = 'GSplat Benchmark';
+titleEl.textContent = 'PlayCanvas GSplat Benchmark';
 Object.assign(titleEl.style, { margin: '0 0 4px 0', fontSize: '20px', fontWeight: 'normal' });
 containerEl.appendChild(titleEl);
 
@@ -634,18 +634,17 @@ function refreshChartAndDownload() {
     chartArea.appendChild(saveResultsBtn);
 
     const saveChartBtn = document.createElement('button');
-    saveChartBtn.textContent = 'Save Chart (.png)';
+    saveChartBtn.textContent = 'Save Page (.png)';
     Object.assign(saveChartBtn.style, { ...btnStyle, marginLeft: '8px' });
-    saveChartBtn.onclick = () => {
-        chartCanvas.toBlob((blob) => {
-            if (!blob) return;
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `gsplat-benchmark-${Date.now()}.png`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }, 'image/png');
+    saveChartBtn.onclick = async () => {
+        const blob = await pageToPngBlob();
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `gsplat-benchmark-${Date.now()}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
     chartArea.appendChild(saveChartBtn);
 
@@ -734,6 +733,72 @@ function buildDownloadText() {
     text += `UserAgent: ${navigator.userAgent}\n`;
     text += `Date: ${new Date().toISOString()}\n`;
     return text;
+}
+
+/**
+ * Rasterize the visible benchmark page (containerEl) to a PNG blob,
+ * trimming uniform #111 background edges.
+ *
+ * @returns {Promise<Blob|null>} PNG blob.
+ */
+async function pageToPngBlob() {
+    const { width, height } = containerEl.getBoundingClientRect();
+    const W = Math.ceil(width);
+    const H = Math.ceil(height);
+
+    // Clone; canvases don't render inside foreignObject, so swap them for <img>.
+    const clone = /** @type {HTMLElement} */ (containerEl.cloneNode(true));
+    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    const lives = containerEl.querySelectorAll('canvas');
+    clone.querySelectorAll('canvas').forEach((c, i) => {
+        const img = document.createElement('img');
+        img.src = lives[i].toDataURL();
+        img.width = lives[i].width;
+        img.height = lives[i].height;
+        img.style.cssText = c.style.cssText;
+        c.replaceWith(img);
+    });
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject width="100%" height="100%">${new XMLSerializer().serializeToString(clone)}</foreignObject></svg>`;
+    const pageImg = new Image();
+    pageImg.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    await pageImg.decode();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(pageImg, 0, 0);
+
+    // Find bounding box of non-background pixels and crop with a small padding.
+    const data = ctx.getImageData(0, 0, W, H).data;
+    const BG = 0x11, TOL = 6, PAD = 10;
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+            const i = (y * W + x) * 4;
+            if (Math.abs(data[i] - BG) > TOL || Math.abs(data[i + 1] - BG) > TOL || Math.abs(data[i + 2] - BG) > TOL) {
+                x0 = Math.min(x0, x); x1 = Math.max(x1, x);
+                y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+            }
+        }
+    }
+    if (x1 < 0) {
+        x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1;
+    } else {
+        x0 = Math.max(0, x0 - PAD); y0 = Math.max(0, y0 - PAD);
+        x1 = Math.min(W - 1, x1 + PAD); y1 = Math.min(H - 1, y1 + PAD);
+    }
+
+    const out = document.createElement('canvas');
+    out.width = x1 - x0 + 1;
+    out.height = y1 - y0 + 1;
+    /** @type {CanvasRenderingContext2D} */ (out.getContext('2d')).drawImage(canvas, -x0, -y0);
+    return new Promise((resolve) => {
+        out.toBlob(resolve, 'image/png');
+    });
 }
 
 /**
