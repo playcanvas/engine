@@ -10,7 +10,6 @@ import { Asset } from '../asset/asset.js';
 
 /**
  * @import { Application } from '../../framework/application.js'
- * @import { ScriptType } from './script-type.js'
  * @import { Script } from '../../framework/script/script.js'
  */
 
@@ -207,8 +206,8 @@ export function assignAttributesToScript(app, attributeSchemaMap, data, script) 
 
 /**
  * Container of Script Attribute definitions. Implements an interface to add/remove attributes and
- * store their definition for a {@link ScriptType}. Note: An instance of ScriptAttributes is
- * created automatically by each {@link ScriptType}.
+ * store their definition for a {@link Script}. Note: An instance of ScriptAttributes is
+ * created automatically by each {@link Script}.
  *
  * @category Script
  */
@@ -220,16 +219,16 @@ class ScriptAttributes {
     /**
      * Create a new ScriptAttributes instance.
      *
-     * @param {typeof ScriptType} scriptType - Script Type that attributes relate to.
+     * @param {typeof Script} Script - Script Type that attributes relate to.
      */
-    constructor(scriptType) {
-        this.scriptType = scriptType;
+    constructor(Script) {
+        this.Script = Script;
         this.index = {};
     }
 
     static reservedNames = new Set([
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
-        '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
+        '__attributes', '__attributesRaw', '__Script', '__executionOrder',
         '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
     ]);
 
@@ -324,17 +323,17 @@ class ScriptAttributes {
      */
     add(name, args) {
         if (!args) {
-            Debug.error(`Cannot add attribute '${name}' to script type '${this.scriptType.name}': args parameter is required`);
+            Debug.error(`Cannot add attribute '${name}' to script type '${this.Script.name}': args parameter is required`);
             return;
         }
 
         if (!args.type) {
-            Debug.error(`Cannot add attribute '${name}' to script type '${this.scriptType.name}': args.type is required`);
+            Debug.error(`Cannot add attribute '${name}' to script type '${this.Script.name}': args.type is required`);
             return;
         }
 
         if (this.index[name]) {
-            Debug.warn(`attribute '${name}' is already defined for script type '${this.scriptType.name}'`);
+            Debug.warn(`attribute '${name}' is already defined for script type '${this.Script.name}'`);
             return;
         } else if (ScriptAttributes.reservedNames.has(name)) {
             Debug.warn(`attribute '${name}' is a reserved attribute name`);
@@ -343,7 +342,7 @@ class ScriptAttributes {
 
         this.index[name] = args;
 
-        Object.defineProperty(this.scriptType.prototype, name, {
+        Object.defineProperty(this.Script.prototype, name, {
             get: function () {
                 return this.__attributes[name];
             },
@@ -397,7 +396,7 @@ class ScriptAttributes {
         }
 
         delete this.index[name];
-        delete this.scriptType.prototype[name];
+        delete this.Script.prototype[name];
         return true;
     }
 
