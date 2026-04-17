@@ -1,14 +1,15 @@
+import { Debug } from '../../core/debug.js';
 import {
     PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
     PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
 } from '../../platform/graphics/constants.js';
-import { Debug } from '../../core/debug.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import {
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
-    GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE
+    GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
+    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -168,7 +169,6 @@ class GSplatParams {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else if ((value === GSPLAT_RENDERER_RASTER_GPU_SORT || value === GSPLAT_RENDERER_COMPUTE) &&
                 !this._device.isWebGPU) {
-                Debug.warnOnce(`GSplatParams: renderer mode ${value} requires WebGPU, falling back to GSPLAT_RENDERER_RASTER_CPU_SORT.`);
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else {
                 this._currentRenderer = value;
@@ -207,31 +207,53 @@ class GSplatParams {
     dirty = false;
 
     /**
-     * @type {boolean}
+     * @type {number}
      * @private
      */
-    _colorizeLod = false;
+    _debug = GSPLAT_DEBUG_NONE;
 
     /**
-     * Enables colorization by selected LOD level when rendering GSplat objects. Defaults to false.
-     * Marks params dirty on change.
+     * Debug rendering mode for Gaussian splats. Can be:
      *
-     * @type {boolean}
+     * - {@link GSPLAT_DEBUG_NONE}: Normal rendering (default).
+     * - {@link GSPLAT_DEBUG_LOD}: Colorize splats by their selected LOD level.
+     * - {@link GSPLAT_DEBUG_SH_UPDATE}: Random color per SH update pass to visualize update
+     * frequency.
+     * - {@link GSPLAT_DEBUG_HEATMAP}: Heatmap visualization of average splats processed per
+     * pixel in each tile. Only supported with {@link GSPLAT_RENDERER_COMPUTE}.
+     *
+     * Only one debug mode can be active at a time. Defaults to {@link GSPLAT_DEBUG_NONE}.
+     *
+     * @type {number}
      */
-    set colorizeLod(value) {
-        if (this._colorizeLod !== value) {
-            this._colorizeLod = value;
-            this.dirty = true;
+    set debug(value) {
+        if (this._debug !== value) {
+            const prev = this._debug;
+            this._debug = value;
+
+            if (value === GSPLAT_DEBUG_LOD || prev === GSPLAT_DEBUG_LOD ||
+                value === GSPLAT_DEBUG_HEATMAP || prev === GSPLAT_DEBUG_HEATMAP) {
+                this.dirty = true;
+            }
         }
     }
 
+    get debug() {
+        return this._debug;
+    }
+
+    /** @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_LOD} instead. */
+    set colorizeLod(value) {
+        Debug.deprecated('GSplatParams#colorizeLod is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_LOD instead.');
+        this.debug = value ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
+    }
+
     /**
-     * Gets colorize-by-LOD flag.
-     *
-     * @returns {boolean} Current enabled state.
+     * @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_LOD} instead.
+     * @returns {boolean} Whether LOD colorization is enabled.
      */
     get colorizeLod() {
-        return this._colorizeLod;
+        return this._debug === GSPLAT_DEBUG_LOD;
     }
 
     /**
@@ -479,54 +501,63 @@ class GSplatParams {
      */
     useFog = true;
 
-    /**
-     * Enables debug colorization to visualize when spherical harmonics are evaluated.
-     * When true, each update pass renders with a random color to visualize the behavior
-     * of colorUpdateDistance and colorUpdateAngle thresholds. Defaults to false.
-     *
-     * @type {boolean}
-     */
-    colorizeColorUpdate = false;
+    /** @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead. */
+    set colorizeColorUpdate(value) {
+        Debug.deprecated('GSplatParams#colorizeColorUpdate is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_SH_UPDATE instead.');
+        this.debug = value ? GSPLAT_DEBUG_SH_UPDATE : GSPLAT_DEBUG_NONE;
+    }
 
     /**
-     * Distance threshold in world units for triggering spherical harmonics color updates.
-     * Used to control how often SH evaluation occurs based on camera translation.
-     * Only affects resources with spherical harmonics data. Set to 0 to update on
-     * every frame where camera moves. Defaults to 0.2.
+     * @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead.
+     * @returns {boolean} Whether SH update colorization is enabled.
+     */
+    get colorizeColorUpdate() {
+        return this._debug === GSPLAT_DEBUG_SH_UPDATE;
+    }
+
+    /**
+     * Viewing angle threshold in degrees for triggering spherical harmonics color updates.
+     * When the camera translates enough to change the viewing angle to an octree node or
+     * splat by this amount, its SH colors are re-evaluated. Distant nodes naturally update
+     * less frequently since they require more camera movement to reach the angle threshold.
+     * Set to 0 to update every frame where camera moves. Defaults to 10.
      *
      * @type {number}
      */
-    colorUpdateDistance = 0.2;
+    colorUpdateAngle = 10;
 
-    /**
-     * Angle threshold in degrees for triggering spherical harmonics color updates.
-     * Used to control how often SH evaluation occurs based on camera rotation.
-     * Only affects resources with spherical harmonics data. Set to 0 to update on
-     * every frame where camera rotates. Defaults to 2.
-     *
-     * @type {number}
-     */
-    colorUpdateAngle = 2;
+    /** @ignore */
+    set colorUpdateDistance(value) {
+        Debug.removed('GSplatParams#colorUpdateDistance is removed. Use colorUpdateAngle instead.');
+    }
 
-    /**
-     * Scale factor applied to colorUpdateDistance for each LOD level.
-     * Each LOD level multiplies the threshold by this value raised to the power of lodIndex.
-     * For example, with scale=2: LOD 0 uses 1x threshold, LOD 1 uses 2x, LOD 2 uses 4x.
-     * Higher values relax thresholds more aggressively for distant geometry. Defaults to 2.
-     *
-     * @type {number}
-     */
-    colorUpdateDistanceLodScale = 2;
+    /** @ignore */
+    get colorUpdateDistance() {
+        Debug.removed('GSplatParams#colorUpdateDistance is removed. Use colorUpdateAngle instead.');
+        return 0;
+    }
 
-    /**
-     * Scale factor applied to colorUpdateAngle for each LOD level.
-     * Each LOD level multiplies the threshold by this value raised to the power of lodIndex.
-     * For example, with scale=2: LOD 0 uses 1x threshold, LOD 1 uses 2x, LOD 2 uses 4x.
-     * Higher values relax thresholds more aggressively for distant geometry. Defaults to 2.
-     *
-     * @type {number}
-     */
-    colorUpdateAngleLodScale = 2;
+    /** @ignore */
+    set colorUpdateDistanceLodScale(value) {
+        Debug.removed('GSplatParams#colorUpdateDistanceLodScale is removed. Per-node distance scaling is now automatic.');
+    }
+
+    /** @ignore */
+    get colorUpdateDistanceLodScale() {
+        Debug.removed('GSplatParams#colorUpdateDistanceLodScale is removed. Per-node distance scaling is now automatic.');
+        return 0;
+    }
+
+    /** @ignore */
+    set colorUpdateAngleLodScale(value) {
+        Debug.removed('GSplatParams#colorUpdateAngleLodScale is removed. Per-node distance scaling is now automatic.');
+    }
+
+    /** @ignore */
+    get colorUpdateAngleLodScale() {
+        Debug.removed('GSplatParams#colorUpdateAngleLodScale is removed. Per-node distance scaling is now automatic.');
+        return 0;
+    }
 
     /**
      * Sets the alpha threshold below which splats are discarded during shadow, pick, and prepass

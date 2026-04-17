@@ -11,12 +11,10 @@ export const computeGsplatLocalBucketSortSource = /* wgsl */`
 const NUM_BUCKETS: u32 = ${NUM_BUCKETS}u;
 const MAX_CHUNK_SIZE: u32 = 4096u;
 const WG_SIZE: u32 = 256u;
-const CACHE_STRIDE: u32 = 8u;
-
 @group(0) @binding(0) var<storage, read_write> tileEntries: array<u32>;
 @group(0) @binding(1) var<storage, read> largeTileOverflowBases: array<u32>;
 @group(0) @binding(2) var<storage, read> tileSplatCounts: array<u32>;
-@group(0) @binding(3) var<storage, read> projCache: array<u32>;
+@group(0) @binding(3) var<storage, read> depthBuffer: array<u32>;
 @group(0) @binding(4) var<storage, read> largeTileList: array<u32>;
 @group(0) @binding(5) var<storage, read_write> chunkRanges: array<u32>;
 @group(0) @binding(6) var<storage, read_write> totalChunks: array<atomic<u32>>;
@@ -71,7 +69,7 @@ fn main(
 
     for (var i: u32 = localIdx; i < count; i += WG_SIZE) {
         let entryIdx = tileEntries[tStart + i];
-        let depthU = projCache[entryIdx * CACHE_STRIDE + 7u];
+        let depthU = depthBuffer[entryIdx];
         atomicMin(&sDepthMin, depthU);
         atomicMax(&sDepthMax, depthU);
     }
@@ -94,7 +92,7 @@ fn main(
     // the main tileEntries range (which Phase 4 writes to).
     for (var i: u32 = localIdx; i < count; i += WG_SIZE) {
         let entryIdx = tileEntries[tStart + i];
-        let depth = bitcast<f32>(projCache[entryIdx * CACHE_STRIDE + 7u]);
+        let depth = bitcast<f32>(depthBuffer[entryIdx]);
         let bucket = min(u32((log(max(depth, 1e-6)) - logMin) * bucketScale), NUM_BUCKETS - 1u);
         atomicAdd(&sBucketCounts[bucket], 1u);
         tileEntries[overflowBase + i] = entryIdx;
@@ -116,7 +114,7 @@ fn main(
     // Read from overflow scratch, recompute bucket, scatter to tileEntries main range.
     for (var i: u32 = localIdx; i < count; i += WG_SIZE) {
         let entryIdx = tileEntries[overflowBase + i];
-        let depth = bitcast<f32>(projCache[entryIdx * CACHE_STRIDE + 7u]);
+        let depth = bitcast<f32>(depthBuffer[entryIdx]);
         let bucket = min(u32((log(max(depth, 1e-6)) - logMin) * bucketScale), NUM_BUCKETS - 1u);
         let writePos = sBucketOffsets[bucket] + atomicAdd(&sBucketCursors[bucket], 1u);
         tileEntries[tStart + writePos] = entryIdx;

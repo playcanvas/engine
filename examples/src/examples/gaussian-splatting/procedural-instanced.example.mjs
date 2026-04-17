@@ -1,4 +1,5 @@
 // @config DESCRIPTION A static GSplatContainer with custom data format, rendered as multiple instances. Per-instance color tints are animated via shader uniforms using setParameter.
+import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -43,6 +44,15 @@ app.on('destroy', () => {
 });
 
 app.start();
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
 // Grid bounds for position denormalization
 const gridSize = 10;
@@ -97,7 +107,7 @@ const maxSplats = gridSize ** 3;
 const container = new pc.GSplatContainer(device, maxSplats, format);
 
 // Fill data texture (RGBA8: RGB=normalized position 0-1, A=brightness 0-1)
-const data = container.getTexture('data').lock();
+const textureData = container.getTexture('data').lock();
 // Fill centers array for sorting (Float32Array with xyz per splat)
 const centers = container.centers;
 
@@ -126,10 +136,10 @@ for (let x = 0; x < gridSize; x++) {
             const brightness = radial * 0.7 + diagonal * 0.3;
 
             // Data: RGB = normalized position (0-255), A = brightness (0-255)
-            data[idx * 4 + 0] = nx * 255;
-            data[idx * 4 + 1] = ny * 255;
-            data[idx * 4 + 2] = nz * 255;
-            data[idx * 4 + 3] = brightness * 255;
+            textureData[idx * 4 + 0] = nx * 255;
+            textureData[idx * 4 + 1] = ny * 255;
+            textureData[idx * 4 + 2] = nz * 255;
+            textureData[idx * 4 + 3] = brightness * 255;
 
             // Centers for sorting (xyz world position)
             centers[idx * 3 + 0] = px;

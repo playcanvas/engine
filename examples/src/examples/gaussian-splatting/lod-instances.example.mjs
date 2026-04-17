@@ -195,6 +195,15 @@ assetListLoader.load(() => {
         app.scene.gsplat.material.update();
     };
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
     // Initialize colorize setting (enabled by default)
     data.set('colorize', data.get('colorize') !== false);
     applyColorize(data.get('colorize'));

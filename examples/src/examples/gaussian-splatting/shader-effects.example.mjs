@@ -157,7 +157,16 @@ assetListLoader.load(() => {
         }
     };
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
     // Default to enabled
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('enabled', true);
     data.set('effect', 'hide');
 

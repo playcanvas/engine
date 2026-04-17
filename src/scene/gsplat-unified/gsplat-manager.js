@@ -17,7 +17,8 @@ import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
-    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE
+    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
+    GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE
 } from '../constants.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
@@ -43,8 +44,11 @@ const invModelMat = new Mat4();
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
 const _updatedSplats = [];
-const _splatsNeedingColorUpdate = [];
-const _cameraDeltas = { rotationDelta: 0, translationDelta: 0 };
+const _splatsWithSH = [];
+const _changedColorAllocIds = new Set();
+const _cameraDeltas = { translationDelta: 0 };
+const _localCamPos = new Vec3();
+const _closestPt = new Vec3();
 const tempOctreesTicked = new Set();
 const _queuedSplats = new Set();
 
@@ -77,30 +81,34 @@ let _randomColorRaw = null;
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
  * stored and rendered from.
  *
- * GPU sorting (WebGPU only):
- *   1. [culling] Frustum cull: a fragment shader tests each bounding sphere against frustum
- *      planes and writes results into a bit-packed nodeVisibilityTexture (1 bit per sphere).
- *   2. Interval compaction: operates on contiguous intervals of splats (one per octree node)
- *      rather than individual pixels. A cull/count pass writes each interval's splat count
- *      (or 0 if culled) into a count buffer. A prefix sum produces output offsets. A scatter
- *      pass expands visible intervals into compactedSplatIds (flat list of work-buffer pixel
- *      indices). The last prefix sum element gives visibleCount.
- *   3. Generate sort keys: an indirect compute dispatch (visibleCount threads) reads each
+ * Shared culling + compaction (GPU sorting and compute renderer, WebGPU only):
+ *   Interval compaction operates on contiguous intervals of splats (one per octree node).
+ *   1. Cull + count (compute): each interval's bounding sphere is tested against frustum
+ *      planes (or a fisheye cone). The pass writes the interval's splat count (or 0 if
+ *      culled) into a count buffer.
+ *   2. Prefix sum: exclusive prefix sum over the count buffer produces output offsets.
+ *      The last element gives visibleCount.
+ *   3. Scatter (compute): one workgroup per interval expands visible intervals into
+ *      compactedSplatIds (flat list of work-buffer pixel indices).
+ *
+ * Raster renderer — GPU sorting (WebGPU, {@link GSplatQuadRenderer}):
+ *   Uses shared steps 1-3 above, then:
+ *   4. Generate sort keys: an indirect compute dispatch (visibleCount threads) reads each
  *      compactedSplatIds[i] to look up the splat's depth and writes a sort key to keysBuffer.
- *   4. Radix sort: an indirect GPU radix sort over keysBuffer, with compactedSplatIds supplied
+ *   5. Radix sort: an indirect GPU radix sort over keysBuffer, with compactedSplatIds supplied
  *      as initial values, produces a buffer of sorted splat IDs directly.
- *   5. Render: the vertex shader reads sortedSplatIds[vertexId] → splatId.
+ *   6. Render: the vertex shader reads sortedSplatIds[vertexId] → splatId.
  *
- * CPU sorting (WebGPU):
+ * Raster renderer — CPU sorting (WebGPU and WebGL, {@link GSplatQuadRenderer}):
  *   1. Sort on worker: camera position and splat centers are sent to a web worker which
- *      performs a radix sort and returns the sorted order as orderBuffer (storage buffer).
- *   2. Interval compaction with frustum culling (same as GPU path steps 1-2).
- *   3. Render: the vertex shader reads compactedSplatIds[vertexId] → splatId.
+ *      performs a counting sort and returns the sorted order as orderBuffer.
+ *   2. Render: the vertex shader reads orderBuffer[vertexId] → splatId.
+ *      No culling or compaction is used.
  *
- * CPU sorting (WebGL):
- *   1. Sort on worker: same as the WebGPU CPU path, producing orderBuffer (texture).
- *   2. Render: the vertex shader reads orderBuffer[vertexId] → splatId directly.
- *      No culling or compaction is available on WebGL.
+ * Compute tiled renderer (WebGPU only, {@link GSplatComputeLocalRenderer}):
+ *   Uses shared steps 1-3 above, then runs a fully compute-based tiled pipeline:
+ *   project splats into a cache, bin into screen tiles, sort per-tile by depth, and rasterize
+ *   front-to-back. See {@link GSplatComputeLocalRenderer} for the full pass breakdown.
  *
  * @ignore
  */
@@ -175,8 +183,9 @@ class GSplatManager {
     indirectDrawSlot = -1;
 
     /**
-     * Indirect dispatch slot index for key gen (first of 2 consecutive slots).
-     * Slot 0 = key gen (256 threads/workgroup), slot 1 = sort (1024 elements/workgroup).
+     * Indirect dispatch slot index for GPU-sort indirect dispatch args.
+     * Slot +0 = key gen, slot +1 = sort. The compute local renderer builds
+     * its own indirect args in private buffers and does not use these slots.
      *
      * @type {number}
      */
@@ -192,6 +201,15 @@ class GSplatManager {
 
     /** @type {number} */
     sortedVersion = 0;
+
+    /**
+     * When true, suppresses ready=true in frame:ready until a fullUpdate cycle runs.
+     * Only set when octreeInstances exist and params change (dirty).
+     *
+     * @type {boolean}
+     * @private
+     */
+    _awaitingLodUpdate = false;
 
     /**
      * Cached work buffer format version for detecting extra stream changes.
@@ -305,9 +323,6 @@ class GSplatManager {
 
     /** @type {Vec3} */
     lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
-
-    /** @type {Vec3} */
-    lastColorUpdateCameraFwd = new Vec3(Infinity, Infinity, Infinity);
 
     /** @type {GraphNode} */
     cameraNode;
@@ -674,14 +689,10 @@ class GSplatManager {
             this.lastWorldStateVersion++;
             const splats = [];
 
-            // color update thresholds
-            const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
-
             // add standalone splats
             for (const p of this.layerPlacements) {
                 p.ensureInstanceStreams(this.device);
                 const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p));
-                splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                 splats.push(splatInfo);
             }
 
@@ -693,7 +704,6 @@ class GSplatManager {
                         const octreeNodes = p.intervals.size > 0 ? inst.octree.nodes : null;
                         const nodeInfos = octreeNodes ? inst.nodeInfos : null;
                         const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p), octreeNodes, nodeInfos);
-                        splatInfo.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
                         splats.push(splatInfo);
                     }
                 });
@@ -844,12 +854,9 @@ class GSplatManager {
             this.workBuffer.render(splatsToRender, this.cameraNode, this.getDebugColors(), changedAllocIds);
         }
 
-        // update all splats to sync their transforms and reset color accumulators
-        // (prevents redundant re-render later)
-        const { colorUpdateAngle, colorUpdateDistance } = this.scene.gsplat;
+        // update all splats to sync their transforms (prevents redundant re-render later)
         for (let i = 0; i < worldState.splats.length; i++) {
             worldState.splats[i].update();
-            worldState.splats[i].resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
         }
 
         // update camera tracking for color updates
@@ -936,10 +943,13 @@ class GSplatManager {
      */
     applyWorkBufferUpdates(state) {
         // color update thresholds
-        const { colorUpdateAngle, colorUpdateDistance, colorUpdateDistanceLodScale, colorUpdateAngleLodScale } = this.scene.gsplat;
+        const { colorUpdateAngle } = this.scene.gsplat;
+        const ratio = Math.tan(colorUpdateAngle * math.DEG_TO_RAD);
+        const cameraPos = this.cameraNode.getPosition();
 
         // Calculate camera movement deltas for color updates
-        const { rotationDelta, translationDelta } = this.calculateColorCameraDeltas();
+        const { translationDelta } = this.calculateColorCameraDeltas();
+        const hasCameraMovement = translationDelta > 0;
 
         // check each splat for full or color update
         let uploadedBlocks = 0;
@@ -950,30 +960,49 @@ class GSplatManager {
                 _updatedSplats.push(splat);
                 uploadedBlocks += splat.intervalAllocIds.length;
 
-                // Reset accumulators for fully updated splats
-                splat.resetColorAccumulators(colorUpdateAngle, colorUpdateDistance);
+                // Reset all node accumulators for this splat
+                if (splat.nodeInfos) {
+                    for (const ni of splat.intervalNodeIndices) {
+                        splat.nodeInfos[ni].colorAccumulatedTranslation = 0;
+                    }
+                } else {
+                    splat.colorAccumulatedTranslation = 0;
+                }
 
                 // Splat moved, need to re-sort
                 this.sortNeeded = true;
 
-            } else if (splat.hasSphericalHarmonics) {
+            } else if (hasCameraMovement && splat.hasSphericalHarmonics) {
 
-                // Otherwise, check if color needs updating (accumulator-based)
-                // Add this frame's camera movement to accumulators
-                splat.colorAccumulatedRotation += rotationDelta;
-                splat.colorAccumulatedTranslation += translationDelta;
+                _splatsWithSH.push(splat);
 
-                // Apply LOD-based scaling to thresholds
-                const lodIndex = splat.lodIndex ?? 0;
-                const distThreshold = colorUpdateDistance * Math.pow(colorUpdateDistanceLodScale, lodIndex);
-                const angleThreshold = colorUpdateAngle * Math.pow(colorUpdateAngleLodScale, lodIndex);
-
-                // Trigger update if either threshold exceeded
-                if (splat.colorAccumulatedRotation >= angleThreshold ||
-                    splat.colorAccumulatedTranslation >= distThreshold) {
-                    _splatsNeedingColorUpdate.push(splat);
-                    uploadedBlocks += splat.intervalAllocIds.length;
-                    splat.resetColorAccumulators(angleThreshold, distThreshold);
+                if (splat.nodeInfos) {
+                    // Per-node accumulation for octree splats
+                    const nodeIndices = splat.intervalNodeIndices;
+                    for (let j = 0; j < nodeIndices.length; j++) {
+                        const nodeInfo = splat.nodeInfos[nodeIndices[j]];
+                        nodeInfo.colorAccumulatedTranslation += translationDelta;
+                        const threshold = ratio * Math.max(1, nodeInfo.worldDistance);
+                        if (nodeInfo.colorAccumulatedTranslation >= threshold) {
+                            _changedColorAllocIds.add(splat.intervalAllocIds[j]);
+                            nodeInfo.colorAccumulatedTranslation = 0;
+                            uploadedBlocks++;
+                        }
+                    }
+                } else {
+                    // Non-octree: per-splat accumulation with AABB distance scaling
+                    splat.colorAccumulatedTranslation += translationDelta;
+                    invModelMat.copy(splat.node.getWorldTransform()).invert();
+                    invModelMat.transformPoint(cameraPos, _localCamPos);
+                    splat.aabb.closestPoint(_localCamPos, _closestPt);
+                    const dist = _localCamPos.distance(_closestPt) *
+                        splat.node.getWorldTransform().getScale().x;
+                    const threshold = ratio * Math.max(1, dist);
+                    if (splat.colorAccumulatedTranslation >= threshold) {
+                        _changedColorAllocIds.add(splat.allocId);
+                        uploadedBlocks += splat.intervalAllocIds.length;
+                        splat.colorAccumulatedTranslation = 0;
+                    }
                 }
             }
         });
@@ -988,11 +1017,15 @@ class GSplatManager {
             _updatedSplats.length = 0;
         }
 
-        // Batch render color updates for all splats that exceeded thresholds
-        if (_splatsNeedingColorUpdate.length > 0) {
-            this.workBuffer.renderColor(_splatsNeedingColorUpdate, this.cameraNode, this.getDebugColors());
-            _splatsNeedingColorUpdate.length = 0;
+        // Batch render color updates for nodes that exceeded angle thresholds
+        if (_changedColorAllocIds.size > 0) {
+            this.workBuffer.renderColor(
+                _splatsWithSH, this.cameraNode, this.getDebugColors(),
+                _changedColorAllocIds
+            );
+            _changedColorAllocIds.clear();
         }
+        _splatsWithSH.length = 0;
     }
 
     /**
@@ -1088,7 +1121,6 @@ class GSplatManager {
      */
     updateColorCameraTracking() {
         this.lastColorUpdateCameraPos.copy(this.cameraNode.getPosition());
-        this.lastColorUpdateCameraFwd.copy(this.cameraNode.forward);
     }
 
     /**
@@ -1097,9 +1129,9 @@ class GSplatManager {
      * @returns {Array<number[]>|undefined} Color array for debug visualization, or undefined for normal rendering
      */
     getDebugColors() {
-        if (this.scene.gsplat.colorizeColorUpdate) {
+        const debug = this.scene.gsplat.debug;
+        if (debug === GSPLAT_DEBUG_SH_UPDATE) {
             _randomColorRaw ??= [];
-            // Random color for this update pass - use same color for all LOD levels
             const r = Math.random();
             const g = Math.random();
             const b = Math.random();
@@ -1110,32 +1142,23 @@ class GSplatManager {
                 _randomColorRaw[i][2] = b;
             }
             return _randomColorRaw;
-        } else if (this.scene.gsplat.colorizeLod) {
-            // LOD colors
+        } else if (debug === GSPLAT_DEBUG_LOD) {
             return _lodColorsRaw;
         }
         return undefined;
     }
 
     /**
-     * Calculates camera movement deltas since last color update.
+     * Calculates camera translation delta since last color update.
      * Updates and returns the shared _cameraDeltas object.
      *
-     * @returns {{ rotationDelta: number, translationDelta: number }} Shared camera movement deltas object
+     * @returns {{ translationDelta: number }} Shared camera movement deltas object
      */
     calculateColorCameraDeltas() {
-        _cameraDeltas.rotationDelta = 0;
         _cameraDeltas.translationDelta = 0;
 
         // Skip delta calculation on first frame (camera position not yet initialized)
         if (isFinite(this.lastColorUpdateCameraPos.x)) {
-            // Calculate rotation delta in degrees using dot product
-            const currentCameraFwd = this.cameraNode.forward;
-            const dot = Math.min(1, Math.max(-1,
-                this.lastColorUpdateCameraFwd.dot(currentCameraFwd)));
-            _cameraDeltas.rotationDelta = Math.acos(dot) * math.RAD_TO_DEG;
-
-            // Calculate translation delta in world units
             const currentCameraPos = this.cameraNode.getPosition();
             _cameraDeltas.translationDelta = this.lastColorUpdateCameraPos.distance(currentCameraPos);
         }
@@ -1147,7 +1170,7 @@ class GSplatManager {
      * Fires the frame:ready event with current sorting and loading state.
      */
     fireFrameReadyEvent() {
-        const ready = this.sortedVersion === this.lastWorldStateVersion;
+        const ready = this.sortedVersion === this.lastWorldStateVersion && !this._awaitingLodUpdate;
 
         // Count total pending loads from octree instances (including environment)
         let loadingCount = 0;
@@ -1269,8 +1292,7 @@ class GSplatManager {
         if (this.workBuffer.format !== currentFormat) {
             this.workBuffer.destroy();
             this.workBuffer = new GSplatWorkBuffer(this.device, currentFormat);
-            this.renderer.workBuffer = this.workBuffer;
-            this.renderer.onWorkBufferFormatChanged();
+            this.renderer.setDataSource(this.workBuffer);
             this._workBufferFormatVersion = this.workBuffer.format.extraStreamsVersion;
             this._workBufferRebuildRequired = true;
             this.sortNeeded = true;
@@ -1358,6 +1380,8 @@ class GSplatManager {
 
             // check if camera has moved/rotated enough to require LOD update
             cameraMovedOrRotatedForLod = this.testCameraMovedForLod();
+
+            this._awaitingLodUpdate = false;
         }
 
         // check if camera has moved enough to require re-sorting
@@ -1390,6 +1414,12 @@ class GSplatManager {
             // colorization) is refreshed immediately instead of trickling in over time.
             this._workBufferRebuildRequired = true;
             this.sortNeeded = true;
+
+            // Suppress ready=true in frame:ready until a fullUpdate cycle runs, so
+            // consumers can reliably detect the not-ready→ready transition after param changes.
+            if (this.octreeInstances.size > 0) {
+                this._awaitingLodUpdate = true;
+            }
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
@@ -1646,8 +1676,8 @@ class GSplatManager {
         this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, this.renderer.fisheyeProj.enabled);
 
         // Extract the visible count from the prefix sum into sortElementCountBuffer.
-        // writeIndirectArgs is the only path that does this; the indirect draw/dispatch
-        // slots are unused by the local renderer but required by the API.
+        // writeIndirectArgs is the only path that does this. The local compute renderer
+        // prepares its own indirect dispatch args in private buffers.
         this.allocateAndWriteIntervalIndirectArgs(numIntervals);
 
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);

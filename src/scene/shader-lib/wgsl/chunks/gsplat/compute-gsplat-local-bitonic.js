@@ -2,7 +2,7 @@
 // Included by both the small-tile sort and chunk-sort shaders.
 // Expects the including shader to declare:
 //   var<storage, read_write> tileEntries: array<u32>;
-//   var<storage, read> projCache: array<u32>;
+//   var<storage, read> depthBuffer: array<u32>;
 export const computeGsplatLocalBitonicSource = /* wgsl */`
 
 const MAX_TILE_ENTRIES: u32 = 4096u;
@@ -10,7 +10,6 @@ const INDEX_BITS: u32 = 12u;
 const INDEX_MASK: u32 = 0xFFFu;
 const DEPTH_LEVELS: f32 = 1048575.0;
 const BITONIC_WG_SIZE: u32 = 256u;
-const CACHE_STRIDE: u32 = 8u;
 
 var<workgroup> sData: array<u32, 4096>;
 var<workgroup> sDepthMin: atomic<u32>;
@@ -42,7 +41,7 @@ fn bitonicSortRange(localIdx: u32, tStart: u32, count: u32) {
     for (var i: u32 = localIdx; i < sortN; i += BITONIC_WG_SIZE) {
         if (i < clampedCount) {
             let entryIdx = tileEntries[tStart + i];
-            sData[i] = projCache[entryIdx * CACHE_STRIDE + 7u];
+            sData[i] = depthBuffer[entryIdx];
         } else {
             sData[i] = 0xFFFFFFFFu;
         }

@@ -61,6 +61,12 @@ class NodeInfo {
     worldDistance = 0;
 
     /**
+     * Accumulated camera translation for SH color update threshold tracking.
+     * @type {number}
+     */
+    colorAccumulatedTranslation = 0;
+
+    /**
      * Back-reference to owning GSplatOctreeInstance.
      * @type {GSplatOctreeInstance|null}
      */
@@ -1001,4 +1007,4 @@ class GSplatOctreeInstance {
     }
 }
 
-export { GSplatOctreeInstance };
+export { GSplatOctreeInstance, NodeInfo };

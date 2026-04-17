@@ -218,12 +218,18 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Colorize LOD' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Debug' },
+                jsx(SelectInput, {
+                    type: 'number',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'debugLod' },
-                    value: observer.get('debugLod')
+                    link: { observer, path: 'debug' },
+                    value: observer.get('debug') ?? 0,
+                    options: [
+                        { v: 0, t: 'None' },
+                        { v: 1, t: 'LOD' },
+                        { v: 2, t: 'SH Update' },
+                        { v: 3, t: 'Heatmap' }
+                    ]
                 })
             ),
             jsx(
