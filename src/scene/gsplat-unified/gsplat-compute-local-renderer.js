@@ -32,6 +32,8 @@ import { computeGsplatLocalBucketSortSource } from '../shader-lib/wgsl/chunks/gs
 import { computeGsplatLocalChunkSortSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-chunk-sort.js';
 import { computeGsplatLocalCopySource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-copy.js';
 import { computeGsplatLocalBitonicSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-bitonic.js';
+import { computeGsplatLocalRadixSortSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-radix-sort.js';
+import { computeGsplatLocalTileRadixSortSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-tile-radix-sort.js';
 import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-common.js';
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import { GSplatTileComposite } from './gsplat-tile-composite.js';
@@ -288,6 +290,15 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
     /** @type {BindGroupFormat} */
     _chunkSortBindGroupFormat;
+
+    /** @type {boolean} */
+    _useRadixSort = false;
+
+    /** @type {Shader|undefined} */
+    _radixSortShader;
+
+    /** @type {BindGroupFormat|undefined} */
+    _radixSortBindGroupFormat;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -747,7 +758,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set._totalChunksBuffer.clear();
         set._chunkSortIndirectBuffer.clear();
 
-        const indirectSlot = device.getIndirectDispatchSlot(3);
+        const numIndirectSlots = this._useRadixSort ? 4 : 3;
+        const indirectSlot = device.getIndirectDispatchSlot(numIndirectSlots);
         const drawSlot = device.getIndirectDrawSlot(1);
 
         set.classifyCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
@@ -758,6 +770,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.classifyCompute.setParameter('indirectDispatchArgs', device.indirectDispatchBuffer);
         set.classifyCompute.setParameter('largeTileOverflowBases', set._largeTileOverflowBasesBuffer);
         set.classifyCompute.setParameter('indirectDrawArgs', device.indirectDrawBuffer);
+        if (this._useRadixSort) {
+            set.classifyCompute.setParameter('radixTileList', set._radixTileListBuffer);
+        }
         set.classifyCompute.setParameter('numTiles', numTiles);
         set.classifyCompute.setParameter('dispatchSlotOffset', indirectSlot * 3);
         set.classifyCompute.setParameter('bufferCapacity', maxEntries);
@@ -791,7 +806,19 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.copyCompute.setupDispatch(1, 1, 1);
         device.computeDispatch([set.copyCompute], pickMode ? 'GSplatPickCopy' : 'GSplatLocalCopy');
 
-        // --- Pass 4a: Small tile sort ---
+        // --- Pass 4a-radix: Radix tile sort (≤1976 entries, when enabled) ---
+        if (this._useRadixSort) {
+            set.radixSortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
+            set.radixSortCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
+            set.radixSortCompute.setParameter('depthBuffer', this._depthBuffer);
+            set.radixSortCompute.setParameter('radixTileList', set._radixTileListBuffer);
+            set.radixSortCompute.setParameter('tileListCounts', set._tileListCountsBuffer);
+
+            set.radixSortCompute.setupIndirectDispatch(indirectSlot + 3);
+            device.computeDispatch([set.radixSortCompute], pickMode ? 'GSplatPickTileRadixSort' : 'GSplatLocalTileRadixSort');
+        }
+
+        // --- Pass 4a-bitonic: Bitonic tile sort ---
         set.sortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
         set.sortCompute.setParameter('tileSplatCounts', set._tileSplatCountsBuffer);
         set.sortCompute.setParameter('depthBuffer', this._depthBuffer);
@@ -799,7 +826,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.sortCompute.setParameter('tileListCounts', set._tileListCountsBuffer);
 
         set.sortCompute.setupIndirectDispatch(indirectSlot);
-        device.computeDispatch([set.sortCompute], pickMode ? 'GSplatPickTileSort' : 'GSplatLocalTileSort');
+        device.computeDispatch([set.sortCompute], pickMode ? 'GSplatPickTileBitonicSort' : 'GSplatLocalTileBitonicSort');
 
         // --- Pass 4c: Chunk sort ---
         set.chunkSortCompute.setParameter('tileEntries', this._tileEntriesBuffer);
@@ -809,7 +836,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.chunkSortCompute.setParameter('maxChunks', numTiles * MAX_CHUNKS_PER_TILE);
 
         set.chunkSortCompute.setupIndirectDispatch(0, set._chunkSortIndirectBuffer);
-        device.computeDispatch([set.chunkSortCompute], pickMode ? 'GSplatPickChunkSort' : 'GSplatLocalChunkSort');
+        device.computeDispatch([set.chunkSortCompute], pickMode ? 'GSplatPickChunkBitonicSort' : 'GSplatLocalChunkBitonicSort');
 
         // --- Pass 5: Rasterize ---
         // Select the shader variant based on pick mode and depth availability. Depth testing
@@ -1057,6 +1084,13 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         });
 
         // --- Classify ---
+        // Radix sort requires subgroups and uses a subgroupBallot .x-only optimization that
+        // is only correct when sgSize <= 32. Currently restricted to NVIDIA only:
+        // - NVIDIA: sgSize always 32, benchmarked faster than bitonic for larger tiles
+        // - Apple: sgSize 32 but benchmarks show a performance regression vs bitonic
+        // - AMD: sgSize can be 64 (wave64), .x-only ballot would produce incorrect results
+        // - Intel/Qualcomm/others: untested, excluded for safety
+        this._useRadixSort = device.supportsSubgroups && device.capsDefines.has('VENDOR_NVIDIA');
         {
             const ubf = new UniformBufferFormat(device, [
                 new UniformFormat('numTiles', UNIFORMTYPE_UINT),
@@ -1065,7 +1099,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
                 new UniformFormat('maxWorkgroupsPerDim', UNIFORMTYPE_UINT),
                 new UniformFormat('drawSlot', UNIFORMTYPE_UINT)
             ]);
-            this._classifyBindGroupFormat = new BindGroupFormat(device, [
+            const classifyBindings = [
                 new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
                 new BindStorageBufferFormat('smallTileList', SHADERSTAGE_COMPUTE),
                 new BindStorageBufferFormat('largeTileList', SHADERSTAGE_COMPUTE),
@@ -1075,11 +1109,18 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
                 new BindStorageBufferFormat('largeTileOverflowBases', SHADERSTAGE_COMPUTE),
                 new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
                 new BindStorageBufferFormat('indirectDrawArgs', SHADERSTAGE_COMPUTE)
-            ]);
+            ];
+            if (this._useRadixSort) {
+                classifyBindings.push(new BindStorageBufferFormat('radixTileList', SHADERSTAGE_COMPUTE));
+            }
+            this._classifyBindGroupFormat = new BindGroupFormat(device, classifyBindings);
+
+            const cdefines = this._useRadixSort ? new Map([['USE_RADIX_SORT', '']]) : undefined;
             this._classifyShader = new Shader(device, {
                 name: 'GSplatLocalClassify',
                 shaderLanguage: SHADERLANGUAGE_WGSL,
                 cshader: computeGsplatLocalClassifySource,
+                cdefines: cdefines,
                 computeBindGroupFormat: this._classifyBindGroupFormat,
                 computeUniformBufferFormats: { uniforms: ubf }
             });
@@ -1094,12 +1135,30 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
         ]);
         this._sortShader = new Shader(device, {
-            name: 'GSplatLocalTileSort',
+            name: 'GSplatLocalTileBitonicSort',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatLocalTileSortSource,
             cincludes: this._createBitonicIncludes(),
             computeBindGroupFormat: this._sortBindGroupFormat
         });
+
+        // --- Radix Sort (for tiles with ≤1976 entries, NVIDIA only) ---
+        if (this._useRadixSort) {
+            this._radixSortBindGroupFormat = new BindGroupFormat(device, [
+                new BindStorageBufferFormat('tileEntries', SHADERSTAGE_COMPUTE),
+                new BindStorageBufferFormat('tileSplatCounts', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('depthBuffer', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('radixTileList', SHADERSTAGE_COMPUTE, true),
+                new BindStorageBufferFormat('tileListCounts', SHADERSTAGE_COMPUTE, true)
+            ]);
+            this._radixSortShader = new Shader(device, {
+                name: 'GSplatLocalTileRadixSort',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: computeGsplatLocalTileRadixSortSource,
+                cincludes: new Map([['gsplatLocalRadixSortCS', computeGsplatLocalRadixSortSource]]),
+                computeBindGroupFormat: this._radixSortBindGroupFormat
+            });
+        }
 
         // --- BucketSort ---
         {
@@ -1160,7 +1219,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
                 new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
             ]);
             this._chunkSortShader = new Shader(device, {
-                name: 'GSplatLocalChunkSort',
+                name: 'GSplatLocalChunkBitonicSort',
                 shaderLanguage: SHADERLANGUAGE_WGSL,
                 cshader: computeGsplatLocalChunkSortSource,
                 cincludes: this._createBitonicIncludes(),
@@ -1287,7 +1346,12 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.classifyCompute = new Compute(device, this._classifyShader, pickMode ? 'GSplatPickClassify' : 'GSplatLocalClassify');
 
         // Sort: shared shader
-        set.sortCompute = new Compute(device, this._sortShader, pickMode ? 'GSplatPickTileSort' : 'GSplatLocalTileSort');
+        set.sortCompute = new Compute(device, this._sortShader, pickMode ? 'GSplatPickTileBitonicSort' : 'GSplatLocalTileBitonicSort');
+
+        // RadixSort: shared shader (when enabled)
+        if (this._useRadixSort) {
+            set.radixSortCompute = new Compute(device, this._radixSortShader, pickMode ? 'GSplatPickTileRadixSort' : 'GSplatLocalTileRadixSort');
+        }
 
         // BucketSort: shared shader
         set.bucketSortCompute = new Compute(device, this._bucketSortShader, pickMode ? 'GSplatPickBucketSort' : 'GSplatLocalBucketSort');
@@ -1296,7 +1360,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         set.copyCompute = new Compute(device, this._copyShader, pickMode ? 'GSplatPickCopy' : 'GSplatLocalCopy');
 
         // ChunkSort: shared shader
-        set.chunkSortCompute = new Compute(device, this._chunkSortShader, pickMode ? 'GSplatPickChunkSort' : 'GSplatLocalChunkSort');
+        set.chunkSortCompute = new Compute(device, this._chunkSortShader, pickMode ? 'GSplatPickChunkBitonicSort' : 'GSplatLocalChunkBitonicSort');
 
         return set;
     }
