@@ -517,7 +517,6 @@ class LitShader {
     preparePrepassPass() {
         const { options } = this;
         this.fDefineSet(options.alphaTest, 'LIT_ALPHA_TEST');
-        this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
         this.fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[options.opacityShadowDither]);
     }
 
