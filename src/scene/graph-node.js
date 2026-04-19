@@ -647,7 +647,7 @@ class GraphNode extends EventHandler {
 
     /**
      * Return all graph nodes that satisfy the search query. Query can be simply a string, or comma
-     * separated strings, to have inclusive results of assets that match at least one query. A
+     * separated strings, to have inclusive results of graph nodes that match at least one query. A
      * query that consists of an array of tags can be used to match graph nodes that have each tag
      * of the array.
      *
