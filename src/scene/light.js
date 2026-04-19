@@ -1103,7 +1103,7 @@ class Light {
     }
 
     /**
-     * Updates a integer key for the light. The key is used to identify all shader related features
+     * Updates an integer key for the light. The key is used to identify all shader related features
      * of the light, and so needs to have all properties that modify the generated shader encoded.
      * Properties without an effect on the shader (color, shadow intensity) should not be encoded.
      */

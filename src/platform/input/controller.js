@@ -168,7 +168,7 @@ class Controller {
     }
 
     /**
-     * Create or update a action which is enabled when the supplied keys are pressed.
+     * Create or update an action which is enabled when the supplied keys are pressed.
      *
      * @param {string} action - The name of the action.
      * @param {number[]} keys - A list of keycodes.
