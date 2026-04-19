@@ -1289,8 +1289,9 @@ class AppBase extends EventHandler {
      *
      * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
-     * @returns {{width: number, height: number}} An object containing the values calculated to
-     * use as width and height.
+     * @returns {{width: number, height: number}|undefined} An object containing the values
+     * calculated to use as width and height, or `undefined` if resizing is not allowed or an XR
+     * session is active.
      */
     resizeCanvas(width, height) {
         if (!this._allowResize) return undefined; // prevent resizing (e.g. if presenting in VR HMD)
