@@ -746,8 +746,8 @@ class RigidBodyComponent extends Component {
 
     /**
      * Apply a force to the body at a point. By default, the force is applied at the origin of the
-     * body. However, the force can be applied at an offset this point by specifying a world space
-     * vector from the body's origin to the point of application.
+     * body. However, the force can be applied at an offset from this point by specifying a world
+     * space vector from the body's origin to the point of application.
      *
      * @overload
      * @param {number} x - X-component of the force in world space.
@@ -769,8 +769,8 @@ class RigidBodyComponent extends Component {
      */
     /**
      * Apply a force to the body at a point. By default, the force is applied at the origin of the
-     * body. However, the force can be applied at an offset this point by specifying a world space
-     * vector from the body's origin to the point of application.
+     * body. However, the force can be applied at an offset from this point by specifying a world
+     * space vector from the body's origin to the point of application.
      *
      * @overload
      * @param {Vec3} force - Vector representing the force in world space.

@@ -1171,7 +1171,7 @@ class Mat4 {
     }
 
     /**
-     * -1 if the the matrix has an odd number of negative scales (mirrored); 1 otherwise.
+     * -1 if the matrix has an odd number of negative scales (mirrored); 1 otherwise.
      *
      * @type {number}
      * @ignore

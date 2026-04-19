@@ -7,7 +7,7 @@ import { EventHandler } from '../../core/event-handler.js';
  */
 class Bundle extends EventHandler {
     /**
-     * Index of file url to to DataView.
+     * Index of file url to DataView.
      * @type {Map<string, DataView>}
      * @private
      */

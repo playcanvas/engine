@@ -19,7 +19,7 @@ class UsedBuffer {
     stagingBuffer;
 
     /**
-     * The beginning position of the used area that needs to be copied from staging to to the GPU
+     * The beginning position of the used area that needs to be copied from staging to the GPU
      * buffer.
      *
      * @type {number}

@@ -1304,7 +1304,8 @@ class MeshInstance {
      * Retrieves the specified shader parameter from a mesh instance.
      *
      * @param {string} name - The name of the parameter to query.
-     * @returns {object} The named parameter.
+     * @returns {object|undefined} The named parameter, or `undefined` if no parameter with that
+     * name is set on this mesh instance.
      */
     getParameter(name) {
         return this.parameters[name];

@@ -4,7 +4,7 @@
 export default /* wgsl */`
 
 fn SampleTextureCatmullRom(tex: texture_2d<f32>, texSampler: sampler, uv: vec2f, texSize: vec2f) -> vec4f {
-    // We're going to sample a a 4x4 grid of texels surrounding the target UV coordinate. We'll do this by rounding
+    // We're going to sample a 4x4 grid of texels surrounding the target UV coordinate. We'll do this by rounding
     // down the sample location to get the exact center of our "starting" texel. The starting texel will be at
     // location [1, 1] in the grid, where [0, 0] is the top left corner.
     let samplePos: vec2f = uv * texSize;

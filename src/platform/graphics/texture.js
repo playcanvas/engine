@@ -53,7 +53,7 @@ let id = 0;
  *     - on WebGPU, rendering to float and half-float formats is always supported.
  *     - on WebGPU, rendering to small-float format is supported only if
  * {@link GraphicsDevice#textureRG11B10Renderable} is true.
- *     - on WebGL2, rendering to these 3 formats formats is supported only if
+ *     - on WebGL2, rendering to these 3 formats is supported only if
  * {@link GraphicsDevice#textureFloatRenderable} is true.
  *     - on WebGL2, if {@link GraphicsDevice#textureFloatRenderable} is false, but
  * {@link GraphicsDevice#textureHalfFloatRenderable} is true, rendering to half-float formats only

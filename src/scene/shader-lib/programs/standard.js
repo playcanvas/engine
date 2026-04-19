@@ -53,7 +53,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     }
 
     /**
-     * Get the code with which to to replace '*_TEXTURE_UV' in the map shader functions.
+     * Get the code with which to replace '*_TEXTURE_UV' in the map shader functions.
      *
      * @param {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
      * @param {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".

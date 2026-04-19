@@ -59,7 +59,7 @@ class XrAnchor extends EventHandler {
     static EVENT_CHANGE = 'change';
 
     /**
-     * Fired when an anchor has has been persisted. The handler is passed the UUID string that can
+     * Fired when an anchor has been persisted. The handler is passed the UUID string that can
      * be used to restore this anchor.
      *
      * @event

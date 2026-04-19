@@ -440,7 +440,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @deprecated Use {@link RotateGizmo#rotationMode} instead.
      * @ignore
      */
     set orbitRotation(value) {
@@ -449,7 +449,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @deprecated Use {@link RotateGizmo#rotationMode} instead.
      * @ignore
      */
     get orbitRotation() {

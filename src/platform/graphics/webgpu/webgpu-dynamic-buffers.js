@@ -5,7 +5,7 @@ import { WebgpuDynamicBuffer } from './webgpu-dynamic-buffer.js';
 
 class WebgpuDynamicBuffers extends DynamicBuffers {
     /**
-     * Staging buffers which are getting copied over to gpu buffers in the the command buffer waiting
+     * Staging buffers which are getting copied over to gpu buffers in the command buffer waiting
      * to be submitted. When those command buffers are submitted, we can mapAsync these staging
      * buffers for reuse.
      *

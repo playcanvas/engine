@@ -270,7 +270,7 @@ const _tempColor = new Color();
  * @property {string} refractionMapChannel Color channels of the refraction map to use. Can be "r",
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} refractionVertexColor Use mesh vertex colors for refraction. If
- * refraction map is set, it will be be multiplied by vertex colors.
+ * refraction map is set, it will be multiplied by vertex colors.
  * @property {boolean} refractionVertexColorChannel Vertex color channel to use for refraction.
  * Can be "r", "g", "b" or "a".
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of
@@ -295,7 +295,7 @@ const _tempColor = new Color();
  * @property {string} thicknessMapChannel Color channels of the thickness map to use. Can be "r",
  * "g", "b" or "a".
  * @property {boolean} thicknessVertexColor Use mesh vertex colors for thickness. If
- * thickness map is set, it will be be multiplied by vertex colors.
+ * thickness map is set, it will be multiplied by vertex colors.
  * @property {Color} attenuation The attenuation color for refractive materials, only used when
  * useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
