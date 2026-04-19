@@ -83,7 +83,7 @@ ScriptAttributes.reservedNames.forEach((value, value2, set) => {
 createScript.reservedAttributes = reservedAttributes;
 
 /**
- * Register an existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
+ * Register an existing class type as a Script Type with {@link ScriptRegistry}. Useful when defining
  * an ES6 script class that extends {@link ScriptType} (see example).
  *
  * @param {typeof ScriptType} script - The existing class type (constructor function) to be
