@@ -590,7 +590,7 @@ class GraphNode extends EventHandler {
      * string then it represents the name of a field or a method of the node. If this is the name
      * of a field then the value passed as the second argument will be checked for equality. If
      * this is the name of a function then the return value of the function will be checked for
-     * equality against the valued passed as the second argument to this function.
+     * equality against the value passed as the second argument to this function.
      * @param {*} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
@@ -626,10 +626,10 @@ class GraphNode extends EventHandler {
      * findOne. If it's a string then it represents the name of a field or a method of the node. If
      * this is the name of a field then the value passed as the second argument will be checked for
      * equality. If this is the name of a function then the return value of the function will be
-     * checked for equality against the valued passed as the second argument to this function.
+     * checked for equality against the value passed as the second argument to this function.
      * @param {*} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
-     * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+     * @returns {GraphNode|null} A graph node that matches the search criteria. Returns null if no
      * node is found.
      * @example
      * // Find the first node that is called 'head' and has a model component
@@ -649,21 +649,21 @@ class GraphNode extends EventHandler {
      * Return all graph nodes that satisfy the search query. Query can be simply a string, or comma
      * separated strings, to have inclusive results of assets that match at least one query. A
      * query that consists of an array of tags can be used to match graph nodes that have each tag
-     * of array.
+     * of the array.
      *
      * @param {...*} query - Name of a tag or array of tags.
      * @returns {GraphNode[]} A list of all graph nodes that match the query.
      * @example
-     * // Return all graph nodes that tagged by `animal`
+     * // Return all graph nodes tagged with `animal`
      * const animals = node.findByTag("animal");
      * @example
-     * // Return all graph nodes that tagged by `bird` OR `mammal`
+     * // Return all graph nodes tagged with `bird` OR `mammal`
      * const birdsAndMammals = node.findByTag("bird", "mammal");
      * @example
-     * // Return all assets that tagged by `carnivore` AND `mammal`
+     * // Return all graph nodes tagged with `carnivore` AND `mammal`
      * const meatEatingMammals = node.findByTag(["carnivore", "mammal"]);
      * @example
-     * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
+     * // Return all graph nodes tagged with (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
      * const meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
     findByTag(...query) {
@@ -687,7 +687,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the first node found in the graph with the name. The search is depth first.
      *
-     * @param {string} name - The name of the graph.
+     * @param {string} name - The name of the node.
      * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
      * null if no node is found.
      */

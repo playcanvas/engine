@@ -15,7 +15,7 @@ import { I18nParser } from './i18n-parser.js';
  */
 class I18n extends EventHandler {
     /**
-     * Fired when when the locale is changed.
+     * Fired when the locale is changed.
      *
      * @event
      * @example

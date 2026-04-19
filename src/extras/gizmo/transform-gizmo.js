@@ -51,7 +51,7 @@ const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
  */
 class TransformGizmo extends Gizmo {
     /**
-     * Fired when when the transformation has started.
+     * Fired when the transformation has started.
      *
      * @event
      * @example
@@ -69,13 +69,13 @@ class TransformGizmo extends Gizmo {
      * @example
      * const gizmo = new pc.TransformGizmo(camera, layer);
      * gizmo.on('transform:move', (pointDelta, angleDelta) => {
-     *     console.log('Transformation moved by ${pointDelta} (angle: ${angleDelta})');
+     *     console.log(`Transformation moved by ${pointDelta} (angle: ${angleDelta})`);
      * });
      */
     static EVENT_TRANSFORMMOVE = 'transform:move';
 
     /**
-     * Fired when when the transformation has ended.
+     * Fired when the transformation has ended.
      *
      * @event
      * @example

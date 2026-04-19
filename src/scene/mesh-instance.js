@@ -177,7 +177,8 @@ class ShaderInstance {
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {Vec3} cameraPosition - The position of the camera.
  * @param {Vec3} cameraForward - The forward vector of the camera.
- * @returns {void}
+ * @returns {number} The sort distance for the mesh instance. Mesh instances are sorted by this
+ * value in ascending or descending order depending on the layer's sort mode.
  */
 
 /**

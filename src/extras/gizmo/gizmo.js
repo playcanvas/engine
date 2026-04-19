@@ -138,7 +138,7 @@ class Gizmo extends EventHandler {
     static EVENT_NODESDETACH = 'nodes:detach';
 
     /**
-     * Fired when when the gizmo render has updated.
+     * Fired when the gizmo render has updated.
      *
      * @event
      * @example
