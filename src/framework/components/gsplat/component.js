@@ -562,8 +562,8 @@ class GSplatComponent extends Component {
      * - {@link WORKBUFFER_UPDATE_ONCE}: Force update this frame, then switch to AUTO.
      * - {@link WORKBUFFER_UPDATE_ALWAYS}: Update every frame.
      *
-     * This is typically useful when using custom shader code via {@link workBufferModifier} that
-     * depends on external factors like time or animated uniforms.
+     * This is typically useful when using custom shader code via {@link setWorkBufferModifier}
+     * that depends on external factors like time or animated uniforms.
      *
      * Note: {@link WORKBUFFER_UPDATE_ALWAYS} has a performance impact as it re-renders
      * all splat data to the work buffer every frame. Where possible, consider using shader

@@ -54,7 +54,7 @@ class Shader {
     /**
      * Creates a new Shader instance.
      *
-     * Consider {@link ShaderUtils#createShader} as a simpler and more powerful way to create
+     * Consider {@link ShaderUtils.createShader} as a simpler and more powerful way to create
      * a shader.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
