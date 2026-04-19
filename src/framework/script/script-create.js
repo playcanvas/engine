@@ -98,8 +98,8 @@ createScript.reservedAttributes = reservedAttributes;
  * (underscore): system, entity, create, destroy, swap, move, scripts, onEnable, onDisable,
  * onPostStateChange, has, on, off, fire, once, hasEvent.
  * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
- * to register the script type to. By default it will use `Application.getApplication()` to get
- * current {@link AppBase}.
+ * to register the script type with. By default it will use `Application.getApplication()` to get
+ * the current {@link AppBase}.
  * @example
  * // define an ES6 script class
  * class PlayerController extends pc.ScriptType {
