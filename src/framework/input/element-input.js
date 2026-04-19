@@ -320,7 +320,7 @@ class ElementTouchEvent extends ElementInputEvent {
  */
 class ElementSelectEvent extends ElementInputEvent {
     /**
-     * Create an instance of a ElementSelectEvent.
+     * Create an instance of an ElementSelectEvent.
      *
      * @param {XRInputSourceEvent} event - The XRInputSourceEvent that was originally raised.
      * @param {ElementComponent} element - The

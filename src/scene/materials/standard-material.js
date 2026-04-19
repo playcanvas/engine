@@ -515,8 +515,8 @@ const _tempColor = new Color();
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
  * @property {boolean} useLighting Apply lighting
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
- * @property {boolean} useTonemap Apply tonemapping (as configured in {@link Scene#rendering} or
- * {@link CameraComponent.rendering}). Defaults to true.
+ * @property {boolean} useTonemap Apply tonemapping (as configured via
+ * {@link CameraComponent#toneMapping}). Defaults to true.
  * @property {boolean} pixelSnap Align vertices to pixel coordinates when rendering. Useful for
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on

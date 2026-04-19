@@ -9,7 +9,7 @@ import { Quat } from '../../core/math/quat.js';
 /**
  * @callback XrAnchorPersistCallback
  * Callback used by {@link XrAnchor#persist}.
- * @param {Error|null} err - The Error object if failed to persist an anchor or null.
+ * @param {Error|null} err - The Error object if persisting the anchor failed, or null.
  * @param {string|null} uuid - Unique string that can be used to restore an {@link XrAnchor} in
  * another session.
  * @returns {void}
@@ -18,8 +18,8 @@ import { Quat } from '../../core/math/quat.js';
 /**
  * @callback XrAnchorForgetCallback
  * Callback used by {@link XrAnchor#forget}.
- * @param {Error|null} err - The Error object if failed to forget an {@link XrAnchor} or null if
- * succeeded.
+ * @param {Error|null} err - The Error object if forgetting the {@link XrAnchor} failed, or null
+ * if it succeeded.
  * @returns {void}
  */
 

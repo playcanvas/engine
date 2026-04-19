@@ -1289,7 +1289,8 @@ class AppBase extends EventHandler {
      *
      * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
-     * @returns {object} A object containing the values calculated to use as width and height.
+     * @returns {{width: number, height: number}} An object containing the values calculated to
+     * use as width and height.
      */
     resizeCanvas(width, height) {
         if (!this._allowResize) return undefined; // prevent resizing (e.g. if presenting in VR HMD)
@@ -1675,8 +1676,8 @@ class AppBase extends EventHandler {
      * @param {number[]} positions - An array of points to draw lines between. Each point is
      * represented by 3 numbers - x, y and z coordinate.
      * @param {number[]|Color} colors - A single color for all lines, or an array of colors to color
-     * the lines. If an array is specified, number of colors it stores must match the number of
-     * positions provided.
+     * the lines. If an array is specified, the number of colors it stores must match the number
+     * of positions provided.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.

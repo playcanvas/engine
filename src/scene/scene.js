@@ -24,7 +24,7 @@ import { FogParams } from './fog-params.js';
  */
 
 /**
- * A scene is graphical representation of an environment. It manages the scene hierarchy, all
+ * A scene is a graphical representation of an environment. It manages the scene hierarchy, all
  * graphical objects, lights, and scene-wide properties.
  *
  * @category Graphics

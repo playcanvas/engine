@@ -125,7 +125,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
 
             if (requiredChangeStrings.length > 0) {
-                Debug.errorOnce(`Shader chunk ${chunkName} is in no longer compatible format. Please make these replacements to bring it to the current version:\n${requiredChangeStrings.join('\n')}`, { code: code });
+                Debug.errorOnce(`Shader chunk ${chunkName} is no longer in a compatible format. Please make these replacements to bring it to the current version:\n${requiredChangeStrings.join('\n')}`, { code: code });
             }
         });
     }
@@ -136,7 +136,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
      * @param {Map<string, string>} fDefines - The fragment defines.
      * @param {string} propName - The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao.
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
-     * @param {object} options - The options passed into to createShaderDefinition.
+     * @param {object} options - The options passed into createShaderDefinition.
      * @param {Map<string, string>} chunks - The set of shader chunks to choose from.
      * @param {object} mapping - The mapping between chunk and sampler
      * @param {string|null} encoding - The texture's encoding

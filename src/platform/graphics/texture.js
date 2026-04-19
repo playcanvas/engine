@@ -1213,8 +1213,8 @@ class Texture {
     }
 
     /**
-     * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-     * is called by internally by {@link setSource} and {@link unlock}. However, it still needs to
+     * Forces a reupload of the texture's pixel data to graphics memory. Ordinarily, this function
+     * is called internally by {@link setSource} and {@link unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the
      * texture.  Normally, this is done once every frame before video textured geometry is
      * rendered.
