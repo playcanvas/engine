@@ -38,9 +38,9 @@ const matC = new Mat4();
 const matD = new Mat4();
 
 /**
- * ElementComponents are used to construct user interfaces. The {@link ElementComponent#type}
- * property can be configured in 3 main ways: as a text element, as an image element or as a group
- * element. If the ElementComponent has a {@link ScreenComponent} ancestor in the hierarchy, it
+ * ElementComponents are used to construct user interfaces. The {@link type} property can be
+ * configured in 3 main ways: as a text element, as an image element or as a group element. If
+ * the ElementComponent has a {@link ScreenComponent} ancestor in the hierarchy, it
  * will be transformed with respect to the coordinate system of the screen. If there is no
  * {@link ScreenComponent} ancestor, the ElementComponent will be transformed like any other
  * entity.

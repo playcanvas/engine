@@ -33,9 +33,9 @@ const PARAM_ATLAS_RECT = 'atlasRect';
 
 /**
  * The SpriteComponent enables an {@link Entity} to render a simple static sprite or sprite
- * animations. The {@link SpriteComponent#type} property can be set to either
- * {@link SPRITETYPE_SIMPLE} to render a single frame from a sprite asset, or
- * {@link SPRITETYPE_ANIMATED} to play one or more {@link SpriteAnimationClip}s.
+ * animations. The {@link type} property can be set to either {@link SPRITETYPE_SIMPLE} to render
+ * a single frame from a sprite asset, or {@link SPRITETYPE_ANIMATED} to play one or more
+ * {@link SpriteAnimationClip}s.
  *
  * You should never need to use the SpriteComponent constructor directly. To add a
  * SpriteComponent to an {@link Entity}, use {@link Entity#addComponent}:

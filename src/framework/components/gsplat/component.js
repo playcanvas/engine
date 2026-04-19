@@ -47,8 +47,8 @@ import { PickerId } from '../../../scene/picker-id.js';
  *
  * ## Unified Rendering
  *
- * The {@link GSplatComponent#unified} property enables unified rendering mode, which provides
- * advanced features for Gaussian Splats:
+ * The {@link unified} property enables unified rendering mode, which provides advanced features
+ * for Gaussian Splats:
  *
  * - **Global Sorting**: Multiple splat components are sorted together in a single unified sort,
  *   eliminating visibility artifacts and popping effects when splat components overlap.
