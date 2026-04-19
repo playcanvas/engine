@@ -179,7 +179,7 @@ class URI {
      *     "a": 1,
      *     "b": 2
      * });
-     * console.log(uri.toString()); // logs "http://example.com?a=1&b=2
+     * console.log(uri.toString()); // logs "http://example.com?a=1&b=2"
      */
     setQuery(params) {
         let q = '';
