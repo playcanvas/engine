@@ -868,7 +868,7 @@ class Mesh extends RefCountedObject {
      * {@link vertexBuffer} or {@link indexBuffer} to fit all provided vertices and indices, and
      * fills them with data.
      *
-     * @param {number} [primitiveType] - The type of primitive to render.  Can be:
+     * @param {number} [primitiveType] - The type of primitive to render. Can be:
      *
      * - {@link PRIMITIVE_POINTS}
      * - {@link PRIMITIVE_LINES}

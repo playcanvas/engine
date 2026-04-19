@@ -204,7 +204,7 @@ class Texture {
      * Defaults to undefined.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume.
      * Defaults to false.
-     * @param {string} [options.type] - Specifies the texture type.  Can be:
+     * @param {string} [options.type] - Specifies the texture type. Can be:
      *
      * - {@link TEXTURETYPE_DEFAULT}
      * - {@link TEXTURETYPE_RGBM}
@@ -1216,7 +1216,7 @@ class Texture {
      * Forces a reupload of the texture's pixel data to graphics memory. Ordinarily, this function
      * is called internally by {@link setSource} and {@link unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the
-     * texture.  Normally, this is done once every frame before video textured geometry is
+     * texture. Normally, this is done once every frame before video textured geometry is
      * rendered.
      */
     upload() {

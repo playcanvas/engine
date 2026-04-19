@@ -22,7 +22,7 @@ const tempMap = new Map();
 /**
  * Base class for a GSplat resource and defines common properties.
  *
- *  @ignore
+ * @ignore
  */
 class GSplatResourceBase {
     /**

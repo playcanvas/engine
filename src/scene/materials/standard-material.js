@@ -383,7 +383,7 @@ const _tempColor = new Color();
  *
  * Defaults to {@link DITHER_NONE}.
  * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
- * allows shadow transparency without alpha blending.  Can be:
+ * allows shadow transparency without alpha blending. Can be:
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.

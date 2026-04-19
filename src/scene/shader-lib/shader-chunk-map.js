@@ -11,7 +11,7 @@ import { hashCode } from '../../core/hash.js';
 
 /**
  * A collection of shader chunks, used by {@link ShaderChunks}. This is a map of shader chunk names
- * to their code.  As this class extends `Map`, it can be used as a `Map` as well in addition to
+ * to their code. As this class extends `Map`, it can be used as a `Map` as well in addition to
  * custom functionality it provides.
  *
  * @category Graphics

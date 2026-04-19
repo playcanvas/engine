@@ -1434,7 +1434,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the horizontal and vertical alignment of the text. Values range from 0 to 1 where
-     * `[0, 0]` is the bottom left and `[1, 1]` is the top right.  Only works for
+     * `[0, 0]` is the bottom left and `[1, 1]` is the top right. Only works for
      * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {Vec2}

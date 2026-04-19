@@ -19,7 +19,7 @@ class FrameGraph {
     /**
      * Map used during frame graph compilation. It maps a render target to its previous occurrence.
      *
-     *  @type {Map<RenderTarget, RenderPass>}
+     * @type {Map<RenderTarget, RenderPass>}
      */
     renderTargetMap = new Map();
 

@@ -1136,7 +1136,7 @@ class MeshInstance {
      * buffer attribute — the caller must set {@link instancingCount} manually. Pass null to turn
      * off hardware instancing.
      * @param {boolean} cull - Whether to perform frustum culling on this instance. If true, the whole
-     * instance will be culled by the  camera frustum. This often involves setting
+     * instance will be culled by the camera frustum. This often involves setting
      * {@link RenderComponent#customAabb} containing all instances. Defaults to false, which means
      * the whole instance is always rendered.
      */

@@ -78,7 +78,7 @@ export default /* wgsl */`
             #else
                 uniform samplerCube light{i}_shadowMap;
             #endif
-*/            
+*/
         #else
             #if defined(LIGHT{i}SHADOW_PCF)
                 var light{i}_shadowMap: texture_depth_2d;

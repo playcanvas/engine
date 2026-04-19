@@ -70,7 +70,7 @@ class CameraFrameOptions {
 const _defaultOptions = new CameraFrameOptions();
 
 /**
- * Render pass implementation of a common camera frame rendering with integrated  post-processing
+ * Render pass implementation of a common camera frame rendering with integrated post-processing
  * effects.
  *
  * @category Graphics
