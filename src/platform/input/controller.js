@@ -168,10 +168,11 @@ class Controller {
     }
 
     /**
-     * Create or update an action which is enabled when the supplied keys are pressed.
+     * Register a new action which is enabled when the supplied keys are pressed.
      *
      * @param {string} action - The name of the action.
      * @param {number[]} keys - A list of keycodes.
+     * @throws {Error} If the action is already registered, or if `keys` is undefined.
      */
     registerKeys(action, keys) {
         if (!this._keyboard) {
