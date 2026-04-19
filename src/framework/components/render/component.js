@@ -55,6 +55,7 @@ import { Component } from '../component.js';
  * - [Primitive Shapes](https://playcanvas.github.io/#/graphics/shapes)
  * - [Spinning Cube](https://playcanvas.github.io/#/misc/hello-world)
  *
+ * @hideconstructor
  * @category Graphics
  */
 class RenderComponent extends Component {

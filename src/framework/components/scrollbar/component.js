@@ -14,7 +14,33 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
  */
 
 /**
- * A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
+ * The ScrollbarComponent enables an {@link Entity} to behave like a draggable scrollbar. It is
+ * typically used together with a {@link ScrollViewComponent} to allow the user to scroll the
+ * contents of a scroll view area.
+ *
+ * You should never need to use the ScrollbarComponent constructor directly. To add a
+ * ScrollbarComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('element', {
+ *     type: pc.ELEMENTTYPE_IMAGE
+ * });
+ * entity.addComponent('scrollbar', {
+ *     orientation: pc.ORIENTATION_VERTICAL,
+ *     value: 0,
+ *     handleSize: 0.5
+ * });
+ * ```
+ *
+ * Once the ScrollbarComponent is added to the entity, you can access it via the
+ * {@link Entity#scrollbar} property:
+ *
+ * ```javascript
+ * entity.scrollbar.value = 0.25; // Scroll the bar to 25%
+ *
+ * console.log(entity.scrollbar.value); // Get the scroll value and print it
+ * ```
  *
  * @hideconstructor
  * @category User Interface

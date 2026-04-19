@@ -26,11 +26,11 @@ import { PickerId } from '../../../scene/picker-id.js';
  * `gsplat` which supports multiple file formats including `.ply`, `.sog`, `.meta.json` (SOG
  * format), and `.lod-meta.json` (streaming LOD format).
  *
- * You should never need to use the GSplatComponent constructor directly. To add an
+ * You should never need to use the GSplatComponent constructor directly. To add a
  * GSplatComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('gsplat', {
  *     asset: asset
  * });

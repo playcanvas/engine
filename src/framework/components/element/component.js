@@ -49,7 +49,7 @@ const matD = new Mat4();
  * ElementComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('element'); // This defaults to a 'group' element
  * ```
  *

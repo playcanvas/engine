@@ -25,7 +25,7 @@ import { properties } from './data.js';
  * - `spot`: A local light that emits light similarly to an omni light but is bounded by a cone
  * centered on the owner entity's negative y-axis. Emulates flashlights, spotlights, etc.
  *
- * You should never need to use the LightComponent constructor directly. To add an LightComponent
+ * You should never need to use the LightComponent constructor directly. To add a LightComponent
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript

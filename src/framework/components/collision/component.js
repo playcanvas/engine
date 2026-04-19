@@ -22,18 +22,18 @@ const _quat = new Quat();
  * When an entity is configured as a trigger volume, if an entity with a dynamic or kinematic body
  * enters or leaves that trigger volume, both entities will receive trigger events.
  *
- * You should never need to use the CollisionComponent constructor directly. To add an
+ * You should never need to use the CollisionComponent constructor directly. To add a
  * CollisionComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('collision'); // This defaults to 1x1x1 box-shaped trigger volume
  * ```
  *
  * To create a 0.5 radius dynamic rigid body sphere:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('collision', {
  *     type: 'sphere'
  * });

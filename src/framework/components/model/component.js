@@ -48,6 +48,7 @@ import { Component } from '../component.js';
  * console.log(entity.model.type); // Get the model component's type and print it
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class ModelComponent extends Component {

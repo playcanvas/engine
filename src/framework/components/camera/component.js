@@ -60,6 +60,13 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *
+ * Relevant Engine API examples:
+ *
+ * - [First Person Camera](https://playcanvas.github.io/#/camera/first-person)
+ * - [Fly Camera](https://playcanvas.github.io/#/camera/fly)
+ * - [Multiple Cameras](https://playcanvas.github.io/#/camera/multi)
+ * - [Orbit Camera](https://playcanvas.github.io/#/camera/orbit)
+ *
  * @hideconstructor
  * @category Graphics
  */

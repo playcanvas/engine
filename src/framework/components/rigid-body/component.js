@@ -26,12 +26,12 @@ const _vec3 = new Vec3();
  * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid
  * bodies.
  *
- * You should never need to use the RigidBodyComponent constructor directly. To add an
+ * You should never need to use the RigidBodyComponent constructor directly. To add a
  * RigidBodyComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
  * // Create a static 1x1x1 box-shaped rigid body
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('collision'); // Without options, this defaults to a 1x1x1 box shape
  * entity.addComponent('rigidbody'); // Without options, this defaults to a 'static' body
  * ```
@@ -39,7 +39,7 @@ const _vec3 = new Vec3();
  * To create a dynamic sphere with mass of 10, do:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('collision', {
  *     type: 'sphere'
  * });

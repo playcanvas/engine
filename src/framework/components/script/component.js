@@ -18,21 +18,19 @@ import { getScriptName } from '../../script/script.js';
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
 /**
- * The ScriptComponent allows you add custom behavior to an {@link Entity} by attaching
- * your own scripts written in JavaScript (or TypeScript).
+ * The ScriptComponent enables an {@link Entity} to have custom behavior by attaching scripts
+ * written in JavaScript (or TypeScript).
  *
  * You should never need to use the ScriptComponent constructor directly. To add a
- * ScriptComponent to an Entity, use {@link Entity#addComponent}:
+ * ScriptComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
  * const entity = new pc.Entity();
  * entity.addComponent('script');
  * ```
  *
- * Once the ScriptComponent is added to the entity, you can access it via the {@link Entity#script}
- * property.
- *
- * Add scripts to the entity by calling the `create` method:
+ * Once the ScriptComponent is added to the entity, you can access it via the
+ * {@link Entity#script} property:
  *
  * ```javascript
  * // Option 1: Add a script using the name registered in the ScriptRegistry

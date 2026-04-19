@@ -20,8 +20,36 @@ function isEnabledAndHasEnabledElement(entity) {
 }
 
 /**
- * A LayoutGroupComponent enables the Entity to position and scale child {@link ElementComponent}s
- * according to configurable layout rules.
+ * The LayoutGroupComponent enables an {@link Entity} to position and scale its child
+ * {@link ElementComponent}s according to configurable layout rules. It supports horizontal and
+ * vertical orientations and a variety of alignment, spacing, wrapping and sizing options.
+ *
+ * You should never need to use the LayoutGroupComponent constructor directly. To add a
+ * LayoutGroupComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('element', {
+ *     type: pc.ELEMENTTYPE_GROUP
+ * });
+ * entity.addComponent('layoutgroup', {
+ *     orientation: pc.ORIENTATION_HORIZONTAL,
+ *     spacing: new pc.Vec2(10, 0)
+ * });
+ * ```
+ *
+ * Once the LayoutGroupComponent is added to the entity, you can access it via the
+ * {@link Entity#layoutgroup} property:
+ *
+ * ```javascript
+ * entity.layoutgroup.spacing = new pc.Vec2(20, 0); // Increase spacing between children
+ *
+ * console.log(entity.layoutgroup.spacing);         // Get the spacing and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Layout Group](https://playcanvas.github.io/#/user-interface/layout-group)
  *
  * @hideconstructor
  * @category User Interface
