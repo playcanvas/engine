@@ -3,7 +3,7 @@ import { Component } from '../component.js';
 /**
  * The LayoutChildComponent enables an {@link Entity} to control the sizing and fitting behavior
  * applied to it by its parent {@link LayoutGroupComponent}. It allows per-child overrides of
- * minimum and maximum dimensions as well as fit priority.
+ * minimum and maximum dimensions as well as fit proportions.
  *
  * You should never need to use the LayoutChildComponent constructor directly. To add a
  * LayoutChildComponent to an {@link Entity}, use {@link Entity#addComponent}:
