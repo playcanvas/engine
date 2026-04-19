@@ -19,17 +19,29 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
  * contents of a scroll view area.
  *
  * You should never need to use the ScrollbarComponent constructor directly. To add a
- * ScrollbarComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ * ScrollbarComponent to an {@link Entity}, use {@link Entity#addComponent}. A draggable
+ * scrollbar requires a child handle entity with an input-enabled {@link ElementComponent},
+ * wired up via the scrollbar's {@link handleEntity} property:
  *
  * ```javascript
+ * // Create a child handle entity that the user can drag
+ * const handle = new pc.Entity();
+ * handle.addComponent('element', {
+ *     type: pc.ELEMENTTYPE_IMAGE,
+ *     useInput: true
+ * });
+ *
+ * // Create the scrollbar entity and wire in the handle
  * const entity = new pc.Entity();
+ * entity.addChild(handle);
  * entity.addComponent('element', {
  *     type: pc.ELEMENTTYPE_IMAGE
  * });
  * entity.addComponent('scrollbar', {
  *     orientation: pc.ORIENTATION_VERTICAL,
  *     value: 0,
- *     handleSize: 0.5
+ *     handleSize: 0.5,
+ *     handleEntity: handle
  * });
  * ```
  *
