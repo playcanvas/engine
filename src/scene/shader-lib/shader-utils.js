@@ -31,6 +31,14 @@ class ShaderGeneratorPassThrough extends ShaderGenerator {
     }
 }
 
+/**
+ * Utility class for creating shaders. Provides a higher-level API over the {@link Shader}
+ * constructor, handling cross-API concerns such as GLSL/WGSL selection and translation, shader
+ * caching, include and define resolution, and attaching commonly used extensions and precision
+ * qualifiers.
+ *
+ * @category Graphics
+ */
 class ShaderUtils {
     /**
      * Creates a shader. When the active graphics device is WebGL, the provided GLSL vertex and
