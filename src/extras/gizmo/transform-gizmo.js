@@ -611,7 +611,7 @@ class TransformGizmo extends Gizmo {
      * @param {number} y - The y coordinate.
      * @param {boolean} isFacing - Whether the axis is facing the camera.
      * @param {boolean} isLine - Whether the axis is a line.
-     * @returns {Vec3} The point (space is {@link coordSpace}).
+     * @returns {Vec3} The point (space is {@link Gizmo#coordSpace}).
      * @protected
      */
     _screenToPoint(x, y, isFacing = false, isLine = false) {

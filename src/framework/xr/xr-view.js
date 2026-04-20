@@ -18,7 +18,7 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_R32F,
  */
 class XrView extends EventHandler {
     /**
-     * Fired when the depth sensing texture been resized. The {@link depthUvMatrix} needs
+     * Fired when the depth sensing texture has been resized. The {@link depthUvMatrix} needs
      * to be updated for relevant shaders. The handler is passed the new width and height of the
      * depth texture in pixels.
      *
