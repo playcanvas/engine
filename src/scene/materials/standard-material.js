@@ -371,8 +371,8 @@ const _tempColor = new Color();
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be
  * "r", "g", "b" or "a".
  * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
- * faded out using {@link opacity}. Default is true. When set to false use {@link Material#alphaFade}
- * to fade out materials.
+ * faded out using {@link opacity}. Default is true. When set to false use {@link alphaFade} to
+ * fade out materials.
  * @property {string} opacityDither Used to specify whether opacity is dithered, which allows
  * transparency without alpha blending. Can be:
  *
