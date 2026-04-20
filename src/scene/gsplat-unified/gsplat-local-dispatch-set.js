@@ -19,6 +19,7 @@ import {
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { computeGsplatLocalRasterizeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-rasterize.js';
+import { CACHE_STRIDE } from './gsplat-local-constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -355,6 +356,7 @@ class GSplatLocalDispatchSet {
         const bgf = new BindGroupFormat(device, [...sharedBindings, ...outputBindings, ...depthBindings]);
 
         const cdefines = new Map();
+        cdefines.set('{CACHE_STRIDE}', CACHE_STRIDE.toString());
         if (pickMode) cdefines.set('PICK_MODE', '');
         if (depthTest) cdefines.set('DEPTH_TEST', '');
         if (heatmap) cdefines.set('HEATMAP_MODE', '');

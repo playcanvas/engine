@@ -36,6 +36,7 @@ import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/comp
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import { GSplatTileComposite } from './gsplat-tile-composite.js';
 import { GSplatLocalDispatchSet } from './gsplat-local-dispatch-set.js';
+import { CACHE_STRIDE } from './gsplat-local-constants.js';
 import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
 
 /**
@@ -76,7 +77,6 @@ const INITIAL_LARGE_SPLAT_CAPACITY = 16384;
 
 const TILE_SIZE = 16;
 const MAX_TILES = 65535; // tile index must fit in 16 bits for pair packing (tileIdx << 16 | localOffset)
-const CACHE_STRIDE = 7;
 const MAX_CHUNKS_PER_TILE = 8;
 
 // ---- Module-scope scratch (reusable, never exported) ----
@@ -1031,11 +1031,15 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
                 new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
             ]);
 
+            const cdefines = new Map();
+            cdefines.set('{CACHE_STRIDE}', CACHE_STRIDE.toString());
+
             this._largeSplatShader = new Shader(device, {
                 name: 'GSplatLocalTileCountLarge',
                 shaderLanguage: SHADERLANGUAGE_WGSL,
                 cshader: computeGsplatLocalTileCountLargeSource,
                 cincludes,
+                cdefines,
                 computeBindGroupFormat: this._largeSplatBindGroupFormat,
                 computeUniformBufferFormats: { uniforms: ubf }
             });
@@ -1261,6 +1265,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
 
         const cdefines = new Map();
+        cdefines.set('{CACHE_STRIDE}', CACHE_STRIDE.toString());
         if (fisheyeEnabled) {
             cdefines.set('GSPLAT_FISHEYE', '');
         }
