@@ -33,7 +33,6 @@ deviceInfo.style.cssText = `
     border-radius: 4px;
     z-index: 1000;
 `;
-deviceInfo.textContent = `Device: ${device.deviceType.toUpperCase()}`;
 document.body.appendChild(deviceInfo);
 
 // Create error overlay (initially hidden)
@@ -87,8 +86,6 @@ let currentNumElements = 0;
 let currentNumBits = 0;
 /** @type {pc.StorageBuffer|null} */
 let keysBuffer = null;
-/** @type {pc.ComputeRadixSort|null} */
-let radixSort = null;
 /** @type {pc.StorageBuffer|null} */
 let sortedIndicesBuffer = null;
 /** @type {number[]} */
@@ -98,8 +95,60 @@ let needsRegen = true;
 /** @type {boolean} */
 const enableRendering = true;
 
-// Create compute radix sort instance
-radixSort = new pc.ComputeRadixSort(device);
+// Valid radix modes. Invalid combinations (e.g. 4-bit + subgroup) are never
+// exposed to the user, so we enumerate the three working variants directly
+// rather than cross-producting two dropdowns.
+const RADIX_MODES = {
+    '4-shared-mem': { radixBits: 4, reorderVariant: 'shared-mem' },
+    '8-shared-mem': { radixBits: 8, reorderVariant: 'shared-mem' },
+    '8-subgroup': { radixBits: 8, reorderVariant: 'subgroup' },
+    '8-subgroup-packed': { radixBits: 8, reorderVariant: 'subgroup-packed' }
+};
+const DEFAULT_MODE = device.supportsSubgroups ? '8-shared-mem' : '4-shared-mem';
+
+// Lazy cache of ComputeRadixSort instances, keyed by "scan-mode" toggle
+// combination. Instances are created on first use and retained, so subsequent
+// toggles between configurations are free (no shader rebuild). Each instance
+// grows its internal buffers on demand, so the total GPU memory scales with
+// the max element count exercised per combo. 8-bit modes require subgroup
+// support on the device; the 'subgroup' reorder additionally assumes
+// sgSize == 32.
+/** @type {Map<string, pc.ComputeRadixSort>} */
+const radixSortCache = new Map();
+
+/**
+ * Fetches or creates the ComputeRadixSort matching the current observer
+ * selection. Falls back to safe defaults if the observer value is not yet
+ * populated.
+ *
+ * @returns {pc.ComputeRadixSort} The active radix sort instance.
+ */
+function getActiveRadixSort() {
+    const scan = data.get('options.scan') ?? (device.supportsSubgroups ? 'csdldf' : 'blelloch');
+    const mode = data.get('options.mode') ?? DEFAULT_MODE;
+    const { radixBits, reorderVariant } = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
+    const key = `${scan}-${mode}`;
+    let inst = radixSortCache.get(key);
+    if (!inst) {
+        inst = new pc.ComputeRadixSort(device, {
+            scanKernel: scan,
+            radixBits: radixBits,
+            reorderVariant: reorderVariant
+        });
+        radixSortCache.set(key, inst);
+    }
+    return inst;
+}
+
+/**
+ * Refreshes the device overlay text to reflect the active configuration.
+ */
+function updateDeviceInfo() {
+    const sort = getActiveRadixSort();
+    deviceInfo.textContent = `Device: ${device.deviceType.toUpperCase()} - scan: ${sort.scanKernelName} - radix: ${sort.radixBits}bit - reorder: ${sort.reorderVariant}`;
+}
+
+updateDeviceInfo();
 
 // ==================== MATERIALS ====================
 
@@ -234,10 +283,15 @@ function regenerateData() {
  * @param {boolean} [verify] - Whether to verify results.
  */
 function runSort(verify = false) {
-    if (!keysBuffer || !radixSort) return;
+    if (!keysBuffer) return;
 
-    // Execute the GPU sort and get the sorted indices buffer
-    sortedIndicesBuffer = radixSort.sort(keysBuffer, currentNumElements, currentNumBits);
+    const sort = getActiveRadixSort();
+    // Round up numBits to a multiple of the active radix width so the sort
+    // asserts don't fire when the user picks e.g. 12 bits while in 8-bit mode.
+    // Keys never exceed (1 << currentNumBits) - 1 (see regenerateData), so
+    // sorting with extra high bits is still correct.
+    const alignedBits = Math.ceil(currentNumBits / sort.radixBits) * sort.radixBits;
+    sortedIndicesBuffer = sort.sort(keysBuffer, currentNumElements, alignedBits);
 
     // Update visualization materials
     updateMaterialParameters();
@@ -372,22 +426,33 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             needsRegen = true;
         }
     } else if (path === 'options.bits') {
-        // Round to nearest valid value (must be multiple of 4)
-        const validBits = [4, 8, 12, 16, 20, 24, 28, 32];
+        // Snap to a multiple of 8 so the bit count is compatible with both
+        // 4-bit and 8-bit radix modes without realignment at sort time.
+        const validBits = [8, 16, 24, 32];
         const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev)
         );
         if (nearest !== currentNumBits) {
             currentNumBits = nearest;
             needsRegen = true;
         }
+    } else if (path === 'options.scan' || path === 'options.mode') {
+        // Switching scan kernel or radix mode changes the active shader set;
+        // force a re-sort on next frame and refresh the overlay.
+        needsRegen = true;
+        updateDeviceInfo();
     }
 });
 
 // Initialize observer with default values (single source of truth for defaults)
-// Must be after data.on() so the handler receives the initial values
+// Must be after data.on() so the handler receives the initial values.
+// Default to the shared-memory 8-bit mode when subgroups are available
+// (historical baseline), 4-bit otherwise. The subgroup ballot variant is
+// opt-in for A/B testing.
 data.set('options', {
     elementsK: 1000,
-    bits: 16
+    bits: 16,
+    scan: device.supportsSubgroups ? 'csdldf' : 'blelloch',
+    mode: DEFAULT_MODE
 });
 
 // Update loop - continuously sorts every frame

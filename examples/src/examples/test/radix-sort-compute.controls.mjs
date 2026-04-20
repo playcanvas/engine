@@ -16,7 +16,7 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'options.elementsK' },
                     min: 1,
-                    max: 10000,
+                    max: 30000,
                     precision: 0
                 })
             ),
@@ -27,14 +27,38 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'options.bits' },
                     options: [
-                        { v: 4, t: '4 bits (1 pass)' },
-                        { v: 8, t: '8 bits (2 passes)' },
-                        { v: 12, t: '12 bits (3 passes)' },
-                        { v: 16, t: '16 bits (4 passes)' },
-                        { v: 20, t: '20 bits (5 passes)' },
-                        { v: 24, t: '24 bits (6 passes)' },
-                        { v: 28, t: '28 bits (7 passes)' },
-                        { v: 32, t: '32 bits (8 passes)' }
+                        { v: 8, t: '8 bits' },
+                        { v: 16, t: '16 bits' },
+                        { v: 24, t: '24 bits' },
+                        { v: 32, t: '32 bits' }
+                    ]
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Scan kernel' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'options.scan' },
+                    type: 'string',
+                    options: [
+                        { v: 'csdldf', t: 'CSDLDF' },
+                        { v: 'blelloch', t: 'Blelloch' }
+                    ]
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Radix mode' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'options.mode' },
+                    type: 'string',
+                    options: [
+                        { v: '4-shared-mem', t: '4-bit shared' },
+                        { v: '8-shared-mem', t: '8-bit shared' },
+                        { v: '8-subgroup', t: '8-bit ballot' },
+                        { v: '8-subgroup-packed', t: '8-bit ballot packed' }
                     ]
                 })
             )
