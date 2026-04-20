@@ -180,6 +180,7 @@ class GSplatOctree {
 
     /**
      * Trace out per-LOD counts of currently loaded file resources.
+     *
      * @private
      */
     _traceLodCounts() {

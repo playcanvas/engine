@@ -594,6 +594,7 @@ class GSplatParams {
      *
      * If the source splats were generated without anti-aliasing, enabling this
      * option may slightly soften the image or alter opacity.
+     *
      * @type {boolean}
      */
     set antiAlias(value) {
@@ -618,6 +619,7 @@ class GSplatParams {
      * was generated for 2D Gaussian Splatting.
      *
      * Enabling this with standard 3D splat data may produce incorrect results.
+     *
      * @type {boolean}
      */
     set twoDimensional(value) {

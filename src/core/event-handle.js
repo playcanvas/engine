@@ -63,6 +63,7 @@ class EventHandle {
 
     /**
      * True if event has been removed.
+     *
      * @private
      */
     _removed = false;

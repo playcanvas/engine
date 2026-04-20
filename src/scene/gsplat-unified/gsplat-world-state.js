@@ -64,6 +64,7 @@ class GSplatWorldState {
     /**
      * Files to decrement when this state becomes active.
      * Array of tuples: [octree, fileIndex]
+     *
      * @type {Array<[GSplatOctree, number]>}
      */
     pendingReleases = [];

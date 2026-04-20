@@ -64,18 +64,21 @@ class NodeInfo {
 
     /**
      * Back-reference to owning GSplatOctreeInstance.
+     *
      * @type {GSplatOctreeInstance|null}
      */
     inst = null;
 
     /**
      * Cached reference to this node's LOD array for fast budget balancing.
+     *
      * @type {Array|null}
      */
     lods = null;
 
     /**
      * Unique allocation identifier for persistent work buffer allocation tracking.
+     *
      * @type {number}
      */
     allocId = GsplatAllocId.get();
@@ -113,6 +116,7 @@ class GSplatOctreeInstance {
 
     /**
      * Array of NodeInfo instances, one per octree node.
+     *
      * @type {NodeInfo[]}
      */
     nodeInfos;
@@ -120,12 +124,14 @@ class GSplatOctreeInstance {
     /**
      * Array of current placements per file. Index is fileIndex, value is GSplatPlacement or null.
      * Value null indicates file is not used / no placement.
+     *
      * @type {(GSplatPlacement|null)[]}
      */
     filePlacements;
 
     /**
      * Set of pending file loads (file indices).
+     *
      * @type {Set<number>}
      */
     pending = new Set();
@@ -178,6 +184,7 @@ class GSplatOctreeInstance {
     /**
      * Tracks invisible->visible pending adds per node: nodeIndex -> fileIndex.
      * Ensures only a single pending placement exists for a node while it's not yet displayed.
+     *
      * @type {Map<number, number>}
      */
     pendingVisibleAdds = new Map();
@@ -200,6 +207,7 @@ class GSplatOctreeInstance {
 
     /**
      * Environment placement.
+     *
      * @type {GSplatPlacement|null}
      */
     environmentPlacement = null;
@@ -957,6 +965,7 @@ class GSplatOctreeInstance {
 
     /**
      * Returns true if this instance requests LOD re-evaluation and resets the flag.
+     *
      * @returns {boolean} True if LOD should be re-evaluated.
      */
     consumeNeedsLodUpdate() {
