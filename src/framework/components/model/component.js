@@ -77,13 +77,11 @@ class ModelComponent extends Component {
     _mapping = {};
 
     /**
-     * @type {boolean}
      * @private
      */
     _castShadows = true;
 
     /**
-     * @type {boolean}
      * @private
      */
     _receiveShadows = true;
@@ -101,27 +99,22 @@ class ModelComponent extends Component {
     _material;
 
     /**
-     * @type {boolean}
      * @private
      */
     _castShadowsLightmap = true;
 
     /**
-     * @type {boolean}
      * @private
      */
     _lightmapped = false;
 
     /**
-     * @type {number}
      * @private
      */
     _lightmapSizeMultiplier = 1;
 
     /**
      * Mark meshes as non-movable (optimization).
-     *
-     * @type {boolean}
      */
     isStatic = false;
 
@@ -132,7 +125,6 @@ class ModelComponent extends Component {
     _layers = [LAYERID_WORLD]; // assign to the default world layer
 
     /**
-     * @type {number}
      * @private
      */
     _batchGroupId = -1;
@@ -148,7 +140,6 @@ class ModelComponent extends Component {
     _materialEvents = null;
 
     /**
-     * @type {boolean}
      * @private
      */
     _clonedModel = false;
@@ -1293,3 +1284,4 @@ class ModelComponent extends Component {
 }
 
 export { ModelComponent };
+

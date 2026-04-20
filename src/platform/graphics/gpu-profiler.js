@@ -63,8 +63,6 @@ class GpuProfiler {
 
     /**
      * The maximum number of slots that can be allocated during the frame.
-     *
-     * @type {number}
      */
     maxCount = 9999;
 
@@ -206,3 +204,4 @@ class GpuProfiler {
 }
 
 export { GpuProfiler };
+

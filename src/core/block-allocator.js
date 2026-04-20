@@ -11,7 +11,6 @@ class MemBlock {
     /**
      * Position in the address space.
      *
-     * @type {number}
      * @private
      */
     _offset = 0;
@@ -19,7 +18,6 @@ class MemBlock {
     /**
      * Size of this block.
      *
-     * @type {number}
      * @private
      */
     _size = 0;
@@ -27,7 +25,6 @@ class MemBlock {
     /**
      * True if this is a free region, false if allocated.
      *
-     * @type {boolean}
      * @private
      */
     _free = true;
@@ -67,7 +64,6 @@ class MemBlock {
     /**
      * Index of the size bucket this free block belongs to, or -1 if not in any bucket.
      *
-     * @type {number}
      * @private
      */
     _bucket = -1;
@@ -139,7 +135,6 @@ class BlockAllocator {
     /**
      * Total address space.
      *
-     * @type {number}
      * @private
      */
     _capacity = 0;
@@ -147,7 +142,6 @@ class BlockAllocator {
     /**
      * Sum of all allocated block sizes.
      *
-     * @type {number}
      * @private
      */
     _usedSize = 0;
@@ -155,7 +149,6 @@ class BlockAllocator {
     /**
      * Sum of all free region sizes.
      *
-     * @type {number}
      * @private
      */
     _freeSize = 0;
@@ -163,7 +156,6 @@ class BlockAllocator {
     /**
      * Number of free regions. Maintained O(1) for the fragmentation metric.
      *
-     * @type {number}
      * @private
      */
     _freeRegionCount = 0;
@@ -793,3 +785,4 @@ class BlockAllocator {
 }
 
 export { BlockAllocator, MemBlock };
+

@@ -100,7 +100,6 @@ class FramePassCameraFrame extends FramePass {
     /**
      * True if the render pass needs to be re-created because layers have been added or removed.
      *
-     * @type {boolean}
      * @ignore
      */
     layersDirty = false;
@@ -543,3 +542,4 @@ class FramePassCameraFrame extends FramePass {
 }
 
 export { FramePassCameraFrame, CameraFrameOptions };
+

@@ -14,22 +14,16 @@ const _toFree = [];
 class GSplatWorldState {
     /**
      * The version of the world state.
-     *
-     * @type {number}
      */
     version = 0;
 
     /**
      * Whether the sort parameters have been set on the sorter.
-     *
-     * @type {boolean}
      */
     sortParametersSet = false;
 
     /**
      * Whether the world state has been sorted before.
-     *
-     * @type {boolean}
      */
     sortedBefore = false;
 
@@ -42,23 +36,17 @@ class GSplatWorldState {
 
     /**
      * The texture size of work buffer.
-     *
-     * @type {number}
      */
     textureSize = 0;
 
     /**
      * Total number of active splats across all placements.
-     *
-     * @type {number}
      */
     totalActiveSplats = 0;
 
     /**
      * Total number of intervals across all placements. Each placement contributes
      * either its interval count (intervals.length / 2) or 1 if it has no intervals.
-     *
-     * @type {number}
      */
     totalIntervals = 0;
 
@@ -106,8 +94,6 @@ class GSplatWorldState {
     /**
      * True when the allocator grew or defragmented, meaning all block offsets may have
      * changed and every splat must be re-rendered to the work buffer.
-     *
-     * @type {boolean}
      */
     fullRebuild = false;
 
@@ -371,3 +357,4 @@ class GSplatWorldState {
 }
 
 export { GSplatWorldState };
+

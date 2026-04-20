@@ -49,7 +49,6 @@ class Compute {
     parameters = new Map();
 
     /**
-     * @type {number}
      * @ignore
      */
     countX = 1;
@@ -69,7 +68,6 @@ class Compute {
     /**
      * Slot index in the indirect dispatch buffer, or -1 for direct dispatch.
      *
-     * @type {number}
      * @ignore
      */
     indirectSlotIndex = -1;
@@ -86,7 +84,6 @@ class Compute {
      * Frame stamp (device.renderVersion) when indirect slot was set. Used for validation
      * when using the built-in buffer.
      *
-     * @type {number}
      * @ignore
      */
     indirectFrameStamp = 0;
@@ -237,3 +234,4 @@ class Compute {
 }
 
 export { Compute };
+

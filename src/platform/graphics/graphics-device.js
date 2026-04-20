@@ -93,8 +93,6 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the back buffer should use anti-aliasing.
-     *
-     * @type {boolean}
      */
     backBufferAntialias = false;
 
@@ -142,16 +140,12 @@ class GraphicsDevice extends EventHandler {
      * The maximum number of indirect draw calls that can be used within a single frame. Used on
      * WebGPU only. This needs to be adjusted based on the maximum number of draw calls that can
      * be used within a single frame. Defaults to 1024.
-     *
-     * @type {number}
      */
     maxIndirectDrawCount = 1024;
 
     /**
      * The maximum number of indirect compute dispatches that can be used within a single frame.
      * Used on WebGPU only. Defaults to 256.
-     *
-     * @type {number}
      */
     maxIndirectDispatchCount = 256;
 
@@ -231,8 +225,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports multi-draw. This is always supported on WebGPU, and support on
      * WebGL2 is optional, but pretty common.
-     *
-     * @type {boolean}
      */
     supportsMultiDraw = true;
 
@@ -334,7 +326,6 @@ class GraphicsDevice extends EventHandler {
      * A version number that is incremented every frame. This is used to detect if some object were
      * invalidated.
      *
-     * @type {number}
      * @ignore
      */
     renderVersion = 0;
@@ -353,7 +344,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports uniform buffers.
      *
-     * @type {boolean}
      * @ignore
      */
     supportsUniformBuffers = false;
@@ -361,8 +351,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
      * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
-     *
-     * @type {boolean}
      */
     supportsClipDistances = false;
 
@@ -517,7 +505,6 @@ class GraphicsDevice extends EventHandler {
     gpuProfiler;
 
     /**
-     * @type {boolean}
      * @ignore
      */
     _destroyed = false;
@@ -543,7 +530,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * A very heavy handed way to force all shaders to be rebuilt. Avoid using as much as possible.
      *
-     * @type {boolean}
      * @ignore
      */
     _shadersDirty = false;
@@ -1382,3 +1368,4 @@ class GraphicsDevice extends EventHandler {
 }
 
 export { GraphicsDevice };
+

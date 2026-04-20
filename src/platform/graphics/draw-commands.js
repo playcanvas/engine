@@ -28,7 +28,6 @@ class DrawCommands {
     /**
      * Maximum number of multi-draw calls the space is allocated for. Ignored for indirect draw commands.
      *
-     * @type {number}
      * @private
      */
     _maxCount = 0;
@@ -53,7 +52,6 @@ class DrawCommands {
     /**
      * Number of draw calls to perform.
      *
-     * @type {number}
      * @private
      */
     _count = 1;
@@ -70,7 +68,6 @@ class DrawCommands {
     /**
      * Slot index of the first indirect draw call. Ignored for multi-draw commands.
      *
-     * @type {number}
      * @ignore
      */
     slotIndex = 0;
@@ -78,7 +75,6 @@ class DrawCommands {
     /**
      * Total number of primitives across all sub-draws (pre-calculated).
      *
-     * @type {number}
      * @ignore
      */
     primitiveCount = 0;
@@ -140,3 +136,4 @@ class DrawCommands {
 }
 
 export { DrawCommands };
+

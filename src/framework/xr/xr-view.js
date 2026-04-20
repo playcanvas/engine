@@ -49,49 +49,41 @@ class XrView extends EventHandler {
     _positionData = new Float32Array(3);
 
     /**
-     * @type {Vec4}
      * @private
      */
     _viewport = new Vec4();
 
     /**
-     * @type {Mat4}
      * @private
      */
     _projMat = new Mat4();
 
     /**
-     * @type {Mat4}
      * @private
      */
     _projViewOffMat = new Mat4();
 
     /**
-     * @type {Mat4}
      * @private
      */
     _viewMat = new Mat4();
 
     /**
-     * @type {Mat4}
      * @private
      */
     _viewOffMat = new Mat4();
 
     /**
-     * @type {Mat3}
      * @private
      */
     _viewMat3 = new Mat3();
 
     /**
-     * @type {Mat4}
      * @private
      */
     _viewInvMat = new Mat4();
 
     /**
-     * @type {Mat4}
      * @private
      */
     _viewInvOffMat = new Mat4();
@@ -127,7 +119,6 @@ class XrView extends EventHandler {
     _emptyDepthBuffer = new Uint8Array(32);
 
     /**
-     * @type {Mat4}
      * @private
      */
     _depthMatrix = new Mat4();
@@ -606,3 +597,4 @@ class XrView extends EventHandler {
 }
 
 export { XrView };
+

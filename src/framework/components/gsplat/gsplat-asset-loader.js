@@ -34,7 +34,6 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     /**
      * Maximum number of assets that can be loading concurrently.
      *
-     * @type {number}
      * @private
      */
     maxConcurrentLoads = 2;
@@ -42,7 +41,6 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     /**
      * Maximum number of retry attempts for failed loads.
      *
-     * @type {number}
      * @private
      */
     maxRetries = 2;
@@ -74,7 +72,6 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     /**
      * Whether this asset loader has been destroyed.
      *
-     * @type {boolean}
      * @private
      */
     _destroyed = false;
@@ -335,3 +332,4 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
 }
 
 export { GSplatAssetLoader };
+

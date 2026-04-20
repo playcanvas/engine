@@ -71,43 +71,36 @@ class XrJoint {
     _radius = null;
 
     /**
-     * @type {Mat4}
      * @private
      */
     _localTransform = new Mat4();
 
     /**
-     * @type {Mat4}
      * @private
      */
     _worldTransform = new Mat4();
 
     /**
-     * @type {Vec3}
      * @private
      */
     _localPosition = new Vec3();
 
     /**
-     * @type {Quat}
      * @private
      */
     _localRotation = new Quat();
 
     /**
-     * @type {Vec3}
      * @private
      */
     _position = new Vec3();
 
     /**
-     * @type {Quat}
      * @private
      */
     _rotation = new Quat();
 
     /**
-     * @type {boolean}
      * @private
      */
     _dirtyLocal = true;
@@ -247,3 +240,4 @@ class XrJoint {
 }
 
 export { XrJoint };
+

@@ -20,15 +20,12 @@ class GSplatOctreeNode {
     lods;
 
     /**
-     * @type {BoundingBox}
      */
     bounds = new BoundingBox();
 
     /**
      * Precomputed bounding sphere derived from the AABB. Stored as (center.x, center.y,
      * center.z, radius) for efficient GPU frustum culling.
-     *
-     * @type {Vec4}
      */
     boundingSphere = new Vec4();
 
@@ -53,3 +50,4 @@ class GSplatOctreeNode {
 }
 
 export { GSplatOctreeNode };
+

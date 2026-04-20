@@ -18,13 +18,11 @@ class Listener {
     _manager;
 
     /**
-     * @type {Vec3}
      * @private
      */
     position = new Vec3();
 
     /**
-     * @type {Mat4}
      * @private
      */
     orientation = new Mat4();
@@ -111,3 +109,4 @@ class Listener {
 }
 
 export { Listener };
+

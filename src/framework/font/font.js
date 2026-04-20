@@ -30,8 +30,6 @@ class Font {
 
         /**
          * The font intensity.
-         *
-         * @type {number}
          */
         this.intensity = 0.0;
 
@@ -75,3 +73,4 @@ class Font {
 }
 
 export { Font };
+

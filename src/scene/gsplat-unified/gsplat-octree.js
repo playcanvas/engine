@@ -74,8 +74,6 @@ class GSplatOctree {
 
     /**
      * Reference count for environment usage.
-     *
-     * @type {number}
      */
     environmentRefCount = 0;
 
@@ -88,15 +86,12 @@ class GSplatOctree {
 
     /**
      * Whether this octree has been destroyed.
-     *
-     * @type {boolean}
      */
     destroyed = false;
 
     /**
      * Number of update ticks before unloading unused file resources. Set from GSplatParams.
      *
-     * @type {number}
      * @private
      */
     cooldownTicks = 100;
@@ -439,3 +434,4 @@ class GSplatOctree {
 }
 
 export { GSplatOctree };
+

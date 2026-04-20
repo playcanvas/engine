@@ -183,15 +183,11 @@ class GSplatSogData {
 
     /**
      * URL of the asset, used for debugging texture names.
-     *
-     * @type {string}
      */
     url = '';
 
     /**
      * Whether to use minimal memory mode (releases source textures after packing).
-     *
-     * @type {boolean}
      */
     minimalMemory = false;
 
@@ -215,8 +211,6 @@ class GSplatSogData {
 
     /**
      * Number of spherical harmonics bands.
-     *
-     * @type {number}
      */
     shBands = 0;
 
@@ -634,3 +628,4 @@ class GSplatSogData {
 }
 
 export { GSplatSogData };
+

@@ -63,7 +63,6 @@ class EventHandle {
 
     /**
      * True if event has been removed.
-     * @type {boolean}
      * @private
      */
     _removed = false;
@@ -129,3 +128,4 @@ class EventHandle {
 }
 
 export { EventHandle };
+

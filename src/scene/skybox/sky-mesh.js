@@ -27,7 +27,6 @@ class SkyMesh {
     meshInstance = null;
 
     /**
-     * @type {boolean}
      */
     _depthWrite = false;
 
@@ -111,3 +110,4 @@ class SkyMesh {
 }
 
 export { SkyMesh };
+

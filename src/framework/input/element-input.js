@@ -250,8 +250,6 @@ class ElementMouseEvent extends ElementInputEvent {
 
         /**
          * The amount of the wheel movement.
-         *
-         * @type {number}
          */
         this.wheelDelta = 0;
 
@@ -1200,3 +1198,4 @@ class ElementInput {
 }
 
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent };
+

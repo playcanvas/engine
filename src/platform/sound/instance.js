@@ -134,7 +134,6 @@ class SoundInstance extends EventHandler {
         this._pitch = options.pitch !== undefined ? Math.max(0.01, Number(options.pitch) || 0) : 1;
 
         /**
-         * @type {boolean}
          * @private
          */
         this._loop = !!(options.loop !== undefined ? options.loop : false);
@@ -156,7 +155,6 @@ class SoundInstance extends EventHandler {
         /**
          * True if the manager was suspended.
          *
-         * @type {boolean}
          * @private
          */
         this._suspended = false;
@@ -166,7 +164,6 @@ class SoundInstance extends EventHandler {
          * When an 'onended' event is suspended, this counter is decremented by 1.
          * When a future 'onended' event is to be suspended, this counter is incremented by 1.
          *
-         * @type {number}
          * @private
          */
         this._suspendEndEvent = 0;
@@ -174,7 +171,6 @@ class SoundInstance extends EventHandler {
         /**
          * True if we want to suspend firing instance events.
          *
-         * @type {boolean}
          * @private
          */
         this._suspendInstanceEvents = false;
@@ -182,19 +178,16 @@ class SoundInstance extends EventHandler {
         /**
          * If true then the instance will start playing its source when its created.
          *
-         * @type {boolean}
          * @private
          */
         this._playWhenLoaded = true;
 
         /**
-         * @type {number}
          * @private
          */
         this._startTime = Math.max(0, Number(options.startTime) || 0);
 
         /**
-         * @type {number}
          * @private
          */
         this._duration = Math.max(0, Number(options.duration) || 0);
@@ -219,7 +212,6 @@ class SoundInstance extends EventHandler {
 
         if (hasAudioContext()) {
             /**
-             * @type {number}
              * @private
              */
             this._startedAt = 0;
@@ -228,13 +220,11 @@ class SoundInstance extends EventHandler {
              * Manually keep track of the playback position because the Web Audio API does not
              * provide a way to do this accurately if the playbackRate is not 1.
              *
-             * @type {number}
              * @private
              */
             this._currentTime = 0;
 
             /**
-             * @type {number}
              * @private
              */
             this._currentOffset = 0;
@@ -276,7 +266,6 @@ class SoundInstance extends EventHandler {
              * Set to true if a play() request was issued when the AudioContext was still suspended,
              * and will therefore wait until it is resumed to play the audio.
              *
-             * @type {boolean}
              * @private
              */
             this._waitingContextSuspension = false;
@@ -1262,3 +1251,4 @@ if (!hasAudioContext()) {
 }
 
 export { SoundInstance };
+

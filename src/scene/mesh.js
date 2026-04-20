@@ -240,7 +240,6 @@ class Mesh extends RefCountedObject {
     /**
      * AABB representing object space bounds of the mesh.
      *
-     * @type {BoundingBox}
      * @private
      */
     _aabb = new BoundingBox();
@@ -260,7 +259,6 @@ class Mesh extends RefCountedObject {
     /**
      * True if the created index buffer should be accessible as a storage buffer in compute shader.
      *
-     * @type {boolean}
      * @private
      */
     _storageIndex = false;
@@ -268,7 +266,6 @@ class Mesh extends RefCountedObject {
     /**
      * True if the created vertex buffer should be accessible as a storage buffer in compute shader.
      *
-     * @type {boolean}
      * @private
      */
     _storageVertex = false;
@@ -1140,3 +1137,4 @@ class Mesh extends RefCountedObject {
 }
 
 export { Mesh };
+

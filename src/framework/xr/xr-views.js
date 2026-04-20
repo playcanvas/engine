@@ -77,25 +77,21 @@ class XrViews extends EventHandler {
     _supportedDepth = platform.browser && !!window.XRDepthInformation;
 
     /**
-     * @type {boolean}
      * @private
      */
     _availableColor = false;
 
     /**
-     * @type {boolean}
      * @private
      */
     _availableDepth = false;
 
     /**
-     * @type {string}
      * @private
      */
     _depthUsage = '';
 
     /**
-     * @type {string}
      * @private
      */
     _depthFormat = '';
@@ -303,3 +299,4 @@ class XrViews extends EventHandler {
 }
 
 export { XrViews };
+

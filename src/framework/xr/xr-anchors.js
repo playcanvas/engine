@@ -103,13 +103,11 @@ class XrAnchors extends EventHandler {
     _supported = platform.browser && !!window.XRAnchor;
 
     /**
-     * @type {boolean}
      * @private
      */
     _available = false;
 
     /**
-     * @type {boolean}
      * @private
      */
     _checkingAvailability = false;
@@ -538,3 +536,4 @@ class XrAnchors extends EventHandler {
 }
 
 export { XrAnchors };
+

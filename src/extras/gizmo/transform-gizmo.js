@@ -119,7 +119,6 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal gizmo starting rotation in world space.
      *
-     * @type {Vec3}
      * @protected
      */
     _rootStartPos = new Vec3();
@@ -127,7 +126,6 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal gizmo starting rotation in world space.
      *
-     * @type {Quat}
      * @protected
      */
     _rootStartRot = new Quat();
@@ -167,7 +165,6 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal state of if currently hovered shape is a plane.
      *
-     * @type {boolean}
      * @private
      */
     _hoverIsPlane = false;
@@ -183,7 +180,6 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal state of if currently selected shape is a plane.
      *
-     * @type {boolean}
      * @protected
      */
     _selectedIsPlane = false;
@@ -191,22 +187,17 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal selection starting coordinates in world space.
      *
-     * @type {Vec3}
      * @protected
      */
     _selectionStartPoint = new Vec3();
 
     /**
      * Whether snapping is enabled. Defaults to false.
-     *
-     * @type {boolean}
      */
     snap = false;
 
     /**
      * Snapping increment. Defaults to 1.
-     *
-     * @type {number}
      */
     snapIncrement = 1;
 
@@ -804,3 +795,4 @@ class TransformGizmo extends Gizmo {
 }
 
 export { TransformGizmo };
+

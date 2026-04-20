@@ -128,19 +128,16 @@ class GraphNode extends EventHandler {
 
     // Local space properties of transform (only first 3 are settable by the user)
     /**
-     * @type {Vec3}
      * @private
      */
     localPosition = new Vec3();
 
     /**
-     * @type {Quat}
      * @private
      */
     localRotation = new Quat();
 
     /**
-     * @type {Vec3}
      * @private
      */
     localScale = new Vec3(1, 1, 1);
@@ -153,19 +150,16 @@ class GraphNode extends EventHandler {
 
     // World space properties of transform
     /**
-     * @type {Vec3}
      * @private
      */
     position = new Vec3();
 
     /**
-     * @type {Quat}
      * @private
      */
     rotation = new Quat();
 
     /**
-     * @type {Vec3}
      * @private
      */
     eulerAngles = new Vec3();
@@ -177,19 +171,16 @@ class GraphNode extends EventHandler {
     _scale = null;
 
     /**
-     * @type {Mat4}
      * @private
      */
     localTransform = new Mat4();
 
     /**
-     * @type {boolean}
      * @private
      */
     _dirtyLocal = false;
 
     /**
-     * @type {number}
      * @private
      */
     _aabbVer = 0;
@@ -199,19 +190,16 @@ class GraphNode extends EventHandler {
      * automatically freezes and unfreezes objects whenever required. Segregating dynamic and
      * stationary nodes into subhierarchies allows to reduce sync time significantly.
      *
-     * @type {boolean}
      * @private
      */
     _frozen = false;
 
     /**
-     * @type {Mat4}
      * @private
      */
     worldTransform = new Mat4();
 
     /**
-     * @type {boolean}
      * @private
      */
     _dirtyWorld = false;
@@ -222,19 +210,16 @@ class GraphNode extends EventHandler {
      * transform is not negatively scaled. If the value is -1, the world transform is negatively
      * scaled.
      *
-     * @type {number}
      * @private
      */
     _worldScaleSign = 0;
 
     /**
-     * @type {Mat3}
      * @private
      */
     _normalMatrix = new Mat3();
 
     /**
-     * @type {boolean}
      * @private
      */
     _dirtyNormal = true;
@@ -270,7 +255,6 @@ class GraphNode extends EventHandler {
     _children = [];
 
     /**
-     * @type {number}
      * @private
      */
     _graphDepth = 0;
@@ -279,7 +263,6 @@ class GraphNode extends EventHandler {
      * Represents enabled state of the entity. If the entity is disabled, the entity including all
      * children are excluded from updates.
      *
-     * @type {boolean}
      * @private
      */
     _enabled = true;
@@ -288,13 +271,11 @@ class GraphNode extends EventHandler {
      * Represents enabled state of the entity in the hierarchy. It's true only if this entity and
      * all parent entities all the way to the scene's root are enabled.
      *
-     * @type {boolean}
      * @private
      */
     _enabledInHierarchy = false;
 
     /**
-     * @type {boolean}
      * @ignore
      */
     scaleCompensation = false;
@@ -1832,3 +1813,4 @@ class GraphNode extends EventHandler {
 }
 
 export { GraphNode };
+

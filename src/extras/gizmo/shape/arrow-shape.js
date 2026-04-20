@@ -31,7 +31,6 @@ class ArrowShape extends Shape {
     /**
      * The internal gap between the arrow base and the center.
      *
-     * @type {number}
      * @private
      */
     _gap = 0;
@@ -39,7 +38,6 @@ class ArrowShape extends Shape {
     /**
      * The internal line thickness of the arrow.
      *
-     * @type {number}
      * @private
      */
     _lineThickness = 0.02;
@@ -47,7 +45,6 @@ class ArrowShape extends Shape {
     /**
      * The internal line length of the arrow.
      *
-     * @type {number}
      * @private
      */
     _lineLength = 0.5;
@@ -55,7 +52,6 @@ class ArrowShape extends Shape {
     /**
      * The internal arrow thickness of the arrow.
      *
-     * @type {number}
      * @private
      */
     _arrowThickness = 0.12;
@@ -63,7 +59,6 @@ class ArrowShape extends Shape {
     /**
      * The internal arrow length of the arrow.
      *
-     * @type {number}
      * @private
      */
     _arrowLength = 0.18;
@@ -71,7 +66,6 @@ class ArrowShape extends Shape {
     /**
      * The internal tolerance of the arrow.
      *
-     * @type {number}
      * @private
      */
     _tolerance = 0.1;
@@ -270,3 +264,4 @@ class ArrowShape extends Shape {
 }
 
 export { ArrowShape };
+

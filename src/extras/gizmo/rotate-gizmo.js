@@ -115,7 +115,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal selection starting angle in world space.
      *
-     * @type {number}
      * @private
      */
     _selectionStartAngle = 0;
@@ -147,7 +146,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal vector for storing the mouse position in screen space.
      *
-     * @type {Vec2}
      * @private
      */
     _screenPos = new Vec2();
@@ -155,7 +153,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal vector for storing the mouse start position in screen space.
      *
-     * @type {Vec2}
      * @private
      */
     _screenStartPos = new Vec2();
@@ -163,7 +160,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal vector for the start point of the guide line angle.
      *
-     * @type {Vec3}
      * @private
      */
     _guideAngleStart = new Vec3();
@@ -171,7 +167,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal vector for the end point of the guide line angle.
      *
-     * @type {Vec3}
      * @private
      */
     _guideAngleEnd = new Vec3();
@@ -187,7 +182,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal copy of facing direction to avoid unnecessary updates.
      *
-     * @type {Vec3}
      * @private
      */
     _facingDir = new Vec3();
@@ -821,3 +815,4 @@ class RotateGizmo extends TransformGizmo {
 }
 
 export { RotateGizmo };
+

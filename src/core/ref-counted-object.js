@@ -3,7 +3,6 @@
  */
 class RefCountedObject {
     /**
-     * @type {number}
      * @private
      */
     _refCount = 0;
@@ -33,3 +32,4 @@ class RefCountedObject {
 }
 
 export { RefCountedObject };
+

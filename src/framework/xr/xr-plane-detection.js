@@ -85,7 +85,6 @@ class XrPlaneDetection extends EventHandler {
     _supported = platform.browser && !!window.XRPlane;
 
     /**
-     * @type {boolean}
      * @private
      */
     _available = false;
@@ -224,3 +223,4 @@ class XrPlaneDetection extends EventHandler {
 }
 
 export { XrPlaneDetection };
+

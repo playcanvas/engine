@@ -82,8 +82,6 @@ class RenderComponent extends Component {
 
     /**
      * Mark meshes as non-movable (optimization).
-     *
-     * @type {boolean}
      */
     isStatic = false;
 
@@ -1075,3 +1073,4 @@ class RenderComponent extends Component {
 }
 
 export { RenderComponent };
+

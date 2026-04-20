@@ -20,7 +20,6 @@ let id = 0;
  */
 class BindBaseFormat {
     /**
-     * @type {number}
      * @ignore
      */
     slot = -1;
@@ -68,7 +67,6 @@ class BindStorageBufferFormat extends BindBaseFormat {
     /**
      * Format, extracted from vertex and fragment shader.
      *
-     * @type {string}
      * @ignore
      */
     format = '';
@@ -364,3 +362,4 @@ class BindGroupFormat {
 }
 
 export { BindUniformBufferFormat, BindTextureFormat, BindGroupFormat, BindStorageTextureFormat, BindStorageBufferFormat };
+

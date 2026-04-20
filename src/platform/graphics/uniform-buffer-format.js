@@ -208,7 +208,6 @@ class UniformFormat {
  */
 class UniformBufferFormat {
     /**
-     * @type {number}
      * @ignore
      */
     byteSize = 0;
@@ -260,3 +259,4 @@ class UniformBufferFormat {
 }
 
 export { UniformFormat, UniformBufferFormat };
+

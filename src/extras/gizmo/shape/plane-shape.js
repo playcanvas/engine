@@ -31,7 +31,6 @@ class PlaneShape extends Shape {
     /**
      * The size of the plane.
      *
-     * @type {number}
      * @private
      */
     _size = 0.16;
@@ -39,7 +38,6 @@ class PlaneShape extends Shape {
     /**
      * The gap between the plane and the center.
      *
-     * @type {number}
      * @private
      */
     _gap = 0;
@@ -47,7 +45,6 @@ class PlaneShape extends Shape {
     /**
      * The internal flipped state of the plane.
      *
-     * @type {Vec3}
      * @private
      */
     _flipped = new Vec3();
@@ -160,3 +157,4 @@ class PlaneShape extends Shape {
 }
 
 export { PlaneShape };
+

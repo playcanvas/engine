@@ -12,50 +12,36 @@
 class FisheyeProjection {
     /**
      * Whether fisheye is active (t > 0).
-     *
-     * @type {boolean}
      */
     enabled = false;
 
     /**
      * The fisheye k parameter controlling projection curvature.
-     *
-     * @type {number}
      */
     k = 1.0;
 
     /**
      * Precomputed 1/k to avoid per-splat division in shaders.
-     *
-     * @type {number}
      */
     invK = 1.0;
 
     /**
      * Scale factor blending from edge-fit (1.0) to corner-fit (sqrt(2)) based on t.
-     *
-     * @type {number}
      */
     cornerScale = 1.0;
 
     /**
      * Fisheye-adjusted horizontal projection scale for NDC conversion.
-     *
-     * @type {number}
      */
     projMat00 = 1.0;
 
     /**
      * Fisheye-adjusted vertical projection scale for NDC conversion.
-     *
-     * @type {number}
      */
     projMat11 = 1.0;
 
     /**
      * Maximum viewing angle before singularity, used for cone culling.
-     *
-     * @type {number}
      */
     maxTheta = Math.PI;
 
@@ -137,3 +123,4 @@ class FisheyeProjection {
 }
 
 export { FisheyeProjection };
+

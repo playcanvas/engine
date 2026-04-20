@@ -52,7 +52,6 @@ class StencilParameters {
     _writeMask;
 
     /**
-     * @type {boolean}
      * @private
      */
     _dirty = true;
@@ -291,3 +290,4 @@ class StencilParameters {
 }
 
 export { StencilParameters };
+

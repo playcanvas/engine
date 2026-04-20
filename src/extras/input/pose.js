@@ -15,47 +15,36 @@ const rotation = new Quat();
 class Pose {
     /**
      * The position of the pose.
-     *
-     * @type {Vec3}
      */
     position = new Vec3();
 
     /**
      * The angles of the pose in degrees calculated from the forward vector.
-     *
-     * @type {Vec3}
      */
     angles = new Vec3();
 
     /**
      * The focus distance from the position to the pose.
-     *
-     * @type {number}
      */
     distance = 0;
 
     /**
-     * @type {Vec2}
      */
     pitchRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * @type {Vec2}
      */
     yawRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * @type {Vec2}
      */
     xRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * @type {Vec2}
      */
     yRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * @type {Vec2}
      */
     zRange = new Vec2(-Infinity, Infinity);
 
@@ -206,3 +195,4 @@ class Pose {
 }
 
 export { Pose };
+

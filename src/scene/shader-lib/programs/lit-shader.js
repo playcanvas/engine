@@ -40,8 +40,6 @@ const builtinAttributes = {
 class LitShader {
     /**
      * Shader code representing varyings.
-     *
-     * @type {string}
      */
     varyingsCode = '';
 
@@ -572,3 +570,4 @@ class LitShader {
 }
 
 export { LitShader };
+

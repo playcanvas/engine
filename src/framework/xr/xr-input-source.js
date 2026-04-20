@@ -182,19 +182,16 @@ class XrInputSource extends EventHandler {
     _xrInputSource;
 
     /**
-     * @type {Ray}
      * @private
      */
     _ray = new Ray();
 
     /**
-     * @type {Ray}
      * @private
      */
     _rayLocal = new Ray();
 
     /**
-     * @type {boolean}
      * @private
      */
     _grip = false;
@@ -206,13 +203,11 @@ class XrInputSource extends EventHandler {
     _hand = null;
 
     /**
-     * @type {boolean}
      * @private
      */
     _velocitiesAvailable = false;
 
     /**
-     * @type {number}
      * @private
      */
     _velocitiesTimestamp = now();
@@ -230,13 +225,11 @@ class XrInputSource extends EventHandler {
     _worldTransform = null;
 
     /**
-     * @type {Vec3}
      * @private
      */
     _position = new Vec3();
 
     /**
-     * @type {Quat}
      * @private
      */
     _rotation = new Quat();
@@ -266,31 +259,26 @@ class XrInputSource extends EventHandler {
     _linearVelocity = null;
 
     /**
-     * @type {boolean}
      * @private
      */
     _dirtyLocal = true;
 
     /**
-     * @type {boolean}
      * @private
      */
     _dirtyRay = false;
 
     /**
-     * @type {boolean}
      * @private
      */
     _selecting = false;
 
     /**
-     * @type {boolean}
      * @private
      */
     _squeezing = false;
 
     /**
-     * @type {boolean}
      * @private
      */
     _elementInput = true;
@@ -737,3 +725,4 @@ class XrInputSource extends EventHandler {
 }
 
 export { XrInputSource };
+

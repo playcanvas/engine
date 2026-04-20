@@ -136,7 +136,6 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * Internal state if transform should use uniform scaling.
      *
-     * @type {boolean}
      * @protected
      */
     _uniform = false;
@@ -148,15 +147,11 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Flips the planes to face the camera.
-     *
-     * @type {boolean}
      */
     flipPlanes = true;
 
     /**
      * The lower bound for scaling.
-     *
-     * @type {Vec3}
      */
     lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
 
@@ -611,3 +606,4 @@ class ScaleGizmo extends TransformGizmo {
 }
 
 export { ScaleGizmo };
+

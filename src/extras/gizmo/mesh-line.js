@@ -21,7 +21,6 @@ const tmpV1 = new Vec3();
  */
 class MeshLine {
     /**
-     * @type {number}
      * @private
      */
     _thickness = 0.02;
@@ -102,3 +101,4 @@ class MeshLine {
 }
 
 export { MeshLine };
+

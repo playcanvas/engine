@@ -20,13 +20,11 @@ const MAX_DISTANCE = 10000;
  */
 class SoundInstance3d extends SoundInstance {
     /**
-     * @type {Vec3}
      * @private
      */
     _position = new Vec3();
 
     /**
-     * @type {Vec3}
      * @private
      */
     _velocity = new Vec3();
@@ -295,3 +293,4 @@ if (!hasAudioContext()) {
 }
 
 export { SoundInstance3d };
+

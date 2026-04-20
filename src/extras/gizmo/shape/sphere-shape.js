@@ -18,7 +18,6 @@ class SphereShape extends Shape {
     /**
      * The internal size of the sphere.
      *
-     * @type {number}
      * @private
      */
     _radius = 0.03;
@@ -84,3 +83,4 @@ class SphereShape extends Shape {
 }
 
 export { SphereShape };
+

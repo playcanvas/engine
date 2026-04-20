@@ -25,7 +25,6 @@ class Sky {
     /**
      * The center of the sky.
      *
-     * @type {Vec3}
      * @private
      */
     _center = new Vec3(0, 1, 0);
@@ -39,13 +38,11 @@ class Sky {
     skyMesh = null;
 
     /**
-     * @type {boolean}
      * @private
      */
     _depthWrite = false;
 
     /**
-     * @type {number}
      * @private
      */
     _fisheye = 0;
@@ -270,3 +267,4 @@ class Sky {
 }
 
 export { Sky };
+

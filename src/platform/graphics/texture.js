@@ -120,7 +120,6 @@ class Texture {
      * A render version used to track the last time the texture properties requiring bind group
      * to be updated were changed.
      *
-     * @type {number}
      * @ignore
      */
     renderVersionDirty = 0;
@@ -1295,3 +1294,4 @@ class Texture {
 }
 
 export { Texture };
+

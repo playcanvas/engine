@@ -114,7 +114,6 @@ class GSplatComponent extends Component {
     /**
      * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
-     * @type {number}
      * @private
      */
     _lodBaseDistance = 5;
@@ -122,7 +121,6 @@ class GSplatComponent extends Component {
     /**
      * Geometric multiplier between successive LOD distance thresholds.
      *
-     * @type {number}
      * @private
      */
     _lodMultiplier = 3;
@@ -171,7 +169,6 @@ class GSplatComponent extends Component {
     /**
      * Whether to use the unified gsplat rendering.
      *
-     * @type {boolean}
      * @private
      */
     _unified = false;
@@ -1026,3 +1023,4 @@ class GSplatComponent extends Component {
 }
 
 export { GSplatComponent };
+

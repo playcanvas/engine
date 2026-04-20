@@ -70,7 +70,6 @@ class XrHand extends EventHandler {
     _inputSource;
 
     /**
-     * @type {boolean}
      * @private
      */
     _tracking = false;
@@ -314,3 +313,4 @@ class XrHand extends EventHandler {
 }
 
 export { XrHand };
+

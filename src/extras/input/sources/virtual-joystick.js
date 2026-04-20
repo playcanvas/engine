@@ -5,19 +5,16 @@ const v = new Vec2();
 
 class VirtualJoystick {
     /**
-     * @type {number}
      * @private
      */
     _range = 70;
 
     /**
-     * @type {Vec2}
      * @private
      */
     _position = new Vec2();
 
     /**
-     * @type {Vec2}
      * @private
      */
     _value = new Vec2();
@@ -81,3 +78,4 @@ class VirtualJoystick {
 }
 
 export { VirtualJoystick };
+

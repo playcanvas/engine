@@ -82,7 +82,6 @@ class CameraComponent extends Component {
     /**
      * A counter of requests of depth map rendering.
      *
-     * @type {number}
      * @private
      */
     _renderSceneDepthMap = 0;
@@ -90,7 +89,6 @@ class CameraComponent extends Component {
     /**
      * A counter of requests of color map rendering.
      *
-     * @type {number}
      * @private
      */
     _renderSceneColorMap = 0;
@@ -1389,3 +1387,4 @@ class CameraComponent extends Component {
 }
 
 export { CameraComponent };
+

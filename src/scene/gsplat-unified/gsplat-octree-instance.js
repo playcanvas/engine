@@ -43,26 +43,22 @@ const _lodColors = [
 class NodeInfo {
     /**
      * Current LOD index being rendered. -1 indicates node is not visible.
-     * @type {number}
      */
     currentLod = -1;
 
     /**
      * Optimal LOD index based on distance/visibility (before underfill).
-     * @type {number}
      */
     optimalLod = -1;
 
     /**
      * World-space distance from camera to this node.
      * Used for non-linear bucket mapping in budget enforcement.
-     * @type {number}
      */
     worldDistance = 0;
 
     /**
      * Accumulated camera translation for SH color update threshold tracking.
-     * @type {number}
      */
     colorAccumulatedTranslation = 0;
 
@@ -109,8 +105,6 @@ class GSplatOctreeInstance {
     /**
      * Set to true when placements are added or removed, signaling that the manager needs to
      * create a new world state and trigger a full work buffer rebuild.
-     *
-     * @type {boolean}
      */
     dirtyPlacementSetChanged = false;
 
@@ -154,30 +148,22 @@ class GSplatOctreeInstance {
 
     /**
      * Minimum allowed LOD index for this instance, clamped to valid octree bounds.
-     *
-     * @type {number}
      */
     rangeMin = 0;
 
     /**
      * Maximum allowed LOD index for this instance, clamped to valid octree bounds.
-     *
-     * @type {number}
      */
     rangeMax = 0;
 
     /**
      * Previous node position at which LOD was last updated. This is used to determine if LOD needs
      * to be updated as the octree splat moves.
-     *
-     * @type {Vec3}
      */
     previousPosition = new Vec3();
 
     /**
      * Set when a resource has completed loading and LOD should be re-evaluated.
-     *
-     * @type {boolean}
      */
     needsLodUpdate = false;
 
@@ -1008,3 +994,4 @@ class GSplatOctreeInstance {
 }
 
 export { GSplatOctreeInstance, NodeInfo };
+

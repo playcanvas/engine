@@ -111,13 +111,11 @@ class XrHitTest extends EventHandler {
     _supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
 
     /**
-     * @type {boolean}
      * @private
      */
     _available = false;
 
     /**
-     * @type {boolean}
      * @private
      */
     _checkingAvailability = false;
@@ -376,3 +374,4 @@ class XrHitTest extends EventHandler {
 }
 
 export { XrHitTest };
+

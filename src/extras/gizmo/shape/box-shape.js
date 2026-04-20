@@ -18,7 +18,6 @@ class BoxShape extends Shape {
     /**
      * The internal size of the box.
      *
-     * @type {number}
      * @private
      */
     _size = 0.06;
@@ -80,3 +79,4 @@ class BoxShape extends Shape {
 }
 
 export { BoxShape };
+

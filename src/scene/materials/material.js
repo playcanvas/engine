@@ -87,8 +87,6 @@ class Material {
 
     /**
      * The name of the material.
-     *
-     * @type {string}
      */
     name = 'Untitled';
 
@@ -96,8 +94,6 @@ class Material {
      * A unique id the user can assign to the material. The engine internally does not use this for
      * anything, and the user can assign a value to this id for any purpose they like. Defaults to
      * an empty string.
-     *
-     * @type {string}
      */
     userId = '';
 
@@ -129,8 +125,6 @@ class Material {
      * active render target based on alpha value. All fragments with an alpha value of less than
      * the alphaTest reference value will be discarded. alphaTest defaults to 0 (all fragments
      * pass).
-     *
-     * @type {number}
      */
     alphaTest = 0;
 
@@ -141,8 +135,6 @@ class Material {
      * otherwise sharp alpha cutouts, but isn't recommended for large area semi-transparent
      * surfaces. Note, that you don't need to enable blending to make alpha to coverage work. It
      * will work without it, just like alphaTest.
-     *
-     * @type {boolean}
      */
     alphaToCoverage = false;
 
@@ -932,3 +924,4 @@ class Material {
 }
 
 export { Material };
+

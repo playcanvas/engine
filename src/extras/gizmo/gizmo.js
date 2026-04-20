@@ -152,7 +152,6 @@ class Gizmo extends EventHandler {
     /**
      * Internal version of the gizmo size. Defaults to 1.
      *
-     * @type {number}
      * @private
      */
     _size = 1;
@@ -160,7 +159,6 @@ class Gizmo extends EventHandler {
     /**
      * Internal version of the gizmo scale. Defaults to 1.
      *
-     * @type {number}
      * @protected
      */
     _scale = 1;
@@ -224,7 +222,6 @@ class Gizmo extends EventHandler {
     /**
      * Internal flag to track if a render update is required.
      *
-     * @type {boolean}
      * @protected
      */
     _renderUpdate = false;
@@ -252,8 +249,6 @@ class Gizmo extends EventHandler {
 
     /**
      * Flag to indicate whether to call `preventDefault` on pointer events.
-     *
-     * @type {boolean}
      */
     preventDefault = true;
 
@@ -758,3 +753,4 @@ class Gizmo extends EventHandler {
 }
 
 export { Gizmo };
+

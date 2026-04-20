@@ -6,31 +6,26 @@ import { EventHandler } from '../../core/event-handler.js';
  */
 class Untar extends EventHandler {
     /**
-     * @type {number}
      * @private
      */
     headerSize = 512;
 
     /**
-     * @type {number}
      * @private
      */
     paddingSize = 512;
 
     /**
-     * @type {number}
      * @private
      */
     bytesRead = 0;
 
     /**
-     * @type {number}
      * @private
      */
     bytesReceived = 0;
 
     /**
-     * @type {boolean}
      * @private
      */
     headerRead = false;
@@ -54,31 +49,26 @@ class Untar extends EventHandler {
     decoder = null;
 
     /**
-     * @type {string}
      * @private
      */
     prefix = '';
 
     /**
-     * @type {string}
      * @private
      */
     fileName = '';
 
     /**
-     * @type {number}
      * @private
      */
     fileSize = 0;
 
     /**
-     * @type {string}
      * @private
      */
     fileType = '';
 
     /**
-     * @type {string}
      * @private
      */
     ustarFormat = '';
@@ -194,3 +184,4 @@ class Untar extends EventHandler {
 }
 
 export { Untar };
+

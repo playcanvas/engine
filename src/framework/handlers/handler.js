@@ -18,8 +18,6 @@
 class ResourceHandler {
     /**
      * Type of the resource the handler handles.
-     *
-     * @type {string}
      */
     handlerType = '';
 
@@ -101,3 +99,4 @@ class ResourceHandler {
 }
 
 export { ResourceHandler };
+

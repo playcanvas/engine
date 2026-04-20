@@ -40,7 +40,6 @@ class XrImageTracking extends EventHandler {
     _supported = platform.browser && !!window.XRImageTrackingResult;
 
     /**
-     * @type {boolean}
      * @private
      */
     _available = false;
@@ -220,3 +219,4 @@ class XrImageTracking extends EventHandler {
 }
 
 export { XrImageTracking };
+

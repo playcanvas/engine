@@ -79,7 +79,6 @@ class KeyboardMouseSource extends InputSource {
     static keyCode = KEY_CODES;
 
     /**
-     * @type {number}
      * @private
      */
     _pointerId = -1;
@@ -361,3 +360,4 @@ class KeyboardMouseSource extends InputSource {
 }
 
 export { KeyboardMouseSource };
+

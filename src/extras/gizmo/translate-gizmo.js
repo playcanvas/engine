@@ -143,8 +143,6 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Flips the planes to face the camera.
-     *
-     * @type {boolean}
      */
     flipPlanes = true;
 
@@ -609,3 +607,4 @@ class TranslateGizmo extends TransformGizmo {
 }
 
 export { TranslateGizmo };
+

@@ -85,7 +85,6 @@ class XrMeshDetection extends EventHandler {
     _supported = platform.browser && !!window.XRMesh;
 
     /**
-     * @type {boolean}
      * @private
      */
     _available = false;
@@ -219,3 +218,4 @@ class XrMeshDetection extends EventHandler {
 }
 
 export { XrMeshDetection };
+

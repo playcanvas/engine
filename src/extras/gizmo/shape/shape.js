@@ -43,7 +43,6 @@ class Shape {
     /**
      * The internal position of the shape.
      *
-     * @type {Vec3}
      * @protected
      */
     _position = new Vec3();
@@ -51,7 +50,6 @@ class Shape {
     /**
      * The internal rotation of the shape.
      *
-     * @type {Vec3}
      * @protected
      */
     _rotation = new Vec3();
@@ -59,7 +57,6 @@ class Shape {
     /**
      * The internal scale of the shape.
      *
-     * @type {Vec3}
      * @protected
      */
     _scale = new Vec3(1, 1, 1);
@@ -84,14 +81,12 @@ class Shape {
      * The internal disabled state of the shape.
      *
      * @protected
-     * @type {boolean}
      */
     _disabled = false;
 
     /**
      * The internal visibility state of the shape.
      *
-     * @type {boolean}
      * @protected
      */
     _visible = true;
@@ -131,7 +126,6 @@ class Shape {
     /**
      * The internal depth state of the shape. -1 = interpolated depth.
      *
-     * @type {number}
      * @protected
      */
     _depth = -1;
@@ -324,3 +318,4 @@ class Shape {
 }
 
 export { Shape };
+

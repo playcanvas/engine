@@ -15,7 +15,6 @@ class Bundle extends EventHandler {
 
     /**
      * If Bundle has all files loaded.
-     * @type {boolean}
      * @private
      */
     _loaded = false;
@@ -105,3 +104,4 @@ class Bundle extends EventHandler {
 }
 
 export { Bundle };
+

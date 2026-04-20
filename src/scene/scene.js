@@ -145,60 +145,44 @@ class Scene extends EventHandler {
     /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the
      * {@link skybox} if set up, otherwise {@link ambientLight}. Defaults to false.
-     *
-     * @type {boolean}
      */
     ambientBake = false;
 
     /**
      * If {@link ambientBake} is true, this specifies the brightness of ambient occlusion. Typical
      * range is -1 to 1. Defaults to 0, representing no change to brightness.
-     *
-     * @type {number}
      */
     ambientBakeOcclusionBrightness = 0;
 
     /**
      * If {@link ambientBake} is true, this specifies the contrast of ambient occlusion. Typical
      * range is -1 to 1. Defaults to 0, representing no change to contrast.
-     *
-     * @type {number}
      */
     ambientBakeOcclusionContrast = 0;
 
     /**
      * The color of the scene's ambient light, specified in sRGB color space. Defaults to black
      * (0, 0, 0).
-     *
-     * @type {Color}
      */
     ambientLight = new Color(0, 0, 0);
 
     /**
      * The luminosity of the scene's ambient light in lux (lm/m^2). Used if physicalUnits is true. Defaults to 0.
-     *
-     * @type {number}
      */
     ambientLuminance = 0;
 
     /**
      * The exposure value tweaks the overall brightness of the scene. Ignored if physicalUnits is true. Defaults to 1.
-     *
-     * @type {number}
      */
     exposure = 1;
 
     /**
      * The lightmap resolution multiplier. Defaults to 1.
-     *
-     * @type {number}
      */
     lightmapSizeMultiplier = 1;
 
     /**
      * The maximum lightmap resolution. Defaults to 2048.
-     *
-     * @type {number}
      */
     lightmapMaxResolution = 2048;
 
@@ -222,16 +206,12 @@ class Scene extends EventHandler {
      * in the image space of the lightmap, and it does not filter across lightmap UV space seams,
      * often making the seams more visible. It's important to balance the strength of the filter
      * with number of samples used for lightmap baking to limit the visible artifacts.
-     *
-     * @type {boolean}
      */
     lightmapFilterEnabled = false;
 
     /**
      * Enables HDR lightmaps. This can result in smoother lightmaps especially when many samples
      * are used. Defaults to false.
-     *
-     * @type {boolean}
      */
     lightmapHDR = false;
 
@@ -245,8 +225,6 @@ class Scene extends EventHandler {
 
     /**
      * Use physically based units for cameras and lights. When used, the exposure value is ignored.
-     *
-     * @type {boolean}
      */
     physicalUnits = false;
 
@@ -356,7 +334,6 @@ class Scene extends EventHandler {
          * This flag indicates changes were made to the scene which may require recompilation of
          * shaders that reference global settings.
          *
-         * @type {boolean}
          * @ignore
          */
         this.updateShaders = true;
@@ -905,3 +882,4 @@ class Scene extends EventHandler {
 }
 
 export { Scene };
+

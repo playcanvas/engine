@@ -39,8 +39,6 @@ class InterpolatedKey {
 class Skeleton {
     /**
      * Determines whether skeleton is looping its animation.
-     *
-     * @type {boolean}
      */
     looping = true;
 
@@ -306,3 +304,4 @@ class Skeleton {
 }
 
 export { Skeleton };
+

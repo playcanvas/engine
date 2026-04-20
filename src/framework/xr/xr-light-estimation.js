@@ -54,19 +54,16 @@ class XrLightEstimation extends EventHandler {
     _manager;
 
     /**
-     * @type {boolean}
      * @private
      */
     _supported = false;
 
     /**
-     * @type {boolean}
      * @private
      */
     _available = false;
 
     /**
-     * @type {boolean}
      * @private
      */
     _lightProbeRequested = false;
@@ -78,19 +75,16 @@ class XrLightEstimation extends EventHandler {
     _lightProbe = null;
 
     /**
-     * @type {number}
      * @private
      */
     _intensity = 0;
 
     /**
-     * @type {Quat}
      * @private
      */
     _rotation = new Quat();
 
     /**
-     * @type {Color}
      * @private
      */
     _color = new Color();
@@ -296,3 +290,4 @@ class XrLightEstimation extends EventHandler {
 }
 
 export { XrLightEstimation };
+

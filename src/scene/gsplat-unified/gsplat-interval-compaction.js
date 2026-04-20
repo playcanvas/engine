@@ -79,8 +79,6 @@ class GSplatIntervalCompaction {
     /**
      * World state version for which intervals were last uploaded. Avoids redundant
      * uploads when sortGpu is called repeatedly with the same world state.
-     *
-     * @type {number}
      */
     _uploadedVersion = -1;
 
@@ -488,3 +486,4 @@ class GSplatIntervalCompaction {
 }
 
 export { GSplatIntervalCompaction };
+

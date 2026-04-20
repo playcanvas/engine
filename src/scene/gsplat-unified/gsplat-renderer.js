@@ -41,7 +41,6 @@ class GSplatRenderer {
     /**
      * Cached work buffer format version for detecting extra stream changes.
      *
-     * @type {number}
      * @protected
      */
     _workBufferFormatVersion = -1;
@@ -187,3 +186,4 @@ class GSplatRenderer {
 }
 
 export { GSplatRenderer };
+

@@ -363,7 +363,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
     static EVENT_CONTACT = 'contact';
 
     /**
-     * @type {number}
      * @ignore
      */
     maxSubSteps = 10;
@@ -378,7 +377,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * The world space vector representing global gravity in the physics simulation. Defaults to
      * [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
      *
-     * @type {Vec3}
      * @example
      * // Set the gravity in the physics world to simulate a planet with low gravity
      * app.systems.rigidbody.gravity = new pc.Vec3(0, -3.7, 0);
@@ -1130,3 +1128,4 @@ class RigidBodyComponentSystem extends ComponentSystem {
 Component._buildAccessors(RigidBodyComponent.prototype, _schema);
 
 export { ContactPoint, ContactResult, RaycastResult, RigidBodyComponentSystem, SingleContactResult };
+

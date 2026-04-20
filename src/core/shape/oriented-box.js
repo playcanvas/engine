@@ -19,7 +19,6 @@ const tmpMat4 = new Mat4();
  */
 class OrientedBox {
     /**
-     * @type {Vec3}
      * @private
      */
     halfExtents = new Vec3(0.5, 0.5, 0.5);
@@ -132,3 +131,4 @@ class OrientedBox {
 }
 
 export { OrientedBox };
+

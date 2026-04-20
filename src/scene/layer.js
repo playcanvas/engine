@@ -147,7 +147,6 @@ class Layer {
      * True if _splitLights needs to be updated, which means if lights were added or removed from
      * the layer, or their key changed.
      *
-     * @type {boolean}
      * @private
      */
     _splitLightsDirty = true;
@@ -155,7 +154,6 @@ class Layer {
     /**
      * True if the objects rendered on the layer require light cube (emitters with lighting do).
      *
-     * @type {boolean}
      * @ignore
      */
     requiresLightCube = false;
@@ -199,7 +197,6 @@ class Layer {
     /**
      * True if the gsplatPlacements array was modified.
      *
-     * @type {boolean}
      * @ignore
      */
     gsplatPlacementsDirty = true;
@@ -289,19 +286,16 @@ class Layer {
 
         // clear flags
         /**
-         * @type {boolean}
          * @private
          */
         this._clearColorBuffer = !!options.clearColorBuffer;
 
         /**
-         * @type {boolean}
          * @private
          */
         this._clearDepthBuffer = !!options.clearDepthBuffer;
 
         /**
-         * @type {boolean}
          * @private
          */
         this._clearStencilBuffer = !!options.clearStencilBuffer;
@@ -967,3 +961,4 @@ class Layer {
 }
 
 export { Layer, CulledInstances };
+
