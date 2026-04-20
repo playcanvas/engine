@@ -76,24 +76,16 @@ class XrViews extends EventHandler {
      */
     _supportedDepth = platform.browser && !!window.XRDepthInformation;
 
-    /**
-     * @private
-     */
+    /** @private */
     _availableColor = false;
 
-    /**
-     * @private
-     */
+    /** @private */
     _availableDepth = false;
 
-    /**
-     * @private
-     */
+    /** @private */
     _depthUsage = '';
 
-    /**
-     * @private
-     */
+    /** @private */
     _depthFormat = '';
 
     /**
@@ -260,9 +252,7 @@ class XrViews extends EventHandler {
         return this._index.get(eye) || null;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _onSessionStart() {
         if (this._manager.type !== XRTYPE_AR) {
             return;
@@ -282,9 +272,7 @@ class XrViews extends EventHandler {
         }
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _onSessionEnd() {
         for (const view of this._index.values()) {
             view.destroy();

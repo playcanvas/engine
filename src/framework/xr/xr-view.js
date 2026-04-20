@@ -48,44 +48,28 @@ class XrView extends EventHandler {
      */
     _positionData = new Float32Array(3);
 
-    /**
-     * @private
-     */
+    /** @private */
     _viewport = new Vec4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _projMat = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _projViewOffMat = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _viewMat = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _viewOffMat = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _viewMat3 = new Mat3();
 
-    /**
-     * @private
-     */
+    /** @private */
     _viewInvMat = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _viewInvOffMat = new Mat4();
 
     /**
@@ -118,9 +102,7 @@ class XrView extends EventHandler {
      */
     _emptyDepthBuffer = new Uint8Array(32);
 
-    /**
-     * @private
-     */
+    /** @private */
     _depthMatrix = new Mat4();
 
     /**
@@ -366,9 +348,7 @@ class XrView extends EventHandler {
         this._updateDepth(frame);
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _updateTextureColor() {
         if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor) {
             return;

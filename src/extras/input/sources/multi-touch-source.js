@@ -29,14 +29,10 @@ class MultiTouchSource extends InputSource {
      */
     _pointerEvents = new Map();
 
-    /**
-     * @private
-     */
+    /** @private */
     _pointerPos = new Vec2();
 
-    /**
-     * @private
-     */
+    /** @private */
     _pinchDist = -1;
 
     constructor() {

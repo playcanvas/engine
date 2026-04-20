@@ -174,14 +174,10 @@ class AppBase extends EventHandler {
      */
     _entityIndex = {};
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     _inTools = false;
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     _scriptPrefix = '';
 
     /** @ignore */

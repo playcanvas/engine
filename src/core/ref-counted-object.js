@@ -2,9 +2,7 @@
  * Base class that implements reference counting for objects.
  */
 class RefCountedObject {
-    /**
-     * @private
-     */
+    /** @private */
     _refCount = 0;
 
     /**

@@ -70,14 +70,10 @@ class XrPlane extends EventHandler {
      */
     _orientation;
 
-    /**
-     * @private
-     */
+    /** @private */
     _position = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     _rotation = new Quat();
 
     /**

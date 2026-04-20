@@ -140,9 +140,7 @@ class ScaleGizmo extends TransformGizmo {
      */
     _uniform = false;
 
-    /**
-     * @override
-     */
+    /** @override */
     snapIncrement = 1;
 
     /**
@@ -410,9 +408,7 @@ class ScaleGizmo extends TransformGizmo {
         this._shapes.xy[prop] = value;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _shapesLookAtCamera() {
         const cameraDir = this.cameraDir;
 
@@ -512,9 +508,7 @@ class ScaleGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _storeNodeScales() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -591,9 +585,7 @@ class ScaleGizmo extends TransformGizmo {
         return point;
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     prerender() {
         super.prerender();
 

@@ -133,9 +133,7 @@ class SoundInstance extends EventHandler {
          */
         this._pitch = options.pitch !== undefined ? Math.max(0.01, Number(options.pitch) || 0) : 1;
 
-        /**
-         * @private
-         */
+        /** @private */
         this._loop = !!(options.loop !== undefined ? options.loop : false);
 
         /**
@@ -182,14 +180,10 @@ class SoundInstance extends EventHandler {
          */
         this._playWhenLoaded = true;
 
-        /**
-         * @private
-         */
+        /** @private */
         this._startTime = Math.max(0, Number(options.startTime) || 0);
 
-        /**
-         * @private
-         */
+        /** @private */
         this._duration = Math.max(0, Number(options.duration) || 0);
 
         /**
@@ -211,9 +205,7 @@ class SoundInstance extends EventHandler {
         this._onEndCallback = options.onEnd;
 
         if (hasAudioContext()) {
-            /**
-             * @private
-             */
+            /** @private */
             this._startedAt = 0;
 
             /**
@@ -224,9 +216,7 @@ class SoundInstance extends EventHandler {
              */
             this._currentTime = 0;
 
-            /**
-             * @private
-             */
+            /** @private */
             this._currentOffset = 0;
 
             /**

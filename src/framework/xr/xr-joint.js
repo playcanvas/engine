@@ -70,39 +70,25 @@ class XrJoint {
      */
     _radius = null;
 
-    /**
-     * @private
-     */
+    /** @private */
     _localTransform = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _worldTransform = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _localPosition = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     _localRotation = new Quat();
 
-    /**
-     * @private
-     */
+    /** @private */
     _position = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     _rotation = new Quat();
 
-    /**
-     * @private
-     */
+    /** @private */
     _dirtyLocal = true;
 
     /**

@@ -26,9 +26,7 @@ class SkyMesh {
      */
     meshInstance = null;
 
-    /**
-     * @private
-     */
+    /** @private */
     _depthWrite = false;
 
     /**

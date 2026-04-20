@@ -127,19 +127,13 @@ class GraphNode extends EventHandler {
     tags = new Tags(this);
 
     // Local space properties of transform (only first 3 are settable by the user)
-    /**
-     * @private
-     */
+    /** @private */
     localPosition = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     localRotation = new Quat();
 
-    /**
-     * @private
-     */
+    /** @private */
     localScale = new Vec3(1, 1, 1);
 
     /**
@@ -149,19 +143,13 @@ class GraphNode extends EventHandler {
     localEulerAngles = new Vec3(); // Only calculated on request
 
     // World space properties of transform
-    /**
-     * @private
-     */
+    /** @private */
     position = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     rotation = new Quat();
 
-    /**
-     * @private
-     */
+    /** @private */
     eulerAngles = new Vec3();
 
     /**
@@ -170,19 +158,13 @@ class GraphNode extends EventHandler {
      */
     _scale = null;
 
-    /**
-     * @private
-     */
+    /** @private */
     localTransform = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _dirtyLocal = false;
 
-    /**
-     * @private
-     */
+    /** @private */
     _aabbVer = 0;
 
     /**
@@ -194,14 +176,10 @@ class GraphNode extends EventHandler {
      */
     _frozen = false;
 
-    /**
-     * @private
-     */
+    /** @private */
     worldTransform = new Mat4();
 
-    /**
-     * @private
-     */
+    /** @private */
     _dirtyWorld = false;
 
     /**
@@ -214,14 +192,10 @@ class GraphNode extends EventHandler {
      */
     _worldScaleSign = 0;
 
-    /**
-     * @private
-     */
+    /** @private */
     _normalMatrix = new Mat3();
 
-    /**
-     * @private
-     */
+    /** @private */
     _dirtyNormal = true;
 
     /**
@@ -254,9 +228,7 @@ class GraphNode extends EventHandler {
      */
     _children = [];
 
-    /**
-     * @private
-     */
+    /** @private */
     _graphDepth = 0;
 
     /**
@@ -275,9 +247,7 @@ class GraphNode extends EventHandler {
      */
     _enabledInHierarchy = false;
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     scaleCompensation = false;
 
     /**

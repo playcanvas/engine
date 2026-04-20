@@ -23,9 +23,7 @@ const tmpQ1 = new Quat();
  * @property {number} [tolerance] - The tolerance for intersection tests
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class BoxLineShape extends Shape {
     /**
      * The internal gap between the box and the line.

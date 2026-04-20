@@ -90,9 +90,7 @@ class DrawCommands {
         this.impl = device.createDrawCommandImpl(this);
     }
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     destroy() {
         this.impl?.destroy?.();
         this.impl = null;

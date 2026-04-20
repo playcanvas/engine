@@ -249,9 +249,7 @@ class GSplatParams {
         return this._debug === GSPLAT_DEBUG_LOD;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _enableIds = false;
 
     /**
@@ -297,9 +295,7 @@ class GSplatParams {
      */
     lodUpdateAngle = 0;
 
-    /**
-     * @private
-     */
+    /** @private */
     _lodBehindPenalty = 1;
 
     /**
@@ -327,9 +323,7 @@ class GSplatParams {
         return this._lodBehindPenalty;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _lodRangeMin = 0;
 
     /**
@@ -353,9 +347,7 @@ class GSplatParams {
         return this._lodRangeMin;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _lodRangeMax = 10;
 
     /**
@@ -379,9 +371,7 @@ class GSplatParams {
         return this._lodRangeMax;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _lodUnderfillLimit = 0;
 
     /**
@@ -408,9 +398,7 @@ class GSplatParams {
         return this._lodUnderfillLimit;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _splatBudget = 0;
 
     /**
@@ -646,9 +634,7 @@ class GSplatParams {
         return !!this._material.getDefine('GSPLAT_2DGS');
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _fisheye = 0;
 
     /**

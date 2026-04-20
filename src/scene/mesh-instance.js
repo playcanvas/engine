@@ -270,9 +270,7 @@ class MeshInstance {
      */
     drawOrder = 0;
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     _drawBucket = 127;
 
     /**

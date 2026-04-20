@@ -285,19 +285,13 @@ class Layer {
         }
 
         // clear flags
-        /**
-         * @private
-         */
+        /** @private */
         this._clearColorBuffer = !!options.clearColorBuffer;
 
-        /**
-         * @private
-         */
+        /** @private */
         this._clearDepthBuffer = !!options.clearDepthBuffer;
 
-        /**
-         * @private
-         */
+        /** @private */
         this._clearStencilBuffer = !!options.clearStencilBuffer;
 
         /**

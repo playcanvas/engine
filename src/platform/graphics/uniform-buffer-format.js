@@ -207,9 +207,7 @@ class UniformFormat {
  * @category Graphics
  */
 class UniformBufferFormat {
-    /**
-     * @ignore
-     */
+    /** @ignore */
     byteSize = 0;
 
     /**

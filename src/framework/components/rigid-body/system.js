@@ -362,9 +362,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     static EVENT_CONTACT = 'contact';
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     maxSubSteps = 10;
 
     /**

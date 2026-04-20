@@ -530,9 +530,7 @@ class Gizmo extends EventHandler {
         this.fire(Gizmo.EVENT_POINTERUP, e.offsetX, e.offsetY, selection[0]);
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _updatePosition() {
         position.set(0, 0, 0);
         if (this._coordSpace === 'local') {
@@ -555,9 +553,7 @@ class Gizmo extends EventHandler {
         this._renderUpdate = true;
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _updateRotation() {
         rotation.set(0, 0, 0, 1);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
@@ -574,9 +570,7 @@ class Gizmo extends EventHandler {
         this._renderUpdate = true;
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _updateScale() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const gizmoPos = this.root.getLocalPosition();

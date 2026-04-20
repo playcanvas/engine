@@ -16,9 +16,7 @@ const UPDATE_EPSILON = 1e-6;
  * @property {number} [gap] - The gap between the plane and the center
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class PlaneShape extends Shape {
     /**
      * The culling mode for the plane.

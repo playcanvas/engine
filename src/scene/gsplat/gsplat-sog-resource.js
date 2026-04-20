@@ -40,9 +40,7 @@ class GSplatSogResource extends GSplatResourceBase {
         this._populateParameters();
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _actualDestroy() {
         // Remove externally-owned textures without destroying them (they're owned by gsplatData)
         this.streams.textures.delete('packedTexture');

@@ -48,9 +48,7 @@ class Compute {
      */
     parameters = new Map();
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     countX = 1;
 
     /**

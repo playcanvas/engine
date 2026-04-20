@@ -35,14 +35,10 @@ class BoundingBox {
      */
     halfExtents = new Vec3(0.5, 0.5, 0.5);
 
-    /**
-     * @private
-     */
+    /** @private */
     _min = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     _max = new Vec3();
 
     /**

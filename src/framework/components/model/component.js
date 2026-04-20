@@ -76,14 +76,10 @@ class ModelComponent extends Component {
      */
     _mapping = {};
 
-    /**
-     * @private
-     */
+    /** @private */
     _castShadows = true;
 
-    /**
-     * @private
-     */
+    /** @private */
     _receiveShadows = true;
 
     /**
@@ -98,19 +94,13 @@ class ModelComponent extends Component {
      */
     _material;
 
-    /**
-     * @private
-     */
+    /** @private */
     _castShadowsLightmap = true;
 
-    /**
-     * @private
-     */
+    /** @private */
     _lightmapped = false;
 
-    /**
-     * @private
-     */
+    /** @private */
     _lightmapSizeMultiplier = 1;
 
     /**
@@ -124,9 +114,7 @@ class ModelComponent extends Component {
      */
     _layers = [LAYERID_WORLD]; // assign to the default world layer
 
-    /**
-     * @private
-     */
+    /** @private */
     _batchGroupId = -1;
 
     /**
@@ -139,9 +127,7 @@ class ModelComponent extends Component {
 
     _materialEvents = null;
 
-    /**
-     * @private
-     */
+    /** @private */
     _clonedModel = false;
 
     // #if _DEBUG

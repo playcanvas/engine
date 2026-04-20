@@ -37,14 +37,10 @@ class Sky {
      */
     skyMesh = null;
 
-    /**
-     * @private
-     */
+    /** @private */
     _depthWrite = false;
 
-    /**
-     * @private
-     */
+    /** @private */
     _fisheye = 0;
 
     /**

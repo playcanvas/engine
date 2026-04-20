@@ -36,9 +36,7 @@ tmpG.normals = [];
  * @property {number} [depth] - The depth of the shape. -1 = interpolated depth.
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class Shape {
     /**
      * The internal position of the shape.

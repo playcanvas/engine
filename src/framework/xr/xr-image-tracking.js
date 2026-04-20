@@ -39,9 +39,7 @@ class XrImageTracking extends EventHandler {
      */
     _supported = platform.browser && !!window.XRImageTrackingResult;
 
-    /**
-     * @private
-     */
+    /** @private */
     _available = false;
 
     /**

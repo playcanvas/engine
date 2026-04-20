@@ -48,19 +48,13 @@ class XrMesh extends EventHandler {
      */
     _xrMesh;
 
-    /**
-     * @private
-     */
+    /** @private */
     _lastChanged = 0;
 
-    /**
-     * @private
-     */
+    /** @private */
     _position = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     _rotation = new Quat();
 
     /**

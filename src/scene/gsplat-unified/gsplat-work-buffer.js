@@ -117,9 +117,7 @@ class WorkBufferRenderInfo {
     }
 }
 
-/**
- * @ignore
- */
+/** @ignore */
 class GSplatWorkBuffer {
     /** @type {GraphicsDevice} */
     device;

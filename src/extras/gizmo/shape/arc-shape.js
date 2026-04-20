@@ -16,9 +16,7 @@ const TORUS_INTERSECT_SEGMENTS = 20;
  * @property {number} [sectorAngle] - The sector angle.
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class ArcShape extends Shape {
     /**
      * The internal tube radius of the arc.

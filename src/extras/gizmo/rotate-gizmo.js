@@ -186,9 +186,7 @@ class RotateGizmo extends TransformGizmo {
      */
     _facingDir = new Vec3();
 
-    /**
-     * @override
-     */
+    /** @override */
     snapIncrement = 5;
 
     /**
@@ -461,9 +459,7 @@ class RotateGizmo extends TransformGizmo {
         this._shapes.z[prop] = value;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _storeGuidePoints() {
         const gizmoPos = this.root.getLocalPosition();
         const axis = this._selectedAxis;
@@ -520,9 +516,7 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _shapesLookAtCamera() {
         // face shape
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
@@ -593,9 +587,7 @@ class RotateGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _storeNodeRotations() {
         const gizmoPos = this.root.getLocalPosition();
         for (let i = 0; i < this.nodes.length; i++) {
@@ -791,9 +783,7 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     prerender() {
         super.prerender();
 
@@ -804,9 +794,7 @@ class RotateGizmo extends TransformGizmo {
         this._shapesLookAtCamera();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     destroy() {
         this._guideAngleLines.forEach(line => line.destroy());
 

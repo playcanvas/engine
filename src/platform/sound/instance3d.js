@@ -19,14 +19,10 @@ const MAX_DISTANCE = 10000;
  * @category Sound
  */
 class SoundInstance3d extends SoundInstance {
-    /**
-     * @private
-     */
+    /** @private */
     _position = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     _velocity = new Vec3();
 
     /**

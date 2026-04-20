@@ -247,9 +247,7 @@ class DualGestureSource extends InputSource {
         super.detach();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         this.deltas.leftInput.append([this._leftJoystick.value.x, this._leftJoystick.value.y]);
         this.deltas.rightInput.append([this._rightJoystick.value.x, this._rightJoystick.value.y]);
@@ -257,9 +255,7 @@ class DualGestureSource extends InputSource {
         return super.read();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     destroy() {
         this._leftJoystick.up();
         this._rightJoystick.up();

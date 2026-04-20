@@ -99,14 +99,10 @@ class GSplatResourceBase {
      */
     parameters = new Map();
 
-    /**
-     * @private
-     */
+    /** @private */
     _refCount = 0;
 
-    /**
-     * @private
-     */
+    /** @private */
     _meshRefCount = 0;
 
     constructor(device, gsplatData) {

@@ -23,9 +23,7 @@ class ViewCube extends EventHandler {
      */
     static EVENT_CAMERAALIGN = 'camera:align';
 
-    /**
-     * @private
-     */
+    /** @private */
     _size = 0;
 
     /**
@@ -40,49 +38,31 @@ class ViewCube extends EventHandler {
      */
     _group;
 
-    /**
-     * @private
-     */
+    /** @private */
     _anchor = new Vec4(1, 1, 1, 1);
 
-    /**
-     * @private
-     */
+    /** @private */
     _colorX = COLOR_RED.clone();
 
-    /**
-     * @private
-     */
+    /** @private */
     _colorY = COLOR_GREEN.clone();
 
-    /**
-     * @private
-     */
+    /** @private */
     _colorZ = COLOR_BLUE.clone();
 
-    /**
-     * @private
-     */
+    /** @private */
     _colorNeg = new Color(0.3, 0.3, 0.3);
 
-    /**
-     * @private
-     */
+    /** @private */
     _radius = 10;
 
-    /**
-     * @private
-     */
+    /** @private */
     _textSize = 10;
 
-    /**
-     * @private
-     */
+    /** @private */
     _lineThickness = 2;
 
-    /**
-     * @private
-     */
+    /** @private */
     _lineLength = 40;
 
     /**
@@ -312,9 +292,7 @@ class ViewCube extends EventHandler {
         return this._lineLength;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _resize() {
         this._size = 2 * (this.lineLength + this.radius + this.lineThickness);
 

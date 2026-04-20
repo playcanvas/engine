@@ -5,29 +5,19 @@ import { EventHandler } from '../../core/event-handler.js';
  * in a streamed manner, so asset parsing can happen in parallel instead of all at once at the end.
  */
 class Untar extends EventHandler {
-    /**
-     * @private
-     */
+    /** @private */
     headerSize = 512;
 
-    /**
-     * @private
-     */
+    /** @private */
     paddingSize = 512;
 
-    /**
-     * @private
-     */
+    /** @private */
     bytesRead = 0;
 
-    /**
-     * @private
-     */
+    /** @private */
     bytesReceived = 0;
 
-    /**
-     * @private
-     */
+    /** @private */
     headerRead = false;
 
     /**
@@ -48,29 +38,19 @@ class Untar extends EventHandler {
      */
     decoder = null;
 
-    /**
-     * @private
-     */
+    /** @private */
     prefix = '';
 
-    /**
-     * @private
-     */
+    /** @private */
     fileName = '';
 
-    /**
-     * @private
-     */
+    /** @private */
     fileSize = 0;
 
-    /**
-     * @private
-     */
+    /** @private */
     fileType = '';
 
-    /**
-     * @private
-     */
+    /** @private */
     ustarFormat = '';
 
     /**

@@ -17,14 +17,10 @@ class Listener {
      */
     _manager;
 
-    /**
-     * @private
-     */
+    /** @private */
     position = new Vec3();
 
-    /**
-     * @private
-     */
+    /** @private */
     orientation = new Mat4();
 
     /**

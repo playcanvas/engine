@@ -78,9 +78,7 @@ class KeyboardMouseSource extends InputSource {
      */
     static keyCode = KEY_CODES;
 
-    /**
-     * @private
-     */
+    /** @private */
     _pointerId = -1;
 
     /**
@@ -280,9 +278,7 @@ class KeyboardMouseSource extends InputSource {
         this._setKey(event.code, 0);
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _clearButtons() {
         for (let i = 0; i < this._button.length; i++) {
             if (this._button[i] === 1) {
@@ -345,9 +341,7 @@ class KeyboardMouseSource extends InputSource {
         super.detach();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         for (let i = 0; i < array.length; i++) {
             array[i] = this._keyNow[i] - this._keyPrev[i];

@@ -1139,19 +1139,13 @@ export const EVENT_POSTCULL = 'postcull';
  */
 export const EVENT_CULL_END = 'cull:end';
 
-/**
- * @ignore
- */
+/** @ignore */
 export const GSPLAT_FORWARD = 1;
 
-/**
- * @ignore
- */
+/** @ignore */
 export const GSPLAT_SHADOW = 2;
 
-/**
- * @ignore
- */
+/** @ignore */
 export const SHADOWCAMERA_NAME = 'pcShadowCamera';
 
 /**

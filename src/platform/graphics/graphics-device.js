@@ -504,9 +504,7 @@ class GraphicsDevice extends EventHandler {
      */
     gpuProfiler;
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     _destroyed = false;
 
     defaultClearOptions = {

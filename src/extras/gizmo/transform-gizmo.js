@@ -667,9 +667,7 @@ class TransformGizmo extends Gizmo {
         }
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _createTransform() {
         // shapes
         for (const key in this._shapes) {
@@ -765,9 +763,7 @@ class TransformGizmo extends Gizmo {
         }
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     prerender() {
         super.prerender();
 
@@ -782,9 +778,7 @@ class TransformGizmo extends Gizmo {
         this._drawGuideLines(gizmoPos, gizmoRot, activeAxis, activeIsPlane);
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     destroy() {
         super.destroy();
 

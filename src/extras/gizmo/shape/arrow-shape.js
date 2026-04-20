@@ -24,9 +24,7 @@ const tmpQ1 = new Quat();
  * @property {number} [tolerance] - The tolerance for intersection tests
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class ArrowShape extends Shape {
     /**
      * The internal gap between the arrow base and the center.

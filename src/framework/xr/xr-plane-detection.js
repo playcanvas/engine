@@ -84,9 +84,7 @@ class XrPlaneDetection extends EventHandler {
      */
     _supported = platform.browser && !!window.XRPlane;
 
-    /**
-     * @private
-     */
+    /** @private */
     _available = false;
 
     /**

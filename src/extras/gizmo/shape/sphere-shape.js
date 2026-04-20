@@ -11,9 +11,7 @@ import { Shape } from './shape.js';
  * @property {number} [radius] - The radius of the sphere.
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class SphereShape extends Shape {
     /**
      * The internal size of the sphere.

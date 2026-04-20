@@ -110,14 +110,10 @@ class XrHitTest extends EventHandler {
      */
     _supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
 
-    /**
-     * @private
-     */
+    /** @private */
     _available = false;
 
-    /**
-     * @private
-     */
+    /** @private */
     _checkingAvailability = false;
 
     /**

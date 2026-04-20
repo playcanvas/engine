@@ -19,9 +19,7 @@ let id = 0;
  * @category Graphics
  */
 class BindBaseFormat {
-    /**
-     * @ignore
-     */
+    /** @ignore */
     slot = -1;
 
     /**
