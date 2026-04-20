@@ -42,19 +42,19 @@ class Pose {
 
     /**
      * The allowed range of positions along the x axis, stored as (min, max). Applied when the
-     * pose is translated via {@link Pose#translate}.
+     * pose is translated via {@link Pose#move}.
      */
     xRange = new Vec2(-Infinity, Infinity);
 
     /**
      * The allowed range of positions along the y axis, stored as (min, max). Applied when the
-     * pose is translated via {@link Pose#translate}.
+     * pose is translated via {@link Pose#move}.
      */
     yRange = new Vec2(-Infinity, Infinity);
 
     /**
      * The allowed range of positions along the z axis, stored as (min, max). Applied when the
-     * pose is translated via {@link Pose#translate}.
+     * pose is translated via {@link Pose#move}.
      */
     zRange = new Vec2(-Infinity, Infinity);
 
