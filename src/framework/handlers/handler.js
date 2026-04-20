@@ -66,7 +66,7 @@ class ResourceHandler {
      * @param {string | {load: string, original: string}} url - Either the URL of the resource to
      * load or a structure containing the load URL (used for loading the resource) and the original
      * URL (used for identifying the resource format; necessary when loading, for example, from
-     * blob).
+     * a blob URL).
      * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
      * an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
