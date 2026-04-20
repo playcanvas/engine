@@ -29,22 +29,32 @@ class Pose {
     distance = 0;
 
     /**
+     * The allowed range of pitch angles in degrees, stored as (min, max). Applied when the pose
+     * is rotated via {@link Pose#rotate}.
      */
     pitchRange = new Vec2(-Infinity, Infinity);
 
     /**
+     * The allowed range of yaw angles in degrees, stored as (min, max). Applied when the pose is
+     * rotated via {@link Pose#rotate}.
      */
     yawRange = new Vec2(-Infinity, Infinity);
 
     /**
+     * The allowed range of positions along the x axis, stored as (min, max). Applied when the
+     * pose is translated via {@link Pose#translate}.
      */
     xRange = new Vec2(-Infinity, Infinity);
 
     /**
+     * The allowed range of positions along the y axis, stored as (min, max). Applied when the
+     * pose is translated via {@link Pose#translate}.
      */
     yRange = new Vec2(-Infinity, Infinity);
 
     /**
+     * The allowed range of positions along the z axis, stored as (min, max). Applied when the
+     * pose is translated via {@link Pose#translate}.
      */
     zRange = new Vec2(-Infinity, Infinity);
 

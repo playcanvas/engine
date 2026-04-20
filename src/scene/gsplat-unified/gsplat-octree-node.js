@@ -20,6 +20,7 @@ class GSplatOctreeNode {
     lods;
 
     /**
+     * The axis-aligned bounding box of this octree node in local space.
      */
     bounds = new BoundingBox();
 
