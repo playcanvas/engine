@@ -310,7 +310,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#setTheme} instead.
+     * @deprecated Use {@link setTheme} instead.
      * @ignore
      */
     set xAxisColor(value) {
@@ -330,7 +330,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#theme} instead.
+     * @deprecated Use {@link theme} instead.
      * @ignore
      */
     get xAxisColor() {
@@ -339,7 +339,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#setTheme} instead.
+     * @deprecated Use {@link setTheme} instead.
      * @ignore
      */
     set yAxisColor(value) {
@@ -359,7 +359,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#theme} instead.
+     * @deprecated Use {@link theme} instead.
      * @ignore
      */
     get yAxisColor() {
@@ -368,7 +368,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#setTheme} instead.
+     * @deprecated Use {@link setTheme} instead.
      * @ignore
      */
     set zAxisColor(value) {
@@ -388,7 +388,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#theme} instead.
+     * @deprecated Use {@link theme} instead.
      * @ignore
      */
     get zAxisColor() {
@@ -397,7 +397,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {number}
-     * @deprecated Use {@link TransformGizmo#setTheme} instead.
+     * @deprecated Use {@link setTheme} instead.
      * @ignore
      */
     set colorAlpha(value) {
@@ -414,7 +414,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {number}
-     * @deprecated Use {@link TransformGizmo#theme} instead.
+     * @deprecated Use {@link theme} instead.
      * @ignore
      */
     get colorAlpha() {
@@ -611,7 +611,7 @@ class TransformGizmo extends Gizmo {
      * @param {number} y - The y coordinate.
      * @param {boolean} isFacing - Whether the axis is facing the camera.
      * @param {boolean} isLine - Whether the axis is a line.
-     * @returns {Vec3} The point (space is {@link TransformGizmo#coordSpace}).
+     * @returns {Vec3} The point (space is {@link coordSpace}).
      * @protected
      */
     _screenToPoint(x, y, isFacing = false, isLine = false) {

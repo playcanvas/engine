@@ -58,7 +58,7 @@ class Scene extends EventHandler {
     /**
      * Fired when the skybox is set. The handler is passed the {@link Texture} that is the
      * previously used skybox cubemap texture. The new skybox cubemap texture is in the
-     * {@link Scene#skybox} property.
+     * {@link skybox} property.
      *
      * @event
      * @example
@@ -144,23 +144,23 @@ class Scene extends EventHandler {
 
     /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the
-     * {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
+     * {@link skybox} if set up, otherwise {@link ambientLight}. Defaults to false.
      *
      * @type {boolean}
      */
     ambientBake = false;
 
     /**
-     * If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion.
-     * Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
+     * If {@link ambientBake} is true, this specifies the brightness of ambient occlusion. Typical
+     * range is -1 to 1. Defaults to 0, representing no change to brightness.
      *
      * @type {number}
      */
     ambientBakeOcclusionBrightness = 0;
 
     /**
-     * If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion.
-     * Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
+     * If {@link ambientBake} is true, this specifies the contrast of ambient occlusion. Typical
+     * range is -1 to 1. Defaults to 0, representing no change to contrast.
      *
      * @type {number}
      */
@@ -379,8 +379,8 @@ class Scene extends EventHandler {
 
     /**
      * Sets the number of samples used to bake the ambient light into the lightmap. Note that
-     * {@link Scene#ambientBake} must be true for this to have an effect. Defaults to 1. Maximum
-     * value is 255.
+     * {@link ambientBake} must be true for this to have an effect. Defaults to 1. Maximum value
+     * is 255.
      *
      * @type {number}
      */
@@ -399,7 +399,7 @@ class Scene extends EventHandler {
 
     /**
      * Sets the part of the sphere which represents the source of ambient light. Note that
-     * {@link Scene#ambientBake} must be true for this to have an effect. The valid range is 0..1,
+     * {@link ambientBake} must be true for this to have an effect. The valid range is 0..1,
      * representing a part of the sphere from top to the bottom. A value of 0.5 represents the
      * upper hemisphere. A value of 1 represents a full sphere. Defaults to 0.4, which is a smaller
      * upper hemisphere as this requires fewer samples to bake.
@@ -543,9 +543,9 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Sets the range parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled}
-     * is enabled. Larger value applies more widespread blur. This needs to be a positive non-zero
-     * value. Defaults to 10.
+     * Sets the range parameter of the bilateral filter. It's used when
+     * {@link lightmapFilterEnabled} is enabled. Larger value applies more widespread blur. This
+     * needs to be a positive non-zero value. Defaults to 10.
      *
      * @type {number}
      */
@@ -563,9 +563,9 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Sets the spatial parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled}
-     * is enabled. Larger value blurs less similar colors. This needs to be a positive non-zero
-     * value. Defaults to 0.2.
+     * Sets the spatial parameter of the bilateral filter. It's used when
+     * {@link lightmapFilterEnabled} is enabled. Larger value blurs less similar colors. This
+     * needs to be a positive non-zero value. Defaults to 0.2.
      *
      * @type {number}
      */

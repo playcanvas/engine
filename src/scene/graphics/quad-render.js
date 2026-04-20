@@ -25,9 +25,9 @@ const _dynamicBindGroup = new DynamicBindGroup();
 /**
  * An object that renders a quad using a {@link Shader}.
  *
- * Note: QuadRender does not modify render states. Before calling {@link QuadRender#render},
- * you should set up the required states using {@link GraphicsDevice#setDrawStates}, or the
- * individual setters ({@link GraphicsDevice#setBlendState}, {@link GraphicsDevice#setCullMode},
+ * Note: QuadRender does not modify render states. Before calling {@link render}, you should set
+ * up the required states using {@link GraphicsDevice#setDrawStates}, or the individual setters
+ * ({@link GraphicsDevice#setBlendState}, {@link GraphicsDevice#setCullMode},
  * {@link GraphicsDevice#setFrontFace}, {@link GraphicsDevice#setDepthState},
  * {@link GraphicsDevice#setStencilState}). Otherwise previously set states will be used.
  *

@@ -80,7 +80,7 @@ class ResourceHandler {
      * into a format that can be used at runtime. The base implementation simply returns the data.
      *
      * @param {string} url - The URL of the resource to open.
-     * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
+     * @param {*} data - The raw resource data passed by callback from {@link load}.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */

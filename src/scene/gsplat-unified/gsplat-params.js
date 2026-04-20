@@ -242,14 +242,14 @@ class GSplatParams {
         return this._debug;
     }
 
-    /** @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_LOD} instead. */
+    /** @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_LOD} instead. */
     set colorizeLod(value) {
         Debug.deprecated('GSplatParams#colorizeLod is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_LOD instead.');
         this.debug = value ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
     }
 
     /**
-     * @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_LOD} instead.
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_LOD} instead.
      * @returns {boolean} Whether LOD colorization is enabled.
      */
     get colorizeLod() {
@@ -320,8 +320,7 @@ class GSplatParams {
      * Value 1 means no penalty; higher values drop LOD faster for nodes behind the camera.
      *
      * Note: when using a penalty > 1, it often makes sense to set a positive
-     * {@link GSplatParams#lodUpdateAngle} so LOD is re-evaluated on camera rotation,
-     * not just translation.
+     * {@link lodUpdateAngle} so LOD is re-evaluated on camera rotation, not just translation.
      *
      * @type {number}
      */
@@ -501,14 +500,14 @@ class GSplatParams {
      */
     useFog = true;
 
-    /** @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead. */
+    /** @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead. */
     set colorizeColorUpdate(value) {
         Debug.deprecated('GSplatParams#colorizeColorUpdate is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_SH_UPDATE instead.');
         this.debug = value ? GSPLAT_DEBUG_SH_UPDATE : GSPLAT_DEBUG_NONE;
     }
 
     /**
-     * @deprecated Use {@link GSplatParams#debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead.
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead.
      * @returns {boolean} Whether SH update colorization is enabled.
      */
     get colorizeColorUpdate() {
@@ -692,7 +691,7 @@ class GSplatParams {
      * Note: This only affects Gaussian splat rendering. Other objects in the scene (meshes,
      * sprites, etc.) continue to use the standard camera projection and are not distorted.
      *
-     * For best results, enable {@link GSplatParams#radialSorting} when using fisheye projection
+     * For best results, enable {@link radialSorting} when using fisheye projection
      * to avoid sorting artifacts caused by the wide field of view.
      *
      * Defaults to 0.

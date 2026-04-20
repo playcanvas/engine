@@ -461,7 +461,7 @@ class Material {
     /**
      * Sets the blend state for this material. Controls how fragment shader outputs are blended
      * when being written to the currently active render target. This overwrites blending type set
-     * using {@link Material#blendType}, and offers more control over blending.
+     * using {@link blendType}, and offers more control over blending.
      *
      * @type {BlendState}
      */
@@ -545,8 +545,8 @@ class Material {
     }
 
     /**
-     * Sets the depth state. Note that this can also be done by using {@link Material#depthTest},
-     * {@link Material#depthFunc} and {@link Material#depthWrite}.
+     * Sets the depth state. Note that this can also be done by using {@link depthTest},
+     * {@link depthFunc} and {@link depthWrite}.
      *
      * @type {DepthState}
      */
@@ -714,7 +714,7 @@ class Material {
      * The method will clear cached shader variants and trigger recompilation if:
      * - Modified material properties require a different shader variant (e.g., enabling/disabling
      *   textures or other properties that affect shader generation)
-     * - Material-specific shader chunks (from {@link Material#getShaderChunks}) have been modified
+     * - Material-specific shader chunks (from {@link getShaderChunks}) have been modified
      * - Global shader chunks (from {@link ShaderChunks.get}) have been modified
      * - Material defines have been changed
      *

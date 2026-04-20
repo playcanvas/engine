@@ -273,7 +273,7 @@ class GraphicsDevice extends EventHandler {
      * True if the device supports the WGSL subgroup_uniformity extension, which allows
      * subgroup functionality to be considered uniform in more cases during shader compilation.
      * This is automatically enabled via the `enable subgroups;` directive when
-     * {@link GraphicsDevice#supportsSubgroups} is true.
+     * {@link supportsSubgroups} is true.
      *
      * @readonly
      * @type {boolean}
@@ -1117,9 +1117,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
-     * specified width and height values will be multiplied by the value of
-     * {@link GraphicsDevice#maxPixelRatio} to give the final resultant width and height for the
-     * canvas.
+     * specified width and height values will be multiplied by the value of {@link maxPixelRatio}
+     * to give the final resultant width and height for the canvas.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
@@ -1136,7 +1135,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
-     * value of {@link GraphicsDevice#maxPixelRatio} is ignored.
+     * value of {@link maxPixelRatio} is ignored.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.

@@ -3,8 +3,8 @@ import { Debug } from '../../core/debug.js';
 /**
  * Container holding parameters for multi-draw commands.
  *
- * Obtain an instance via {@link MeshInstance#setMultiDraw} and populate it using
- * {@link DrawCommands#add} followed by {@link DrawCommands#update}.
+ * Obtain an instance via {@link MeshInstance#setMultiDraw} and populate it using {@link add}
+ * followed by {@link update}.
  *
  * @category Graphics
  */

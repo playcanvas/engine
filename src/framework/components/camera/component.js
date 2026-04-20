@@ -236,7 +236,7 @@ class CameraComponent extends Component {
 
     /**
      * @type {FramePass[]|null}
-     * @deprecated Use {@link CameraComponent#framePasses} instead.
+     * @deprecated Use {@link framePasses} instead.
      * @ignore
      */
     set renderPasses(passes) {
@@ -246,7 +246,7 @@ class CameraComponent extends Component {
 
     /**
      * @type {FramePass[]}
-     * @deprecated Use {@link CameraComponent#framePasses} instead.
+     * @deprecated Use {@link framePasses} instead.
      * @ignore
      */
     get renderPasses() {

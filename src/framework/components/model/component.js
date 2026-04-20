@@ -1105,8 +1105,8 @@ class ModelComponent extends Component {
     }
 
     /**
-     * Enable rendering of the model if hidden using {@link ModelComponent#hide}. This method sets
-     * all the {@link MeshInstance#visible} property on all mesh instances to true.
+     * Enable rendering of the model if hidden using {@link hide}. This method sets all the
+     * {@link MeshInstance#visible} property on all mesh instances to true.
      */
     show() {
         if (this._model) {

@@ -939,7 +939,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Clears any external nodes set by {@link SoundInstance#setExternalNodes}.
+     * Clears any external nodes set by {@link setExternalNodes}.
      */
     clearExternalNodes() {
         const speakers = this._manager.context.destination;
@@ -960,10 +960,10 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Gets any external nodes set by {@link SoundInstance#setExternalNodes}.
+     * Gets any external nodes set by {@link setExternalNodes}.
      *
      * @returns {AudioNode[]} Returns an array that contains the two nodes set by
-     * {@link SoundInstance#setExternalNodes}.
+     * {@link setExternalNodes}.
      */
     getExternalNodes() {
         return [this._firstNode, this._lastNode];

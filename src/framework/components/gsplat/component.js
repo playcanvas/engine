@@ -519,9 +519,9 @@ class GSplatComponent extends Component {
     /**
      * Sets whether to use the unified gsplat rendering. Default is false.
      *
-     * Note: Material handling differs between modes. When unified is false, use
-     * {@link GSplatComponent#material}. When unified is true, materials are shared per
-     * camera/layer - use {@link GSplatComponentSystem#getMaterial} instead.
+     * Note: Material handling differs between modes. When unified is false, use {@link material}.
+     * When unified is true, materials are shared per camera/layer - use
+     * {@link GSplatComponentSystem#getMaterial} instead.
      *
      * @type {boolean}
      */
@@ -899,7 +899,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Enable rendering of the component if hidden using {@link GSplatComponent#hide}.
+     * Enable rendering of the component if hidden using {@link hide}.
      */
     show() {
         if (this._instance) {

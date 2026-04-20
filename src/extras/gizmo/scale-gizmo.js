@@ -377,7 +377,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link ScaleGizmo#flipPlanes} instead.
+     * @deprecated Use {@link flipPlanes} instead.
      * @ignore
      */
     set flipShapes(value) {
@@ -386,7 +386,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link ScaleGizmo#flipPlanes} instead.
+     * @deprecated Use {@link flipPlanes} instead.
      * @ignore
      */
     get flipShapes() {

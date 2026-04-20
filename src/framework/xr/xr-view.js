@@ -18,7 +18,7 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_R32F,
  */
 class XrView extends EventHandler {
     /**
-     * Fired when the depth sensing texture been resized. The {@link XrView#depthUvMatrix} needs
+     * Fired when the depth sensing texture been resized. The {@link depthUvMatrix} needs
      * to be updated for relevant shaders. The handler is passed the new width and height of the
      * depth texture in pixels.
      *
@@ -212,7 +212,7 @@ class XrView extends EventHandler {
      * and more.
      * The format of this texture is any of {@link PIXELFORMAT_LA8}, {@link PIXELFORMAT_DEPTH}, or
      * {@link PIXELFORMAT_R32F} based on {@link XrViews#depthPixelFormat}. It is UV transformed
-     * based on the underlying AR system which can be normalized using {@link XrView#depthUvMatrix}.
+     * based on the underlying AR system which can be normalized using {@link depthUvMatrix}.
      * Equals to null if camera depth is not supported.
      *
      * @type {Texture|null}

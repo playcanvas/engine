@@ -1,8 +1,8 @@
 /**
  * Helper that caches derived fisheye projection values from a normalized slider value, camera FOV,
  * and projection matrix. Each consumer (renderer, culling, future skydome) creates its own instance
- * and calls {@link FisheyeProjection#update} when it needs current values. The instance only
- * mutates its own cached fields, with no external side effects.
+ * and calls {@link update} when it needs current values. The instance only mutates its own cached
+ * fields, with no external side effects.
  *
  * Uses the generalized fisheye model g(θ) = k·tan(θ/k), where k controls the projection
  * characteristic: k=1 is rectilinear perspective, lower k increases barrel distortion.

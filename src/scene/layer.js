@@ -309,8 +309,8 @@ class Layer {
         /**
          * Custom function that is called after the layer has been enabled. This happens when:
          *
-         * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
-         * - {@link Layer#enabled} was changed from false to true
+         * - The layer is created with {@link enabled} set to true (which is the default value).
+         * - {@link enabled} was changed from false to true
          *
          * @type {Function}
          */
@@ -319,8 +319,8 @@ class Layer {
         /**
          * Custom function that is called after the layer has been disabled. This happens when:
          *
-         * - {@link Layer#enabled} was changed from true to false
-         * - {@link Layer#decrementCounter} was called and set the counter to zero.
+         * - {@link enabled} was changed from true to false
+         * - {@link decrementCounter} was called and set the counter to zero.
          *
          * @type {Function}
          */

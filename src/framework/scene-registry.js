@@ -179,7 +179,7 @@ class SceneRegistry {
      * data which may be undesired behavior with projects that have many scenes.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
+     * {@link find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {boolean} storeInCache - Whether to store the loaded data in the scene item.
      * @param {LoadSceneDataCallback} callback - The function to call after loading,
      * passed (err, sceneItem) where err is null if no errors occurred.
@@ -246,11 +246,11 @@ class SceneRegistry {
     /**
      * Loads and stores the scene data to reduce the number of the network requests when the same
      * scenes are loaded multiple times. Can also be used to load data before calling
-     * {@link SceneRegistry#loadSceneHierarchy} and {@link SceneRegistry#loadSceneSettings} to make
-     * scene loading quicker for the user.
+     * {@link loadSceneHierarchy} and {@link loadSceneSettings} to make scene loading quicker for
+     * the user.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
+     * {@link find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {LoadSceneDataCallback} callback - The function to call after loading,
      * passed (err, sceneItem) where err is null if no errors occurred.
      * @example
@@ -266,10 +266,10 @@ class SceneRegistry {
     }
 
     /**
-     * Unloads scene data that has been loaded previously using {@link SceneRegistry#loadSceneData}.
+     * Unloads scene data that has been loaded previously using {@link loadSceneData}.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
+     * {@link find} or URL of the scene file. Usually this will be "scene_id.json".
      * @example
      * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.unloadSceneData(sceneItem);
@@ -334,7 +334,7 @@ class SceneRegistry {
      * application root Entity.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
+     * {@link find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {LoadHierarchyCallback} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
@@ -355,7 +355,7 @@ class SceneRegistry {
      * Load a scene file and apply the scene settings to the current scene.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
+     * {@link find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {LoadSettingsCallback} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
@@ -388,7 +388,7 @@ class SceneRegistry {
      * entities and graph nodes under `app.root` and load the scene settings and hierarchy.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
+     * {@link find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {ChangeSceneCallback} [callback] - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example

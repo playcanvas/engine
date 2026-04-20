@@ -231,8 +231,7 @@ class ParticleSystemComponent extends Component {
 
     /**
      * Sets whether the particle system plays automatically on creation. If set to false, it is
-     * necessary to call {@link ParticleSystemComponent#play} for the particle system to play.
-     * Defaults to true.
+     * necessary to call {@link play} for the particle system to play. Defaults to true.
      *
      * @type {boolean}
      */

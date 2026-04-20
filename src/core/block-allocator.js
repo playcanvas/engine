@@ -169,8 +169,8 @@ class BlockAllocator {
     _freeRegionCount = 0;
 
     /**
-     * Multiplicative growth factor used by {@link BlockAllocator#updateAllocation}.
-     * When growing, the new capacity is at least `capacity * growMultiplier`.
+     * Multiplicative growth factor used by {@link updateAllocation}. When growing, the new
+     * capacity is at least `capacity * growMultiplier`.
      *
      * @type {number}
      * @private
@@ -182,7 +182,7 @@ class BlockAllocator {
      *
      * @param {number} [capacity] - Initial address space capacity. Defaults to 0.
      * @param {number} [growMultiplier] - Multiplicative growth factor for auto-grow in
-     * {@link BlockAllocator#updateAllocation}. Defaults to 1.1 (10% extra).
+     * {@link updateAllocation}. Defaults to 1.1 (10% extra).
      */
     constructor(capacity = 0, growMultiplier = 1.1) {
         this._growMultiplier = growMultiplier;
@@ -450,8 +450,7 @@ class BlockAllocator {
     /**
      * Free a previously allocated block. Adjacent free regions are merged automatically.
      *
-     * @param {MemBlock} block - The block to free (must have been returned by
-     * {@link BlockAllocator#allocate}).
+     * @param {MemBlock} block - The block to free (must have been returned by {@link allocate}).
      */
     free(block) {
         Debug.assert(block && !block._free, 'BlockAllocator.free: block is null or already free');
