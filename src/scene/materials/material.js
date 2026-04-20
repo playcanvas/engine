@@ -720,7 +720,7 @@ class Material {
      *
      * Note: Shaders are not compiled immediately. Instead, existing shader variants are cleared
      * and new variants will be compiled on-demand as they are needed for different render passes
-     * (e.g., {@link SHADER_FORWARD}, {@link SHADER_SHADOW}).
+     * (e.g., forward, shadow, pick).
      *
      * When global shader chunks are modified, `update()` must be called on each material that
      * should reflect those changes.
