@@ -396,4 +396,3 @@ class UniformBuffer {
 }
 
 export { UniformBuffer };
-

@@ -1251,4 +1251,3 @@ if (!hasAudioContext()) {
 }
 
 export { SoundInstance };
-

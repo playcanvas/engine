@@ -1387,4 +1387,3 @@ class CameraComponent extends Component {
 }
 
 export { CameraComponent };
-

@@ -360,4 +360,3 @@ class KeyboardMouseSource extends InputSource {
 }
 
 export { KeyboardMouseSource };
-

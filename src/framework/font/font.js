@@ -73,4 +73,3 @@ class Font {
 }
 
 export { Font };
-

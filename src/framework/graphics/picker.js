@@ -498,4 +498,3 @@ class Picker {
 }
 
 export { Picker };
-

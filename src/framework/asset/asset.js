@@ -653,4 +653,3 @@ class Asset extends EventHandler {
 }
 
 export { Asset };
-

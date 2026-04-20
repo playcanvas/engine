@@ -146,4 +146,3 @@ class RenderPassTAA extends RenderPassShaderQuad {
 }
 
 export { RenderPassTAA };
-

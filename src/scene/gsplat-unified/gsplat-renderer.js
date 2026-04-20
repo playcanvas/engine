@@ -186,4 +186,3 @@ class GSplatRenderer {
 }
 
 export { GSplatRenderer };
-

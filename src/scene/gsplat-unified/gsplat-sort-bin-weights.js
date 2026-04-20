@@ -163,4 +163,3 @@ class GSplatSortBinWeights {
 }
 
 export { GSplatSortBinWeights };
-

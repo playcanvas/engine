@@ -290,4 +290,3 @@ class XrLightEstimation extends EventHandler {
 }
 
 export { XrLightEstimation };
-

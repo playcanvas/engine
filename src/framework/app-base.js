@@ -2124,4 +2124,3 @@ const makeTick = function (_app) {
 };
 
 export { app, AppBase };
-

@@ -101,4 +101,3 @@ class MeshLine {
 }
 
 export { MeshLine };
-

@@ -136,4 +136,3 @@ class DrawCommands {
 }
 
 export { DrawCommands };
-

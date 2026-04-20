@@ -111,4 +111,3 @@ class FlyController extends InputController {
 }
 
 export { FlyController };
-

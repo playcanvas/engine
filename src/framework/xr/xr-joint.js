@@ -240,4 +240,3 @@ class XrJoint {
 }
 
 export { XrJoint };
-

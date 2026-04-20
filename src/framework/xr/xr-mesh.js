@@ -161,4 +161,3 @@ class XrMesh extends EventHandler {
 }
 
 export { XrMesh };
-

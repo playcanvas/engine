@@ -290,4 +290,3 @@ class StencilParameters {
 }
 
 export { StencilParameters };
-

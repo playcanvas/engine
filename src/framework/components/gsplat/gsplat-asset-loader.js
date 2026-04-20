@@ -332,4 +332,3 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
 }
 
 export { GSplatAssetLoader };
-

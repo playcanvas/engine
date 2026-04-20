@@ -223,4 +223,3 @@ class XrPlaneDetection extends EventHandler {
 }
 
 export { XrPlaneDetection };
-

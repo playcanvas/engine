@@ -784,4 +784,3 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
 }
 
 export { Entity };
-

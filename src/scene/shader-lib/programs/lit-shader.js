@@ -570,4 +570,3 @@ class LitShader {
 }
 
 export { LitShader };
-

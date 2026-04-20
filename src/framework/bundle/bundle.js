@@ -104,4 +104,3 @@ class Bundle extends EventHandler {
 }
 
 export { Bundle };
-

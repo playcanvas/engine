@@ -313,4 +313,3 @@ class XrHand extends EventHandler {
 }
 
 export { XrHand };
-

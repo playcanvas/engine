@@ -1428,4 +1428,3 @@ class MeshInstance {
 }
 
 export { MeshInstance };
-

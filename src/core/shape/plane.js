@@ -146,4 +146,3 @@ class Plane {
 }
 
 export { Plane };
-

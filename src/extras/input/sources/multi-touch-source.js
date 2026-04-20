@@ -204,4 +204,3 @@ class MultiTouchSource extends InputSource {
 }
 
 export { MultiTouchSource };
-

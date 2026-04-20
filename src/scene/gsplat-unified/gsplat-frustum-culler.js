@@ -236,4 +236,3 @@ class GSplatFrustumCuller {
 }
 
 export { GSplatFrustumCuller };
-

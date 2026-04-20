@@ -1417,4 +1417,3 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 }
 
 export { WebgpuGraphicsDevice };
-

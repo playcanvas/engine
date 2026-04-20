@@ -788,4 +788,3 @@ class GSplatParams {
 }
 
 export { GSplatParams };
-

@@ -138,4 +138,3 @@ class ShaderChunks {
 }
 
 export { ShaderChunks };
-

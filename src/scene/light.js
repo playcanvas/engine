@@ -1227,4 +1227,3 @@ class Light {
 }
 
 export { Light, lightTypes };
-

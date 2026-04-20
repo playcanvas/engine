@@ -505,4 +505,3 @@ class WebgpuRenderTarget {
 }
 
 export { WebgpuRenderTarget };
-

@@ -536,4 +536,3 @@ class XrAnchors extends EventHandler {
 }
 
 export { XrAnchors };
-

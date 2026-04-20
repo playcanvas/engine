@@ -272,4 +272,3 @@ class LitShaderOptions {
 }
 
 export { LitShaderOptions };
-

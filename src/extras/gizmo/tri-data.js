@@ -88,4 +88,3 @@ class TriData {
 }
 
 export { TriData };
-

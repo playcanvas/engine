@@ -79,4 +79,3 @@ class BoxShape extends Shape {
 }
 
 export { BoxShape };
-

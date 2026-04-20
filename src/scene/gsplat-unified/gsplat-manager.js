@@ -1920,4 +1920,3 @@ class GSplatManager {
 }
 
 export { GSplatManager };
-

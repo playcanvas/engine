@@ -725,4 +725,3 @@ class XrInputSource extends EventHandler {
 }
 
 export { XrInputSource };
-

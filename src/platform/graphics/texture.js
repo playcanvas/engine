@@ -1294,4 +1294,3 @@ class Texture {
 }
 
 export { Texture };
-

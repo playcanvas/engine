@@ -51,4 +51,3 @@ class GSplatOctreeNode {
 }
 
 export { GSplatOctreeNode };
-

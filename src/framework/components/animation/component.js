@@ -741,4 +741,3 @@ class AnimationComponent extends Component {
 }
 
 export { AnimationComponent };
-

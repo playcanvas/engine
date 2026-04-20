@@ -994,4 +994,3 @@ class GSplatOctreeInstance {
 }
 
 export { GSplatOctreeInstance, NodeInfo };
-

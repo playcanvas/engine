@@ -1368,4 +1368,3 @@ class GraphicsDevice extends EventHandler {
 }
 
 export { GraphicsDevice };
-

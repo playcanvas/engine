@@ -924,4 +924,3 @@ class Material {
 }
 
 export { Material };
-

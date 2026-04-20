@@ -112,4 +112,3 @@ class FocusController extends InputController {
 }
 
 export { FocusController };
-

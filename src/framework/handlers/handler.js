@@ -99,4 +99,3 @@ class ResourceHandler {
 }
 
 export { ResourceHandler };
-

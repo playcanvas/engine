@@ -293,4 +293,3 @@ if (!hasAudioContext()) {
 }
 
 export { SoundInstance3d };
-

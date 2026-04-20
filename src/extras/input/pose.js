@@ -205,4 +205,3 @@ class Pose {
 }
 
 export { Pose };
-

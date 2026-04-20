@@ -173,4 +173,3 @@ class RenderPassRadixSortReorder extends RenderPassShaderQuad {
 }
 
 export { RenderPassRadixSortReorder };
-

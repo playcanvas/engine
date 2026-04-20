@@ -628,4 +628,3 @@ class GSplatSogData {
 }
 
 export { GSplatSogData };
-

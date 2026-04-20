@@ -147,4 +147,3 @@ class SortedLoopArray {
 }
 
 export { SortedLoopArray };
-

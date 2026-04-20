@@ -234,4 +234,3 @@ class Compute {
 }
 
 export { Compute };
-

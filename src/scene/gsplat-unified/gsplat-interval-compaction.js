@@ -486,4 +486,3 @@ class GSplatIntervalCompaction {
 }
 
 export { GSplatIntervalCompaction };
-

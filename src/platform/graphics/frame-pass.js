@@ -159,4 +159,3 @@ class FramePass {
 }
 
 export { FramePass };
-

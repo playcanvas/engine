@@ -882,4 +882,3 @@ class Scene extends EventHandler {
 }
 
 export { Scene };
-

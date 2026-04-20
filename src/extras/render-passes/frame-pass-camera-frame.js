@@ -542,4 +542,3 @@ class FramePassCameraFrame extends FramePass {
 }
 
 export { FramePassCameraFrame, CameraFrameOptions };
-

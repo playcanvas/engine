@@ -1075,4 +1075,3 @@ class GamePads extends EventHandler {
 }
 
 export { GamePads, GamePad, GamePadButton };
-

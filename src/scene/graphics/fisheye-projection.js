@@ -123,4 +123,3 @@ class FisheyeProjection {
 }
 
 export { FisheyeProjection };
-

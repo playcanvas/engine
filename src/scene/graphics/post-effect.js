@@ -89,4 +89,3 @@ class PostEffect {
 }
 
 export { PostEffect };
-

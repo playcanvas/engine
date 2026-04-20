@@ -83,4 +83,3 @@ class SphereShape extends Shape {
 }
 
 export { SphereShape };
-

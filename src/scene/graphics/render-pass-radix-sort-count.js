@@ -131,4 +131,3 @@ class RenderPassRadixSortCount extends RenderPassShaderQuad {
 }
 
 export { RenderPassRadixSortCount };
-

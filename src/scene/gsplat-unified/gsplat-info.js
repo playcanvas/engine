@@ -480,4 +480,3 @@ class GSplatInfo {
 }
 
 export { GSplatInfo };
-

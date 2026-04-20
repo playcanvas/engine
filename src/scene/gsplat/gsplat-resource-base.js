@@ -395,4 +395,3 @@ class GSplatResourceBase {
 }
 
 export { GSplatResourceBase };
-

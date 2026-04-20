@@ -46,4 +46,3 @@ class FogParams {
 }
 
 export { FogParams };
-

@@ -225,4 +225,3 @@ class Curve {
 }
 
 export { Curve };
-

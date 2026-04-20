@@ -157,4 +157,3 @@ class PlaneShape extends Shape {
 }
 
 export { PlaneShape };
-

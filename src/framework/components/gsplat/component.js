@@ -1023,4 +1023,3 @@ class GSplatComponent extends Component {
 }
 
 export { GSplatComponent };
-

@@ -247,4 +247,3 @@ class BindGroup {
 }
 
 export { BindGroup, DynamicBindGroup };
-

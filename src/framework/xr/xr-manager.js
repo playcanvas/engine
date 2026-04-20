@@ -1090,4 +1090,3 @@ class XrManager extends EventHandler {
 }
 
 export { XrManager };
-

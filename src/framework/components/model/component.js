@@ -1284,4 +1284,3 @@ class ModelComponent extends Component {
 }
 
 export { ModelComponent };
-

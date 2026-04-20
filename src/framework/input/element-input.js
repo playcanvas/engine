@@ -1198,4 +1198,3 @@ class ElementInput {
 }
 
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent };
-

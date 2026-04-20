@@ -607,4 +607,3 @@ class TranslateGizmo extends TransformGizmo {
 }
 
 export { TranslateGizmo };
-

@@ -328,4 +328,3 @@ class XrInput extends EventHandler {
 }
 
 export { XrInput };
-

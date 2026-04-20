@@ -389,4 +389,3 @@ class PostEffectQueue {
 }
 
 export { PostEffectQueue };
-

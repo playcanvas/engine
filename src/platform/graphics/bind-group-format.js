@@ -362,4 +362,3 @@ class BindGroupFormat {
 }
 
 export { BindUniformBufferFormat, BindTextureFormat, BindGroupFormat, BindStorageTextureFormat, BindStorageBufferFormat };
-

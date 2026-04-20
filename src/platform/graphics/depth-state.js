@@ -236,4 +236,3 @@ class DepthState {
 }
 
 export { DepthState };
-

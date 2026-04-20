@@ -259,4 +259,3 @@ class UniformBufferFormat {
 }
 
 export { UniformFormat, UniformBufferFormat };
-

@@ -407,4 +407,3 @@ class RenderPass extends FramePass {
 }
 
 export { RenderPass };
-

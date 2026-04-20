@@ -299,4 +299,3 @@ class XrViews extends EventHandler {
 }
 
 export { XrViews };
-

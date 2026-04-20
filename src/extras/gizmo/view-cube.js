@@ -450,4 +450,3 @@ class ViewCube extends EventHandler {
 }
 
 export { ViewCube };
-

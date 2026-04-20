@@ -606,4 +606,3 @@ class ScaleGizmo extends TransformGizmo {
 }
 
 export { ScaleGizmo };
-

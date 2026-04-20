@@ -131,4 +131,3 @@ class OrientedBox {
 }
 
 export { OrientedBox };
-

@@ -101,4 +101,3 @@ class MorphTarget {
 }
 
 export { MorphTarget };
-

@@ -434,4 +434,3 @@ class GSplatOctree {
 }
 
 export { GSplatOctree };
-

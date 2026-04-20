@@ -629,4 +629,3 @@ class ComputeRadixSort {
 }
 
 export { ComputeRadixSort, ELEMENTS_PER_WORKGROUP as RADIX_SORT_ELEMENTS_PER_WORKGROUP };
-

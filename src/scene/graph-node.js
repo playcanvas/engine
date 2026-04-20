@@ -1813,4 +1813,3 @@ class GraphNode extends EventHandler {
 }
 
 export { GraphNode };
-

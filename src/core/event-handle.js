@@ -128,4 +128,3 @@ class EventHandle {
 }
 
 export { EventHandle };
-

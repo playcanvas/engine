@@ -1128,4 +1128,3 @@ class RigidBodyComponentSystem extends ComponentSystem {
 Component._buildAccessors(RigidBodyComponent.prototype, _schema);
 
 export { ContactPoint, ContactResult, RaycastResult, RigidBodyComponentSystem, SingleContactResult };
-

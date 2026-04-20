@@ -304,4 +304,3 @@ class Skeleton {
 }
 
 export { Skeleton };
-

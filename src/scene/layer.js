@@ -961,4 +961,3 @@ class Layer {
 }
 
 export { Layer, CulledInstances };
-

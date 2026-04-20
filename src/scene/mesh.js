@@ -1137,4 +1137,3 @@ class Mesh extends RefCountedObject {
 }
 
 export { Mesh };
-

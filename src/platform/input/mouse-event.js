@@ -163,4 +163,3 @@ class MouseEvent {
 }
 
 export { isMousePointerLocked, MouseEvent };
-

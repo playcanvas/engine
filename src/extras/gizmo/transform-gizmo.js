@@ -795,4 +795,3 @@ class TransformGizmo extends Gizmo {
 }
 
 export { TransformGizmo };
-

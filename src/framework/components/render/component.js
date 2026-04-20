@@ -1073,4 +1073,3 @@ class RenderComponent extends Component {
 }
 
 export { RenderComponent };
-

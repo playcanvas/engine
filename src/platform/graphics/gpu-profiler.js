@@ -204,4 +204,3 @@ class GpuProfiler {
 }
 
 export { GpuProfiler };
-

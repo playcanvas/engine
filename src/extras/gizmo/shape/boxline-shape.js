@@ -272,4 +272,3 @@ class BoxLineShape extends Shape {
 }
 
 export { BoxLineShape };
-

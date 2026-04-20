@@ -374,4 +374,3 @@ class XrHitTest extends EventHandler {
 }
 
 export { XrHitTest };
-

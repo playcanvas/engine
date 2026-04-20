@@ -75,4 +75,3 @@ class ObjectPool {
 }
 
 export { ObjectPool };
-

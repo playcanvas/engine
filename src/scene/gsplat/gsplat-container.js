@@ -184,4 +184,3 @@ class GSplatContainer extends GSplatResourceBase {
 }
 
 export { GSplatContainer };
-

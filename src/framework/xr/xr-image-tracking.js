@@ -219,4 +219,3 @@ class XrImageTracking extends EventHandler {
 }
 
 export { XrImageTracking };
-

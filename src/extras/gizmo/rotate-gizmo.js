@@ -815,4 +815,3 @@ class RotateGizmo extends TransformGizmo {
 }
 
 export { RotateGizmo };
-

@@ -272,4 +272,3 @@ class XrAnchor extends EventHandler {
 }
 
 export { XrAnchor };
-

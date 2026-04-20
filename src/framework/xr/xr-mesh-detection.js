@@ -218,4 +218,3 @@ class XrMeshDetection extends EventHandler {
 }
 
 export { XrMeshDetection };
-

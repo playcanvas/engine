@@ -264,4 +264,3 @@ class ArrowShape extends Shape {
 }
 
 export { ArrowShape };
-

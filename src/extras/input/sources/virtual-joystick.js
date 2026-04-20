@@ -78,4 +78,3 @@ class VirtualJoystick {
 }
 
 export { VirtualJoystick };
-

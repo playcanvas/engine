@@ -357,4 +357,3 @@ class GSplatWorldState {
 }
 
 export { GSplatWorldState };
-

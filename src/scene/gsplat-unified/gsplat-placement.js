@@ -334,4 +334,3 @@ class GSplatPlacement {
 
 
 export { GSplatPlacement };
-

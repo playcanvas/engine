@@ -384,4 +384,3 @@ class RenderPassForward extends RenderPass {
 }
 
 export { RenderPassForward };
-

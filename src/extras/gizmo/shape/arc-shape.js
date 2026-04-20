@@ -218,4 +218,3 @@ class ArcShape extends Shape {
 }
 
 export { ArcShape };
-

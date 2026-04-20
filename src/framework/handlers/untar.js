@@ -184,4 +184,3 @@ class Untar extends EventHandler {
 }
 
 export { Untar };
-

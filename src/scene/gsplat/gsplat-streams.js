@@ -199,4 +199,3 @@ class GSplatStreams {
 }
 
 export { GSplatStreams };
-
