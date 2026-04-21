@@ -556,9 +556,12 @@ const BENCH_SIZES = [
 const BENCH_CONFIGS = [
     { label: '4-bit', modeKey: '4-shared-mem' },
     { label: 'OneSweep', modeKey: 'onesweep' },
-    // Apple-candidate 8-bit variant (best on M4 in prior testing). Requires
-    // subgroups; skipped on devices without them.
-    ...(device.supportsSubgroups ? [{ label: '8-coalesced', modeKey: '8-subgroup-coalesced' }] : [])
+    // Apple-candidate 8-bit variants (both performed well on M4 in prior
+    // testing). Require subgroups; skipped on devices without them.
+    ...(device.supportsSubgroups ? [
+        { label: '8-ranked', modeKey: '8-subgroup-ranked' },
+        { label: '8-coalesced', modeKey: '8-subgroup-coalesced' }
+    ] : [])
 ];
 const BENCH_WARMUP = 20;
 const BENCH_MEASURE = 50;
