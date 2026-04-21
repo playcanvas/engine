@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
@@ -31,7 +32,11 @@ class GSplatSogResource extends GSplatResourceBase {
             this.streams.textures.set('sh_labels', gsplatData.sh_labels);
             this.streams.textures.set('sh_centroids', gsplatData.sh_centroids);
         }
-        if (isV2 && gsplatData.codebookTexture) {
+        if (isV2) {
+            // V2 always declares the sogCodebook stream below, so the texture must exist or the
+            // streams system would auto-create a default (wrong-sized) RGBA32F texture at bind.
+            // Callers must invoke gsplatData.prepareCodebook() before constructing the resource.
+            Debug.assert(gsplatData.codebookTexture, 'GSplatSogResource: V2 asset is missing codebookTexture - prepareCodebook() must be called first.');
             this.streams.textures.set('sogCodebook', gsplatData.codebookTexture);
         }
 

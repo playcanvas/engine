@@ -278,6 +278,10 @@ class GSplatSogData {
             'rot_0', 'rot_1', 'rot_2', 'rot_3'
         ];
 
+        // ensure V2 codebooks are patched before the CPU iterator indexes them; the GPU flow
+        // does this via prepareCodebook(), but decompress runs without that path.
+        this._patchCodebooks();
+
         const { shBands } = this;
 
         // copy back gpu texture data so cpu iterator has access to it
@@ -433,6 +437,8 @@ class GSplatSogData {
      * @private
      */
     _createCodebookTexture() {
+        Debug.assert(!this.codebookTexture, 'GSplatSogData: codebookTexture already exists - _createCodebookTexture() should only be called once per data instance.');
+
         const device = this.means_l.device;
         const { scales, sh0, shN } = this.meta;
 
@@ -465,6 +471,23 @@ class GSplatSogData {
     }
 
     /**
+     * Patches any null-leading codebook entries in place. A null `codebook[0]` was a bug in
+     * older SOG creation tools (since fixed); this workaround keeps already-published assets
+     * in the wild renderable by synthesizing a plausible value so downstream sampling never
+     * produces NaN. Required for both GPU rendering and CPU decompression flows.
+     *
+     * @private
+     */
+    _patchCodebooks() {
+        ['scales', 'sh0', 'shN'].forEach((name) => {
+            const codebook = this.meta[name]?.codebook;
+            if (codebook?.[0] === null) {
+                codebook[0] = codebook[1] + (codebook[1] - codebook[255]) / 255;
+            }
+        });
+    }
+
+    /**
      * Synchronous codebook preparation. Patches any null-leading codebook entries and, for V2
      * assets, builds the codebook LUT texture. Must be called before {@link prepareGpuData}.
      */
@@ -472,13 +495,7 @@ class GSplatSogData {
         const device = this.means_l?.device;
         if (this.destroyed || !device || device._destroyed) return;
 
-        // patch codebooks starting with a null entry
-        ['scales', 'sh0', 'shN'].forEach((name) => {
-            const codebook = this.meta[name]?.codebook;
-            if (codebook?.[0] === null) {
-                codebook[0] = codebook[1] + (codebook[1] - codebook[255]) / 255;
-            }
-        });
+        this._patchCodebooks();
 
         // V2 only: build the codebook LUT texture
         if (this.meta.version === 2) {
