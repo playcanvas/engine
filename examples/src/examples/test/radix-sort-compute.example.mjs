@@ -1054,15 +1054,40 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
     const plotH = H - PAD.top - PAD.bottom;
     const COLORS = ['#ff6b6b', '#2ecc71', '#a06bff', '#f7dc6f'];
 
-    // Y range: auto-scale from the max measured frameMs across all configs.
+    // Log-Y. Sort timings routinely span 2-3 decades across the sweep
+    // (e.g. 0.1 ms at 100K vs 70 ms at 50M), so linear-Y squashes the
+    // small-N region into invisibility. On log-Y a fixed speedup ratio
+    // always takes the same vertical space regardless of absolute ms.
+    let minVal = Infinity;
     let maxVal = 0;
     for (const row of bySize.values()) {
         for (const cell of row.values()) {
-            if (cell.frameMs > maxVal) maxVal = cell.frameMs;
+            if (cell.frameMs > 0) {
+                if (cell.frameMs < minVal) minVal = cell.frameMs;
+                if (cell.frameMs > maxVal) maxVal = cell.frameMs;
+            }
         }
     }
-    maxVal = Math.ceil(maxVal * 1.15);
-    if (maxVal === 0) maxVal = 1;
+    if (!isFinite(minVal) || maxVal === 0) {
+        minVal = 0.1;
+        maxVal = 1;
+    }
+
+    // Snap to decades so gridlines land on clean values (0.1, 1, 10, ...).
+    // Always widen by at least one decade so tiny ranges still draw nicely.
+    const logMin = Math.floor(Math.log10(minVal));
+    let logMax = Math.ceil(Math.log10(maxVal));
+    if (logMax <= logMin) logMax = logMin + 1;
+    const logRange = logMax - logMin;
+
+    /**
+     * @param {number} v - Value in ms.
+     * @returns {number} Pixel Y.
+     */
+    const yOf = (v) => {
+        const lv = Math.log10(Math.max(v, 10 ** (logMin - 2)));
+        return H - PAD.bottom - ((lv - logMin) / logRange) * plotH;
+    };
 
     ctx.clearRect(0, 0, W, H);
 
@@ -1074,19 +1099,32 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
     ctx.lineTo(W - PAD.right, H - PAD.bottom);
     ctx.stroke();
 
-    ctx.fillStyle = '#888';
+    // Decade gridlines + labels, plus unlabelled minor lines at 2x/5x
+    // within each decade so the eye can still read sub-decade spacing.
     ctx.font = '11px monospace';
     ctx.textAlign = 'right';
-    const yTicks = 5;
-    for (let i = 0; i <= yTicks; i++) {
-        const v = (maxVal / yTicks) * i;
-        const y = H - PAD.bottom - (i / yTicks) * plotH;
-        ctx.fillText(v.toFixed(1), PAD.left - 5, y + 4);
+    for (let d = logMin; d <= logMax; d++) {
+        const decade = 10 ** d;
+        const y = yOf(decade);
         ctx.strokeStyle = '#333';
         ctx.beginPath();
         ctx.moveTo(PAD.left, y);
         ctx.lineTo(W - PAD.right, y);
         ctx.stroke();
+        ctx.fillStyle = '#888';
+        const label = decade >= 1 ? decade.toFixed(0) : decade.toFixed(Math.max(0, -d));
+        ctx.fillText(label, PAD.left - 5, y + 4);
+
+        if (d < logMax) {
+            ctx.strokeStyle = '#222';
+            for (const m of [2, 5]) {
+                const ym = yOf(decade * m);
+                ctx.beginPath();
+                ctx.moveTo(PAD.left, ym);
+                ctx.lineTo(W - PAD.right, ym);
+                ctx.stroke();
+            }
+        }
     }
 
     // X ticks: label every size if there's room, otherwise stride so labels
@@ -1104,7 +1142,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
     ctx.fillStyle = '#ccc';
     ctx.font = '12px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('Sort Time (ms) vs Element Count', W / 2, 18);
+    ctx.fillText('Sort Time (ms, log scale) vs Element Count', W / 2, 18);
 
     // One polyline per config in BENCH_CONFIGS order, so colors line up with
     // the summary table's column order.
@@ -1121,8 +1159,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
             const cell = bySize.get(sizes[i])?.get(label);
             if (!cell) continue;
             const x = PAD.left + (i / denom) * plotW;
-            const y = H - PAD.bottom - (cell.frameMs / maxVal) * plotH;
-            points.push({ x, y });
+            points.push({ x, y: yOf(cell.frameMs) });
         }
 
         if (points.length > 1) {
