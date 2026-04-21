@@ -918,6 +918,10 @@ function renderBenchResults(results, onClose) {
     html += `<div style="color:${MUTED};margin-bottom:4px;">${gpuLine}</div>`;
     html += `<div style="color:${MUTED};margin-bottom:12px;">${BENCH_BITS}-bit keys  ·  ${BENCH_WARMUP} warmup + ${BENCH_MEASURE} measured frames per cell  ·  sort-only GPU time in ms (Forward pass excluded)</div>`;
 
+    // Line chart placeholder; filled in by drawBenchChart() after the
+    // overlay HTML is committed to the DOM.
+    html += '<canvas id="bench-chart" width="700" height="320" style="display:block;background:#1a1a2e;border-radius:4px;width:100%;max-width:700px;margin-bottom:14px;"></canvas>';
+
     html += `<table style="border-collapse:collapse;margin-bottom:14px;width:100%;color:${TXT};">`;
     html += `<thead><tr style="background:${HDR_BG};">`;
     const th = `style="text-align:right;padding:5px 10px;border-bottom:1px solid #444;color:${TXT};"`;
@@ -990,6 +994,12 @@ function renderBenchResults(results, onClose) {
     benchResults.innerHTML = html;
     benchResults.style.display = 'block';
 
+    // Render the line chart into the <canvas> now that it's in the DOM.
+    const chartCanvas = /** @type {HTMLCanvasElement | null} */ (document.getElementById('bench-chart'));
+    if (chartCanvas) {
+        drawBenchChart(chartCanvas, bySize, sizes);
+    }
+
     // Wire up per-row toggles. Each button flips the matching detail row
     // and swaps its caret glyph.
     const toggles = benchResults.querySelectorAll('button[data-toggle]');
@@ -1020,6 +1030,125 @@ function renderBenchResults(results, onClose) {
             benchResults.style.display = 'none';
             onClose();
         };
+    }
+}
+
+/**
+ * Draw a line chart of sort time (ms) vs element count, one line per
+ * benchmark config. Sizes are evenly spaced on the X axis (index-based)
+ * so every measured point gets equal visual weight regardless of the
+ * 500x range between smallest and largest test.
+ *
+ * @param {HTMLCanvasElement} chartCanvas - Target canvas.
+ * @param {Map<number, Map<string, {frameMs: number, passMs: Map<string, number>}>>} bySize - Results grouped by size then config label.
+ * @param {number[]} sizes - Tested sizes, sorted ascending.
+ */
+function drawBenchChart(chartCanvas, bySize, sizes) {
+    const ctx = chartCanvas.getContext('2d');
+    if (!ctx || sizes.length === 0) return;
+
+    const W = chartCanvas.width;
+    const H = chartCanvas.height;
+    const PAD = { top: 30, right: 20, bottom: 40, left: 50 };
+    const plotW = W - PAD.left - PAD.right;
+    const plotH = H - PAD.top - PAD.bottom;
+    const COLORS = ['#ff6b6b', '#2ecc71', '#a06bff', '#f7dc6f'];
+
+    // Y range: auto-scale from the max measured frameMs across all configs.
+    let maxVal = 0;
+    for (const row of bySize.values()) {
+        for (const cell of row.values()) {
+            if (cell.frameMs > maxVal) maxVal = cell.frameMs;
+        }
+    }
+    maxVal = Math.ceil(maxVal * 1.15);
+    if (maxVal === 0) maxVal = 1;
+
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, PAD.top);
+    ctx.lineTo(PAD.left, H - PAD.bottom);
+    ctx.lineTo(W - PAD.right, H - PAD.bottom);
+    ctx.stroke();
+
+    ctx.fillStyle = '#888';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'right';
+    const yTicks = 5;
+    for (let i = 0; i <= yTicks; i++) {
+        const v = (maxVal / yTicks) * i;
+        const y = H - PAD.bottom - (i / yTicks) * plotH;
+        ctx.fillText(v.toFixed(1), PAD.left - 5, y + 4);
+        ctx.strokeStyle = '#333';
+        ctx.beginPath();
+        ctx.moveTo(PAD.left, y);
+        ctx.lineTo(W - PAD.right, y);
+        ctx.stroke();
+    }
+
+    // X ticks: label every size if there's room, otherwise stride so labels
+    // don't overlap.
+    const stride = sizes.length > 10 ? Math.ceil(sizes.length / 10) : 1;
+    const denom = Math.max(1, sizes.length - 1);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#888';
+    for (let i = 0; i < sizes.length; i++) {
+        if (i % stride !== 0 && i !== sizes.length - 1) continue;
+        const x = PAD.left + (i / denom) * plotW;
+        ctx.fillText(fmtN(sizes[i]), x, H - PAD.bottom + 18);
+    }
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sort Time (ms) vs Element Count', W / 2, 18);
+
+    // One polyline per config in BENCH_CONFIGS order, so colors line up with
+    // the summary table's column order.
+    for (let c = 0; c < BENCH_CONFIGS.length; c++) {
+        const label = BENCH_CONFIGS[c].label;
+        const color = COLORS[c % COLORS.length];
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2;
+
+        /** @type {{x: number, y: number}[]} */
+        const points = [];
+        for (let i = 0; i < sizes.length; i++) {
+            const cell = bySize.get(sizes[i])?.get(label);
+            if (!cell) continue;
+            const x = PAD.left + (i / denom) * plotW;
+            const y = H - PAD.bottom - (cell.frameMs / maxVal) * plotH;
+            points.push({ x, y });
+        }
+
+        if (points.length > 1) {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+        }
+        for (const pt of points) {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'left';
+    for (let c = 0; c < BENCH_CONFIGS.length; c++) {
+        const color = COLORS[c % COLORS.length];
+        const lx = PAD.left + 10;
+        const ly = PAD.top + 10 + c * 14;
+        ctx.fillStyle = color;
+        ctx.fillRect(lx, ly - 4, 10, 3);
+        ctx.fillText(BENCH_CONFIGS[c].label, lx + 14, ly);
     }
 }
 
