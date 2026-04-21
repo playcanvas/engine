@@ -254,11 +254,9 @@ class SogBundleParser {
 
             // construct the gsplat resource
             const decompress = asset.data?.decompress;
-            const minimalMemory = asset.options?.minimalMemory ?? false;
 
             const data = new GSplatSogData();
             data.url = url.original;
-            data.minimalMemory = minimalMemory;
             data.meta = meta;
             data.numSplats = meta.count;
             data.means_l = textures[meta.means.files[0]].resource;
@@ -272,6 +270,7 @@ class SogBundleParser {
 
             if (!decompress) {
                 // no need to prepare gpu data if decompressing
+                data.prepareCodebook();
                 await data.prepareGpuData();
             }
 

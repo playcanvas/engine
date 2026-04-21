@@ -168,8 +168,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
 
         if (!asset) {
             // Create a new gsplat asset
-            // @ts-ignore - minimalMemory is a custom option for gsplat assets
-            asset = new Asset(url, 'gsplat', { url }, {}, { minimalMemory: true });
+            asset = new Asset(url, 'gsplat', { url });
 
             // Assert that registry doesn't already have an asset for this URL
             // If it does, there's a code ownership issue - GSplatAssetLoader should be the only
