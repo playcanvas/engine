@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
-    const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, BooleanInput, Button, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
 
     return fragment(
         jsx(
@@ -83,6 +83,43 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                     link: { observer, path: 'options.validation' }
                 })
             )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Benchmark' },
+            jsx(
+                LabelGroup,
+                { text: 'Run up to' },
+                jsx(SelectInput, {
+                    type: 'number',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'options.benchMaxElements' },
+                    options: [
+                        { v: 100_000, t: '100K' },
+                        { v: 500_000, t: '500K' },
+                        { v: 1_000_000, t: '1M' },
+                        { v: 2_000_000, t: '2M' },
+                        { v: 3_000_000, t: '3M' },
+                        { v: 4_000_000, t: '4M' },
+                        { v: 5_000_000, t: '5M' },
+                        { v: 6_000_000, t: '6M' },
+                        { v: 8_000_000, t: '8M' },
+                        { v: 10_000_000, t: '10M' },
+                        { v: 15_000_000, t: '15M' },
+                        { v: 20_000_000, t: '20M' },
+                        { v: 25_000_000, t: '25M' },
+                        { v: 30_000_000, t: '30M' },
+                        { v: 40_000_000, t: '40M' },
+                        { v: 50_000_000, t: '50M' }
+                    ]
+                })
+            ),
+            jsx(Button, {
+                text: 'Run',
+                onClick: () => {
+                    observer.emit('benchmark');
+                }
+            })
         )
     );
 };

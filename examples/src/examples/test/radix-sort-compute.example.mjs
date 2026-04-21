@@ -54,6 +54,48 @@ errorOverlay.style.cssText = `
 `;
 document.body.appendChild(errorOverlay);
 
+// Create benchmark status overlay (shown while running) and a results
+// container (shown after completion). Both are full-screen-ish panels on top
+// of the canvas so the user doesn't need to look at devtools.
+const benchStatus = document.createElement('div');
+benchStatus.style.cssText = `
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: monospace;
+    font-size: 16px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 12px 20px;
+    border-radius: 6px;
+    z-index: 1100;
+    display: none;
+    white-space: pre;
+`;
+document.body.appendChild(benchStatus);
+
+const benchResults = document.createElement('div');
+benchResults.style.cssText = `
+    position: fixed;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-height: calc(100vh - 80px);
+    width: 720px;
+    max-width: 95vw;
+    overflow: auto;
+    font-family: monospace;
+    font-size: 13px;
+    color: #fff;
+    background: rgba(10, 10, 15, 0.98);
+    padding: 16px 20px;
+    border-radius: 6px;
+    z-index: 1200;
+    display: none;
+`;
+document.body.appendChild(benchResults);
+
 // Track sort failure count and verification state
 let sortFailureCount = 0;
 let verificationPending = false;
@@ -497,13 +539,636 @@ data.set('options', {
     scan: 'blelloch',
     mode: DEFAULT_MODE,
     render: true,
-    validation: true
+    validation: true,
+    benchMaxElements: 10_000_000
+});
+
+// ==================== BENCHMARK ====================
+
+// Benchmark covers the full dynamic range we care about for gsplat sorts.
+// 100K and 500K expose per-dispatch fixed-cost floors; 30M+ probes DRAM
+// bandwidth ceilings. 24-bit keys is the gsplat-representative bit width.
+const BENCH_SIZES = [
+    100_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 4_000_000,
+    5_000_000, 6_000_000, 8_000_000, 10_000_000, 15_000_000,
+    20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
+];
+const BENCH_CONFIGS = [
+    { label: '4-bit', modeKey: '4-shared-mem' },
+    { label: 'OneSweep', modeKey: 'onesweep' },
+    // Apple-candidate 8-bit variant (best on M4 in prior testing). Requires
+    // subgroups; skipped on devices without them.
+    ...(device.supportsSubgroups ? [{ label: '8-coalesced', modeKey: '8-subgroup-coalesced' }] : [])
+];
+const BENCH_WARMUP = 20;
+const BENCH_MEASURE = 50;
+const BENCH_BITS = 24;
+
+// Passes that are not part of the sort itself - excluded from per-cell
+// totals and per-pass breakdowns. `Forward` is the main PlayCanvas forward
+// render pass; its cost (and serialization-behind-compute timing artefacts)
+// would pollute the sort-only comparison.
+const BENCH_EXCLUDED_PASSES = new Set(['Forward']);
+
+/**
+ * @type {null | {
+ *     phase: 'setup' | 'warmup' | 'measure',
+ *     sizes: number[],
+ *     sizeIdx: number,
+ *     configIdx: number,
+ *     frame: number,
+ *     frameTimes: number[],
+ *     passAccum: Map<string, number[]>,
+ *     sortInst: pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort | null,
+ *     keysBuf: pc.StorageBuffer | null,
+ *     results: {size: number, configLabel: string, frameMs: number, passMs: Map<string, number>}[],
+ *     saved: {elementsK: any, bits: any, mode: any, render: any, validation: any, profilerEnabled: boolean}
+ * }}
+ */
+let benchState = null;
+
+/**
+ * Format an element count compactly (e.g. 1_500_000 -> "1.5M").
+ *
+ * @param {number} n - Count.
+ * @returns {string} Formatted count.
+ */
+function fmtN(n) {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+    return `${n}`;
+}
+
+/**
+ * Create a fresh sort instance for the given mode key. Bypasses the
+ * per-user radixSortCache so benchmark lifetimes are independent of the
+ * interactive UI state.
+ *
+ * @param {string} modeKey - Entry key into RADIX_MODES.
+ * @returns {pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort} Sort instance.
+ */
+function createBenchSort(modeKey) {
+    const modeCfg = RADIX_MODES[modeKey];
+    if (modeCfg.onesweep) {
+        return new pc.ComputeOneSweepRadixSort(device);
+    }
+    return new pc.ComputeRadixSort(device, {
+        scanKernel: 'blelloch',
+        radixBits: modeCfg.radixBits,
+        reorderVariant: modeCfg.reorderVariant
+    });
+}
+
+/**
+ * Fill a StorageBuffer with random 24-bit keys. Creates a new buffer
+ * sized to numElements and uploads it.
+ *
+ * @param {number} numElements - Number of elements.
+ * @returns {pc.StorageBuffer} Uploaded keys buffer.
+ */
+function createBenchKeys(numElements) {
+    const maxValue = (1 << BENCH_BITS) - 1;
+    const buf = new pc.StorageBuffer(device, numElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+    const keysData = new Uint32Array(numElements);
+    for (let i = 0; i < numElements; i++) {
+        keysData[i] = Math.floor(Math.random() * maxValue);
+    }
+    buf.write(0, keysData);
+    return buf;
+}
+
+/**
+ * Display the benchmark status overlay.
+ *
+ * @param {string} text - Status text to show.
+ */
+function showBenchStatus(text) {
+    benchStatus.textContent = text;
+    benchStatus.style.display = 'block';
+}
+
+/**
+ * Start a benchmark run. Snapshots current settings, disables rendering
+ * and validation, enables the GPU profiler, and kicks off the state
+ * machine. Subsequent ticks happen inside the app update loop.
+ */
+function startBenchmark() {
+    if (benchState) return;
+
+    // Filter the benchmark size sweep to respect the user-selected upper
+    // bound from the Benchmark panel.
+    const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
+    const sizes = BENCH_SIZES.filter(n => n <= maxN);
+    if (sizes.length === 0) {
+        showBenchStatus('No benchmark sizes selected.');
+        setTimeout(() => {
+            benchStatus.style.display = 'none';
+        }, 1500);
+        return;
+    }
+
+    // Snapshot interactive state - restored on completion.
+    const saved = {
+        elementsK: data.get('options.elementsK'),
+        bits: data.get('options.bits'),
+        mode: data.get('options.mode'),
+        render: data.get('options.render'),
+        validation: data.get('options.validation'),
+        profilerEnabled: !!(device.gpuProfiler && device.gpuProfiler.enabled)
+    };
+
+    // Force off visualization (saves fragment shader cost during timing) and
+    // hide any stale error overlay from a prior interactive session.
+    unsortedPlane.enabled = false;
+    sortedPlane.enabled = false;
+    errorOverlay.style.display = 'none';
+    benchResults.style.display = 'none';
+
+    if (device.gpuProfiler) {
+        device.gpuProfiler.enabled = true;
+    }
+
+    benchState = {
+        phase: 'setup',
+        sizes: sizes,
+        sizeIdx: 0,
+        configIdx: 0,
+        frame: 0,
+        frameTimes: [],
+        passAccum: new Map(),
+        sortInst: null,
+        keysBuf: null,
+        results: [],
+        saved
+    };
+    showBenchStatus('Starting benchmark...');
+}
+
+/**
+ * Advance the benchmark state machine by one frame. Called from the app
+ * update loop in lieu of the normal sort-every-frame behaviour while a
+ * benchmark is active.
+ */
+function stepBenchmark() {
+    const s = /** @type {NonNullable<typeof benchState>} */ (benchState);
+    const cfg = BENCH_CONFIGS[s.configIdx];
+    const size = s.sizes[s.sizeIdx];
+
+    if (s.phase === 'setup') {
+        // First frame for this (size, config). Allocate a fresh sort
+        // instance and fresh keys (identical across configs for the same
+        // size by virtue of the RNG seeding, but since we're measuring
+        // per-config-and-size there's no need to share).
+        //
+        // We recreate the sort instance for each (config, size) so that
+        // capacity growth from earlier smaller sizes doesn't leak into
+        // timings (the current allocation scheme only grows).
+        if (s.sortInst) {
+            s.sortInst.destroy();
+        }
+        if (s.keysBuf) {
+            s.keysBuf.destroy();
+        }
+
+        showBenchStatus(`[${cfg.label}]  ${fmtN(size)}  allocating & uploading keys...`);
+        s.sortInst = createBenchSort(cfg.modeKey);
+        s.keysBuf = createBenchKeys(size);
+
+        // Round up to the sort's radix width (same alignment rule the
+        // interactive path uses).
+        const alignedBits = Math.ceil(BENCH_BITS / s.sortInst.radixBits) * s.sortInst.radixBits;
+
+        // Prime: one throwaway sort so shader compilation, pipeline
+        // creation and buffer allocations land outside the warmup window.
+        s.sortInst.sort(s.keysBuf, size, alignedBits);
+
+        s.phase = 'warmup';
+        s.frame = 0;
+        s.frameTimes = [];
+        s.passAccum = new Map();
+        return;
+    }
+
+    // Active phases (warmup / measure): run one sort per frame.
+    const sort = /** @type {NonNullable<typeof s.sortInst>} */ (s.sortInst);
+    const keys = /** @type {NonNullable<typeof s.keysBuf>} */ (s.keysBuf);
+    const alignedBits = Math.ceil(BENCH_BITS / sort.radixBits) * sort.radixBits;
+    sort.sort(keys, size, alignedBits);
+
+    s.frame++;
+
+    if (s.phase === 'warmup') {
+        showBenchStatus(`[${cfg.label}]  ${fmtN(size)}  warmup  ${s.frame}/${BENCH_WARMUP}`);
+        if (s.frame >= BENCH_WARMUP) {
+            s.phase = 'measure';
+            s.frame = 0;
+        }
+        return;
+    }
+
+    // phase === 'measure': collect timings from the previous frame's work.
+    // Timestamp queries resolve async so the values we read now correspond
+    // to the sort dispatched ~1 frame ago; over MEASURE frames this is
+    // amortized away. We deliberately exclude the `Forward` (scene render)
+    // pass - it's not part of the sort, and Metal/WebGPU timing of compute
+    // followed by graphics serializes in a way that inflates its reported
+    // time in proportion to the preceding compute workload. The total we
+    // record is therefore the sum of sort-related passes only.
+    const gp = device.gpuProfiler;
+    if (gp && gp.passTimings.size > 0) {
+        let sortMs = 0;
+        for (const [name, t] of gp.passTimings) {
+            if (BENCH_EXCLUDED_PASSES.has(name)) continue;
+            sortMs += t;
+            let arr = s.passAccum.get(name);
+            if (!arr) {
+                arr = [];
+                s.passAccum.set(name, arr);
+            }
+            arr.push(t);
+        }
+        if (sortMs > 0) s.frameTimes.push(sortMs);
+    }
+    showBenchStatus(`[${cfg.label}]  ${fmtN(size)}  measure ${s.frame}/${BENCH_MEASURE}`);
+
+    if (s.frame < BENCH_MEASURE) return;
+
+    // Aggregate this (size, config) into a result row.
+    const mean = (/** @type {number[]} */ arr) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0);
+    /** @type {Map<string, number>} */
+    const passMs = new Map();
+    for (const [name, arr] of s.passAccum) {
+        passMs.set(name, mean(arr));
+    }
+    s.results.push({
+        size: size,
+        configLabel: cfg.label,
+        frameMs: mean(s.frameTimes),
+        passMs: passMs
+    });
+
+    // Order: inner loop is config (so both configs at the same size are
+    // measured back-to-back, equalizing GPU boost-clock / thermal state
+    // across configs at that size). Outer loop is size.
+    s.configIdx++;
+    if (s.configIdx >= BENCH_CONFIGS.length) {
+        s.configIdx = 0;
+        s.sizeIdx++;
+    }
+
+    if (s.sizeIdx >= s.sizes.length) {
+        finishBenchmark();
+        return;
+    }
+    s.phase = 'setup';
+}
+
+/**
+ * Finalize benchmark: clean up GPU resources, restore user settings,
+ * render results overlay, and log a plaintext table to the console.
+ */
+function finishBenchmark() {
+    const s = /** @type {NonNullable<typeof benchState>} */ (benchState);
+
+    if (s.sortInst) s.sortInst.destroy();
+    if (s.keysBuf) s.keysBuf.destroy();
+
+    const results = s.results;
+    const saved = s.saved;
+
+    benchState = null;
+    benchStatus.style.display = 'none';
+
+    // Restore GPU profiler to whatever the user had (usually off).
+    if (device.gpuProfiler) {
+        device.gpuProfiler.enabled = saved.profilerEnabled;
+    }
+
+    // Hide the device info HUD so it doesn't overlap the results title, and
+    // keep the visualization planes disabled while the overlay is shown -
+    // restoring both only when the user clicks Close. We don't restore the
+    // render / elementsK / bits / mode observer values here for the same
+    // reason: doing so would trigger regen and a visible cube / planes
+    // flicker behind the results. Close defers that until it's actually
+    // needed.
+    deviceInfo.style.display = 'none';
+    unsortedPlane.enabled = false;
+    sortedPlane.enabled = false;
+
+    renderBenchResults(results, () => {
+        deviceInfo.style.display = '';
+        data.set('options.elementsK', saved.elementsK);
+        data.set('options.bits', saved.bits);
+        data.set('options.mode', saved.mode);
+        data.set('options.render', saved.render);
+        data.set('options.validation', saved.validation);
+    });
+    console.log(benchResultsPlaintext(results));
+}
+
+/**
+ * Render the benchmark results as a table in the overlay.
+ *
+ * @param {{size: number, configLabel: string, frameMs: number, passMs: Map<string, number>}[]} results - Benchmark results.
+ * @param {() => void} onClose - Called when the user clicks Close.
+ */
+function renderBenchResults(results, onClose) {
+    // Group results by size - columns are configs. `sizes` preserves the
+    // actual measured sizes (may be a subset of BENCH_SIZES when the user
+    // capped the sweep via the Benchmark panel), sorted ascending.
+    /** @type {Map<number, Map<string, {frameMs: number, passMs: Map<string, number>}>>} */
+    const bySize = new Map();
+    for (const r of results) {
+        let row = bySize.get(r.size);
+        if (!row) {
+            row = new Map();
+            bySize.set(r.size, row);
+        }
+        row.set(r.configLabel, { frameMs: r.frameMs, passMs: r.passMs });
+    }
+    const sizes = [...bySize.keys()].sort((a, b) => a - b);
+
+    // GPU info header.
+    const dev = /** @type {any} */ (device);
+    let gpuLine = `Device: ${device.deviceType.toUpperCase()}`;
+    if (device.isWebGPU && dev.gpuAdapter?.info) {
+        const info = dev.gpuAdapter.info;
+        gpuLine += `  ·  ${info.vendor || '?'} / ${info.architecture || info.device || '?'}`;
+    }
+
+    const baseline = BENCH_CONFIGS[0].label;
+
+    // Explicit palette - PCUI's default styles inherit into the overlay and
+    // drag text toward panel-background grey, so we pin every cell to a
+    // high-contrast foreground.
+    const TXT = '#e6e6e6';
+    const MUTED = '#aaa';
+    const HDR_BG = '#1e1e24';
+
+    // Column count for the details-row colspan: Size + 1 per baseline +
+    // 2 per non-baseline (time + speedup) + Details.
+    const totalCols = 2 + (BENCH_CONFIGS.length - 1) * 2 + 1;
+
+    let html = '';
+    html += `<div style="color:${TXT};">`;
+    html += `<div style="font-size:15px;margin-bottom:4px;font-weight:bold;color:${TXT};">Radix Sort Benchmark</div>`;
+    html += `<div style="color:${MUTED};margin-bottom:4px;">${gpuLine}</div>`;
+    html += `<div style="color:${MUTED};margin-bottom:12px;">${BENCH_BITS}-bit keys  ·  ${BENCH_WARMUP} warmup + ${BENCH_MEASURE} measured frames per cell  ·  sort-only GPU time in ms (Forward pass excluded)</div>`;
+
+    html += `<table style="border-collapse:collapse;margin-bottom:14px;width:100%;color:${TXT};">`;
+    html += `<thead><tr style="background:${HDR_BG};">`;
+    const th = `style="text-align:right;padding:5px 10px;border-bottom:1px solid #444;color:${TXT};"`;
+    html += `<th ${th}>Size</th>`;
+    for (let c = 0; c < BENCH_CONFIGS.length; c++) {
+        const cfg = BENCH_CONFIGS[c];
+        html += `<th ${th}>${cfg.label} (ms)</th>`;
+        // Non-baseline configs get an adjacent speedup-vs-baseline column.
+        if (c > 0) html += `<th ${th}>vs ${baseline}</th>`;
+    }
+    html += `<th style="text-align:center;padding:5px 10px;border-bottom:1px solid #444;color:${TXT};">Details</th>`;
+    html += '</tr></thead><tbody>';
+
+    const td = `style="text-align:right;padding:3px 10px;color:${TXT};"`;
+
+    for (let i = 0; i < sizes.length; i++) {
+        const size = sizes[i];
+        const row = bySize.get(size);
+        if (!row) continue;
+
+        // Zebra striping for readability at a glance.
+        const rowBg = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)';
+        const b = row.get(baseline)?.frameMs ?? 0;
+
+        html += `<tr style="background:${rowBg};">`;
+        html += `<td ${td}>${fmtN(size)}</td>`;
+        for (let c = 0; c < BENCH_CONFIGS.length; c++) {
+            const cfg = BENCH_CONFIGS[c];
+            const v = row.get(cfg.label)?.frameMs ?? 0;
+            html += `<td ${td}>${v ? v.toFixed(2) : '—'}</td>`;
+            if (c > 0) {
+                const speedup = (b > 0 && v > 0) ? (b / v) : 0;
+                const spColor = speedup >= 1 ? '#78e37a' : '#e87878';
+                html += `<td style="text-align:right;padding:3px 10px;color:${spColor};">${speedup ? `${speedup.toFixed(2)}×` : '—'}</td>`;
+            }
+        }
+        html += `<td style="text-align:center;padding:3px 10px;color:${TXT};"><button data-toggle="${i}" style="background:transparent;color:${TXT};border:1px solid #555;border-radius:3px;padding:1px 8px;cursor:pointer;font-family:monospace;font-size:11px;">▸</button></td>`;
+        html += '</tr>';
+
+        // Hidden detail row below, one per size. Shows per-pass breakdown
+        // for all configs side by side; revealed by the toggle button.
+        html += `<tr data-detail-content="${i}" style="display:none;background:${rowBg};">`;
+        html += `<td colspan="${totalCols}" style="padding:6px 24px 10px 24px;color:${TXT};">`;
+        html += '<div style="display:flex;gap:24px;flex-wrap:wrap;">';
+        for (const cfg of BENCH_CONFIGS) {
+            const entry = row.get(cfg.label);
+            if (!entry) continue;
+            const passes = [...entry.passMs.entries()].sort((a, b) => b[1] - a[1]);
+            html += '<div style="min-width:260px;">';
+            html += `<div style="color:${TXT};margin-bottom:2px;font-weight:bold;">${cfg.label}  <span style="color:${MUTED};font-weight:normal;">(${entry.frameMs.toFixed(2)} ms)</span></div>`;
+            if (passes.length === 0) {
+                html += `<div style="color:${MUTED};padding-left:8px;">(no pass timings)</div>`;
+            } else {
+                for (const [name, t] of passes) {
+                    html += `<div style="color:${MUTED};padding-left:8px;white-space:nowrap;"><span style="display:inline-block;width:54px;text-align:right;color:${TXT};">${t.toFixed(3)}</span>  ${name}</div>`;
+                }
+            }
+            html += '</div>';
+        }
+        html += '</div></td></tr>';
+    }
+    html += '</tbody></table>';
+
+    html += '<div style="margin-top:14px;display:flex;gap:8px;">';
+    html += '<button id="bench-save-btn" style="background:#3a8a3a;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Save to file</button>';
+    html += '<button id="bench-close-btn" style="background:#4a9eff;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Close</button>';
+    html += '</div>';
+    html += '</div>';
+
+    benchResults.innerHTML = html;
+    benchResults.style.display = 'block';
+
+    // Wire up per-row toggles. Each button flips the matching detail row
+    // and swaps its caret glyph.
+    const toggles = benchResults.querySelectorAll('button[data-toggle]');
+    toggles.forEach((btn) => {
+        const b = /** @type {HTMLButtonElement} */ (btn);
+        b.onclick = () => {
+            const idx = b.getAttribute('data-toggle');
+            const detailRow = /** @type {HTMLElement | null} */ (
+                benchResults.querySelector(`tr[data-detail-content="${idx}"]`)
+            );
+            if (!detailRow) return;
+            const isOpen = detailRow.style.display !== 'none';
+            detailRow.style.display = isOpen ? 'none' : '';
+            b.textContent = isOpen ? '▸' : '▾';
+        };
+    });
+
+    const saveBtn = document.getElementById('bench-save-btn');
+    if (saveBtn) {
+        saveBtn.onclick = () => {
+            downloadText(benchFilename(), benchResultsPlaintext(results, true));
+        };
+    }
+
+    const closeBtn = document.getElementById('bench-close-btn');
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            benchResults.style.display = 'none';
+            onClose();
+        };
+    }
+}
+
+/**
+ * Build a plaintext copy of the benchmark results. With `includeDetails`
+ * also appends the per-pass breakdown below the summary table, so the
+ * output is suitable for pasting into a PR/issue or saving to disk.
+ *
+ * @param {{size: number, configLabel: string, frameMs: number, passMs: Map<string, number>}[]} results - Benchmark results.
+ * @param {boolean} [includeDetails] - When true, append per-pass breakdown per (size, config).
+ * @returns {string} Plaintext report.
+ */
+function benchResultsPlaintext(results, includeDetails = false) {
+    /** @type {Map<number, Map<string, {frameMs: number, passMs: Map<string, number>}>>} */
+    const bySize = new Map();
+    for (const r of results) {
+        let row = bySize.get(r.size);
+        if (!row) {
+            row = new Map();
+            bySize.set(r.size, row);
+        }
+        row.set(r.configLabel, { frameMs: r.frameMs, passMs: r.passMs });
+    }
+    const sizes = [...bySize.keys()].sort((a, b) => a - b);
+
+    // GPU info - useful when pasting results into issues / PRs.
+    const dev = /** @type {any} */ (device);
+    let gpuLine = `Device: ${device.deviceType.toUpperCase()}`;
+    if (device.isWebGPU && dev.gpuAdapter?.info) {
+        const info = dev.gpuAdapter.info;
+        gpuLine += `  -  ${info.vendor || '?'} / ${info.architecture || info.device || '?'}`;
+    }
+
+    const COL_W = 14;
+    const baseline = BENCH_CONFIGS[0].label;
+
+    let text = 'Radix Sort Benchmark\n';
+    text += `${gpuLine}\n`;
+    text += `${BENCH_BITS}-bit keys, ${BENCH_WARMUP} warmup + ${BENCH_MEASURE} measured frames per cell\n`;
+    text += 'Sort-only GPU time in ms (Forward pass excluded)\n';
+    text += `Captured: ${new Date().toISOString()}\n\n`;
+
+    // Header row: Size + for each config: its label + (if non-baseline) a
+    // "vs baseline" column.
+    text += 'Size'.padStart(8);
+    for (let c = 0; c < BENCH_CONFIGS.length; c++) {
+        text += BENCH_CONFIGS[c].label.padStart(COL_W);
+        if (c > 0) text += `vs ${baseline}`.padStart(COL_W);
+    }
+    text += '\n';
+    const totalW = 8 + BENCH_CONFIGS.length * COL_W + (BENCH_CONFIGS.length - 1) * COL_W;
+    text += '-'.repeat(totalW);
+    text += '\n';
+
+    for (const size of sizes) {
+        const row = bySize.get(size);
+        if (!row) continue;
+        text += fmtN(size).padStart(8);
+        const b = row.get(baseline)?.frameMs ?? 0;
+        for (let c = 0; c < BENCH_CONFIGS.length; c++) {
+            const cfg = BENCH_CONFIGS[c];
+            const v = row.get(cfg.label)?.frameMs ?? 0;
+            text += (v ? v.toFixed(2) : '-').padStart(COL_W);
+            if (c > 0) {
+                text += (b > 0 && v > 0 ? `${(b / v).toFixed(2)}x` : '-').padStart(COL_W);
+            }
+        }
+        text += '\n';
+    }
+
+    if (includeDetails) {
+        text += '\n\nPer-pass breakdown (mean ms)\n';
+        text += '='.repeat(totalW);
+        text += '\n';
+        for (const size of sizes) {
+            const row = bySize.get(size);
+            if (!row) continue;
+            text += `\n[${fmtN(size)}]\n`;
+            for (const cfg of BENCH_CONFIGS) {
+                const entry = row.get(cfg.label);
+                if (!entry) continue;
+                text += `  ${cfg.label}  (sort-only ${entry.frameMs.toFixed(3)} ms)\n`;
+                const passes = [...entry.passMs.entries()].sort((a, b) => b[1] - a[1]);
+                if (passes.length === 0) {
+                    text += '    (no pass timings)\n';
+                } else {
+                    for (const [name, t] of passes) {
+                        text += `    ${t.toFixed(3).padStart(8)}  ${name}\n`;
+                    }
+                }
+            }
+        }
+    }
+
+    return text;
+}
+
+/**
+ * Trigger a text file download in the browser.
+ *
+ * @param {string} filename - Suggested filename.
+ * @param {string} content - File contents.
+ */
+function downloadText(filename, content) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Defer revoke so the download has a chance to start in all browsers.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
+ * Build a filename for the saved report: radix-bench-<device>-<YYYYMMDD-HHMMSS>.txt.
+ *
+ * @returns {string} The suggested filename.
+ */
+function benchFilename() {
+    const dev = /** @type {any} */ (device);
+    let tag = device.deviceType || 'gpu';
+    if (device.isWebGPU && dev.gpuAdapter?.info) {
+        const info = dev.gpuAdapter.info;
+        tag = (info.architecture || info.device || info.vendor || 'gpu');
+    }
+    tag = String(tag).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const d = new Date();
+    const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
+    const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    return `radix-bench-${tag}-${stamp}.txt`;
+}
+
+// Hook the button-emitted event from the controls panel.
+data.on('benchmark', () => {
+    startBenchmark();
 });
 
 // Update loop - continuously sorts every frame
 app.on('update', (/** @type {number} */ dt) => {
     // Rotate the cube for visual frame rate indication
     cube.rotate(10 * dt, 20 * dt, 30 * dt);
+
+    // Benchmark mode takes over the frame: it owns its own sort instances
+    // and keys buffer, and intentionally bypasses the interactive material
+    // updates so fragment-shader work doesn't contaminate timings.
+    if (benchState) {
+        stepBenchmark();
+        return;
+    }
 
     // Wait for observer to initialize values from controls
     if (currentNumElements === 0 || currentNumBits === 0) {
