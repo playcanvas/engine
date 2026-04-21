@@ -61,6 +61,19 @@ function load(app) {
         ['StandardMaterial', './src/scene/materials/standard-material.js']
     ]);
 
+    // Sweep away any top-level Accessor reflections that `typedoc-plugin-missing-exports` has
+    // incorrectly hoisted out of their owning class into the project root. These show up as
+    // orphan entries under the "Other" category on the generated index page, with broken
+    // self-links to anchors that don't exist. The canonical documentation for each accessor
+    // lives on its owning class's page; removing the project-root duplicates does not affect
+    // those class-member reflections.
+    app.converter.on(Converter.EVENT_RESOLVE_END, (/** @type {import('typedoc').Context} */ context) => {
+        const orphans = context.project.children?.filter(child => child.kind === ReflectionKind.Accessor) ?? [];
+        for (const orphan of orphans) {
+            context.project.removeReflection(orphan);
+        }
+    });
+
     app.converter.on(Converter.EVENT_RESOLVE_BEGIN, (/** @type {import('typedoc').Context} */ context) => {
         const getReference = (type) => {
             const reflection = context.project.children.find(child => child.name === type && child.kind === ReflectionKind.Class);
