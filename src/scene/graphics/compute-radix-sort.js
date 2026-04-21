@@ -13,6 +13,8 @@ import { radixSort8bitHistogramSource } from '../shader-lib/wgsl/chunks/radix-so
 import { radixSort8bitReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit.js';
 import { radixSort8bitSubgroupReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit-subgroup.js';
 import { radixSort8bitSubgroupPackedReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit-subgroup-packed.js';
+import { radixSort8bitSubgroupRankedReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit-subgroup-ranked.js';
+import { radixSort8bitSubgroupCoalescedReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit-subgroup-coalesced.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -97,15 +99,18 @@ class ComputeRadixSort {
     _elementCount = 0;
 
     /**
-     * Number of workgroups for current sort.
+     * Number of workgroups actually dispatched for the current sort.
+     * Derived from `elementCount` (not `capacity`) so that smaller sorts issue
+     * fewer workgroups even when buffers are sized for a larger high-water
+     * mark.
      *
      * @type {number}
      */
     _workgroupCount = 0;
 
     /**
-     * Allocated workgroup capacity. Tracks the last allocated size; reallocation is triggered
-     * when the effective workgroup count (derived from element count and capacity) differs.
+     * Allocated workgroup capacity (buffer sizing). Buffers are only
+     * reallocated when this value changes. Always `>= _workgroupCount`.
      *
      * @type {number}
      */
@@ -270,7 +275,7 @@ class ComputeRadixSort {
     /**
      * Reorder shader variant for 8-bit mode. Ignored when `_radixBits === 4`.
      *
-     * @type {'shared-mem' | 'subgroup' | 'subgroup-packed'}
+     * @type {'shared-mem' | 'subgroup' | 'subgroup-packed' | 'subgroup-ranked' | 'subgroup-coalesced'}
      * @private
      */
     _reorderVariant = 'shared-mem';
@@ -290,20 +295,29 @@ class ComputeRadixSort {
      * @param {GraphicsDevice} device - The graphics device (must support compute).
      * @param {object} [options] - Options.
      * @param {'auto' | 'csdldf' | 'blelloch'} [options.scanKernel] - Which
-     * prefix scan kernel to use for block sums. `'auto'` (default) picks
-     * CSDLDF when the device supports subgroups, and Blelloch otherwise.
+     * prefix scan kernel to use for block sums. `'auto'` (default) maps to
+     * Blelloch. `'csdldf'` requires `device.supportsSubgroups` and is
+     * currently opt-in while an NVIDIA correctness issue at large partition
+     * counts is being investigated.
      * @param {'auto' | 4 | 8} [options.radixBits] - Radix width per pass.
      * `'auto'` (default) picks 8 when the device supports subgroups, 4
      * otherwise. Passing 8 explicitly requires `device.supportsSubgroups`.
-     * @param {'auto' | 'shared-mem' | 'subgroup' | 'subgroup-packed'} [options.reorderVariant] -
+     * @param {'auto' | 'shared-mem' | 'subgroup' | 'subgroup-packed' | 'subgroup-ranked' | 'subgroup-coalesced'} [options.reorderVariant] -
      * Reorder shader variant for 8-bit mode (ignored in 4-bit mode).
      * `'shared-mem'` (default when `'auto'`) uses per-digit shared-memory
      * bitmasks for ranking. `'subgroup'` uses per-bit subgroup-ballot
      * intersection trading shared-memory atomic traffic for hardware subgroup
      * ops. `'subgroup-packed'` is the same as `'subgroup'` but packs the
      * per-subgroup counts 4-to-a-u32 (2 KB shared memory vs 8 KB) to improve
-     * occupancy on shared-memory-limited GPUs. Both subgroup variants are
-     * currently correct only for sgSize == 32.
+     * occupancy on shared-memory-limited GPUs. `'subgroup-ranked'` ports the
+     * `RankKeysWGE16` ranking scheme from b0nes164/GPUSorting (MIT): per-warp
+     * atomicAdds into private histogram rows + a circular-shift inclusive
+     * scan to derive per-warp digit bases, avoiding the per-key inter-warp
+     * sum loop of the other subgroup variants. `'subgroup-coalesced'` extends
+     * `'subgroup-ranked'` by staging keys and values through shared memory so
+     * the final global scatter is coalesced within each warp (targets GPUs
+     * like NVIDIA where the non-coalesced scatter dominates reorder time).
+     * All subgroup variants are currently correct only for sgSize == 32.
      */
     constructor(device, { scanKernel = 'auto', radixBits = 'auto', reorderVariant = 'auto' } = {}) {
         Debug.assert(device.supportsCompute, 'ComputeRadixSort requires compute shader support (WebGPU)');
@@ -332,8 +346,10 @@ class ComputeRadixSort {
         Debug.assert(
             this._reorderVariant === 'shared-mem' ||
             this._reorderVariant === 'subgroup' ||
-            this._reorderVariant === 'subgroup-packed',
-            `ComputeRadixSort: reorderVariant must be 'shared-mem', 'subgroup' or 'subgroup-packed', got ${reorderVariant}`);
+            this._reorderVariant === 'subgroup-packed' ||
+            this._reorderVariant === 'subgroup-ranked' ||
+            this._reorderVariant === 'subgroup-coalesced',
+            `ComputeRadixSort: reorderVariant must be 'shared-mem', 'subgroup', 'subgroup-packed', 'subgroup-ranked' or 'subgroup-coalesced', got ${reorderVariant}`);
         Debug.assert(this._reorderVariant === 'shared-mem' || effective === 8,
             'ComputeRadixSort: subgroup reorder variants are only supported in 8-bit mode');
 
@@ -341,6 +357,10 @@ class ComputeRadixSort {
             this._profilerTag = 'RadixSort8bitSG';
         } else if (this._radixBits === 8 && this._reorderVariant === 'subgroup-packed') {
             this._profilerTag = 'RadixSort8bitSGP';
+        } else if (this._radixBits === 8 && this._reorderVariant === 'subgroup-ranked') {
+            this._profilerTag = 'RadixSort8bitSGR';
+        } else if (this._radixBits === 8 && this._reorderVariant === 'subgroup-coalesced') {
+            this._profilerTag = 'RadixSort8bitSGC';
         } else {
             this._profilerTag = `RadixSort${this._radixBits}bit`;
         }
@@ -453,7 +473,7 @@ class ComputeRadixSort {
      * Active reorder shader variant for 8-bit mode. Always `'shared-mem'` in
      * 4-bit mode. Useful for logging and debug overlays.
      *
-     * @type {'shared-mem' | 'subgroup' | 'subgroup-packed'}
+     * @type {'shared-mem' | 'subgroup' | 'subgroup-packed' | 'subgroup-ranked' | 'subgroup-coalesced'}
      */
     get reorderVariant() {
         return this._radixBits === 8 ? this._reorderVariant : 'shared-mem';
@@ -532,6 +552,10 @@ class ComputeRadixSort {
                 reorderSource = radixSort8bitSubgroupReorderSource;
             } else if (this._reorderVariant === 'subgroup-packed') {
                 reorderSource = radixSort8bitSubgroupPackedReorderSource;
+            } else if (this._reorderVariant === 'subgroup-ranked') {
+                reorderSource = radixSort8bitSubgroupRankedReorderSource;
+            } else if (this._reorderVariant === 'subgroup-coalesced') {
+                reorderSource = radixSort8bitSubgroupCoalescedReorderSource;
             } else {
                 reorderSource = radixSort8bitReorderSource;
             }
@@ -582,10 +606,17 @@ class ComputeRadixSort {
      * @private
      */
     _allocateBuffers(elementCount, numBits, indirect, hasInitialValues, skipLastPassKeyWrite) {
+        // Buffer sizing is driven by `capacity` (the high-water mark) to avoid
+        // realloc churn when the workload shrinks. Dispatch and scan sizes
+        // must track the CURRENT sort's elementCount - otherwise a 1M sort
+        // following a 30M sort still dispatches 30M-worth of workgroups and
+        // scans over a 30M block_sums array, doing mostly-no-op work but
+        // still paying per-workgroup fixed costs.
         const effectiveCount = Math.max(elementCount, this.capacity);
-        const workgroupCount = Math.ceil(effectiveCount / ELEMENTS_PER_WORKGROUP);
+        const allocWorkgroupCount = Math.ceil(effectiveCount / ELEMENTS_PER_WORKGROUP);
+        const currentWorkgroupCount = Math.max(1, Math.ceil(elementCount / ELEMENTS_PER_WORKGROUP));
 
-        const buffersNeedRealloc = workgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
+        const buffersNeedRealloc = allocWorkgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
 
         // Recreate passes when numBits, indirect mode, initial-values mode, or key-write mode changes
         const passesNeedRecreate = numBits !== this._numBits || indirect !== this._indirect ||
@@ -597,11 +628,11 @@ class ComputeRadixSort {
             this._destroyBuffers();
 
             // Store the new capacity
-            this._allocatedWorkgroupCount = workgroupCount;
+            this._allocatedWorkgroupCount = allocWorkgroupCount;
             this.capacity = effectiveCount;
 
             const elementSize = effectiveCount * 4;
-            const blockSumSize = this._bucketCount * workgroupCount * 4;
+            const blockSumSize = this._bucketCount * allocWorkgroupCount * 4;
 
             // Create ping-pong buffers for keys and values
             this._keys0 = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
@@ -628,11 +659,13 @@ class ComputeRadixSort {
 
         // Update current working size and dispatch dimensions (must be after
         // _destroyBuffers which resets _workgroupCount)
-        this._workgroupCount = workgroupCount;
-        Compute.calcDispatchSize(workgroupCount, this._dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        this._workgroupCount = currentWorkgroupCount;
+        Compute.calcDispatchSize(currentWorkgroupCount, this._dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
 
-        // Resize prefix kernel (creates passes on first call, updates counts otherwise)
-        this._prefixSumKernel.resize(this._blockSums, this._bucketCount * workgroupCount);
+        // Resize prefix kernel to match the CURRENT scan size. The allocated
+        // block_sums buffer is larger (sized for capacity), but the scan only
+        // needs to operate over the compact range we'll actually populate.
+        this._prefixSumKernel.resize(this._blockSums, this._bucketCount * currentWorkgroupCount);
 
         if (passesNeedRecreate) {
             this._createPasses(numBits, indirect, hasInitialValues, skipLastPassKeyWrite);

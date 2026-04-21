@@ -178,6 +178,7 @@ export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
 export { ComputeRadixSort } from './scene/graphics/compute-radix-sort.js';
+export { ComputeOneSweepRadixSort } from './scene/graphics/compute-onesweep-radix-sort.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
 export { FramePass } from './platform/graphics/frame-pass.js';

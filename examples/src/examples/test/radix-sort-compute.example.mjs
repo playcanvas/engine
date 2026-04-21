@@ -92,49 +92,60 @@ let sortedIndicesBuffer = null;
 let originalValues = [];
 /** @type {boolean} */
 let needsRegen = true;
-/** @type {boolean} */
-const enableRendering = true;
 
 // Valid radix modes. Invalid combinations (e.g. 4-bit + subgroup) are never
-// exposed to the user, so we enumerate the three working variants directly
-// rather than cross-producting two dropdowns.
+// exposed to the user, so we enumerate the working variants directly rather
+// than cross-producting two dropdowns. The 'onesweep' entry is a separate
+// implementation class (ComputeOneSweepRadixSort) with a fused global
+// histogram + chained-scan lookback + binning pipeline; the rest route
+// through the classic multi-pass ComputeRadixSort.
 const RADIX_MODES = {
     '4-shared-mem': { radixBits: 4, reorderVariant: 'shared-mem' },
     '8-shared-mem': { radixBits: 8, reorderVariant: 'shared-mem' },
     '8-subgroup': { radixBits: 8, reorderVariant: 'subgroup' },
-    '8-subgroup-packed': { radixBits: 8, reorderVariant: 'subgroup-packed' }
+    '8-subgroup-packed': { radixBits: 8, reorderVariant: 'subgroup-packed' },
+    '8-subgroup-ranked': { radixBits: 8, reorderVariant: 'subgroup-ranked' },
+    '8-subgroup-coalesced': { radixBits: 8, reorderVariant: 'subgroup-coalesced' },
+    'onesweep': { onesweep: true }
 };
 const DEFAULT_MODE = device.supportsSubgroups ? '8-shared-mem' : '4-shared-mem';
 
-// Lazy cache of ComputeRadixSort instances, keyed by "scan-mode" toggle
-// combination. Instances are created on first use and retained, so subsequent
-// toggles between configurations are free (no shader rebuild). Each instance
-// grows its internal buffers on demand, so the total GPU memory scales with
-// the max element count exercised per combo. 8-bit modes require subgroup
-// support on the device; the 'subgroup' reorder additionally assumes
-// sgSize == 32.
-/** @type {Map<string, pc.ComputeRadixSort>} */
+// Lazy cache of ComputeRadixSort / ComputeOneSweepRadixSort instances, keyed
+// by "scan-mode" toggle combination. Instances are created on first use and
+// retained, so subsequent toggles between configurations are free (no shader
+// rebuild). Each instance grows its internal buffers on demand. 8-bit modes
+// require subgroup support; subgroup variants additionally assume
+// sgSize == 32. 'onesweep' additionally requires forward-thread-progress
+// (NVIDIA, Intel, AMD — may deadlock on Apple Silicon).
+/** @type {Map<string, pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort>} */
 const radixSortCache = new Map();
 
 /**
- * Fetches or creates the ComputeRadixSort matching the current observer
+ * Fetches or creates the radix sort instance matching the current observer
  * selection. Falls back to safe defaults if the observer value is not yet
  * populated.
  *
- * @returns {pc.ComputeRadixSort} The active radix sort instance.
+ * @returns {pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort} The active
+ * radix sort instance.
  */
 function getActiveRadixSort() {
-    const scan = data.get('options.scan') ?? (device.supportsSubgroups ? 'csdldf' : 'blelloch');
+    const scan = data.get('options.scan') ?? 'blelloch';
     const mode = data.get('options.mode') ?? DEFAULT_MODE;
-    const { radixBits, reorderVariant } = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
-    const key = `${scan}-${mode}`;
+    const modeCfg = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
+    // OneSweep ignores the scan toggle (it has a bespoke fused scan) so key
+    // only by mode to share the cached instance across scan selections.
+    const key = modeCfg.onesweep ? 'onesweep' : `${scan}-${mode}`;
     let inst = radixSortCache.get(key);
     if (!inst) {
-        inst = new pc.ComputeRadixSort(device, {
-            scanKernel: scan,
-            radixBits: radixBits,
-            reorderVariant: reorderVariant
-        });
+        if (modeCfg.onesweep) {
+            inst = new pc.ComputeOneSweepRadixSort(device);
+        } else {
+            inst = new pc.ComputeRadixSort(device, {
+                scanKernel: scan,
+                radixBits: modeCfg.radixBits,
+                reorderVariant: modeCfg.reorderVariant
+            });
+        }
         radixSortCache.set(key, inst);
     }
     return inst;
@@ -395,12 +406,23 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
     // CPU sort a copy of original values for reference
     const cpuSorted = capturedOriginalValues.slice().sort((a, b) => a - b);
 
-    // Compare GPU result against CPU reference
+    // Compare GPU result against CPU reference. Keep the first and last 5
+    // mismatches so we can see both where corruption starts and whether the
+    // tail of the array is also off (e.g. a shift-by-one cascade drops the
+    // last element and duplicates an earlier one).
     let errorCount = 0;
+    const firstErrors = [];
+    /** @type {{i: number, gpu: number, expected: number}[]} */
+    const lastErrors = [];
+    const TAIL_SIZE = 5;
     for (let i = 0; i < capturedNumElements; i++) {
         if (sortedValues[i] !== cpuSorted[i]) {
-            if (errorCount < 5) {
-                console.error(`Mismatch at index ${i}: GPU=${sortedValues[i]}, expected=${cpuSorted[i]}`);
+            if (firstErrors.length < 5) {
+                firstErrors.push({ i: i, gpu: sortedValues[i], expected: cpuSorted[i] });
+            }
+            lastErrors.push({ i: i, gpu: sortedValues[i], expected: cpuSorted[i] });
+            if (lastErrors.length > TAIL_SIZE) {
+                lastErrors.shift();
             }
             errorCount++;
         }
@@ -409,6 +431,23 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
     if (errorCount > 0) {
         sortFailureCount++;
         console.error(`✗ [${device.deviceType}] Array is NOT correctly sorted (${errorCount} errors, ${(errorCount / capturedNumElements * 100).toFixed(2)}%)`);
+        for (const e of firstErrors) {
+            console.error(`  First mismatch at index ${e.i}: GPU=${e.gpu}, expected=${e.expected}`);
+        }
+        // Avoid double-logging when the total error count fits in the first window.
+        if (errorCount > firstErrors.length) {
+            for (const e of lastErrors) {
+                console.error(`  Last  mismatch at index ${e.i}: GPU=${e.gpu}, expected=${e.expected}`);
+            }
+        }
+        // Dump the final few GPU/expected pairs unconditionally so we can
+        // confirm whether the very end of the array is shifted (a stable
+        // shift-by-one drops the last original element) or intact.
+        const tailStart = Math.max(0, capturedNumElements - TAIL_SIZE);
+        for (let i = tailStart; i < capturedNumElements; i++) {
+            const marker = sortedValues[i] !== cpuSorted[i] ? '✗' : '✓';
+            console.error(`  Tail ${marker} index ${i}: GPU=${sortedValues[i]}, expected=${cpuSorted[i]}`);
+        }
         errorOverlay.textContent = `SORT ERROR (${sortFailureCount} failures)`;
         errorOverlay.style.display = 'block';
     } else {
@@ -440,6 +479,10 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         // force a re-sort on next frame and refresh the overlay.
         needsRegen = true;
         updateDeviceInfo();
+    } else if (path === 'options.validation' && !value) {
+        // Clear any stale error overlay when validation is turned off -
+        // a previous failure is no longer being re-checked each frame.
+        errorOverlay.style.display = 'none';
     }
 });
 
@@ -451,8 +494,10 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 data.set('options', {
     elementsK: 1000,
     bits: 16,
-    scan: device.supportsSubgroups ? 'csdldf' : 'blelloch',
-    mode: DEFAULT_MODE
+    scan: 'blelloch',
+    mode: DEFAULT_MODE,
+    render: true,
+    validation: true
 });
 
 // Update loop - continuously sorts every frame
@@ -465,19 +510,27 @@ app.on('update', (/** @type {number} */ dt) => {
         return;
     }
 
-    // Regenerate data when parameters change
-    const verify = needsRegen;
+    // Regenerate data when parameters change. Validation is a one-shot
+    // GPU→CPU readback + CPU reference sort, which is O(N log N) on the
+    // main thread and blocks for seconds at large N. Gate it behind the
+    // Validation toggle so perf testing with frequent slider tweaks stays
+    // responsive.
+    const verify = needsRegen && (data.get('options.validation') ?? true);
     if (needsRegen) {
         regenerateData();
     }
 
-    // Sort every frame, verify only after regeneration
+    // Sort every frame, verify only after regeneration (and only when the
+    // Validation toggle is on).
     runSort(verify);
 
-    // Enable visualization after first sort
-    if (enableRendering && !unsortedPlane.enabled) {
-        unsortedPlane.enabled = true;
-        sortedPlane.enabled = true;
+    // Toggle visualization planes based on the Render checkbox. Disabling
+    // rendering isolates pure sort cost (no quad draws, no texture sampling
+    // of the keys/indices buffers).
+    const renderEnabled = data.get('options.render') ?? true;
+    if (unsortedPlane.enabled !== renderEnabled) {
+        unsortedPlane.enabled = renderEnabled;
+        sortedPlane.enabled = renderEnabled;
     }
 });
 

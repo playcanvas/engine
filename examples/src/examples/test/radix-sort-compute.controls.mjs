@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
 
     return fragment(
         jsx(
@@ -58,8 +58,29 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                         { v: '4-shared-mem', t: '4-bit shared' },
                         { v: '8-shared-mem', t: '8-bit shared' },
                         { v: '8-subgroup', t: '8-bit ballot' },
-                        { v: '8-subgroup-packed', t: '8-bit ballot packed' }
+                        { v: '8-subgroup-packed', t: '8-bit ballot packed' },
+                        { v: '8-subgroup-ranked', t: '8-bit ranked' },
+                        { v: '8-subgroup-coalesced', t: '8-bit coalesced' },
+                        { v: 'onesweep', t: 'OneSweep (fused)' }
                     ]
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Render' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'options.render' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Validation' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'options.validation' }
                 })
             )
         )

@@ -11,11 +11,19 @@ import { PrefixSumKernel } from './prefix-sum-kernel.js';
  * expose the same `resize(buffer, count)` / `dispatch(device)` / `destroy()`
  * contract, so callers do not need to care which was chosen.
  *
- * - When `force` is `'csdldf'` or (for `'auto'`) `device.supportsSubgroups` is
- *   true, returns a {@link CsdldfScanKernel} - a single-pass scan using
- *   chained lookback with decoupled fallback.
- * - Otherwise returns a {@link PrefixSumKernel} - a classic hierarchical
- *   Blelloch scan.
+ * - When `force` is `'csdldf'`, returns a {@link CsdldfScanKernel} - a
+ *   single-pass scan using chained lookback with decoupled fallback. Requires
+ *   `device.supportsSubgroups`.
+ * - Otherwise (including `'auto'`) returns a {@link PrefixSumKernel} - a
+ *   classic hierarchical Blelloch scan.
+ *
+ * The `'auto'` default is currently Blelloch everywhere. CSDLDF is retained
+ * as an opt-in (used by the example / benchmarks) while we investigate a
+ * correctness issue that appears on NVIDIA when the scan is driven with many
+ * partitions (~140+), as happens for 8-bit radix block sums on multi-million
+ * element inputs. The cost of this default is small in the radix-sort use
+ * case because the scan is far off the critical path (~0.1 ms out of ~10 ms
+ * total on RTX 2070).
  *
  * @param {GraphicsDevice} device - The graphics device.
  * @param {object} [options] - Options.
@@ -23,15 +31,13 @@ import { PrefixSumKernel } from './prefix-sum-kernel.js';
  * exclusive scan. PrefixSumKernel only produces exclusive scans; the flag is
  * only honoured by CsdldfScanKernel.
  * @param {'auto' | 'csdldf' | 'blelloch'} [options.force] - Force a specific
- * kernel. `'auto'` (default) picks CSDLDF when subgroups are available and
- * Blelloch otherwise. `'csdldf'` requires `device.supportsSubgroups`.
+ * kernel. `'auto'` (default) picks Blelloch. `'csdldf'` requires
+ * `device.supportsSubgroups`.
  * @returns {CsdldfScanKernel | PrefixSumKernel} The selected scan kernel.
  * @ignore
  */
 function createScanKernel(device, { exclusive = true, force = 'auto' } = {}) {
-    const useCsdldf = force === 'csdldf' ||
-        (force === 'auto' && device.supportsSubgroups);
-    if (useCsdldf) {
+    if (force === 'csdldf') {
         Debug.assert(device.supportsSubgroups,
             'CsdldfScanKernel forced, but device.supportsSubgroups is false');
         return new CsdldfScanKernel(device, { exclusive });
@@ -42,7 +48,8 @@ function createScanKernel(device, { exclusive = true, force = 'auto' } = {}) {
 /**
  * Returns a short name identifying which scan kernel `createScanKernel` would
  * return for the given device and `force` option. Useful for logging / debug
- * overlays.
+ * overlays. `'auto'` maps to `'blelloch'` (see {@link createScanKernel} for
+ * the rationale).
  *
  * @param {GraphicsDevice} device - The graphics device.
  * @param {'auto' | 'csdldf' | 'blelloch'} [force] - The forced kernel choice
@@ -52,9 +59,7 @@ function createScanKernel(device, { exclusive = true, force = 'auto' } = {}) {
  * @ignore
  */
 function getScanKernelName(device, force = 'auto') {
-    if (force === 'csdldf') return 'csdldf';
-    if (force === 'blelloch') return 'blelloch';
-    return device.supportsSubgroups ? 'csdldf' : 'blelloch';
+    return force === 'csdldf' ? 'csdldf' : 'blelloch';
 }
 
 export { createScanKernel, getScanKernelName };
