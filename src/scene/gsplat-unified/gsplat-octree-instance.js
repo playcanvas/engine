@@ -7,6 +7,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 import { GsplatAllocId } from './gsplat-alloc-id.js';
+import { GSPLAT_DEBUG_NODE_AABBS } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -948,7 +949,7 @@ class GSplatOctreeInstance {
     // debug render world space bounds for octree nodes based on current LOD selection
     debugRender(scene) {
         Debug.call(() => {
-            if (scene.gsplat.debugNodeAabbs) {
+            if (scene.gsplat.debug === GSPLAT_DEBUG_NODE_AABBS) {
                 const modelMat = this.placement.node.getWorldTransform();
                 const nodes = this.octree.nodes;
                 for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {

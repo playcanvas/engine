@@ -9,7 +9,8 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
-    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP
+    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
+    GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -118,11 +119,6 @@ class GSplatParams {
     }
 
     /**
-     * Enables debug rendering of AABBs for GSplat objects. Defaults to false.
-     */
-    debugAabbs = false;
-
-    /**
      * Enables radial sorting based on distance from camera (for cubemap rendering). When false,
      * uses directional sorting along camera forward vector. Defaults to false.
      *
@@ -195,11 +191,6 @@ class GSplatParams {
     }
 
     /**
-     * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
-     */
-    debugNodeAabbs = false;
-
-    /**
      * Internal dirty flag to trigger update of gsplat managers when some params change.
      *
      * @ignore
@@ -221,6 +212,9 @@ class GSplatParams {
      * frequency.
      * - {@link GSPLAT_DEBUG_HEATMAP}: Heatmap visualization of average splats processed per
      * pixel in each tile. Only supported with {@link GSPLAT_RENDERER_COMPUTE}.
+     * - {@link GSPLAT_DEBUG_AABBS}: Draw world-space AABBs for each GSplat, colorized by LOD.
+     * - {@link GSPLAT_DEBUG_NODE_AABBS}: Draw world-space AABBs for each octree node of
+     * streamed GSplats, colorized by the currently selected LOD.
      *
      * Only one debug mode can be active at a time. Defaults to {@link GSPLAT_DEBUG_NONE}.
      *
@@ -264,6 +258,44 @@ class GSplatParams {
      */
     get colorizeLod() {
         return this._debug === GSPLAT_DEBUG_LOD;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_AABBS} instead.
+     * @ignore
+     */
+    set debugAabbs(value) {
+        Debug.deprecated('GSplatParams#debugAabbs is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_AABBS instead.');
+        this.debug = value ? GSPLAT_DEBUG_AABBS : GSPLAT_DEBUG_NONE;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_AABBS} instead.
+     * @ignore
+     */
+    get debugAabbs() {
+        return this._debug === GSPLAT_DEBUG_AABBS;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_NODE_AABBS} instead.
+     * @ignore
+     */
+    set debugNodeAabbs(value) {
+        Debug.deprecated('GSplatParams#debugNodeAabbs is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_NODE_AABBS instead.');
+        this.debug = value ? GSPLAT_DEBUG_NODE_AABBS : GSPLAT_DEBUG_NONE;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_NODE_AABBS} instead.
+     * @ignore
+     */
+    get debugNodeAabbs() {
+        return this._debug === GSPLAT_DEBUG_NODE_AABBS;
     }
 
     /** @private */
