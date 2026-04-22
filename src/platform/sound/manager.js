@@ -33,13 +33,6 @@ class SoundManager extends EventHandler {
          */
         this._context = null;
 
-        this.AudioContext = (typeof AudioContext !== 'undefined' && AudioContext) ||
-                            (typeof webkitAudioContext !== 'undefined' && webkitAudioContext);
-
-        if (!this.AudioContext) {
-            Debug.warn('No support for 3D audio found');
-        }
-
         this._unlockHandlerFunc = this._unlockHandler.bind(this);
 
         // user suspended audio
@@ -76,15 +69,25 @@ class SoundManager extends EventHandler {
     }
 
     /**
-     * Get the Web Audio API context.
+     * Get the Web Audio API context. Returns null if the environment does not support the Web
+     * Audio API.
      *
-     * @type {AudioContext}
+     * @type {AudioContext|null}
      * @ignore
      */
     get context() {
         // lazy create the AudioContext
-        if (!this._context && this.AudioContext) {
-            this._context = new this.AudioContext();
+        if (!this._context) {
+            const AudioContextCtor =
+                (typeof AudioContext !== 'undefined' && AudioContext) ||
+                (typeof webkitAudioContext !== 'undefined' && webkitAudioContext);
+
+            if (!AudioContextCtor) {
+                Debug.warnOnce('No support for Web Audio API found');
+                return null;
+            }
+
+            this._context = new AudioContextCtor();
 
             if (this._context.state !== CONTEXT_STATE_RUNNING) {
                 this._registerUnlockListeners();
