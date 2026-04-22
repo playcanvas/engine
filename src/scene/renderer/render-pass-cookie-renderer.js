@@ -127,6 +127,10 @@ class RenderPassCookieRenderer extends RenderPass {
                 const projMat = camera.projectionMatrix;
                 const viewMat = camera.node.getLocalTransform().clone().invert();
                 _invViewProjMatrices[face] = new Mat4().mul2(projMat, viewMat).invert();
+
+                // we only need the inverse view-projection matrix; the temporary camera
+                // must be destroyed to unsubscribe from the device's 'resizecanvas' event
+                camera.destroy();
             }
         }
     }

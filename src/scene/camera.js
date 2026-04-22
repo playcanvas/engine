@@ -174,9 +174,10 @@ class Camera {
         };
 
         // if the backbuffer is resized, the AUTO aspect ratio (when using the backbuffer as
-        // the target) may change, so invalidate the cached value
+        // the target) may change, so invalidate the cached value and projection matrix
         this._evtResize = this.device.on('resizecanvas', () => {
             this._aspectDirty = true;
+            this._projMatDirty = true;
         });
     }
 
@@ -443,6 +444,7 @@ class Camera {
     set rect(newValue) {
         this._rect.copy(newValue);
         this._aspectDirty = true;
+        this._projMatDirty = true;
     }
 
     get rect() {
@@ -452,6 +454,7 @@ class Camera {
     set renderTarget(newValue) {
         this._renderTarget = newValue;
         this._aspectDirty = true;
+        this._projMatDirty = true;
     }
 
     get renderTarget() {

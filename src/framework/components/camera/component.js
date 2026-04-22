@@ -1243,11 +1243,15 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Calculates aspect ratio value for a given render target.
+     * Computes the aspect ratio this camera would produce when rendering to the given render
+     * target, without changing the camera's state. When `rt` is omitted, the camera's own
+     * {@link CameraComponent#renderTarget} is used, and if that is also null, the backbuffer
+     * is used. The camera's {@link CameraComponent#rect} viewport is taken into account.
      *
-     * @param {RenderTarget|null} [rt] - Optional
-     * render target. If unspecified, the backbuffer is used.
-     * @returns {number} The aspect ratio of the render target (or backbuffer).
+     * @param {RenderTarget|null} [rt] - Optional render target to compute the aspect ratio
+     * against. Defaults to the camera's current render target, or the backbuffer if none is
+     * assigned.
+     * @returns {number} The computed aspect ratio.
      */
     calculateAspectRatio(rt) {
         return this._camera.calculateAspectRatio(rt);

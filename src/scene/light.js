@@ -115,6 +115,9 @@ class LightRenderData {
             bg.destroy();
         });
         this.viewBindGroups.length = 0;
+
+        this.shadowCamera?.destroy();
+        this.shadowCamera = null;
     }
 
     // returns shadow buffer currently attached to the shadow camera

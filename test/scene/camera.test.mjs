@@ -70,7 +70,7 @@ describe('Camera', function () {
             const camera = new Camera(app.graphicsDevice);
             expect(camera.aspectRatio).to.equal(1);
 
-            // half-width viewport on a square render target -> 2:1 viewport aspect
+            // half-width viewport on a square render target -> 1:2 viewport aspect
             camera.rect = new Vec4(0, 0, 0.5, 1);
             expect(camera.aspectRatio).to.equal(0.5);
         });
