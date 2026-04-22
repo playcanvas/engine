@@ -57,6 +57,14 @@ class MouseEvent {
     button = MOUSEBUTTON_NONE;
 
     /**
+     * The pressed state of all mouse buttons at the time this event was fired. A 3-element
+     * array of booleans for left, middle and right buttons respectively.
+     *
+     * @type {boolean[]}
+     */
+    buttons;
+
+    /**
      * A value representing the amount the mouse wheel has moved, only valid for
      * {@link Mouse.EVENT_MOUSEWHEEL} events.
      */

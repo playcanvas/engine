@@ -64,14 +64,42 @@ class TouchDevice extends EventHandler {
     static EVENT_TOUCHCANCEL = 'touchcancel';
 
     /**
+     * @type {Element|null}
+     * @private
+     */
+    _element = null;
+
+    /**
+     * @type {(e: globalThis.TouchEvent) => void}
+     * @private
+     */
+    _startHandler;
+
+    /**
+     * @type {(e: globalThis.TouchEvent) => void}
+     * @private
+     */
+    _endHandler;
+
+    /**
+     * @type {(e: globalThis.TouchEvent) => void}
+     * @private
+     */
+    _moveHandler;
+
+    /**
+     * @type {(e: globalThis.TouchEvent) => void}
+     * @private
+     */
+    _cancelHandler;
+
+    /**
      * Create a new touch device and attach it to an element.
      *
      * @param {Element} element - The element to attach listen for events on.
      */
     constructor(element) {
         super();
-
-        this._element = null;
 
         this._startHandler = this._handleTouchStart.bind(this);
         this._endHandler = this._handleTouchEnd.bind(this);
