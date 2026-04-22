@@ -2034,8 +2034,6 @@ class AppBase extends EventHandler {
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
 
-        this.tick = null;
-
         this.off(); // remove all events
 
         this._soundManager?.destroy();
