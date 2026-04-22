@@ -205,7 +205,7 @@ class Camera {
         if (this.xr?.active) return this._xrProperties.aspectRatio;
 
         // in ASPECT_AUTO mode, always recompute from current inputs (render target / backbuffer
-        // size and rect). The computation is trivially cheap, and this avoids few complexities.
+        // size and rect). The computation is trivially cheap, and this avoids a few complexities.
         if (this._aspectRatioMode === ASPECT_AUTO) {
             const newValue = this.calculateAspectRatio();
             if (this._aspectRatio !== newValue) {
