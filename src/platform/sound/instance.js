@@ -1,6 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { math } from '../../core/math/math.js';
-import { hasAudioContext } from './capabilities.js';
 
 /**
  * @import { SoundManager } from './manager.js'
@@ -84,9 +83,7 @@ class SoundInstance extends EventHandler {
     static EVENT_END = 'end';
 
     /**
-     * Gets the source that plays the sound resource. If the Web Audio API is not supported the
-     * type of source is [Audio](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio).
-     * Source is only available after calling play.
+     * Gets the source that plays the sound resource. Source is only available after calling play.
      *
      * @type {AudioBufferSourceNode}
      */
@@ -204,79 +201,65 @@ class SoundInstance extends EventHandler {
         /** @private */
         this._onEndCallback = options.onEnd;
 
-        if (hasAudioContext()) {
-            /** @private */
-            this._startedAt = 0;
+        /** @private */
+        this._startedAt = 0;
 
-            /**
-             * Manually keep track of the playback position because the Web Audio API does not
-             * provide a way to do this accurately if the playbackRate is not 1.
-             *
-             * @private
-             */
-            this._currentTime = 0;
+        /**
+         * Manually keep track of the playback position because the Web Audio API does not
+         * provide a way to do this accurately if the playbackRate is not 1.
+         *
+         * @private
+         */
+        this._currentTime = 0;
 
-            /** @private */
-            this._currentOffset = 0;
+        /** @private */
+        this._currentOffset = 0;
 
-            /**
-             * The input node is the one that is connected to the source.
-             *
-             * @type {AudioNode|null}
-             * @private
-             */
-            this._inputNode = null;
+        /**
+         * The input node is the one that is connected to the source.
+         *
+         * @type {AudioNode|null}
+         * @private
+         */
+        this._inputNode = null;
 
-            /**
-             * The connected node is the one that is connected to the destination (speakers). Any
-             * external nodes will be connected to this node.
-             *
-             * @type {AudioNode|null}
-             * @private
-             */
-            this._connectorNode = null;
+        /**
+         * The connected node is the one that is connected to the destination (speakers). Any
+         * external nodes will be connected to this node.
+         *
+         * @type {AudioNode|null}
+         * @private
+         */
+        this._connectorNode = null;
 
-            /**
-             * The first external node set by a user.
-             *
-             * @type {AudioNode|null}
-             * @private
-             */
-            this._firstNode = null;
+        /**
+         * The first external node set by a user.
+         *
+         * @type {AudioNode|null}
+         * @private
+         */
+        this._firstNode = null;
 
-            /**
-             * The last external node set by a user.
-             *
-             * @type {AudioNode|null}
-             * @private
-             */
-            this._lastNode = null;
+        /**
+         * The last external node set by a user.
+         *
+         * @type {AudioNode|null}
+         * @private
+         */
+        this._lastNode = null;
 
-            /**
-             * Set to true if a play() request was issued when the AudioContext was still suspended,
-             * and will therefore wait until it is resumed to play the audio.
-             *
-             * @private
-             */
-            this._waitingContextSuspension = false;
+        /**
+         * Set to true if a play() request was issued when the AudioContext was still suspended,
+         * and will therefore wait until it is resumed to play the audio.
+         *
+         * @private
+         */
+        this._waitingContextSuspension = false;
 
-            this._initializeNodes();
+        this._initializeNodes();
 
-            /** @private */
-            this._endedHandler = this._onEnded.bind(this);
-        } else {
-            /** @private */
-            this._isReady = false;
-
-            /** @private */
-            this._loadedMetadataHandler = this._onLoadedMetadata.bind(this);
-            /** @private */
-            this._timeUpdateHandler = this._onTimeUpdate.bind(this);
-            /** @private */
-            this._endedHandler = this._onEnded.bind(this);
-
-            this._createSource();
-        }
+        /** @private */
+        this._endedHandler = this._onEnded.bind(this);
     }
 
     /**
@@ -1003,241 +986,6 @@ class SoundInstance extends EventHandler {
             this.source = null;
         }
     }
-}
-
-if (!hasAudioContext()) {
-    Object.assign(SoundInstance.prototype, {
-        play: function () {
-            if (this._state !== STATE_STOPPED) {
-                this.stop();
-            }
-
-            if (!this.source) {
-                if (!this._createSource()) {
-                    return false;
-                }
-            }
-
-            this.volume = this._volume;
-            this.pitch = this._pitch;
-            this.loop = this._loop;
-
-            this.source.play();
-            this._state = STATE_PLAYING;
-            this._playWhenLoaded = false;
-
-            this._manager.on('volumechange', this._onManagerVolumeChange, this);
-            this._manager.on('suspend', this._onManagerSuspend, this);
-            this._manager.on('resume', this._onManagerResume, this);
-            this._manager.on('destroy', this._onManagerDestroy, this);
-
-            // suspend immediately if manager is suspended
-            if (this._manager.suspended) {
-                this._onManagerSuspend();
-            }
-
-            if (!this._suspendInstanceEvents) {
-                this._onPlay();
-            }
-
-            return true;
-
-        },
-
-        pause: function () {
-            if (!this.source || this._state !== STATE_PLAYING) {
-                return false;
-            }
-
-            this._suspendEndEvent++;
-            this.source.pause();
-            this._playWhenLoaded = false;
-            this._state = STATE_PAUSED;
-            this._startOffset = null;
-
-            if (!this._suspendInstanceEvents) {
-                this._onPause();
-            }
-
-            return true;
-        },
-
-        resume: function () {
-            if (!this.source || this._state !== STATE_PAUSED) {
-                return false;
-            }
-
-            this._state = STATE_PLAYING;
-            this._playWhenLoaded = false;
-            if (this.source.paused) {
-                this.source.play();
-
-                if (!this._suspendInstanceEvents) {
-                    this._onResume();
-                }
-            }
-
-            return true;
-        },
-
-        stop: function () {
-            if (!this.source || this._state === STATE_STOPPED) {
-                return false;
-            }
-
-            this._manager.off('volumechange', this._onManagerVolumeChange, this);
-            this._manager.off('suspend', this._onManagerSuspend, this);
-            this._manager.off('resume', this._onManagerResume, this);
-            this._manager.off('destroy', this._onManagerDestroy, this);
-
-            this._suspendEndEvent++;
-            this.source.pause();
-            this._playWhenLoaded = false;
-            this._state = STATE_STOPPED;
-            this._startOffset = null;
-
-            if (!this._suspendInstanceEvents) {
-                this._onStop();
-            }
-
-            return true;
-        },
-
-        setExternalNodes: function () {
-            // not supported
-        },
-
-        clearExternalNodes: function () {
-            // not supported
-        },
-
-        getExternalNodes: function () {
-            // not supported but return same type of result
-            return [null, null];
-        },
-
-        // Sets start time after loadedmetadata is fired which is required by most browsers
-        _onLoadedMetadata: function () {
-            this.source.removeEventListener('loadedmetadata', this._loadedMetadataHandler);
-
-            this._isReady = true;
-
-            // calculate start time for source
-            let offset = capTime(this._startOffset, this.duration);
-            offset = capTime(this._startTime + offset, this._sound.duration);
-            // reset currentTime
-            this._startOffset = null;
-
-            // set offset on source
-            this.source.currentTime = offset;
-        },
-
-        _createSource: function () {
-            if (this._sound && this._sound.audio) {
-
-                this._isReady = false;
-                this.source = this._sound.audio.cloneNode(true);
-
-                // set events
-                this.source.addEventListener('loadedmetadata', this._loadedMetadataHandler);
-                this.source.addEventListener('timeupdate', this._timeUpdateHandler);
-                this.source.onended = this._endedHandler;
-            }
-
-            return this.source;
-        },
-
-        // called every time the 'currentTime' is changed
-        _onTimeUpdate: function () {
-            if (!this._duration) {
-                return;
-            }
-
-            // if the currentTime passes the end then if looping go back to the beginning
-            // otherwise manually stop
-            if (this.source.currentTime > capTime(this._startTime + this._duration, this.source.duration)) {
-                if (this.loop) {
-                    this.source.currentTime = capTime(this._startTime, this.source.duration);
-                } else {
-                    // remove listener to prevent multiple calls
-                    this.source.removeEventListener('timeupdate', this._timeUpdateHandler);
-                    this.source.pause();
-
-                    // call this manually because it doesn't work in all browsers in this case
-                    this._onEnded();
-                }
-            }
-        },
-
-        _onManagerDestroy: function () {
-            if (this.source) {
-                this.source.pause();
-            }
-        }
-    });
-
-    Object.defineProperty(SoundInstance.prototype, 'volume', {
-        get: function () {
-            return this._volume;
-        },
-
-        set: function (volume) {
-            volume = math.clamp(volume, 0, 1);
-            this._volume = volume;
-            if (this.source) {
-                this.source.volume = volume * this._manager.volume;
-            }
-        }
-    });
-
-    Object.defineProperty(SoundInstance.prototype, 'pitch', {
-        get: function () {
-            return this._pitch;
-        },
-
-        set: function (pitch) {
-            this._pitch = Math.max(Number(pitch) || 0, 0.01);
-            if (this.source) {
-                this.source.playbackRate = this._pitch;
-            }
-        }
-    });
-
-    Object.defineProperty(SoundInstance.prototype, 'sound', {
-        get: function () {
-            return this._sound;
-        },
-
-        set: function (value) {
-            this.stop();
-            this._sound = value;
-        }
-    });
-
-
-    Object.defineProperty(SoundInstance.prototype, 'currentTime', {
-        get: function () {
-            if (this._startOffset !== null) {
-                return this._startOffset;
-            }
-
-            if (this._state === STATE_STOPPED || !this.source) {
-                return 0;
-            }
-
-            return this.source.currentTime - this._startTime;
-        },
-
-        set: function (value) {
-            if (value < 0) return;
-
-            this._startOffset = value;
-            if (this.source && this._isReady) {
-                this.source.currentTime = capTime(this._startTime + capTime(value, this.duration), this._sound.duration);
-                this._startOffset = null;
-            }
-        }
-    });
 }
 
 export { SoundInstance };

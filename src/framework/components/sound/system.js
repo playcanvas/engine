@@ -1,5 +1,4 @@
 import { Debug } from '../../../core/debug.js';
-import { hasAudioContext } from '../../../platform/sound/capabilities.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
@@ -67,17 +66,11 @@ class SoundComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
-     * Returns null if the device does not support the Web Audio API.
+     * Gets the AudioContext currently used by the sound manager.
      *
      * @type {AudioContext|null}
      */
     get context() {
-        if (!hasAudioContext()) {
-            Debug.warn('WARNING: Audio context is not supported on this browser');
-            return null;
-        }
-
         return this.manager.context;
     }
 
