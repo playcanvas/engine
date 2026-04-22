@@ -1,4 +1,5 @@
 import { Color } from '../core/math/color.js';
+import { Debug } from '../core/debug.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
@@ -13,7 +14,10 @@ import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
 
 /**
+ * @import { EventHandle } from '../core/event-handle.js'
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { FogParams } from './fog-params.js'
  * @import { ShaderPassInfo } from './shader-pass.js'
  */
@@ -79,7 +83,39 @@ class Camera {
     /** @type {number} */
     jitter = 0;
 
-    constructor() {
+    /**
+     * The graphics device used by this camera. Required so the camera can compute its aspect
+     * ratio from the backbuffer and react to resize events.
+     *
+     * @type {GraphicsDevice}
+     */
+    device;
+
+    /**
+     * Event handle for the graphics device 'resizecanvas' subscription.
+     *
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtResize = null;
+
+    /**
+     * When true and aspectRatioMode is ASPECT_AUTO, the next read of `aspectRatio` will
+     * recompute it from the current render target (or backbuffer) and the `rect`.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _aspectDirty = true;
+
+    /**
+     * @param {GraphicsDevice} graphicsDevice - The graphics device this camera will use for
+     * automatic aspect ratio calculation (and to listen to resize events).
+     */
+    constructor(graphicsDevice) {
+        Debug.assert(graphicsDevice, 'Camera constructor requires a GraphicsDevice.');
+        this.device = graphicsDevice;
+
         this._aspectRatio = 16 / 9;
         this._aspectRatioMode = ASPECT_AUTO;
         this._calculateProjection = null;
@@ -136,9 +172,18 @@ class Camera {
             farClip: this._farClip,
             nearClip: this._nearClip
         };
+
+        // if the backbuffer is resized, the AUTO aspect ratio (when using the backbuffer as
+        // the target) may change, so invalidate the cached value
+        this._evtResize = this.device.on('resizecanvas', () => {
+            this._aspectDirty = true;
+        });
     }
 
     destroy() {
+
+        this._evtResize?.off();
+        this._evtResize = null;
 
         this.renderPassColorGrab?.destroy();
         this.renderPassColorGrab = null;
@@ -177,6 +222,9 @@ class Camera {
     }
 
     set aspectRatio(newValue) {
+        // explicit write (used by ASPECT_MANUAL, clone/copy, renderer code)
+        // clears the dirty flag so the AUTO recompute doesn't immediately overwrite it
+        this._aspectDirty = false;
         if (this._aspectRatio !== newValue) {
             this._aspectRatio = newValue;
             this._projMatDirty = true;
@@ -184,13 +232,26 @@ class Camera {
     }
 
     get aspectRatio() {
-        return (this.xr?.active) ? this._xrProperties.aspectRatio : this._aspectRatio;
+        if (this.xr?.active) return this._xrProperties.aspectRatio;
+
+        // lazy recompute when in ASPECT_AUTO mode and one of the inputs (rect, render target,
+        // backbuffer size) has changed since the last read
+        if (this._aspectDirty && this._aspectRatioMode === ASPECT_AUTO) {
+            this._aspectDirty = false;
+            const newValue = this.calculateAspectRatio();
+            if (this._aspectRatio !== newValue) {
+                this._aspectRatio = newValue;
+                this._projMatDirty = true;
+            }
+        }
+        return this._aspectRatio;
     }
 
     set aspectRatioMode(newValue) {
         if (this._aspectRatioMode !== newValue) {
             this._aspectRatioMode = newValue;
             this._projMatDirty = true;
+            this._aspectDirty = true;
         }
     }
 
@@ -381,6 +442,7 @@ class Camera {
 
     set rect(newValue) {
         this._rect.copy(newValue);
+        this._aspectDirty = true;
     }
 
     get rect() {
@@ -389,6 +451,7 @@ class Camera {
 
     set renderTarget(newValue) {
         this._renderTarget = newValue;
+        this._aspectDirty = true;
     }
 
     get renderTarget() {
@@ -448,12 +511,30 @@ class Camera {
     }
 
     /**
+     * Calculates the aspect ratio that should be used for the camera, based on the size of the
+     * given render target (or the backbuffer if no render target is given), and the camera's
+     * `rect`. The `rect` is included so that a camera rendering into a sub-region of a render
+     * target gets the aspect ratio of the actual rendered pixel area (important for split-screen
+     * and similar setups, otherwise rendering would appear stretched).
+     *
+     * @param {RenderTarget|null} [rt] - Optional render target. If unspecified, the camera's
+     * own render target (or, if that is also null, the backbuffer) is used.
+     * @returns {number} The computed aspect ratio.
+     */
+    calculateAspectRatio(rt) {
+        const target = rt ?? this._renderTarget;
+        const width = target ? target.width : this.device.width;
+        const height = target ? target.height : this.device.height;
+        return (width * this._rect.z) / (height * this._rect.w);
+    }
+
+    /**
      * Creates a duplicate of the camera.
      *
      * @returns {Camera} A cloned Camera.
      */
     clone() {
-        return new Camera().copy(this);
+        return new Camera(this.device).copy(this);
     }
 
     /**

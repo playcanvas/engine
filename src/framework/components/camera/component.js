@@ -110,8 +110,11 @@ class CameraComponent extends Component {
      */
     _disablePostEffectsLayer = LAYERID_UI;
 
-    /** @private */
-    _camera = new Camera();
+    /**
+     * @type {Camera}
+     * @private
+     */
+    _camera;
 
     /**
      * @type {EventHandle|null}
@@ -140,6 +143,7 @@ class CameraComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
+        this._camera = new Camera(system.app.graphicsDevice);
         this._camera.node = entity;
 
         // postprocessing management
@@ -1207,10 +1211,6 @@ class CameraComponent extends Component {
             this.addCameraToLayers();
         }
 
-        if (this.aspectRatioMode === ASPECT_AUTO) {
-            this.aspectRatio = this.calculateAspectRatio();
-        }
-
         this.postEffects.enable();
     }
 
@@ -1250,10 +1250,7 @@ class CameraComponent extends Component {
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
     calculateAspectRatio(rt) {
-        const device = this.system.app.graphicsDevice;
-        const width = rt ? rt.width : device.width;
-        const height = rt ? rt.height : device.height;
-        return (width * this.rect.z) / (height * this.rect.w);
+        return this._camera.calculateAspectRatio(rt);
     }
 
     /**
