@@ -1106,7 +1106,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
     const PAD = { top: 30, right: 20, bottom: 40, left: 50 };
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
-    const COLORS = ['#ff6b6b', '#2ecc71', '#a06bff', '#f7dc6f'];
+    const COLORS = ['#ff6b6b', '#2ecc71', '#a06bff', '#f7dc6f', '#4dabff', '#ff9f43', '#ec87c0', '#48c9b0'];
 
     // Log-Y. Sort timings routinely span 2-3 decades across the sweep
     // (e.g. 0.1 ms at 100K vs 70 ms at 50M), so linear-Y squashes the
