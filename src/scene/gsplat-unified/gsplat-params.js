@@ -144,7 +144,7 @@ class GSplatParams {
     _currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
 
     /**
-     * The rendering pipeline used for gaussian splatting. Can be:
+     * Sets the rendering pipeline used for gaussian splatting. Can be:
      *
      * - {@link GSPLAT_RENDERER_AUTO}: Automatically selects the best pipeline for the platform.
      * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
@@ -153,7 +153,8 @@ class GSplatParams {
      * - {@link GSPLAT_RENDERER_COMPUTE}: Full compute pipeline (WebGPU only, experimental).
      *
      * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
-     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices.
+     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
+     * can be queried via {@link currentRenderer}.
      *
      * @type {number}
      */
@@ -172,6 +173,13 @@ class GSplatParams {
         }
     }
 
+    /**
+     * Gets the requested rendering pipeline for gaussian splatting. This is the value last
+     * assigned to {@link renderer}, which may differ from {@link currentRenderer} when a WebGPU
+     * mode falls back on a WebGL device.
+     *
+     * @type {number}
+     */
     get renderer() {
         return this._renderer;
     }
@@ -206,7 +214,7 @@ class GSplatParams {
     _debug = GSPLAT_DEBUG_NONE;
 
     /**
-     * Debug rendering mode for Gaussian splats. Can be:
+     * Sets the debug rendering mode for Gaussian splats. Can be:
      *
      * - {@link GSPLAT_DEBUG_NONE}: Normal rendering (default).
      * - {@link GSPLAT_DEBUG_LOD}: Colorize splats by their selected LOD level.
@@ -231,19 +239,29 @@ class GSplatParams {
         }
     }
 
+    /**
+     * Gets the debug rendering mode for Gaussian splats.
+     *
+     * @type {number}
+     */
     get debug() {
         return this._debug;
     }
 
-    /** @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_LOD} instead. */
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_LOD} instead.
+     * @ignore
+     */
     set colorizeLod(value) {
         Debug.deprecated('GSplatParams#colorizeLod is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_LOD instead.');
         this.debug = value ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
     }
 
     /**
+     * @type {boolean}
      * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_LOD} instead.
-     * @returns {boolean} Whether LOD colorization is enabled.
+     * @ignore
      */
     get colorizeLod() {
         return this._debug === GSPLAT_DEBUG_LOD;
