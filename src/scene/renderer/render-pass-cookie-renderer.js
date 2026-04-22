@@ -123,7 +123,7 @@ class RenderPassCookieRenderer extends RenderPass {
     initInvViewProjMatrices() {
         if (!_invViewProjMatrices.length) {
             for (let face = 0; face < 6; face++) {
-                const camera = LightCamera.create(null, LIGHTTYPE_OMNI, face);
+                const camera = LightCamera.create(this.device, null, LIGHTTYPE_OMNI, face);
                 const projMat = camera.projectionMatrix;
                 const viewMat = camera.node.getLocalTransform().clone().invert();
                 _invViewProjMatrices[face] = new Mat4().mul2(projMat, viewMat).invert();

@@ -113,9 +113,9 @@ class ShadowRenderer {
     }
 
     // creates shadow camera for a light and sets up its constant properties
-    static createShadowCamera(shadowType, type, face) {
+    static createShadowCamera(device, shadowType, type, face) {
 
-        const shadowCam = LightCamera.create(SHADOWCAMERA_NAME, type, face);
+        const shadowCam = LightCamera.create(device, SHADOWCAMERA_NAME, type, face);
 
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);

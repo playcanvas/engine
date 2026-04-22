@@ -80,7 +80,7 @@ class LightRenderData {
         this.camera = camera;
 
         // camera used to cull / render the shadow map
-        this.shadowCamera = ShadowRenderer.createShadowCamera(light._shadowType, light._type, face);
+        this.shadowCamera = ShadowRenderer.createShadowCamera(light.device, light._shadowType, light._type, face);
 
         // shadow view-projection matrix
         this.shadowMatrix = new Mat4();

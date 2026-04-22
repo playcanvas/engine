@@ -110,8 +110,11 @@ class CameraComponent extends Component {
      */
     _disablePostEffectsLayer = LAYERID_UI;
 
-    /** @private */
-    _camera = new Camera();
+    /**
+     * @type {Camera}
+     * @private
+     */
+    _camera;
 
     /**
      * @type {EventHandle|null}
@@ -140,6 +143,7 @@ class CameraComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
+        this._camera = new Camera(system.app.graphicsDevice);
         this._camera.node = entity;
 
         // postprocessing management
@@ -1207,10 +1211,6 @@ class CameraComponent extends Component {
             this.addCameraToLayers();
         }
 
-        if (this.aspectRatioMode === ASPECT_AUTO) {
-            this.aspectRatio = this.calculateAspectRatio();
-        }
-
         this.postEffects.enable();
     }
 
@@ -1243,17 +1243,18 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Calculates aspect ratio value for a given render target.
+     * Computes the aspect ratio this camera would produce when rendering to the given render
+     * target, without changing the camera's state. When `rt` is omitted, the camera's own
+     * {@link CameraComponent#renderTarget} is used, and if that is also null, the backbuffer
+     * is used. The camera's {@link CameraComponent#rect} viewport is taken into account.
      *
-     * @param {RenderTarget|null} [rt] - Optional
-     * render target. If unspecified, the backbuffer is used.
-     * @returns {number} The aspect ratio of the render target (or backbuffer).
+     * @param {RenderTarget|null} [rt] - Optional render target to compute the aspect ratio
+     * against. Defaults to the camera's current render target, or the backbuffer if none is
+     * assigned.
+     * @returns {number} The computed aspect ratio.
      */
     calculateAspectRatio(rt) {
-        const device = this.system.app.graphicsDevice;
-        const width = rt ? rt.width : device.width;
-        const height = rt ? rt.height : device.height;
-        return (width * this.rect.z) / (height * this.rect.w);
+        return this._camera.calculateAspectRatio(rt);
     }
 
     /**
