@@ -129,21 +129,25 @@ class SoundManager extends EventHandler {
     destroy() {
         this.fire('destroy');
 
-        if (this._context) {
+        const context = this._context;
+        if (context) {
             this._removeUnlockListeners();
-            this._context?.close();
+            context.close();
             this._context = null;
         }
     }
 
     // resume the sound context
     _resume() {
-        this._context.resume().then(() => {
+        const context = this._context;
+        if (!context) return;
+
+        context.resume().then(() => {
             // Some platforms (mostly iOS) require an additional sound to be played.
             // This also performs a sanity check and verifies sounds can be played.
-            const source = this._context.createBufferSource();
-            source.buffer = this._context.createBuffer(1, 1, this._context.sampleRate);
-            source.connect(this._context.destination);
+            const source = context.createBufferSource();
+            source.buffer = context.createBuffer(1, 1, context.sampleRate);
+            source.connect(context.destination);
             source.start(0);
 
             // onended is only called if everything worked as expected (context is running)
@@ -160,7 +164,10 @@ class SoundManager extends EventHandler {
 
     // resume the sound context and fire suspend event if it succeeds
     _suspend() {
-        this._context.suspend().then(() => {
+        const context = this._context;
+        if (!context) return;
+
+        context.suspend().then(() => {
             this.fire('suspend');
         }, (e) => {
             Debug.error(`Attempted to suspend the AudioContext on SoundManager.suspend(), but it was rejected ${e}`);
@@ -172,7 +179,7 @@ class SoundManager extends EventHandler {
     _unlockHandler() {
         this._removeUnlockListeners();
 
-        if (!this._userSuspended && this._context.state !== CONTEXT_STATE_RUNNING) {
+        if (!this._userSuspended && this._context && this._context.state !== CONTEXT_STATE_RUNNING) {
             this._resume();
         }
     }
