@@ -298,8 +298,7 @@ class LayoutGroupComponent extends Component {
 
     /**
      * Sets the height fitting mode to be applied when positioning and scaling child elements.
-     * Identical to {@link LayoutGroupComponent#widthFitting} but for the Y axis. Defaults to
-     * {@link FITTING_NONE}.
+     * Identical to {@link widthFitting} but for the Y axis. Defaults to {@link FITTING_NONE}.
      *
      * @type {number}
      */
@@ -324,9 +323,8 @@ class LayoutGroupComponent extends Component {
      * exceeded. Defaults to false, which means that children will be rendered in a single row
      * (horizontal orientation) or column (vertical orientation). Note that setting wrap to true
      * makes it impossible for the {@link FITTING_BOTH} fitting mode to operate in any logical
-     * manner. For this reason, when wrap is true, a {@link LayoutGroupComponent#widthFitting} or
-     * {@link LayoutGroupComponent#heightFitting} mode of {@link FITTING_BOTH} will be coerced to
-     * {@link FITTING_STRETCH}.
+     * manner. For this reason, when wrap is true, a {@link widthFitting} or {@link heightFitting}
+     * mode of {@link FITTING_BOTH} will be coerced to {@link FITTING_STRETCH}.
      *
      * @type {boolean}
      */

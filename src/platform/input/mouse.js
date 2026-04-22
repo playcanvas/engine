@@ -106,7 +106,7 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * Check if the mouse pointer has been locked, using {@link Mouse#enablePointerLock}.
+     * Check if the mouse pointer has been locked, using {@link enablePointerLock}.
      *
      * @returns {boolean} True if locked.
      */

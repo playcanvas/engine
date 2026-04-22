@@ -1,53 +1,43 @@
-// SOG GSplat format - work variables, helpers, and read functions
-// packedTexture is auto-generated from GSplatFormat streams
+// SOG GSplat format - reads directly from source textures (no packed texture step)
 export default /* wgsl */`
-#include "gsplatPackingPS"
-
-// uniform declarations for dequantization
+// means dequantization (both V1 and V2)
 uniform means_mins: vec3f;
 uniform means_maxs: vec3f;
 
-uniform scales_mins: f32;
-uniform scales_maxs: f32;
-
-// SH0 color uniforms
-uniform sh0_mins: f32;
-uniform sh0_maxs: f32;
-
-// SH0 texture for color
-var packedSh0: texture_2d<f32>;
+#ifndef SOG_V2
+    // V1: linear min/max dequantization (no codebooks)
+    uniform scales_mins: vec3f;
+    uniform scales_maxs: vec3f;
+    uniform sh0_mins: vec4f;
+    uniform sh0_maxs: vec4f;
+#endif
 
 // SH_C0 coefficient for 0th degree spherical harmonic
 const SH_C0: f32 = 0.28209479177387814;
-
-// work value
-var<private> packedSample: vec4<u32>;
-
 const norm: f32 = sqrt(2.0);
 
-// read the model-space center of the gaussian
-fn getCenter() -> vec3f {
-    // read the packed texture sample using generated load function (uses global splat.uv)
-    packedSample = loadPackedTexture();
+#ifdef SOG_V2
+    // 256x1 RGBA32F LUT:
+    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a unused
+    fn lutScales(b: i32) -> f32 { return textureLoad(sogCodebook, vec2i(b, 0), 0).r; }
+    fn lutSh0(b: i32) -> f32    { return textureLoad(sogCodebook, vec2i(b, 0), 0).g; }
+    fn lutShN(b: i32) -> f32    { return textureLoad(sogCodebook, vec2i(b, 0), 0).b; }
+#endif
 
-    let l = unpack8888(packedSample.x).xyz;
-    let u = unpack8888(packedSample.y).xyz;
+// read the model-space center of the gaussian (16-bit per-axis, low + high byte)
+fn getCenter() -> vec3f {
+    let l = textureLoad(means_l, splat.uv, 0).xyz;
+    let u = textureLoad(means_u, splat.uv, 0).xyz;
     let n = (l + u * 256.0) / 257.0;
     let v = mix(uniform.means_mins, uniform.means_maxs, n);
-
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-fn getColor() -> vec4f {
-    let clr = mix(half3(half(uniform.sh0_mins)), half3(half(uniform.sh0_maxs)), half3(unpack111110(pack8888(textureLoad(packedSh0, splat.uv, 0)))));
-    let alpha = half(f32(packedSample.z & 0xffu) / 255.0);
-    return vec4f(half4(half3(0.5) + clr * half(SH_C0), alpha));
-}
-
+// decode rotation quaternion (3 components + 2-bit mode selecting the omitted axis)
 fn getRotation() -> vec4f {
-    let qdata = unpack8888(packedSample.z).xyz;
-    let qmode = packedSample.w & 0x3u;
-    let abc = (qdata - 0.5) * norm;
+    let q = textureLoad(quats, splat.uv, 0);
+    let qmode = u32(q.w * 255.0 + 0.5) - 252u;
+    let abc = (q.xyz - 0.5) * norm;
     let d = sqrt(max(0.0, 1.0 - dot(abc, abc)));
 
     var quat: vec4f;
@@ -64,8 +54,31 @@ fn getRotation() -> vec4f {
 }
 
 fn getScale() -> vec3f {
-    let sdata = unpack101010(packedSample.w >> 2u);
-    return exp(mix(vec3f(uniform.scales_mins), vec3f(uniform.scales_maxs), sdata));
+    let s = textureLoad(scales, splat.uv, 0).xyz;
+    var logS: vec3f;
+    #ifdef SOG_V2
+        let i = vec3i(s * 255.0 + 0.5);
+        logS = vec3f(lutScales(i.x), lutScales(i.y), lutScales(i.z));
+    #else
+        logS = mix(uniform.scales_mins, uniform.scales_maxs, s);
+    #endif
+    return exp(logS);
+}
+
+fn getColor() -> vec4f {
+    let c = textureLoad(sh0, splat.uv, 0);
+    var rgb: vec3f;
+    var alpha: f32;
+    #ifdef SOG_V2
+        let i = vec3i(c.xyz * 255.0 + 0.5);
+        rgb = vec3f(lutSh0(i.x), lutSh0(i.y), lutSh0(i.z));
+        alpha = c.w;
+    #else
+        rgb = mix(uniform.sh0_mins.xyz, uniform.sh0_maxs.xyz, c.xyz);
+        let logitAlpha = mix(uniform.sh0_mins.w, uniform.sh0_maxs.w, c.w);
+        alpha = 1.0 / (1.0 + exp(-logitAlpha));
+    #endif
+    return vec4f(vec3f(0.5) + rgb * SH_C0, alpha);
 }
 
 #include "gsplatSogSHVS"

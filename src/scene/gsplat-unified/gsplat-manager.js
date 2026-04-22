@@ -134,8 +134,6 @@ class GSplatManager {
 
     /**
      * The version of the last world state.
-     *
-     * @type {number}
      */
     lastWorldStateVersion = 0;
 
@@ -177,8 +175,6 @@ class GSplatManager {
 
     /**
      * Indirect draw slot index for the current frame (-1 when not using indirect draw).
-     *
-     * @type {number}
      */
     indirectDrawSlot = -1;
 
@@ -186,16 +182,12 @@ class GSplatManager {
      * Indirect dispatch slot index for GPU-sort indirect dispatch args.
      * Slot +0 = key gen, slot +1 = sort. The compute local renderer builds
      * its own indirect args in private buffers and does not use these slots.
-     *
-     * @type {number}
      */
     indirectDispatchSlot = -1;
 
     /**
      * Total intervals from the last interval compaction dispatch. Needed for
      * writeIndirectArgs to index into the prefix sum buffer for visible count.
-     *
-     * @type {number}
      */
     lastCompactedNumIntervals = 0;
 
@@ -206,7 +198,6 @@ class GSplatManager {
      * When true, suppresses ready=true in frame:ready until a fullUpdate cycle runs.
      * Only set when octreeInstances exist and params change (dirty).
      *
-     * @type {boolean}
      * @private
      */
     _awaitingLodUpdate = false;
@@ -214,7 +205,6 @@ class GSplatManager {
     /**
      * Cached work buffer format version for detecting extra stream changes.
      *
-     * @type {number}
      * @private
      */
     _workBufferFormatVersion = -1;
@@ -222,22 +212,17 @@ class GSplatManager {
     /**
      * Flag set when the work buffer needs a full rebuild due to format changes.
      *
-     * @type {boolean}
      * @private
      */
     _workBufferRebuildRequired = false;
 
     /**
      * Number of blocks uploaded to the work buffer this frame.
-     *
-     * @type {number}
      */
     bufferCopyUploaded = 0;
 
     /**
      * Total number of blocks in the work buffer this frame.
-     *
-     * @type {number}
      */
     bufferCopyTotal = 0;
 
@@ -299,7 +284,6 @@ class GSplatManager {
      * Values > 1 push boundaries outward (more splats), values < 1 pull them inward
      * (fewer splats).
      *
-     * @type {number}
      * @private
      */
     _budgetScale = 1.0;
@@ -344,7 +328,6 @@ class GSplatManager {
      * True when placements have been added or removed since the last world state was created.
      * Triggers a full work buffer rebuild so boundsBaseIndex stays consistent.
      *
-     * @type {boolean}
      * @private
      */
     _placementSetChanged = false;
@@ -362,8 +345,6 @@ class GSplatManager {
 
     /**
      * Flag set when new octree instances are added, to trigger immediate LOD evaluation.
-     *
-     * @type {boolean}
      */
     hasNewOctreeInstances = false;
 

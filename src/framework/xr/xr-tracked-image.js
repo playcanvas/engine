@@ -50,28 +50,16 @@ class XrTrackedImage extends EventHandler {
      */
     _bitmap = null;
 
-    /**
-     * @type {number}
-     * @ignore
-     */
+    /** @ignore */
     _measuredWidth = 0;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _trackable = false;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _tracking = false;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _emulated = false;
 
     /**
@@ -80,16 +68,10 @@ class XrTrackedImage extends EventHandler {
      */
     _pose = null;
 
-    /**
-     * @type {Vec3}
-     * @private
-     */
+    /** @private */
     _position = new Vec3();
 
-    /**
-     * @type {Quat}
-     * @private
-     */
+    /** @private */
     _rotation = new Quat();
 
     /**

@@ -58,8 +58,6 @@ class DepthAttachment {
 
     /**
      * True if the depthTexture is internally allocated / owned
-     *
-     * @type {boolean}
      */
     depthTextureInternal = false;
 
@@ -143,8 +141,6 @@ class WebgpuRenderTarget {
 
     /**
      * True if this is the backbuffer of the device.
-     *
-     * @type {boolean}
      */
     isBackbuffer = false;
 

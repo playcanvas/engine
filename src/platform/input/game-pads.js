@@ -268,43 +268,31 @@ function sleep(ms) {
 class GamePadButton {
     /**
      * The value for the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
-     *
-     * @type {number}
      */
     value = 0;
 
     /**
      * Whether the button is currently down.
-     *
-     * @type {boolean}
      */
     pressed = false;
 
     /**
      * Whether the button is currently touched.
-     *
-     * @type {boolean}
      */
     touched = false;
 
     /**
      * Whether the button was pressed.
-     *
-     * @type {boolean}
      */
     wasPressed = false;
 
     /**
      * Whether the button was released since the last update.
-     *
-     * @type {boolean}
      */
     wasReleased = false;
 
     /**
      * Whether the button was touched since the last update.
-     *
-     * @type {boolean}
      */
     wasTouched = false;
 

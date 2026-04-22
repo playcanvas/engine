@@ -114,7 +114,6 @@ class GSplatComponent extends Component {
     /**
      * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
-     * @type {number}
      * @private
      */
     _lodBaseDistance = 5;
@@ -122,7 +121,6 @@ class GSplatComponent extends Component {
     /**
      * Geometric multiplier between successive LOD distance thresholds.
      *
-     * @type {number}
      * @private
      */
     _lodMultiplier = 3;
@@ -171,7 +169,6 @@ class GSplatComponent extends Component {
     /**
      * Whether to use the unified gsplat rendering.
      *
-     * @type {boolean}
      * @private
      */
     _unified = false;
@@ -519,9 +516,9 @@ class GSplatComponent extends Component {
     /**
      * Sets whether to use the unified gsplat rendering. Default is false.
      *
-     * Note: Material handling differs between modes. When unified is false, use
-     * {@link GSplatComponent#material}. When unified is true, materials are shared per
-     * camera/layer - use {@link GSplatComponentSystem#getMaterial} instead.
+     * Note: Material handling differs between modes. When unified is false, use {@link material}.
+     * When unified is true, materials are shared per camera/layer - use
+     * {@link GSplatComponentSystem#getMaterial} instead.
      *
      * @type {boolean}
      */
@@ -899,7 +896,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Enable rendering of the component if hidden using {@link GSplatComponent#hide}.
+     * Enable rendering of the component if hidden using {@link hide}.
      */
     show() {
         if (this._instance) {

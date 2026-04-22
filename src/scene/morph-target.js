@@ -11,8 +11,6 @@ import { BoundingBox } from '../core/shape/bounding-box.js';
 class MorphTarget {
     /**
      * A used flag. A morph target can be used / owned by the Morph class only one time.
-     *
-     * @type {boolean}
      */
     used = false;
 

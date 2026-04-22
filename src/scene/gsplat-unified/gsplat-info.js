@@ -127,22 +127,16 @@ class GSplatInfo {
 
     /**
      * Number of sub-draw instances for instanced interval rendering.
-     *
-     * @type {number}
      */
     subDrawCount = 0;
 
     /**
      * Number of bounding sphere entries this GSplatInfo contributes to the shared bounds texture.
-     *
-     * @type {number}
      */
     numBoundsEntries = 0;
 
     /**
      * Base index into the shared bounds sphere texture for this GSplatInfo's entries.
-     *
-     * @type {number}
      */
     boundsBaseIndex = 0;
 

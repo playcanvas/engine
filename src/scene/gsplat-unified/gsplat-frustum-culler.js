@@ -36,8 +36,6 @@ class GSplatFrustumCuller {
 
     /**
      * Total number of bounds entries across all GSplatInfos.
-     *
-     * @type {number}
      */
     totalBoundsEntries = 0;
 
@@ -91,8 +89,6 @@ class GSplatFrustumCuller {
 
     /**
      * Maximum visible angle from forward direction for fisheye cone culling.
-     *
-     * @type {number}
      */
     fisheyeMaxTheta = Math.PI;
 

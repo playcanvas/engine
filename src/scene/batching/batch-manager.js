@@ -108,8 +108,7 @@ class BatchManager {
      * @param {boolean} dynamic - Is this batch group dynamic? Will these objects move/rotate/scale
      * after being batched?
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched
-     * objects.
-     * {@link BatchManager#prepare} will split objects into local groups based on this size.
+     * objects. {@link prepare} will split objects into local groups based on this size.
      * @param {number} [id] - Optional custom unique id for the group (will be generated
      * automatically otherwise).
      * @param {number[]} [layers] - Optional layer ID array. Default is [{@link LAYERID_WORLD}].
@@ -478,7 +477,7 @@ class BatchManager {
      * This is useful to keep a balance between the number of draw calls and the number of drawn
      * triangles, because smaller batches can be hidden when not visible in camera.
      * @returns {MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to
-     * {@link BatchManager#create}.
+     * {@link create}.
      */
     prepare(meshInstances, dynamic, maxAabbSize = Number.POSITIVE_INFINITY, translucent) {
         if (meshInstances.length === 0) return [];
@@ -664,7 +663,7 @@ class BatchManager {
     }
 
     /**
-     * Takes a mesh instance list that has been prepared by {@link BatchManager#prepare}, and
+     * Takes a mesh instance list that has been prepared by {@link prepare}, and
      * returns a {@link Batch} object. This method assumes that all mesh instances provided can be
      * rendered in a single draw call.
      *

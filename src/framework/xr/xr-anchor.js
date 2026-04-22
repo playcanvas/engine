@@ -81,16 +81,10 @@ class XrAnchor extends EventHandler {
      */
     static EVENT_FORGET = 'forget';
 
-    /**
-     * @type {Vec3}
-     * @private
-     */
+    /** @private */
     _position = new Vec3();
 
-    /**
-     * @type {Quat}
-     * @private
-     */
+    /** @private */
     _rotation = new Quat();
 
     /**

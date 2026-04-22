@@ -84,15 +84,11 @@ class FramePassRadixSort extends FramePass {
 
     /**
      * Current number of radix passes.
-     *
-     * @type {number}
      */
     _numPasses = 0;
 
     /**
      * Current internal texture size (power of 2).
-     *
-     * @type {number}
      */
     _internalSize = 0;
 
@@ -168,8 +164,6 @@ class FramePassRadixSort extends FramePass {
 
     /**
      * Number of elements to sort (set by setup()).
-     *
-     * @type {number}
      */
     _elementCount = 0;
 

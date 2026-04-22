@@ -18,7 +18,7 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_R32F,
  */
 class XrView extends EventHandler {
     /**
-     * Fired when the depth sensing texture been resized. The {@link XrView#depthUvMatrix} needs
+     * Fired when the depth sensing texture has been resized. The {@link depthUvMatrix} needs
      * to be updated for relevant shaders. The handler is passed the new width and height of the
      * depth texture in pixels.
      *
@@ -48,52 +48,28 @@ class XrView extends EventHandler {
      */
     _positionData = new Float32Array(3);
 
-    /**
-     * @type {Vec4}
-     * @private
-     */
+    /** @private */
     _viewport = new Vec4();
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     _projMat = new Mat4();
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     _projViewOffMat = new Mat4();
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     _viewMat = new Mat4();
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     _viewOffMat = new Mat4();
 
-    /**
-     * @type {Mat3}
-     * @private
-     */
+    /** @private */
     _viewMat3 = new Mat3();
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     _viewInvMat = new Mat4();
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     _viewInvOffMat = new Mat4();
 
     /**
@@ -126,10 +102,7 @@ class XrView extends EventHandler {
      */
     _emptyDepthBuffer = new Uint8Array(32);
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     _depthMatrix = new Mat4();
 
     /**
@@ -212,7 +185,7 @@ class XrView extends EventHandler {
      * and more.
      * The format of this texture is any of {@link PIXELFORMAT_LA8}, {@link PIXELFORMAT_DEPTH}, or
      * {@link PIXELFORMAT_R32F} based on {@link XrViews#depthPixelFormat}. It is UV transformed
-     * based on the underlying AR system which can be normalized using {@link XrView#depthUvMatrix}.
+     * based on the underlying AR system which can be normalized using {@link depthUvMatrix}.
      * Equals to null if camera depth is not supported.
      *
      * @type {Texture|null}
@@ -375,9 +348,7 @@ class XrView extends EventHandler {
         this._updateDepth(frame);
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _updateTextureColor() {
         if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor) {
             return;

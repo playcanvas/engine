@@ -82,8 +82,6 @@ class RenderComponent extends Component {
 
     /**
      * Mark meshes as non-movable (optimization).
-     *
-     * @type {boolean}
      */
     isStatic = false;
 
@@ -924,9 +922,8 @@ class RenderComponent extends Component {
     }
 
     /**
-     * Enable rendering of the component's {@link MeshInstance}s if hidden using
-     * {@link RenderComponent#hide}. This method sets the {@link MeshInstance#visible} property on
-     * all mesh instances to true.
+     * Enable rendering of the component's {@link MeshInstance}s if hidden using {@link hide}. This
+     * method sets the {@link MeshInstance#visible} property on all mesh instances to true.
      */
     show() {
         if (this._meshInstances) {

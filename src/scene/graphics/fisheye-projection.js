@@ -1,8 +1,8 @@
 /**
  * Helper that caches derived fisheye projection values from a normalized slider value, camera FOV,
  * and projection matrix. Each consumer (renderer, culling, future skydome) creates its own instance
- * and calls {@link FisheyeProjection#update} when it needs current values. The instance only
- * mutates its own cached fields, with no external side effects.
+ * and calls {@link update} when it needs current values. The instance only mutates its own cached
+ * fields, with no external side effects.
  *
  * Uses the generalized fisheye model g(θ) = k·tan(θ/k), where k controls the projection
  * characteristic: k=1 is rectilinear perspective, lower k increases barrel distortion.
@@ -12,50 +12,36 @@
 class FisheyeProjection {
     /**
      * Whether fisheye is active (t > 0).
-     *
-     * @type {boolean}
      */
     enabled = false;
 
     /**
      * The fisheye k parameter controlling projection curvature.
-     *
-     * @type {number}
      */
     k = 1.0;
 
     /**
      * Precomputed 1/k to avoid per-splat division in shaders.
-     *
-     * @type {number}
      */
     invK = 1.0;
 
     /**
      * Scale factor blending from edge-fit (1.0) to corner-fit (sqrt(2)) based on t.
-     *
-     * @type {number}
      */
     cornerScale = 1.0;
 
     /**
      * Fisheye-adjusted horizontal projection scale for NDC conversion.
-     *
-     * @type {number}
      */
     projMat00 = 1.0;
 
     /**
      * Fisheye-adjusted vertical projection scale for NDC conversion.
-     *
-     * @type {number}
      */
     projMat11 = 1.0;
 
     /**
      * Maximum viewing angle before singularity, used for cone culling.
-     *
-     * @type {number}
      */
     maxTheta = Math.PI;
 

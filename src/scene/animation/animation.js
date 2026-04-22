@@ -36,15 +36,11 @@ class AnimationNode {
 class Animation {
     /**
      * Human-readable name of the animation.
-     *
-     * @type {string}
      */
     name = '';
 
     /**
      * Duration of the animation in seconds.
-     *
-     * @type {number}
      */
     duration = 0;
 

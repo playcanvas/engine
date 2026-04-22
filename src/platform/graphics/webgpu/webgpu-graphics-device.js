@@ -78,7 +78,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Number of indirect draw slots allocated.
      *
-     * @type {number}
      * @private
      */
     _indirectDrawBufferCount = 0;
@@ -86,7 +85,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Next unused index in indirectDrawBuffer.
      *
-     * @type {number}
      * @private
      */
     _indirectDrawNextIndex = 0;
@@ -102,7 +100,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Number of indirect dispatch slots allocated.
      *
-     * @type {number}
      * @private
      */
     _indirectDispatchBufferCount = 0;
@@ -110,7 +107,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Next unused index in indirectDispatchBuffer.
      *
-     * @type {number}
      * @private
      */
     _indirectDispatchNextIndex = 0;
@@ -155,7 +151,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Monotonically increasing counter incremented each time queue.submit() is called.
      *
-     * @type {number}
      * @ignore
      */
     submitVersion = 0;

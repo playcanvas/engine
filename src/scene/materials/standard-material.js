@@ -130,9 +130,9 @@ const _tempColor = new Color();
  * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
- * {@link StandardMaterial#anisotropyIntensity} parameter to set material anisotropy.
+ * {@link anisotropyIntensity} parameter to set material anisotropy.
  * @property {number} anisotropyIntensity Defines amount of anisotropy. Requires
- * {@link StandardMaterial#enableGGXSpecular} is set to true.
+ * {@link enableGGXSpecular} is set to true.
  * - When anisotropyIntensity == 0, specular is isotropic.
  * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
  * @property {number} anisotropyRotation Defines the rotation (in degrees) of anisotropy.
@@ -371,8 +371,8 @@ const _tempColor = new Color();
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be
  * "r", "g", "b" or "a".
  * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
- * faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use
- * {@link Material#alphaFade} to fade out materials.
+ * faded out using {@link opacity}. Default is true. When set to false use {@link alphaFade} to
+ * fade out materials.
  * @property {string} opacityDither Used to specify whether opacity is dithered, which allows
  * transparency without alpha blending. Can be:
  *
@@ -391,8 +391,8 @@ const _tempColor = new Color();
  * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
- * @property {number} alphaFade Used to fade out materials when
- * {@link StandardMaterial#opacityFadesSpecular} is set to false.
+ * @property {number} alphaFade Used to fade out materials when {@link opacityFadesSpecular} is
+ * set to false.
  * @property {Texture|null} normalMap The main (primary) normal map of the material (default is
  * null). The texture must contains normalized, tangent space normals.
  * @property {number} normalMapUv Main (primary) normal map UV channel.

@@ -57,15 +57,11 @@ class GSplatSortBinWeights {
 
     /**
      * Cached cameraBin from last compute call.
-     *
-     * @type {number}
      */
     lastCameraBin = -1;
 
     /**
      * Cached bucketCount from last compute call.
-     *
-     * @type {number}
      */
     lastBucketCount = -1;
 

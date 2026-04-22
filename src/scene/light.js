@@ -159,7 +159,6 @@ class Light {
      * The flags used for clustered lighting. Stored as a bitfield, updated as properties change to
      * avoid those being updated each frame.
      *
-     * @type {number}
      * @ignore
      */
     clusteredFlags = 0;

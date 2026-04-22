@@ -241,28 +241,16 @@ class XrManager extends EventHandler {
      */
     _camera = null;
 
-    /**
-     * @type {Vec3}
-     * @private
-     */
+    /** @private */
     _localPosition = new Vec3();
 
-    /**
-     * @type {Quat}
-     * @private
-     */
+    /** @private */
     _localRotation = new Quat();
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _depthNear = 0.1;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _depthFar = 1000;
 
     /**
@@ -271,22 +259,13 @@ class XrManager extends EventHandler {
      */
     _supportedFrameRates = null;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _width = 0;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _height = 0;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _framebufferScaleFactor = 1.0;
 
     /**

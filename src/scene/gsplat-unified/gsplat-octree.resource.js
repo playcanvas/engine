@@ -9,7 +9,6 @@ class GSplatOctreeResource {
     /**
      * Version counter for centers array changes. Always 0 for octree resources (static).
      *
-     * @type {number}
      * @ignore
      */
     centersVersion = 0;

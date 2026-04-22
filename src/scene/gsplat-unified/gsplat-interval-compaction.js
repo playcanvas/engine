@@ -79,8 +79,6 @@ class GSplatIntervalCompaction {
     /**
      * World state version for which intervals were last uploaded. Avoids redundant
      * uploads when sortGpu is called repeatedly with the same world state.
-     *
-     * @type {number}
      */
     _uploadedVersion = -1;
 
@@ -158,9 +156,7 @@ class GSplatIntervalCompaction {
         this._writeArgsUniformBufferFormat = null;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _destroyCullPass() {
         this._cullComputePerspective?.shader?.destroy();
         this._cullBindGroupFormatPerspective?.destroy();
@@ -172,9 +168,7 @@ class GSplatIntervalCompaction {
         this._cullBindGroupFormatFisheye = null;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _createUniformBufferFormats() {
         const device = this.device;
 
@@ -266,9 +260,7 @@ class GSplatIntervalCompaction {
         return this._cullComputePerspective;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _createScatterCompute() {
         const device = this.device;
 
@@ -295,9 +287,7 @@ class GSplatIntervalCompaction {
         this._scatterCompute = new Compute(device, shader, 'GSplatIntervalScatter');
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _createWriteIndirectArgsCompute() {
         const device = this.device;
 

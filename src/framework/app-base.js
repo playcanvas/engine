@@ -174,16 +174,10 @@ class AppBase extends EventHandler {
      */
     _entityIndex = {};
 
-    /**
-     * @type {boolean}
-     * @ignore
-     */
+    /** @ignore */
     _inTools = false;
 
-    /**
-     * @type {string}
-     * @ignore
-     */
+    /** @ignore */
     _scriptPrefix = '';
 
     /** @ignore */
@@ -193,7 +187,6 @@ class AppBase extends EventHandler {
      * Set this to false if you want to run without using bundles. We set it to true only if
      * TextDecoder is available because we currently rely on it for untarring.
      *
-     * @type {boolean}
      * @ignore
      */
     enableBundles = (typeof TextDecoder !== 'undefined');
@@ -208,7 +201,6 @@ class AppBase extends EventHandler {
     /**
      * Scales the global time delta. Defaults to 1.
      *
-     * @type {number}
      * @example
      * // Set the app to run at half speed
      * this.app.timeScale = 0.5;
@@ -230,7 +222,6 @@ class AppBase extends EventHandler {
     /**
      * The total number of frames the application has updated since start() was called.
      *
-     * @type {number}
      * @ignore
      */
     frame = 0;
@@ -271,7 +262,6 @@ class AppBase extends EventHandler {
      * false is useful to applications where the rendered image may often be unchanged over time.
      * This can heavily reduce the application's load on the CPU and GPU. Defaults to true.
      *
-     * @type {boolean}
      * @example
      * // Disable rendering every frame and only render on a keydown event
      * this.app.autoRender = false;
@@ -286,7 +276,6 @@ class AppBase extends EventHandler {
      * effect if {@link autoRender} is set to false. The value of renderNextFrame is set back to
      * false again as soon as the scene has been rendered.
      *
-     * @type {boolean}
      * @example
      * // Render the scene only while space key is pressed
      * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {

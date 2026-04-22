@@ -43,43 +43,42 @@ const _lodColors = [
 class NodeInfo {
     /**
      * Current LOD index being rendered. -1 indicates node is not visible.
-     * @type {number}
      */
     currentLod = -1;
 
     /**
      * Optimal LOD index based on distance/visibility (before underfill).
-     * @type {number}
      */
     optimalLod = -1;
 
     /**
      * World-space distance from camera to this node.
      * Used for non-linear bucket mapping in budget enforcement.
-     * @type {number}
      */
     worldDistance = 0;
 
     /**
      * Accumulated camera translation for SH color update threshold tracking.
-     * @type {number}
      */
     colorAccumulatedTranslation = 0;
 
     /**
      * Back-reference to owning GSplatOctreeInstance.
+     *
      * @type {GSplatOctreeInstance|null}
      */
     inst = null;
 
     /**
      * Cached reference to this node's LOD array for fast budget balancing.
+     *
      * @type {Array|null}
      */
     lods = null;
 
     /**
      * Unique allocation identifier for persistent work buffer allocation tracking.
+     *
      * @type {number}
      */
     allocId = GsplatAllocId.get();
@@ -109,8 +108,6 @@ class GSplatOctreeInstance {
     /**
      * Set to true when placements are added or removed, signaling that the manager needs to
      * create a new world state and trigger a full work buffer rebuild.
-     *
-     * @type {boolean}
      */
     dirtyPlacementSetChanged = false;
 
@@ -119,6 +116,7 @@ class GSplatOctreeInstance {
 
     /**
      * Array of NodeInfo instances, one per octree node.
+     *
      * @type {NodeInfo[]}
      */
     nodeInfos;
@@ -126,12 +124,14 @@ class GSplatOctreeInstance {
     /**
      * Array of current placements per file. Index is fileIndex, value is GSplatPlacement or null.
      * Value null indicates file is not used / no placement.
+     *
      * @type {(GSplatPlacement|null)[]}
      */
     filePlacements;
 
     /**
      * Set of pending file loads (file indices).
+     *
      * @type {Set<number>}
      */
     pending = new Set();
@@ -154,30 +154,22 @@ class GSplatOctreeInstance {
 
     /**
      * Minimum allowed LOD index for this instance, clamped to valid octree bounds.
-     *
-     * @type {number}
      */
     rangeMin = 0;
 
     /**
      * Maximum allowed LOD index for this instance, clamped to valid octree bounds.
-     *
-     * @type {number}
      */
     rangeMax = 0;
 
     /**
      * Previous node position at which LOD was last updated. This is used to determine if LOD needs
      * to be updated as the octree splat moves.
-     *
-     * @type {Vec3}
      */
     previousPosition = new Vec3();
 
     /**
      * Set when a resource has completed loading and LOD should be re-evaluated.
-     *
-     * @type {boolean}
      */
     needsLodUpdate = false;
 
@@ -192,6 +184,7 @@ class GSplatOctreeInstance {
     /**
      * Tracks invisible->visible pending adds per node: nodeIndex -> fileIndex.
      * Ensures only a single pending placement exists for a node while it's not yet displayed.
+     *
      * @type {Map<number, number>}
      */
     pendingVisibleAdds = new Map();
@@ -214,6 +207,7 @@ class GSplatOctreeInstance {
 
     /**
      * Environment placement.
+     *
      * @type {GSplatPlacement|null}
      */
     environmentPlacement = null;
@@ -971,6 +965,7 @@ class GSplatOctreeInstance {
 
     /**
      * Returns true if this instance requests LOD re-evaluation and resets the flag.
+     *
      * @returns {boolean} True if LOD should be re-evaluated.
      */
     consumeNeedsLodUpdate() {

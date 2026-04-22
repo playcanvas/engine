@@ -4,22 +4,13 @@ import { Vec2 } from '../../../core/math/vec2.js';
 const v = new Vec2();
 
 class VirtualJoystick {
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _range = 70;
 
-    /**
-     * @type {Vec2}
-     * @private
-     */
+    /** @private */
     _position = new Vec2();
 
-    /**
-     * @type {Vec2}
-     * @private
-     */
+    /** @private */
     _value = new Vec2();
 
     /**

@@ -44,7 +44,6 @@ class GSplatResourceBase {
      * Version counter for centers array changes. Remains 0 for static resources.
      * Only GSplatContainer increments this via its update() method.
      *
-     * @type {number}
      * @ignore
      */
     centersVersion = 0;
@@ -100,16 +99,10 @@ class GSplatResourceBase {
      */
     parameters = new Map();
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _refCount = 0;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _meshRefCount = 0;
 
     constructor(device, gsplatData) {

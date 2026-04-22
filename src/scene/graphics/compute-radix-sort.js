@@ -93,8 +93,6 @@ class ComputeRadixSort {
 
     /**
      * Current element count.
-     *
-     * @type {number}
      */
     _elementCount = 0;
 
@@ -103,16 +101,12 @@ class ComputeRadixSort {
      * Derived from `elementCount` (not `capacity`) so that smaller sorts issue
      * fewer workgroups even when buffers are sized for a larger high-water
      * mark.
-     *
-     * @type {number}
      */
     _workgroupCount = 0;
 
     /**
      * Allocated workgroup capacity (buffer sizing). Buffers are only
      * reallocated when this value changes. Always `>= _workgroupCount`.
-     *
-     * @type {number}
      */
     _allocatedWorkgroupCount = 0;
 
@@ -121,15 +115,11 @@ class ComputeRadixSort {
      * `max(elementCount, capacity)` as the effective size. The caller can lower this value
      * to request shrinkage; actual reallocation is deferred to the next sort call.
      * After allocation, this is updated to reflect the effective element count.
-     *
-     * @type {number}
      */
     capacity = 0;
 
     /**
      * Current number of bits for which passes are created.
-     *
-     * @type {number}
      */
     _numBits = 0;
 
@@ -185,8 +175,6 @@ class ComputeRadixSort {
 
     /**
      * Dispatch dimensions.
-     *
-     * @type {Vec2}
      */
     _dispatchSize = new Vec2(1, 1);
 
@@ -220,23 +208,17 @@ class ComputeRadixSort {
 
     /**
      * Whether the current passes are for indirect sort mode.
-     *
-     * @type {boolean}
      */
     _indirect = false;
 
     /**
      * Whether the current passes expect caller-supplied initial values on pass 0.
-     *
-     * @type {boolean}
      */
     _hasInitialValues = false;
 
     /**
      * Whether the last pass skips writing sorted keys (only values are written).
      * When true, `sortedKeys` will contain stale data after sorting.
-     *
-     * @type {boolean}
      */
     _skipLastPassKeyWrite = false;
 

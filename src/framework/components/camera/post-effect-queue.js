@@ -56,7 +56,6 @@ class PostEffectQueue {
          * If the queue is enabled it will render all of its effects, otherwise it will not render
          * anything.
          *
-         * @type {boolean}
          * @ignore
          */
         this.enabled = false;

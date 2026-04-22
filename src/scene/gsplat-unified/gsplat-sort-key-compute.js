@@ -53,8 +53,6 @@ class GSplatSortKeyCompute {
 
     /**
      * Allocated capacity for sort keys (grow-only).
-     *
-     * @type {number}
      */
     allocatedCount = 0;
 
@@ -81,15 +79,11 @@ class GSplatSortKeyCompute {
 
     /**
      * Whether the current compute instance is for radial sorting.
-     *
-     * @type {boolean}
      */
     computeRadialSort = false;
 
     /**
      * Whether the current compute instance uses indirect sort (with compaction).
-     *
-     * @type {boolean}
      */
     computeUseIndirectSort = false;
 

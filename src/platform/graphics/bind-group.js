@@ -37,7 +37,6 @@ class BindGroup {
     /**
      * A render version the bind group was last updated on.
      *
-     * @type {number}
      * @private
      */
     renderVersionUpdated = -1;

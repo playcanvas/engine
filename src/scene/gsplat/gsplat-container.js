@@ -70,7 +70,6 @@ class GSplatContainer extends GSplatResourceBase {
      * of course, but not for cpu based sorting. The workaround is to recreate container when the
      * size changes.
      *
-     * @type {number}
      * @private
      */
     _maxSplats = 0;
@@ -78,7 +77,6 @@ class GSplatContainer extends GSplatResourceBase {
     /**
      * Current number of splats to render.
      *
-     * @type {number}
      * @private
      */
     _numSplats = 0;

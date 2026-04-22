@@ -63,6 +63,7 @@ let id = 0;
  *     - {@link PIXELFORMAT_RGB10A2} provides 10 bits per RGB channel with 2-bit alpha, offering
  * higher precision than {@link PIXELFORMAT_RGBA8} at the same memory cost. It is renderable on
  * both WebGL2 and WebGPU. {@link PIXELFORMAT_RGB10A2U} is the unsigned integer variant.
+ *
  * @category Graphics
  */
 class Texture {
@@ -120,7 +121,6 @@ class Texture {
      * A render version used to track the last time the texture properties requiring bind group
      * to be updated were changed.
      *
-     * @type {number}
      * @ignore
      */
     renderVersionDirty = 0;

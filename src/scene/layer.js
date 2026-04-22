@@ -147,7 +147,6 @@ class Layer {
      * True if _splitLights needs to be updated, which means if lights were added or removed from
      * the layer, or their key changed.
      *
-     * @type {boolean}
      * @private
      */
     _splitLightsDirty = true;
@@ -155,7 +154,6 @@ class Layer {
     /**
      * True if the objects rendered on the layer require light cube (emitters with lighting do).
      *
-     * @type {boolean}
      * @ignore
      */
     requiresLightCube = false;
@@ -199,7 +197,6 @@ class Layer {
     /**
      * True if the gsplatPlacements array was modified.
      *
-     * @type {boolean}
      * @ignore
      */
     gsplatPlacementsDirty = true;
@@ -288,29 +285,20 @@ class Layer {
         }
 
         // clear flags
-        /**
-         * @type {boolean}
-         * @private
-         */
+        /** @private */
         this._clearColorBuffer = !!options.clearColorBuffer;
 
-        /**
-         * @type {boolean}
-         * @private
-         */
+        /** @private */
         this._clearDepthBuffer = !!options.clearDepthBuffer;
 
-        /**
-         * @type {boolean}
-         * @private
-         */
+        /** @private */
         this._clearStencilBuffer = !!options.clearStencilBuffer;
 
         /**
          * Custom function that is called after the layer has been enabled. This happens when:
          *
-         * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
-         * - {@link Layer#enabled} was changed from false to true
+         * - The layer is created with {@link enabled} set to true (which is the default value).
+         * - {@link enabled} was changed from false to true
          *
          * @type {Function}
          */
@@ -319,8 +307,8 @@ class Layer {
         /**
          * Custom function that is called after the layer has been disabled. This happens when:
          *
-         * - {@link Layer#enabled} was changed from true to false
-         * - {@link Layer#decrementCounter} was called and set the counter to zero.
+         * - {@link enabled} was changed from true to false
+         * - {@link decrementCounter} was called and set the counter to zero.
          *
          * @type {Function}
          */

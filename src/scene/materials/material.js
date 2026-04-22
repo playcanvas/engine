@@ -87,8 +87,6 @@ class Material {
 
     /**
      * The name of the material.
-     *
-     * @type {string}
      */
     name = 'Untitled';
 
@@ -96,8 +94,6 @@ class Material {
      * A unique id the user can assign to the material. The engine internally does not use this for
      * anything, and the user can assign a value to this id for any purpose they like. Defaults to
      * an empty string.
-     *
-     * @type {string}
      */
     userId = '';
 
@@ -129,8 +125,6 @@ class Material {
      * active render target based on alpha value. All fragments with an alpha value of less than
      * the alphaTest reference value will be discarded. alphaTest defaults to 0 (all fragments
      * pass).
-     *
-     * @type {number}
      */
     alphaTest = 0;
 
@@ -141,8 +135,6 @@ class Material {
      * otherwise sharp alpha cutouts, but isn't recommended for large area semi-transparent
      * surfaces. Note, that you don't need to enable blending to make alpha to coverage work. It
      * will work without it, just like alphaTest.
-     *
-     * @type {boolean}
      */
     alphaToCoverage = false;
 
@@ -461,7 +453,7 @@ class Material {
     /**
      * Sets the blend state for this material. Controls how fragment shader outputs are blended
      * when being written to the currently active render target. This overwrites blending type set
-     * using {@link Material#blendType}, and offers more control over blending.
+     * using {@link blendType}, and offers more control over blending.
      *
      * @type {BlendState}
      */
@@ -545,8 +537,8 @@ class Material {
     }
 
     /**
-     * Sets the depth state. Note that this can also be done by using {@link Material#depthTest},
-     * {@link Material#depthFunc} and {@link Material#depthWrite}.
+     * Sets the depth state. Note that this can also be done by using {@link depthTest},
+     * {@link depthFunc} and {@link depthWrite}.
      *
      * @type {DepthState}
      */
@@ -714,13 +706,13 @@ class Material {
      * The method will clear cached shader variants and trigger recompilation if:
      * - Modified material properties require a different shader variant (e.g., enabling/disabling
      *   textures or other properties that affect shader generation)
-     * - Material-specific shader chunks (from {@link Material#getShaderChunks}) have been modified
+     * - Material-specific shader chunks (from {@link getShaderChunks}) have been modified
      * - Global shader chunks (from {@link ShaderChunks.get}) have been modified
      * - Material defines have been changed
      *
      * Note: Shaders are not compiled immediately. Instead, existing shader variants are cleared
      * and new variants will be compiled on-demand as they are needed for different render passes
-     * (e.g., {@link SHADER_FORWARD}, {@link SHADER_SHADOW}).
+     * (e.g., forward, shadow, pick).
      *
      * When global shader chunks are modified, `update()` must be called on each material that
      * should reflect those changes.

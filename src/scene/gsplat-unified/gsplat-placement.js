@@ -46,8 +46,6 @@ class GSplatPlacement {
     /**
      * Unique identifier for this placement. Used by the picking system and available
      * for custom shader effects.
-     *
-     * @type {number}
      */
     id = 0;
 
@@ -60,15 +58,12 @@ class GSplatPlacement {
 
     /**
      * The LOD index for this placement.
-     *
-     * @type {number}
      */
     lodIndex = 0;
 
     /**
      * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
-     * @type {number}
      * @private
      */
     _lodBaseDistance = 5;
@@ -77,7 +72,6 @@ class GSplatPlacement {
      * Geometric multiplier between successive LOD distance thresholds.
      * Distance for LOD level i is: lodBaseDistance * lodMultiplier^i.
      *
-     * @type {number}
      * @private
      */
     _lodMultiplier = 3;
@@ -135,15 +129,11 @@ class GSplatPlacement {
 
     /**
      * Flag indicating LOD parameters have changed and LOD needs re-evaluation.
-     *
-     * @type {boolean}
      */
     lodDirty = false;
 
     /**
      * Flag indicating the splat needs to be re-rendered to work buffer.
-     *
-     * @type {boolean}
      */
     renderDirty = false;
 
@@ -157,7 +147,6 @@ class GSplatPlacement {
     /**
      * Last seen format version for auto-detecting format changes.
      *
-     * @type {number}
      * @private
      */
     _lastFormatVersion = -1;

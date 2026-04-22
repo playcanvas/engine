@@ -64,8 +64,6 @@ class InstancingData {
 
     /**
      * True if the vertex buffer is destroyed when the mesh instance is destroyed.
-     *
-     * @type {boolean}
      */
     _destroyVertexBuffer = false;
 
@@ -246,8 +244,6 @@ class MeshInstance {
      * casting without overhead of removing from scene. Note that this property does not add the
      * mesh instance to appropriate list of shadow casters on a {@link Layer}, but allows mesh to
      * be skipped from shadow casting while it is in the list already. Defaults to false.
-     *
-     * @type {boolean}
      */
     castShadow = false;
 
@@ -264,8 +260,6 @@ class MeshInstance {
     /**
      * Controls whether the mesh instance can be culled by frustum culling (see
      * {@link CameraComponent#frustumCulling}). Defaults to true.
-     *
-     * @type {boolean}
      */
     cull = true;
 
@@ -273,15 +267,10 @@ class MeshInstance {
      * Determines the rendering order of mesh instances. Only used when mesh instances are added to
      * a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode}
      * (depending on the material) set to {@link SORTMODE_MANUAL}.
-     *
-     * @type {number}
      */
     drawOrder = 0;
 
-    /**
-     * @type {number}
-     * @ignore
-     */
+    /** @ignore */
     _drawBucket = 127;
 
     /**
@@ -295,23 +284,18 @@ class MeshInstance {
      * Enable rendering for this mesh instance. Use visible property to enable/disable rendering
      * without overhead of removing from scene. But note that the mesh instance is still in the
      * hierarchy and still in the draw call list.
-     *
-     * @type {boolean}
      */
     visible = true;
 
     /**
      * Read this value in the {@link Scene.EVENT_POSTCULL} event to determine if the object is
      * actually going to be rendered.
-     *
-     * @type {boolean}
      */
     visibleThisFrame = false;
 
     /**
      * Negative scale batching support.
      *
-     * @type {number}
      * @ignore
      */
     flipFacesFactor = 1;
@@ -371,7 +355,6 @@ class MeshInstance {
     /**
      * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
      *
-     * @type {boolean}
      * @ignore
      */
     pick = true;

@@ -25,8 +25,6 @@ class LitShaderOptions {
 
     /**
      * Enable alpha testing. See {@link Material#alphaTest}.
-     *
-     * @type {boolean}
      */
     alphaTest = false;
 
@@ -48,22 +46,16 @@ class LitShaderOptions {
     /**
      * If hardware instancing compatible shader should be generated. Transform is read from
      * per-instance {@link VertexBuffer} instead of shader's uniforms.
-     *
-     * @type {boolean}
      */
     useInstancing = false;
 
     /**
      * If morphing code should be generated to morph positions.
-     *
-     * @type {boolean}
      */
     useMorphPosition = false;
 
     /**
      * If morphing code should be generated to morph normals.
-     *
-     * @type {boolean}
      */
     useMorphNormal = false;
 
@@ -104,44 +96,32 @@ class LitShaderOptions {
     /**
      * If ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on
      * certain platforms (mostly Android) for performance reasons.
-     *
-     * @type {boolean}
      */
     ambientSH = false;
 
     /**
      * Apply SSAO during the lighting.
-     *
-     * @type {boolean}
      */
     ssao = false;
 
     /**
      * The value of {@link StandardMaterial#twoSidedLighting}.
-     *
-     * @type {boolean}
      */
     twoSidedLighting = false;
 
     /**
      * The value of {@link StandardMaterial#occludeDirect}.
-     *
-     * @type {boolean}
      */
     occludeDirect = false;
 
     /**
      * The value of {@link StandardMaterial#occludeSpecular}.
-     *
-     * @type {number}
      */
     occludeSpecular = 0;
 
     /**
      * Defines if {@link StandardMaterial#occludeSpecularIntensity} constant should affect specular
      * occlusion.
-     *
-     * @type {boolean}
      */
     occludeSpecularFloat = false;
 
@@ -151,15 +131,11 @@ class LitShaderOptions {
 
     /**
      * Enable alpha to coverage. See {@link Material#alphaToCoverage}.
-     *
-     * @type {boolean}
      */
     alphaToCoverage = false;
 
     /**
      * Enable specular fade. See {@link StandardMaterial#opacityFadesSpecular}.
-     *
-     * @type {boolean}
      */
     opacityFadesSpecular = false;
 
@@ -179,15 +155,11 @@ class LitShaderOptions {
 
     /**
      * The value of {@link StandardMaterial#cubeMapProjection}.
-     *
-     * @type {number}
      */
     cubeMapProjection = 0;
 
     /**
      * If any specular or reflections are needed at all.
-     *
-     * @type {boolean}
      */
     useSpecular = false;
 
@@ -197,15 +169,11 @@ class LitShaderOptions {
 
     /**
      * The value of {@link StandardMaterial#fresnelModel}.
-     *
-     * @type {number}
      */
     fresnelModel = 0;
 
     /**
      * If refraction is used.
-     *
-     * @type {boolean}
      */
     useRefraction = false;
 
@@ -217,8 +185,6 @@ class LitShaderOptions {
 
     /**
      * The value of {@link StandardMaterial#useMetalness}.
-     *
-     * @type {boolean}
      */
     useMetalness = false;
 
@@ -245,8 +211,6 @@ class LitShaderOptions {
     /**
      * The type of tone mapping being applied in the shader. See {@link CameraComponent#toneMapping}
      * for the list of possible values.
-     *
-     * @type {number}
      */
     toneMap = -1;
 
@@ -263,8 +227,6 @@ class LitShaderOptions {
 
     /**
      * One of "ambientSH", "envAtlas", "constant".
-     *
-     * @type {string}
      */
     ambientSource = 'constant';
 
@@ -275,15 +237,11 @@ class LitShaderOptions {
 
     /**
      * Skybox intensity factor.
-     *
-     * @type {number}
      */
     skyboxIntensity = 1.0;
 
     /**
      * If cube map rotation is enabled.
-     *
-     * @type {boolean}
      */
     useCubeMapRotation = false;
 
@@ -304,8 +262,6 @@ class LitShaderOptions {
 
     /**
      * Make vLinearDepth available in the shader.
-     *
-     * @type {boolean}
      */
     linearDepth = false;
 

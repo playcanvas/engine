@@ -207,10 +207,6 @@ class SogParser {
         data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
         const decompress = asset.data?.decompress;
-        const minimalMemory = asset.options?.minimalMemory ?? false;
-
-        // Pass minimalMemory to data
-        data.minimalMemory = minimalMemory;
 
         if (!decompress) {
             if (this._shouldAbort(asset, unloaded)) {
@@ -220,6 +216,7 @@ class SogParser {
             }
 
             // no need to prepare gpu data if decompressing
+            data.prepareCodebook();
             await data.prepareGpuData();
         }
 

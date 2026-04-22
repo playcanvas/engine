@@ -34,7 +34,6 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     /**
      * Maximum number of assets that can be loading concurrently.
      *
-     * @type {number}
      * @private
      */
     maxConcurrentLoads = 2;
@@ -42,7 +41,6 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     /**
      * Maximum number of retry attempts for failed loads.
      *
-     * @type {number}
      * @private
      */
     maxRetries = 2;
@@ -74,7 +72,6 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     /**
      * Whether this asset loader has been destroyed.
      *
-     * @type {boolean}
      * @private
      */
     _destroyed = false;
@@ -171,8 +168,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
 
         if (!asset) {
             // Create a new gsplat asset
-            // @ts-ignore - minimalMemory is a custom option for gsplat assets
-            asset = new Asset(url, 'gsplat', { url }, {}, { minimalMemory: true });
+            asset = new Asset(url, 'gsplat', { url });
 
             // Assert that registry doesn't already have an asset for this URL
             // If it does, there's a code ownership issue - GSplatAssetLoader should be the only
