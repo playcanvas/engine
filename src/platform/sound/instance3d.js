@@ -57,6 +57,11 @@ class SoundInstance3d extends SoundInstance {
     constructor(manager, sound, options = {}) {
         super(manager, sound, options);
 
+        // Web Audio is unavailable - the base class left the instance inert.
+        if (!manager.context) {
+            return;
+        }
+
         if (options.position) {
             this.position = options.position;
         }
@@ -89,6 +94,9 @@ class SoundInstance3d extends SoundInstance {
     set position(value) {
         this._position.copy(value);
         const panner = this.panner;
+        if (!panner) {
+            return;
+        }
         if ('positionX' in panner) {
             panner.positionX.value = value.x;
             panner.positionY.value = value.y;
@@ -124,7 +132,9 @@ class SoundInstance3d extends SoundInstance {
      * @type {number}
      */
     set maxDistance(value) {
-        this.panner.maxDistance = value;
+        if (this.panner) {
+            this.panner.maxDistance = value;
+        }
     }
 
     /**
@@ -133,7 +143,7 @@ class SoundInstance3d extends SoundInstance {
      * @type {number}
      */
     get maxDistance() {
-        return this.panner.maxDistance;
+        return this.panner ? this.panner.maxDistance : 0;
     }
 
     /**
@@ -143,7 +153,9 @@ class SoundInstance3d extends SoundInstance {
      * @type {number}
      */
     set refDistance(value) {
-        this.panner.refDistance = value;
+        if (this.panner) {
+            this.panner.refDistance = value;
+        }
     }
 
     /**
@@ -153,7 +165,7 @@ class SoundInstance3d extends SoundInstance {
      * @type {number}
      */
     get refDistance() {
-        return this.panner.refDistance;
+        return this.panner ? this.panner.refDistance : 0;
     }
 
     /**
@@ -162,7 +174,9 @@ class SoundInstance3d extends SoundInstance {
      * @type {number}
      */
     set rollOffFactor(value) {
-        this.panner.rolloffFactor = value;
+        if (this.panner) {
+            this.panner.rolloffFactor = value;
+        }
     }
 
     /**
@@ -171,7 +185,7 @@ class SoundInstance3d extends SoundInstance {
      * @type {number}
      */
     get rollOffFactor() {
-        return this.panner.rolloffFactor;
+        return this.panner ? this.panner.rolloffFactor : 0;
     }
 
     /**
@@ -187,7 +201,9 @@ class SoundInstance3d extends SoundInstance {
      * @type {string}
      */
     set distanceModel(value) {
-        this.panner.distanceModel = value;
+        if (this.panner) {
+            this.panner.distanceModel = value;
+        }
     }
 
     /**
@@ -197,7 +213,7 @@ class SoundInstance3d extends SoundInstance {
      * @type {string}
      */
     get distanceModel() {
-        return this.panner.distanceModel;
+        return this.panner ? this.panner.distanceModel : DISTANCE_LINEAR;
     }
 }
 

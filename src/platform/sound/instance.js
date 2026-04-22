@@ -256,6 +256,12 @@ class SoundInstance extends EventHandler {
          */
         this._waitingContextSuspension = false;
 
+        // Web Audio is unavailable - leave the instance inert. play()/setExternalNodes()/etc.
+        // will become no-ops.
+        if (!this._manager.context) {
+            return;
+        }
+
         this._initializeNodes();
 
         /** @private */
@@ -416,8 +422,10 @@ class SoundInstance extends EventHandler {
         // set offset to current time so that
         // we calculate the rest of the time with the new pitch
         // from now on
-        this._currentOffset = this.currentTime;
-        this._startedAt = this._manager.context.currentTime;
+        if (this._manager.context) {
+            this._currentOffset = this.currentTime;
+            this._startedAt = this._manager.context.currentTime;
+        }
 
         this._pitch = Math.max(Number(pitch) || 0, 0.01);
         if (this.source) {
@@ -615,6 +623,11 @@ class SoundInstance extends EventHandler {
      * @returns {boolean} True if the sound was started immediately.
      */
     play() {
+        // No audio context - the instance is inert.
+        if (!this._manager.context) {
+            return false;
+        }
+
         if (this._state !== STATE_STOPPED) {
             this.stop();
         }
@@ -863,6 +876,11 @@ class SoundInstance extends EventHandler {
             return;
         }
 
+        // inert instance - no Web Audio graph to wire into
+        if (!this._connectorNode) {
+            return;
+        }
+
         if (!lastNode) {
             lastNode = firstNode;
         }
@@ -904,6 +922,11 @@ class SoundInstance extends EventHandler {
      * Clears any external nodes set by {@link setExternalNodes}.
      */
     clearExternalNodes() {
+        // inert instance - nothing to disconnect
+        if (!this._connectorNode) {
+            return;
+        }
+
         const speakers = this._manager.context.destination;
 
         // break existing connections
@@ -944,6 +967,11 @@ class SoundInstance extends EventHandler {
         }
 
         const context = this._manager.context;
+
+        // inert instance - no audio context available
+        if (!context) {
+            return null;
+        }
 
         if (this._sound.buffer) {
             this.source = context.createBufferSource();
