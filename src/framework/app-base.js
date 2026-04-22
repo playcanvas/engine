@@ -556,22 +556,8 @@ class AppBase extends EventHandler {
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
-        // Depending on browser add the correct visibilitychange event and store the name of the
-        // hidden attribute in this._hiddenAttr.
         if (typeof document !== 'undefined') {
-            if (document.hidden !== undefined) {
-                this._hiddenAttr = 'hidden';
-                document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.mozHidden !== undefined) {
-                this._hiddenAttr = 'mozHidden';
-                document.addEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.msHidden !== undefined) {
-                this._hiddenAttr = 'msHidden';
-                document.addEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.webkitHidden !== undefined) {
-                this._hiddenAttr = 'webkitHidden';
-                document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
-            }
+            document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         }
 
         // bind tick function to current scope
@@ -1247,7 +1233,7 @@ class AppBase extends EventHandler {
      * @returns {boolean} True if the application is not visible and false otherwise.
      */
     isHidden() {
-        return document[this._hiddenAttr];
+        return document.hidden;
     }
 
     /**
@@ -1867,9 +1853,6 @@ class AppBase extends EventHandler {
 
         if (typeof document !== 'undefined') {
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
         }
         this._visibilityChangeHandler = null;
 
