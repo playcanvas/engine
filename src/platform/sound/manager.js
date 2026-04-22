@@ -20,27 +20,48 @@ const USER_INPUT_EVENTS = [
  */
 class SoundManager extends EventHandler {
     /**
+     * The underlying AudioContext, lazy loaded in the 'context' property.
+     *
+     * @type {AudioContext|null}
+     * @private
+     */
+    _context = null;
+
+    /**
+     * @type {() => void}
+     * @private
+     */
+    _unlockHandlerFunc;
+
+    /**
+     * Whether audio was suspended by the user.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _userSuspended = false;
+
+    /**
+     * The listener associated with this manager.
+     *
+     * @type {Listener}
+     */
+    listener;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _volume = 1;
+
+    /**
      * Create a new SoundManager instance.
      */
     constructor() {
         super();
 
-        /**
-         * The underlying AudioContext, lazy loaded in the 'context' property.
-         *
-         * @type {AudioContext|null}
-         * @private
-         */
-        this._context = null;
-
         this._unlockHandlerFunc = this._unlockHandler.bind(this);
-
-        // user suspended audio
-        this._userSuspended = false;
-
         this.listener = new Listener(this);
-
-        this._volume = 1;
     }
 
     /**
