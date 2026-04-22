@@ -675,6 +675,12 @@ class ComputeRadixSort {
         cdefines.set('{CURRENT_BIT}', currentBit);
         cdefines.set('{IS_FIRST_PASS}', isFirstPass ? 1 : 0);
         cdefines.set('{IS_LAST_PASS}', isLastPass ? 1 : 0);
+        // Subgroup reorder variants use MAX_SUBGROUPS to size per-warp
+        // shared-memory buffers; non-subgroup variants ignore the token.
+        // See the sg_size notes in compute-onesweep-radix-sort.js for why
+        // this has to be per-device and not hardcoded to 8.
+        const sgSize = this.device.maxSubgroupSize || 32;
+        cdefines.set('{MAX_SUBGROUPS}', Math.max(1, Math.ceil(THREADS_PER_WORKGROUP / sgSize)));
         if (indirect) {
             cdefines.set('USE_INDIRECT_SORT', '');
         }

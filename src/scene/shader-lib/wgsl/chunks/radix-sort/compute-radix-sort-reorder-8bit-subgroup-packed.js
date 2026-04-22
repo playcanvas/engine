@@ -56,10 +56,10 @@ const IS_LAST_PASS: u32 = {IS_LAST_PASS}u;
 const ELEMENTS_PER_THREAD: u32 = {ELEMENTS_PER_THREAD}u;
 const ELEMENTS_PER_WORKGROUP: u32 = THREADS_PER_WORKGROUP * ELEMENTS_PER_THREAD;
 
-// Assumes sgSize == 32 → 256 threads = 8 subgroups. See header comment.
-const MAX_SUBGROUPS: u32 = 8u;
+// Parametrized by the host from device.maxSubgroupSize (256 / sgSize).
+const MAX_SUBGROUPS: u32 = {MAX_SUBGROUPS}u;
 const SUBGROUPS_PER_WORD: u32 = 4u;
-const WORDS_PER_DIGIT: u32 = MAX_SUBGROUPS / SUBGROUPS_PER_WORD; // 2
+const WORDS_PER_DIGIT: u32 = MAX_SUBGROUPS / SUBGROUPS_PER_WORD;
 
 // Packed per-(subgroup, digit) counts: 4 subgroups per u32, 2 words per digit.
 // Each subgroup leader writes its count into its dedicated byte using atomicOr,
@@ -82,6 +82,13 @@ fn main(
     let WID = WORKGROUP_ID * ELEMENTS_PER_WORKGROUP;
     let sgId = TID / sgSize;
     let sgInvMask = (1u << sgInvId) - 1u;
+    // Active-lane mask for the match-any ballot below. WGSL says inactive-lane
+    // bits of subgroupBallot are 0, but drivers (notably Mali / Imagination
+    // at sgSize<32) don't always honour this for subgroupBallot(is_valid).
+    // Initialising sameDigitMask to only cover active lanes makes the per-bit
+    // AND-chain correct regardless of driver behaviour. \`1u << 32u\` is UB so
+    // branch on sgSize < 32.
+    let activeMask = select(0xFFFFFFFFu, (1u << sgSize) - 1u, sgSize < 32u);
 
     // Precompute this thread's subgroup slot/shift so the per-round write
     // only needs a single atomicOr with a prebuilt value.
@@ -109,7 +116,7 @@ fn main(
         let v = select(0u, select(inputValues[GID], GID, IS_FIRST_PASS == 1u), is_valid);
 
         // Match-any via per-bit ballot intersection. See non-packed variant.
-        var sameDigitMask: u32 = 0xFFFFFFFFu;
+        var sameDigitMask: u32 = activeMask;
         for (var b = 0u; b < 8u; b++) {
             let myBit = ((digit >> b) & 1u) == 1u;
             let ballot = subgroupBallot(myBit).x;

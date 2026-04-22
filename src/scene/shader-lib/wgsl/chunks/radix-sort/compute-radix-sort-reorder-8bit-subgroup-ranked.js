@@ -50,11 +50,10 @@
 // Shared memory: MAX_SUBGROUPS * RADIX u32s = 8 * 256 * 4 B = 8 KB (same as
 // the shared-mem and subgroup variants).
 //
-// Subgroup-size assumption: hard-codes MAX_SUBGROUPS = 8 for sgSize == 32.
-// Correct for Apple M-series, NVIDIA on Chrome/WebGPU, Intel, ARM Mali, Adreno
-// (all 32). Not safe for sgSize != 32; the host falls back to the 4-bit path
-// on those devices (runtime sgSize detection is a follow-up — PlayCanvas does
-// not surface minSubgroupSize / maxSubgroupSize today).
+// Subgroup-size handling: `MAX_SUBGROUPS` is parametrized by the host from
+// `device.maxSubgroupSize` (256 / sgSize). Valid for any subgroup size that
+// divides 256 evenly (all common values: 4, 8, 16, 32, 64, 128). Shared
+// memory usage scales as MAX_SUBGROUPS * RADIX u32.
 //
 // Scatter coalescing: this shader still scatters directly to global at
 // `prefix_block_sum[...] + rank`, i.e. non-coalesced writes within a warp
@@ -92,9 +91,9 @@ const ELEMENTS_PER_WORKGROUP: u32 = THREADS_PER_WORKGROUP * ELEMENTS_PER_THREAD;
 
 const RADIX: u32 = 256u;
 
-// sgSize == 32 ⇒ 256 / 32 = 8 warps. See header comment on sgSize assumptions.
-const MAX_SUBGROUPS: u32 = 8u;
-const WAVE_HISTS_SIZE: u32 = MAX_SUBGROUPS * RADIX; // 2048 u32 = 8 KB
+// Parametrized by the host from device.maxSubgroupSize (256 / sgSize).
+const MAX_SUBGROUPS: u32 = {MAX_SUBGROUPS}u;
+const WAVE_HISTS_SIZE: u32 = MAX_SUBGROUPS * RADIX;
 
 // Per-warp digit histograms. During ranking, each warp accumulates its own
 // row (g_d[warp*RADIX .. warp*RADIX+256)) via atomicAdds, so there is no
@@ -117,6 +116,13 @@ fn main(
     let WID = WORKGROUP_ID * ELEMENTS_PER_WORKGROUP;
     let waveIndex = TID / sgSize;
     let ltMask = (1u << sgInvId) - 1u;
+    // Active-lane mask for the match-any ballot below. WGSL says inactive-lane
+    // bits of subgroupBallot are 0, but drivers (notably Mali / Imagination
+    // at sgSize<32) don't always honour this for subgroupBallot(is_valid).
+    // Initialising waveFlag to only cover active lanes makes the per-bit
+    // AND-chain correct regardless of driver behaviour. \`1u << 32u\` is UB so
+    // branch on sgSize < 32.
+    let activeMask = select(0xFFFFFFFFu, (1u << sgSize) - 1u, sgSize < 32u);
 
     // Clear per-warp histograms. THREADS_PER_WORKGROUP == RADIX and we have
     // MAX_SUBGROUPS rows, so each thread clears MAX_SUBGROUPS words.
@@ -169,7 +175,7 @@ fn main(
 
         // WarpLevelMultiSplitWGE16: intersect 8 ballots to isolate the set of
         // subgroup lanes whose 8-bit digit equals mine.
-        var waveFlag: u32 = 0xFFFFFFFFu;
+        var waveFlag: u32 = activeMask;
         for (var b = 0u; b < 8u; b++) {
             let t = ((digit >> b) & 1u) == 1u;
             let ballot = subgroupBallot(t).x;

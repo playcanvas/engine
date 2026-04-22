@@ -52,7 +52,8 @@
 //   digit_base:   u32[256]            — 1 KB, per-digit block base → global base
 //   warp_totals:  u32[8]              — 32 B, scratch for the hierarchical scan
 //
-// Subgroup-size assumption: sgSize == 32 (MAX_SUBGROUPS = 8). Correct on
+// Subgroup-size handling: `MAX_SUBGROUPS` is parametrized by the host from
+// `device.maxSubgroupSize` (256 / sgSize). Correct on
 // Apple M-series, NVIDIA, Intel, Mali, Adreno. Host falls back to the 4-bit
 // path for sgSize != 32 or devices without subgroup support.
 //
@@ -98,8 +99,14 @@ const ELEMENTS_PER_THREAD: u32 = {ELEMENTS_PER_THREAD}u;
 const ELEMENTS_PER_WORKGROUP: u32 = THREADS_PER_WORKGROUP * ELEMENTS_PER_THREAD;
 
 const RADIX: u32 = 256u;
-const MAX_SUBGROUPS: u32 = 8u;
-const STAGING_SIZE: u32 = MAX_SUBGROUPS * RADIX; // 2048, == ELEMENTS_PER_WORKGROUP
+// Parametrized by the host from device.maxSubgroupSize (256 / sgSize).
+const MAX_SUBGROUPS: u32 = {MAX_SUBGROUPS}u;
+// g_d is reused between per-warp histograms (MAX_SUBGROUPS * RADIX u32) and
+// per-key staging (ELEMENTS_PER_WORKGROUP u32). Pick the larger of the two
+// so both phases fit. For sgSize==32 the two sizes coincide at 2048; for
+// sgSize==16 the histogram phase needs 4096; for sgSize>=64 the staging
+// phase dominates at 2048.
+const STAGING_SIZE: u32 = max(MAX_SUBGROUPS * RADIX, ELEMENTS_PER_WORKGROUP);
 
 // Three-phase shared-memory reuse:
 //   phase A (ranking):        per-warp histograms, MAX_SUBGROUPS × RADIX u32
@@ -129,6 +136,13 @@ fn main(
     let WID = WORKGROUP_ID * ELEMENTS_PER_WORKGROUP;
     let waveIndex = TID / sgSize;
     let ltMask = (1u << sgInvId) - 1u;
+    // Active-lane mask for the match-any ballot below. WGSL says inactive-lane
+    // bits of subgroupBallot are 0, but drivers (notably Mali / Imagination
+    // at sgSize<32) don't always honour this for subgroupBallot(is_valid).
+    // Initialising waveFlag to only cover active lanes makes the per-bit
+    // AND-chain correct regardless of driver behaviour. \`1u << 32u\` is UB so
+    // branch on sgSize < 32.
+    let activeMask = select(0xFFFFFFFFu, (1u << sgSize) - 1u, sgSize < 32u);
 
     // ---- Phase A.1: clear per-warp histograms ----
     for (var w = 0u; w < MAX_SUBGROUPS; w++) {
@@ -177,7 +191,7 @@ fn main(
         let isValid = ((validMask >> i) & 1u) == 1u;
         let digit = (k >> CURRENT_BIT) & 0xFFu;
 
-        var waveFlag: u32 = 0xFFFFFFFFu;
+        var waveFlag: u32 = activeMask;
         for (var b = 0u; b < 8u; b++) {
             let t = ((digit >> b) & 1u) == 1u;
             let ballot = subgroupBallot(t).x;

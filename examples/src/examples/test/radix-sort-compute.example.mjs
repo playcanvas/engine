@@ -148,7 +148,13 @@ const RADIX_MODES = {
     '8-subgroup-packed': { radixBits: 8, reorderVariant: 'subgroup-packed' },
     '8-subgroup-ranked': { radixBits: 8, reorderVariant: 'subgroup-ranked' },
     '8-subgroup-coalesced': { radixBits: 8, reorderVariant: 'subgroup-coalesced' },
-    'onesweep': { onesweep: true }
+    // Default OneSweep uses vendor-detected lookback (plain on NVIDIA/AMD/
+    // Intel, CSDLDF fallback on Apple/unknown).
+    'onesweep': { onesweep: true },
+    // Force-enable the CSDLDF fallback shader variant for A/B testing
+    // (e.g. to verify correctness on NVIDIA, or to measure the fallback
+    // overhead without switching GPUs).
+    'onesweep-safe': { onesweep: true, useFallback: true }
 };
 const DEFAULT_MODE = device.supportsSubgroups ? '8-shared-mem' : '4-shared-mem';
 
@@ -175,12 +181,15 @@ function getActiveRadixSort() {
     const mode = data.get('options.mode') ?? DEFAULT_MODE;
     const modeCfg = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
     // OneSweep ignores the scan toggle (it has a bespoke fused scan) so key
-    // only by mode to share the cached instance across scan selections.
-    const key = modeCfg.onesweep ? 'onesweep' : `${scan}-${mode}`;
+    // only by mode (which differentiates the default 'onesweep' from the
+    // forced-fallback 'onesweep-safe' variant).
+    const key = modeCfg.onesweep ? mode : `${scan}-${mode}`;
     let inst = radixSortCache.get(key);
     if (!inst) {
         if (modeCfg.onesweep) {
-            inst = new pc.ComputeOneSweepRadixSort(device);
+            inst = new pc.ComputeOneSweepRadixSort(device, {
+                useFallback: modeCfg.useFallback
+            });
         } else {
             inst = new pc.ComputeRadixSort(device, {
                 scanKernel: scan,
@@ -194,11 +203,50 @@ function getActiveRadixSort() {
 }
 
 /**
+ * Build a device identity string. Shared by the interactive device overlay
+ * and the benchmark / validation result overlays so the reported GPU
+ * metadata stays consistent across every surface.
+ *
+ * The subgroup range is the big one: our OneSweep and 8-bit subgroup
+ * kernels hardcode `MAX_SUBGROUPS = 8` assuming `sgSize == 32`, so when a
+ * device advertises subgroups with a different size every subgroup kernel
+ * will silently produce corrupt output. Surfacing min/max subgroup size in
+ * the results header makes that easy to diagnose.
+ *
+ * @param {string} sep - Separator glyph between segments (e.g. '-' or '·').
+ * @returns {string} Formatted line, suitable for both plaintext and HTML.
+ */
+function buildGpuLine(sep) {
+    const dev = /** @type {any} */ (device);
+    let line = `Device: ${device.deviceType.toUpperCase()}`;
+    if (device.isWebGPU && dev.gpuAdapter?.info) {
+        const info = dev.gpuAdapter.info;
+        line += `  ${sep}  ${info.vendor || '?'} / ${info.architecture || info.device || '?'}`;
+    }
+    if (device.isWebGPU) {
+        // Read from device fields captured at init (adapter.limits for
+        // subgroup entries can be cleared after requestDevice on some
+        // browsers, so a live re-read is unreliable - e.g. on M4 Chrome).
+        const maxSg = device.maxSubgroupSize;
+        const minSg = device.minSubgroupSize;
+        if (device.supportsSubgroups && maxSg) {
+            const range = (minSg && minSg !== maxSg) ? `${minSg}-${maxSg}` : `${maxSg}`;
+            line += `  ${sep}  subgroup: ${range}`;
+        } else if (device.supportsSubgroups) {
+            line += `  ${sep}  subgroup: yes`;
+        } else {
+            line += `  ${sep}  subgroup: none`;
+        }
+    }
+    return line;
+}
+
+/**
  * Refreshes the device overlay text to reflect the active configuration.
  */
 function updateDeviceInfo() {
     const sort = getActiveRadixSort();
-    deviceInfo.textContent = `Device: ${device.deviceType.toUpperCase()} - scan: ${sort.scanKernelName} - radix: ${sort.radixBits}bit - reorder: ${sort.reorderVariant}`;
+    deviceInfo.textContent = `${buildGpuLine('-')} - scan: ${sort.scanKernelName} - radix: ${sort.radixBits}bit - reorder: ${sort.reorderVariant}`;
 }
 
 updateDeviceInfo();
@@ -554,11 +602,21 @@ const BENCH_SIZES = [
     20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
 ];
 const BENCH_CONFIGS = [
+    // 4-bit Multipass is the only config that works on every WebGPU device
+    // (no subgroups required). It's the production fallback path too.
     { label: '4-bit', modeKey: '4-shared-mem' },
-    { label: 'OneSweep', modeKey: 'onesweep' },
-    // Apple-candidate 8-bit variants (both performed well on M4 in prior
-    // testing). Require subgroups; skipped on devices without them.
+    // Everything else requires subgroups. On devices where subgroups aren't
+    // exposed (e.g. iPhone / Safari today) the Run and Validate panels
+    // exercise the 4-bit path only. This mirrors the gating the gsplat
+    // renderer already applies at runtime.
     ...(device.supportsSubgroups ? [
+        { label: 'OneSweep', modeKey: 'onesweep' },
+        // CSDLDF fallback variant - on NVIDIA it measures the fallback's
+        // overhead; on Apple / other non-NVIDIA it's the path you actually
+        // want.
+        { label: 'OneSweep-safe', modeKey: 'onesweep-safe' },
+        // Apple-candidate 8-bit variants (both performed well on M4 in
+        // prior testing).
         { label: '8-ranked', modeKey: '8-subgroup-ranked' },
         { label: '8-coalesced', modeKey: '8-subgroup-coalesced' }
     ] : [])
@@ -613,7 +671,9 @@ function fmtN(n) {
 function createBenchSort(modeKey) {
     const modeCfg = RADIX_MODES[modeKey];
     if (modeCfg.onesweep) {
-        return new pc.ComputeOneSweepRadixSort(device);
+        return new pc.ComputeOneSweepRadixSort(device, {
+            useFallback: modeCfg.useFallback
+        });
     }
     return new pc.ComputeRadixSort(device, {
         scanKernel: 'blelloch',
@@ -891,13 +951,7 @@ function renderBenchResults(results, onClose) {
     }
     const sizes = [...bySize.keys()].sort((a, b) => a - b);
 
-    // GPU info header.
-    const dev = /** @type {any} */ (device);
-    let gpuLine = `Device: ${device.deviceType.toUpperCase()}`;
-    if (device.isWebGPU && dev.gpuAdapter?.info) {
-        const info = dev.gpuAdapter.info;
-        gpuLine += `  ·  ${info.vendor || '?'} / ${info.architecture || info.device || '?'}`;
-    }
+    const gpuLine = buildGpuLine('·');
 
     const baseline = BENCH_CONFIGS[0].label;
 
@@ -1211,13 +1265,7 @@ function benchResultsPlaintext(results, includeDetails = false) {
     }
     const sizes = [...bySize.keys()].sort((a, b) => a - b);
 
-    // GPU info - useful when pasting results into issues / PRs.
-    const dev = /** @type {any} */ (device);
-    let gpuLine = `Device: ${device.deviceType.toUpperCase()}`;
-    if (device.isWebGPU && dev.gpuAdapter?.info) {
-        const info = dev.gpuAdapter.info;
-        gpuLine += `  -  ${info.vendor || '?'} / ${info.architecture || info.device || '?'}`;
-    }
+    const gpuLine = buildGpuLine('-');
 
     const COL_W = 14;
     const baseline = BENCH_CONFIGS[0].label;
@@ -1321,9 +1369,416 @@ function benchFilename() {
     return `radix-bench-${tag}-${stamp}.txt`;
 }
 
+// ==================== VALIDATION ====================
+
+// Validation exercises every mode listed in BENCH_CONFIGS against a CPU
+// reference sort. Unlike the benchmark it ignores timing entirely and only
+// reports pass/fail. The size sweep and mode list are shared with the
+// benchmark so selecting a `Run up to` value applies to both buttons.
+const VALIDATE_RUNS = 10;
+
+// True while an async validation pass is in flight. Gates the normal
+// per-frame sort to prevent the interactive path from clobbering the
+// validate driver's sort instances and readbacks.
+let validateRunning = false;
+
+/**
+ * Fill a Uint32Array with random 24-bit keys. Returned separately from the
+ * uploaded GPU buffer so the CPU reference sort can reuse the same data.
+ *
+ * @param {number} numElements - Number of elements.
+ * @returns {Uint32Array} Random keys.
+ */
+function generateValidateKeys(numElements) {
+    const maxValue = (1 << BENCH_BITS) - 1;
+    const data = new Uint32Array(numElements);
+    for (let i = 0; i < numElements; i++) {
+        data[i] = Math.floor(Math.random() * maxValue);
+    }
+    return data;
+}
+
+/**
+ * Compare GPU-produced sorted indices against a CPU-sorted reference.
+ *
+ * @param {Uint32Array} indices - GPU-produced sorted indices.
+ * @param {Uint32Array} original - Original unsorted keys (pre-sort).
+ * @param {Uint32Array} cpuSorted - CPU-sorted reference keys.
+ * @returns {{i: number, gpu: number, expected: number}|null} First mismatch or null if all match.
+ */
+function findFirstMismatch(indices, original, cpuSorted) {
+    const n = indices.length;
+    for (let i = 0; i < n; i++) {
+        const gpu = original[indices[i]];
+        const expected = cpuSorted[i];
+        if (gpu !== expected) {
+            return { i: i, gpu: gpu, expected: expected };
+        }
+    }
+    return null;
+}
+
+/**
+ * @typedef {{ passed: number, failed: number, skipped: boolean, firstFailure: { run: number, i: number, gpu: number, expected: number } | null }} ValidateCell
+ */
+
+/**
+ * Run the full validation sweep. Iterates size → run → mode; generates a
+ * single random input per (size, run) so every mode sees identical data
+ * (direct A/B reproduction for any mismatch). Any mode that produces an
+ * incorrect result at size N is marked `skipped` for all larger sizes.
+ *
+ * @returns {Promise<void>} Resolves when the sweep completes.
+ */
+async function runValidation() {
+    if (validateRunning || benchState) return;
+
+    const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
+    const sizes = BENCH_SIZES.filter(n => n <= maxN);
+    if (sizes.length === 0) {
+        showBenchStatus('No validation sizes selected.');
+        setTimeout(() => {
+            benchStatus.style.display = 'none';
+        }, 1500);
+        return;
+    }
+
+    // Snapshot the same interactive state the benchmark does so we can
+    // leave the UI untouched after completion. Validation doesn't need the
+    // GPU profiler, but we still disable visualization and the error
+    // overlay to keep the screen clean.
+    const saved = {
+        elementsK: data.get('options.elementsK'),
+        bits: data.get('options.bits'),
+        mode: data.get('options.mode'),
+        render: data.get('options.render'),
+        validation: data.get('options.validation')
+    };
+
+    unsortedPlane.enabled = false;
+    sortedPlane.enabled = false;
+    errorOverlay.style.display = 'none';
+    benchResults.style.display = 'none';
+
+    validateRunning = true;
+
+    /** @type {Map<string, ValidateCell>} */
+    const results = new Map();
+    /** @type {Set<string>} */
+    const skipLabels = new Set();
+
+    const key = (/** @type {number} */ size, /** @type {string} */ label) => `${size}:${label}`;
+
+    try {
+        for (const size of sizes) {
+            // Pre-mark any already-failed mode as skipped for this size so
+            // it appears in the output grid even though we don't run it.
+            for (const cfg of BENCH_CONFIGS) {
+                if (skipLabels.has(cfg.label)) {
+                    results.set(key(size, cfg.label), {
+                        passed: 0, failed: 0, skipped: true, firstFailure: null
+                    });
+                }
+            }
+
+            for (let run = 0; run < VALIDATE_RUNS; run++) {
+                // Fresh random input per run; shared across all configs at
+                // this (size, run) so mismatches can be directly compared.
+                const keysCpu = generateValidateKeys(size);
+                const cpuSorted = keysCpu.slice().sort();
+                const keysBuf = new pc.StorageBuffer(
+                    device,
+                    size * 4,
+                    pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST
+                );
+                keysBuf.write(0, keysCpu);
+
+                for (const cfg of BENCH_CONFIGS) {
+                    if (skipLabels.has(cfg.label)) continue;
+
+                    showBenchStatus(
+                        `Validating [${cfg.label}]  ${fmtN(size)}  run ${run + 1}/${VALIDATE_RUNS}`
+                    );
+
+                    const sort = createBenchSort(cfg.modeKey);
+                    const alignedBits = Math.ceil(BENCH_BITS / sort.radixBits) * sort.radixBits;
+                    sort.sort(keysBuf, size, alignedBits);
+
+                    const indicesData = new Uint32Array(size);
+                    // eslint-disable-next-line no-await-in-loop
+                    await sort.sortedIndices.read(0, size * 4, indicesData, true);
+
+                    const mismatch = findFirstMismatch(indicesData, keysCpu, cpuSorted);
+
+                    const k = key(size, cfg.label);
+                    let entry = results.get(k);
+                    if (!entry) {
+                        entry = { passed: 0, failed: 0, skipped: false, firstFailure: null };
+                        results.set(k, entry);
+                    }
+                    if (mismatch) {
+                        entry.failed++;
+                        if (!entry.firstFailure) {
+                            entry.firstFailure = { run: run, ...mismatch };
+                        }
+                        // Fail-fast per mode: the next size will almost
+                        // certainly fail too, and each failure eats a long
+                        // readback. Skip this mode at all larger sizes.
+                        skipLabels.add(cfg.label);
+                    } else {
+                        entry.passed++;
+                    }
+
+                    sort.destroy();
+
+                    // Yield a frame so the engine can flush the GPU queue
+                    // between sorts and the status overlay updates live.
+                    // eslint-disable-next-line no-await-in-loop
+                    await new Promise((resolve) => {
+                        requestAnimationFrame(() => resolve(undefined));
+                    });
+                }
+
+                keysBuf.destroy();
+            }
+        }
+    } finally {
+        validateRunning = false;
+    }
+
+    benchStatus.style.display = 'none';
+    deviceInfo.style.display = 'none';
+
+    renderValidateResults(results, sizes, () => {
+        deviceInfo.style.display = '';
+        data.set('options.elementsK', saved.elementsK);
+        data.set('options.bits', saved.bits);
+        data.set('options.mode', saved.mode);
+        data.set('options.render', saved.render);
+        data.set('options.validation', saved.validation);
+    });
+    console.log(validateResultsPlaintext(results, sizes));
+}
+
+/**
+ * Render the validation pass/fail grid into the `benchResults` overlay.
+ *
+ * @param {Map<string, ValidateCell>} results - Validation results.
+ * @param {number[]} sizes - Sizes tested (sorted ascending).
+ * @param {() => void} onClose - Called when the user clicks Close.
+ */
+function renderValidateResults(results, sizes, onClose) {
+    const gpuLine = buildGpuLine('·');
+
+    let html = '';
+    html += '<div style="font-size:16px;font-weight:bold;margin-bottom:6px;color:#fff;">Radix Sort Validation</div>';
+    html += `<div style="opacity:0.8;margin-bottom:4px;color:#fff;">${gpuLine}</div>`;
+    html += `<div style="opacity:0.8;margin-bottom:14px;color:#fff;">${BENCH_BITS}-bit keys · ${VALIDATE_RUNS} runs per cell · no timing</div>`;
+
+    html += '<table style="border-collapse:collapse;width:100%;color:#fff;">';
+    html += '<thead><tr>';
+    html += '<th style="text-align:left;padding:6px 10px;border-bottom:1px solid #444;">Size</th>';
+    for (const cfg of BENCH_CONFIGS) {
+        html += `<th style="text-align:left;padding:6px 10px;border-bottom:1px solid #444;">${cfg.label}</th>`;
+    }
+    html += '<th style="text-align:left;padding:6px 10px;border-bottom:1px solid #444;">Details</th>';
+    html += '</tr></thead><tbody>';
+
+    /** @type {{size: number, label: string, entry: ValidateCell}[]} */
+    const detailRows = [];
+
+    for (const size of sizes) {
+        html += '<tr>';
+        html += `<td style="padding:4px 10px;">${fmtN(size)}</td>`;
+        let rowHasDetails = false;
+        for (const cfg of BENCH_CONFIGS) {
+            const entry = results.get(`${size}:${cfg.label}`);
+            if (!entry) {
+                html += '<td style="padding:4px 10px;color:#888;">--</td>';
+                continue;
+            }
+            if (entry.skipped) {
+                html += '<td style="padding:4px 10px;color:#888;">skip</td>';
+            } else if (entry.failed > 0) {
+                html += `<td style="padding:4px 10px;color:#f66;font-weight:bold;">FAIL ${entry.failed}/${VALIDATE_RUNS}</td>`;
+                rowHasDetails = true;
+            } else {
+                html += `<td style="padding:4px 10px;color:#6f6;">PASS ${entry.passed}/${VALIDATE_RUNS}</td>`;
+            }
+        }
+
+        if (rowHasDetails) {
+            const detailIdx = detailRows.length;
+            html += `<td style="padding:4px 10px;"><button data-toggle="${detailIdx}" style="background:#333;color:#fff;border:1px solid #555;cursor:pointer;border-radius:3px;">▸</button></td>`;
+            for (const cfg of BENCH_CONFIGS) {
+                const entry = results.get(`${size}:${cfg.label}`);
+                if (entry && entry.failed > 0) {
+                    detailRows.push({ size: size, label: cfg.label, entry: entry });
+                }
+            }
+        } else {
+            html += '<td style="padding:4px 10px;color:#888;">--</td>';
+        }
+        html += '</tr>';
+
+        // Insert hidden detail row immediately under each failing size.
+        if (rowHasDetails) {
+            const detailIdx = detailRows.length - 1;
+            // Use a range marker: the toggle button covers all failures
+            // from this size. Build the detail HTML below by walking
+            // detailRows backwards until we cross a size boundary.
+            const startIdx = detailRows.findIndex(r => r.size === size);
+            let detailHtml = '';
+            for (let d = startIdx; d <= detailIdx; d++) {
+                const r = detailRows[d];
+                const f = /** @type {NonNullable<ValidateCell['firstFailure']>} */ (r.entry.firstFailure);
+                detailHtml += `<div style="margin:3px 0;"><span style="color:#f66;">${r.label}</span>: `;
+                detailHtml += `${r.entry.failed}/${VALIDATE_RUNS} runs failed. First mismatch @ run ${f.run + 1}, `;
+                detailHtml += `index ${f.i}: GPU=${f.gpu}, expected=${f.expected}</div>`;
+            }
+            html += `<tr data-detail-content="${detailIdx}" style="display:none;"><td colspan="${BENCH_CONFIGS.length + 2}" style="padding:8px 10px 10px 20px;background:rgba(255,255,255,0.04);font-size:12px;">${detailHtml}</td></tr>`;
+        }
+    }
+
+    html += '</tbody></table>';
+
+    html += '<div style="margin-top:14px;display:flex;gap:8px;">';
+    html += '<button id="validate-save" style="background:#2a6;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Save to file</button>';
+    html += '<button id="validate-close" style="background:#48a;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Close</button>';
+    html += '</div>';
+
+    benchResults.innerHTML = html;
+    benchResults.style.display = 'block';
+
+    // Wire toggle buttons.
+    const toggles = benchResults.querySelectorAll('button[data-toggle]');
+    toggles.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const idx = btn.getAttribute('data-toggle');
+            const row = /** @type {HTMLElement|null} */ (
+                benchResults.querySelector(`tr[data-detail-content="${idx}"]`)
+            );
+            if (row) {
+                const show = row.style.display === 'none';
+                row.style.display = show ? 'table-row' : 'none';
+                btn.textContent = show ? '▾' : '▸';
+            }
+        });
+    });
+
+    const saveBtn = benchResults.querySelector('#validate-save');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            downloadText(validateFilename(), validateResultsPlaintext(results, sizes));
+        });
+    }
+
+    const closeBtn = benchResults.querySelector('#validate-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            benchResults.style.display = 'none';
+            onClose();
+        });
+    }
+}
+
+/**
+ * Plain-text version of the validation report, suitable for console and
+ * file output.
+ *
+ * @param {Map<string, ValidateCell>} results - Validation results.
+ * @param {number[]} sizes - Sizes tested.
+ * @returns {string} Plain text report.
+ */
+function validateResultsPlaintext(results, sizes) {
+    const gpuLine = buildGpuLine('-');
+
+    let text = 'Radix Sort Validation\n';
+    text += `${gpuLine}\n`;
+    text += `${BENCH_BITS}-bit keys, ${VALIDATE_RUNS} runs per cell, no timing\n`;
+    text += `Captured: ${new Date().toISOString()}\n\n`;
+
+    const COL_W = 16;
+    text += 'Size'.padEnd(8);
+    for (const cfg of BENCH_CONFIGS) {
+        text += cfg.label.padStart(COL_W);
+    }
+    text += '\n';
+    text += `${'-'.repeat(8 + BENCH_CONFIGS.length * COL_W)}\n`;
+
+    for (const size of sizes) {
+        text += fmtN(size).padEnd(8);
+        for (const cfg of BENCH_CONFIGS) {
+            const entry = results.get(`${size}:${cfg.label}`);
+            let cell;
+            if (!entry) {
+                cell = '--';
+            } else if (entry.skipped) {
+                cell = 'skip';
+            } else if (entry.failed > 0) {
+                cell = `FAIL ${entry.failed}/${VALIDATE_RUNS}`;
+            } else {
+                cell = `PASS ${entry.passed}/${VALIDATE_RUNS}`;
+            }
+            text += cell.padStart(COL_W);
+        }
+        text += '\n';
+    }
+
+    // Failure detail section: one block per (size, mode) with at least one failure.
+    let hasFailures = false;
+    for (const [, entry] of results) {
+        if (entry.failed > 0) {
+            hasFailures = true;
+            break;
+        }
+    }
+
+    if (hasFailures) {
+        text += '\n\nFailure details\n';
+        text += `${'='.repeat(8 + BENCH_CONFIGS.length * COL_W)}\n\n`;
+        for (const size of sizes) {
+            for (const cfg of BENCH_CONFIGS) {
+                const entry = results.get(`${size}:${cfg.label}`);
+                if (entry && entry.failed > 0 && entry.firstFailure) {
+                    const f = entry.firstFailure;
+                    text += `[${fmtN(size)}]  ${cfg.label}\n`;
+                    text += `    ${entry.failed}/${VALIDATE_RUNS} runs failed\n`;
+                    text += `    first mismatch: run ${f.run + 1}, index ${f.i}, GPU=${f.gpu}, expected=${f.expected}\n\n`;
+                }
+            }
+        }
+    }
+
+    return text;
+}
+
+/**
+ * Build a filename for the saved validation report.
+ *
+ * @returns {string} The suggested filename.
+ */
+function validateFilename() {
+    const dev = /** @type {any} */ (device);
+    let tag = device.deviceType || 'gpu';
+    if (device.isWebGPU && dev.gpuAdapter?.info) {
+        const info = dev.gpuAdapter.info;
+        tag = (info.architecture || info.device || info.vendor || 'gpu');
+    }
+    tag = String(tag).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const d = new Date();
+    const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
+    const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    return `radix-validate-${tag}-${stamp}.txt`;
+}
+
 // Hook the button-emitted event from the controls panel.
 data.on('benchmark', () => {
     startBenchmark();
+});
+
+data.on('validate', () => {
+    runValidation();
 });
 
 // Update loop - continuously sorts every frame
@@ -1336,6 +1791,12 @@ app.on('update', (/** @type {number} */ dt) => {
     // updates so fragment-shader work doesn't contaminate timings.
     if (benchState) {
         stepBenchmark();
+        return;
+    }
+
+    // Validation drives its own sort dispatches from an async driver and
+    // must not be clobbered by the interactive per-frame sort.
+    if (validateRunning) {
         return;
     }
 

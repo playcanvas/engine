@@ -32,15 +32,13 @@
 // hypothesised win is purely from replacing shared-memory atomic chains with
 // subgroup intrinsics and register popcounts.
 //
-// Subgroup-size assumption: this shader hard-codes MAX_SUBGROUPS = 8, derived
-// from 256 threads / 32 lanes. It is correct for sgSize == 32 (Apple M-series,
-// NVIDIA on Chrome/WebGPU, Intel, ARM Mali). It is NOT safe for:
-//  - sgSize < 32: numSgs > 8, `warpCounts` would overflow.
-//  - sgSize > 32 (AMD wave64, some Adreno): the `.x`-only ballot component
-//    drops half the subgroup, giving wrong ranks.
-// The host gates this shader on `device.supportsSubgroups`; runtime sgSize
-// detection is a planned follow-up (PlayCanvas currently does not surface
-// `minSubgroupSize` / `maxSubgroupSize` — see webgpu-graphics-device.js).
+// Subgroup-size handling: `MAX_SUBGROUPS` is parametrized by the host from
+// `device.maxSubgroupSize` (256 / sgSize), so this shader correctly sizes
+// `warpCounts` for sgSize ∈ {16, 32}.
+// It is NOT safe for sgSize > 32 (AMD wave64, some Adreno) because the
+// `.x`-only ballot component drops lanes ≥32; that architecture needs a
+// separate kernel and is handled by the multipass 4-bit fallback at the
+// ComputeRadixSort level.
 
 export const radixSort8bitSubgroupReorderSource = /* wgsl */`
 
@@ -69,8 +67,8 @@ const IS_LAST_PASS: u32 = {IS_LAST_PASS}u;
 const ELEMENTS_PER_THREAD: u32 = {ELEMENTS_PER_THREAD}u;
 const ELEMENTS_PER_WORKGROUP: u32 = THREADS_PER_WORKGROUP * ELEMENTS_PER_THREAD;
 
-// Assumes sgSize == 32 → 256 threads = 8 subgroups. See header comment.
-const MAX_SUBGROUPS: u32 = 8u;
+// Parametrized by the host from device.maxSubgroupSize (256 / sgSize).
+const MAX_SUBGROUPS: u32 = {MAX_SUBGROUPS}u;
 
 // Per-subgroup per-digit counts for the current round. One write per
 // (subgroup, digit) pair (the "leader" lane of each same-digit run), so
@@ -93,6 +91,13 @@ fn main(
     let WID = WORKGROUP_ID * ELEMENTS_PER_WORKGROUP;
     let sgId = TID / sgSize;
     let sgInvMask = (1u << sgInvId) - 1u;
+    // Active-lane mask for the match-any ballot below. WGSL says inactive-lane
+    // bits of subgroupBallot are 0, but drivers (notably Mali / Imagination
+    // at sgSize<32) don't always honour this for subgroupBallot(is_valid).
+    // Initialising sameDigitMask to only cover active lanes makes the per-bit
+    // AND-chain correct regardless of driver behaviour. \`1u << 32u\` is UB so
+    // branch on sgSize < 32.
+    let activeMask = select(0xFFFFFFFFu, (1u << sgSize) - 1u, sgSize < 32u);
 
     // Clear digit_offsets (1 per thread) and warpCounts (8 per thread at
     // stride 256 — one slot per subgroup for this thread's digit column).
@@ -126,7 +131,7 @@ fn main(
         // all 8 bits leaves only lanes that share my full digit.
         //
         // NOTE on .x-only: correct iff sgSize <= 32. See header comment.
-        var sameDigitMask: u32 = 0xFFFFFFFFu;
+        var sameDigitMask: u32 = activeMask;
         for (var b = 0u; b < 8u; b++) {
             let myBit = ((digit >> b) & 1u) == 1u;
             let ballot = subgroupBallot(myBit).x;

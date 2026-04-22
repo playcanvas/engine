@@ -28,10 +28,13 @@ struct OneSweepScanUniforms {
 const RADIX: u32 = 256u;
 const FLAG_INCLUSIVE: u32 = 2u;
 
-// Scratch for the hierarchical exclusive scan. sg_totals is scanned serially
-// by lane 0 of each subgroup; it fits 8 entries for sgSize=32.
+// Parametrized by the host from device.maxSubgroupSize (256 / sgSize).
+const MAX_SUBGROUPS: u32 = {MAX_SUBGROUPS}u;
+
+// Scratch for the hierarchical exclusive scan. sg_totals holds one entry per
+// subgroup; lane 0 of the workgroup scans it serially.
 var<workgroup> g_scan: array<u32, RADIX>;
-var<workgroup> sg_totals: array<u32, 8>;
+var<workgroup> sg_totals: array<u32, MAX_SUBGROUPS>;
 
 @compute @workgroup_size(RADIX, 1, 1)
 fn main(
@@ -56,10 +59,10 @@ fn main(
     }
     workgroupBarrier();
 
-    // Phase 2: scan the subgroup totals (serially in thread 0; only 8 entries).
+    // Phase 2: scan the subgroup totals (serially in thread 0; MAX_SUBGROUPS entries).
     if (gtid == 0u) {
         var acc: u32 = 0u;
-        for (var i = 0u; i < 8u; i = i + 1u) {
+        for (var i = 0u; i < MAX_SUBGROUPS; i = i + 1u) {
             let v = sg_totals[i];
             sg_totals[i] = acc;
             acc = acc + v;
