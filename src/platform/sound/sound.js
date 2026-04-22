@@ -9,7 +9,7 @@ class Sound {
     /**
      * Contains the decoded audio data.
      *
-     * @type {AudioBuffer|undefined}
+     * @type {AudioBuffer}
      */
     buffer;
 

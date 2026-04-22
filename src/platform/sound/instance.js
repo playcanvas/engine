@@ -85,7 +85,7 @@ class SoundInstance extends EventHandler {
     /**
      * Gets the source that plays the sound resource. Source is only available after calling play.
      *
-     * @type {AudioBufferSourceNode}
+     * @type {AudioBufferSourceNode|null}
      */
     source = null;
 
