@@ -91,15 +91,6 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
  */
 
 /**
- * @callback MakeTickCallback
- * Callback used by {@link AppBase#start} and itself to request the rendering of a new animation
- * frame.
- * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
- * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
- * @returns {void}
- */
-
-/**
  * Gets the current application, if any.
  *
  * @type {AppBase|null}
@@ -197,6 +188,96 @@ class AppBase extends EventHandler {
      * @ignore
      */
     frameRequestId;
+
+    /**
+     * Main loop tick, invoked by `requestAnimationFrame` each frame. Bound to this instance so
+     * it can be passed directly to `requestAnimationFrame`. Subclasses may replace this with
+     * their own tick function.
+     *
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+     * @param {XRFrame} [xrFrame] - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
+    tick = (timestamp, xrFrame) => {
+        if (!this.graphicsDevice) {
+            return;
+        }
+
+        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
+        if (this.frameRequestId) {
+            this.xr?.session?.cancelAnimationFrame(this.frameRequestId);
+            cancelAnimationFrame(this.frameRequestId);
+            this.frameRequestId = null;
+        }
+
+        this._inFrameUpdate = true;
+
+        setApplication(this);
+
+        // have current application pointer in pc
+        app = this;
+
+        const currentTime = this._processTimestamp(timestamp) || now();
+        const ms = currentTime - (this._time || currentTime);
+        let dt = ms / 1000.0;
+        dt = math.clamp(dt, 0, this.maxDeltaTime);
+        dt *= this.timeScale;
+
+        this._time = currentTime;
+
+        // Submit a request to queue up a new animation frame immediately
+        this.requestAnimationFrame();
+
+        if (this.graphicsDevice.contextLost) {
+            return;
+        }
+
+        this._fillFrameStatsBasic(currentTime, dt, ms);
+
+        // #if _PROFILER
+        this._fillFrameStats();
+        // #endif
+
+        this.fire('frameupdate', ms);
+
+        let skipUpdate = false;
+
+        if (xrFrame) {
+            skipUpdate = !this.xr?.update(xrFrame);
+            this.graphicsDevice.defaultFramebuffer = xrFrame.session.renderState.baseLayer.framebuffer;
+        } else {
+            this.graphicsDevice.defaultFramebuffer = null;
+        }
+
+        if (!skipUpdate) {
+
+            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${this.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
+
+            this.update(dt);
+
+            this.fire('framerender');
+
+            if (this.autoRender || this.renderNextFrame) {
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
+
+                this.render();
+                this.renderNextFrame = false;
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
+            }
+
+            this.fire('frameend');
+            this.stats.frameEnd();
+        }
+
+        this._inFrameUpdate = false;
+
+        if (this._destroyRequested) {
+            this.destroy();
+        }
+    };
 
     /**
      * Scales the global time delta. Defaults to 1.
@@ -559,10 +640,6 @@ class AppBase extends EventHandler {
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         }
-
-        // bind tick function to current scope
-        /* eslint-disable-next-line no-use-before-define */
-        this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
     static _applications = {};
@@ -2006,100 +2083,5 @@ class AppBase extends EventHandler {
         });
     }
 }
-
-/**
- * Create tick function to be wrapped in closure.
- *
- * @param {AppBase} _app - The application.
- * @returns {MakeTickCallback} The tick function.
- * @private
- */
-const makeTick = function (_app) {
-    const application = _app;
-    /**
-     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {XRFrame} [xrFrame] - XRFrame from requestAnimationFrame callback.
-     */
-    return function (timestamp, xrFrame) {
-        if (!application.graphicsDevice) {
-            return;
-        }
-
-        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
-        if (application.frameRequestId) {
-            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
-            cancelAnimationFrame(application.frameRequestId);
-            application.frameRequestId = null;
-        }
-
-        application._inFrameUpdate = true;
-
-        setApplication(application);
-
-        // have current application pointer in pc
-        app = application;
-
-        const currentTime = application._processTimestamp(timestamp) || now();
-        const ms = currentTime - (application._time || currentTime);
-        let dt = ms / 1000.0;
-        dt = math.clamp(dt, 0, application.maxDeltaTime);
-        dt *= application.timeScale;
-
-        application._time = currentTime;
-
-        // Submit a request to queue up a new animation frame immediately
-        application.requestAnimationFrame();
-
-        if (application.graphicsDevice.contextLost) {
-            return;
-        }
-
-        application._fillFrameStatsBasic(currentTime, dt, ms);
-
-        // #if _PROFILER
-        application._fillFrameStats();
-        // #endif
-
-        application.fire('frameupdate', ms);
-
-        let skipUpdate = false;
-
-        if (xrFrame) {
-            skipUpdate = !application.xr?.update(xrFrame);
-            application.graphicsDevice.defaultFramebuffer = xrFrame.session.renderState.baseLayer.framebuffer;
-        } else {
-            application.graphicsDevice.defaultFramebuffer = null;
-        }
-
-        if (!skipUpdate) {
-
-            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
-            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
-
-            application.update(dt);
-
-            application.fire('framerender');
-
-            if (application.autoRender || application.renderNextFrame) {
-
-                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
-
-                application.render();
-                application.renderNextFrame = false;
-
-                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
-            }
-
-            application.fire('frameend');
-            application.stats.frameEnd();
-        }
-
-        application._inFrameUpdate = false;
-
-        if (application._destroyRequested) {
-            application.destroy();
-        }
-    };
-};
 
 export { app, AppBase };
