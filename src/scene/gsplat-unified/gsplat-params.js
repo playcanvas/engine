@@ -174,9 +174,8 @@ class GSplatParams {
     }
 
     /**
-     * Gets the requested rendering pipeline for gaussian splatting. This is the value last
-     * assigned to {@link renderer}, which may differ from {@link currentRenderer} when a WebGPU
-     * mode falls back on a WebGL device.
+     * Gets the requested rendering pipeline for gaussian splatting. This may differ from
+     * {@link currentRenderer} when a WebGPU mode falls back on a WebGL device.
      *
      * @type {number}
      */
