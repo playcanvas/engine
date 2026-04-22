@@ -117,20 +117,23 @@ describe('Camera', function () {
         });
     });
 
-    describe('#destroy', function () {
+    describe('#projectionMatrix', function () {
 
-        it('unsubscribes from the device resize event', function () {
+        it('refreshes after a backbuffer resize (no setter touched)', function () {
             app.graphicsDevice.setResolution(800, 400);
 
             const camera = new Camera(app.graphicsDevice);
-            // read the getter to clear the dirty flag
-            expect(camera.aspectRatio).to.equal(2);
 
-            camera.destroy();
+            // prime the projection matrix cache
+            const before = camera.projectionMatrix.clone();
 
-            // after destroy, a resize must not re-dirty the cached value or throw
+            // resize the backbuffer without touching any camera setter
             app.graphicsDevice.setResolution(1600, 400);
-            expect(camera.aspectRatio).to.equal(2);
+
+            // reading projectionMatrix should detect the aspect change via the getter and
+            // rebuild the matrix
+            const after = camera.projectionMatrix;
+            expect(after.equals(before)).to.equal(false);
         });
     });
 

@@ -14,7 +14,6 @@ import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
 
 /**
- * @import { EventHandle } from '../core/event-handle.js'
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
@@ -85,32 +84,15 @@ class Camera {
 
     /**
      * The graphics device used by this camera. Required so the camera can compute its aspect
-     * ratio from the backbuffer and react to resize events.
+     * ratio from the backbuffer size when no render target is assigned.
      *
      * @type {GraphicsDevice}
      */
     device;
 
     /**
-     * Event handle for the graphics device 'resizecanvas' subscription.
-     *
-     * @type {EventHandle|null}
-     * @private
-     */
-    _evtResize = null;
-
-    /**
-     * When true and aspectRatioMode is ASPECT_AUTO, the next read of `aspectRatio` will
-     * recompute it from the current render target (or backbuffer) and the `rect`.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _aspectDirty = true;
-
-    /**
      * @param {GraphicsDevice} graphicsDevice - The graphics device this camera will use for
-     * automatic aspect ratio calculation (and to listen to resize events).
+     * automatic aspect ratio calculation against the backbuffer size.
      */
     constructor(graphicsDevice) {
         Debug.assert(graphicsDevice, 'Camera constructor requires a GraphicsDevice.');
@@ -172,19 +154,9 @@ class Camera {
             farClip: this._farClip,
             nearClip: this._nearClip
         };
-
-        // if the backbuffer is resized, the AUTO aspect ratio (when using the backbuffer as
-        // the target) may change, so invalidate the cached value and projection matrix
-        this._evtResize = this.device.on('resizecanvas', () => {
-            this._aspectDirty = true;
-            this._projMatDirty = true;
-        });
     }
 
     destroy() {
-
-        this._evtResize?.off();
-        this._evtResize = null;
 
         this.renderPassColorGrab?.destroy();
         this.renderPassColorGrab = null;
@@ -223,9 +195,6 @@ class Camera {
     }
 
     set aspectRatio(newValue) {
-        // explicit write (used by ASPECT_MANUAL, clone/copy, renderer code)
-        // clears the dirty flag so the AUTO recompute doesn't immediately overwrite it
-        this._aspectDirty = false;
         if (this._aspectRatio !== newValue) {
             this._aspectRatio = newValue;
             this._projMatDirty = true;
@@ -235,10 +204,9 @@ class Camera {
     get aspectRatio() {
         if (this.xr?.active) return this._xrProperties.aspectRatio;
 
-        // lazy recompute when in ASPECT_AUTO mode and one of the inputs (rect, render target,
-        // backbuffer size) has changed since the last read
-        if (this._aspectDirty && this._aspectRatioMode === ASPECT_AUTO) {
-            this._aspectDirty = false;
+        // in ASPECT_AUTO mode, always recompute from current inputs (render target / backbuffer
+        // size and rect). The computation is trivially cheap, and this avoids few complexities.
+        if (this._aspectRatioMode === ASPECT_AUTO) {
             const newValue = this.calculateAspectRatio();
             if (this._aspectRatio !== newValue) {
                 this._aspectRatio = newValue;
@@ -252,7 +220,6 @@ class Camera {
         if (this._aspectRatioMode !== newValue) {
             this._aspectRatioMode = newValue;
             this._projMatDirty = true;
-            this._aspectDirty = true;
         }
     }
 
@@ -443,7 +410,6 @@ class Camera {
 
     set rect(newValue) {
         this._rect.copy(newValue);
-        this._aspectDirty = true;
         this._projMatDirty = true;
     }
 
@@ -453,7 +419,6 @@ class Camera {
 
     set renderTarget(newValue) {
         this._renderTarget = newValue;
-        this._aspectDirty = true;
         this._projMatDirty = true;
     }
 
@@ -711,15 +676,19 @@ class Camera {
     }
 
     _evaluateProjectionMatrix() {
+        // in ASPECT_AUTO, reading the aspectRatio getter recomputes it from current inputs
+        // and marks _projMatDirty if the value changed (e.g. after a backbuffer resize with
+        // no other input changes)
+        const aspect = this.aspectRatio;
         if (this._projMatDirty) {
             if (this._projection === PROJECTION_PERSPECTIVE) {
-                this._projMat.setPerspective(this.fov, this.aspectRatio, this.nearClip, this.farClip, this.horizontalFov);
+                this._projMat.setPerspective(this.fov, aspect, this.nearClip, this.farClip, this.horizontalFov);
                 this._projMatSkybox.copy(this._projMat);
             } else {
                 const y = this._orthoHeight;
-                const x = y * this.aspectRatio;
+                const x = y * aspect;
                 this._projMat.setOrtho(-x, x, -y, y, this.nearClip, this.farClip);
-                this._projMatSkybox.setPerspective(this.fov, this.aspectRatio, this.nearClip, this.farClip);
+                this._projMatSkybox.setPerspective(this.fov, aspect, this.nearClip, this.farClip);
             }
 
             this._projMatDirty = false;
