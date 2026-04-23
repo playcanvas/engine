@@ -14,7 +14,7 @@ import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE,
+    CULLFACE_NONE,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
 } from '../platform/graphics/constants.js';
@@ -232,10 +232,10 @@ class AppBase extends EventHandler {
             return;
         }
 
-        this._fillFrameStatsBasic(currentTime, dt, ms);
+        this.stats.updateBasic(currentTime, dt, ms, this.renderer, this.graphicsDevice);
 
         // #if _PROFILER
-        this._fillFrameStats();
+        this.stats.updateDetailed(this.renderer, this.graphicsDevice);
         // #endif
 
         this.fire('frameupdate', ms);
@@ -1159,105 +1159,6 @@ class AppBase extends EventHandler {
 
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
         this.frameGraph.render(this.graphicsDevice);
-    }
-
-    /**
-     * @param {number} now - The timestamp passed to the requestAnimationFrame callback.
-     * @param {number} dt - The time delta in seconds since the last frame. This is subject to the
-     * application's time scale and max delta values.
-     * @param {number} ms - The time in milliseconds since the last frame.
-     * @private
-     */
-    _fillFrameStatsBasic(now, dt, ms) {
-        // Timing stats
-        const stats = this.stats.frame;
-        stats.dt = dt;
-        stats.ms = ms;
-        if (now > stats._timeToCountFrames) {
-            stats.fps = stats._fpsAccum;
-            stats._fpsAccum = 0;
-            stats._timeToCountFrames = now + 1000;
-        } else {
-            stats._fpsAccum++;
-        }
-
-        // total draw call
-        this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
-        this.graphicsDevice._drawCallsPerFrame = 0;
-
-        stats.gsplats = this.renderer._gsplatCount;
-        stats.gsplatBufferCopy = this.renderer._gsplatBufferCopy ?? 0;
-    }
-
-    /** @private */
-    _fillFrameStats() {
-        let stats = this.stats.frame;
-
-        // Render stats
-        stats.cameras = this.renderer._camerasRendered;
-        stats.materials = this.renderer._materialSwitches;
-        stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
-        stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
-        stats.shadowMapTime = this.renderer._shadowMapTime;
-        stats.depthMapTime = this.renderer._depthMapTime;
-        stats.forwardTime = this.renderer._forwardTime;
-        const prims = this.graphicsDevice._primsPerFrame;
-        stats.triangles = prims[PRIMITIVE_TRIANGLES] / 3 +
-            Math.max(prims[PRIMITIVE_TRISTRIP] - 2, 0) +
-            Math.max(prims[PRIMITIVE_TRIFAN] - 2, 0);
-        stats.cullTime = this.renderer._cullTime;
-        stats.sortTime = this.renderer._sortTime;
-        stats.skinTime = this.renderer._skinTime;
-        stats.morphTime = this.renderer._morphTime;
-        stats.lightClusters = this.renderer._lightClusters;
-        stats.lightClustersTime = this.renderer._lightClustersTime;
-        stats.otherPrimitives = 0;
-        for (let i = 0; i < prims.length; i++) {
-            if (i < PRIMITIVE_TRIANGLES) {
-                stats.otherPrimitives += prims[i];
-            }
-            prims[i] = 0;
-        }
-        this.renderer._camerasRendered = 0;
-        this.renderer._materialSwitches = 0;
-        this.renderer._shadowMapUpdates = 0;
-        this.graphicsDevice._shaderSwitchesPerFrame = 0;
-        this.renderer._cullTime = 0;
-        this.renderer._layerCompositionUpdateTime = 0;
-        this.renderer._lightClustersTime = 0;
-        this.renderer._sortTime = 0;
-        this.renderer._skinTime = 0;
-        this.renderer._morphTime = 0;
-        this.renderer._shadowMapTime = 0;
-        this.renderer._depthMapTime = 0;
-        this.renderer._forwardTime = 0;
-
-        // Draw call stats
-        stats = this.stats.drawCalls;
-        stats.forward = this.renderer._forwardDrawCalls;
-        stats.culled = this.renderer._numDrawCallsCulled;
-        stats.depth = 0;
-        stats.shadow = this.renderer._shadowDrawCalls;
-        stats.skinned = this.renderer._skinDrawCalls;
-        stats.immediate = 0;
-        stats.instanced = 0;
-        stats.removedByInstancing = 0;
-        stats.misc = stats.total - (stats.forward + stats.shadow);
-        this.renderer._depthDrawCalls = 0;
-        this.renderer._shadowDrawCalls = 0;
-        this.renderer._forwardDrawCalls = 0;
-        this.renderer._numDrawCallsCulled = 0;
-        this.renderer._skinDrawCalls = 0;
-        this.renderer._immediateRendered = 0;
-        this.renderer._instancedDrawCalls = 0;
-
-        this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
-
-        stats = this.stats.particles;
-        stats.updatesPerFrame = stats._updatesPerFrame;
-        stats.frameTime = stats._frameTime;
-        stats._updatesPerFrame = 0;
-        stats._frameTime = 0;
     }
 
     /**
