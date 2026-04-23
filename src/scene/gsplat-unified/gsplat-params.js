@@ -9,7 +9,8 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
-    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP
+    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
+    GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -118,11 +119,6 @@ class GSplatParams {
     }
 
     /**
-     * Enables debug rendering of AABBs for GSplat objects. Defaults to false.
-     */
-    debugAabbs = false;
-
-    /**
      * Enables radial sorting based on distance from camera (for cubemap rendering). When false,
      * uses directional sorting along camera forward vector. Defaults to false.
      *
@@ -144,7 +140,7 @@ class GSplatParams {
     _currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
 
     /**
-     * The rendering pipeline used for gaussian splatting. Can be:
+     * Sets the rendering pipeline used for gaussian splatting. Can be:
      *
      * - {@link GSPLAT_RENDERER_AUTO}: Automatically selects the best pipeline for the platform.
      * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
@@ -153,7 +149,8 @@ class GSplatParams {
      * - {@link GSPLAT_RENDERER_COMPUTE}: Full compute pipeline (WebGPU only, experimental).
      *
      * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
-     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices.
+     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
+     * can be queried via {@link currentRenderer}.
      *
      * @type {number}
      */
@@ -172,6 +169,12 @@ class GSplatParams {
         }
     }
 
+    /**
+     * Gets the requested rendering pipeline for gaussian splatting. This may differ from
+     * {@link currentRenderer} when a WebGPU mode falls back on a WebGL device.
+     *
+     * @type {number}
+     */
     get renderer() {
         return this._renderer;
     }
@@ -188,11 +191,6 @@ class GSplatParams {
     }
 
     /**
-     * Enables debug rendering of AABBs for GSplat octree nodes. Defaults to false.
-     */
-    debugNodeAabbs = false;
-
-    /**
      * Internal dirty flag to trigger update of gsplat managers when some params change.
      *
      * @ignore
@@ -206,7 +204,7 @@ class GSplatParams {
     _debug = GSPLAT_DEBUG_NONE;
 
     /**
-     * Debug rendering mode for Gaussian splats. Can be:
+     * Sets the debug rendering mode for Gaussian splats. Can be:
      *
      * - {@link GSPLAT_DEBUG_NONE}: Normal rendering (default).
      * - {@link GSPLAT_DEBUG_LOD}: Colorize splats by their selected LOD level.
@@ -214,6 +212,9 @@ class GSplatParams {
      * frequency.
      * - {@link GSPLAT_DEBUG_HEATMAP}: Heatmap visualization of average splats processed per
      * pixel in each tile. Only supported with {@link GSPLAT_RENDERER_COMPUTE}.
+     * - {@link GSPLAT_DEBUG_AABBS}: Draw world-space AABBs for each GSplat, colorized by LOD.
+     * - {@link GSPLAT_DEBUG_NODE_AABBS}: Draw world-space AABBs for each octree node of
+     * streamed GSplats, colorized by the currently selected LOD.
      *
      * Only one debug mode can be active at a time. Defaults to {@link GSPLAT_DEBUG_NONE}.
      *
@@ -231,22 +232,70 @@ class GSplatParams {
         }
     }
 
+    /**
+     * Gets the debug rendering mode for Gaussian splats.
+     *
+     * @type {number}
+     */
     get debug() {
         return this._debug;
     }
 
-    /** @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_LOD} instead. */
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_LOD} instead.
+     * @ignore
+     */
     set colorizeLod(value) {
         Debug.deprecated('GSplatParams#colorizeLod is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_LOD instead.');
         this.debug = value ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
     }
 
     /**
+     * @type {boolean}
      * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_LOD} instead.
-     * @returns {boolean} Whether LOD colorization is enabled.
+     * @ignore
      */
     get colorizeLod() {
         return this._debug === GSPLAT_DEBUG_LOD;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_AABBS} instead.
+     * @ignore
+     */
+    set debugAabbs(value) {
+        Debug.deprecated('GSplatParams#debugAabbs is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_AABBS instead.');
+        this.debug = value ? GSPLAT_DEBUG_AABBS : GSPLAT_DEBUG_NONE;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_AABBS} instead.
+     * @ignore
+     */
+    get debugAabbs() {
+        return this._debug === GSPLAT_DEBUG_AABBS;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_NODE_AABBS} instead.
+     * @ignore
+     */
+    set debugNodeAabbs(value) {
+        Debug.deprecated('GSplatParams#debugNodeAabbs is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_NODE_AABBS instead.');
+        this.debug = value ? GSPLAT_DEBUG_NODE_AABBS : GSPLAT_DEBUG_NONE;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_NODE_AABBS} instead.
+     * @ignore
+     */
+    get debugNodeAabbs() {
+        return this._debug === GSPLAT_DEBUG_NODE_AABBS;
     }
 
     /** @private */

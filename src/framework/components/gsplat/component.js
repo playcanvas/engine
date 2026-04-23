@@ -480,8 +480,9 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * @deprecated Use {@link lodBaseDistance} and {@link lodMultiplier} instead.
      * @type {number[]|null}
+     * @deprecated Use {@link lodBaseDistance} and {@link lodMultiplier} instead.
+     * @ignore
      */
     set lodDistances(value) {
         Debug.removed('GSplatComponent#lodDistances is removed. Use lodBaseDistance and lodMultiplier instead.');
@@ -492,8 +493,9 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * @deprecated Use {@link lodBaseDistance} and {@link lodMultiplier} instead.
      * @type {number[]}
+     * @deprecated Use {@link lodBaseDistance} and {@link lodMultiplier} instead.
+     * @ignore
      */
     get lodDistances() {
         Debug.removed('GSplatComponent#lodDistances is removed. Use lodBaseDistance and lodMultiplier instead.');
@@ -501,13 +503,19 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * @deprecated Use app.scene.gsplat.splatBudget instead for global budget control.
      * @type {number}
+     * @deprecated Use app.scene.gsplat.splatBudget instead for global budget control.
+     * @ignore
      */
     set splatBudget(value) {
         Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
     }
 
+    /**
+     * @type {number}
+     * @deprecated Use app.scene.gsplat.splatBudget instead for global budget control.
+     * @ignore
+     */
     get splatBudget() {
         Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
         return 0;

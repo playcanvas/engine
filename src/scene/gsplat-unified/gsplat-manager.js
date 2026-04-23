@@ -18,7 +18,7 @@ import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
-    GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE
+    GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_AABBS
 } from '../constants.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
@@ -1440,7 +1440,7 @@ class GSplatManager {
 
             // debug render world space bounds for all splats
             Debug.call(() => {
-                if (this.scene.gsplat.debugAabbs) {
+                if (this.scene.gsplat.debug === GSPLAT_DEBUG_AABBS) {
                     const tempAabb = new BoundingBox();
                     const scene = this.scene;
                     lastState.splats.forEach((splat) => {

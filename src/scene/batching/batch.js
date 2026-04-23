@@ -101,9 +101,9 @@ class Batch {
     }
 
     /**
+     * @type {undefined}
      * @deprecated
      * @ignore
-     * @type {undefined}
      */
     get model() {
         Debug.removed('pc.Batch#model was removed. Use pc.Batch#meshInstance to access batched mesh instead.');

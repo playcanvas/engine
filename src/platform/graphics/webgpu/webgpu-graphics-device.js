@@ -339,7 +339,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsSubgroups = requireFeature('subgroups');
         this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.limits?.maxSubgroupSize ?? 0) : 0;
         this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.limits?.minSubgroupSize ?? 0) : 0;
-        Debug.log(`WEBGPU features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`);
+        Debug.log(
+            `WEBGPU${this.gpuAdapter?.info ?
+                ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
+                ''
+            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`
+        );
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};

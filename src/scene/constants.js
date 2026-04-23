@@ -1275,3 +1275,20 @@ export const GSPLAT_DEBUG_SH_UPDATE = 2;
  * @category Graphics
  */
 export const GSPLAT_DEBUG_HEATMAP = 3;
+
+/**
+ * Debug rendering that draws world-space AABBs for each GSplat, colorized by LOD.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_AABBS = 4;
+
+/**
+ * Debug rendering that draws world-space AABBs for each octree node of streamed GSplats,
+ * colorized by the currently selected LOD.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_NODE_AABBS = 5;

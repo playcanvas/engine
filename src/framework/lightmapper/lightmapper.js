@@ -153,7 +153,7 @@ class Lightmapper {
             LightmapCache.incRef(this.blackTex);
 
             // camera used for baking
-            const camera = new Camera();
+            const camera = new Camera(this.device);
             camera.clearColor.set(0, 0, 0, 0);
             camera.clearColorBuffer = true;
             camera.clearDepthBuffer = false;
