@@ -1052,9 +1052,6 @@ class AppBase extends EventHandler {
      * @private
      */
     inputUpdate(dt) {
-        if (this.controller) {
-            this.controller.update(dt);
-        }
         if (this.mouse) {
             this.mouse.update();
         }
@@ -1863,10 +1860,6 @@ class AppBase extends EventHandler {
         if (this.gamepads) {
             this.gamepads.destroy();
             this.gamepads = null;
-        }
-
-        if (this.controller) {
-            this.controller = null;
         }
 
         this.systems.destroy();
