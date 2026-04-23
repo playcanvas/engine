@@ -58,9 +58,11 @@ const MAX_PASSES = 4;
  *  - The device's lookback must be able to make progress under producer/
  *    consumer partition scheduling (true on NVIDIA Turing+, AMD GCN+, Intel
  *    Gen9+). Apple Silicon and any other device lacking forward-thread-
- *    progress guarantees should opt in to the CSDLDF fallback path (see
- *    `useFallback` constructor option). By default this is auto-detected
- *    from the WebGPU adapter's vendor string.
+ *    progress guarantees should use {@link ComputeRadixSort} in 8-bit mode
+ *    (subgroup or shared-mem reorder) instead - benchmarking showed the
+ *    CSDLDF decoupled-fallback lookback path, while correct, serialized
+ *    to the point of being 5-100x slower than the multi-pass path on
+ *    those architectures, so it is not shipped as an option here.
  *
  * @category Graphics
  * @ignore
@@ -197,51 +199,13 @@ class ComputeOneSweepRadixSort {
     _binningComputes = [];
 
     /**
-     * Whether the binning shader was compiled with the CSDLDF decoupled
-     * fallback. `true` when running on a platform that lacks forward-thread-
-     * progress guarantees (Apple Silicon, unknown vendors). `false` on
-     * NVIDIA, AMD and Intel, where the plain decoupled lookback is faster.
-     *
-     * @type {boolean}
-     */
-    useFallback = false;
-
-    /**
-     * Auto-detects whether the binning shader should be compiled with the
-     * CSDLDF decoupled fallback. Returns `true` on vendors without forward-
-     * thread-progress guarantees (Apple, unknown). Returns `false` on
-     * vendors that guarantee progress in a producer/consumer chain
-     * (NVIDIA, AMD, Intel).
-     *
-     * @param {GraphicsDevice} device - The graphics device.
-     * @returns {boolean} Whether the fallback should be enabled.
-     * @private
-     */
-    static _detectUseFallback(device) {
-        // WebGPU adapter vendor, lowercase. Common values: 'nvidia', 'amd',
-        // 'intel', 'apple', 'qualcomm', ''.
-        const vendor = /** @type {any} */ (device).gpuAdapter?.info?.vendor?.toLowerCase?.() || '';
-        if (vendor === 'nvidia' || vendor === 'amd' || vendor === 'intel') {
-            return false;
-        }
-        // Apple, Qualcomm, Mali/ARM, unknown → assume no forward progress.
-        return true;
-    }
-
-    /**
      * @param {GraphicsDevice} device - The graphics device (must support
      * compute and subgroups).
-     * @param {object} [options] - Optional configuration.
-     * @param {boolean} [options.useFallback] - Compile the binning shader
-     * with the CSDLDF decoupled fallback path. Defaults to an auto-detected
-     * value from the device vendor. Set explicitly to force-test either
-     * path on any hardware.
      */
-    constructor(device, options) {
+    constructor(device) {
         Debug.assert(device.supportsCompute, 'ComputeOneSweepRadixSort requires compute shader support (WebGPU)');
         Debug.assert(device.supportsSubgroups, 'ComputeOneSweepRadixSort requires subgroup support');
         this.device = device;
-        this.useFallback = options?.useFallback ?? ComputeOneSweepRadixSort._detectUseFallback(device);
 
         this._createFormatsAndShaders();
     }
@@ -341,13 +305,12 @@ class ComputeOneSweepRadixSort {
     }
 
     /**
-     * Reorder variant identifier for logging. `'onesweep-safe'` when the
-     * CSDLDF decoupled fallback was compiled in, `'onesweep'` otherwise.
+     * Reorder variant identifier for logging. Always `'onesweep'`.
      *
      * @type {string}
      */
     get reorderVariant() {
-        return this.useFallback ? 'onesweep-safe' : 'onesweep';
+        return 'onesweep';
     }
 
     /** @private */
@@ -431,19 +394,12 @@ class ComputeOneSweepRadixSort {
             computeUniformBufferFormats: { uniforms: this._scanUniformFormat }
         });
 
-        // Single binning variant compiled eagerly based on device vendor:
-        // with CSDLDF fallback for Apple/unknown, without for NVIDIA/AMD/Intel.
-        // Keeping this vendor-pinned avoids the compile cost of both variants
-        // on devices where only one can possibly be used.
         const binDefines = new Map();
         binDefines.set('{D_DIM}', D_DIM);
         binDefines.set('{KEYS_PER_THREAD}', KEYS_PER_THREAD);
         binDefines.set('{MAX_SUBGROUPS}', maxSubgroups);
-        if (this.useFallback) {
-            binDefines.set('ENABLE_FALLBACK', '');
-        }
         this._binningShader = new Shader(device, {
-            name: this.useFallback ? 'OneSweepBinningSafe' : 'OneSweepBinning',
+            name: 'OneSweepBinning',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: onesweepBinningSource,
             cdefines: binDefines,

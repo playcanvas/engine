@@ -45,18 +45,16 @@
 // UpdateOffsetsWGE16,ScatterKeysShared,ScatterDevice*}` of
 // [b0nes164/GPUSorting](https://github.com/b0nes164/GPUSorting) (MIT License).
 //
-// Portability: the plain Lookback (no decoupled fallback) spins on previous
-// partitions. This requires forward-thread-progress guarantees and works
-// reliably on NVIDIA and Intel. For Apple Silicon and any other device
-// lacking forward-progress guarantees, compile this shader with the
-// preprocessor define ENABLE_FALLBACK. That replaces Phase D with a
-// cooperative Chained-Scan Decoupled Lookback Decoupled Fallback (CSDLDF)
-// path, adapted from b0nes164/GPUPrefixSums/SharedShaders/csdldf.wgsl
-// (MIT License). After a bounded number of spins on a predecessor slot,
-// the whole workgroup cooperatively recomputes that predecessor partition's
-// histogram and atomicMax-publishes it. atomicMax cannot corrupt a slot
-// already upgraded to FLAG_INCLUSIVE because INCLUSIVE payloads always
-// exceed any fallback-written REDUCTION payload for the same producer.
+// Portability: the plain Lookback used here spins on previous partitions.
+// This requires forward-thread-progress guarantees and works reliably on
+// NVIDIA, AMD and Intel. A CSDLDF (Chained-Scan Decoupled-Lookback Decoupled-
+// Fallback) variant was previously available under an ENABLE_FALLBACK define
+// for Apple Silicon and other architectures without progress guarantees, but
+// benchmarking showed it serialized heavily (5-100x slower than the 4-bit
+// multi-pass path on M1/M4, while never outperforming plain lookback on
+// NVIDIA where the fallback was unnecessary). The fallback path has been
+// removed; callers targeting those architectures should use
+// {@link ComputeRadixSort} in 8-bit mode instead.
 
 export const onesweepBinningSource = /* wgsl */`
 
@@ -89,27 +87,29 @@ const PART_SIZE: u32 = D_DIM * KEYS_PER_THREAD; // 3840 for D_DIM=256, KEYS=15
 const MAX_SUBGROUPS: u32 = {MAX_SUBGROUPS}u;
 const WAVE_HISTS_SIZE: u32 = MAX_SUBGROUPS * RADIX;
 
+// g_d must be large enough for both the ranking phase (WAVE_HISTS_SIZE slots)
+// and the staging phase (PART_SIZE slots). For D_DIM=256, KEYS_PER_THREAD=15
+// this is:
+//  sgSize=32 (MAX_SUBGROUPS=8 ): max(3840, 2048) = 3840
+//  sgSize=16 (MAX_SUBGROUPS=16): max(3840, 4096) = 4096  (+1 KiB vs sgSize=32)
+//  sgSize=64 (MAX_SUBGROUPS=4 ): max(3840, 1024) = 3840
+// Sizing g_d to PART_SIZE alone (as in the original port) corrupts waves 15..
+// on sgSize=16 hardware because their per-warp histogram slots fall out of
+// bounds.
+const G_D_SIZE: u32 = max(PART_SIZE, WAVE_HISTS_SIZE);
+
 const FLAG_NOT_READY: u32 = 0u;
 const FLAG_REDUCTION: u32 = 1u;
 const FLAG_INCLUSIVE: u32 = 2u;
 const FLAG_MASK: u32 = 3u;
 
-#ifdef ENABLE_FALLBACK
-// Spins per predecessor slot before falling back to cooperative histogram
-// recomputation. 4 matches the b0nes164 reference. Tune upward (8, 16, 32)
-// if profiling on Apple shows the fallback triggering too aggressively.
-const MAX_SPIN_COUNT: u32 = 4u;
-const LOCKED: u32 = 1u;
-const UNLOCKED: u32 = 0u;
-#endif
-
 // Staging memory. Reused across phases:
-//   phase A (ranking):          per-warp histograms (8 × 256 u32) in slots 0..2048
+//   phase A (ranking):          per-warp histograms (MAX_SUBGROUPS × 256 u32) in slots 0..WAVE_HISTS_SIZE
 //   phase E (key staging):      sorted keys at block-local offset, slots 0..PART_SIZE
 //   phase G (value staging):    values at block-local offset, slots 0..PART_SIZE
 // Declared atomic to satisfy atomicAdd in phase A. Other phases use
 // atomicStore/atomicLoad which behave like plain stores/loads on modern GPUs.
-var<workgroup> g_d: array<atomic<u32>, PART_SIZE>;
+var<workgroup> g_d: array<atomic<u32>, G_D_SIZE>;
 
 // After phase B: per-digit block-local base.
 // After phase D: per-digit GLOBAL base (minus block-local exclusive prefix).
@@ -122,21 +122,6 @@ var<workgroup> sg_totals: array<u32, MAX_SUBGROUPS>;
 
 // Broadcast slot for the atomically-acquired partition tile id.
 var<workgroup> wg_partIndex: u32;
-
-#ifdef ENABLE_FALLBACK
-// CSDLDF workgroup state. Accessed only in Phase D by all threads; each
-// iteration of the lookback loop is gated by workgroupUniformLoad(&wg_lock)
-// so control flow stays uniform on WGSL / Metal.
-var<workgroup> wg_lock: u32;                       // LOCKED while lookback still running
-var<workgroup> wg_broadcast_k: u32;                // predecessor slot currently being examined
-var<workgroup> wg_spin_count: u32;                 // consecutive spins at current k
-var<workgroup> wg_do_fallback: u32;                // 1 when this iteration should run the fallback
-var<workgroup> wg_any_not_ready: u32;              // non-atomic broadcast target for uniform load
-var<workgroup> wg_not_ready_atomic: atomic<u32>;   // atomicOr collector for "any digit NOT_READY"
-// Fallback histogram reuses g_d[0..RADIX]. Phase D executes AFTER Phase C
-// (which no longer needs g_d) and BEFORE Phase E (which overwrites it for
-// staging), so this overlap is safe.
-#endif
 
 fn passHistOffset(pass_: u32, partitionIdx: u32) -> u32 {
     return pass_ * uniforms.threadBlocks * RADIX + partitionIdx * RADIX;
@@ -273,18 +258,7 @@ fn main(
     // last block has no successor and skips this step.
     if (partitionIndex + 1u < threadBlocks) {
         let dst = passHistOffset(pass_, partitionIndex + 1u) + TID;
-#ifdef ENABLE_FALLBACK
-        // atomicStore (not atomicAdd) so we stay idempotent with the
-        // fallback's atomicMax REDUCTION writes. atomicAdd would compose
-        // with a prior fallback's REDUCTION to produce a corrupt INCLUSIVE
-        // payload. The two REDUCTION writes (producer + fallback) always
-        // carry the same count value (both read the same input range), so
-        // atomicStore is safe. The flip to INCLUSIVE is likewise an
-        // atomicStore below, not an atomicAdd.
-        atomicStore(&b_passHist[dst], FLAG_REDUCTION | (myHistRed << 2u));
-#else
         atomicAdd(&b_passHist[dst], FLAG_REDUCTION | (myHistRed << 2u));
-#endif
     }
 
     // ---- Phase B: per-digit exclusive scan (hierarchical) ----
@@ -339,12 +313,13 @@ fn main(
     workgroupBarrier();
 
     // ---- Phase D: Lookback + global base resolution ----
-#ifndef ENABLE_FALLBACK
     // Plain decoupled lookback: each digit-owning thread walks backward
     // through passHist for its digit until it finds FLAG_INCLUSIVE,
     // accumulating reductions on the way. Requires forward-thread-progress
-    // guarantees (NVIDIA Turing+, recent AMD, Intel Gen9+). Will stall on
-    // Apple Silicon; compile with ENABLE_FALLBACK for that path.
+    // guarantees (NVIDIA Turing+, recent AMD, Intel Gen9+). On devices
+    // without those guarantees (Apple Silicon, Mali, Adreno) this may
+    // deadlock; callers should use {@link ComputeRadixSort} in 8-bit mode
+    // on those architectures instead.
     // On finding FLAG_INCLUSIVE, it atomically upgrades its own (partition+1)
     // slot to FLAG_INCLUSIVE so later blocks terminate faster.
     // No workgroupBarrier inside the loop: the spin is per-thread/digit and
@@ -382,162 +357,6 @@ fn main(
             // FLAG_NOT_READY: spin on the same slot.
         }
     }
-#else
-    // CSDLDF lookback: whole-workgroup state machine gated on wg_lock via
-    // workgroupUniformLoad so control flow stays uniform. Each iteration
-    // examines ONE predecessor slot k. All 256 digit threads read their
-    // digit's flag in parallel; if any see NOT_READY, TID 0 bumps
-    // wg_spin_count and either retries or triggers a cooperative fallback.
-    // The fallback re-reads partition (k-1)'s keys into g_d[0..RADIX] to
-    // rebuild that partition's digit histogram, then atomicMax-publishes
-    // it to slot k. atomicMax is safe because a producer-published REDUCTION
-    // or a flip-promoted INCLUSIVE for the same slot always has a payload
-    // >= our (fb_val << 2) | FLAG_REDUCTION (INCLUSIVE folds in predecessor
-    // prefixes, growing the high bits). Partition 0's slot is always
-    // FLAG_INCLUSIVE at binning time (scan dispatch synchronises with the
-    // binning dispatch), so we never enter the fallback at k=0.
-    var my_reduction: u32 = 0u;
-    var my_done: bool = false;
-
-    if (TID == 0u) {
-        wg_lock = LOCKED;
-        wg_broadcast_k = partitionIndex;
-        wg_spin_count = 0u;
-    }
-    workgroupBarrier();
-
-    var lock = workgroupUniformLoad(&wg_lock);
-    while (lock == LOCKED) {
-        // Reset the NOT_READY collector for this iteration.
-        if (TID == 0u) {
-            atomicStore(&wg_not_ready_atomic, 0u);
-        }
-        workgroupBarrier();
-
-        let k = wg_broadcast_k;
-        var my_flag: u32 = 0u;
-        var my_value: u32 = 0u;
-        if (TID < RADIX && !my_done) {
-            let payload = atomicLoad(&b_passHist[passHistOffset(pass_, k) + TID]);
-            my_flag = payload & FLAG_MASK;
-            my_value = payload >> 2u;
-            if (my_flag == FLAG_NOT_READY) {
-                atomicOr(&wg_not_ready_atomic, 1u);
-            }
-        }
-        workgroupBarrier();
-
-        // Stage the OR-result into a non-atomic var so all threads can
-        // workgroupUniformLoad it and produce uniform control flow below.
-        if (TID == 0u) {
-            wg_any_not_ready = atomicLoad(&wg_not_ready_atomic);
-        }
-        let any_not_ready = workgroupUniformLoad(&wg_any_not_ready);
-
-        if (any_not_ready == 0u) {
-            // All still-pending digits saw a resolved flag at k. Accumulate.
-            if (TID < RADIX && !my_done) {
-                my_reduction = my_reduction + my_value;
-                if (my_flag == FLAG_INCLUSIVE) {
-                    my_done = true;
-                }
-            }
-            if (TID == 0u) {
-                wg_spin_count = 0u;
-                if (wg_broadcast_k == 0u) {
-                    // k=0 slot is FLAG_INCLUSIVE (scan-seeded); every digit
-                    // that still wasn't done is now done after this iteration.
-                    wg_lock = UNLOCKED;
-                } else {
-                    wg_broadcast_k = wg_broadcast_k - 1u;
-                }
-            }
-        } else {
-            // At least one digit is still NOT_READY at slot k. Decide between
-            // retrying the spin and kicking off the cooperative fallback.
-            if (TID == 0u) {
-                wg_spin_count = wg_spin_count + 1u;
-                wg_do_fallback = select(0u, 1u, wg_spin_count >= MAX_SPIN_COUNT);
-            }
-            let do_fallback = workgroupUniformLoad(&wg_do_fallback);
-
-            if (do_fallback == 1u) {
-                // Cooperative recomputation of partition (k-1)'s histogram.
-                // k >= 1 here (slot 0 is always INCLUSIVE => never NOT_READY).
-                // Reuse g_d[0..RADIX] as the fallback histogram; Phase C has
-                // already consumed g_d's wave-histograms, and Phase E will
-                // overwrite g_d before the next use.
-                if (TID < RADIX) {
-                    atomicStore(&g_d[TID], 0u);
-                }
-                workgroupBarrier();
-
-                let fb_part = k - 1u;
-                let fb_start = fb_part * PART_SIZE;
-                let numKeys = uniforms.numKeys;
-                let fb_end = min(fb_start + PART_SIZE, numKeys);
-                var fi = fb_start + TID;
-                while (fi < fb_end) {
-                    let kk = inputKeys[fi];
-                    let dd = (kk >> currentBit) & RADIX_MASK;
-                    atomicAdd(&g_d[dd], 1u);
-                    fi = fi + D_DIM;
-                }
-                workgroupBarrier();
-
-                if (TID < RADIX && !my_done) {
-                    let fb_val = atomicLoad(&g_d[TID]);
-                    // atomicMax is safe: a FLAG_INCLUSIVE payload at slot k
-                    // either comes from a flip (REDUCTION + excl_prefix<<2 +1)
-                    // or from the scan kernel at k=0 (unreachable here); in
-                    // the flip case the INCLUSIVE payload exceeds any pure
-                    // local-histogram REDUCTION payload since excl_prefix > 0
-                    // for any non-degenerate partition chain.
-                    let existing = atomicMax(&b_passHist[passHistOffset(pass_, k) + TID],
-                                             (fb_val << 2u) | FLAG_REDUCTION);
-                    if (existing == 0u) {
-                        // Our atomicMax won the race; fb_val is authoritative.
-                        my_reduction = my_reduction + fb_val;
-                    } else {
-                        my_reduction = my_reduction + (existing >> 2u);
-                        if ((existing & FLAG_MASK) == FLAG_INCLUSIVE) {
-                            my_done = true;
-                        }
-                    }
-                }
-
-                if (TID == 0u) {
-                    wg_spin_count = 0u;
-                    if (wg_broadcast_k == 0u) {
-                        wg_lock = UNLOCKED;
-                    } else {
-                        wg_broadcast_k = wg_broadcast_k - 1u;
-                    }
-                }
-            }
-            // else: stay locked, retry the same k next iteration.
-        }
-
-        lock = workgroupUniformLoad(&wg_lock);
-    }
-
-    // Post-loop flip: each digit publishes its FULL inclusive prefix into
-    // the successor slot so downstream blocks can terminate in one read.
-    // atomicStore (not atomicAdd) because Phase A.5 also used atomicStore
-    // under ENABLE_FALLBACK — composing atomicAdds between producer and
-    // flip would race with a concurrent fallback's atomicMax. The flip
-    // value is the FULL exclusive prefix up-to-and-including this
-    // partition: my_reduction (prefix < partitionIndex) + myHistRed (this
-    // partition's local count).
-    if (TID < RADIX && partitionIndex + 1u < threadBlocks) {
-        let dst = passHistOffset(pass_, partitionIndex + 1u) + TID;
-        atomicStore(&b_passHist[dst], ((my_reduction + myHistRed) << 2u) | FLAG_INCLUSIVE);
-    }
-    if (TID < RADIX) {
-        digit_base[TID] = my_reduction - myDigitBase;
-    }
-    workgroupBarrier();
-#endif
 
     // ---- Phase E: scatter keys into shared-memory staging ----
     for (var i = 0u; i < KEYS_PER_THREAD; i = i + 1u) {

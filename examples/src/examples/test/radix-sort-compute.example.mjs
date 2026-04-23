@@ -148,13 +148,10 @@ const RADIX_MODES = {
     '8-subgroup-packed': { radixBits: 8, reorderVariant: 'subgroup-packed' },
     '8-subgroup-ranked': { radixBits: 8, reorderVariant: 'subgroup-ranked' },
     '8-subgroup-coalesced': { radixBits: 8, reorderVariant: 'subgroup-coalesced' },
-    // Default OneSweep uses vendor-detected lookback (plain on NVIDIA/AMD/
-    // Intel, CSDLDF fallback on Apple/unknown).
-    'onesweep': { onesweep: true },
-    // Force-enable the CSDLDF fallback shader variant for A/B testing
-    // (e.g. to verify correctness on NVIDIA, or to measure the fallback
-    // overhead without switching GPUs).
-    'onesweep-safe': { onesweep: true, useFallback: true }
+    // OneSweep uses the plain decoupled lookback (no CSDLDF fallback) and
+    // requires forward-thread-progress guarantees, so it is gated on
+    // subgroup support below for the benchmark/validate sweeps.
+    'onesweep': { onesweep: true }
 };
 const DEFAULT_MODE = device.supportsSubgroups ? '8-shared-mem' : '4-shared-mem';
 
@@ -180,16 +177,13 @@ function getActiveRadixSort() {
     const scan = data.get('options.scan') ?? 'blelloch';
     const mode = data.get('options.mode') ?? DEFAULT_MODE;
     const modeCfg = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
-    // OneSweep ignores the scan toggle (it has a bespoke fused scan) so key
-    // only by mode (which differentiates the default 'onesweep' from the
-    // forced-fallback 'onesweep-safe' variant).
+    // OneSweep ignores the scan toggle (it has a bespoke fused scan) so it
+    // is keyed by mode alone.
     const key = modeCfg.onesweep ? mode : `${scan}-${mode}`;
     let inst = radixSortCache.get(key);
     if (!inst) {
         if (modeCfg.onesweep) {
-            inst = new pc.ComputeOneSweepRadixSort(device, {
-                useFallback: modeCfg.useFallback
-            });
+            inst = new pc.ComputeOneSweepRadixSort(device);
         } else {
             inst = new pc.ComputeRadixSort(device, {
                 scanKernel: scan,
@@ -601,25 +595,22 @@ const BENCH_SIZES = [
     5_000_000, 6_000_000, 8_000_000, 10_000_000, 15_000_000,
     20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
 ];
+// The benchmark and validation matrix mirrors the production decision:
+//   - 4-bit is the universal portable fallback (every non-NVIDIA device:
+//     Apple, Mali, etc.). Chosen over 6-bit because 6-bit regresses badly
+//     on Apple M1/M2 in the 4-8M target range, which is the range we
+//     actually care about on those GPUs.
+//   - OneSweep is the production fastpath on NVIDIA; it's unstable on Mali
+//     (validates incorrectly) and Apple (GPU hangs under heavy validation
+//     load on M1), so it's restricted to NVIDIA here.
+// All other variants (8-bit shared-mem, 8-subgroup-ranked, 8-coalesced, etc.)
+// are still selectable from the interactive `Radix mode` dropdown for
+// manual exploration, but are excluded from the benchmark / validation
+// sweeps to keep runs fast and avoid unstable paths.
+const _nvidia = (device.gpuAdapter?.info?.vendor || '').toLowerCase().includes('nvidia');
 const BENCH_CONFIGS = [
-    // 4-bit Multipass is the only config that works on every WebGPU device
-    // (no subgroups required). It's the production fallback path too.
     { label: '4-bit', modeKey: '4-shared-mem' },
-    // Everything else requires subgroups. On devices where subgroups aren't
-    // exposed (e.g. iPhone / Safari today) the Run and Validate panels
-    // exercise the 4-bit path only. This mirrors the gating the gsplat
-    // renderer already applies at runtime.
-    ...(device.supportsSubgroups ? [
-        { label: 'OneSweep', modeKey: 'onesweep' },
-        // CSDLDF fallback variant - on NVIDIA it measures the fallback's
-        // overhead; on Apple / other non-NVIDIA it's the path you actually
-        // want.
-        { label: 'OneSweep-safe', modeKey: 'onesweep-safe' },
-        // Apple-candidate 8-bit variants (both performed well on M4 in
-        // prior testing).
-        { label: '8-ranked', modeKey: '8-subgroup-ranked' },
-        { label: '8-coalesced', modeKey: '8-subgroup-coalesced' }
-    ] : [])
+    ...(_nvidia ? [{ label: 'OneSweep', modeKey: 'onesweep' }] : [])
 ];
 const BENCH_WARMUP = 20;
 const BENCH_MEASURE = 50;
@@ -671,9 +662,7 @@ function fmtN(n) {
 function createBenchSort(modeKey) {
     const modeCfg = RADIX_MODES[modeKey];
     if (modeCfg.onesweep) {
-        return new pc.ComputeOneSweepRadixSort(device, {
-            useFallback: modeCfg.useFallback
-        });
+        return new pc.ComputeOneSweepRadixSort(device);
     }
     return new pc.ComputeRadixSort(device, {
         scanKernel: 'blelloch',

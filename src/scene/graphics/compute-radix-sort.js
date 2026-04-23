@@ -32,10 +32,11 @@ const THREADS_PER_WORKGROUP = WORKGROUP_SIZE_X * WORKGROUP_SIZE_Y; // 256
 const ELEMENTS_PER_THREAD = 8;
 const ELEMENTS_PER_WORKGROUP = THREADS_PER_WORKGROUP * ELEMENTS_PER_THREAD; // 2048
 
-// Per-mode radix constants. 8-bit halves the number of passes but needs 16x
-// larger block sums and 8 KB of shared memory in the reorder shader, so it is
-// gated on `device.supportsSubgroups` as a forward-compatibility signal for
-// the planned subgroup-ranked scatter optimisation.
+// Per-mode radix constants. 8-bit halves the number of passes vs 4-bit at
+// the cost of 16x larger block sums and ~8 KB of shared memory in the
+// reorder shader. The shared-memory reorder variants (4-bit, 8-bit) are
+// subgroup-free and run on any WebGPU device; the subgroup-* reorder
+// variants additionally require `device.supportsSubgroups`.
 const RADIX_CONFIG = {
     4: { bitsPerPass: 4, bucketCount: 16 },
     8: { bitsPerPass: 8, bucketCount: 256 }
@@ -283,7 +284,8 @@ class ComputeRadixSort {
      * counts is being investigated.
      * @param {'auto' | 4 | 8} [options.radixBits] - Radix width per pass.
      * `'auto'` (default) picks 8 when the device supports subgroups, 4
-     * otherwise. Passing 8 explicitly requires `device.supportsSubgroups`.
+     * otherwise. Passing 8 explicitly is allowed on any device when used
+     * with the subgroup-free `'shared-mem'` reorder variant.
      * @param {'auto' | 'shared-mem' | 'subgroup' | 'subgroup-packed' | 'subgroup-ranked' | 'subgroup-coalesced'} [options.reorderVariant] -
      * Reorder shader variant for 8-bit mode (ignored in 4-bit mode).
      * `'shared-mem'` (default when `'auto'`) uses per-digit shared-memory
@@ -306,24 +308,23 @@ class ComputeRadixSort {
         this.device = device;
         this._scanKernelChoice = scanKernel;
 
-        // Resolve radix width once at construction. 8-bit is gated on subgroup
-        // support even though the current shared-memory shader does not use
-        // subgroup ops directly - this lets the 4-bit path stay as a pure
-        // fallback, and enables the optional subgroup-ballot reorder variant
-        // in 8-bit mode.
+        // Resolve radix width once at construction. `'auto'` picks 8-bit on
+        // devices with subgroup support (where the subgroup reorder variants
+        // are available), and 4-bit elsewhere as a conservative default.
+        // Explicit `radixBits: 8` combined with the shared-memory reorder
+        // variant is allowed on any device - the shared-memory shader has
+        // no subgroup intrinsics.
         const effective = radixBits === 'auto' ? (device.supportsSubgroups ? 8 : 4) : radixBits;
         Debug.assert(effective === 4 || effective === 8,
             `ComputeRadixSort: radixBits must be 4 or 8, got ${radixBits}`);
-        Debug.assert(effective === 4 || device.supportsSubgroups,
-            'ComputeRadixSort: radixBits=8 requires device.supportsSubgroups');
 
         this._radixBits = /** @type {4 | 8} */ (effective);
         this._bitsPerPass = RADIX_CONFIG[effective].bitsPerPass;
         this._bucketCount = RADIX_CONFIG[effective].bucketCount;
 
         // Default the 8-bit reorder variant to the shared-memory shader — it
-        // matches the historical behaviour and does not rely on the sgSize==32
-        // assumption baked into the subgroup shader.
+        // matches the historical behaviour and is subgroup-free, so it works
+        // on devices without subgroup support too.
         this._reorderVariant = reorderVariant === 'auto' ? 'shared-mem' : reorderVariant;
         Debug.assert(
             this._reorderVariant === 'shared-mem' ||
@@ -334,6 +335,10 @@ class ComputeRadixSort {
             `ComputeRadixSort: reorderVariant must be 'shared-mem', 'subgroup', 'subgroup-packed', 'subgroup-ranked' or 'subgroup-coalesced', got ${reorderVariant}`);
         Debug.assert(this._reorderVariant === 'shared-mem' || effective === 8,
             'ComputeRadixSort: subgroup reorder variants are only supported in 8-bit mode');
+        // Subgroup reorder variants use subgroup intrinsics; the shared-mem
+        // variant does not and works everywhere.
+        Debug.assert(this._reorderVariant === 'shared-mem' || device.supportsSubgroups,
+            `ComputeRadixSort: reorderVariant '${this._reorderVariant}' requires device.supportsSubgroups`);
 
         if (this._radixBits === 8 && this._reorderVariant === 'subgroup') {
             this._profilerTag = 'RadixSort8bitSG';
@@ -442,8 +447,8 @@ class ComputeRadixSort {
     }
 
     /**
-     * Resolved radix width in bits for this instance (4 or 8). Useful for
-     * logging and debug overlays.
+     * Resolved radix width in bits for this instance (4 or 8). Useful
+     * for logging and debug overlays.
      *
      * @type {4 | 8}
      */
@@ -527,9 +532,10 @@ class ComputeRadixSort {
         const numPasses = numBits / this._bitsPerPass;
         const suffix = indirect ? '-Indirect' : '';
         const tag = this._profilerTag;
-        const histogramSource = this._radixBits === 8 ? radixSort8bitHistogramSource : radixSort4bitSource;
+        let histogramSource;
         let reorderSource;
         if (this._radixBits === 8) {
+            histogramSource = radixSort8bitHistogramSource;
             if (this._reorderVariant === 'subgroup') {
                 reorderSource = radixSort8bitSubgroupReorderSource;
             } else if (this._reorderVariant === 'subgroup-packed') {
@@ -542,6 +548,7 @@ class ComputeRadixSort {
                 reorderSource = radixSort8bitReorderSource;
             }
         } else {
+            histogramSource = radixSort4bitSource;
             reorderSource = radixSortReorderSource;
         }
 

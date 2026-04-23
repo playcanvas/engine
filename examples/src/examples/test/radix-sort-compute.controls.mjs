@@ -61,8 +61,7 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                         { v: '8-subgroup-packed', t: '8-bit ballot packed' },
                         { v: '8-subgroup-ranked', t: '8-bit ranked' },
                         { v: '8-subgroup-coalesced', t: '8-bit coalesced' },
-                        { v: 'onesweep', t: 'OneSweep (fused)' },
-                        { v: 'onesweep-safe', t: 'OneSweep (fallback)' }
+                        { v: 'onesweep', t: 'OneSweep (fused)' }
                     ]
                 })
             ),
