@@ -95,7 +95,7 @@ fn main(
     // bits of subgroupBallot are 0, but drivers (notably Mali / Imagination
     // at sgSize<32) don't always honour this for subgroupBallot(is_valid).
     // Initialising sameDigitMask to only cover active lanes makes the per-bit
-    // AND-chain correct regardless of driver behaviour. \`1u << 32u\` is UB so
+    // AND-chain correct regardless of driver behaviour. 1u << 32u is UB so
     // branch on sgSize < 32.
     let activeMask = select(0xFFFFFFFFu, (1u << sgSize) - 1u, sgSize < 32u);
 

@@ -120,7 +120,7 @@ fn main(
     // bits of subgroupBallot are 0, but drivers (notably Mali / Imagination
     // at sgSize<32) don't always honour this for subgroupBallot(is_valid).
     // Initialising waveFlag to only cover active lanes makes the per-bit
-    // AND-chain correct regardless of driver behaviour. \`1u << 32u\` is UB so
+    // AND-chain correct regardless of driver behaviour. 1u << 32u is UB so
     // branch on sgSize < 32.
     let activeMask = select(0xFFFFFFFFu, (1u << sgSize) - 1u, sgSize < 32u);
 
@@ -137,8 +137,8 @@ fn main(
         let elementCount = uniforms.elementCount;
     #endif
 
-    // Wave-interleaved loads: warp \`waveIndex\` owns partition positions
-    // [waveIndex*sgSize*KPT .. (waveIndex+1)*sgSize*KPT). Round \`i\` of the
+    // Wave-interleaved loads: warp waveIndex owns partition positions
+    // [waveIndex*sgSize*KPT .. (waveIndex+1)*sgSize*KPT). Round i of the
     // ranking loop targets positions [... + i*sgSize, ... + (i+1)*sgSize), so
     // within a warp each round covers a contiguous sgSize-wide chunk and
     // across warps the partition is covered in ascending order → stable.
@@ -189,13 +189,13 @@ fn main(
         let peerBits = countOneBits(waveFlag & ltMask);
         let totalBits = countOneBits(waveFlag);
         // firstTrailingBit(0) is undefined on some targets, but waveFlag
-        // always has at least my own bit set when \`isValid\`, and we only use
+        // always has at least my own bit set when isValid, and we only use
         // the broadcast result for valid lanes (scatter is gated on isValid).
         let lowestRankPeer = firstTrailingBit(waveFlag);
 
         // Only the leader (lowest-rank valid peer) publishes this round's
         // totalBits into the shared per-warp histogram. Non-leaders keep
-        // \`preIncrementVal\` at 0; they don't read their own value, they read
+        // preIncrementVal at 0; they don't read their own value, they read
         // the leader's via subgroupShuffle below.
         var preIncrementVal: u32 = 0u;
         if (isValid && peerBits == 0u) {
@@ -214,9 +214,9 @@ fn main(
     }
 
     // ---- WaveHistInclusiveScanCircularShiftWGE16 ----
-    // For each digit column \`TID\`, inclusive-scan the per-warp counts across
+    // For each digit column TID, inclusive-scan the per-warp counts across
     // warps and write back the EXCLUSIVE prefix in-place. Rows 1..MAX-1 end up
-    // holding \`sum(cnt[0..w-1][digit])\`, which is the per-warp base for this
+    // holding sum(cnt[0..w-1][digit]), which is the per-warp base for this
     // digit. Row 0 still holds warp 0's own count and is not used below.
     {
         var histReduction = atomicLoad(&g_d[TID]);
