@@ -328,7 +328,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         this.supportsSubgroups = requireFeature('subgroups');
-        Debug.log(`WEBGPU features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`);
+        Debug.log(
+            `WEBGPU${this.gpuAdapter?.info ?
+                ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
+                ''
+            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`
+        );
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
