@@ -14,24 +14,32 @@ import { radixSortReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/com
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
-// Constants for 4-bit radix sort
-const BITS_PER_PASS = 4;
-const BUCKET_COUNT = 16; // 2^4
+// Workgroup / batching constants. The reorder shader processes ELEMENTS_PER_THREAD
+// keys per thread to amortise shared-memory bitmask traffic.
 const WORKGROUP_SIZE_X = 16;
 const WORKGROUP_SIZE_Y = 16;
 const THREADS_PER_WORKGROUP = WORKGROUP_SIZE_X * WORKGROUP_SIZE_Y; // 256
 const ELEMENTS_PER_THREAD = 8;
 const ELEMENTS_PER_WORKGROUP = THREADS_PER_WORKGROUP * ELEMENTS_PER_THREAD; // 2048
 
+// 4-bit radix: 16 buckets per pass, 8 passes for 32-bit keys. Chosen as the
+// portable fallback across all non-subgroup and non-NVIDIA devices after
+// benchmarking wider radixes (6-bit, 8-bit shared, 8-bit subgroup variants)
+// on Apple M1/M2/M4, NVIDIA, and Android Mali/IMG — 4-bit is the single
+// most consistent winner or close-second in every target range.
+const BITS_PER_PASS = 4;
+const BUCKET_COUNT = 16; // 2 ** BITS_PER_PASS
+
 /**
- * A compute-based GPU radix sort implementation using 4-bit radix (16 buckets).
- * Provides stable sorting of 32-bit unsigned integer keys, returning sorted indices.
- * WebGPU only.
+ * A compute-based GPU radix sort implementation using a 4-bit radix (16 buckets).
+ * Provides stable sorting of 32-bit unsigned integer keys, returning sorted
+ * indices. WebGPU only.
  *
  * **Performance characteristics:**
  * - 4 passes for 16-bit keys, 8 passes for 32-bit keys
  * - Each pass processes 4 bits (16 buckets)
  * - Workgroup size: 16x16 = 256 threads, 8 elements per thread = 2048 elements/workgroup
+ * - Works on every WebGPU device (no subgroup intrinsics required)
  *
  * **Algorithm (per pass):**
  * 1. **Histogram**: Each thread extracts 4-bit digits from its elements and
@@ -79,13 +87,16 @@ class ComputeRadixSort {
     _elementCount = 0;
 
     /**
-     * Number of workgroups for current sort.
+     * Number of workgroups actually dispatched for the current sort.
+     * Derived from `elementCount` (not `capacity`) so that smaller sorts issue
+     * fewer workgroups even when buffers are sized for a larger high-water
+     * mark.
      */
     _workgroupCount = 0;
 
     /**
-     * Allocated workgroup capacity. Tracks the last allocated size; reallocation is triggered
-     * when the effective workgroup count (derived from element count and capacity) differs.
+     * Allocated workgroup capacity (buffer sizing). Buffers are only
+     * reallocated when this value changes. Always `>= _workgroupCount`.
      */
     _allocatedWorkgroupCount = 0;
 
@@ -131,7 +142,7 @@ class ComputeRadixSort {
     _values1 = null;
 
     /**
-     * Block sums buffer (16 per workgroup).
+     * Block sums buffer (BUCKET_COUNT entries per workgroup).
      *
      * @type {StorageBuffer|null}
      */
@@ -145,7 +156,7 @@ class ComputeRadixSort {
     _sortedIndices = null;
 
     /**
-     * Prefix sum kernel for block sums.
+     * Prefix sum kernel for block sums (hierarchical Blelloch scan).
      *
      * @type {PrefixSumKernel|null}
      */
@@ -157,14 +168,14 @@ class ComputeRadixSort {
     _dispatchSize = new Vec2(1, 1);
 
     /**
-     * Cached bind group format for histogram shader (created lazily for current mode).
+     * Cached bind group format for histogram shader.
      *
      * @type {BindGroupFormat|null}
      */
     _histogramBindGroupFormat = null;
 
     /**
-     * Cached bind group format for reorder shader (created lazily for current mode).
+     * Cached bind group format for reorder shader.
      *
      * @type {BindGroupFormat|null}
      */
@@ -292,6 +303,17 @@ class ComputeRadixSort {
     }
 
     /**
+     * Radix width in bits. Always 4 for this implementation. Exposed so
+     * callers can align key-bit counts to the radix boundary generically
+     * across sort backends.
+     *
+     * @type {number}
+     */
+    get radixBits() {
+        return BITS_PER_PASS;
+    }
+
+    /**
      * Ensures bind group formats exist for the given mode. Destroys and recreates
      * them if switching between direct and indirect modes.
      *
@@ -400,10 +422,17 @@ class ComputeRadixSort {
      * @private
      */
     _allocateBuffers(elementCount, numBits, indirect, hasInitialValues, skipLastPassKeyWrite) {
+        // Buffer sizing is driven by `capacity` (the high-water mark) to avoid
+        // realloc churn when the workload shrinks. Dispatch and scan sizes
+        // must track the CURRENT sort's elementCount - otherwise a 1M sort
+        // following a 30M sort still dispatches 30M-worth of workgroups and
+        // scans over a 30M block_sums array, doing mostly-no-op work but
+        // still paying per-workgroup fixed costs.
         const effectiveCount = Math.max(elementCount, this.capacity);
-        const workgroupCount = Math.ceil(effectiveCount / ELEMENTS_PER_WORKGROUP);
+        const allocWorkgroupCount = Math.ceil(effectiveCount / ELEMENTS_PER_WORKGROUP);
+        const currentWorkgroupCount = Math.max(1, Math.ceil(elementCount / ELEMENTS_PER_WORKGROUP));
 
-        const buffersNeedRealloc = workgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
+        const buffersNeedRealloc = allocWorkgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
 
         // Recreate passes when numBits, indirect mode, initial-values mode, or key-write mode changes
         const passesNeedRecreate = numBits !== this._numBits || indirect !== this._indirect ||
@@ -415,11 +444,11 @@ class ComputeRadixSort {
             this._destroyBuffers();
 
             // Store the new capacity
-            this._allocatedWorkgroupCount = workgroupCount;
+            this._allocatedWorkgroupCount = allocWorkgroupCount;
             this.capacity = effectiveCount;
 
             const elementSize = effectiveCount * 4;
-            const blockSumSize = BUCKET_COUNT * workgroupCount * 4;
+            const blockSumSize = BUCKET_COUNT * allocWorkgroupCount * 4;
 
             // Create ping-pong buffers for keys and values
             this._keys0 = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
@@ -427,23 +456,27 @@ class ComputeRadixSort {
             this._values0 = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
             this._values1 = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
-            // Create block sums buffer (16 per workgroup)
+            // Create block sums buffer (BUCKET_COUNT entries per workgroup)
             this._blockSums = new StorageBuffer(this.device, blockSumSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
             // Create output buffer
             this._sortedIndices = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
-            // Create prefix sum kernel for block sums
-            this._prefixSumKernel = new PrefixSumKernel(this.device);
+            // Create prefix sum kernel (hierarchical Blelloch scan, exclusive).
+            // The radix sort reorder shader requires an exclusive scan over
+            // the block sums.
+            this._prefixSumKernel = new PrefixSumKernel(this.device, { exclusive: true });
         }
 
         // Update current working size and dispatch dimensions (must be after
         // _destroyBuffers which resets _workgroupCount)
-        this._workgroupCount = workgroupCount;
-        Compute.calcDispatchSize(workgroupCount, this._dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        this._workgroupCount = currentWorkgroupCount;
+        Compute.calcDispatchSize(currentWorkgroupCount, this._dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
 
-        // Resize prefix kernel (creates passes on first call, updates counts otherwise)
-        this._prefixSumKernel.resize(this._blockSums, BUCKET_COUNT * workgroupCount);
+        // Resize prefix kernel to match the CURRENT scan size. The allocated
+        // block_sums buffer is larger (sized for capacity), but the scan only
+        // needs to operate over the compact range we'll actually populate.
+        this._prefixSumKernel.resize(this._blockSums, BUCKET_COUNT * currentWorkgroupCount);
 
         if (passesNeedRecreate) {
             this._createPasses(numBits, indirect, hasInitialValues, skipLastPassKeyWrite);
@@ -457,6 +490,7 @@ class ComputeRadixSort {
      * @param {string} source - Shader source.
      * @param {number} currentBit - Current bit offset for this pass.
      * @param {boolean} isFirstPass - Whether this is the first pass (uses GID for indices).
+     * @param {boolean} isLastPass - Whether this is the last pass and can skip writing keys.
      * @param {BindGroupFormat} bindGroupFormat - Bind group format.
      * @param {boolean} indirect - Whether to add the USE_INDIRECT_SORT define.
      * @returns {Shader} The created shader.
@@ -590,7 +624,7 @@ class ComputeRadixSort {
             } else {
                 histogramCompute.setupDispatch(this._dispatchSize.x, this._dispatchSize.y, 1);
             }
-            device.computeDispatch([histogramCompute], `RadixSort-Histogram${suffix}`);
+            device.computeDispatch([histogramCompute], `RadixSort4bit-Histogram${suffix}`);
 
             // Phase 2: Prefix sum on block sums
             this._prefixSumKernel.dispatch(device);
@@ -612,7 +646,7 @@ class ComputeRadixSort {
             } else {
                 reorderCompute.setupDispatch(this._dispatchSize.x, this._dispatchSize.y, 1);
             }
-            device.computeDispatch([reorderCompute], `RadixSort-Reorder${suffix}`);
+            device.computeDispatch([reorderCompute], `RadixSort4bit-Reorder${suffix}`);
 
             // Swap buffers for next pass (skip on last pass - not needed)
             if (!isLastPass) {
