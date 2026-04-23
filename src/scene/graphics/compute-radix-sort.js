@@ -6,51 +6,40 @@ import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_COPY_DST, SHADERLANGUAGE_WGSL, SHADERSTAGE_COMPUTE, UNIFORMTYPE_UINT } from '../../platform/graphics/constants.js';
-import { createScanKernel, getScanKernelName } from './scan-kernel-factory.js';
+import { PrefixSumKernel } from './prefix-sum-kernel.js';
 import { radixSort4bitSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-4bit.js';
 import { radixSortReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder.js';
-import { radixSort8bitHistogramSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-histogram-8bit.js';
-import { radixSort8bitReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit.js';
-import { radixSort8bitSubgroupReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit-subgroup.js';
-import { radixSort8bitSubgroupPackedReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit-subgroup-packed.js';
-import { radixSort8bitSubgroupRankedReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit-subgroup-ranked.js';
-import { radixSort8bitSubgroupCoalescedReorderSource } from '../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder-8bit-subgroup-coalesced.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { CsdldfScanKernel } from './csdldf-scan-kernel.js'
- * @import { PrefixSumKernel } from './prefix-sum-kernel.js'
  */
 
-// Workgroup / batching constants shared by both 4-bit and 8-bit modes. These
-// only depend on the thread-block layout, not on the radix width, and do not
-// need to change when switching modes (making mode swaps cheap: no buffer
-// realloc, just shader rebuild).
+// Workgroup / batching constants. The reorder shader processes ELEMENTS_PER_THREAD
+// keys per thread to amortise shared-memory bitmask traffic.
 const WORKGROUP_SIZE_X = 16;
 const WORKGROUP_SIZE_Y = 16;
 const THREADS_PER_WORKGROUP = WORKGROUP_SIZE_X * WORKGROUP_SIZE_Y; // 256
 const ELEMENTS_PER_THREAD = 8;
 const ELEMENTS_PER_WORKGROUP = THREADS_PER_WORKGROUP * ELEMENTS_PER_THREAD; // 2048
 
-// Per-mode radix constants. 8-bit halves the number of passes vs 4-bit at
-// the cost of 16x larger block sums and ~8 KB of shared memory in the
-// reorder shader. The shared-memory reorder variants (4-bit, 8-bit) are
-// subgroup-free and run on any WebGPU device; the subgroup-* reorder
-// variants additionally require `device.supportsSubgroups`.
-const RADIX_CONFIG = {
-    4: { bitsPerPass: 4, bucketCount: 16 },
-    8: { bitsPerPass: 8, bucketCount: 256 }
-};
+// 4-bit radix: 16 buckets per pass, 8 passes for 32-bit keys. Chosen as the
+// portable fallback across all non-subgroup and non-NVIDIA devices after
+// benchmarking wider radixes (6-bit, 8-bit shared, 8-bit subgroup variants)
+// on Apple M1/M2/M4, NVIDIA, and Android Mali/IMG — 4-bit is the single
+// most consistent winner or close-second in every target range.
+const BITS_PER_PASS = 4;
+const BUCKET_COUNT = 16; // 2 ** BITS_PER_PASS
 
 /**
- * A compute-based GPU radix sort implementation using 4-bit radix (16 buckets).
- * Provides stable sorting of 32-bit unsigned integer keys, returning sorted indices.
- * WebGPU only.
+ * A compute-based GPU radix sort implementation using a 4-bit radix (16 buckets).
+ * Provides stable sorting of 32-bit unsigned integer keys, returning sorted
+ * indices. WebGPU only.
  *
  * **Performance characteristics:**
  * - 4 passes for 16-bit keys, 8 passes for 32-bit keys
  * - Each pass processes 4 bits (16 buckets)
  * - Workgroup size: 16x16 = 256 threads, 8 elements per thread = 2048 elements/workgroup
+ * - Works on every WebGPU device (no subgroup intrinsics required)
  *
  * **Algorithm (per pass):**
  * 1. **Histogram**: Each thread extracts 4-bit digits from its elements and
@@ -153,7 +142,7 @@ class ComputeRadixSort {
     _values1 = null;
 
     /**
-     * Block sums buffer (16 per workgroup).
+     * Block sums buffer (BUCKET_COUNT entries per workgroup).
      *
      * @type {StorageBuffer|null}
      */
@@ -167,10 +156,9 @@ class ComputeRadixSort {
     _sortedIndices = null;
 
     /**
-     * Prefix sum kernel for block sums. Either a CSDLDF single-pass scan
-     * (when the device supports subgroups) or a hierarchical Blelloch scan.
+     * Prefix sum kernel for block sums (hierarchical Blelloch scan).
      *
-     * @type {CsdldfScanKernel | PrefixSumKernel | null}
+     * @type {PrefixSumKernel|null}
      */
     _prefixSumKernel = null;
 
@@ -180,14 +168,14 @@ class ComputeRadixSort {
     _dispatchSize = new Vec2(1, 1);
 
     /**
-     * Cached bind group format for histogram shader (created lazily for current mode).
+     * Cached bind group format for histogram shader.
      *
      * @type {BindGroupFormat|null}
      */
     _histogramBindGroupFormat = null;
 
     /**
-     * Cached bind group format for reorder shader (created lazily for current mode).
+     * Cached bind group format for reorder shader.
      *
      * @type {BindGroupFormat|null}
      */
@@ -224,133 +212,13 @@ class ComputeRadixSort {
     _skipLastPassKeyWrite = false;
 
     /**
-     * Forced scan kernel choice. See {@link createScanKernel}.
-     *
-     * @type {'auto' | 'csdldf' | 'blelloch'}
-     * @private
-     */
-    _scanKernelChoice = 'auto';
-
-    /**
-     * Resolved radix width used by the current instance (4 or 8).
-     *
-     * @type {4 | 8}
-     * @private
-     */
-    _radixBits = 4;
-
-    /**
-     * Bits processed per pass (equal to `_radixBits`).
-     *
-     * @type {number}
-     * @private
-     */
-    _bitsPerPass = 4;
-
-    /**
-     * Number of histogram buckets per pass (`2 ** _bitsPerPass`).
-     *
-     * @type {number}
-     * @private
-     */
-    _bucketCount = 16;
-
-    /**
-     * Reorder shader variant for 8-bit mode. Ignored when `_radixBits === 4`.
-     *
-     * @type {'shared-mem' | 'subgroup' | 'subgroup-packed' | 'subgroup-ranked' | 'subgroup-coalesced'}
-     * @private
-     */
-    _reorderVariant = 'shared-mem';
-
-    /**
-     * GPU profiler dispatch tag that identifies the active shader variant.
-     * Cached so both `_createPasses` and `_execute` stay in sync.
-     *
-     * @type {string}
-     * @private
-     */
-    _profilerTag = 'RadixSort4bit';
-
-    /**
      * Creates a new ComputeRadixSort instance.
      *
      * @param {GraphicsDevice} device - The graphics device (must support compute).
-     * @param {object} [options] - Options.
-     * @param {'auto' | 'csdldf' | 'blelloch'} [options.scanKernel] - Which
-     * prefix scan kernel to use for block sums. `'auto'` (default) maps to
-     * Blelloch. `'csdldf'` requires `device.supportsSubgroups` and is
-     * currently opt-in while an NVIDIA correctness issue at large partition
-     * counts is being investigated.
-     * @param {'auto' | 4 | 8} [options.radixBits] - Radix width per pass.
-     * `'auto'` (default) picks 8 when the device supports subgroups, 4
-     * otherwise. Passing 8 explicitly is allowed on any device when used
-     * with the subgroup-free `'shared-mem'` reorder variant.
-     * @param {'auto' | 'shared-mem' | 'subgroup' | 'subgroup-packed' | 'subgroup-ranked' | 'subgroup-coalesced'} [options.reorderVariant] -
-     * Reorder shader variant for 8-bit mode (ignored in 4-bit mode).
-     * `'shared-mem'` (default when `'auto'`) uses per-digit shared-memory
-     * bitmasks for ranking. `'subgroup'` uses per-bit subgroup-ballot
-     * intersection trading shared-memory atomic traffic for hardware subgroup
-     * ops. `'subgroup-packed'` is the same as `'subgroup'` but packs the
-     * per-subgroup counts 4-to-a-u32 (2 KB shared memory vs 8 KB) to improve
-     * occupancy on shared-memory-limited GPUs. `'subgroup-ranked'` ports the
-     * `RankKeysWGE16` ranking scheme from b0nes164/GPUSorting (MIT): per-warp
-     * atomicAdds into private histogram rows + a circular-shift inclusive
-     * scan to derive per-warp digit bases, avoiding the per-key inter-warp
-     * sum loop of the other subgroup variants. `'subgroup-coalesced'` extends
-     * `'subgroup-ranked'` by staging keys and values through shared memory so
-     * the final global scatter is coalesced within each warp (targets GPUs
-     * like NVIDIA where the non-coalesced scatter dominates reorder time).
-     * All subgroup variants are currently correct only for sgSize == 32.
      */
-    constructor(device, { scanKernel = 'auto', radixBits = 'auto', reorderVariant = 'auto' } = {}) {
+    constructor(device) {
         Debug.assert(device.supportsCompute, 'ComputeRadixSort requires compute shader support (WebGPU)');
         this.device = device;
-        this._scanKernelChoice = scanKernel;
-
-        // Resolve radix width once at construction. `'auto'` picks 8-bit on
-        // devices with subgroup support (where the subgroup reorder variants
-        // are available), and 4-bit elsewhere as a conservative default.
-        // Explicit `radixBits: 8` combined with the shared-memory reorder
-        // variant is allowed on any device - the shared-memory shader has
-        // no subgroup intrinsics.
-        const effective = radixBits === 'auto' ? (device.supportsSubgroups ? 8 : 4) : radixBits;
-        Debug.assert(effective === 4 || effective === 8,
-            `ComputeRadixSort: radixBits must be 4 or 8, got ${radixBits}`);
-
-        this._radixBits = /** @type {4 | 8} */ (effective);
-        this._bitsPerPass = RADIX_CONFIG[effective].bitsPerPass;
-        this._bucketCount = RADIX_CONFIG[effective].bucketCount;
-
-        // Default the 8-bit reorder variant to the shared-memory shader — it
-        // matches the historical behaviour and is subgroup-free, so it works
-        // on devices without subgroup support too.
-        this._reorderVariant = reorderVariant === 'auto' ? 'shared-mem' : reorderVariant;
-        Debug.assert(
-            this._reorderVariant === 'shared-mem' ||
-            this._reorderVariant === 'subgroup' ||
-            this._reorderVariant === 'subgroup-packed' ||
-            this._reorderVariant === 'subgroup-ranked' ||
-            this._reorderVariant === 'subgroup-coalesced',
-            `ComputeRadixSort: reorderVariant must be 'shared-mem', 'subgroup', 'subgroup-packed', 'subgroup-ranked' or 'subgroup-coalesced', got ${reorderVariant}`);
-        Debug.assert(this._reorderVariant === 'shared-mem' || effective === 8,
-            'ComputeRadixSort: subgroup reorder variants are only supported in 8-bit mode');
-        // Subgroup reorder variants use subgroup intrinsics; the shared-mem
-        // variant does not and works everywhere.
-        Debug.assert(this._reorderVariant === 'shared-mem' || device.supportsSubgroups,
-            `ComputeRadixSort: reorderVariant '${this._reorderVariant}' requires device.supportsSubgroups`);
-
-        if (this._radixBits === 8 && this._reorderVariant === 'subgroup') {
-            this._profilerTag = 'RadixSort8bitSG';
-        } else if (this._radixBits === 8 && this._reorderVariant === 'subgroup-packed') {
-            this._profilerTag = 'RadixSort8bitSGP';
-        } else if (this._radixBits === 8 && this._reorderVariant === 'subgroup-ranked') {
-            this._profilerTag = 'RadixSort8bitSGR';
-        } else if (this._radixBits === 8 && this._reorderVariant === 'subgroup-coalesced') {
-            this._profilerTag = 'RadixSort8bitSGC';
-        } else {
-            this._profilerTag = `RadixSort${this._radixBits}bit`;
-        }
 
         // Create uniform buffer format (shared by both direct and indirect modes)
         this._uniformBufferFormat = new UniformBufferFormat(device, [
@@ -430,40 +298,19 @@ class ComputeRadixSort {
      */
     get sortedKeys() {
         if (!this._keys0) return null;
-        const numPasses = this._numBits / this._bitsPerPass;
+        const numPasses = this._numBits / BITS_PER_PASS;
         return (numPasses % 2 === 0) ? this._keys1 : this._keys0;
     }
 
     /**
-     * Short name identifying the prefix scan kernel selected for this
-     * instance: `'csdldf'` for the single-pass CSDLDF scan, or `'blelloch'`
-     * for the hierarchical Blelloch scan. Useful for logging and debug
-     * overlays.
+     * Radix width in bits. Always 4 for this implementation. Exposed so
+     * callers can align key-bit counts to the radix boundary generically
+     * across sort backends.
      *
-     * @type {'csdldf' | 'blelloch'}
-     */
-    get scanKernelName() {
-        return getScanKernelName(this.device, this._scanKernelChoice);
-    }
-
-    /**
-     * Resolved radix width in bits for this instance (4 or 8). Useful
-     * for logging and debug overlays.
-     *
-     * @type {4 | 8}
+     * @type {number}
      */
     get radixBits() {
-        return this._radixBits;
-    }
-
-    /**
-     * Active reorder shader variant for 8-bit mode. Always `'shared-mem'` in
-     * 4-bit mode. Useful for logging and debug overlays.
-     *
-     * @type {'shared-mem' | 'subgroup' | 'subgroup-packed' | 'subgroup-ranked' | 'subgroup-coalesced'}
-     */
-    get reorderVariant() {
-        return this._radixBits === 8 ? this._reorderVariant : 'shared-mem';
+        return BITS_PER_PASS;
     }
 
     /**
@@ -529,37 +376,17 @@ class ComputeRadixSort {
         this._hasInitialValues = hasInitialValues;
         this._skipLastPassKeyWrite = skipLastPassKeyWrite;
 
-        const numPasses = numBits / this._bitsPerPass;
+        const numPasses = numBits / BITS_PER_PASS;
         const suffix = indirect ? '-Indirect' : '';
-        const tag = this._profilerTag;
-        let histogramSource;
-        let reorderSource;
-        if (this._radixBits === 8) {
-            histogramSource = radixSort8bitHistogramSource;
-            if (this._reorderVariant === 'subgroup') {
-                reorderSource = radixSort8bitSubgroupReorderSource;
-            } else if (this._reorderVariant === 'subgroup-packed') {
-                reorderSource = radixSort8bitSubgroupPackedReorderSource;
-            } else if (this._reorderVariant === 'subgroup-ranked') {
-                reorderSource = radixSort8bitSubgroupRankedReorderSource;
-            } else if (this._reorderVariant === 'subgroup-coalesced') {
-                reorderSource = radixSort8bitSubgroupCoalescedReorderSource;
-            } else {
-                reorderSource = radixSort8bitReorderSource;
-            }
-        } else {
-            histogramSource = radixSort4bitSource;
-            reorderSource = radixSortReorderSource;
-        }
 
         for (let pass = 0; pass < numPasses; pass++) {
-            const bitOffset = pass * this._bitsPerPass;
+            const bitOffset = pass * BITS_PER_PASS;
             const isFirstPass = pass === 0 && !hasInitialValues;
             const isLastPass = skipLastPassKeyWrite && pass === numPasses - 1;
 
             const histogramShader = this._createShader(
-                `${tag}-Histogram${suffix}-${bitOffset}`,
-                histogramSource,
+                `RadixSort4bit-Histogram${suffix}-${bitOffset}`,
+                radixSort4bitSource,
                 bitOffset,
                 false,
                 false,
@@ -568,8 +395,8 @@ class ComputeRadixSort {
             );
 
             const reorderShader = this._createShader(
-                `${tag}-Reorder${suffix}-${bitOffset}`,
-                reorderSource,
+                `RadixSort4bit-Reorder${suffix}-${bitOffset}`,
+                radixSortReorderSource,
                 bitOffset,
                 isFirstPass,
                 isLastPass,
@@ -577,8 +404,8 @@ class ComputeRadixSort {
                 indirect
             );
 
-            const histogramCompute = new Compute(this.device, histogramShader, `${tag}-Histogram${suffix}-${bitOffset}`);
-            const reorderCompute = new Compute(this.device, reorderShader, `${tag}-Reorder${suffix}-${bitOffset}`);
+            const histogramCompute = new Compute(this.device, histogramShader, `RadixSort4bit-Histogram${suffix}-${bitOffset}`);
+            const reorderCompute = new Compute(this.device, reorderShader, `RadixSort4bit-Reorder${suffix}-${bitOffset}`);
 
             this._passes.push({ histogramCompute, reorderCompute });
         }
@@ -621,7 +448,7 @@ class ComputeRadixSort {
             this.capacity = effectiveCount;
 
             const elementSize = effectiveCount * 4;
-            const blockSumSize = this._bucketCount * allocWorkgroupCount * 4;
+            const blockSumSize = BUCKET_COUNT * allocWorkgroupCount * 4;
 
             // Create ping-pong buffers for keys and values
             this._keys0 = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
@@ -629,21 +456,16 @@ class ComputeRadixSort {
             this._values0 = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
             this._values1 = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
-            // Create block sums buffer (16 per workgroup)
+            // Create block sums buffer (BUCKET_COUNT entries per workgroup)
             this._blockSums = new StorageBuffer(this.device, blockSumSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
             // Create output buffer
             this._sortedIndices = new StorageBuffer(this.device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
-            // Create prefix sum kernel for block sums. The factory picks a
-            // single-pass CSDLDF scan when subgroups are available, otherwise
-            // a hierarchical Blelloch scan. The radix sort reorder shader
-            // requires an exclusive scan over the block sums.
-            this._prefixSumKernel = createScanKernel(this.device, {
-                exclusive: true,
-                force: this._scanKernelChoice
-            });
-            Debug.log(`ComputeRadixSort: using '${this.scanKernelName}' scan kernel`);
+            // Create prefix sum kernel (hierarchical Blelloch scan, exclusive).
+            // The radix sort reorder shader requires an exclusive scan over
+            // the block sums.
+            this._prefixSumKernel = new PrefixSumKernel(this.device, { exclusive: true });
         }
 
         // Update current working size and dispatch dimensions (must be after
@@ -654,7 +476,7 @@ class ComputeRadixSort {
         // Resize prefix kernel to match the CURRENT scan size. The allocated
         // block_sums buffer is larger (sized for capacity), but the scan only
         // needs to operate over the compact range we'll actually populate.
-        this._prefixSumKernel.resize(this._blockSums, this._bucketCount * currentWorkgroupCount);
+        this._prefixSumKernel.resize(this._blockSums, BUCKET_COUNT * currentWorkgroupCount);
 
         if (passesNeedRecreate) {
             this._createPasses(numBits, indirect, hasInitialValues, skipLastPassKeyWrite);
@@ -668,6 +490,7 @@ class ComputeRadixSort {
      * @param {string} source - Shader source.
      * @param {number} currentBit - Current bit offset for this pass.
      * @param {boolean} isFirstPass - Whether this is the first pass (uses GID for indices).
+     * @param {boolean} isLastPass - Whether this is the last pass and can skip writing keys.
      * @param {BindGroupFormat} bindGroupFormat - Bind group format.
      * @param {boolean} indirect - Whether to add the USE_INDIRECT_SORT define.
      * @returns {Shader} The created shader.
@@ -682,12 +505,6 @@ class ComputeRadixSort {
         cdefines.set('{CURRENT_BIT}', currentBit);
         cdefines.set('{IS_FIRST_PASS}', isFirstPass ? 1 : 0);
         cdefines.set('{IS_LAST_PASS}', isLastPass ? 1 : 0);
-        // Subgroup reorder variants use MAX_SUBGROUPS to size per-warp
-        // shared-memory buffers; non-subgroup variants ignore the token.
-        // See the sg_size notes in compute-onesweep-radix-sort.js for why
-        // this has to be per-device and not hardcoded to 8.
-        const sgSize = this.device.maxSubgroupSize || 32;
-        cdefines.set('{MAX_SUBGROUPS}', Math.max(1, Math.ceil(THREADS_PER_WORKGROUP / sgSize)));
         if (indirect) {
             cdefines.set('USE_INDIRECT_SORT', '');
         }
@@ -719,7 +536,7 @@ class ComputeRadixSort {
     sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite = false) {
         Debug.assert(keysBuffer, 'ComputeRadixSort.sort: keysBuffer is required');
         Debug.assert(elementCount > 0, 'ComputeRadixSort.sort: elementCount must be > 0');
-        Debug.assert(numBits % this._bitsPerPass === 0, `ComputeRadixSort.sort: numBits must be a multiple of ${this._bitsPerPass}`);
+        Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSort.sort: numBits must be a multiple of ${BITS_PER_PASS}`);
 
         return this._execute(keysBuffer, elementCount, numBits, false, -1, null, initialValues, skipLastPassKeyWrite);
     }
@@ -743,7 +560,7 @@ class ComputeRadixSort {
     sortIndirect(keysBuffer, maxElementCount, numBits, dispatchSlot, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false) {
         Debug.assert(keysBuffer, 'ComputeRadixSort.sortIndirect: keysBuffer is required');
         Debug.assert(maxElementCount > 0, 'ComputeRadixSort.sortIndirect: maxElementCount must be > 0');
-        Debug.assert(numBits % this._bitsPerPass === 0, `ComputeRadixSort.sortIndirect: numBits must be a multiple of ${this._bitsPerPass}`);
+        Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSort.sortIndirect: numBits must be a multiple of ${BITS_PER_PASS}`);
         Debug.assert(sortElementCountBuffer, 'ComputeRadixSort.sortIndirect: sortElementCountBuffer is required');
 
         return this._execute(keysBuffer, maxElementCount, numBits, true, dispatchSlot, sortElementCountBuffer, initialValues, skipLastPassKeyWrite);
@@ -772,7 +589,7 @@ class ComputeRadixSort {
         this._allocateBuffers(elementCount, numBits, indirect, hasInitialValues, skipLastPassKeyWrite);
 
         const device = this.device;
-        const numPasses = numBits / this._bitsPerPass;
+        const numPasses = numBits / BITS_PER_PASS;
         const suffix = indirect ? '-Indirect' : '';
 
         // When initial values are provided, pass 0 reads from that buffer (IS_FIRST_PASS=0).
@@ -807,7 +624,7 @@ class ComputeRadixSort {
             } else {
                 histogramCompute.setupDispatch(this._dispatchSize.x, this._dispatchSize.y, 1);
             }
-            device.computeDispatch([histogramCompute], `${this._profilerTag}-Histogram${suffix}`);
+            device.computeDispatch([histogramCompute], `RadixSort4bit-Histogram${suffix}`);
 
             // Phase 2: Prefix sum on block sums
             this._prefixSumKernel.dispatch(device);
@@ -829,7 +646,7 @@ class ComputeRadixSort {
             } else {
                 reorderCompute.setupDispatch(this._dispatchSize.x, this._dispatchSize.y, 1);
             }
-            device.computeDispatch([reorderCompute], `${this._profilerTag}-Reorder${suffix}`);
+            device.computeDispatch([reorderCompute], `RadixSort4bit-Reorder${suffix}`);
 
             // Swap buffers for next pass (skip on last pass - not needed)
             if (!isLastPass) {

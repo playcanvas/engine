@@ -285,32 +285,14 @@ class ComputeOneSweepRadixSort {
     }
 
     /**
-     * Name of the scan kernel used internally. Matches the
-     * {@link ComputeRadixSort#scanKernelName} contract so logging code can
-     * stay generic.
-     *
-     * @type {string}
-     */
-    get scanKernelName() {
-        return 'onesweep';
-    }
-
-    /**
-     * Radix width in bits (always 8 for OneSweep).
+     * Radix width in bits (always 8 for OneSweep). Exposed so callers can
+     * align key-bit counts to the radix boundary generically across sort
+     * backends.
      *
      * @type {number}
      */
     get radixBits() {
         return 8;
-    }
-
-    /**
-     * Reorder variant identifier for logging. Always `'onesweep'`.
-     *
-     * @type {string}
-     */
-    get reorderVariant() {
-        return 'onesweep';
     }
 
     /** @private */

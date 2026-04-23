@@ -135,33 +135,26 @@ let originalValues = [];
 /** @type {boolean} */
 let needsRegen = true;
 
-// Valid radix modes. Invalid combinations (e.g. 4-bit + subgroup) are never
-// exposed to the user, so we enumerate the working variants directly rather
-// than cross-producting two dropdowns. The 'onesweep' entry is a separate
-// implementation class (ComputeOneSweepRadixSort) with a fused global
-// histogram + chained-scan lookback + binning pipeline; the rest route
-// through the classic multi-pass ComputeRadixSort.
+// Valid radix modes. After benchmarking across NVIDIA / Apple / Mali / IMG
+// the surviving variants are:
+//   - '4-shared-mem': the universal portable multi-pass fallback
+//     (ComputeRadixSort), subgroup-free, shipped as the production
+//     default on every non-NVIDIA device.
+//   - 'onesweep': the fused single-sweep implementation
+//     (ComputeOneSweepRadixSort). Fastest on NVIDIA; unstable on Mali
+//     (validates incorrectly) and Apple (GPU hangs under heavy validation
+//     load), so it is selectable manually but restricted to NVIDIA in the
+//     benchmark / validation sweeps.
 const RADIX_MODES = {
-    '4-shared-mem': { radixBits: 4, reorderVariant: 'shared-mem' },
-    '8-shared-mem': { radixBits: 8, reorderVariant: 'shared-mem' },
-    '8-subgroup': { radixBits: 8, reorderVariant: 'subgroup' },
-    '8-subgroup-packed': { radixBits: 8, reorderVariant: 'subgroup-packed' },
-    '8-subgroup-ranked': { radixBits: 8, reorderVariant: 'subgroup-ranked' },
-    '8-subgroup-coalesced': { radixBits: 8, reorderVariant: 'subgroup-coalesced' },
-    // OneSweep uses the plain decoupled lookback (no CSDLDF fallback) and
-    // requires forward-thread-progress guarantees, so it is gated on
-    // subgroup support below for the benchmark/validate sweeps.
+    '4-shared-mem': { },
     'onesweep': { onesweep: true }
 };
-const DEFAULT_MODE = device.supportsSubgroups ? '8-shared-mem' : '4-shared-mem';
+const DEFAULT_MODE = '4-shared-mem';
 
 // Lazy cache of ComputeRadixSort / ComputeOneSweepRadixSort instances, keyed
-// by "scan-mode" toggle combination. Instances are created on first use and
-// retained, so subsequent toggles between configurations are free (no shader
-// rebuild). Each instance grows its internal buffers on demand. 8-bit modes
-// require subgroup support; subgroup variants additionally assume
-// sgSize == 32. 'onesweep' additionally requires forward-thread-progress
-// (NVIDIA, Intel, AMD — may deadlock on Apple Silicon).
+// by the mode dropdown. Instances are created on first use and retained, so
+// subsequent toggles between configurations are free (no shader rebuild).
+// Each instance grows its internal buffers on demand.
 /** @type {Map<string, pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort>} */
 const radixSortCache = new Map();
 
@@ -174,24 +167,14 @@ const radixSortCache = new Map();
  * radix sort instance.
  */
 function getActiveRadixSort() {
-    const scan = data.get('options.scan') ?? 'blelloch';
     const mode = data.get('options.mode') ?? DEFAULT_MODE;
     const modeCfg = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
-    // OneSweep ignores the scan toggle (it has a bespoke fused scan) so it
-    // is keyed by mode alone.
-    const key = modeCfg.onesweep ? mode : `${scan}-${mode}`;
-    let inst = radixSortCache.get(key);
+    let inst = radixSortCache.get(mode);
     if (!inst) {
-        if (modeCfg.onesweep) {
-            inst = new pc.ComputeOneSweepRadixSort(device);
-        } else {
-            inst = new pc.ComputeRadixSort(device, {
-                scanKernel: scan,
-                radixBits: modeCfg.radixBits,
-                reorderVariant: modeCfg.reorderVariant
-            });
-        }
-        radixSortCache.set(key, inst);
+        inst = modeCfg.onesweep ?
+            new pc.ComputeOneSweepRadixSort(device) :
+            new pc.ComputeRadixSort(device);
+        radixSortCache.set(mode, inst);
     }
     return inst;
 }
@@ -239,8 +222,9 @@ function buildGpuLine(sep) {
  * Refreshes the device overlay text to reflect the active configuration.
  */
 function updateDeviceInfo() {
+    const mode = data.get('options.mode') ?? DEFAULT_MODE;
     const sort = getActiveRadixSort();
-    deviceInfo.textContent = `${buildGpuLine('-')} - scan: ${sort.scanKernelName} - radix: ${sort.radixBits}bit - reorder: ${sort.reorderVariant}`;
+    deviceInfo.textContent = `${buildGpuLine('-')} - mode: ${mode} - radix: ${sort.radixBits}bit`;
 }
 
 updateDeviceInfo();
@@ -558,9 +542,9 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             currentNumBits = nearest;
             needsRegen = true;
         }
-    } else if (path === 'options.scan' || path === 'options.mode') {
-        // Switching scan kernel or radix mode changes the active shader set;
-        // force a re-sort on next frame and refresh the overlay.
+    } else if (path === 'options.mode') {
+        // Switching radix mode changes the active shader set; force a
+        // re-sort on next frame and refresh the overlay.
         needsRegen = true;
         updateDeviceInfo();
     } else if (path === 'options.validation' && !value) {
@@ -572,13 +556,9 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 
 // Initialize observer with default values (single source of truth for defaults)
 // Must be after data.on() so the handler receives the initial values.
-// Default to the shared-memory 8-bit mode when subgroups are available
-// (historical baseline), 4-bit otherwise. The subgroup ballot variant is
-// opt-in for A/B testing.
 data.set('options', {
     elementsK: 1000,
     bits: 16,
-    scan: 'blelloch',
     mode: DEFAULT_MODE,
     render: true,
     validation: true,
@@ -603,10 +583,6 @@ const BENCH_SIZES = [
 //   - OneSweep is the production fastpath on NVIDIA; it's unstable on Mali
 //     (validates incorrectly) and Apple (GPU hangs under heavy validation
 //     load on M1), so it's restricted to NVIDIA here.
-// All other variants (8-bit shared-mem, 8-subgroup-ranked, 8-coalesced, etc.)
-// are still selectable from the interactive `Radix mode` dropdown for
-// manual exploration, but are excluded from the benchmark / validation
-// sweeps to keep runs fast and avoid unstable paths.
 const _nvidia = (device.gpuAdapter?.info?.vendor || '').toLowerCase().includes('nvidia');
 const BENCH_CONFIGS = [
     { label: '4-bit', modeKey: '4-shared-mem' },
@@ -661,14 +637,9 @@ function fmtN(n) {
  */
 function createBenchSort(modeKey) {
     const modeCfg = RADIX_MODES[modeKey];
-    if (modeCfg.onesweep) {
-        return new pc.ComputeOneSweepRadixSort(device);
-    }
-    return new pc.ComputeRadixSort(device, {
-        scanKernel: 'blelloch',
-        radixBits: modeCfg.radixBits,
-        reorderVariant: modeCfg.reorderVariant
-    });
+    return modeCfg.onesweep ?
+        new pc.ComputeOneSweepRadixSort(device) :
+        new pc.ComputeRadixSort(device);
 }
 
 /**

@@ -36,32 +36,14 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Scan kernel' },
-                jsx(SelectInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'options.scan' },
-                    type: 'string',
-                    options: [
-                        { v: 'csdldf', t: 'CSDLDF' },
-                        { v: 'blelloch', t: 'Blelloch' }
-                    ]
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Radix mode' },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'options.mode' },
                     type: 'string',
                     options: [
-                        { v: '4-shared-mem', t: '4-bit shared' },
-                        { v: '8-shared-mem', t: '8-bit shared' },
-                        { v: '8-subgroup', t: '8-bit ballot' },
-                        { v: '8-subgroup-packed', t: '8-bit ballot packed' },
-                        { v: '8-subgroup-ranked', t: '8-bit ranked' },
-                        { v: '8-subgroup-coalesced', t: '8-bit coalesced' },
-                        { v: 'onesweep', t: 'OneSweep (fused)' }
+                        { v: '4-shared-mem', t: '4-bit shared (portable)' },
+                        { v: 'onesweep', t: 'OneSweep (fused, NVIDIA)' }
                     ]
                 })
             ),
