@@ -465,7 +465,7 @@ class ComputeRadixSort {
             // Create prefix sum kernel (hierarchical Blelloch scan, exclusive).
             // The radix sort reorder shader requires an exclusive scan over
             // the block sums.
-            this._prefixSumKernel = new PrefixSumKernel(this.device, { exclusive: true });
+            this._prefixSumKernel = new PrefixSumKernel(this.device);
         }
 
         // Update current working size and dispatch dimensions (must be after
