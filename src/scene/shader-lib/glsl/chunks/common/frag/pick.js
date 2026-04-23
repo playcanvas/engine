@@ -16,8 +16,10 @@ vec4 encodePickOutput(uint id) {
 
 #ifdef DEPTH_PICK_PASS
     #include "floatAsUintPS"
-    uniform vec4 camera_params; // x: 1/far, y: far, z: near, w: isOrtho
-
+    #ifndef CAMERAPLANES
+        #define CAMERAPLANES
+        uniform vec4 camera_params; // x: 1/far, y: far, z: near, w: isOrtho
+    #endif
     vec4 getPickDepth() {
         float linearDepth;
         if (camera_params.w > 0.5) {
