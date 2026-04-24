@@ -60,12 +60,18 @@ export const onesweepBinningSource = /* wgsl */`
 @group(0) @binding(5) var<storage, read_write> b_index: array<atomic<u32>>;
 
 struct OneSweepBinningUniforms {
-    numKeys: u32,
-    threadBlocks: u32,   // DigitBinningPass workgroup count per pass
+    numKeys: u32,        // ignored in indirect mode
+    threadBlocks: u32,   // DigitBinningPass workgroup count per pass (ignored in indirect mode)
     pass_: u32,          // 0..NUM_PASSES-1
     flags: u32           // bit 0: isFirstPass, bit 1: isLastPass (skip key write)
 };
 @group(0) @binding(6) var<uniform> uniforms: OneSweepBinningUniforms;
+
+#ifdef USE_INDIRECT_SORT
+// Indirect dispatch: numKeys/threadBlocks are derived from a GPU-written
+// element count. The uniform fields are ignored.
+@group(0) @binding(7) var<storage, read> b_sortElementCount: array<u32>;
+#endif
 
 const RADIX: u32 = 256u;
 const RADIX_MASK: u32 = 255u;
@@ -117,8 +123,12 @@ var<workgroup> sg_totals: array<u32, MAX_SUBGROUPS>;
 // Broadcast slot for the atomically-acquired partition tile id.
 var<workgroup> wg_partIndex: u32;
 
-fn passHistOffset(pass_: u32, partitionIdx: u32) -> u32 {
-    return pass_ * uniforms.threadBlocks * RADIX + partitionIdx * RADIX;
+// 'passHistOffset' needs 'threadBlocks' to compute the per-pass row stride.
+// 'threadBlocks' is a local at the top of 'main' (from either the uniform or
+// the GPU-side element count); we plumb it through as an explicit argument
+// rather than a module-scope 'var' so the value stays in registers.
+fn passHistOffset(tb: u32, pass_: u32, partitionIdx: u32) -> u32 {
+    return pass_ * tb * RADIX + partitionIdx * RADIX;
 }
 
 @compute @workgroup_size(D_DIM, 1, 1)
@@ -138,7 +148,13 @@ fn main(
     let activeMask = select(0xFFFFFFFFu, (1u << sgSize) - 1u, sgSize < 32u);
     let pass_ = uniforms.pass_;
     let currentBit = pass_ << 3u;
+    #ifdef USE_INDIRECT_SORT
+    let numKeys = b_sortElementCount[0];
+    let threadBlocks = (numKeys + PART_SIZE - 1u) / PART_SIZE;
+    #else
+    let numKeys = uniforms.numKeys;
     let threadBlocks = uniforms.threadBlocks;
+    #endif
     let isFirstPass = (uniforms.flags & 1u) != 0u;
     let isLastPass = (uniforms.flags & 2u) != 0u;
 
@@ -159,8 +175,8 @@ fn main(
     let tileStart = partitionIndex * PART_SIZE;
     let validInBlock = select(
         0u,
-        min(PART_SIZE, uniforms.numKeys - tileStart),
-        tileStart < uniforms.numKeys
+        min(PART_SIZE, numKeys - tileStart),
+        tileStart < numKeys
     );
 
     // ---- Phase A.2: wave-interleaved load of keys + values ----
@@ -178,7 +194,7 @@ fn main(
     var validMask: u32 = 0u;
     for (var i = 0u; i < KEYS_PER_THREAD; i = i + 1u) {
         let gid = waveBase + sgInvId + i * sgSize;
-        let is_valid = gid < uniforms.numKeys;
+        let is_valid = gid < numKeys;
         // Dummy 0xFFFFFFFF for invalid lanes: validBallot drops them from
         // any real digit's run.
         keys[i] = select(0xFFFFFFFFu, inputKeys[gid], is_valid);
@@ -251,7 +267,7 @@ fn main(
     // slot partitionIndex+1 of passHist (i.e. its successor's inbox). The
     // last block has no successor and skips this step.
     if (partitionIndex + 1u < threadBlocks) {
-        let dst = passHistOffset(pass_, partitionIndex + 1u) + TID;
+        let dst = passHistOffset(threadBlocks, pass_, partitionIndex + 1u) + TID;
         atomicAdd(&b_passHist[dst], FLAG_REDUCTION | (myHistRed << 2u));
     }
 
@@ -325,7 +341,7 @@ fn main(
         var done: bool = false;
         loop {
             if (done) { break; }
-            let flagPayload = atomicLoad(&b_passHist[passHistOffset(pass_, k) + TID]);
+            let flagPayload = atomicLoad(&b_passHist[passHistOffset(threadBlocks, pass_, k) + TID]);
             let flag = flagPayload & FLAG_MASK;
 
             if (flag == FLAG_INCLUSIVE) {
@@ -334,7 +350,7 @@ fn main(
                     // Flip FLAG_REDUCTION (01) to FLAG_INCLUSIVE (10) by adding
                     // 1, and fold in the full exclusive prefix so downstream
                     // blocks can terminate their lookback on this slot.
-                    let dst = passHistOffset(pass_, partitionIndex + 1u) + TID;
+                    let dst = passHistOffset(threadBlocks, pass_, partitionIndex + 1u) + TID;
                     atomicAdd(&b_passHist[dst], 1u | (lookbackReduction << 2u));
                 }
                 // Convert digit_base[TID] from block-local base to the value

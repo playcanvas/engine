@@ -9,11 +9,13 @@
 
 import indirectCoreCS from '../common/comp/indirect-core.js';
 import dispatchCoreCS from '../common/comp/dispatch-core.js';
+import sortIndirectArgsCS from '../common/comp/sort-indirect-args.js';
 
 export const computeGsplatWriteIndirectArgsSource = /* wgsl */`
 
 ${indirectCoreCS}
 ${dispatchCoreCS}
+${sortIndirectArgsCS}
 
 // Prefix sum buffer (flagBuffer after in-place exclusive scan)
 @group(0) @binding(0) var<storage, read> prefixSumBuffer: array<u32>;
@@ -34,8 +36,9 @@ ${dispatchCoreCS}
 struct WriteArgsUniforms {
     drawSlot: u32,              // slot index into indirectDrawArgs
     indexCount: u32,            // indices per instance (768 = 6 * 128)
-    dispatchSlotOffset: u32,    // u32 offset into indirectDispatchArgs (slot * 3)
-    totalSplats: u32            // total splat count, index into prefixSumBuffer for visible count
+    dispatchSlotBase: u32,      // slot index of keygen dispatch; sort slots follow
+    totalSplats: u32,           // total splat count, index into prefixSumBuffer for visible count
+    sortIndirectInfo: vec4<u32> // sorter-owned [slotCount, g0, g1, g2] from prepareIndirect()
 };
 @group(0) @binding(5) var<uniform> uniforms: WriteArgsUniforms;
 
@@ -58,21 +61,21 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // Write numSplats for vertex shader
     numSplatsBuf[0] = count;
 
-    // Write indirect dispatch args: slot 0 = key gen, slot 1 = sort.
-    // Use 2D layout to stay within maxComputeWorkgroupsPerDimension.
-    let dispatchOffset = uniforms.dispatchSlotOffset;
+    // --- Indirect dispatch args ---
+    // Layout: slot[base + 0] = key gen, slot[base + 1..base + 1 + sortSlotCount] = sort.
+    let keygenSlot = uniforms.dispatchSlotBase;
+    let keygenOffset = keygenSlot * 3u;
 
     let keygenWorkgroupCount = (count + {KEYGEN_THREADS_PER_WORKGROUP}u - 1u) / {KEYGEN_THREADS_PER_WORKGROUP}u;
     let keygenDim = calcDispatch2D(keygenWorkgroupCount, {MAX_WORKGROUPS_PER_DIM}u);
-    indirectDispatchArgs[dispatchOffset + 0u] = keygenDim.x;
-    indirectDispatchArgs[dispatchOffset + 1u] = keygenDim.y;
-    indirectDispatchArgs[dispatchOffset + 2u] = 1u;
+    indirectDispatchArgs[keygenOffset + 0u] = keygenDim.x;
+    indirectDispatchArgs[keygenOffset + 1u] = keygenDim.y;
+    indirectDispatchArgs[keygenOffset + 2u] = 1u;
 
-    let sortWorkgroupCount = (count + {SORT_ELEMENTS_PER_WORKGROUP}u - 1u) / {SORT_ELEMENTS_PER_WORKGROUP}u;
-    let sortDim = calcDispatch2D(sortWorkgroupCount, {MAX_WORKGROUPS_PER_DIM}u);
-    indirectDispatchArgs[dispatchOffset + 3u] = sortDim.x;
-    indirectDispatchArgs[dispatchOffset + 4u] = sortDim.y;
-    indirectDispatchArgs[dispatchOffset + 5u] = 1u;
+    // Sort dispatch slots — delegated to the sorter-agnostic helper so this
+    // shader doesn't need to know how many slots or what granularity the
+    // active radix sort backend uses.
+    writeSortIndirectArgs(&indirectDispatchArgs, keygenSlot + 1u, count, uniforms.sortIndirectInfo);
 
     // Write sortElementCount for sort shaders (= visibleCount)
     sortElementCountBuf[0] = count;

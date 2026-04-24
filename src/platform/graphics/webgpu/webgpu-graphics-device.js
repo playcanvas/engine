@@ -328,8 +328,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         this.supportsSubgroups = requireFeature('subgroups');
-        this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.limits?.maxSubgroupSize ?? 0) : 0;
-        this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.limits?.minSubgroupSize ?? 0) : 0;
+        this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMaxSize ?? 0) : 0;
+        this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
         Debug.log(
             `WEBGPU${this.gpuAdapter?.info ?
                 ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :

@@ -12,13 +12,13 @@ import {
     UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_UINT,
     UNIFORMTYPE_VEC3,
-    UNIFORMTYPE_VEC4
+    UNIFORMTYPE_VEC4,
+    UNIFORMTYPE_UVEC4
 } from '../../platform/graphics/constants.js';
 import { computeGsplatIntervalCullSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-interval-cull.js';
 import { computeGsplatIntervalScatterSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-interval-scatter.js';
 import { computeGsplatWriteIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-write-indirect-args.js';
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
-import { RADIX_SORT_ELEMENTS_PER_WORKGROUP } from '../graphics/compute-radix-sort.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 
 /**
@@ -30,8 +30,6 @@ import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 const WORKGROUP_SIZE = 256;
 
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
-
-const SORT_ELEMENTS_PER_WORKGROUP = RADIX_SORT_ELEMENTS_PER_WORKGROUP;
 
 // 16 bytes per interval: { workBufferBase, splatCount, boundsIndex, pad }
 const INTERVAL_STRIDE = 4;
@@ -182,8 +180,9 @@ class GSplatIntervalCompaction {
         this._writeArgsUniformBufferFormat = new UniformBufferFormat(device, [
             new UniformFormat('drawSlot', UNIFORMTYPE_UINT),
             new UniformFormat('indexCount', UNIFORMTYPE_UINT),
-            new UniformFormat('dispatchSlotOffset', UNIFORMTYPE_UINT),
-            new UniformFormat('totalSplats', UNIFORMTYPE_UINT)
+            new UniformFormat('dispatchSlotBase', UNIFORMTYPE_UINT),
+            new UniformFormat('totalSplats', UNIFORMTYPE_UINT),
+            new UniformFormat('sortIndirectInfo', UNIFORMTYPE_UVEC4)
         ]);
     }
 
@@ -303,7 +302,6 @@ class GSplatIntervalCompaction {
         const cdefines = new Map([
             ['{INSTANCE_SIZE}', GSplatResourceBase.instanceSize],
             ['{KEYGEN_THREADS_PER_WORKGROUP}', 256],
-            ['{SORT_ELEMENTS_PER_WORKGROUP}', SORT_ELEMENTS_PER_WORKGROUP],
             ['{MAX_WORKGROUPS_PER_DIM}', device.limits.maxComputeWorkgroupsPerDimension || 65535]
         ]);
 
@@ -455,10 +453,15 @@ class GSplatIntervalCompaction {
      * Writes indirect draw and dispatch arguments from the prefix sum visible count.
      *
      * @param {number} drawSlot - Slot index in the device's indirect draw buffer.
-     * @param {number} dispatchSlot - Slot index in the device's indirect dispatch buffer.
+     * @param {number} dispatchSlotBase - Base slot index in the device's indirect
+     * dispatch buffer. Key-gen args go to `dispatchSlotBase`; sort args to
+     * `dispatchSlotBase + 1` onwards (as described by `sortIndirectInfo`).
      * @param {number} numIntervals - Total interval count (index into prefix sum for visible count).
+     * @param {Uint32Array} sortIndirectInfo - Sorter-owned 4-element Uint32 array
+     * returned by `ComputeRadixSort.prepareIndirect()`, used as a `vec4<u32>`
+     * uniform by the shader to drive the `writeSortIndirectArgs` helper.
      */
-    writeIndirectArgs(drawSlot, dispatchSlot, numIntervals) {
+    writeIndirectArgs(drawSlot, dispatchSlotBase, numIntervals, sortIndirectInfo) {
         const compute = this._writeIndirectArgsCompute;
 
         compute.setParameter('prefixSumBuffer', this.countBuffer);
@@ -469,8 +472,9 @@ class GSplatIntervalCompaction {
 
         compute.setParameter('drawSlot', drawSlot);
         compute.setParameter('indexCount', INDEX_COUNT);
-        compute.setParameter('dispatchSlotOffset', dispatchSlot * 3);
+        compute.setParameter('dispatchSlotBase', dispatchSlotBase);
         compute.setParameter('totalSplats', numIntervals);
+        compute.setParameter('sortIndirectInfo', sortIndirectInfo);
 
         compute.setupDispatch(1);
         this.device.computeDispatch([compute], 'GSplatIntervalWriteIndirectArgs');

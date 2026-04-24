@@ -25,10 +25,17 @@
 // The global histogram is the input to the Scan kernel, which in turn produces
 // the base offsets consumed by DigitBinningPass during lookback.
 //
-// Alignment requirement: numKeys must be a multiple of 4 (= the key buffer
-// size must be a multiple of 16 bytes). Enforced by an assert in
-// ComputeOneSweepRadixSort. Callers with odd sizes should pad or fall back to
-// the classic ComputeRadixSort.
+// Ragged tails: the vec4 load pattern processes keys in groups of 4. When
+// numKeys is not a multiple of 4 (e.g. after GPU-side stream compaction), the
+// last vec4 of the key buffer contains 1-3 valid keys and 3-1 "trailing" slots
+// that hold unrelated data (or zero, for WebGPU out-of-bounds reads). To keep
+// the hot loop branch-free, we split it in two:
+//   - Fast loop: runs over the FULL vec4s only (numKeys >> 2u), all 4 lanes
+//     valid, no per-lane guards.
+//   - Tail block: runs on at most a single thread per workgroup, processing
+//     the one ragged vec4 (if any) with explicit per-lane guards.
+// This is required for GPU-indirect sorting, where numKeys is only known at
+// shader launch time and cannot be padded to a vec4 boundary.
 
 export const onesweepGlobalHistSource = /* wgsl */`
 
@@ -42,6 +49,11 @@ struct OneSweepUniforms {
     _pad: u32
 };
 @group(0) @binding(2) var<uniform> uniforms: OneSweepUniforms;
+
+#ifdef USE_INDIRECT_SORT
+// Indirect dispatch: numKeys is GPU-written. uniforms.numKeys is ignored.
+@group(0) @binding(3) var<storage, read> b_sortElementCount: array<u32>;
+#endif
 
 const RADIX: u32 = 256u;
 const MAX_PASSES: u32 = 4u;
@@ -67,6 +79,12 @@ fn main(
     let flatGid = gid.x + gid.y * nwg.x;
     let numPasses = uniforms.numPasses;
 
+    #ifdef USE_INDIRECT_SORT
+        let numKeys = b_sortElementCount[0];
+    #else
+        let numKeys = uniforms.numKeys;
+    #endif
+
     // Clear shared histogram (only the rows we'll actually use).
     let sharedEnd = 2u * numPasses * RADIX;
     for (var i = gtid; i < sharedEnd; i = i + G_HIST_DIM) {
@@ -74,30 +92,33 @@ fn main(
     }
     workgroupBarrier();
 
-    // Process this workgroup's partition tile (vec4 units).
+    // Process this workgroup's partition tile (vec4 units). The loop bound
+    // is clamped to FULL vec4s (numKeys >> 2u); any partial trailing vec4
+    // is handled out-of-loop by a single thread below.
     let row = gtid / 64u; // 0 or 1
-    let numKeysVec = uniforms.numKeys >> 2u;
+    let numKeysVecFull = numKeys >> 2u;
     let partitionStartVec = flatGid * G_HIST_PART_SIZE_VEC;
-    let partitionEndVec = min(partitionStartVec + G_HIST_PART_SIZE_VEC, numKeysVec);
+    let partitionEndVec = min(partitionStartVec + G_HIST_PART_SIZE_VEC, numKeysVecFull);
 
+    // Fast path: all 4 lanes always valid, no per-lane bounds checks.
+    // Unrolled per-lane, per-pass digit extraction; numPasses is known at
+    // runtime but MAX_PASSES is compile-time, so naga strips the guarded
+    // blocks for NUM_PASSES < 4.
     for (var i = partitionStartVec + gtid; i < partitionEndVec; i = i + G_HIST_DIM) {
         let q = b_sort[i];
-        // Unrolled per-lane, per-pass digit extraction. MAX_PASSES is
-        // compile-time, so the naga optimizer will strip the guarded branches
-        // for NUM_PASSES < 4.
         if (numPasses >= 1u) {
             let off = histOffset(row, 0u);
-            atomicAdd(&g_gHist[(q.x & 0xFFu) + off], 1u);
-            atomicAdd(&g_gHist[(q.y & 0xFFu) + off], 1u);
-            atomicAdd(&g_gHist[(q.z & 0xFFu) + off], 1u);
-            atomicAdd(&g_gHist[(q.w & 0xFFu) + off], 1u);
+            atomicAdd(&g_gHist[(q.x         & 0xFFu) + off], 1u);
+            atomicAdd(&g_gHist[(q.y         & 0xFFu) + off], 1u);
+            atomicAdd(&g_gHist[(q.z         & 0xFFu) + off], 1u);
+            atomicAdd(&g_gHist[(q.w         & 0xFFu) + off], 1u);
         }
         if (numPasses >= 2u) {
             let off = histOffset(row, 1u);
-            atomicAdd(&g_gHist[((q.x >> 8u) & 0xFFu) + off], 1u);
-            atomicAdd(&g_gHist[((q.y >> 8u) & 0xFFu) + off], 1u);
-            atomicAdd(&g_gHist[((q.z >> 8u) & 0xFFu) + off], 1u);
-            atomicAdd(&g_gHist[((q.w >> 8u) & 0xFFu) + off], 1u);
+            atomicAdd(&g_gHist[((q.x >>  8u) & 0xFFu) + off], 1u);
+            atomicAdd(&g_gHist[((q.y >>  8u) & 0xFFu) + off], 1u);
+            atomicAdd(&g_gHist[((q.z >>  8u) & 0xFFu) + off], 1u);
+            atomicAdd(&g_gHist[((q.w >>  8u) & 0xFFu) + off], 1u);
         }
         if (numPasses >= 3u) {
             let off = histOffset(row, 2u);
@@ -112,6 +133,45 @@ fn main(
             atomicAdd(&g_gHist[((q.y >> 24u) & 0xFFu) + off], 1u);
             atomicAdd(&g_gHist[((q.z >> 24u) & 0xFFu) + off], 1u);
             atomicAdd(&g_gHist[((q.w >> 24u) & 0xFFu) + off], 1u);
+        }
+    }
+
+    // Ragged-tail path: at most ONE vec4 at index (numKeys >> 2u) has 1-3
+    // valid lanes (never 4 — if it were, the fast loop would own it). The
+    // thread whose position in the strided loop would have landed on
+    // tailIdx handles it; everyone else falls through.
+    let tailIdx = numKeysVecFull;
+    if ((numKeys & 3u) != 0u &&
+        tailIdx >= partitionStartVec &&
+        tailIdx <  partitionStartVec + G_HIST_PART_SIZE_VEC &&
+        (tailIdx - partitionStartVec) % G_HIST_DIM == gtid) {
+        let q = b_sort[tailIdx];
+        let base = tailIdx << 2u;
+        // Lane 3 is always invalid here (numKeys % 4 == 1/2/3), so it is
+        // unconditionally dropped. Lanes 0..2 are guarded.
+        if (numPasses >= 1u) {
+            let off = histOffset(row, 0u);
+            if (base + 0u < numKeys) { atomicAdd(&g_gHist[(q.x & 0xFFu) + off], 1u); }
+            if (base + 1u < numKeys) { atomicAdd(&g_gHist[(q.y & 0xFFu) + off], 1u); }
+            if (base + 2u < numKeys) { atomicAdd(&g_gHist[(q.z & 0xFFu) + off], 1u); }
+        }
+        if (numPasses >= 2u) {
+            let off = histOffset(row, 1u);
+            if (base + 0u < numKeys) { atomicAdd(&g_gHist[((q.x >>  8u) & 0xFFu) + off], 1u); }
+            if (base + 1u < numKeys) { atomicAdd(&g_gHist[((q.y >>  8u) & 0xFFu) + off], 1u); }
+            if (base + 2u < numKeys) { atomicAdd(&g_gHist[((q.z >>  8u) & 0xFFu) + off], 1u); }
+        }
+        if (numPasses >= 3u) {
+            let off = histOffset(row, 2u);
+            if (base + 0u < numKeys) { atomicAdd(&g_gHist[((q.x >> 16u) & 0xFFu) + off], 1u); }
+            if (base + 1u < numKeys) { atomicAdd(&g_gHist[((q.y >> 16u) & 0xFFu) + off], 1u); }
+            if (base + 2u < numKeys) { atomicAdd(&g_gHist[((q.z >> 16u) & 0xFFu) + off], 1u); }
+        }
+        if (numPasses >= 4u) {
+            let off = histOffset(row, 3u);
+            if (base + 0u < numKeys) { atomicAdd(&g_gHist[((q.x >> 24u) & 0xFFu) + off], 1u); }
+            if (base + 1u < numKeys) { atomicAdd(&g_gHist[((q.y >> 24u) & 0xFFu) + off], 1u); }
+            if (base + 2u < numKeys) { atomicAdd(&g_gHist[((q.z >> 24u) & 0xFFu) + off], 1u); }
         }
     }
     workgroupBarrier();

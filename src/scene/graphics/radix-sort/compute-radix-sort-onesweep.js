@@ -1,17 +1,18 @@
-import { Debug } from '../../core/debug.js';
-import { Vec2 } from '../../core/math/vec2.js';
-import { Compute } from '../../platform/graphics/compute.js';
-import { Shader } from '../../platform/graphics/shader.js';
-import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
-import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
-import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_COPY_DST, SHADERLANGUAGE_WGSL, SHADERSTAGE_COMPUTE, UNIFORMTYPE_UINT } from '../../platform/graphics/constants.js';
-import { onesweepGlobalHistSource } from '../shader-lib/wgsl/chunks/radix-sort/onesweep-global-hist.js';
-import { onesweepScanSource } from '../shader-lib/wgsl/chunks/radix-sort/onesweep-scan.js';
-import { onesweepBinningSource } from '../shader-lib/wgsl/chunks/radix-sort/onesweep-binning.js';
+import { Debug } from '../../../core/debug.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Compute } from '../../../platform/graphics/compute.js';
+import { Shader } from '../../../platform/graphics/shader.js';
+import { StorageBuffer } from '../../../platform/graphics/storage-buffer.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../../platform/graphics/bind-group-format.js';
+import { UniformBufferFormat, UniformFormat } from '../../../platform/graphics/uniform-buffer-format.js';
+import { BUFFERUSAGE_COPY_DST, SHADERLANGUAGE_WGSL, SHADERSTAGE_COMPUTE, UNIFORMTYPE_UINT } from '../../../platform/graphics/constants.js';
+import { onesweepGlobalHistSource } from '../../shader-lib/wgsl/chunks/radix-sort/onesweep-global-hist.js';
+import { onesweepScanSource } from '../../shader-lib/wgsl/chunks/radix-sort/onesweep-scan.js';
+import { onesweepBinningSource } from '../../shader-lib/wgsl/chunks/radix-sort/onesweep-binning.js';
+import { ComputeRadixSortBase } from './compute-radix-sort-base.js';
 
 /**
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
 
 // DigitBinningPass tile geometry (mirrors the shader defines). KEYS_PER_THREAD=15
@@ -44,41 +45,27 @@ const MAX_PASSES = 4;
  * eliminates all but one round-trip to device memory for scan results.
  *
  * WGSL ported from [b0nes164/GPUSorting](https://github.com/b0nes164/GPUSorting)
- * (Thomas Smith, MIT License). See {@link ComputeRadixSort} for the classic
- * multi-pass fallback used on devices where OneSweep's spin-based lookback
- * cannot make forward progress (e.g. Apple Silicon lacking forward-thread
- * progress guarantees).
+ * (Thomas Smith, MIT License). See {@link ComputeRadixSortMultipass} for the classic
+ * multi-pass fallback used on devices where OneSweep's spin-based lookback cannot make
+ * forward progress (e.g. Apple Silicon lacking forward-thread progress guarantees).
  *
  * **Requirements:**
  *  - `device.supportsCompute` (WebGPU)
- *  - `device.supportsSubgroups` and a runtime subgroup size of 32
- *  - `elementCount` must be a multiple of 4 (GlobalHistogram issues vec4
- *    loads over the key buffer). Callers with odd sizes should either pad to
- *    a multiple of 4 or fall back to {@link ComputeRadixSort}.
+ *  - `device.supportsSubgroups` and a runtime subgroup size <= 32
  *  - The device's lookback must be able to make progress under producer/
  *    consumer partition scheduling (true on NVIDIA Turing+, AMD GCN+, Intel
  *    Gen9+). Apple Silicon and any other device lacking forward-thread-
- *    progress guarantees should use {@link ComputeRadixSort} (the 4-bit
- *    multi-pass portable fallback) instead.
+ *    progress guarantees should use {@link ComputeRadixSortMultipass}
+ *    instead.
+ *
+ * Not exported as a public class; always accessed through the
+ * {@link ComputeRadixSort} facade with `kind: RADIX_SORT_ONESWEEP` or
+ * `RADIX_SORT_AUTO` on supported hardware.
  *
  * @category Graphics
  * @ignore
  */
-class ComputeOneSweepRadixSort {
-    /**
-     * The graphics device.
-     *
-     * @type {GraphicsDevice}
-     */
-    device;
-
-    /**
-     * Current element count.
-     *
-     * @type {number}
-     */
-    _elementCount = 0;
-
+class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
     /**
      * Number of DigitBinningPass workgroups actually dispatched for the
      * current sort. Derived from `elementCount` (not `capacity`) so that
@@ -96,37 +83,6 @@ class ComputeOneSweepRadixSort {
      * @type {number}
      */
     _allocatedThreadBlocks = 0;
-
-    /**
-     * Minimum element capacity for internal buffers.
-     *
-     * @type {number}
-     */
-    capacity = 0;
-
-    /** @type {number} */
-    _numBits = 0;
-
-    /** @type {boolean} */
-    _hasInitialValues = false;
-
-    /** @type {boolean} */
-    _skipLastPassKeyWrite = false;
-
-    /** @type {StorageBuffer|null} */
-    _keys0 = null;
-
-    /** @type {StorageBuffer|null} */
-    _keys1 = null;
-
-    /** @type {StorageBuffer|null} */
-    _values0 = null;
-
-    /** @type {StorageBuffer|null} */
-    _values1 = null;
-
-    /** @type {StorageBuffer|null} */
-    _sortedIndices = null;
 
     /**
      * Per-pass 256-entry digit histograms, concatenated across MAX_PASSES
@@ -195,24 +151,132 @@ class ComputeOneSweepRadixSort {
     /** @type {Compute[]} */
     _binningComputes = [];
 
+
     /**
      * @param {GraphicsDevice} device - The graphics device (must support
      * compute and subgroups).
+     * @param {boolean} [indirect] - Whether this instance is for indirect dispatch only.
      */
-    constructor(device) {
-        Debug.assert(device.supportsCompute, 'ComputeOneSweepRadixSort requires compute shader support (WebGPU)');
-        Debug.assert(device.supportsSubgroups, 'ComputeOneSweepRadixSort requires subgroup support');
+    constructor(device, indirect = false) {
+        super(device, indirect);
+        // prepareIndirect: slot 0 = DigitBinningPass (PART_SIZE), slot 1 = GlobalHistogram.
+        const info = this._indirectInfo;
+        info[0] = 2;
+        info[1] = PART_SIZE;
+        info[2] = G_HIST_PART_SIZE;
+
+        Debug.assert(device.supportsCompute, 'ComputeRadixSortOneSweep requires compute shader support (WebGPU)');
+        Debug.assert(device.supportsSubgroups, 'ComputeRadixSortOneSweep requires subgroup support');
         // The OneSweep binning shader uses 32-bit subgroup ballot masks
         // (`subgroupBallot(...).x` and `1u << sgInvId`), which are only
         // valid when the runtime subgroup size is <= 32. On hardware with
         // 64 / 128 lane subgroups (AMD Wave64, future wider architectures)
         // those expressions silently truncate / UB and will corrupt the
         // sort output. Refuse to run rather than producing garbage.
-        Debug.assert(device.minSubgroupSize > 0, 'ComputeOneSweepRadixSort requires a valid minimum subgroup size');
-        Debug.assert(device.maxSubgroupSize <= 32, 'ComputeOneSweepRadixSort currently requires subgroup sizes <= 32 (binning shader uses 32-bit subgroup masks)');
-        this.device = device;
+        Debug.assert(device.minSubgroupSize > 0, 'ComputeRadixSortOneSweep requires a valid minimum subgroup size');
+        Debug.assert(device.maxSubgroupSize <= 32, 'ComputeRadixSortOneSweep currently requires subgroup sizes <= 32 (binning shader uses 32-bit subgroup masks)');
 
-        this._createFormatsAndShaders();
+        // Create uniform formats (shared between direct and indirect modes), then
+        // create bind group formats and shaders for the chosen mode only.
+        this._globalHistUniformFormat = new UniformBufferFormat(device, [
+            new UniformFormat('numKeys', UNIFORMTYPE_UINT),
+            new UniformFormat('threadBlocks', UNIFORMTYPE_UINT),
+            new UniformFormat('numPasses', UNIFORMTYPE_UINT),
+            new UniformFormat('_pad', UNIFORMTYPE_UINT)
+        ]);
+
+        this._scanUniformFormat = new UniformBufferFormat(device, [
+            new UniformFormat('threadBlocks', UNIFORMTYPE_UINT),
+            new UniformFormat('_pad0', UNIFORMTYPE_UINT),
+            new UniformFormat('_pad1', UNIFORMTYPE_UINT),
+            new UniformFormat('_pad2', UNIFORMTYPE_UINT)
+        ]);
+
+        this._binningUniformFormat = new UniformBufferFormat(device, [
+            new UniformFormat('numKeys', UNIFORMTYPE_UINT),
+            new UniformFormat('threadBlocks', UNIFORMTYPE_UINT),
+            new UniformFormat('pass_', UNIFORMTYPE_UINT),
+            new UniformFormat('flags', UNIFORMTYPE_UINT)
+        ]);
+
+        const minSubgroupSize = device.minSubgroupSize || device.maxSubgroupSize || 32;
+        const maxSubgroups = Math.max(1, Math.ceil(256 / minSubgroupSize));
+
+        const suffix = indirect ? 'Indirect' : '';
+        const elementCountBinding = new BindStorageBufferFormat('b_sortElementCount', SHADERSTAGE_COMPUTE, true);
+
+        const histGroupEntries = [
+            new BindStorageBufferFormat('b_sort', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('b_globalHist', SHADERSTAGE_COMPUTE, false),
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+        ];
+        const scanGroupEntries = [
+            new BindStorageBufferFormat('b_globalHist', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('b_passHist', SHADERSTAGE_COMPUTE, false),
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+        ];
+        const binGroupEntries = [
+            new BindStorageBufferFormat('inputKeys', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('outputKeys', SHADERSTAGE_COMPUTE, false),
+            new BindStorageBufferFormat('inputValues', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('outputValues', SHADERSTAGE_COMPUTE, false),
+            new BindStorageBufferFormat('b_passHist', SHADERSTAGE_COMPUTE, false),
+            new BindStorageBufferFormat('b_index', SHADERSTAGE_COMPUTE, false),
+            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
+        ];
+        if (indirect) {
+            histGroupEntries.push(elementCountBinding);
+            scanGroupEntries.push(elementCountBinding);
+            binGroupEntries.push(elementCountBinding);
+        }
+
+        this._globalHistBindGroupFormat = new BindGroupFormat(device, histGroupEntries);
+        this._scanBindGroupFormat = new BindGroupFormat(device, scanGroupEntries);
+        this._binningBindGroupFormat = new BindGroupFormat(device, binGroupEntries);
+
+        const histDefines = new Map();
+        histDefines.set('{G_HIST_DIM}', G_HIST_DIM);
+        histDefines.set('{G_HIST_PART_SIZE}', G_HIST_PART_SIZE);
+        if (indirect) histDefines.set('USE_INDIRECT_SORT', '');
+        this._globalHistShader = new Shader(device, {
+            name: `OneSweepGlobalHist${suffix}`,
+            shaderLanguage: SHADERLANGUAGE_WGSL,
+            cshader: onesweepGlobalHistSource,
+            cdefines: histDefines,
+            computeBindGroupFormat: this._globalHistBindGroupFormat,
+            computeUniformBufferFormats: { uniforms: this._globalHistUniformFormat }
+        });
+
+        const scanDefines = new Map();
+        scanDefines.set('{MAX_SUBGROUPS}', maxSubgroups);
+        scanDefines.set('{PART_SIZE}', PART_SIZE);
+        if (indirect) scanDefines.set('USE_INDIRECT_SORT', '');
+        this._scanShader = new Shader(device, {
+            name: `OneSweepScan${suffix}`,
+            shaderLanguage: SHADERLANGUAGE_WGSL,
+            cshader: onesweepScanSource,
+            cdefines: scanDefines,
+            computeBindGroupFormat: this._scanBindGroupFormat,
+            computeUniformBufferFormats: { uniforms: this._scanUniformFormat }
+        });
+
+        const binDefines = new Map();
+        binDefines.set('{D_DIM}', D_DIM);
+        binDefines.set('{KEYS_PER_THREAD}', KEYS_PER_THREAD);
+        binDefines.set('{MAX_SUBGROUPS}', maxSubgroups);
+        if (indirect) binDefines.set('USE_INDIRECT_SORT', '');
+        this._binningShader = new Shader(device, {
+            name: `OneSweepBinning${suffix}`,
+            shaderLanguage: SHADERLANGUAGE_WGSL,
+            cshader: onesweepBinningSource,
+            cdefines: binDefines,
+            computeBindGroupFormat: this._binningBindGroupFormat,
+            computeUniformBufferFormats: { uniforms: this._binningUniformFormat }
+        });
+
+        this._globalHistCompute = new Compute(device, this._globalHistShader, this._globalHistShader.name);
+        this._scanCompute = new Compute(device, this._scanShader, this._scanShader.name);
+        // Binning Computes are allocated per-pass in _ensureBinningComputes.
     }
 
     /**
@@ -240,53 +304,22 @@ class ComputeOneSweepRadixSort {
         this._globalHistUniformFormat = null;
         this._scanUniformFormat = null;
         this._binningUniformFormat = null;
+
+        super.destroy();
     }
 
     /** @private */
     _destroyBuffers() {
-        this._keys0?.destroy();
-        this._keys1?.destroy();
-        this._values0?.destroy();
-        this._values1?.destroy();
-        this._sortedIndices?.destroy();
+        this._destroyPingPongBuffers();
         this._globalHist?.destroy();
         this._passHist?.destroy();
         this._index?.destroy();
 
-        this._keys0 = null;
-        this._keys1 = null;
-        this._values0 = null;
-        this._values1 = null;
-        this._sortedIndices = null;
         this._globalHist = null;
         this._passHist = null;
         this._index = null;
         this._allocatedThreadBlocks = 0;
         this._threadBlocks = 0;
-    }
-
-    /**
-     * Gets the sorted values buffer (indices, or user-supplied initial
-     * values after sorting).
-     *
-     * @type {StorageBuffer|null}
-     */
-    get sortedIndices() {
-        return this._sortedIndices;
-    }
-
-    /**
-     * Gets the sorted keys buffer after the last sort. One of the ping-pong
-     * key buffers depending on pass parity.
-     *
-     * @type {StorageBuffer|null}
-     */
-    get sortedKeys() {
-        if (!this._keys0) return null;
-        const numPasses = this._numBits / 8;
-        // Pass 0 writes _keys0, pass 1 writes _keys1, ... last-pass parity
-        // determines final.
-        return (numPasses % 2 === 0) ? this._keys1 : this._keys0;
     }
 
     /**
@@ -298,111 +331,6 @@ class ComputeOneSweepRadixSort {
      */
     get radixBits() {
         return 8;
-    }
-
-    /** @private */
-    _createFormatsAndShaders() {
-        const device = this.device;
-
-        // ----- uniform formats -----
-        this._globalHistUniformFormat = new UniformBufferFormat(device, [
-            new UniformFormat('numKeys', UNIFORMTYPE_UINT),
-            new UniformFormat('threadBlocks', UNIFORMTYPE_UINT),
-            new UniformFormat('numPasses', UNIFORMTYPE_UINT),
-            new UniformFormat('_pad', UNIFORMTYPE_UINT)
-        ]);
-
-        this._scanUniformFormat = new UniformBufferFormat(device, [
-            new UniformFormat('threadBlocks', UNIFORMTYPE_UINT),
-            new UniformFormat('_pad0', UNIFORMTYPE_UINT),
-            new UniformFormat('_pad1', UNIFORMTYPE_UINT),
-            new UniformFormat('_pad2', UNIFORMTYPE_UINT)
-        ]);
-
-        this._binningUniformFormat = new UniformBufferFormat(device, [
-            new UniformFormat('numKeys', UNIFORMTYPE_UINT),
-            new UniformFormat('threadBlocks', UNIFORMTYPE_UINT),
-            new UniformFormat('pass_', UNIFORMTYPE_UINT),
-            new UniformFormat('flags', UNIFORMTYPE_UINT)
-        ]);
-
-        // ----- bind group formats -----
-        this._globalHistBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('b_sort', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('b_globalHist', SHADERSTAGE_COMPUTE, false),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
-
-        this._scanBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('b_globalHist', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('b_passHist', SHADERSTAGE_COMPUTE, false),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
-
-        this._binningBindGroupFormat = new BindGroupFormat(device, [
-            new BindStorageBufferFormat('inputKeys', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('outputKeys', SHADERSTAGE_COMPUTE, false),
-            new BindStorageBufferFormat('inputValues', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('outputValues', SHADERSTAGE_COMPUTE, false),
-            new BindStorageBufferFormat('b_passHist', SHADERSTAGE_COMPUTE, false),
-            new BindStorageBufferFormat('b_index', SHADERSTAGE_COMPUTE, false),
-            new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
-        ]);
-
-        // ----- shaders -----
-        const histDefines = new Map();
-        histDefines.set('{G_HIST_DIM}', G_HIST_DIM);
-        histDefines.set('{G_HIST_PART_SIZE}', G_HIST_PART_SIZE);
-        this._globalHistShader = new Shader(device, {
-            name: 'OneSweepGlobalHist',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: onesweepGlobalHistSource,
-            cdefines: histDefines,
-            computeBindGroupFormat: this._globalHistBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: this._globalHistUniformFormat }
-        });
-
-        // `MAX_SUBGROUPS` is the worst-case number of subgroups in a
-        // 256-thread workgroup. The runtime `subgroup_size` WGSL builtin
-        // may be any value in [minSubgroupSize, maxSubgroupSize], and the
-        // scan and binning kernels size their per-subgroup reduction slots
-        // indexed by `waveIndex = gtid / sgSize`. To avoid under-allocating
-        // those arrays when the runtime subgroup size is smaller than the
-        // max (producing more subgroups than expected), we size from the
-        // minimum subgroup size. Falls back to maxSubgroupSize / 32 when
-        // the device doesn't report a minimum.
-        const minSubgroupSize = device.minSubgroupSize || device.maxSubgroupSize || 32;
-        const maxSubgroups = Math.max(1, Math.ceil(256 / minSubgroupSize));
-
-        const scanDefines = new Map();
-        scanDefines.set('{MAX_SUBGROUPS}', maxSubgroups);
-        this._scanShader = new Shader(device, {
-            name: 'OneSweepScan',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: onesweepScanSource,
-            cdefines: scanDefines,
-            computeBindGroupFormat: this._scanBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: this._scanUniformFormat }
-        });
-
-        const binDefines = new Map();
-        binDefines.set('{D_DIM}', D_DIM);
-        binDefines.set('{KEYS_PER_THREAD}', KEYS_PER_THREAD);
-        binDefines.set('{MAX_SUBGROUPS}', maxSubgroups);
-        this._binningShader = new Shader(device, {
-            name: 'OneSweepBinning',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            cshader: onesweepBinningSource,
-            cdefines: binDefines,
-            computeBindGroupFormat: this._binningBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: this._binningUniformFormat }
-        });
-
-        // ----- Compute objects -----
-        this._globalHistCompute = new Compute(device, this._globalHistShader, 'OneSweepGlobalHist');
-        this._scanCompute = new Compute(device, this._scanShader, 'OneSweepScan');
-
-        // Binning Computes are allocated per-pass in _ensureBinningComputes.
     }
 
     /**
@@ -443,14 +371,9 @@ class ComputeOneSweepRadixSort {
             this._allocatedThreadBlocks = allocThreadBlocks;
             this.capacity = effectiveCount;
 
-            const elementSize = effectiveCount * 4;
             const device = this.device;
 
-            this._keys0 = new StorageBuffer(device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
-            this._keys1 = new StorageBuffer(device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
-            this._values0 = new StorageBuffer(device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
-            this._values1 = new StorageBuffer(device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
-            this._sortedIndices = new StorageBuffer(device, elementSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
+            this._allocatePingPongElementBuffers(effectiveCount);
 
             this._globalHist = new StorageBuffer(device, MAX_PASSES * RADIX * 4, BUFFERUSAGE_COPY_DST);
             this._passHist = new StorageBuffer(device, MAX_PASSES * allocThreadBlocks * RADIX * 4, BUFFERUSAGE_COPY_DST);
@@ -472,11 +395,11 @@ class ComputeOneSweepRadixSort {
         // padding workgroups (as produced by calcDispatchSize when count
         // exceeds maxPerDim and it falls back to 2D) would OOB-read
         // b_passHist in the lookback loop and spin on FLAG_NOT_READY.
-        // In practice maxPerDim is 65535 and PART_SIZE ~= 7680, so this
-        // only triggers past ~500M elements.
+        // In practice maxPerDim is 65535 and PART_SIZE = 3840, so this
+        // only triggers past ~250M elements.
         Debug.assert(
             currentThreadBlocks <= maxPerDim,
-            `ComputeOneSweepRadixSort: threadBlocks (${currentThreadBlocks}) exceeds maxComputeWorkgroupsPerDimension (${maxPerDim}). Binning requires an exact 1D dispatch.`
+            `ComputeRadixSortOneSweep: threadBlocks (${currentThreadBlocks}) exceeds maxComputeWorkgroupsPerDimension (${maxPerDim}). Binning requires an exact 1D dispatch.`
         );
         Compute.calcDispatchSize(currentThreadBlocks, this._binningDispatchSize, maxPerDim);
 
@@ -502,11 +425,7 @@ class ComputeOneSweepRadixSort {
      * @returns {StorageBuffer} Sorted values buffer.
      */
     sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite = false) {
-        Debug.assert(keysBuffer, 'ComputeOneSweepRadixSort.sort: keysBuffer is required');
-        Debug.assert(elementCount > 0, 'ComputeOneSweepRadixSort.sort: elementCount must be > 0');
-        Debug.assert(elementCount % 4 === 0, `ComputeOneSweepRadixSort.sort: elementCount must be a multiple of 4 (vec4 GlobalHistogram), got ${elementCount}`);
-        Debug.assert(numBits % 8 === 0, `ComputeOneSweepRadixSort.sort: numBits must be a multiple of 8, got ${numBits}`);
-        Debug.assert(numBits > 0 && numBits <= 32, `ComputeOneSweepRadixSort.sort: numBits must be in (0, 32], got ${numBits}`);
+        Debug.assert(numBits <= 32, `ComputeRadixSortOneSweep.sort: numBits must be <= 32, got ${numBits}`);
 
         const numPasses = numBits / 8;
         const hasInitialValues = !!initialValues;
@@ -523,8 +442,7 @@ class ComputeOneSweepRadixSort {
 
         // Clear the chained-scan state. All three buffers must be zeroed BEFORE
         // any dispatch for this sort. `clear()` encodes clearBuffer into the
-        // command encoder so it is serialized ahead of the dispatches (unlike
-        // queue.writeBuffer which would race against a prior frame's sort).
+        // command encoder so it is serialized ahead of the dispatches.
         this._globalHist.clear();
         this._passHist.clear(0, MAX_PASSES * this._threadBlocks * RADIX * 4);
         this._index.clear();
@@ -588,6 +506,119 @@ class ComputeOneSweepRadixSort {
 
         return this._sortedIndices;
     }
+
+    /**
+     * Indirect-dispatch variant of {@link sort}. Workgroup counts for the
+     * GlobalHistogram and DigitBinningPass kernels are read from the device's
+     * built-in indirect dispatch buffer at consecutive slots starting at
+     * `sortSlotBase`, written beforehand by the caller using the
+     * `writeSortIndirectArgs` WGSL helper (chunk `sortIndirectArgsCS`) with
+     * metadata from {@link prepareIndirect}. `numKeys` and `threadBlocks`
+     * inside the shaders are computed from `sortElementCountBuffer[0]`; the
+     * uniform values of those fields are ignored in indirect mode.
+     *
+     * Buffers are sized for `maxElementCount` (the allocation high-water
+     * mark); the actual sort size may be any value in `[0, maxElementCount]`.
+     *
+     * @param {StorageBuffer} keysBuffer - Input u32 keys buffer (read-only).
+     * @param {number} maxElementCount - Maximum element count; sizes internal
+     * buffers. Must be >= the GPU-written element count.
+     * @param {number} numBits - Number of bits to sort. Must be a multiple of 8.
+     * @param {number} sortSlotBase - Base indirect dispatch slot index. The
+     * backend uses 2 consecutive slots starting here (see {@link prepareIndirect}).
+     * @param {StorageBuffer} sortElementCountBuffer - GPU-written storage
+     * buffer; element `[0]` holds the actual number of keys to sort.
+     * @param {StorageBuffer} [initialValues] - Optional initial values for pass 0.
+     * @param {boolean} [skipLastPassKeyWrite] - Skip writing keys on the last pass.
+     * @returns {StorageBuffer} Sorted values buffer.
+     */
+    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false) {
+        Debug.assert(numBits <= 32, `ComputeRadixSortOneSweep.sortIndirect: numBits must be <= 32, got ${numBits}`);
+
+        const numPasses = numBits / 8;
+        const hasInitialValues = !!initialValues;
+
+        this._elementCount = maxElementCount;
+        this._numBits = numBits;
+        this._hasInitialValues = hasInitialValues;
+        this._skipLastPassKeyWrite = skipLastPassKeyWrite;
+
+        this._allocateBuffers(maxElementCount);
+        this._ensureBinningComputes(numPasses);
+
+        const device = this.device;
+
+        // Clear chained-scan state based on the ALLOCATED thread-block count
+        // (runtime threadBlocks derived from the GPU element count is never
+        // larger, since maxElementCount is the upper bound).
+        this._globalHist.clear();
+        this._passHist.clear(0, MAX_PASSES * this._allocatedThreadBlocks * RADIX * 4);
+        this._index.clear();
+
+        // ---- Dispatch 1: GlobalHistogram (indirect) ----
+        const histCompute = this._globalHistCompute;
+        histCompute.setParameter('b_sort', keysBuffer);
+        histCompute.setParameter('b_globalHist', this._globalHist);
+        histCompute.setParameter('b_sortElementCount', sortElementCountBuffer);
+        // Uniform values are ignored in indirect mode but still written so
+        // the uniform buffer is populated.
+        histCompute.setParameter('numKeys', 0);
+        histCompute.setParameter('threadBlocks', 0);
+        histCompute.setParameter('numPasses', numPasses);
+        histCompute.setParameter('_pad', 0);
+        histCompute.setupIndirectDispatch(sortSlotBase + 1);
+        device.computeDispatch([histCompute], 'OneSweep-GlobalHistIndirect');
+
+        // ---- Dispatch 2: Scan (direct; numPasses workgroups is always small) ----
+        const scanCompute = this._scanCompute;
+        scanCompute.setParameter('b_globalHist', this._globalHist);
+        scanCompute.setParameter('b_passHist', this._passHist);
+        scanCompute.setParameter('b_sortElementCount', sortElementCountBuffer);
+        scanCompute.setParameter('threadBlocks', 0);
+        scanCompute.setParameter('_pad0', 0);
+        scanCompute.setParameter('_pad1', 0);
+        scanCompute.setParameter('_pad2', 0);
+        scanCompute.setupDispatch(numPasses, 1, 1);
+        device.computeDispatch([scanCompute], 'OneSweep-ScanIndirect');
+
+        // ---- Dispatch 3..N+2: DigitBinningPass per radix pass (indirect) ----
+        let currentKeys = keysBuffer;
+        let currentValues = initialValues ?? this._values0;
+        let nextKeys = this._keys0;
+        let nextValues = this._values1;
+
+        for (let pass = 0; pass < numPasses; pass++) {
+            const isFirstPass = pass === 0 && !hasInitialValues;
+            const isLastPass = pass === numPasses - 1;
+            const outputValues = isLastPass ? this._sortedIndices : nextValues;
+            const flags = (isFirstPass ? 1 : 0) | (isLastPass && skipLastPassKeyWrite ? 2 : 0);
+
+            const binCompute = this._binningComputes[pass];
+            binCompute.setParameter('inputKeys', currentKeys);
+            binCompute.setParameter('outputKeys', nextKeys);
+            binCompute.setParameter('inputValues', currentValues);
+            binCompute.setParameter('outputValues', outputValues);
+            binCompute.setParameter('b_passHist', this._passHist);
+            binCompute.setParameter('b_index', this._index);
+            binCompute.setParameter('b_sortElementCount', sortElementCountBuffer);
+            binCompute.setParameter('numKeys', 0);
+            binCompute.setParameter('threadBlocks', 0);
+            binCompute.setParameter('pass_', pass);
+            binCompute.setParameter('flags', flags);
+            binCompute.setupIndirectDispatch(sortSlotBase);
+            device.computeDispatch([binCompute], `OneSweep-BinningIndirect-${pass}`);
+
+            if (!isLastPass) {
+                currentKeys = nextKeys;
+                nextKeys = (currentKeys === this._keys0) ? this._keys1 : this._keys0;
+                const t = currentValues;
+                currentValues = nextValues;
+                nextValues = t;
+            }
+        }
+
+        return this._sortedIndices;
+    }
 }
 
-export { ComputeOneSweepRadixSort };
+export { ComputeRadixSortOneSweep };

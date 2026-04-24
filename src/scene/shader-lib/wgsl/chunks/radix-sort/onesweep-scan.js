@@ -18,15 +18,21 @@ export const onesweepScanSource = /* wgsl */`
 @group(0) @binding(1) var<storage, read_write> b_passHist: array<atomic<u32>>;
 
 struct OneSweepScanUniforms {
-    threadBlocks: u32,   // number of DigitBinningPass workgroups per pass
+    threadBlocks: u32,   // number of DigitBinningPass workgroups per pass (ignored in indirect mode)
     _pad0: u32,
     _pad1: u32,
     _pad2: u32
 };
 @group(0) @binding(2) var<uniform> uniforms: OneSweepScanUniforms;
 
+#ifdef USE_INDIRECT_SORT
+// Indirect dispatch: threadBlocks is derived from a GPU-written element count.
+@group(0) @binding(3) var<storage, read> b_sortElementCount: array<u32>;
+#endif
+
 const RADIX: u32 = 256u;
 const FLAG_INCLUSIVE: u32 = 2u;
+const PART_SIZE: u32 = {PART_SIZE}u;
 
 // Parametrized by the host from device.maxSubgroupSize (256 / sgSize).
 const MAX_SUBGROUPS: u32 = {MAX_SUBGROUPS}u;
@@ -44,7 +50,12 @@ fn main(
     @builtin(subgroup_size) sgSize: u32,
 ) {
     let pass_ = gid.x;
+    #ifdef USE_INDIRECT_SORT
+    let numKeys = b_sortElementCount[0];
+    let threadBlocks = (numKeys + PART_SIZE - 1u) / PART_SIZE;
+    #else
     let threadBlocks = uniforms.threadBlocks;
+    #endif
     let waveIndex = gtid / sgSize;
 
     // Load this pass's digit counts.

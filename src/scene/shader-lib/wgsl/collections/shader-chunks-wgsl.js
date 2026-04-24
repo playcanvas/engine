@@ -120,6 +120,7 @@ import skinBatchVS from '../chunks/common/vert/skinBatch.js';
 import skinVS from '../chunks/common/vert/skin.js';
 import skyboxPS from '../chunks/skybox/frag/skybox.js';
 import skyboxVS from '../chunks/skybox/vert/skybox.js';
+import sortIndirectArgsCS from '../chunks/common/comp/sort-indirect-args.js';
 import specularPS from '../chunks/standard/frag/specular.js';
 import sphericalPS from '../chunks/common/frag/spherical.js';
 import specularityFactorPS from '../chunks/standard/frag/specularityFactor.js';
@@ -291,6 +292,7 @@ const shaderChunksWGSL = {
     skinVS,
     skyboxPS,
     skyboxVS,
+    sortIndirectArgsCS,
     specularPS,
     sphericalPS,
     specularityFactorPS,

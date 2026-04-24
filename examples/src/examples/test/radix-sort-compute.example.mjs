@@ -137,25 +137,25 @@ let needsRegen = true;
 
 // Valid radix modes. After benchmarking across NVIDIA / Apple / Mali / IMG
 // the surviving variants are:
-//   - '4-shared-mem': the universal portable multi-pass fallback
-//     (ComputeRadixSort), subgroup-free, shipped as the production
-//     default on every non-NVIDIA device.
+//   - '4-shared-mem': the universal portable fallback
+//     (ComputeRadixSort with kind=RADIX_SORT_PORTABLE), subgroup-free,
+//     shipped as the production default on every non-NVIDIA device.
 //   - 'onesweep': the fused single-sweep implementation
-//     (ComputeOneSweepRadixSort). Fastest on NVIDIA; unstable on Mali
-//     (validates incorrectly) and Apple (GPU hangs under heavy validation
-//     load), so it is selectable manually but restricted to NVIDIA in the
-//     benchmark / validation sweeps.
+//     (ComputeRadixSort with kind=RADIX_SORT_ONESWEEP). Fastest on NVIDIA;
+//     unstable on Mali (validates incorrectly) and Apple (GPU hangs under
+//     heavy validation load), so it is selectable manually but restricted
+//     to NVIDIA in the benchmark / validation sweeps.
 const RADIX_MODES = {
-    '4-shared-mem': { },
-    'onesweep': { onesweep: true }
+    '4-shared-mem': { kind: pc.RADIX_SORT_PORTABLE },
+    'onesweep': { kind: pc.RADIX_SORT_ONESWEEP }
 };
 const DEFAULT_MODE = '4-shared-mem';
 
-// Lazy cache of ComputeRadixSort / ComputeOneSweepRadixSort instances, keyed
-// by the mode dropdown. Instances are created on first use and retained, so
-// subsequent toggles between configurations are free (no shader rebuild).
-// Each instance grows its internal buffers on demand.
-/** @type {Map<string, pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort>} */
+// Lazy cache of ComputeRadixSort instances, keyed by the mode dropdown.
+// Instances are created on first use and retained, so subsequent toggles
+// between configurations are free (no shader rebuild). Each instance grows
+// its internal buffers on demand.
+/** @type {Map<string, pc.ComputeRadixSort>} */
 const radixSortCache = new Map();
 
 /**
@@ -163,17 +163,14 @@ const radixSortCache = new Map();
  * selection. Falls back to safe defaults if the observer value is not yet
  * populated.
  *
- * @returns {pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort} The active
- * radix sort instance.
+ * @returns {pc.ComputeRadixSort} The active radix sort instance.
  */
 function getActiveRadixSort() {
     const mode = data.get('options.mode') ?? DEFAULT_MODE;
     const modeCfg = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
     let inst = radixSortCache.get(mode);
     if (!inst) {
-        inst = modeCfg.onesweep ?
-            new pc.ComputeOneSweepRadixSort(device) :
-            new pc.ComputeRadixSort(device);
+        inst = new pc.ComputeRadixSort(device, { kind: modeCfg.kind });
         radixSortCache.set(mode, inst);
     }
     return inst;
@@ -607,7 +604,7 @@ const BENCH_EXCLUDED_PASSES = new Set(['Forward']);
  *     frame: number,
  *     frameTimes: number[],
  *     passAccum: Map<string, number[]>,
- *     sortInst: pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort | null,
+ *     sortInst: pc.ComputeRadixSort | null,
  *     keysBuf: pc.StorageBuffer | null,
  *     results: {size: number, configLabel: string, frameMs: number, passMs: Map<string, number>}[],
  *     saved: {elementsK: any, bits: any, mode: any, render: any, validation: any, profilerEnabled: boolean}
@@ -633,13 +630,11 @@ function fmtN(n) {
  * interactive UI state.
  *
  * @param {string} modeKey - Entry key into RADIX_MODES.
- * @returns {pc.ComputeRadixSort | pc.ComputeOneSweepRadixSort} Sort instance.
+ * @returns {pc.ComputeRadixSort} Sort instance.
  */
 function createBenchSort(modeKey) {
     const modeCfg = RADIX_MODES[modeKey];
-    return modeCfg.onesweep ?
-        new pc.ComputeOneSweepRadixSort(device) :
-        new pc.ComputeRadixSort(device);
+    return new pc.ComputeRadixSort(device, { kind: modeCfg.kind });
 }
 
 /**
