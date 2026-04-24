@@ -1582,21 +1582,21 @@ function renderValidateResults(results, sizes, onClose) {
         html += '</tr>';
 
         // Insert hidden detail row immediately under each failing size.
+        // The hidden row's id must match the toggle button's
+        // `data-toggle` set earlier (which captured `detailRows.length`
+        // BEFORE pushing this size's failures, i.e. the start index).
         if (rowHasDetails) {
-            const detailIdx = detailRows.length - 1;
-            // Use a range marker: the toggle button covers all failures
-            // from this size. Build the detail HTML below by walking
-            // detailRows backwards until we cross a size boundary.
             const startIdx = detailRows.findIndex(r => r.size === size);
+            const lastIdx = detailRows.length - 1;
             let detailHtml = '';
-            for (let d = startIdx; d <= detailIdx; d++) {
+            for (let d = startIdx; d <= lastIdx; d++) {
                 const r = detailRows[d];
                 const f = /** @type {NonNullable<ValidateCell['firstFailure']>} */ (r.entry.firstFailure);
                 detailHtml += `<div style="margin:3px 0;"><span style="color:#f66;">${r.label}</span>: `;
                 detailHtml += `${r.entry.failed}/${VALIDATE_RUNS} runs failed. First mismatch @ run ${f.run + 1}, `;
                 detailHtml += `index ${f.i}: GPU=${f.gpu}, expected=${f.expected}</div>`;
             }
-            html += `<tr data-detail-content="${detailIdx}" style="display:none;"><td colspan="${BENCH_CONFIGS.length + 2}" style="padding:8px 10px 10px 20px;background:rgba(255,255,255,0.04);font-size:12px;">${detailHtml}</td></tr>`;
+            html += `<tr data-detail-content="${startIdx}" style="display:none;"><td colspan="${BENCH_CONFIGS.length + 2}" style="padding:8px 10px 10px 20px;background:rgba(255,255,255,0.04);font-size:12px;">${detailHtml}</td></tr>`;
         }
     }
 

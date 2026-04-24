@@ -202,6 +202,14 @@ class ComputeOneSweepRadixSort {
     constructor(device) {
         Debug.assert(device.supportsCompute, 'ComputeOneSweepRadixSort requires compute shader support (WebGPU)');
         Debug.assert(device.supportsSubgroups, 'ComputeOneSweepRadixSort requires subgroup support');
+        // The OneSweep binning shader uses 32-bit subgroup ballot masks
+        // (`subgroupBallot(...).x` and `1u << sgInvId`), which are only
+        // valid when the runtime subgroup size is <= 32. On hardware with
+        // 64 / 128 lane subgroups (AMD Wave64, future wider architectures)
+        // those expressions silently truncate / UB and will corrupt the
+        // sort output. Refuse to run rather than producing garbage.
+        Debug.assert(device.minSubgroupSize > 0, 'ComputeOneSweepRadixSort requires a valid minimum subgroup size');
+        Debug.assert(device.maxSubgroupSize <= 32, 'ComputeOneSweepRadixSort currently requires subgroup sizes <= 32 (binning shader uses 32-bit subgroup masks)');
         this.device = device;
 
         this._createFormatsAndShaders();
@@ -354,13 +362,17 @@ class ComputeOneSweepRadixSort {
             computeUniformBufferFormats: { uniforms: this._globalHistUniformFormat }
         });
 
-        // `MAX_SUBGROUPS` is the number of subgroups in a 256-thread
-        // workgroup at this device's subgroup size. Both the scan and
-        // binning kernels size their per-subgroup reduction slots by this
-        // value; hardcoding it to 8 (the sgSize=32 case) is incorrect on
-        // hardware with smaller subgroups (e.g. Pixel / Mali at sgSize=16
-        // → 16 subgroups), so we specialize the shader per device here.
-        const maxSubgroups = Math.max(1, Math.ceil(256 / (device.maxSubgroupSize || 32)));
+        // `MAX_SUBGROUPS` is the worst-case number of subgroups in a
+        // 256-thread workgroup. The runtime `subgroup_size` WGSL builtin
+        // may be any value in [minSubgroupSize, maxSubgroupSize], and the
+        // scan and binning kernels size their per-subgroup reduction slots
+        // indexed by `waveIndex = gtid / sgSize`. To avoid under-allocating
+        // those arrays when the runtime subgroup size is smaller than the
+        // max (producing more subgroups than expected), we size from the
+        // minimum subgroup size. Falls back to maxSubgroupSize / 32 when
+        // the device doesn't report a minimum.
+        const minSubgroupSize = device.minSubgroupSize || device.maxSubgroupSize || 32;
+        const maxSubgroups = Math.max(1, Math.ceil(256 / minSubgroupSize));
 
         const scanDefines = new Map();
         scanDefines.set('{MAX_SUBGROUPS}', maxSubgroups);
@@ -454,6 +466,18 @@ class ComputeOneSweepRadixSort {
         this._threadBlocks = currentThreadBlocks;
 
         const maxPerDim = this.device.limits.maxComputeWorkgroupsPerDimension || 65535;
+        // Binning requires an EXACT dispatch of `currentThreadBlocks`
+        // workgroups. Each block claims a tile via atomic increment of
+        // `b_index[pass]` and indexes `b_passHist` by that id; any extra
+        // padding workgroups (as produced by calcDispatchSize when count
+        // exceeds maxPerDim and it falls back to 2D) would OOB-read
+        // b_passHist in the lookback loop and spin on FLAG_NOT_READY.
+        // In practice maxPerDim is 65535 and PART_SIZE ~= 7680, so this
+        // only triggers past ~500M elements.
+        Debug.assert(
+            currentThreadBlocks <= maxPerDim,
+            `ComputeOneSweepRadixSort: threadBlocks (${currentThreadBlocks}) exceeds maxComputeWorkgroupsPerDimension (${maxPerDim}). Binning requires an exact 1D dispatch.`
+        );
         Compute.calcDispatchSize(currentThreadBlocks, this._binningDispatchSize, maxPerDim);
 
         const histBlocks = Math.max(1, Math.ceil(elementCount / G_HIST_PART_SIZE));
