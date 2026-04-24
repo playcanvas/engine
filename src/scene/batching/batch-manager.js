@@ -467,6 +467,8 @@ class BatchManager {
      * - Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024
      * on high-end).
      * - Bounding box of a batch is larger than maxAabbSize in any dimension.
+     * - Mesh instances differ in shadow casting ({@link MeshInstance#castShadow}) or directional
+     * shadow cascade mask ({@link MeshInstance#shadowCascadeMask}).
      *
      * @param {MeshInstance[]} meshInstances - Input list of mesh instances
      * @param {boolean} dynamic - Are we preparing for a dynamic batch? Instance count will matter
@@ -528,6 +530,8 @@ class BatchManager {
             const scaleSign = getScaleSign(meshInstancesLeftA[0]);
             const vertexFormatBatchingHash = meshInstancesLeftA[0].mesh.vertexBuffer.format.batchingHash;
             const indexed = meshInstancesLeftA[0].mesh.primitive[0].indexed;
+            const castShadow = meshInstancesLeftA[0].castShadow;
+            const shadowCascadeMask = meshInstancesLeftA[0].shadowCascadeMask;
             skipTranslucentAabb = null;
 
             for (let i = 1; i < meshInstancesLeftA.length; i++) {
@@ -567,6 +571,12 @@ class BatchManager {
                 }
                 // Split by negative scale
                 if (scaleSign !== getScaleSign(mi)) {
+                    skipMesh(mi);
+                    continue;
+                }
+
+                // Split by shadow casting — the batched MeshInstance exposes a single castShadow flag
+                if (castShadow !== mi.castShadow || shadowCascadeMask !== mi.shadowCascadeMask) {
                     skipMesh(mi);
                     continue;
                 }
