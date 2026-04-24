@@ -13,7 +13,7 @@ import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatSortKeyCompute } from './gsplat-sort-key-compute.js';
 import { GSplatIntervalCompaction } from './gsplat-interval-compaction.js';
-import { ComputeRadixSort } from '../graphics/compute-radix-sort.js';
+import { ComputeRadixSort } from '../graphics/radix-sort/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
@@ -41,6 +41,12 @@ const cameraDirection = new Vec3();
 const translation = new Vec3();
 const _tempVec3 = new Vec3();
 const invModelMat = new Mat4();
+
+// Sentinel sort-indirect metadata used when there is no active GPU sorter
+// (e.g. the compute local renderer path, which runs interval compaction but
+// no radix sort). slotCount = 0 makes the writeSortIndirectArgs WGSL helper
+// skip all sort-slot writes.
+const NO_SORT_INDIRECT_INFO = new Uint32Array([0, 0, 0, 0]);
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
 const _updatedSplats = [];
@@ -464,7 +470,7 @@ class GSplatManager {
             this.keyGenerator = new GSplatSortKeyCompute(this.device);
         }
         if (!this.gpuSorter) {
-            this.gpuSorter = new ComputeRadixSort(this.device);
+            this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
         }
     }
 
@@ -1680,10 +1686,18 @@ class GSplatManager {
      * @private
      */
     allocateAndWriteIntervalIndirectArgs(numIntervals) {
+        // The compute local renderer path runs interval compaction without a
+        // radix sort (no gpuSorter), so fall back to the sentinel metadata
+        // which tells the shader to write zero sort slots.
+        const gpuSorter = /** @type {ComputeRadixSort | null} */ (this.gpuSorter);
+        const sortInfo = gpuSorter ? gpuSorter.prepareIndirect() : NO_SORT_INDIRECT_INFO;
+        const sortSlotCount = sortInfo[0];
+
         this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);
-        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(2);
+        // Reserve contiguous dispatch slots: [keygen, sort0, sort1?, sort2?].
+        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(1 + sortSlotCount);
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-        ic.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, numIntervals);
+        ic.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, numIntervals, sortInfo);
         this.lastCompactedNumIntervals = numIntervals;
     }
 
