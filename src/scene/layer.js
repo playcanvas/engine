@@ -12,7 +12,6 @@ import { Material } from './materials/material.js';
  * @import { Light } from './light.js'
  * @import { LightComponent } from '../framework/components/light/component.js'
  * @import { MeshInstance } from './mesh-instance.js'
- * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { Vec3 } from '../core/math/vec3.js'
  * @import { GSplatPlacement } from './gsplat-unified/gsplat-placement.js'
  */
@@ -155,16 +154,14 @@ class Layer {
     customCalculateSortValues = null;
 
     // -------------------------------------------------------------------------
-    // Render target & clear flags
+    // Clear flags
     // -------------------------------------------------------------------------
 
-    /**
-     * The render target to render the layer to. If not set, the layer is rendered to the target
-     * of the camera rendering it.
-     *
-     * @type {RenderTarget|undefined}
-     */
-    renderTarget;
+    // Note: `renderTarget` is intentionally NOT declared as a class field. It is a removed public
+    // property (see `_removedClassProperty(Layer, 'renderTarget')` in deprecated.js), and the
+    // prototype accessor installed there is what surfaces the deprecation error when user code
+    // reads or writes it. Declaring a same-named class field would create an own property that
+    // shadows that accessor and silently breaks the deprecation warning.
 
     /** @private */
     _clearColorBuffer = false;
