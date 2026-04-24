@@ -205,7 +205,7 @@ class ShaderDefinitionUtils {
     }
 
     /**
-     * Generates WGSL enable directives based on device capabilities. Enable directives must come
+     * Generates WGSL `enable` / `requires` directives based on device capabilities. They must come
      * before all global declarations in WGSL shaders.
      *
      * @param {GraphicsDevice} device - The graphics device.
@@ -226,6 +226,9 @@ class ShaderDefinitionUtils {
         }
         if (device.supportsSubgroupId) {
             code += 'requires subgroup_id;\n';
+        }
+        if (shaderType === 'compute' && device.supportsLinearIndexing) {
+            code += 'requires linear_indexing;\n';
         }
         return code;
     }
