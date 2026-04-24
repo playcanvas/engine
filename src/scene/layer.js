@@ -157,12 +157,6 @@ class Layer {
     // Clear flags
     // -------------------------------------------------------------------------
 
-    // Note: `renderTarget` is intentionally NOT declared as a class field. It is a removed public
-    // property (see `_removedClassProperty(Layer, 'renderTarget')` in deprecated.js), and the
-    // prototype accessor installed there is what surfaces the deprecation error when user code
-    // reads or writes it. Declaring a same-named class field would create an own property that
-    // shadows that accessor and silently breaks the deprecation warning.
-
     /** @private */
     _clearColorBuffer = false;
 
@@ -410,6 +404,11 @@ class Layer {
         this.opaqueSortMode = options.opaqueSortMode ?? SORTMODE_MATERIALMESH;
         this.transparentSortMode = options.transparentSortMode ?? SORTMODE_BACK2FRONT;
 
+        // Note: `renderTarget` is intentionally NOT declared as a class field. It is a removed
+        // public property (see `_removedClassProperty(Layer, 'renderTarget')` in deprecated.js),
+        // and the prototype accessor installed there is what surfaces the deprecation error when
+        // user code reads or writes it. Declaring a same-named class field would create an own
+        // property that shadows that accessor and silently breaks the deprecation warning.
         if (options.renderTarget) {
             this.renderTarget = options.renderTarget;
         }
