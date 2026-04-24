@@ -103,7 +103,8 @@ class ComputeRadixSort {
      */
     _canUseOneSweep(device) {
         if (!device.supportsCompute || !device.supportsSubgroups) return false;
-        if (!device.maxSubgroupSize || device.maxSubgroupSize > 32) return false;
+        // Adapter info may omit subgroup sizes (both stay 0); do not auto-select OneSweep then.
+        if (!device.minSubgroupSize || !device.maxSubgroupSize || device.maxSubgroupSize > 32) return false;
         // Only enable on NVIDIA for now; validated on Turing+ and Ampere.
         // Other vendors either lack forward-progress guarantees (Apple) or
         // have shown correctness issues in the lookback (Mali / Imagination /

@@ -296,8 +296,9 @@ class GraphicsDevice extends EventHandler {
     supportsLinearIndexing = false;
 
     /**
-     * Maximum subgroup (warp/wavefront) size supported by the device. Zero if subgroups are
-     * not supported. Used internally to gate algorithms that assume a specific subgroup size.
+     * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either
+     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
+     * implementation did not expose the value.
      *
      * @type {number}
      * @ignore
@@ -305,11 +306,9 @@ class GraphicsDevice extends EventHandler {
     maxSubgroupSize = 0;
 
     /**
-     * Minimum subgroup (warp/wavefront) size supported by the device. Zero if subgroups are
-     * not supported. On hardware where min and max differ, the WGSL `subgroup_size` builtin
-     * may report any value in `[minSubgroupSize, maxSubgroupSize]`; shaders sizing shared
-     * memory by the number of subgroups in a workgroup should use the minimum to cover the
-     * worst-case subgroup count.
+     * Minimum subgroup (warp/wavefront) size reported for the device. Zero means either
+     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
+     * implementation did not expose the value.
      *
      * @type {number}
      * @ignore
