@@ -239,9 +239,10 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device can read from StorageTexture in the compute shader. By default, the
      * storage texture can be only used with the write operation.
-     * When a shader uses this feature, it's recommended to use a `requires` directive to signal the
-     * potential for non-portability at the top of the WGSL shader code:
-     * ```javascript
+     * When a shader uses this feature, add a `requires` directive to signal non-portability at the
+     * top of the WGSL shader code. The shader define `CAPS_STORAGE_TEXTURE_READ` is set when this
+     * capability is available.
+     * ```wgsl
      * requires readonly_and_readwrite_storage_textures;
      * ```
      *
@@ -281,6 +282,18 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     supportsSubgroupId = false;
+
+    /**
+     * True if the device supports the WGSL `linear_indexing` extension, which provides the
+     * `global_invocation_index` and `workgroup_index` built-in values in compute shaders. The
+     * `requires linear_indexing;` directive is then automatically injected for compute shader
+     * modules, and the shader define `CAPS_LINEAR_INDEXING` is set for conditional
+     * compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsLinearIndexing = false;
 
     /**
      * Maximum subgroup (warp/wavefront) size supported by the device. Zero if subgroups are
@@ -668,6 +681,8 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
         if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
         if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
+        if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
+        if (this.supportsStorageTextureRead) capsDefines.set('CAPS_STORAGE_TEXTURE_READ', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');

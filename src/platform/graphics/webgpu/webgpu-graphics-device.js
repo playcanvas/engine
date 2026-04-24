@@ -248,6 +248,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
         this.supportsSubgroupUniformity = wgslFeatures?.has('subgroup_uniformity');
         this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
+        this.supportsLinearIndexing = wgslFeatures?.has('linear_indexing');
 
         this.initCapsDefines();
     }
