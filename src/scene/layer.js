@@ -69,9 +69,7 @@ class CulledInstances {
  * @category Graphics
  */
 class Layer {
-    // -------------------------------------------------------------------------
-    // Identity
-    // -------------------------------------------------------------------------
+    // --- Identity ---
 
     /**
      * A unique ID of the layer. Layer IDs are stored inside {@link ModelComponent#layers},
@@ -90,9 +88,7 @@ class Layer {
      */
     name;
 
-    // -------------------------------------------------------------------------
-    // Enabled state & ref counting
-    // -------------------------------------------------------------------------
+    // --- Enabled state & ref counting ---
 
     /**
      * @type {boolean}
@@ -106,9 +102,7 @@ class Layer {
      */
     _refCounter = 1;
 
-    // -------------------------------------------------------------------------
-    // Sorting
-    // -------------------------------------------------------------------------
+    // --- Sorting ---
 
     /**
      * Defines the method used for sorting opaque (that is, not semi-transparent) mesh
@@ -153,9 +147,7 @@ class Layer {
      */
     customCalculateSortValues = null;
 
-    // -------------------------------------------------------------------------
-    // Clear flags
-    // -------------------------------------------------------------------------
+    // --- Clear flags ---
 
     /** @private */
     _clearColorBuffer = false;
@@ -166,9 +158,7 @@ class Layer {
     /** @private */
     _clearStencilBuffer = false;
 
-    // -------------------------------------------------------------------------
-    // Enable / disable callbacks
-    // -------------------------------------------------------------------------
+    // --- Enable / disable callbacks ---
 
     /**
      * Custom function that is called after the layer has been enabled. This happens when:
@@ -190,9 +180,7 @@ class Layer {
      */
     onDisable;
 
-    // -------------------------------------------------------------------------
-    // Mesh instances & shadow casters
-    // -------------------------------------------------------------------------
+    // --- Mesh instances & shadow casters ---
 
     /**
      * Mesh instances assigned to this layer.
@@ -234,9 +222,7 @@ class Layer {
      */
     _visibleInstances = new WeakMap();
 
-    // -------------------------------------------------------------------------
-    // Lights
-    // -------------------------------------------------------------------------
+    // --- Lights ---
 
     /**
      * All lights assigned to a layer.
@@ -299,9 +285,7 @@ class Layer {
      */
     requiresLightCube = false;
 
-    // -------------------------------------------------------------------------
-    // Cameras
-    // -------------------------------------------------------------------------
+    // --- Cameras ---
 
     /**
      * @type {CameraComponent[]}
@@ -315,9 +299,7 @@ class Layer {
      */
     camerasSet = new Set();
 
-    // -------------------------------------------------------------------------
-    // GSplat
-    // -------------------------------------------------------------------------
+    // --- GSplat ---
 
     /**
      * @type {GSplatPlacement[]}
@@ -350,9 +332,7 @@ class Layer {
      */
     gsplatPlacementsDirty = true;
 
-    // -------------------------------------------------------------------------
-    // Composition / shader versioning
-    // -------------------------------------------------------------------------
+    // --- Composition / shader versioning ---
 
     /**
      * True if the composition is invalidated.
@@ -364,9 +344,7 @@ class Layer {
     /** @private */
     _shaderVersion = -1;
 
-    // -------------------------------------------------------------------------
-    // Profiler
-    // -------------------------------------------------------------------------
+    // --- Profiler ---
 
     // #if _PROFILER
     skipRenderAfter = Number.MAX_VALUE;
