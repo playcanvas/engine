@@ -362,12 +362,10 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Add a built-in component to the entity. The associated component system must be registered
-     * with the application.
+     * Add a component to the entity. The associated component system must be registered with the
+     * application. Built-in component types are listed below; arbitrary string IDs are also
+     * accepted for custom component systems.
      *
-     * @template {keyof ComponentMap} T
-     * @overload
-     * @param {T} type - The type of built-in component to add. Can be:
      * - 'anim' - see {@link AnimComponent}
      * - 'animation' - see {@link AnimationComponent}
      * - 'audiolistener' - see {@link AudioListenerComponent}
@@ -389,10 +387,15 @@ class Entity extends GraphNode {
      * - 'scrollview' - see {@link ScrollViewComponent}
      * - 'sound' - see {@link SoundComponent}
      * - 'sprite' - see {@link SpriteComponent}
-     * @param {Partial<ComponentMap[T]>} [data] - Optional initialization data for the component.
-     * Refer to each specific component's API reference page for details on valid values for this
-     * parameter.
-     * @returns {ComponentMap[T] | null} The newly added component or null in the case of an error.
+     *
+     * @template {keyof ComponentMap | (string & {})} T
+     * @param {T} type - The type of component to add.
+     * @param {T extends keyof ComponentMap ? Partial<ComponentMap[T]> : unknown} [data] - Optional
+     * initialization data for the component. For built-in component types, this is strictly typed
+     * against the component's properties; refer to each specific component's API reference page
+     * for details on valid values.
+     * @returns {(T extends keyof ComponentMap ? ComponentMap[T] : Component) | null} The newly
+     * added component or null in the case of an error.
      * @example
      * const entity = new pc.Entity();
      *
@@ -404,28 +407,6 @@ class Entity extends GraphNode {
      *     fov: 45,
      *     clearColor: new pc.Color(1, 0, 0)
      * });
-     */
-    /**
-     * Add a custom component to the entity. The associated component system must be registered
-     * with the application.
-     *
-     * @overload
-     * @param {string} type - The type of custom component to add.
-     * @param {any} [data] - Optional initialization data for the component.
-     * @returns {Component | null} The newly added component or null in the case of an error.
-     * @example
-     * const entity = new pc.Entity();
-     *
-     * // Add a custom component with some initialization data
-     * entity.addComponent('custom', {
-     *     foo: 'bar'
-     * });
-     */
-    /**
-     * @template {keyof ComponentMap} T
-     * @param {T | string} type - The type of component to add.
-     * @param {Partial<ComponentMap[T]> | any} [data] - Optional initialization data for the component.
-     * @returns {ComponentMap[T] | Component | null} The newly added component or null in the case of an error.
      */
     addComponent(type, data) {
         const system = this._app.systems[type];
@@ -443,7 +424,8 @@ class Entity extends GraphNode {
     /**
      * Remove a component from the Entity.
      *
-     * @param {keyof ComponentMap} type - The name of the Component type.
+     * @param {keyof ComponentMap | (string & {})} type - The name of the Component type. Built-in
+     * component names are auto-suggested; arbitrary strings are accepted for custom components.
      * @example
      * const entity = new pc.Entity();
      * entity.addComponent("light"); // add new light component
@@ -466,10 +448,12 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for the first component of specified type.
      *
-     * @template {keyof ComponentMap} T
-     * @param {T} type - The name of the component type to retrieve.
-     * @returns {ComponentMap[T] | undefined} A component of specified type, if the entity or any
-     * of its descendants has one. Returns undefined otherwise.
+     * @template {keyof ComponentMap | (string & {})} T
+     * @param {T} type - The name of the component type to retrieve. Built-in component names are
+     * auto-suggested; arbitrary strings are accepted for custom components.
+     * @returns {(T extends keyof ComponentMap ? ComponentMap[T] : Component) | undefined} A
+     * component of specified type, if the entity or any of its descendants has one. Returns
+     * undefined otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
      * const light = entity.findComponent("light");
@@ -482,10 +466,11 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for all components of specified type.
      *
-     * @template {keyof ComponentMap} T
-     * @param {T} type - The name of the component type to retrieve.
-     * @returns {ComponentMap[T][]} All components of specified type in the entity or any of its
-     * descendants. Returns empty array if none found.
+     * @template {keyof ComponentMap | (string & {})} T
+     * @param {T} type - The name of the component type to retrieve. Built-in component names are
+     * auto-suggested; arbitrary strings are accepted for custom components.
+     * @returns {(T extends keyof ComponentMap ? ComponentMap[T] : Component)[]} All components of
+     * specified type in the entity or any of its descendants. Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
      * const lights = entity.findComponents("light");
