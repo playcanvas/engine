@@ -54,7 +54,8 @@ import { getApplication } from './globals.js';
  *     sound: SoundComponent;
  *     sprite: SpriteComponent;
  * }} ComponentMap A map of component names to their class types. Facilitates typings for
- * {@link Entity#addComponent}.
+ * {@link Entity#addComponent}, {@link Entity#removeComponent},
+ * {@link Entity#findComponent}, and {@link Entity#findComponents}.
  */
 
 /**
