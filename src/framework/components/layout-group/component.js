@@ -20,8 +20,36 @@ function isEnabledAndHasEnabledElement(entity) {
 }
 
 /**
- * A LayoutGroupComponent enables the Entity to position and scale child {@link ElementComponent}s
- * according to configurable layout rules.
+ * The LayoutGroupComponent enables an {@link Entity} to position and scale its child
+ * {@link ElementComponent}s according to configurable layout rules. It supports horizontal and
+ * vertical orientations and a variety of alignment, spacing, wrapping and sizing options.
+ *
+ * You should never need to use the LayoutGroupComponent constructor directly. To add a
+ * LayoutGroupComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('element', {
+ *     type: pc.ELEMENTTYPE_GROUP
+ * });
+ * entity.addComponent('layoutgroup', {
+ *     orientation: pc.ORIENTATION_HORIZONTAL,
+ *     spacing: new pc.Vec2(10, 0)
+ * });
+ * ```
+ *
+ * Once the LayoutGroupComponent is added to the entity, you can access it via the
+ * {@link Entity#layoutgroup} property:
+ *
+ * ```javascript
+ * entity.layoutgroup.spacing = new pc.Vec2(20, 0); // Increase spacing between children
+ *
+ * console.log(entity.layoutgroup.spacing);         // Get the spacing and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Layout Group](https://playcanvas.github.io/#/user-interface/layout-group)
  *
  * @hideconstructor
  * @category User Interface
@@ -270,8 +298,7 @@ class LayoutGroupComponent extends Component {
 
     /**
      * Sets the height fitting mode to be applied when positioning and scaling child elements.
-     * Identical to {@link LayoutGroupComponent#widthFitting} but for the Y axis. Defaults to
-     * {@link FITTING_NONE}.
+     * Identical to {@link widthFitting} but for the Y axis. Defaults to {@link FITTING_NONE}.
      *
      * @type {number}
      */
@@ -293,12 +320,11 @@ class LayoutGroupComponent extends Component {
 
     /**
      * Sets whether or not to wrap children onto a new row/column when the size of the container is
-     * exceeded. Defaults to false, which means that children will be be rendered in a single row
+     * exceeded. Defaults to false, which means that children will be rendered in a single row
      * (horizontal orientation) or column (vertical orientation). Note that setting wrap to true
      * makes it impossible for the {@link FITTING_BOTH} fitting mode to operate in any logical
-     * manner. For this reason, when wrap is true, a {@link LayoutGroupComponent#widthFitting} or
-     * {@link LayoutGroupComponent#heightFitting} mode of {@link FITTING_BOTH} will be coerced to
-     * {@link FITTING_STRETCH}.
+     * manner. For this reason, when wrap is true, a {@link widthFitting} or {@link heightFitting}
+     * mode of {@link FITTING_BOTH} will be coerced to {@link FITTING_STRETCH}.
      *
      * @type {boolean}
      */

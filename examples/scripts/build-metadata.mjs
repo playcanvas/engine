@@ -8,7 +8,8 @@ import { parseConfig } from '../utils/utils.mjs';
  * @type {{
  *      path: string,
  *      categoryKebab: string,
- *      exampleNameKebab: string
+ *      exampleNameKebab: string,
+ *      hidden: boolean
  * }[]}
  */
 const exampleMetaData = [];
@@ -55,15 +56,16 @@ const main = () => {
             const exampleNameKebab = toKebabCase(exampleName);
 
             const config = parseConfig(fs.readFileSync(examplePath, 'utf-8'));
-            if (config.HIDDEN && process.env.NODE_ENV !== 'development') {
-                console.info(`skipping hidden ${categoryKebab}/${exampleNameKebab}`);
-                return;
+            const hidden = !!config.HIDDEN;
+            if (hidden) {
+                console.info(`hidden (not listed in sidebar): ${categoryKebab}/${exampleNameKebab}`);
             }
 
             exampleMetaData.push({
                 path: categoryPath,
                 categoryKebab,
-                exampleNameKebab
+                exampleNameKebab,
+                hidden
             });
         });
     });

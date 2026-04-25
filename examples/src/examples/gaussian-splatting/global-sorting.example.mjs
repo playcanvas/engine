@@ -55,7 +55,16 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
     // default unified mode
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('unified', true);
 
     // instantiate garage gsplat
@@ -120,13 +129,9 @@ assetListLoader.load(() => {
     // toggle unified rendering for all gsplats via controls
     data.on('unified:set', () => {
         const unified = !!data.get('unified');
-        const comps = /** @type {any[]} */ (app.root.findComponents('gsplat'));
-        comps.forEach((comp /** @type {import('playcanvas').GSplatComponent} */) => {
-            comp.enabled = false;
-            comp.entity.enabled = false;
+        const comps = /** @type {pc.GSplatComponent[]} */ (app.root.findComponents('gsplat'));
+        comps.forEach((comp) => {
             comp.unified = unified;
-            comp.enabled = true;
-            comp.entity.enabled = true;
         });
     });
 });

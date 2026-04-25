@@ -10,6 +10,7 @@ export default /* glsl */`
     #include "composeDofPS"
     #include "composeSsaoPS"
     #include "composeGradingPS"
+    #include "composeColorEnhancePS"
     #include "composeVignettePS"
     #include "composeFringingPS"
     #include "composeCasPS"
@@ -22,13 +23,6 @@ export default /* glsl */`
         #include "composeMainStartPS"
 
         vec2 uv = uv0;
-
-        // TAA pass renders upside-down on WebGPU, flip it here
-        #ifdef TAA
-        #ifdef WEBGPU
-            uv.y = 1.0 - uv.y;
-        #endif
-        #endif
 
         vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
         vec3 result = scene.rgb;
@@ -56,6 +50,11 @@ export default /* glsl */`
         // Apply Bloom
         #ifdef BLOOM
             result = applyBloom(result, uv0);
+        #endif
+
+        // Apply Color Enhancement (shadows, highlights, vibrance)
+        #ifdef COLOR_ENHANCE
+            result = applyColorEnhance(result);
         #endif
 
         // Apply Color Grading

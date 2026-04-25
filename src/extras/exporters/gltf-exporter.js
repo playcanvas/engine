@@ -142,9 +142,7 @@ const textureSemantics = [
  * @category Exporter
  */
 class GltfExporter extends CoreExporter {
-    /**
-     * @ignore
-     */
+    /** @ignore */
     collectResources(root) {
         const resources = {
             buffers: [],

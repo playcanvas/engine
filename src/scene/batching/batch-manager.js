@@ -108,8 +108,7 @@ class BatchManager {
      * @param {boolean} dynamic - Is this batch group dynamic? Will these objects move/rotate/scale
      * after being batched?
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched
-     * objects.
-     * {@link BatchManager#prepare} will split objects into local groups based on this size.
+     * objects. {@link prepare} will split objects into local groups based on this size.
      * @param {number} [id] - Optional custom unique id for the group (will be generated
      * automatically otherwise).
      * @param {number[]} [layers] - Optional layer ID array. Default is [{@link LAYERID_WORLD}].
@@ -191,6 +190,17 @@ class BatchManager {
     }
 
     /**
+     * Retrieves a {@link BatchGroup} object with a corresponding id, if it exists, or null
+     * otherwise.
+     *
+     * @param {number} id - The batch group id.
+     * @returns {BatchGroup|null} The batch group matching the id or null if not found.
+     */
+    getGroupById(id) {
+        return this._batchGroups[id] ?? null;
+    }
+
+    /**
      * Return a list of all {@link Batch} objects that belong to the Batch Group supplied.
      *
      * @param {number} batchGroupId - The id of the batch group.
@@ -234,7 +244,7 @@ class BatchManager {
 
     insert(type, groupId, node) {
         const group = this._batchGroups[groupId];
-        Debug.assert(group, `Invalid batch ${groupId} insertion`);
+        Debug.assert(group, `Invalid batch ${groupId} insertion with node: "${node.name}"`);
 
         if (group) {
             if (group._obj[type].indexOf(node) < 0) {
@@ -246,7 +256,7 @@ class BatchManager {
 
     remove(type, groupId, node) {
         const group = this._batchGroups[groupId];
-        Debug.assert(group, `Invalid batch ${groupId} insertion`);
+        Debug.assert(group, `Invalid batch ${groupId} removal with node: "${node.name}"`);
 
         if (group) {
             const idx = group._obj[type].indexOf(node);
@@ -257,10 +267,43 @@ class BatchManager {
         }
     }
 
+    /**
+     * Filter out mesh instances that have skin or morph, as these are not supported by batching.
+     * If any mesh instance has skin/morph, the entire set is excluded.
+     *
+     * @param {MeshInstance[]} meshInstances - The mesh instances to filter.
+     * @param {string} nodeName - The node name for warning messages.
+     * @returns {MeshInstance[]|null} The mesh instances if none have skin/morph, or null if any do.
+     * @private
+     */
+    _filterBatchableInstances(meshInstances, nodeName) {
+        let hasUnsupported = false;
+        let hasSupported = false;
+        for (let i = 0; i < meshInstances.length; i++) {
+            if (meshInstances[i].skinInstance || meshInstances[i].morphInstance) {
+                hasUnsupported = true;
+            } else {
+                hasSupported = true;
+            }
+        }
+
+        if (hasUnsupported) {
+            if (hasSupported) {
+                Debug.warnOnce(`BatchManager: Some mesh instances on entity "${nodeName}" have skin/morph and the whole entity will be excluded from batching.`);
+            }
+            return null;
+        }
+
+        return meshInstances;
+    }
+
     _extractRender(node, arr, group, groupMeshInstances) {
         if (node.render) {
-            arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(node.render.meshInstances);
-            node.render.removeFromLayers();
+            const valid = this._filterBatchableInstances(node.render.meshInstances, node.name);
+            if (valid) {
+                arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(valid);
+                node.render.removeFromLayers();
+            }
         }
 
         return arr;
@@ -268,12 +311,15 @@ class BatchManager {
 
     _extractModel(node, arr, group, groupMeshInstances) {
         if (node.model && node.model.model) {
-            arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
-            node.model.removeModelFromLayers();
+            const valid = this._filterBatchableInstances(node.model.meshInstances, node.name);
+            if (valid) {
+                arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(valid);
+                node.model.removeModelFromLayers();
 
-            // #if _DEBUG
-            node.model._batchGroup = group;
-            // #endif
+                // #if _DEBUG
+                node.model._batchGroup = group;
+                // #endif
+            }
         }
 
         return arr;
@@ -421,6 +467,8 @@ class BatchManager {
      * - Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024
      * on high-end).
      * - Bounding box of a batch is larger than maxAabbSize in any dimension.
+     * - Mesh instances differ in shadow casting ({@link MeshInstance#castShadow}) or directional
+     * shadow cascade mask ({@link MeshInstance#shadowCascadeMask}).
      *
      * @param {MeshInstance[]} meshInstances - Input list of mesh instances
      * @param {boolean} dynamic - Are we preparing for a dynamic batch? Instance count will matter
@@ -431,7 +479,7 @@ class BatchManager {
      * This is useful to keep a balance between the number of draw calls and the number of drawn
      * triangles, because smaller batches can be hidden when not visible in camera.
      * @returns {MeshInstance[][]} An array of arrays of mesh instances, each valid to pass to
-     * {@link BatchManager#create}.
+     * {@link create}.
      */
     prepare(meshInstances, dynamic, maxAabbSize = Number.POSITIVE_INFINITY, translucent) {
         if (meshInstances.length === 0) return [];
@@ -482,6 +530,8 @@ class BatchManager {
             const scaleSign = getScaleSign(meshInstancesLeftA[0]);
             const vertexFormatBatchingHash = meshInstancesLeftA[0].mesh.vertexBuffer.format.batchingHash;
             const indexed = meshInstancesLeftA[0].mesh.primitive[0].indexed;
+            const castShadow = meshInstancesLeftA[0].castShadow;
+            const shadowCascadeMask = meshInstancesLeftA[0].shadowCascadeMask;
             skipTranslucentAabb = null;
 
             for (let i = 1; i < meshInstancesLeftA.length; i++) {
@@ -521,6 +571,12 @@ class BatchManager {
                 }
                 // Split by negative scale
                 if (scaleSign !== getScaleSign(mi)) {
+                    skipMesh(mi);
+                    continue;
+                }
+
+                // Split by shadow casting — the batched MeshInstance exposes a single castShadow flag
+                if (castShadow !== mi.castShadow || shadowCascadeMask !== mi.shadowCascadeMask) {
                     skipMesh(mi);
                     continue;
                 }
@@ -617,7 +673,7 @@ class BatchManager {
     }
 
     /**
-     * Takes a mesh instance list that has been prepared by {@link BatchManager#prepare}, and
+     * Takes a mesh instance list that has been prepared by {@link prepare}, and
      * returns a {@link Batch} object. This method assumes that all mesh instances provided can be
      * rendered in a single draw call.
      *

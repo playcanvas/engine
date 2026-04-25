@@ -14,7 +14,8 @@ const z = new Vec3();
 const scale = new Vec3();
 
 /**
- * A 4x4 matrix.
+ * A 4x4 matrix. Mat4 is commonly used to represent world, view and projection transformations in
+ * 3D graphics, combining rotation, translation and scale into a single matrix.
  *
  * @category Math
  */
@@ -296,14 +297,20 @@ class Mat4 {
      * instance. This function assumes the matrices are affine transformation matrices, where the
      * upper left 3x3 elements are a rotation matrix, and the bottom left 3 elements are
      * translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters are not
-     * verified to be in the expected format. This function is faster than general
-     * {@link Mat4#mul2}.
+     * verified to be in the expected format. This function is faster than general {@link mul2}.
      *
      * @param {Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of
      * the operation.
      * @param {Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of
      * the operation.
      * @returns {Mat4} Self for chaining.
+     * @example
+     * const a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
+     * const r = new pc.Mat4();
+     *
+     * // r = a * b (optimized for affine transforms)
+     * r.mulAffine2(a, b);
      */
     mulAffine2(lhs, rhs) {
         const a = lhs.data;
@@ -576,7 +583,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
-     * const persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
+     * const persp = new pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
      */
     setPerspective(fov, aspect, znear, zfar, fovIsHorizontal) {
         Mat4._getPerspectiveHalfSize(_halfSize, fov, aspect, znear, fovIsHorizontal);
@@ -600,7 +607,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 orthographic projection matrix
-     * const ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
+     * const ortho = new pc.Mat4().setOrtho(-2, 2, -2, 2, 1, 1000);
      */
     setOrtho(left, right, bottom, top, near, far) {
         const r = this.data;
@@ -782,6 +789,9 @@ class Mat4 {
      * @param {Vec3} normal - The normal of the plane to reflect by.
      * @param {number} distance - The distance of plane to reflect by.
      * @returns {Mat4} Self for chaining.
+     * @example
+     * // Create a reflection matrix for a horizontal plane at y=0
+     * const reflection = new pc.Mat4().setReflection(pc.Vec3.UP, 0);
      */
     setReflection(normal, distance) {
 
@@ -888,6 +898,9 @@ class Mat4 {
      *
      * @param {number[]} src - Source array. Must have 16 values.
      * @returns {Mat4} Self for chaining.
+     * @example
+     * const m = new pc.Mat4();
+     * m.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1]);
      */
     set(src) {
         const dst = this.data;
@@ -1157,7 +1170,7 @@ class Mat4 {
     }
 
     /**
-     * -1 if the the matrix has an odd number of negative scales (mirrored); 1 otherwise.
+     * -1 if the matrix has an odd number of negative scales (mirrored); 1 otherwise.
      *
      * @type {number}
      * @ignore

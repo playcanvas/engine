@@ -30,8 +30,10 @@ dropBox.style.cssText = `
     font-family: Arial, sans-serif;
     font-size: 24px;
     color: white;
+    text-align: center;
+    line-height: 1.4;
 `;
-dropBox.textContent = 'Drop .ply, .sog, or .glb file to view';
+dropBox.innerHTML = 'Drop .ply, .sog, or .glb file to view<br>or unpacked SOG (meta.json + .webp files)';
 dropOverlay.appendChild(dropBox);
 document.body.appendChild(dropOverlay);
 
@@ -88,6 +90,10 @@ assetListLoader.load(() => {
     app.start();
 
     let splatEntity = null;
+
+    app.scene.gsplat.lodBehindPenalty = 3;
+    app.scene.gsplat.minPixelSize = 2;
+    app.scene.gsplat.minContribution = 2;
 
     /**
      * Calculate the bounding box of an entity.
@@ -165,6 +171,7 @@ assetListLoader.load(() => {
     // Initialize data values
     data.set('data', {
         skydome: false,
+        compact: false,
         orientation: 180,
         tonemapping: pc.TONEMAP_LINEAR,
         grading: {
@@ -174,6 +181,14 @@ assetListLoader.load(() => {
         bloom: {
             enabled: false,
             intensity: 0.03
+        },
+        colorEnhance: {
+            enabled: false,
+            shadows: 0,
+            highlights: 0,
+            midtones: 0,
+            vibrance: 0,
+            dehaze: 0
         }
     });
 
@@ -199,16 +214,35 @@ assetListLoader.load(() => {
             cameraFrame.bloom.blurLevel = 7;
         }
 
+        // Color Enhance
+        cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
+        cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
+        cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+        cameraFrame.colorEnhance.midtones = data.get('data.colorEnhance.midtones');
+        cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
+        cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
+
         cameraFrame.update();
     };
 
     // Apply initial settings
     applySettings();
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
     // Listen for changes
     data.on('*:set', (/** @type {string} */ path) => {
         if (path === 'data.skydome') {
             applySkydome();
+        } else if (path === 'data.compact') {
+            app.scene.gsplat.dataFormat = data.get('data.compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
         } else if (path === 'data.orientation') {
             // Apply orientation to splat entity
             if (splatEntity) {
@@ -228,29 +262,83 @@ assetListLoader.load(() => {
     canvas.addEventListener('drop', async (e) => {
         e.preventDefault();
 
-        const file = e.dataTransfer.files[0];
-        if (!file) return;
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length === 0) return;
 
+        // Detect unpacked SOG: a meta.json file was dropped (with any number of sibling webp files).
+        const metaFile = files.find(f => f.name.toLowerCase() === 'meta.json');
+        const isUnpackedSog = !!metaFile;
+
+        // Otherwise expect a single gsplat/glb file
+        const file = files[0];
         const fileName = file.name.toLowerCase();
-        const isGsplat = fileName.endsWith('.ply') || fileName.endsWith('.sog');
-        const isGlb = fileName.endsWith('.glb');
+        const isGsplat = !isUnpackedSog && (fileName.endsWith('.ply') || fileName.endsWith('.sog'));
+        const isGlb = !isUnpackedSog && fileName.endsWith('.glb');
 
-        if (!isGsplat && !isGlb) {
-            console.warn('Please drop a .ply, .sog, or .glb file');
+        if (!isUnpackedSog && !isGsplat && !isGlb) {
+            console.warn('Please drop a .ply, .sog, .glb, or an unpacked SOG (meta.json + .webp files)');
             return;
         }
 
         // Hide instructions overlay
         dropOverlay.style.display = 'none';
 
-        // Create blob URL and load asset using loadFromUrlAndFilename
-        // This method is specifically for blob assets where the URL doesn't identify the format
-        const blobUrl = URL.createObjectURL(file);
-
         let entity;
         let aabb;
 
-        if (isGsplat) {
+        if (isUnpackedSog) {
+            // Build a filename -> blob URL map for all sibling files (webp textures).
+            // The SogParser will use options.mapUrl to resolve filenames referenced in meta.json.
+            const blobMap = new Map();
+            for (const f of files) {
+                if (f !== metaFile) {
+                    blobMap.set(f.name, URL.createObjectURL(f));
+                }
+            }
+
+            const metaBlobUrl = URL.createObjectURL(metaFile);
+
+            // Create gsplat asset manually so we can pass the mapUrl option
+            const asset = new pc.Asset(metaFile.name, 'gsplat', {
+                url: metaBlobUrl,
+                filename: metaFile.name
+            }, null, {
+                mapUrl: filename => blobMap.get(filename)
+            });
+
+            app.assets.add(asset);
+
+            await new Promise((resolve, reject) => {
+                asset.once('load', () => resolve(asset));
+                asset.once('error', err => reject(err));
+                app.assets.load(asset);
+            });
+
+            // Create gsplat entity
+            entity = new pc.Entity(metaFile.name);
+            entity.addComponent('gsplat', {
+                asset: asset,
+                unified: true
+            });
+            entity.setLocalEulerAngles(180, 0, 0);
+            app.root.addChild(entity);
+
+            splatEntity = entity;
+
+            await new Promise((resolve) => {
+                requestAnimationFrame(resolve);
+            });
+
+            aabb = entity.gsplat.customAabb;
+            if (!aabb) {
+                console.warn('customAabb not available');
+                return;
+            }
+        } else if (isGsplat) {
+            // Create blob URL and load asset using loadFromUrlAndFilename
+            // This method is specifically for blob assets where the URL doesn't identify the format
+            const blobUrl = URL.createObjectURL(file);
+
             // Load gaussian splat asset
             const asset = await new Promise((resolve, reject) => {
                 app.assets.loadFromUrlAndFilename(blobUrl, file.name, 'gsplat', (err, loadedAsset) => {
@@ -287,6 +375,7 @@ assetListLoader.load(() => {
             }
         } else {
             // Load GLB container asset
+            const blobUrl = URL.createObjectURL(file);
             let asset;
             try {
                 asset = await new Promise((resolve, reject) => {

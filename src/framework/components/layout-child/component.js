@@ -1,8 +1,33 @@
 import { Component } from '../component.js';
 
 /**
- * A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent
- * {@link LayoutGroupComponent}.
+ * The LayoutChildComponent enables an {@link Entity} to control the sizing and fitting behavior
+ * applied to it by its parent {@link LayoutGroupComponent}. It allows per-child overrides of
+ * minimum and maximum dimensions as well as fit proportions.
+ *
+ * You should never need to use the LayoutChildComponent constructor directly. To add a
+ * LayoutChildComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('element', {
+ *     type: pc.ELEMENTTYPE_IMAGE
+ * });
+ * entity.addComponent('layoutchild', {
+ *     minWidth: 50,
+ *     maxWidth: 200,
+ *     fitWidthProportion: 1
+ * });
+ * ```
+ *
+ * Once the LayoutChildComponent is added to the entity, you can access it via the
+ * {@link Entity#layoutchild} property:
+ *
+ * ```javascript
+ * entity.layoutchild.minWidth = 80; // Increase the minimum width
+ *
+ * console.log(entity.layoutchild.minWidth); // Get the minimum width and print it
+ * ```
  *
  * @hideconstructor
  * @category User Interface

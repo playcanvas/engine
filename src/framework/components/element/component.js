@@ -38,9 +38,9 @@ const matC = new Mat4();
 const matD = new Mat4();
 
 /**
- * ElementComponents are used to construct user interfaces. The {@link ElementComponent#type}
- * property can be configured in 3 main ways: as a text element, as an image element or as a group
- * element. If the ElementComponent has a {@link ScreenComponent} ancestor in the hierarchy, it
+ * ElementComponents are used to construct user interfaces. The {@link type} property can be
+ * configured in 3 main ways: as a text element, as an image element or as a group element. If
+ * the ElementComponent has a {@link ScreenComponent} ancestor in the hierarchy, it
  * will be transformed with respect to the coordinate system of the screen. If there is no
  * {@link ScreenComponent} ancestor, the ElementComponent will be transformed like any other
  * entity.
@@ -49,7 +49,7 @@ const matD = new Mat4();
  * ElementComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('element'); // This defaults to a 'group' element
  * ```
  *
@@ -1434,7 +1434,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the horizontal and vertical alignment of the text. Values range from 0 to 1 where
-     * `[0, 0]` is the bottom left and `[1, 1]` is the top right.  Only works for
+     * `[0, 0]` is the bottom left and `[1, 1]` is the top right. Only works for
      * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {Vec2}

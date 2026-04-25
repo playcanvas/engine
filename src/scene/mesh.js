@@ -101,9 +101,9 @@ class GeometryVertexStream {
  * There are two ways a mesh can be generated or updated.
  *
  * ### Simple Mesh API
- * {@link Mesh} class provides interfaces such as {@link Mesh#setPositions} and {@link Mesh#setUvs}
- * that provide a simple way to provide vertex and index data for the Mesh, and hiding the
- * complexity of creating the {@link VertexFormat}. This is the recommended interface to use.
+ * {@link Mesh} class provides interfaces such as {@link setPositions} and {@link setUvs} that
+ * provide a simple way to provide vertex and index data for the Mesh, and hiding the complexity
+ * of creating the {@link VertexFormat}. This is the recommended interface to use.
  *
  * A simple example which creates a Mesh with 3 vertices, containing position coordinates only, to
  * form a single triangle.
@@ -240,7 +240,6 @@ class Mesh extends RefCountedObject {
     /**
      * AABB representing object space bounds of the mesh.
      *
-     * @type {BoundingBox}
      * @private
      */
     _aabb = new BoundingBox();
@@ -260,7 +259,6 @@ class Mesh extends RefCountedObject {
     /**
      * True if the created index buffer should be accessible as a storage buffer in compute shader.
      *
-     * @type {boolean}
      * @private
      */
     _storageIndex = false;
@@ -268,7 +266,6 @@ class Mesh extends RefCountedObject {
     /**
      * True if the created vertex buffer should be accessible as a storage buffer in compute shader.
      *
-     * @type {boolean}
      * @private
      */
     _storageVertex = false;
@@ -589,8 +586,8 @@ class Mesh extends RefCountedObject {
     /**
      * Clears the mesh of existing vertices and indices and resets the {@link VertexFormat}
      * associated with the mesh. This call is typically followed by calls to methods such as
-     * {@link Mesh#setPositions}, {@link Mesh#setVertexStream} or {@link Mesh#setIndices} and
-     * finally {@link Mesh#update} to rebuild the mesh, allowing different {@link VertexFormat}.
+     * {@link setPositions}, {@link setVertexStream} or {@link setIndices} and finally
+     * {@link update} to rebuild the mesh, allowing different {@link VertexFormat}.
      *
      * @param {boolean} [verticesDynamic] - Indicates the {@link VertexBuffer} should be created
      * with {@link BUFFER_DYNAMIC} usage. If not specified, {@link BUFFER_STATIC} is used.
@@ -868,7 +865,7 @@ class Mesh extends RefCountedObject {
      * {@link vertexBuffer} or {@link indexBuffer} to fit all provided vertices and indices, and
      * fills them with data.
      *
-     * @param {number} [primitiveType] - The type of primitive to render.  Can be:
+     * @param {number} [primitiveType] - The type of primitive to render. Can be:
      *
      * - {@link PRIMITIVE_POINTS}
      * - {@link PRIMITIVE_LINES}
@@ -881,9 +878,9 @@ class Mesh extends RefCountedObject {
      * Defaults to {@link PRIMITIVE_TRIANGLES} if not specified.
      * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated
      * only if positions were set since last time update was called, and `componentCount` for
-     * position was 3, otherwise bounding box is not updated. See {@link Mesh#setPositions}.
-     * Defaults to true if not specified. Set this to false to avoid update of the bounding box and
-     * use aabb property to set it instead.
+     * position was 3, otherwise bounding box is not updated. See {@link setPositions}. Defaults to
+     * true if not specified. Set this to false to avoid update of the bounding box and use aabb
+     * property to set it instead.
      */
     update(primitiveType = PRIMITIVE_TRIANGLES, updateBoundingBox = true) {
 

@@ -37,7 +37,6 @@ class BindGroup {
     /**
      * A render version the bind group was last updated on.
      *
-     * @type {number}
      * @private
      */
     renderVersionUpdated = -1;
@@ -193,11 +192,11 @@ class BindGroup {
             // custom error handling for known global textures
             if (!value) {
                 if (textureFormat.name === 'uSceneDepthMap') {
-                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                     value = getBuiltInTexture(this.device, 'white');
                 }
                 if (textureFormat.name === 'uSceneColorMap') {
-                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                     value = getBuiltInTexture(this.device, 'pink');
                 }
 

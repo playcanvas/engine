@@ -9,6 +9,26 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     return fragment(
         jsx(
             Panel,
+            { headerText: 'Renderer' },
+            jsx(
+                LabelGroup,
+                { text: 'Renderer' },
+                jsx(SelectInput, {
+                    type: 'number',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'renderer' },
+                    value: observer.get('renderer') ?? 0,
+                    options: [
+                        { v: 0, t: 'Auto' },
+                        { v: 1, t: 'Raster (CPU Sort)' },
+                        { v: 2, t: 'Raster (GPU Sort)' },
+                        { v: 3, t: 'Compute' }
+                    ]
+                })
+            )
+        ),
+        jsx(
+            Panel,
             { headerText: 'Scene' },
             jsx(
                 LabelGroup,
@@ -17,6 +37,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.skydome' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Compact' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.compact' }
                 })
             ),
             jsx(
@@ -95,6 +124,74 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     min: 0,
                     max: 0.2,
                     precision: 3
+                })
+            )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Color Enhance' },
+            jsx(
+                LabelGroup,
+                { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.enabled' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'shadows' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.shadows' },
+                    min: -3,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'highlights' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.highlights' },
+                    min: -3,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'midtones' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.midtones' },
+                    min: -1,
+                    max: 1,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'vibrance' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.vibrance' },
+                    min: -1,
+                    max: 1,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'dehaze' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.colorEnhance.dehaze' },
+                    min: -1,
+                    max: 1,
+                    precision: 2
                 })
             )
         )

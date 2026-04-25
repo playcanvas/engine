@@ -175,7 +175,7 @@ class WebglUploadStream {
         device.setUnpackPremultiplyAlpha(false);
 
         // Use alignment matching the data's byte size (1, 2, 4, or 8)
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, data.BYTES_PER_ELEMENT);
+        device.setUnpackAlignment(data.BYTES_PER_ELEMENT);
         gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
         gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
         gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);

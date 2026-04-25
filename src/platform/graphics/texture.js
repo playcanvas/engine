@@ -4,7 +4,7 @@ import { math } from '../../core/math/math.js';
 import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
-    ADDRESS_REPEAT,
+    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
@@ -46,21 +46,55 @@ let id = 0;
  * sampling.
  *     - float formats are supported on WebGL2 and WebGPU with linear sampling only if
  * {@link GraphicsDevice#textureFloatFilterable} is true.
+ *     - {@link PIXELFORMAT_RGB9E5} is a compact HDR format with shared exponent, supported for
+ * sampling on both WebGL2 and WebGPU, but cannot be used as a render target.
  *
  * 2. **As renderable textures** that can be used as color buffers in a {@link RenderTarget}:
  *     - on WebGPU, rendering to float and half-float formats is always supported.
  *     - on WebGPU, rendering to small-float format is supported only if
  * {@link GraphicsDevice#textureRG11B10Renderable} is true.
- *     - on WebGL2, rendering to these 3 formats formats is supported only if
+ *     - on WebGL2, rendering to these 3 formats is supported only if
  * {@link GraphicsDevice#textureFloatRenderable} is true.
  *     - on WebGL2, if {@link GraphicsDevice#textureFloatRenderable} is false, but
  * {@link GraphicsDevice#textureHalfFloatRenderable} is true, rendering to half-float formats only
  * is supported. This is the case of many mobile iOS devices.
  *     - you can determine available renderable HDR format using
  * {@link GraphicsDevice#getRenderableHdrFormat}.
+ *     - {@link PIXELFORMAT_RGB10A2} provides 10 bits per RGB channel with 2-bit alpha, offering
+ * higher precision than {@link PIXELFORMAT_RGBA8} at the same memory cost. It is renderable on
+ * both WebGL2 and WebGPU. {@link PIXELFORMAT_RGB10A2U} is the unsigned integer variant.
+ *
  * @category Graphics
  */
 class Texture {
+    /**
+     * Creates a 2D data texture with nearest filtering, clamp-to-edge addressing and no mipmaps.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+     * @param {string} name - The name of the texture.
+     * @param {number} width - The width of the texture in pixels.
+     * @param {number} height - The height of the texture in pixels.
+     * @param {number} format - The pixel format of the texture.
+     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [levels]
+     * - Optional initial mip level data.
+     * @returns {Texture} The created texture.
+     * @ignore
+     */
+    static createDataTexture2D(graphicsDevice, name, width, height, format, levels) {
+        return new Texture(graphicsDevice, {
+            name,
+            width,
+            height,
+            format,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            levels
+        });
+    }
+
     /**
      * The name of the texture.
      *
@@ -87,7 +121,6 @@ class Texture {
      * A render version used to track the last time the texture properties requiring bind group
      * to be updated were changed.
      *
-     * @type {number}
      * @ignore
      */
     renderVersionDirty = 0;
@@ -171,7 +204,7 @@ class Texture {
      * Defaults to undefined.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume.
      * Defaults to false.
-     * @param {string} [options.type] - Specifies the texture type.  Can be:
+     * @param {string} [options.type] - Specifies the texture type. Can be:
      *
      * - {@link TEXTURETYPE_DEFAULT}
      * - {@link TEXTURETYPE_RGBM}
@@ -260,7 +293,7 @@ class Texture {
         if (options.numLevels !== undefined) {
             this._numLevels = options.numLevels;
         }
-        this._updateNumLevel();
+        this._updateNumLevels();
 
         this._minFilter = options.minFilter ?? FILTER_LINEAR_MIPMAP_LINEAR;
         this._magFilter = options.magFilter ?? FILTER_LINEAR;
@@ -371,7 +404,7 @@ class Texture {
             this._width = Math.floor(width);
             this._height = Math.floor(height);
             this._depth = Math.floor(depth);
-            this._updateNumLevel();
+            this._updateNumLevels();
 
             // re-create the implementation
             this.impl = device.createTextureImpl(this);
@@ -416,7 +449,7 @@ class Texture {
         this.renderVersionDirty = this.device.renderVersion;
     }
 
-    _updateNumLevel() {
+    _updateNumLevels() {
 
         const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
         const requestedLevels = this._numLevelsRequested;
@@ -668,12 +701,25 @@ class Texture {
             } else if (isIntegerPixelFormat(this._format)) {
                 Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
             } else {
-                this._mipmaps = v;
-            }
+                const oldMipmaps = this._mipmaps;
+                const oldNumLevels = this._numLevels;
 
-            if (v) {
-                this._needsMipmapsUpload = true;
-                this.device?.texturesToUpload?.add(this);
+                this._mipmaps = v;
+                this._updateNumLevels();
+
+                // Changing mip count on array textures requires re-creating immutable storage.
+                if (this.array && this._numLevels !== oldNumLevels) {
+                    this.recreateImpl();
+                } else if (this._mipmaps !== oldMipmaps) {
+                    this.propertyChanged(TEXPROPERTY_MIN_FILTER);
+
+                    if (this._mipmaps) {
+                        this._needsMipmapsUpload = true;
+                        this.device?.texturesToUpload?.add(this);
+                    } else {
+                        this._needsMipmapsUpload = false;
+                    }
+                }
             }
         }
     }
@@ -1006,16 +1052,31 @@ class Texture {
     }
 
     /**
-     * Set the pixel data of the texture from a canvas, image, video DOM element. If the texture is
-     * a cubemap, the supplied source must be an array of 6 canvases, images or videos.
+     * Set the pixel data of the texture from a canvas, image, video, or HTML DOM element. If the
+     * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A
-     * canvas, image or video element, or an array of 6 canvas, image or video elements.
+     * Note: using an HTML element (e.g. `<div>`) as a source requires
+     * {@link GraphicsDevice#supportsHtmlTextures} to be true.
+     *
+     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|HTMLElement[]} source - A
+     * canvas, image, video, or HTML element, or an array of 6 canvas, image, video, or HTML
+     * elements.
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
      * than 0, represents the image source for the Nth mipmap reduction level.
      */
     setSource(source, mipLevel = 0) {
+        if (this.device._isHTMLElementInterface(source)) {
+            if (!this.device.supportsHtmlTextures) {
+                Debug.error('Texture#setSource: HTML element textures are not supported on this device. Check device.supportsHtmlTextures before calling setSource with an HTML element.');
+                return;
+            }
+            if (this._cubemap || this._volume) {
+                Debug.error('Texture#setSource: HTML element textures can only be used with 2D textures, not cubemaps or volume textures.');
+                return;
+            }
+        }
+
         let invalid = false;
         let width, height;
 
@@ -1064,6 +1125,10 @@ class Texture {
                 if (source instanceof HTMLVideoElement) {
                     width = source.videoWidth;
                     height = source.videoHeight;
+                } else if (this.device._isHTMLElementInterface(source)) {
+                    const rect = source.getBoundingClientRect();
+                    width = Math.floor(rect.width) || 1;
+                    height = Math.floor(rect.height) || 1;
                 } else {
                     width = source.width;
                     height = source.height;
@@ -1148,10 +1213,10 @@ class Texture {
     }
 
     /**
-     * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-     * is called by internally by {@link setSource} and {@link unlock}. However, it still needs to
+     * Forces a reupload of the texture's pixel data to graphics memory. Ordinarily, this function
+     * is called internally by {@link setSource} and {@link unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the
-     * texture.  Normally, this is done once every frame before video textured geometry is
+     * texture. Normally, this is done once every frame before video textured geometry is
      * rendered.
      */
     upload() {

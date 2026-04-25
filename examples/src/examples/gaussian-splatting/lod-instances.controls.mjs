@@ -3,70 +3,53 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, Label } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, SliderInput, Label } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
-            { headerText: 'Debug' },
+            { headerText: 'Settings' },
             jsx(
                 LabelGroup,
-                { text: 'High Res' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'highRes' },
-                    value: observer.get('highRes') || false
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'AABBs' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'debugAabbs' },
-                    value: observer.get('debugAabbs')
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Colorize LOD' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'debugLod' },
-                    value: observer.get('debugLod')
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'LOD Preset' },
+                { text: 'Renderer' },
                 jsx(SelectInput, {
-                    type: 'string',
+                    type: 'number',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'lodPreset' },
-                    value: observer.get('lodPreset') || 'normal',
+                    link: { observer, path: 'renderer' },
+                    value: observer.get('renderer') ?? 0,
                     options: [
-                        { v: 'normal', t: 'Normal (0–3)' },
-                        { v: 'ultra', t: 'Ultra (0–0)' },
-                        { v: 'high', t: 'High (1–2)' },
-                        { v: 'low', t: 'Low (2–3)' }
+                        { v: 0, t: 'Auto' },
+                        { v: 1, t: 'Raster (CPU Sort)' },
+                        { v: 2, t: 'Raster (GPU Sort)' },
+                        { v: 3, t: 'Compute' }
                     ]
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Hue Animation' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'colorize' },
+                    value: observer.get('colorize')
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Splat Budget' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'splatBudget' },
+                    min: 0,
+                    max: 10,
+                    precision: 1,
+                    step: 0.1
                 })
             )
         ),
         jsx(
             Panel,
             { headerText: 'Stats' },
-            jsx(
-                LabelGroup,
-                { text: 'Resolution' },
-                jsx(Label, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.stats.resolution' },
-                    value: observer.get('data.stats.resolution')
-                })
-            ),
             jsx(
                 LabelGroup,
                 { text: 'GSplat Count' },

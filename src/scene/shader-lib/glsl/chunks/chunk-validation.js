@@ -125,7 +125,8 @@ const removedChunks = {
     aoDetailMapPS: '2.7',
     lightmapDirPS: '2.7',
     lightmapSinglePS: '2.7',
-    tangentBinormalVS: '2.7'
+    tangentBinormalVS: '2.7',
+    gsplatCustomizeVS: '2.16'
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

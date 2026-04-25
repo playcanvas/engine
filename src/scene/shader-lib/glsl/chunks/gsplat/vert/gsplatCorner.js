@@ -1,5 +1,6 @@
 export default /* glsl */`
 uniform vec4 viewport_size;             // viewport width, height, 1/width, 1/height
+uniform float minPixelSize;
 
 // compute 3d covariance from rotation (w,x,y,z format) and scale
 void computeCovariance(vec4 rotation, vec3 scale, out vec3 covA, out vec3 covB) {
@@ -27,14 +28,39 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
 
     float focal = viewport_size.x * center.projMat00;
 
-    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : center.view.xyz;
-    float J1 = focal / v.z;
-    vec2 J2 = -J1 / v.z * v.xy;
-    mat3 J = mat3(
-        J1, 0.0, J2.x, 
-        0.0, J1, J2.y, 
-        0.0, 0.0, 0.0
-    );
+    vec3 v = center.view.xyz;
+
+    #ifdef GSPLAT_FISHEYE
+
+        // Generalized fisheye Jacobian for g(θ) = k·tan(θ/k)
+        // fisheyeSinTK, fisheyeCosTK, fisheyeRxy are shared from center shader
+        float r_sq = max(center.fisheyeRxy * center.fisheyeRxy, 1e-8);
+        float d2 = dot(v, v);
+        float neg_z = -v.z;
+        float g_prime = 1.0 / (center.fisheyeCosTK * center.fisheyeCosTK);
+        float g_theta = fisheye_k * center.fisheyeSinTK / center.fisheyeCosTK;
+        float sv = (center.fisheyeRxy > 1e-4) ? g_theta / center.fisheyeRxy : (neg_z > 0.0 ? 1.0 / neg_z : 0.0);
+        float K = (center.fisheyeRxy > 1e-4) ? (g_prime * neg_z / d2 - sv) / r_sq : 0.0;
+
+        mat3 J = mat3(
+            focal * (sv + K * v.x * v.x),  focal * K * v.x * v.y,         focal * g_prime * v.x / d2,
+            focal * K * v.x * v.y,        focal * (sv + K * v.y * v.y),    focal * g_prime * v.y / d2,
+            0.0,                           0.0,                            0.0
+        );
+
+    #else
+
+        // Standard perspective Jacobian
+        vec3 vp = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : v;
+        float J1 = focal / vp.z;
+        vec2 J2 = -J1 / vp.z * vp.xy;
+        mat3 J = mat3(
+            J1, 0.0, J2.x,
+            0.0, J1, J2.y,
+            0.0, 0.0, 0.0
+        );
+
+    #endif
 
     mat3 W = transpose(mat3(center.modelView));
     mat3 T = W * J;
@@ -62,8 +88,8 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
-    // early-out gaussians smaller than 2 pixels
-    if (l1 < 2.0 && l2 < 2.0) {
+    // early-out gaussians smaller than minPixelSize
+    if (max(l1, l2) < minPixelSize) {
         return false;
     }
 
@@ -78,11 +104,25 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     vec2 v1 = l1 * diagonalVector;
     vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
 
-    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) * c;
+    corner.offset = vec3((source.cornerUV.x * v1 + source.cornerUV.y * v2) * c, 0.0);
     corner.uv = source.cornerUV;
 
     return true;
 }
+
+#if GSPLAT_2DGS
+// 2DGS: Compute oriented quad corner in model space
+void initCorner2DGS(SplatSource source, vec4 rotation, vec3 scale, out SplatCorner corner) {
+    // Scale by 3.0 for 3-sigma coverage
+    vec2 localPos = source.cornerUV * vec2(scale.x, scale.y) * 3.0;
+
+    // Rotate the local position using the quaternion
+    vec3 v = vec3(localPos, 0.0);
+    vec3 t = 2.0 * cross(rotation.xyz, v);
+    corner.offset = v + rotation.w * t + cross(rotation.xyz, t);
+    corner.uv = source.cornerUV;
+}
+#endif
 
 // calculate the clip-space offset from the center for this gaussian
 bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
@@ -93,13 +133,16 @@ bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) 
     // Hook: modify rotation and scale
     modifySplatRotationScale(center.modelCenterOriginal, center.modelCenterModified, rotation, scale);
 
-    // Compute covariance from (possibly modified) rotation and scale
-    vec3 covA, covB;
-    computeCovariance(rotation.wxyz, scale, covA, covB);  // Convert back to (w,x,y,z)
+    #if GSPLAT_2DGS
+        initCorner2DGS(source, rotation, scale, corner);
+        return true;
+    #else
+        // 3DGS: Use covariance-based screen-space projection
+        // Compute covariance from (possibly modified) rotation and scale
+        vec3 covA, covB;
+        computeCovariance(rotation.wxyz, scale, covA, covB);  // Convert back to (w,x,y,z)
 
-    // Existing hook: modify covariance
-    modifyCovariance(center.modelCenterOriginal, center.modelCenterModified, covA, covB);
-
-    return initCornerCov(source, center, corner, covA, covB);
+        return initCornerCov(source, center, corner, covA, covB);
+    #endif
 }
 `;

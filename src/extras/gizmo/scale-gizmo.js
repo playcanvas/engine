@@ -136,27 +136,20 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * Internal state if transform should use uniform scaling.
      *
-     * @type {boolean}
      * @protected
      */
     _uniform = false;
 
-    /**
-     * @override
-     */
+    /** @override */
     snapIncrement = 1;
 
     /**
      * Flips the planes to face the camera.
-     *
-     * @type {boolean}
      */
     flipPlanes = true;
 
     /**
      * The lower bound for scaling.
-     *
-     * @type {Vec3}
      */
     lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
 
@@ -377,7 +370,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link ScaleGizmo#flipPlanes} instead.
+     * @deprecated Use {@link flipPlanes} instead.
      * @ignore
      */
     set flipShapes(value) {
@@ -386,7 +379,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link ScaleGizmo#flipPlanes} instead.
+     * @deprecated Use {@link flipPlanes} instead.
      * @ignore
      */
     get flipShapes() {
@@ -415,9 +408,7 @@ class ScaleGizmo extends TransformGizmo {
         this._shapes.xy[prop] = value;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _shapesLookAtCamera() {
         const cameraDir = this.cameraDir;
 
@@ -517,9 +508,7 @@ class ScaleGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _storeNodeScales() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -596,9 +585,7 @@ class ScaleGizmo extends TransformGizmo {
         return point;
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     prerender() {
         super.prerender();
 

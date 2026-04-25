@@ -44,9 +44,6 @@ uniform vec2 shadowAtlasParams;
 // it's sorted to have all vectors aligned to 4 floats to limit padding
 struct ClusterLightData {
 
-    // 32bit of flags
-    uint flags;
-
     // area light sizes / orientation
     vec3 halfWidth;
 
@@ -88,15 +85,9 @@ struct ClusterLightData {
     // compressed biases, two haf-floats stored in a float
     float biasesData;
 
-    // blue color component and angle flags (as uint for efficient bit operations)
-    uint colorBFlagsData;
-
     // shadow bias values
     float shadowBias;
     float shadowNormalBias;
-
-    // compressed angles, two haf-floats stored in a float
-    float anglesData;
 
     // spot light inner and outer angle cosine
     float innerConeAngleCos;
@@ -118,6 +109,12 @@ struct ClusterLightData {
 // shadow (spot light only) / cookie projection matrix
 mat4 lightProjectionMatrix;
 
+// NOTE: On some Samsung devices, these values can suffer precision / corruption issues when stored
+// as members of ClusterLightData. Keep them as module-scope temporaries instead. See issue #7800.
+uint clusterLightData_flags;             // 32bit of flags
+float clusterLightData_anglesData;       // compressed angles, two haf-floats stored in a float
+uint clusterLightData_colorBFlagsData;   // blue color component and angle flags (as uint for efficient bit operations)
+
 vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
     return texelFetch(lightsTexture, ivec2(index, clusterLightData.lightIndex), 0);
 }
@@ -131,13 +128,13 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, int lightIn
     vec4 halfData = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_COLOR_ANGLES_BIAS});
 
     // store floats we decode later as needed
-    clusterLightData.anglesData = halfData.z;
+    clusterLightData_anglesData = halfData.z;
     clusterLightData.biasesData = halfData.w;
-    clusterLightData.colorBFlagsData = floatBitsToUint(halfData.y);
+    clusterLightData_colorBFlagsData = floatBitsToUint(halfData.y);
 
     // decompress color half-floats
     vec2 colorRG = unpackHalf2x16(floatBitsToUint(halfData.x));
-    vec2 colorB_flags = unpackHalf2x16(clusterLightData.colorBFlagsData);
+    vec2 colorB_flags = unpackHalf2x16(clusterLightData_colorBFlagsData);
     clusterLightData.color = vec3(colorRG, colorB_flags.x) * {LIGHT_COLOR_DIVIDER};
 
     // position and range, full floats
@@ -152,21 +149,21 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, int lightIn
     clusterLightData.direction = lightDir_Flags.xyz;
 
     // 32bit flags
-    clusterLightData.flags = floatBitsToUint(lightDir_Flags.w);
-    clusterLightData.isSpot = (clusterLightData.flags & (1u << 30u)) != 0u;
-    clusterLightData.shape = (clusterLightData.flags >> 28u) & 0x3u;
-    clusterLightData.falloffModeLinear = (clusterLightData.flags & (1u << 27u)) == 0u;
-    clusterLightData.shadowIntensity = float((clusterLightData.flags >> 0u) & 0xFFu) / 255.0;
-    clusterLightData.cookieIntensity = float((clusterLightData.flags >> 8u) & 0xFFu) / 255.0;
-    clusterLightData.isDynamic = (clusterLightData.flags & (1u << 22u)) != 0u;
-    clusterLightData.isLightmapped = (clusterLightData.flags & (1u << 21u)) != 0u;
+    clusterLightData_flags = floatBitsToUint(lightDir_Flags.w);
+    clusterLightData.isSpot = (clusterLightData_flags & (1u << 30u)) != 0u;
+    clusterLightData.shape = (clusterLightData_flags >> 28u) & 0x3u;
+    clusterLightData.falloffModeLinear = (clusterLightData_flags & (1u << 27u)) == 0u;
+    clusterLightData.shadowIntensity = float((clusterLightData_flags >> 0u) & 0xFFu) / 255.0;
+    clusterLightData.cookieIntensity = float((clusterLightData_flags >> 8u) & 0xFFu) / 255.0;
+    clusterLightData.isDynamic = (clusterLightData_flags & (1u << 22u)) != 0u;
+    clusterLightData.isLightmapped = (clusterLightData_flags & (1u << 21u)) != 0u;
 }
 
 void decodeClusterLightSpot(inout ClusterLightData clusterLightData) {
     // decompress spot light angles
-    uint angleFlags = (clusterLightData.colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
+    uint angleFlags = (clusterLightData_colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
 
-    vec2 angleValues = unpackHalf2x16(floatBitsToUint(clusterLightData.anglesData));
+    vec2 angleValues = unpackHalf2x16(floatBitsToUint(clusterLightData_anglesData));
     float innerVal = angleValues.x;
     float outerVal = angleValues.y;
 
@@ -207,7 +204,7 @@ void decodeClusterLightShadowData(inout ClusterLightData clusterLightData) {
 void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
 
     // extract channel mask from flags
-    uint cookieFlags = (clusterLightData.flags >> 23u) & 0x0Fu;  // 4bits, each bit enables a channel
+    uint cookieFlags = (clusterLightData_flags >> 23u) & 0x0Fu;  // 4bits, each bit enables a channel
     clusterLightData.cookieChannelMask = vec4(uvec4(cookieFlags) & uvec4(1u, 2u, 4u, 8u));
     clusterLightData.cookieChannelMask = step(1.0, clusterLightData.cookieChannelMask);  // Normalize to 0.0 or 1.0
 }

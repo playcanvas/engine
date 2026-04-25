@@ -20,34 +20,38 @@ const USER_INPUT_EVENTS = [
  */
 class SoundManager extends EventHandler {
     /**
+     * @type {AudioContext|null}
+     * @private
+     */
+    _context = null;
+
+    /**
+     * @type {() => void}
+     * @private
+     */
+    _unlockHandlerFunc;
+
+    /** @private */
+    _userSuspended = false;
+
+    /**
+     * The listener associated with this manager.
+     *
+     * @type {Listener}
+     */
+    listener;
+
+    /** @private */
+    _volume = 1;
+
+    /**
      * Create a new SoundManager instance.
      */
     constructor() {
         super();
 
-        /**
-         * The underlying AudioContext, lazy loaded in the 'context' property.
-         *
-         * @type {AudioContext|null}
-         * @private
-         */
-        this._context = null;
-
-        this.AudioContext = (typeof AudioContext !== 'undefined' && AudioContext) ||
-                            (typeof webkitAudioContext !== 'undefined' && webkitAudioContext);
-
-        if (!this.AudioContext) {
-            Debug.warn('No support for 3D audio found');
-        }
-
         this._unlockHandlerFunc = this._unlockHandler.bind(this);
-
-        // user suspended audio
-        this._userSuspended = false;
-
         this.listener = new Listener(this);
-
-        this._volume = 1;
     }
 
     /**
@@ -76,15 +80,25 @@ class SoundManager extends EventHandler {
     }
 
     /**
-     * Get the Web Audio API context.
+     * Get the Web Audio API context. Returns null if the environment does not support the Web
+     * Audio API.
      *
-     * @type {AudioContext}
+     * @type {AudioContext|null}
      * @ignore
      */
     get context() {
         // lazy create the AudioContext
-        if (!this._context && this.AudioContext) {
-            this._context = new this.AudioContext();
+        if (!this._context) {
+            const AudioContextCtor =
+                (typeof AudioContext !== 'undefined' && AudioContext) ||
+                (typeof webkitAudioContext !== 'undefined' && webkitAudioContext);
+
+            if (!AudioContextCtor) {
+                Debug.warnOnce('No support for Web Audio API found');
+                return null;
+            }
+
+            this._context = new AudioContextCtor();
 
             if (this._context.state !== CONTEXT_STATE_RUNNING) {
                 this._registerUnlockListeners();
@@ -115,21 +129,25 @@ class SoundManager extends EventHandler {
     destroy() {
         this.fire('destroy');
 
-        if (this._context) {
+        const context = this._context;
+        if (context) {
             this._removeUnlockListeners();
-            this._context?.close();
+            context.close();
             this._context = null;
         }
     }
 
     // resume the sound context
     _resume() {
-        this._context.resume().then(() => {
+        const context = this._context;
+        if (!context) return;
+
+        context.resume().then(() => {
             // Some platforms (mostly iOS) require an additional sound to be played.
             // This also performs a sanity check and verifies sounds can be played.
-            const source = this._context.createBufferSource();
-            source.buffer = this._context.createBuffer(1, 1, this._context.sampleRate);
-            source.connect(this._context.destination);
+            const source = context.createBufferSource();
+            source.buffer = context.createBuffer(1, 1, context.sampleRate);
+            source.connect(context.destination);
             source.start(0);
 
             // onended is only called if everything worked as expected (context is running)
@@ -146,7 +164,10 @@ class SoundManager extends EventHandler {
 
     // resume the sound context and fire suspend event if it succeeds
     _suspend() {
-        this._context.suspend().then(() => {
+        const context = this._context;
+        if (!context) return;
+
+        context.suspend().then(() => {
             this.fire('suspend');
         }, (e) => {
             Debug.error(`Attempted to suspend the AudioContext on SoundManager.suspend(), but it was rejected ${e}`);
@@ -158,7 +179,7 @@ class SoundManager extends EventHandler {
     _unlockHandler() {
         this._removeUnlockListeners();
 
-        if (!this._userSuspended && this._context.state !== CONTEXT_STATE_RUNNING) {
+        if (!this._userSuspended && this._context && this._context.state !== CONTEXT_STATE_RUNNING) {
             this._resume();
         }
     }

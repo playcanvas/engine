@@ -25,7 +25,7 @@ import { properties } from './data.js';
  * - `spot`: A local light that emits light similarly to an omni light but is bounded by a cone
  * centered on the owner entity's negative y-axis. Emulates flashlights, spotlights, etc.
  *
- * You should never need to use the LightComponent constructor directly. To add an LightComponent
+ * You should never need to use the LightComponent constructor directly. To add a LightComponent
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
@@ -468,10 +468,9 @@ class LightComponent extends Component {
 
     /**
      * Sets the distribution of subdivision of the camera frustum for individual shadow cascades.
-     * Only used if {@link LightComponent#numCascades} is larger than 1. Can be a value in range of
-     * 0 and 1. Value of 0 represents a linear distribution, value of 1 represents a logarithmic
-     * distribution. Defaults to 0.5. Larger value increases the resolution of the shadows in the
-     * near distance.
+     * Only used if {@link numCascades} is larger than 1. Can be a value in range of 0 and 1. Value
+     * of 0 represents a linear distribution, value of 1 represents a logarithmic distribution.
+     * Defaults to 0.5. Larger value increases the resolution of the shadows in the near distance.
      *
      * @type {number}
      */

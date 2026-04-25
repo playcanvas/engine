@@ -11,6 +11,7 @@ export default /* wgsl */`
     #include "composeDofPS"
     #include "composeSsaoPS"
     #include "composeGradingPS"
+    #include "composeColorEnhancePS"
     #include "composeVignettePS"
     #include "composeFringingPS"
     #include "composeCasPS"
@@ -25,11 +26,6 @@ export default /* wgsl */`
 
         var output: FragmentOutput;
         var uv = uv0;
-
-        // TAA pass renders upside-down on WebGPU, flip it here
-        #ifdef TAA
-            uv.y = 1.0 - uv.y;
-        #endif
 
         let scene = textureSampleLevel(sceneTexture, sceneTextureSampler, uv, 0.0);
         var result = scene.rgb;
@@ -57,6 +53,11 @@ export default /* wgsl */`
         // Apply Bloom
         #ifdef BLOOM
             result = applyBloom(result, uv0);
+        #endif
+
+        // Apply Color Enhancement (shadows, highlights, vibrance)
+        #ifdef COLOR_ENHANCE
+            result = applyColorEnhance(result);
         #endif
 
         // Apply Color Grading

@@ -25,36 +25,26 @@ import wgslRadixSortReorderPS from '../shader-lib/wgsl/chunks/radix-sort/radix-s
 class RenderPassRadixSortReorder extends RenderPassShaderQuad {
     /**
      * Whether this pass reads from linear-layout source texture (first pass).
-     *
-     * @type {boolean}
      */
     sourceLinear = false;
 
     /**
      * Whether to output indices in linear layout.
-     *
-     * @type {boolean}
      */
     outputLinear = false;
 
     /**
      * Bits per radix step (usually 4).
-     *
-     * @type {number}
      */
     bitsPerStep = 0;
 
     /**
      * Log2 of group size (usually 4 for 16 elements).
-     *
-     * @type {number}
      */
     groupSize = 0;
 
     /**
      * Current bit offset for this pass.
-     *
-     * @type {number}
      */
     currentBit = 0;
 

@@ -106,6 +106,50 @@ class Keyboard extends EventHandler {
     _lastmap = {};
 
     /**
+     * @type {(event: globalThis.KeyboardEvent) => void}
+     * @private
+     */
+    _keyDownHandler;
+
+    /**
+     * @type {(event: globalThis.KeyboardEvent) => void}
+     * @private
+     */
+    _keyUpHandler;
+
+    /**
+     * @type {(event: globalThis.KeyboardEvent) => void}
+     * @private
+     */
+    _keyPressHandler;
+
+    /**
+     * @type {() => void}
+     * @private
+     */
+    _visibilityChangeHandler;
+
+    /**
+     * @type {() => void}
+     * @private
+     */
+    _windowBlurHandler;
+
+    /**
+     * Call preventDefault() in key event handlers.
+     *
+     * @type {boolean}
+     */
+    preventDefault;
+
+    /**
+     * Call stopPropagation() in key event handlers.
+     *
+     * @type {boolean}
+     */
+    stopPropagation;
+
+    /**
      * Create a new Keyboard instance.
      *
      * @param {Element|Window} [element] - Element to attach Keyboard to. Note that elements like

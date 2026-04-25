@@ -130,9 +130,9 @@ const _tempColor = new Color();
  * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
- * {@link StandardMaterial#anisotropyIntensity} parameter to set material anisotropy.
+ * {@link anisotropyIntensity} parameter to set material anisotropy.
  * @property {number} anisotropyIntensity Defines amount of anisotropy. Requires
- * {@link StandardMaterial#enableGGXSpecular} is set to true.
+ * {@link enableGGXSpecular} is set to true.
  * - When anisotropyIntensity == 0, specular is isotropic.
  * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
  * @property {number} anisotropyRotation Defines the rotation (in degrees) of anisotropy.
@@ -270,7 +270,7 @@ const _tempColor = new Color();
  * @property {string} refractionMapChannel Color channels of the refraction map to use. Can be "r",
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} refractionVertexColor Use mesh vertex colors for refraction. If
- * refraction map is set, it will be be multiplied by vertex colors.
+ * refraction map is set, it will be multiplied by vertex colors.
  * @property {boolean} refractionVertexColorChannel Vertex color channel to use for refraction.
  * Can be "r", "g", "b" or "a".
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of
@@ -295,7 +295,7 @@ const _tempColor = new Color();
  * @property {string} thicknessMapChannel Color channels of the thickness map to use. Can be "r",
  * "g", "b" or "a".
  * @property {boolean} thicknessVertexColor Use mesh vertex colors for thickness. If
- * thickness map is set, it will be be multiplied by vertex colors.
+ * thickness map is set, it will be multiplied by vertex colors.
  * @property {Color} attenuation The attenuation color for refractive materials, only used when
  * useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
@@ -371,8 +371,8 @@ const _tempColor = new Color();
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be
  * "r", "g", "b" or "a".
  * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
- * faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use
- * {@link Material#alphaFade} to fade out materials.
+ * faded out using {@link opacity}. Default is true. When set to false use {@link alphaFade} to
+ * fade out materials.
  * @property {string} opacityDither Used to specify whether opacity is dithered, which allows
  * transparency without alpha blending. Can be:
  *
@@ -383,7 +383,7 @@ const _tempColor = new Color();
  *
  * Defaults to {@link DITHER_NONE}.
  * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
- * allows shadow transparency without alpha blending.  Can be:
+ * allows shadow transparency without alpha blending. Can be:
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
@@ -391,8 +391,8 @@ const _tempColor = new Color();
  * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
- * @property {number} alphaFade Used to fade out materials when
- * {@link StandardMaterial#opacityFadesSpecular} is set to false.
+ * @property {number} alphaFade Used to fade out materials when {@link opacityFadesSpecular} is
+ * set to false.
  * @property {Texture|null} normalMap The main (primary) normal map of the material (default is
  * null). The texture must contains normalized, tangent space normals.
  * @property {number} normalMapUv Main (primary) normal map UV channel.
@@ -515,8 +515,8 @@ const _tempColor = new Color();
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
  * @property {boolean} useLighting Apply lighting
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
- * @property {boolean} useTonemap Apply tonemapping (as configured in {@link Scene#rendering} or
- * {@link CameraComponent.rendering}). Defaults to true.
+ * @property {boolean} useTonemap Apply tonemapping (as configured via
+ * {@link CameraComponent#toneMapping}). Defaults to true.
  * @property {boolean} pixelSnap Align vertices to pixel coordinates when rendering. Useful for
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on

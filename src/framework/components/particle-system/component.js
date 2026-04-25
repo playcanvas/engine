@@ -90,19 +90,50 @@ const ASSET_PROPERTIES = ['colorMapAsset', 'normalMapAsset', 'meshAsset', 'rende
 let depthLayer;
 
 /**
- * Used to simulate particles and produce renderable particle mesh on either CPU or GPU. GPU
- * simulation is generally much faster than its CPU counterpart, because it avoids slow CPU-GPU
- * synchronization and takes advantage of many GPU cores. However, it requires client to support
- * reasonable uniform count, reading from multiple textures in vertex shader and OES_texture_float
- * extension, including rendering into float textures. Most mobile devices fail to satisfy these
- * requirements, so it's not recommended to simulate thousands of particles on them. GPU version
- * also can't sort particles, so enabling sorting forces CPU mode too. Particle rotation is
- * specified by a single angle parameter: default billboard particles rotate around camera facing
- * axis, while mesh particles rotate around 2 different view-independent axes. Most of the
- * simulation parameters are specified with {@link Curve} or {@link CurveSet}. Curves are
- * interpolated based on each particle's lifetime, therefore parameters are able to change over
- * time. Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way
- * each particle will pick a random value in-between.
+ * The ParticleSystemComponent enables an {@link Entity} to simulate particles and produce a
+ * renderable particle mesh on either CPU or GPU. GPU simulation is generally much faster than
+ * its CPU counterpart, because it avoids slow CPU-GPU synchronization and takes advantage of
+ * many GPU cores. However, it requires client support for reasonable uniform counts, reading
+ * from multiple textures in a vertex shader and the OES_texture_float extension, including
+ * rendering into float textures. Most mobile devices fail to satisfy these requirements, so it's
+ * not recommended to simulate thousands of particles on them. The GPU version also can't sort
+ * particles, so enabling sorting forces CPU mode too.
+ *
+ * Particle rotation is specified by a single angle parameter: default billboard particles rotate
+ * around the camera-facing axis, while mesh particles rotate around two different view-independent
+ * axes. Most of the simulation parameters are specified with {@link Curve} or {@link CurveSet}.
+ * Curves are interpolated based on each particle's lifetime, therefore parameters are able to
+ * change over time. Most curve parameters can also be specified by 2 minimum/maximum curves, so
+ * that each particle picks a random value in-between.
+ *
+ * You should never need to use the ParticleSystemComponent constructor directly. To add a
+ * ParticleSystemComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('particlesystem', {
+ *     numParticles: 100,
+ *     lifetime: 2,
+ *     rate: 0.1
+ * });
+ * ```
+ *
+ * Once the ParticleSystemComponent is added to the entity, you can access it via the
+ * {@link Entity#particlesystem} property:
+ *
+ * ```javascript
+ * entity.particlesystem.loop = false; // Play the system once then stop
+ *
+ * console.log(entity.particlesystem.loop); // Get the loop flag and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Particle Animated Index](https://playcanvas.github.io/#/graphics/particles-anim-index)
+ * - [Particle Mesh](https://playcanvas.github.io/#/graphics/particles-mesh)
+ * - [Particle Random Sprites](https://playcanvas.github.io/#/graphics/particles-random-sprites)
+ * - [Particle Snow](https://playcanvas.github.io/#/graphics/particles-snow)
+ * - [Particle Spark](https://playcanvas.github.io/#/graphics/particles-spark)
  *
  * @hideconstructor
  * @category Graphics
@@ -200,8 +231,7 @@ class ParticleSystemComponent extends Component {
 
     /**
      * Sets whether the particle system plays automatically on creation. If set to false, it is
-     * necessary to call {@link ParticleSystemComponent#play} for the particle system to play.
-     * Defaults to true.
+     * necessary to call {@link play} for the particle system to play. Defaults to true.
      *
      * @type {boolean}
      */

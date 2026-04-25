@@ -39,6 +39,7 @@ import falloffInvSquaredPS from '../chunks/lit/frag/falloffInvSquared.js';
 import falloffLinearPS from '../chunks/lit/frag/falloffLinear.js';
 import floatAsUintPS from '../chunks/common/frag/float-as-uint.js';
 import fogPS from '../chunks/common/frag/fog.js';
+import fogMathPS from '../chunks/common/shared/fogMath.js';
 import fresnelSchlickPS from '../chunks/lit/frag/fresnelSchlick.js';
 import fullscreenQuadVS from '../chunks/common/vert/fullscreenQuad.js';
 import gammaPS from '../chunks/common/frag/gamma.js';
@@ -119,6 +120,7 @@ import skinBatchVS from '../chunks/common/vert/skinBatch.js';
 import skinVS from '../chunks/common/vert/skin.js';
 import skyboxPS from '../chunks/skybox/frag/skybox.js';
 import skyboxVS from '../chunks/skybox/vert/skybox.js';
+import sortIndirectArgsCS from '../chunks/common/comp/sort-indirect-args.js';
 import specularPS from '../chunks/standard/frag/specular.js';
 import sphericalPS from '../chunks/common/frag/spherical.js';
 import specularityFactorPS from '../chunks/standard/frag/specularityFactor.js';
@@ -199,6 +201,7 @@ const shaderChunksWGSL = {
     falloffLinearPS,
     floatAsUintPS,
     fogPS,
+    fogMathPS,
     fresnelSchlickPS,
     frontendCodePS: '',  // empty chunk, supplied by the shader generator
     frontendDeclPS: '',  // empty chunk, supplied by the shader generator
@@ -289,6 +292,7 @@ const shaderChunksWGSL = {
     skinVS,
     skyboxPS,
     skyboxVS,
+    sortIndirectArgsCS,
     specularPS,
     sphericalPS,
     specularityFactorPS,

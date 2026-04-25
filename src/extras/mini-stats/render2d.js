@@ -21,9 +21,9 @@ import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 
 // Graph colors for MiniStats
-const graphColorRed = '1.0, 0.412, 0.380';      // Pastel Red
-const graphColorGreen = '0.467, 0.867, 0.467';  // Pastel Green
-const graphColorBlue = '0.424, 0.627, 0.863';   // Little Boy Blue
+const graphColorDefault = '1.0, 0.412, 0.380';  // Pastel Red
+const graphColorGpu = '0.467, 0.867, 0.467';    // Pastel Green
+const graphColorCpu = '0.424, 0.627, 0.863';    // Little Boy Blue
 
 // Background colors for MiniStats graphs
 const mainBackgroundColor = '0.0, 0.0, 0.0';
@@ -62,8 +62,7 @@ const vertexShaderWGSL = /* wgsl */ `
 
 // this fragment shader renders the bits required for text and graphs. The text is identified
 // in the texture by white color. The graph data is specified as a single row of pixels
-// where the R channel denotes the height of the 1st graph and the G channel the height
-// of the second graph and B channel the height of the last graph
+// where the R channel denotes the graph height
 const fragmentShaderGLSL = /* glsl */ `
     varying vec4 uv0;
     varying float wordFlag;
@@ -73,15 +72,18 @@ const fragmentShaderGLSL = /* glsl */ `
     uniform sampler2D wordsTex;
 
     void main (void) {
+        vec3 graphColor = vec3(${graphColorDefault});
+        if (wordFlag > 0.5) {
+            graphColor = vec3(${graphColorCpu});
+        } else if (wordFlag > 0.2) {
+            graphColor = vec3(${graphColorGpu});
+        }
+
         vec4 graphSample = texture2D(graphTex, uv0.xy);
 
         vec4 graph;
         if (uv0.w < graphSample.r)
-            graph = vec4(${graphColorRed}, 1.0);
-        else if (uv0.w < graphSample.g)
-            graph = vec4(${graphColorGreen}, 1.0);
-        else if (uv0.w < graphSample.b)
-            graph = vec4(${graphColorBlue}, 1.0);
+            graph = vec4(graphColor, 1.0);
         else {
             vec3 bgColor = vec3(${mainBackgroundColor});
             if (wordFlag > 0.5) {
@@ -117,15 +119,18 @@ const fragmentShaderWGSL = /* wgsl */ `
 
     @fragment fn fragmentMain(input : FragmentInput) -> FragmentOutput {
         var uv0: vec4f = input.uv0;
+        var graphColor: vec3f = vec3f(${graphColorDefault});
+        if (input.wordFlag > 0.5) {
+            graphColor = vec3f(${graphColorCpu});
+        } else if (input.wordFlag > 0.2) {
+            graphColor = vec3f(${graphColorGpu});
+        }
+
         var graphSample: vec4f = textureSample(graphTex, graphTex_sampler, uv0.xy);
 
         var graph: vec4f;
         if (uv0.w < graphSample.r) {
-            graph = vec4f(${graphColorRed}, 1.0);
-        } else if (uv0.w < graphSample.g) {
-            graph = vec4f(${graphColorGreen}, 1.0);
-        } else if (uv0.w < graphSample.b) {
-            graph = vec4f(${graphColorBlue}, 1.0);
+            graph = vec4f(graphColor, 1.0);
         } else {
             var bgColor: vec3f = vec3f(${mainBackgroundColor});
             if (input.wordFlag > 0.5) {

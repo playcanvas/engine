@@ -107,6 +107,17 @@ class WebgpuTexture {
 
         Debug.assert(texture.width > 0 && texture.height > 0, `Invalid texture dimensions ${texture.width}x${texture.height} for texture ${texture.name}`, texture);
 
+        // All compressed formats currently supported by the engine (BC, ETC2, ASTC 4x4) use 4x4
+        // pixel blocks. If ASTC formats with other block sizes (e.g. 5x4, 6x6, 8x8) are added,
+        // this needs to use per-format block dimensions instead of a hardcoded 4.
+        if (isCompressedPixelFormat(texture.format) && (texture.width % 4 !== 0 || texture.height % 4 !== 0)) {
+            Debug.error(`Compressed texture '${texture.name}' [${pixelFormatInfo.get(texture.format)?.name}] dimensions ${texture.width}x${texture.height} ` +
+                'are not a multiple of the block size 4. WebGPU requires compressed texture dimensions to be multiples of the block size. ' +
+                `Rounding up to ${math.roundUp(texture.width, 4)}x${math.roundUp(texture.height, 4)}, which may cause minor rendering artifacts.`, texture);
+            texture._width = math.roundUp(texture.width, 4);
+            texture._height = math.roundUp(texture.height, 4);
+        }
+
         this.desc = {
             size: {
                 width: texture.width,
@@ -155,6 +166,12 @@ class WebgpuTexture {
     }
 
     destroy(device) {
+        // defer GPU texture destruction until after command buffer submission
+        device.deferDestroy(this.gpuTexture);
+        this.gpuTexture = null;
+        this.view = null;
+        this.viewCache.clear();
+        this.samplers.length = 0;
     }
 
     propertyChanged(flag) {
@@ -191,7 +208,12 @@ class WebgpuTexture {
             return view;
         }
 
-        Debug.assert(this.view);
+        Debug.call(() => {
+            if (!this.view) {
+                Debug.errorOnce('View failed to be created for texture, texture is possibly destroyed', this);
+            }
+        });
+
         return this.view;
     }
 
@@ -316,6 +338,9 @@ class WebgpuTexture {
     uploadImmediate(device, texture) {
 
         if (texture._needsUpload || texture._needsMipmapsUpload) {
+            Debug.assert(!device.insideRenderPass,
+                `Texture.upload() for "${texture.name}" was called while inside a render pass, which is not currently supported. ` +
+                'Move texture updates to the before() or after() function of the RenderPass.');
             this.uploadData(device);
 
             texture._needsUpload = false;

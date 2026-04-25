@@ -11,11 +11,11 @@ import { I18nParser } from './i18n-parser.js';
 /**
  * Handles localization. Responsible for loading localization assets and returning translations for
  * a certain key. Can also handle plural forms. To override its default behavior define a different
- * implementation for {@link I18n#getText} and {@link I18n#getPluralText}.
+ * implementation for {@link getText} and {@link getPluralText}.
  */
 class I18n extends EventHandler {
     /**
-     * Fired when when the locale is changed.
+     * Fired when the locale is changed.
      *
      * @event
      * @example
@@ -342,7 +342,7 @@ class I18n extends EventHandler {
      * Removes localization data.
      *
      * @param {object} data - The localization data. The data is expected to be in the same format
-     * as {@link I18n#addData}.
+     * as {@link addData}.
      */
     removeData(data) {
         let parsed;

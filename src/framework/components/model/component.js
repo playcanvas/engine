@@ -48,6 +48,7 @@ import { Component } from '../component.js';
  * console.log(entity.model.type); // Get the model component's type and print it
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class ModelComponent extends Component {
@@ -75,16 +76,10 @@ class ModelComponent extends Component {
      */
     _mapping = {};
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _castShadows = true;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _receiveShadows = true;
 
     /**
@@ -99,28 +94,17 @@ class ModelComponent extends Component {
      */
     _material;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _castShadowsLightmap = true;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _lightmapped = false;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _lightmapSizeMultiplier = 1;
 
     /**
      * Mark meshes as non-movable (optimization).
-     *
-     * @type {boolean}
      */
     isStatic = false;
 
@@ -130,10 +114,7 @@ class ModelComponent extends Component {
      */
     _layers = [LAYERID_WORLD]; // assign to the default world layer
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _batchGroupId = -1;
 
     /**
@@ -146,10 +127,7 @@ class ModelComponent extends Component {
 
     _materialEvents = null;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _clonedModel = false;
 
     // #if _DEBUG
@@ -1104,8 +1082,8 @@ class ModelComponent extends Component {
     }
 
     /**
-     * Enable rendering of the model if hidden using {@link ModelComponent#hide}. This method sets
-     * all the {@link MeshInstance#visible} property on all mesh instances to true.
+     * Enable rendering of the model if hidden using {@link hide}. This method sets all the
+     * {@link MeshInstance#visible} property on all mesh instances to true.
      */
     show() {
         if (this._model) {

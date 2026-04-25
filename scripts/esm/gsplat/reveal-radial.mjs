@@ -11,6 +11,7 @@ uniform vec3 uDotTint;
 uniform vec3 uWaveTint;
 uniform float uOscillationIntensity;
 uniform float uEndRadius;
+uniform float uBandWidth;
 
 // Shared globals (initialized once per vertex)
 float g_dist;
@@ -37,7 +38,7 @@ void modifySplatCenter(inout vec3 center) {
     if (g_dist > uEndRadius) return;
     
     // Only apply oscillation if lift wave hasn't fully passed
-    bool wavesActive = g_liftTime <= 0.0 || g_dist > g_liftWavePos - 1.5;
+    bool wavesActive = g_liftTime <= 0.0 || g_dist > g_liftWavePos - 1.5 * uBandWidth;
     if (wavesActive) {
         // Apply oscillation with per-splat phase offset
         float phase = hash(center) * 6.28318;
@@ -46,10 +47,11 @@ void modifySplatCenter(inout vec3 center) {
     
     // Apply lift effect near the wave edge
     float distToLiftWave = abs(g_dist - g_liftWavePos);
-    if (distToLiftWave < 1.0 && g_liftTime > 0.0) {
+    if (distToLiftWave < 1.0 * uBandWidth && g_liftTime > 0.0) {
         // Create a smooth lift curve (peaks at wave edge)
         // Lift is 0.9x the oscillation intensity (30% of original 3x)
-        float liftAmount = (1.0 - distToLiftWave) * sin(distToLiftWave * 3.14159);
+        float normalizedDist = distToLiftWave / uBandWidth;
+        float liftAmount = (1.0 - normalizedDist) * sin(normalizedDist * 3.14159);
         center.y += liftAmount * uOscillationIntensity * 0.9;
     }
 }
@@ -113,15 +115,15 @@ void modifySplatColor(vec3 center, inout vec4 color) {
     if (g_dist > uEndRadius) return;
     
     // Lift wave tint takes priority (active during lift)
-    if (g_liftTime > 0.0 && g_dist >= g_liftWavePos - 1.5 && g_dist <= g_liftWavePos + 0.5) {
+    if (g_liftTime > 0.0 && g_dist >= g_liftWavePos - 1.5 * uBandWidth && g_dist <= g_liftWavePos + 0.5 * uBandWidth) {
         float distToLift = abs(g_dist - g_liftWavePos);
-        float liftIntensity = smoothstep(1.5, 0.0, distToLift);
+        float liftIntensity = smoothstep(1.5 * uBandWidth, 0.0, distToLift);
         color.rgb += uWaveTint * liftIntensity;
     }
     // Dot wave tint (active in dot phase, but not where lift wave is active)
-    else if (g_dist <= g_dotWavePos && (g_liftTime <= 0.0 || g_dist > g_liftWavePos + 0.5)) {
+    else if (g_dist <= g_dotWavePos && (g_liftTime <= 0.0 || g_dist > g_liftWavePos + 0.5 * uBandWidth)) {
         float distToDot = abs(g_dist - g_dotWavePos);
-        float dotIntensity = smoothstep(1.0, 0.0, distToDot);
+        float dotIntensity = smoothstep(1.0 * uBandWidth, 0.0, distToDot);
         color.rgb += uDotTint * dotIntensity;
     }
 }
@@ -137,6 +139,7 @@ uniform uDotTint: vec3f;
 uniform uWaveTint: vec3f;
 uniform uOscillationIntensity: f32;
 uniform uEndRadius: f32;
+uniform uBandWidth: f32;
 
 // Shared globals (initialized once per vertex)
 var<private> g_dist: f32;
@@ -165,7 +168,7 @@ fn modifySplatCenter(center: ptr<function, vec3f>) {
     }
     
     // Only apply oscillation if lift wave hasn't fully passed
-    let wavesActive = g_liftTime <= 0.0 || g_dist > g_liftWavePos - 1.5;
+    let wavesActive = g_liftTime <= 0.0 || g_dist > g_liftWavePos - 1.5 * uniform.uBandWidth;
     if (wavesActive) {
         // Apply oscillation with per-splat phase offset
         let phase = hash(*center) * 6.28318;
@@ -174,10 +177,11 @@ fn modifySplatCenter(center: ptr<function, vec3f>) {
     
     // Apply lift effect near the wave edge
     let distToLiftWave = abs(g_dist - g_liftWavePos);
-    if (distToLiftWave < 1.0 && g_liftTime > 0.0) {
+    if (distToLiftWave < 1.0 * uniform.uBandWidth && g_liftTime > 0.0) {
         // Create a smooth lift curve (peaks at wave edge)
         // Lift is 0.9x the oscillation intensity (30% of original 3x)
-        let liftAmount = (1.0 - distToLiftWave) * sin(distToLiftWave * 3.14159);
+        let normalizedDist = distToLiftWave / uniform.uBandWidth;
+        let liftAmount = (1.0 - normalizedDist) * sin(normalizedDist * 3.14159);
         (*center).y += liftAmount * uniform.uOscillationIntensity * 0.9;
     }
 }
@@ -245,15 +249,15 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
     }
     
     // Lift wave tint takes priority (active during lift)
-    if (g_liftTime > 0.0 && g_dist >= g_liftWavePos - 1.5 && g_dist <= g_liftWavePos + 0.5) {
+    if (g_liftTime > 0.0 && g_dist >= g_liftWavePos - 1.5 * uniform.uBandWidth && g_dist <= g_liftWavePos + 0.5 * uniform.uBandWidth) {
         let distToLift = abs(g_dist - g_liftWavePos);
-        let liftIntensity = smoothstep(1.5, 0.0, distToLift);
+        let liftIntensity = smoothstep(1.5 * uniform.uBandWidth, 0.0, distToLift);
         (*color) = vec4f((*color).rgb + uniform.uWaveTint * liftIntensity, (*color).a);
     }
     // Dot wave tint (active in dot phase, but not where lift wave is active)
-    else if (g_dist <= g_dotWavePos && (g_liftTime <= 0.0 || g_dist > g_liftWavePos + 0.5)) {
+    else if (g_dist <= g_dotWavePos && (g_liftTime <= 0.0 || g_dist > g_liftWavePos + 0.5 * uniform.uBandWidth)) {
         let distToDot = abs(g_dist - g_dotWavePos);
-        let dotIntensity = smoothstep(1.0, 0.0, distToDot);
+        let dotIntensity = smoothstep(1.0 * uniform.uBandWidth, 0.0, distToDot);
         (*color) = vec4f((*color).rgb + uniform.uDotTint * dotIntensity, (*color).a);
     }
 }
@@ -340,6 +344,14 @@ class GsplatRevealRadial extends GsplatShaderEffect {
      */
     endRadius = 25;
 
+    /**
+     * Width of the color bands for dot and lift waves
+     * @attribute
+     * @range [0, 5]
+     * @precision 0.01
+     */
+    bandWidth = 1.0;
+
     getShaderGLSL() {
         return shaderGLSL;
     }
@@ -379,6 +391,7 @@ class GsplatRevealRadial extends GsplatShaderEffect {
 
         this.setUniform('uOscillationIntensity', this.oscillationIntensity);
         this.setUniform('uEndRadius', this.endRadius);
+        this.setUniform('uBandWidth', this.bandWidth);
     }
 
     /**

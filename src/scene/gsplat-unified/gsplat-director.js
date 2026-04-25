@@ -1,6 +1,7 @@
 import { GSplatManager } from './gsplat-manager.js';
 import { SetUtils } from '../../core/set-utils.js';
 import { GSPLAT_FORWARD, GSPLAT_SHADOW } from '../constants.js';
+import { GSplatResourceCleanup } from '../gsplat/gsplat-resource-cleanup.js';
 
 /**
  * @import { LayerComposition } from '../composition/layer-composition.js'
@@ -216,11 +217,34 @@ class GSplatDirector {
     }
 
     /**
+     * Dispatches pick compute for the given camera and layer, returning a ready-to-render
+     * pick mesh instance (or null if no gsplat data exists for this camera/layer pair).
+     *
+     * @param {Camera} camera - The camera.
+     * @param {number} width - Pick target width.
+     * @param {number} height - Pick target height.
+     * @param {Layer} layer - The layer to pick from.
+     * @returns {import('../mesh-instance.js').MeshInstance|null} The configured pick mesh instance.
+     */
+    prepareForPicking(camera, width, height, layer) {
+        const cameraData = this.camerasMap.get(camera);
+        if (!cameraData) return null;
+
+        const layerData = cameraData.layersMap.get(layer);
+        if (!layerData?.gsplatManager) return null;
+
+        return layerData.gsplatManager.prepareForPicking(camera, width, height);
+    }
+
+    /**
      * Updates the director for the given layer composition cameras and layers.
      *
      * @param {LayerComposition} comp - The layer composition.
      */
     update(comp) {
+
+        // Process any pending resource destructions
+        GSplatResourceCleanup.process(this.device);
 
         // remove camera / layer entires for cameras / layers no longer in the composition
         this.camerasMap.forEach((cameraData, camera) => {
@@ -256,6 +280,8 @@ class GSplatDirector {
         });
 
         let gsplatCount = 0;
+        let bufferCopyUploaded = 0;
+        let bufferCopyTotal = 0;
 
         // for all cameras in the composition
         const camerasComponents = comp.cameras;
@@ -307,9 +333,13 @@ class GSplatDirector {
                 for (const layerData of cameraData.layersMap.values()) {
                     if (layerData.gsplatManager) {
                         gsplatCount += layerData.gsplatManager.update();
+                        bufferCopyUploaded += layerData.gsplatManager.bufferCopyUploaded;
+                        bufferCopyTotal += layerData.gsplatManager.bufferCopyTotal;
                     }
                     if (layerData.gsplatManagerShadow) {
                         gsplatCount += layerData.gsplatManagerShadow.update();
+                        bufferCopyUploaded += layerData.gsplatManagerShadow.bufferCopyUploaded;
+                        bufferCopyTotal += layerData.gsplatManagerShadow.bufferCopyTotal;
                     }
                 }
             }
@@ -317,6 +347,8 @@ class GSplatDirector {
 
         // update stats
         this.renderer._gsplatCount = gsplatCount;
+        this.renderer._gsplatBufferCopy = bufferCopyTotal > 0 ?
+            (bufferCopyUploaded / bufferCopyTotal * 100) : 0;
 
         // clear dirty flags
         this.scene.gsplat.frameEnd();

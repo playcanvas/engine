@@ -1,3 +1,4 @@
+// @config DESCRIPTION Demonstrates LOD streaming combined with spherical harmonics for view-dependent effects.
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -62,23 +63,23 @@ const config = {
 };
 
 // LOD preset definitions with customizable distances
-/** @type {Record<string, { range: number[], lodDistances: number[] }>} */
+/** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
 const LOD_PRESETS = {
     'desktop-max': {
         range: [0, 5],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     },
     'desktop': {
         range: [0, 2],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     },
     'mobile-max': {
         range: [1, 2],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     },
     'mobile': {
         range: [2, 5],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     }
 };
 
@@ -109,25 +110,24 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
     // set up SH update parameters
-    app.scene.gsplat.colorUpdateDistance = 1;
-    app.scene.gsplat.colorUpdateAngle = 4;
-    app.scene.gsplat.colorUpdateDistanceLodScale = 2;
-    app.scene.gsplat.colorUpdateAngleLodScale = 2;
+    app.scene.gsplat.colorUpdateAngle = 10;
 
-    // initialize UI settings
-    data.set('debugLod', false);
-    data.set('colorizeSH', false);
-    data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
-
-    app.scene.gsplat.colorizeLod = !!data.get('debugLod');
-    app.scene.gsplat.colorizeColorUpdate = !!data.get('colorizeSH');
-
-    data.on('debugLod:set', () => {
-        app.scene.gsplat.colorizeLod = !!data.get('debugLod');
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
     });
 
-    data.on('colorizeSH:set', () => {
-        app.scene.gsplat.colorizeColorUpdate = !!data.get('colorizeSH');
+    // initialize UI settings
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+    data.set('debug', pc.GSPLAT_DEBUG_NONE);
+    data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
+    data.set('splatBudget', pc.platform.mobile ? 1 : 3);
+
+    data.on('debug:set', () => {
+        app.scene.gsplat.debug = data.get('debug');
     });
 
     const entity = new pc.Entity(config.name || 'gsplat');
@@ -147,11 +147,30 @@ assetListLoader.load(() => {
         const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
         app.scene.gsplat.lodRangeMin = presetData.range[0];
         app.scene.gsplat.lodRangeMax = presetData.range[1];
-        gs.lodDistances = presetData.lodDistances;
+        gs.lodBaseDistance = presetData.lodBaseDistance;
+        data.set('lodBaseDistance', presetData.lodBaseDistance);
     };
 
     applyPreset();
     data.on('lodPreset:set', applyPreset);
+
+    data.set('lodMultiplier', 4);
+    gs.lodMultiplier = 4;
+
+    data.on('lodBaseDistance:set', () => {
+        gs.lodBaseDistance = data.get('lodBaseDistance');
+    });
+    data.on('lodMultiplier:set', () => {
+        gs.lodMultiplier = data.get('lodMultiplier');
+    });
+
+    const applySplatBudget = () => {
+        const millions = data.get('splatBudget');
+        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+    };
+
+    applySplatBudget();
+    data.on('splatBudget:set', applySplatBudget);
 
     // Create a camera with fly controls
     const camera = new pc.Entity('camera');

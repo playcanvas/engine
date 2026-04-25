@@ -23,14 +23,11 @@ const tmpQ1 = new Quat();
  * @property {number} [tolerance] - The tolerance for intersection tests
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class BoxLineShape extends Shape {
     /**
      * The internal gap between the box and the line.
      *
-     * @type {number}
      * @private
      */
     _gap = 0;
@@ -38,7 +35,6 @@ class BoxLineShape extends Shape {
     /**
      * The internal line thickness of the box line.
      *
-     * @type {number}
      * @private
      */
     _lineThickness = 0.02;
@@ -46,7 +42,6 @@ class BoxLineShape extends Shape {
     /**
      * The internal line length of the box line.
      *
-     * @type {number}
      * @private
      */
     _lineLength = 0.5;
@@ -54,7 +49,6 @@ class BoxLineShape extends Shape {
     /**
      * The internal box size of the box line.
      *
-     * @type {number}
      * @private
      */
     _boxSize = 0.12;
@@ -62,7 +56,6 @@ class BoxLineShape extends Shape {
     /**
      * The internal tolerance of the box line.
      *
-     * @type {number}
      * @private
      */
     _tolerance = 0.1;
@@ -86,7 +79,6 @@ class BoxLineShape extends Shape {
     /**
      * The internal flipped state of the box line.
      *
-     * @type {boolean}
      * @private
      */
     _flipped = false;

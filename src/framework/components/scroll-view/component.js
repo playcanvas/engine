@@ -20,8 +20,39 @@ import { Component } from '../component.js';
 const _tempScrollValue = new Vec2();
 
 /**
- * A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with
- * optional horizontal and vertical scroll bars.
+ * The ScrollViewComponent enables an {@link Entity} to behave like a masked scrolling area, with
+ * optional horizontal and vertical scroll bars. The component exposes references to child
+ * entities that represent the viewport, the content, and the (optional) horizontal and vertical
+ * {@link ScrollbarComponent}s.
+ *
+ * You should never need to use the ScrollViewComponent constructor directly. To add a
+ * ScrollViewComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('element', {
+ *     type: pc.ELEMENTTYPE_GROUP,
+ *     useInput: true
+ * });
+ * entity.addComponent('scrollview', {
+ *     horizontal: false,
+ *     vertical: true,
+ *     bounceAmount: 0.1
+ * });
+ * ```
+ *
+ * Once the ScrollViewComponent is added to the entity, you can access it via the
+ * {@link Entity#scrollview} property:
+ *
+ * ```javascript
+ * entity.scrollview.scroll = new pc.Vec2(0, 1); // Scroll to the top
+ *
+ * console.log(entity.scrollview.scroll);        // Get the scroll position and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Scroll View](https://playcanvas.github.io/#/user-interface/scroll-view)
  *
  * @hideconstructor
  * @category User Interface

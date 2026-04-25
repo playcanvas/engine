@@ -28,7 +28,8 @@ const properties = [
 ];
 
 /**
- * The JointComponent adds a physics joint constraint linking two rigid bodies.
+ * The JointComponent enables an {@link Entity} to act as a physics joint constraint that links
+ * two rigid bodies, controlling the relative motion between them.
  *
  * @ignore
  */

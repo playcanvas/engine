@@ -105,7 +105,7 @@ export const TRACEID_BINDGROUP_ALLOC = 'BindGroupAlloc';
 export const TRACEID_BINDGROUPFORMAT_ALLOC = 'BindGroupFormatAlloc';
 
 /**
- * Logs the creation of render pipelines. WebBPU only.
+ * Logs the creation of render pipelines. WebGPU only.
  *
  * @category Debug
  */
@@ -119,7 +119,7 @@ export const TRACEID_RENDERPIPELINE_ALLOC = 'RenderPipelineAlloc';
 export const TRACEID_COMPUTEPIPELINE_ALLOC = 'ComputePipelineAlloc';
 
 /**
- * Logs the creation of pipeline layouts. WebBPU only.
+ * Logs the creation of pipeline layouts. WebGPU only.
  *
  * @category Debug
  */

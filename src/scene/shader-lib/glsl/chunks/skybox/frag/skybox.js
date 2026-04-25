@@ -13,6 +13,16 @@ export default /* glsl */`
     varying vec3 vViewDir;
     uniform float skyboxHighlightMultiplier;
 
+    #if defined(SKY_FISHEYE) && !defined(SKYMESH)
+        uniform float fisheye_k;
+        uniform float fisheye_invK;
+        uniform float fisheye_projMat00;
+        uniform float fisheye_projMat11;
+        uniform mat4 matrix_view;
+        uniform mat3 cubeMapRotationMatrix;
+        varying vec3 vClipXYW;
+    #endif
+
     #ifdef SKY_CUBEMAP
 
         uniform samplerCube texture_cubeMap;
@@ -42,28 +52,46 @@ export default /* glsl */`
 
         #else
 
+            // --- compute view direction ---
+
+            #if defined(SKY_FISHEYE) && !defined(SKYMESH)
+
+                vec2 ndc = vClipXYW.xy / vClipXYW.z;
+                float px = ndc.x / fisheye_projMat00;
+                float py = ndc.y / fisheye_projMat11;
+                float r = sqrt(px * px + py * py);
+                float theta = fisheye_k * atan(r * fisheye_invK);
+                float sinT = sin(theta);
+                float cosT = cos(theta);
+                vec3 camDir = (r > 1e-6)
+                    ? vec3(px / r * sinT, py / r * sinT, -cosT)
+                    : vec3(0.0, 0.0, -1.0);
+                vec3 dir = transpose(mat3(matrix_view)) * camDir;
+                dir = dir * cubeMapRotationMatrix;
+
+            #elif defined(SKY_CUBEMAP) && defined(SKYMESH)
+
+                // get vector from world space pos to tripod origin
+                vec3 envDir = normalize(vWorldPos - projectedSkydomeCenter);
+                vec3 dir = envDir * cubeMapRotationMatrix;
+
+            #else
+
+                vec3 dir = vViewDir;
+
+            #endif
+
+            // --- sample environment ---
+
             #ifdef SKY_CUBEMAP
-
-                #ifdef SKYMESH
-
-                    // get vector from world space pos to tripod origin
-                    vec3 envDir = normalize(vWorldPos - projectedSkydomeCenter);
-                    vec3 dir = envDir * cubeMapRotationMatrix;
-
-                #else
-
-                    vec3 dir = vViewDir;
-
-                #endif
 
                 dir.x *= -1.0;
                 vec3 linear = {SKYBOX_DECODE_FNC}(textureCube(texture_cubeMap, dir));
 
             #else // env-atlas
 
-                vec3 dir = vViewDir * vec3(-1.0, 1.0, 1.0);
+                dir *= vec3(-1.0, 1.0, 1.0);
                 vec2 uv = toSphericalUv(normalize(dir));
-
                 vec3 linear = {SKYBOX_DECODE_FNC}(texture2D(texture_envAtlas, mapRoughnessUv(uv, mipLevel)));
 
             #endif

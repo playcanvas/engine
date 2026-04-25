@@ -28,6 +28,10 @@ class WebglDrawCommands {
      * @param {number} maxCount - Number of sub-draws.
      */
     allocate(maxCount) {
+        // Skip reallocation if size matches exactly
+        if (this.glCounts && this.glCounts.length === maxCount) {
+            return;
+        }
         this.glCounts = new Int32Array(maxCount);
         this.glOffsetsBytes = new Int32Array(maxCount);
         this.glInstanceCounts = new Int32Array(maxCount);

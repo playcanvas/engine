@@ -1,3 +1,5 @@
+// @config DESCRIPTION Shows a large world scene with LOD streaming and additional moving splats.
+import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -58,15 +60,15 @@ const config = {
 };
 
 // LOD preset definitions
-/** @type {Record<string, { range: number[], lodDistances: number[] }>} */
+/** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
 const LOD_PRESETS = {
     'desktop': {
         range: [0, 2],
-        lodDistances: [15, 30, 80, 250, 300]
+        lodBaseDistance: 15
     },
     'mobile': {
-        range: [2, 5],
-        lodDistances: [15, 30, 80, 250, 300]
+        range: [1, 5],
+        lodBaseDistance: 15
     }
 };
 
@@ -86,11 +88,6 @@ const assets = {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
 
-    // Enable GPU sorting (desktop only for now)
-    if (!pc.platform.mobile) {
-        app.scene.gsplat.gpuSorting = true;
-    }
-
     app.start();
 
     // setup skydome
@@ -101,14 +98,37 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUpdateAngle = 90;
     app.scene.gsplat.lodBehindPenalty = 2;
     app.scene.gsplat.radialSorting = true;
+    app.scene.gsplat.minPixelSize = 1;
     app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
     app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
     // set up SH update parameters
-    app.scene.gsplat.colorUpdateDistance = 1;
-    app.scene.gsplat.colorUpdateAngle = 4;
-    app.scene.gsplat.colorUpdateDistanceLodScale = 2;
-    app.scene.gsplat.colorUpdateAngleLodScale = 2;
+    app.scene.gsplat.colorUpdateAngle = 10;
+
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
+    // initialize UI settings
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+    data.set('debug', pc.GSPLAT_DEBUG_NONE);
+    data.set('splatBudget', pc.platform.mobile ? 1 : 4);
+
+    data.on('debug:set', () => {
+        app.scene.gsplat.debug = data.get('debug');
+    });
+
+    const applySplatBudget = () => {
+        const millions = data.get('splatBudget');
+        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+    };
+
+    applySplatBudget();
+    data.on('splatBudget:set', applySplatBudget);
 
     // Auto-select LOD preset based on device
     const preset = pc.platform.mobile ? 'mobile' : 'desktop';
@@ -131,7 +151,18 @@ assetListLoader.load(() => {
 
     // Apply LOD distances to skatepark
     const gs = /** @type {any} */ (skatepark.gsplat);
-    gs.lodDistances = presetData.lodDistances;
+    gs.lodBaseDistance = presetData.lodBaseDistance;
+    gs.lodMultiplier = 4;
+
+    data.set('lodBaseDistance', presetData.lodBaseDistance);
+    data.set('lodMultiplier', 4);
+
+    data.on('lodBaseDistance:set', () => {
+        gs.lodBaseDistance = data.get('lodBaseDistance');
+    });
+    data.on('lodMultiplier:set', () => {
+        gs.lodMultiplier = data.get('lodMultiplier');
+    });
 
     // World center coordinates
     const worldCenter = { x: 18, y: -1.3, z: 13.5 };
@@ -188,9 +219,20 @@ assetListLoader.load(() => {
         sceneSize: 500,
         moveSpeed: config.moveSpeed,
         moveFastSpeed: config.moveFastSpeed,
-        enableOrbit: config.enableOrbit,
-        enablePan: config.enablePan,
+        enableOrbit: false,
+        enablePan: false,
         focusPoint: focusPoint
+    });
+
+    data.set('orbitCamera', false);
+    data.on('orbitCamera:set', () => {
+        const orbit = !!data.get('orbitCamera');
+        cc.enableOrbit = orbit;
+        cc.enablePan = orbit;
+        cc.enableFly = !orbit;
+        if (orbit) {
+            cc.focusPoint = new pc.Vec3(worldCenter.x, worldCenter.y, worldCenter.z);
+        }
     });
 
     // Orbit parameters
@@ -227,6 +269,9 @@ assetListLoader.load(() => {
         );
         logo2.lookAt(centerVec);
         logo2.rotateLocal(0, 0, time * rollSpeed2);
+
+        // Update HUD stats
+        data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
     });
 });
 

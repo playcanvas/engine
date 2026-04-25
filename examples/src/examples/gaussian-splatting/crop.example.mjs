@@ -55,7 +55,16 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
     // Default precise mode to true, paused to false, edge scale to 0.5
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('precise', true);
     data.set('edgeScale', 0.5);
     let paused = false;

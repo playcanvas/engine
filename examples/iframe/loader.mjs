@@ -1,6 +1,6 @@
 import files from 'examples/files';
 import { data, refresh } from 'examples/observer';
-import { updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
+import { deviceType as selectedDeviceType, updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
 
 import MiniStats from './ministats.mjs';
 
@@ -64,8 +64,15 @@ class ExampleLoader {
         fire('updateFiles', { observer: data, files });
 
         if (this._app) {
-            // Updates device UI
-            fire('updateActiveDevice', { deviceType: this._app?.graphicsDevice?.deviceType });
+            // Report the selected variant (e.g. 'webgpu:bare') back to the UI when the
+            // engine device type matches the expected family, otherwise report the actual
+            // engine device type to surface fallbacks.
+            const engineType = this._app?.graphicsDevice?.deviceType;
+            const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
+            const reportedType = (isWebGPU(selectedDeviceType) && engineType === 'webgpu') ?
+                selectedDeviceType :
+                engineType;
+            fire('updateActiveDevice', { deviceType: reportedType });
         }
 
         this._allowRestart = true;

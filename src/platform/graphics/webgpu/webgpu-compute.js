@@ -3,6 +3,9 @@ import { BindGroup } from '../bind-group.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { UniformBuffer } from '../uniform-buffer.js';
 
+// size of indirect dispatch entry in bytes, 3 x 32bit (x, y, z workgroup counts)
+const _indirectDispatchEntryByteSize = 3 * 4;
+
 /**
  * A WebGPU implementation of the Compute.
  *
@@ -70,10 +73,27 @@ class WebgpuCompute {
         const device = this.compute.device;
         device.setBindGroup(0, this.bindGroup);
 
-        // dispatch
+        // compute pipeline
         const passEncoder = device.passEncoder;
         passEncoder.setPipeline(this.pipeline);
-        passEncoder.dispatchWorkgroups(x, y, z);
+
+        // dispatch
+        const { indirectSlotIndex, indirectBuffer, indirectFrameStamp } = this.compute;
+        if (indirectSlotIndex >= 0) {
+            let gpuBuffer;
+            if (indirectBuffer) {
+                // custom buffer - user owns lifetime, no frame validation
+                gpuBuffer = indirectBuffer.impl.buffer;
+            } else {
+                // built-in buffer - validate frame stamp
+                Debug.assert(indirectFrameStamp === device.renderVersion, 'Indirect dispatch slot must be set each frame using setupIndirectDispatch()');
+                gpuBuffer = device.indirectDispatchBuffer.impl.buffer;
+            }
+            const offset = indirectSlotIndex * _indirectDispatchEntryByteSize;
+            passEncoder.dispatchWorkgroupsIndirect(gpuBuffer, offset);
+        } else {
+            passEncoder.dispatchWorkgroups(x, y, z);
+        }
     }
 }
 

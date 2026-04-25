@@ -1,9 +1,7 @@
 // https://modelviewer.dev/examples/tone-mapping
 export default /* wgsl */`
-uniform exposure: f32;
-
 fn toneMap(col: vec3f) -> vec3f {
-    var color = col * uniform.exposure;
+    var color = col * getExposure();
 
     let startCompression = 0.8 - 0.04;
     let desaturation = 0.15;

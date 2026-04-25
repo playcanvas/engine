@@ -786,8 +786,13 @@ class WebgpuShaderProcessorWGSL {
     static generateFragmentOutputStruct(src, numRenderTargets) {
         let structCode = 'struct FragmentOutput {\n';
 
+        // only include color outputs that the shader actually writes to
+        const colorName = i => `color${i > 0 ? i : ''}`;
         for (let i = 0; i < numRenderTargets; i++) {
-            structCode += `    @location(${i}) color${i > 0 ? i : ''} : pcOutType${i},\n`;
+            const name = colorName(i);
+            if (src.search(new RegExp(`\\.${name}\\s*=`)) !== -1) {
+                structCode += `    @location(${i}) ${name} : pcOutType${i},\n`;
+            }
         }
 
         // find if the src contains `.fragDepth =`, ignoring whitespace before = sign

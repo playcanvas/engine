@@ -8,14 +8,18 @@ import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
-    CULLFACE_BACK,
+    BUFFER_STATIC,
+    CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
+    INDEXFORMAT_UINT16,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
-    semanticToLocation
+    semanticToLocation,
+    FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
+import { IndexBuffer } from './index-buffer.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
@@ -27,7 +31,6 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
  * @import { DynamicBuffers } from './dynamic-buffers.js'
  * @import { GpuProfiler } from './gpu-profiler.js'
- * @import { IndexBuffer } from './index-buffer.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
@@ -90,8 +93,6 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the back buffer should use anti-aliasing.
-     *
-     * @type {boolean}
      */
     backBufferAntialias = false;
 
@@ -139,10 +140,14 @@ class GraphicsDevice extends EventHandler {
      * The maximum number of indirect draw calls that can be used within a single frame. Used on
      * WebGPU only. This needs to be adjusted based on the maximum number of draw calls that can
      * be used within a single frame. Defaults to 1024.
-     *
-     * @type {number}
      */
     maxIndirectDrawCount = 1024;
+
+    /**
+     * The maximum number of indirect compute dispatches that can be used within a single frame.
+     * Used on WebGPU only. Defaults to 256.
+     */
+    maxIndirectDispatchCount = 256;
 
     /**
      * The maximum supported texture anisotropy setting.
@@ -220,8 +225,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports multi-draw. This is always supported on WebGPU, and support on
      * WebGL2 is optional, but pretty common.
-     *
-     * @type {boolean}
      */
     supportsMultiDraw = true;
 
@@ -236,9 +239,10 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device can read from StorageTexture in the compute shader. By default, the
      * storage texture can be only used with the write operation.
-     * When a shader uses this feature, it's recommended to use a `requires` directive to signal the
-     * potential for non-portability at the top of the WGSL shader code:
-     * ```javascript
+     * When a shader uses this feature, add a `requires` directive to signal non-portability at the
+     * top of the WGSL shader code. The shader define `CAPS_STORAGE_TEXTURE_READ` is set when this
+     * capability is available.
+     * ```wgsl
      * requires readonly_and_readwrite_storage_textures;
      * ```
      *
@@ -246,6 +250,70 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsStorageTextureRead = false;
+
+    /**
+     * True if the device supports subgroup operations in shaders (WebGPU only). When supported,
+     * compute and fragment shaders can use WGSL subgroup builtins such as `subgroupBroadcast`,
+     * `subgroupAll`, `subgroupAny`, `subgroupAdd`, `subgroupShuffle`, etc. The `enable subgroups;`
+     * directive is automatically injected into WGSL shaders when this feature is available.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsSubgroups = false;
+
+    /**
+     * True if the device supports the WGSL subgroup_uniformity extension, which allows
+     * subgroup functionality to be considered uniform in more cases during shader compilation.
+     * This is automatically enabled via the `enable subgroups;` directive when
+     * {@link supportsSubgroups} is true.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsSubgroupUniformity = false;
+
+    /**
+     * True if the device supports the WGSL subgroup_id extension, which provides access to
+     * `subgroup_id` and `num_subgroups` built-in values in workgroups. The `requires subgroup_id;`
+     * directive is automatically injected into WGSL shaders when this feature is available.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsSubgroupId = false;
+
+    /**
+     * True if the device supports the WGSL `linear_indexing` extension, which provides the
+     * `global_invocation_index` and `workgroup_index` built-in values in compute shaders. The
+     * `requires linear_indexing;` directive is then automatically injected for compute shader
+     * modules, and the shader define `CAPS_LINEAR_INDEXING` is set for conditional
+     * compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsLinearIndexing = false;
+
+    /**
+     * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either
+     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
+     * implementation did not expose the value.
+     *
+     * @type {number}
+     * @ignore
+     */
+    maxSubgroupSize = 0;
+
+    /**
+     * Minimum subgroup (warp/wavefront) size reported for the device. Zero means either
+     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
+     * implementation did not expose the value.
+     *
+     * @type {number}
+     * @ignore
+     */
+    minSubgroupSize = 0;
 
     /**
      * Currently active render target.
@@ -291,7 +359,6 @@ class GraphicsDevice extends EventHandler {
      * A version number that is incremented every frame. This is used to detect if some object were
      * invalidated.
      *
-     * @type {number}
      * @ignore
      */
     renderVersion = 0;
@@ -310,7 +377,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports uniform buffers.
      *
-     * @type {boolean}
      * @ignore
      */
     supportsUniformBuffers = false;
@@ -318,10 +384,26 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
      * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
-     *
-     * @type {boolean}
      */
     supportsClipDistances = false;
+
+    /**
+     * True if the device supports WebGPU texture format tier 1 capabilities. When enabled, a wider
+     * set of normalized texture formats can be used as render targets and storage textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier1 = false;
+
+    /**
+     * True if the device supports WebGPU texture format tier 2 capabilities. This extends tier 1
+     * and enables read-write storage access for selected texture formats.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureFormatTier2 = false;
 
     /**
      * True if the device supports primitive index in fragment shaders (WebGPU only). When
@@ -332,6 +414,28 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     supportsPrimitiveIndex = false;
+
+    /**
+     * True if the device supports 16-bit floating-point types in shaders (WebGPU only). When
+     * supported, shaders can use native WGSL types: `f16`, `vec2h`, `vec3h`, `vec4h`, `mat2x2h`,
+     * `mat3x3h`, `mat4x4h`. For convenience, PlayCanvas also provides type aliases (`half`,
+     * `half2`, `half3`, `half4`, `half2x2`, `half3x3`, `half4x4`) that resolve to f16 types when
+     * supported, or fall back to f32 types when not supported.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsShaderF16 = false;
+
+    /**
+     * True if HTML elements (e.g. `<div>`) can be used as texture sources via the HTML-in-Canvas
+     * API. When supported, an HTML element appended to a canvas with the `layoutsubtree` attribute
+     * can be passed to {@link Texture#setSource} and rendered as a live texture in the 3D scene.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsHtmlTextures = false;
 
     /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
@@ -373,6 +477,15 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     quadVertexBuffer;
+
+    /**
+     * An index buffer for drawing a quad as an indexed triangle list.
+     * Contains 6 indices: [0, 1, 2, 2, 1, 3] forming two triangles.
+     *
+     * @type {IndexBuffer}
+     * @ignore
+     */
+    quadIndexBuffer;
 
     /**
      * An object representing current blend state
@@ -424,10 +537,7 @@ class GraphicsDevice extends EventHandler {
      */
     gpuProfiler;
 
-    /**
-     * @type {boolean}
-     * @ignore
-     */
+    /** @ignore */
     _destroyed = false;
 
     defaultClearOptions = {
@@ -451,7 +561,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * A very heavy handed way to force all shaders to be rebuilt. Avoid using as much as possible.
      *
-     * @type {boolean}
      * @ignore
      */
     _shadersDirty = false;
@@ -550,6 +659,10 @@ class GraphicsDevice extends EventHandler {
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
             data: positions
         });
+
+        // create quad index buffer for indexed triangle list (two triangles forming a quad)
+        const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+        this.quadIndexBuffer = new IndexBuffer(this, INDEXFORMAT_UINT16, 6, BUFFER_STATIC, indices.buffer);
     }
 
     /**
@@ -564,6 +677,11 @@ class GraphicsDevice extends EventHandler {
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
         if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
+        if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
+        if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
+        if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
+        if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
+        if (this.supportsStorageTextureRead) capsDefines.set('CAPS_STORAGE_TEXTURE_READ', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
@@ -582,6 +700,9 @@ class GraphicsDevice extends EventHandler {
 
         this.quadVertexBuffer?.destroy();
         this.quadVertexBuffer = null;
+
+        this.quadIndexBuffer?.destroy();
+        this.quadIndexBuffer = null;
 
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
@@ -689,6 +810,7 @@ class GraphicsDevice extends EventHandler {
         this.blendState = new BlendState();
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
+        this.frontFace = FRONTFACE_CCW;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -757,6 +879,41 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. The default frontFace is {@link FRONTFACE_CCW}.
+     *
+     * @param {number} frontFace - The front face to set. Can be:
+     *
+     * - {@link FRONTFACE_CW}
+     * - {@link FRONTFACE_CCW}
+     */
+    setFrontFace(frontFace) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets all draw-related render states in a single call. All parameters have sensible defaults
+     * for utility rendering (full-screen quads, particles, etc.), so calling `setDrawStates()` with
+     * no arguments resets to a safe baseline.
+     *
+     * @param {BlendState} [blendState] - Blend state. Defaults to {@link BlendState.NOBLEND}.
+     * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
+     * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
+     * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
+     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
+     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     */
+    setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
+        cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
+        stencilFront, stencilBack) {
+        this.setBlendState(blendState);
+        this.setDepthState(depthState);
+        this.setCullMode(cullMode);
+        this.setFrontFace(frontFace);
+        this.setStencilState(stencilFront, stencilBack);
+    }
+
+    /**
      * Sets the specified render target on the device. If null is passed as a parameter, the back
      * buffer becomes the current target for all rendering operations.
      *
@@ -789,6 +946,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Clears the vertex buffer set on the graphics device. This is called automatically by the
      * renderer.
+     *
      * @ignore
      */
     clearVertexBuffer() {
@@ -820,6 +978,34 @@ class GraphicsDevice extends EventHandler {
      * @type {StorageBuffer|null}
      */
     get indirectDrawBuffer() {
+        return null;
+    }
+
+    /**
+     * Retrieves the first available slot in the {@link indirectDispatchBuffer} used for indirect
+     * compute dispatch, which can be utilized by a {@link Compute} shader to generate indirect
+     * dispatch parameters for another compute shader.
+     *
+     * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
+     * @returns {number} - The first reserved slot index used for indirect dispatch.
+     */
+    getIndirectDispatchSlot(count = 1) {
+        return 0;
+    }
+
+    /**
+     * Returns the buffer used to store arguments for indirect compute dispatch calls. The size of
+     * the buffer is controlled by the {@link maxIndirectDispatchCount} property. This buffer can
+     * be passed to a {@link Compute} shader along with a slot obtained by calling
+     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters.
+     *
+     * Only available on WebGPU, returns null on other platforms.
+     *
+     * @type {StorageBuffer|null}
+     */
+    get indirectDispatchBuffer() {
         return null;
     }
 
@@ -906,17 +1092,18 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Reports whether a texture source is a canvas, image, video or ImageBitmap.
+     * Reports whether a texture source is a canvas, image, video, ImageBitmap, or HTML element.
      *
      * @param {*} texture - Texture source data.
-     * @returns {boolean} True if the texture is a canvas, image, video or ImageBitmap and false
-     * otherwise.
+     * @returns {boolean} True if the texture is a canvas, image, video, ImageBitmap, or HTML
+     * element and false otherwise.
      * @ignore
      */
     _isBrowserInterface(texture) {
         return this._isImageBrowserInterface(texture) ||
                 this._isImageCanvasInterface(texture) ||
-                this._isImageVideoInterface(texture);
+                this._isImageVideoInterface(texture) ||
+                this._isHTMLElementInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
@@ -933,10 +1120,25 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Reports whether a texture source is a generic HTML element (not image, canvas, or video).
+     * Used for the HTML-in-Canvas proposal (texElementImage2D).
+     *
+     * @param {*} texture - Texture source data.
+     * @returns {boolean} True if the texture is an HTMLElement that is not an image, canvas, or
+     * video.
+     * @ignore
+     */
+    _isHTMLElementInterface(texture) {
+        return (typeof HTMLElement !== 'undefined' && texture instanceof HTMLElement &&
+                !(typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) &&
+                !(typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) &&
+                !(typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement));
+    }
+
+    /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
-     * specified width and height values will be multiplied by the value of
-     * {@link GraphicsDevice#maxPixelRatio} to give the final resultant width and height for the
-     * canvas.
+     * specified width and height values will be multiplied by the value of {@link maxPixelRatio}
+     * to give the final resultant width and height for the canvas.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
@@ -953,7 +1155,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
-     * value of {@link GraphicsDevice#maxPixelRatio} is ignored.
+     * value of {@link maxPixelRatio} is ignored.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.

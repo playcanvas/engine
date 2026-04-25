@@ -26,7 +26,7 @@ export const isModuleWithExternalDependencies = (content) => {
 /**
  * @typedef {object} ExampleConfig
  * @property {string} [DESCRIPTION] - The example description.
- * @property {boolean} [HIDDEN] - The example is hidden on production.
+ * @property {boolean} [HIDDEN] - The example is hidden from the sidebar list in production builds (`npm run build`). It is still built and reachable via its URL. In development (`npm run develop`) it is still shown in the sidebar.
  * @property {'development' | 'performance' | 'debug'} [ENGINE] - The engine type.
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.
  * @property {boolean} [NO_MINISTATS] - No ministats.
@@ -41,7 +41,7 @@ export const isModuleWithExternalDependencies = (content) => {
  * @returns {ExampleConfig} - The parsed config.
  */
 export const parseConfig = (script) => {
-    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
+    const regex = /\/\/ @config (\S+)(?:[ \t]+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};

@@ -32,7 +32,29 @@ const PARAM_OUTER_SCALE = 'outerScale';
 const PARAM_ATLAS_RECT = 'atlasRect';
 
 /**
- * Enables an Entity to render a simple static sprite or sprite animations.
+ * The SpriteComponent enables an {@link Entity} to render a simple static sprite or sprite
+ * animations. The {@link type} property can be set to either {@link SPRITETYPE_SIMPLE} to render
+ * a single frame from a sprite asset, or {@link SPRITETYPE_ANIMATED} to play one or more
+ * {@link SpriteAnimationClip}s.
+ *
+ * You should never need to use the SpriteComponent constructor directly. To add a
+ * SpriteComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('sprite', {
+ *     spriteAsset: spriteAsset
+ * });
+ * ```
+ *
+ * Once the SpriteComponent is added to the entity, you can access it via the
+ * {@link Entity#sprite} property:
+ *
+ * ```javascript
+ * entity.sprite.color = pc.Color.RED; // Tint the sprite red
+ *
+ * console.log(entity.sprite.color);   // Get the sprite tint and print it
+ * ```
  *
  * @hideconstructor
  * @category Graphics

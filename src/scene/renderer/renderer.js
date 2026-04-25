@@ -7,13 +7,16 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
+import { Frustum } from '../../core/shape/frustum.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    BINDGROUP_MESH_UB
+    CULLFACE_NONE,
+    BINDGROUP_MESH_UB,
+    FRONTFACE_CCW,
+    FRONTFACE_CW
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -34,7 +37,7 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
-import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
+import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -54,6 +57,7 @@ const viewInvMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
+const tempFrustum = new Frustum();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
@@ -189,7 +193,7 @@ class Renderer {
 
         // clustered passes
         if (this.scene.clusteredLightingEnabled) {
-            this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
+            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
                 this._shadowRendererLocal, this.lightTextureAtlas);
         }
 
@@ -248,8 +252,6 @@ class Renderer {
         this.opacityMapId = scope.resolve('texture_opacityMap');
 
         this.exposureId = scope.resolve('exposure');
-        this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
-        this.twoSidedLightingNegScaleFactorId.setValue(0);
 
         this.morphPositionTex = scope.resolve('morphPositionTex');
         this.morphNormalTex = scope.resolve('morphNormalTex');
@@ -318,10 +320,11 @@ class Renderer {
             const transform = camera._node?.parent?.getWorldTransform() || null;
             const views = camera.xr.views;
             viewList = views.list;
+
+            // update transforms for all views
             for (let v = 0; v < viewList.length; v++) {
                 const view = viewList[v];
                 view.updateTransforms(transform);
-                camera.frustum.setFromMat4(view.projViewOffMat);
             }
         } else {
 
@@ -431,7 +434,7 @@ class Renderer {
         viewportHeight *= camera.rect.w;
 
         // adjust viewport for stereoscopic VR sessions
-        if (camera.xr?.active && camera.xr.views.list.length === 2) {
+        if (camera.xr?.session && camera.xr.views.list.length === 2) {
             viewportWidth *= 0.5;
         }
 
@@ -479,79 +482,44 @@ class Renderer {
         }
     }
 
-    // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    // TODO: this function is only used from outside of forward renderer, and should be deprecated
-    // when the functionality moves to the render passes. Note that Editor uses it as well.
-    setCamera(camera, target, clear, renderAction = null) {
+    setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall) {
+        const material = drawCall.material;
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
 
-        this.setCameraUniforms(camera, target);
-        this.clearView(camera, target, clear, false);
-    }
-
-    // TODO: this is currently used by the lightmapper and the Editor,
-    // and will be removed when those call are removed.
-    clearView(camera, target, clear, forceWrite) {
-
-        const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEW');
-
-        device.setRenderTarget(target);
-        device.updateBegin();
-
-        if (forceWrite) {
-            device.setColorWrite(true, true, true, true);
-            device.setDepthWrite(true);
+        let frontFace = material.frontFace;
+        if (flipFaces < 0) {
+            frontFace = frontFace === FRONTFACE_CCW ? FRONTFACE_CW : FRONTFACE_CCW;
         }
 
-        this.setupViewport(camera, target);
-
-        if (clear) {
-
-            // use camera clear options if any
-            const options = camera._clearOptions;
-            device.clear(options ? options : {
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                flags: (camera._clearColorBuffer ? CLEARFLAG_COLOR : 0) |
-                       (camera._clearDepthBuffer ? CLEARFLAG_DEPTH : 0) |
-                       (camera._clearStencilBuffer ? CLEARFLAG_STENCIL : 0),
-                stencil: camera._clearStencil
-            });
-        }
-
-        DebugGraphics.popGpuMarker(device);
+        this.device.setCullMode(cullFaces ? material.cull : CULLFACE_NONE);
+        this.device.setFrontFace(frontFace);
     }
 
     setupCullMode(cullFaces, flipFactor, drawCall) {
-        const material = drawCall.material;
-        let mode = CULLFACE_NONE;
-        if (cullFaces) {
-            let flipFaces = 1;
-
-            if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
-                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
-            }
-
-            if (flipFaces < 0) {
-                mode = material.cull === CULLFACE_FRONT ? CULLFACE_BACK : CULLFACE_FRONT;
-            } else {
-                mode = material.cull;
-            }
-        }
-        this.device.setCullMode(mode);
-
-        if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
-        }
+        Debug.deprecated('pc.Renderer.setupCullMode is deprecated. Use \'pc.Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
+        this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
     updateCameraFrustum(camera) {
 
         if (camera.xr && camera.xr.views.list.length) {
-            // calculate frustum based on XR view
-            const view = camera.xr.views.list[0];
-            viewProjMat.mul2(view.projMat, view.viewOffMat);
+            // Calculate combined frustum from all XR views to avoid culling objects
+            // visible in any view (e.g. right edge of right eye in stereo rendering).
+            // This works because WebXR uses parallel projection for stereo views - both eyes
+            // look in the same direction with only a horizontal offset, so frustum plane
+            // normals are identical and we can merge by selecting outermost planes.
+            const views = camera.xr.views.list;
+
+            // first view establishes the base frustum
+            viewProjMat.mul2(views[0].projMat, views[0].viewOffMat);
             camera.frustum.setFromMat4(viewProjMat);
+
+            // for additional views, expand frustum to encompass all views
+            for (let v = 1; v < views.length; v++) {
+                viewProjMat.mul2(views[v].projMat, views[v].viewOffMat);
+                tempFrustum.setFromMat4(viewProjMat);
+                camera.frustum.add(tempFrustum);
+            }
             return;
         }
 
@@ -578,6 +546,9 @@ class Renderer {
 
         // Cull mode
         device.setCullMode(material.cull);
+
+        // Front face
+        device.setFrontFace(material.frontFace);
 
         // Alpha test
         if (material.opacityMap) {

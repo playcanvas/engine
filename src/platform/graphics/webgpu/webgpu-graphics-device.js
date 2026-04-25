@@ -33,6 +33,7 @@ import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
 import { WebgpuUploadStream } from './webgpu-upload-stream.js';
+import { WebgpuComputeBenchmark } from './webgpu-compute-benchmark.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -43,7 +44,19 @@ const _uniqueLocations = new Map();
 // size of indirect draw entry in bytes, 5 x 32bit
 const _indirectEntryByteSize = 5 * 4;
 
+// size of indirect dispatch entry in bytes, 3 x 32bit (x, y, z workgroup counts)
+const _indirectDispatchEntryByteSize = 3 * 4;
+
 class WebgpuGraphicsDevice extends GraphicsDevice {
+    /**
+     * Array of GPU resources pending destruction. Resources are destroyed after the current
+     * command buffers are submitted to ensure they're not in use.
+     *
+     * @type {Array<GPUTexture|GPUBuffer|GPUQuerySet>}
+     * @private
+     */
+    _deferredDestroys = [];
+
     /**
      * Object responsible for caching and creation of render pipelines.
      */
@@ -65,7 +78,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Number of indirect draw slots allocated.
      *
-     * @type {number}
      * @private
      */
     _indirectDrawBufferCount = 0;
@@ -73,10 +85,31 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Next unused index in indirectDrawBuffer.
      *
-     * @type {number}
      * @private
      */
     _indirectDrawNextIndex = 0;
+
+    /**
+     * Buffer used to store arguments for indirect dispatch calls.
+     *
+     * @type {StorageBuffer|null}
+     * @private
+     */
+    _indirectDispatchBuffer = null;
+
+    /**
+     * Number of indirect dispatch slots allocated.
+     *
+     * @private
+     */
+    _indirectDispatchBufferCount = 0;
+
+    /**
+     * Next unused index in indirectDispatchBuffer.
+     *
+     * @private
+     */
+    _indirectDispatchNextIndex = 0;
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -116,6 +149,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     emptyBindGroup;
 
     /**
+     * Monotonically increasing counter incremented each time queue.submit() is called.
+     *
+     * @ignore
+     */
+    submitVersion = 0;
+
+    /**
      * Current command buffer encoder.
      *
      * @type {GPUCommandEncoder|null}
@@ -153,6 +193,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
+        this.featureLevel = options.featureLevel;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }
@@ -205,6 +246,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // WGSL features
         const wgslFeatures = window.navigator.gpu.wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
+        this.supportsSubgroupUniformity = wgslFeatures?.has('subgroup_uniformity');
+        this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
+        this.supportsLinearIndexing = wgslFeatures?.has('linear_indexing');
 
         this.initCapsDefines();
     }
@@ -253,9 +297,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
-        // request optional features
+        const featureLevel = this.initOptions.featureLevel;
+        const bare = featureLevel === 'bare';
+
+        // request optional features (returns false for bare mode to simulate the most constrained device)
         const requiredFeatures = [];
-        const requireFeature = (feature) => {
+        const requireFeature = bare ? () => false : (feature) => {
             const supported = this.gpuAdapter.features.has(feature);
             if (supported) {
                 requiredFeatures.push(feature);
@@ -279,19 +326,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsClipDistances = requireFeature('clip-distances');
         this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
         this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+        this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
-        Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
+        this.supportsSubgroups = requireFeature('subgroups');
+        this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMaxSize ?? 0) : 0;
+        this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
+        Debug.log(
+            `WEBGPU${this.gpuAdapter?.info ?
+                ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
+                ''
+            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`
+        );
 
-        // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available
-        const adapterLimits = this.gpuAdapter?.limits;
+        // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
-        if (adapterLimits) {
-            for (const limitName in adapterLimits) {
-                // skip these as they fail on Windows Chrome and are not part of spec currently
-                if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
-                    continue;
+        if (!bare) {
+            const adapterLimits = this.gpuAdapter?.limits;
+            if (adapterLimits) {
+                for (const limitName in adapterLimits) {
+                    // skip these as they fail on Windows Chrome and are not part of spec currently
+                    if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
+                        continue;
+                    }
+                    requiredLimits[limitName] = adapterLimits[limitName];
                 }
-                requiredLimits[limitName] = adapterLimits[limitName];
             }
         }
 
@@ -315,6 +373,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+
+        /**
+         * Compute performance index measured at startup (milliseconds for a fixed benchmark
+         * workload). Used by GSplat auto-selection to choose between compute and V/F renderers.
+         * -1 if timestamp queries are unavailable.
+         *
+         * @type {number}
+         * @ignore
+         */
+        this.computePerfIndex = await WebgpuComputeBenchmark.run(this.wgpu, this.supportsTimestampQuery);
 
         this.initDeviceCaps();
 
@@ -486,6 +554,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         this._indirectDrawNextIndex = 0;
+        this._indirectDispatchNextIndex = 0;
     }
 
     createBufferImpl(usageFlags) {
@@ -567,6 +636,39 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const nextIndex = this._indirectDrawNextIndex + count;
         Debug.assert(nextIndex <= this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
         this._indirectDrawNextIndex = nextIndex;
+        return slot;
+    }
+
+    get indirectDispatchBuffer() {
+        this.allocateIndirectDispatchBuffer();
+        return this._indirectDispatchBuffer;
+    }
+
+    allocateIndirectDispatchBuffer() {
+
+        // handle reallocation
+        if (this._indirectDispatchNextIndex === 0 && this._indirectDispatchBufferCount < this.maxIndirectDispatchCount) {
+            this._indirectDispatchBuffer?.destroy();
+            this._indirectDispatchBuffer = null;
+        }
+
+        // allocate buffer
+        if (this._indirectDispatchBuffer === null) {
+            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
+        }
+    }
+
+    getIndirectDispatchSlot(count = 1) {
+
+        // make sure the buffer is allocated
+        this.allocateIndirectDispatchBuffer();
+
+        // allocate consecutive slots
+        const slot = this._indirectDispatchNextIndex;
+        const nextIndex = this._indirectDispatchNextIndex + count;
+        Debug.assert(nextIndex <= this.maxIndirectDispatchCount, `Insufficient indirect dispatch slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDispatchCount`);
+        this._indirectDispatchNextIndex = nextIndex;
         return slot;
     }
 
@@ -659,7 +761,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 // render pipeline
                 pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                    this.stencilEnabled, this.stencilFront, this.stencilBack);
+                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace);
                 Debug.assert(pipeline);
 
                 if (this.pipeline !== pipeline) {
@@ -776,6 +878,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     setCullMode(cullMode) {
         this.cullMode = cullMode;
+    }
+
+    setFrontFace(frontFace) {
+        this.frontFace = frontFace;
     }
 
     setAlphaToCoverage(state) {
@@ -1044,9 +1150,32 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             this.wgpu.queue.submit(this.commandBuffers);
             this.commandBuffers.length = 0;
+            this.submitVersion++;
 
             // notify dynamic buffers
             this.dynamicBuffers.onCommandBuffersSubmitted();
+        }
+
+        // destroy deferred resources after submit to ensure they're no longer referenced
+        const deferredDestroys = this._deferredDestroys;
+        if (deferredDestroys.length > 0) {
+            for (let i = 0; i < deferredDestroys.length; i++) {
+                deferredDestroys[i].destroy();
+            }
+            deferredDestroys.length = 0;
+        }
+    }
+
+    /**
+     * Defer destruction of a GPU resource until after the current command buffers are submitted.
+     * This ensures the resource is not destroyed while still referenced by pending GPU commands.
+     *
+     * @param {GPUTexture|GPUBuffer|GPUQuerySet} gpuResource - The GPU resource to destroy.
+     * @private
+     */
+    deferDestroy(gpuResource) {
+        if (gpuResource) {
+            this._deferredDestroys.push(gpuResource);
         }
     }
 
@@ -1225,14 +1354,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             /** @type {GPUImageCopyTexture} */
             const copySrc = {
                 texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
-                mipLevel: 0
+                mipLevel: source ? source.mipLevel : 0
             };
 
             // write to supplied render target, or to the framebuffer
             /** @type {GPUImageCopyTexture} */
             const copyDst = {
                 texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
-                mipLevel: 0
+                mipLevel: dest ? dest.mipLevel : 0
             };
 
             Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
@@ -1244,6 +1373,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // read from supplied render target, or from the framebuffer
             const sourceRT = source ? source : this.renderTarget;
             const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
+            const sourceMipLevel = sourceRT.mipLevel;
 
             if (source.samples > 1) {
 
@@ -1255,17 +1385,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
                 // write to supplied render target, or to the framebuffer
                 const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
+                const destMipLevel = dest ? dest.mipLevel : this.renderTarget.mipLevel;
 
                 /** @type {GPUImageCopyTexture} */
                 const copySrc = {
                     texture: sourceTexture,
-                    mipLevel: 0
+                    mipLevel: sourceMipLevel
                 };
 
                 /** @type {GPUImageCopyTexture} */
                 const copyDst = {
                     texture: destTexture,
-                    mipLevel: 0
+                    mipLevel: destMipLevel
                 };
 
                 Debug.assert(copySrc.texture !== null && copyDst.texture !== null);

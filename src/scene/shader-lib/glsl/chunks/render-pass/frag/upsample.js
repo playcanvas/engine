@@ -20,10 +20,9 @@ export default /* glsl */`
         vec3 h = texture2D (sourceTexture, vec2 (uv0.x,     uv0.y - y)).rgb;
         vec3 i = texture2D (sourceTexture, vec2 (uv0.x + x, uv0.y - y)).rgb;
 
-        vec3 value = e * 4.0;
-        value += (b + d + f + h) * 2.0;
-        value += (a + c + g + i);
-        value *= 1.0 / 16.0;
+        vec3 value = e * 0.25;
+        value += (b + d + f + h) * 0.125;
+        value += (a + c + g + i) * 0.0625;
 
         gl_FragColor = vec4(value, 1.0);
     }

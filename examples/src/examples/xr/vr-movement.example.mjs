@@ -77,7 +77,7 @@ const controllers = [];
 // create controller box
 const createController = function (inputSource) {
     const entity = new pc.Entity();
-    entity.addComponent('model', {
+    entity.addComponent('render', {
         type: 'box'
     });
     entity.setLocalScale(0.05, 0.05, 0.05);
@@ -239,12 +239,12 @@ if (app.xr.supported) {
             // render controller
             if (inputSource.grip) {
                 // some controllers can be gripped
-                controllers[i].model.enabled = true;
-                controllers[i].setLocalPosition(inputSource.getLocalPosition);
-                controllers[i].setLocalRotation(inputSource.getLocalRotation);
+                controllers[i].render.enabled = true;
+                controllers[i].setLocalPosition(inputSource.getLocalPosition());
+                controllers[i].setLocalRotation(inputSource.getLocalRotation());
             } else {
                 // some controllers cannot be gripped
-                controllers[i].model.enabled = false;
+                controllers[i].render.enabled = false;
             }
         }
     });

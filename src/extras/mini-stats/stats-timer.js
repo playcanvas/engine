@@ -4,11 +4,8 @@ class StatsTimer {
         this.app = app;
         this.values = [];
 
-        // supporting up to 3 stats
+        // support one or more stats and accumulate them in the graph total
         this.statNames = statNames;
-        if (this.statNames.length > 3) {
-            this.statNames.length = 3;
-        }
 
         this.unitsName = unitsName;
         this.decimalPlaces = decimalPlaces;

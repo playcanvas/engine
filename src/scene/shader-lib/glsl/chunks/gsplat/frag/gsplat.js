@@ -6,10 +6,6 @@ export default /* glsl */`
     varying float id;
 #endif
 
-#ifdef PICK_PASS
-    #include "pickPS"
-#endif
-
 #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
     uniform float alphaClip;
 #endif
@@ -21,6 +17,14 @@ export default /* glsl */`
 
 varying mediump vec2 gaussianUV;
 varying mediump vec4 gaussianColor;
+
+#if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+    flat varying uint vPickId;
+#endif
+
+#ifdef PICK_PASS
+    #include "pickPS"
+#endif
 
 const float EXP4 = exp(-4.0);
 const float INV_EXP4 = 1.0 / (1.0 - EXP4);
@@ -45,7 +49,13 @@ void main(void) {
 
     #ifdef PICK_PASS
 
-        pcFragColor0 = getPickOutput();
+        #ifdef GSPLAT_UNIFIED_ID
+            // Use component ID from work buffer (passed via varying)
+            pcFragColor0 = encodePickOutput(vPickId);
+        #else
+            // Use standard meshInstanceId path
+            pcFragColor0 = getPickOutput();
+        #endif
         #ifdef DEPTH_PICK_PASS
             pcFragColor1 = getPickDepth();
         #endif

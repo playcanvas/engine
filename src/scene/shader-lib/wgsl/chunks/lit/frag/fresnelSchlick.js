@@ -1,6 +1,5 @@
 export default /* wgsl */`
-// Schlick's approximation (glTF 2.0 compliant)
-// F = F0 + (F90 - F0) * (1 - V·H)^5, where F90 = 1.0
+// Schlick's approximation
 fn getFresnel(
         cosTheta: f32,
         gloss: f32,
@@ -11,7 +10,11 @@ fn getFresnel(
     #endif
 ) -> vec3f {
     let fresnel: f32 = pow(1.0 - saturate(cosTheta), 5.0);
-    let ret: vec3f = specularity + (vec3f(1.0) - specularity) * fresnel;
+    let glossSq: f32 = gloss * gloss;
+
+    // Scale gloss contribution by specularity intensity to ensure F90 approaches 0 when F0 is 0
+    let specIntensity: f32 = max(specularity.r, max(specularity.g, specularity.b));
+    let ret: vec3f = specularity + (max(vec3f(glossSq * specIntensity), specularity) - specularity) * fresnel;
 
     #if defined(LIT_IRIDESCENCE)
         return mix(ret, iridescenceFresnel, iridescenceIntensity);

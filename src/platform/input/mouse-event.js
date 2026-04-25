@@ -27,29 +27,21 @@ function isMousePointerLocked() {
 class MouseEvent {
     /**
      * The x coordinate of the mouse pointer relative to the element {@link Mouse} is attached to.
-     *
-     * @type {number}
      */
     x = 0;
 
     /**
      * The y coordinate of the mouse pointer relative to the element {@link Mouse} is attached to.
-     *
-     * @type {number}
      */
     y = 0;
 
     /**
      * The change in x coordinate since the last mouse event.
-     *
-     * @type {number}
      */
     dx = 0;
 
     /**
      * The change in y coordinate since the last mouse event.
-     *
-     * @type {number}
      */
     dy = 0;
 
@@ -65,10 +57,16 @@ class MouseEvent {
     button = MOUSEBUTTON_NONE;
 
     /**
+     * The pressed state of all mouse buttons at the time this event was fired. A 3-element
+     * array of booleans for left, middle and right buttons respectively.
+     *
+     * @type {boolean[]}
+     */
+    buttons;
+
+    /**
      * A value representing the amount the mouse wheel has moved, only valid for
      * {@link Mouse.EVENT_MOUSEWHEEL} events.
-     *
-     * @type {number}
      */
     wheelDelta = 0;
 
@@ -81,29 +79,21 @@ class MouseEvent {
 
     /**
      * True if the ctrl key was pressed when this event was fired.
-     *
-     * @type {boolean}
      */
     ctrlKey = false;
 
     /**
      * True if the alt key was pressed when this event was fired.
-     *
-     * @type {boolean}
      */
     altKey = false;
 
     /**
      * True if the shift key was pressed when this event was fired.
-     *
-     * @type {boolean}
      */
     shiftKey = false;
 
     /**
      * True if the meta key was pressed when this event was fired.
-     *
-     * @type {boolean}
      */
     metaKey = false;
 
