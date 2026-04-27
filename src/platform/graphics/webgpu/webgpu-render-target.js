@@ -29,8 +29,8 @@ class ColorAttachment {
      */
     multisampledBuffer;
 
-    destroy() {
-        this.multisampledBuffer?.destroy();
+    destroy(device) {
+        device.deferDestroy(this.multisampledBuffer);
         this.multisampledBuffer = null;
     }
 }
@@ -85,7 +85,7 @@ class DepthAttachment {
 
     destroy(device) {
         if (this.depthTextureInternal) {
-            this.depthTexture?.destroy();
+            device.deferDestroy(this.depthTexture);
             this.depthTexture = null;
         }
 
@@ -163,7 +163,7 @@ class WebgpuRenderTarget {
         this.assignedColorTexture = null;
 
         this.colorAttachments.forEach((colorAttachment) => {
-            colorAttachment.destroy();
+            colorAttachment.destroy(device);
         });
         this.colorAttachments.length = 0;
 
