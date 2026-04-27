@@ -187,8 +187,12 @@ class GSplatWorkBuffer {
         // Build render targets from textures
         this._createRenderTargets();
 
-        // Create upload stream for non-blocking uploads
-        this.uploadStream = new UploadStream(device);
+        // Create upload stream for the per-frame splat order. On WebGL, use
+        // single-buffer mode: the PBO + texSubImage2D path stalls the main
+        // thread on multi-MB uploads through Chrome's renderer→GPU IPC, while
+        // a single texImage2D (used by uploadDirect) does not. WebGPU keeps
+        // the staging path, which is already non-blocking.
+        this.uploadStream = new UploadStream(device, !device.isWebGPU);
 
         // Use storage buffer on WebGPU, texture on WebGL
         if (device.isWebGPU) {
