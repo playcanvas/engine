@@ -133,9 +133,6 @@ class WebglUploadStream {
         device.setUnpackFlipY(false);
         device.setUnpackPremultiplyAlpha(false);
         device.setUnpackAlignment(data.BYTES_PER_ELEMENT);
-        gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
-        gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
-        gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
 
         // Wrap the source TypedArray to match the texture's pixel type when needed
         // (e.g. RGBA8UI expects UNSIGNED_BYTE → Uint8Array, even if the caller passes Uint32Array).
