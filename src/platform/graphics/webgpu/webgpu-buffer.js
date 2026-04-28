@@ -25,7 +25,9 @@ class WebgpuBuffer {
 
     destroy(device) {
         if (this.buffer) {
-            this.buffer.destroy();
+            // Defer destruction until after pending command buffers are submitted, since
+            // a recorded command buffer may still reference this buffer through a bind group.
+            device.deferDestroy(this.buffer);
             this.buffer = null;
         }
     }

@@ -347,7 +347,7 @@ class Picker {
         const pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
 
         // reconstruct uint bits from RGBA8
-        const intBits = (pixels[0] << 24) | (pixels[1] << 16) | (pixels[2] << 8) | pixels[3];
+        const intBits = ((pixels[0] << 24) | (pixels[1] << 16) | (pixels[2] << 8) | pixels[3]) >>> 0;
 
         // check for white (cleared) depth
         if (intBits === 0xFFFFFFFF) {
