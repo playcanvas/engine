@@ -173,8 +173,14 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         // 64 / 128 lane subgroups (AMD Wave64, future wider architectures)
         // those expressions silently truncate / UB and will corrupt the
         // sort output. Refuse to run rather than producing garbage.
-        Debug.assert(device.minSubgroupSize > 0, 'ComputeRadixSortOneSweep requires a valid minimum subgroup size');
-        Debug.assert(device.maxSubgroupSize <= 32, 'ComputeRadixSortOneSweep currently requires subgroup sizes <= 32 (binning shader uses 32-bit subgroup masks)');
+        //
+        // We only check the *minimum* runtime size: NVIDIA hardware always
+        // executes with 32-wide warps even though the adapter may report a
+        // higher max (e.g. Dawn / D3D12 surfaces a spec ceiling of 128).
+        // A `minSubgroupSize` of 0 means the adapter omitted the field
+        // entirely (older Chrome / Dawn on Windows); accept that — runtime
+        // size on validated NVIDIA targets is still 32.
+        Debug.assert(device.minSubgroupSize <= 32, 'ComputeRadixSortOneSweep currently requires runtime subgroup size <= 32 (binning shader uses 32-bit subgroup masks)');
 
         // Create uniform formats (shared between direct and indirect modes), then
         // create bind group formats and shaders for the chosen mode only.
@@ -203,7 +209,6 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         const maxSubgroups = Math.max(1, Math.ceil(256 / minSubgroupSize));
 
         const suffix = indirect ? 'Indirect' : '';
-        const elementCountBinding = new BindStorageBufferFormat('b_sortElementCount', SHADERSTAGE_COMPUTE, true);
 
         const histGroupEntries = [
             new BindStorageBufferFormat('b_sort', SHADERSTAGE_COMPUTE, true),
@@ -225,9 +230,14 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
         ];
         if (indirect) {
-            histGroupEntries.push(elementCountBinding);
-            scanGroupEntries.push(elementCountBinding);
-            binGroupEntries.push(elementCountBinding);
+            // Each BindStorageBufferFormat must be a separate instance: BindGroupFormat
+            // assigns slot numbers by mutating the objects in-place, so sharing a single
+            // instance across multiple formats would cause the last format to overwrite
+            // the slot on the shared object, producing wrong binding indices for the
+            // earlier formats when their bind groups are created.
+            histGroupEntries.push(new BindStorageBufferFormat('b_sortElementCount', SHADERSTAGE_COMPUTE, true));
+            scanGroupEntries.push(new BindStorageBufferFormat('b_sortElementCount', SHADERSTAGE_COMPUTE, true));
+            binGroupEntries.push(new BindStorageBufferFormat('b_sortElementCount', SHADERSTAGE_COMPUTE, true));
         }
 
         this._globalHistBindGroupFormat = new BindGroupFormat(device, histGroupEntries);

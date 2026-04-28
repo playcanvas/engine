@@ -100,8 +100,8 @@ function logError(msg) {
     statusOverlay.textContent = logLines.join('\n');
 }
 
-// Create radix sort instance
-radixSort = new pc.ComputeRadixSort(device);
+// Create radix sort instance in indirect mode — sortIndirect requires this.
+radixSort = new pc.ComputeRadixSort(device, { indirect: true });
 
 // Create sortElementCount buffer (single u32, GPU-readable storage buffer)
 sortElementCountBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
@@ -110,13 +110,23 @@ sortElementCountBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_SRC
 // Simulates the GSplat pipeline's prepareIndirect: a compute shader writes
 // sortElementCount and indirect dispatch args within the command buffer
 // (instead of queue.writeBuffer which executes before the command buffer).
+//
+// The shader mirrors the sortIndirectArgsCS WGSL chunk: it uses the slot
+// count and per-slot granularities from ComputeRadixSort#prepareIndirect()
+// to support any backend (Multipass = 1 slot, OneSweep = 2 slots).
 
 const prepareSource = /* wgsl */`
     @group(0) @binding(0) var<storage, read_write> sortElementCountBuf: array<u32>;
     @group(0) @binding(1) var<storage, read_write> indirectDispatchArgs: array<u32>;
     struct PrepareUniforms {
-        visibleCount: u32,
-        dispatchSlotOffset: u32
+        visibleCount:  u32,
+        sortSlotBase:  u32,  // first slot index (not u32 offset)
+        _pad0:         u32,
+        _pad1:         u32,
+        sortInfoX:     u32,  // slotCount (from prepareIndirect()[0])
+        sortInfoY:     u32,  // granularity for slot 0
+        sortInfoZ:     u32,  // granularity for slot 1 (0 if unused)
+        sortInfoW:     u32   // granularity for slot 2 (0 if unused)
     };
     @group(0) @binding(2) var<uniform> uniforms: PrepareUniforms;
 
@@ -125,17 +135,42 @@ const prepareSource = /* wgsl */`
         let count = uniforms.visibleCount;
         sortElementCountBuf[0] = count;
 
-        let sortWorkgroupCount = (count + 255u) / 256u;
-        let offset = uniforms.dispatchSlotOffset;
-        indirectDispatchArgs[offset + 0u] = sortWorkgroupCount;
-        indirectDispatchArgs[offset + 1u] = 1u;
-        indirectDispatchArgs[offset + 2u] = 1u;
+        let base = uniforms.sortSlotBase;
+        let n = uniforms.sortInfoX;
+
+        if (n >= 1u) {
+            let g = uniforms.sortInfoY;
+            let wc = (count + g - 1u) / g;
+            indirectDispatchArgs[base * 3u + 0u] = wc;
+            indirectDispatchArgs[base * 3u + 1u] = 1u;
+            indirectDispatchArgs[base * 3u + 2u] = 1u;
+        }
+        if (n >= 2u) {
+            let g = uniforms.sortInfoZ;
+            let wc = (count + g - 1u) / g;
+            indirectDispatchArgs[(base + 1u) * 3u + 0u] = wc;
+            indirectDispatchArgs[(base + 1u) * 3u + 1u] = 1u;
+            indirectDispatchArgs[(base + 1u) * 3u + 2u] = 1u;
+        }
+        if (n >= 3u) {
+            let g = uniforms.sortInfoW;
+            let wc = (count + g - 1u) / g;
+            indirectDispatchArgs[(base + 2u) * 3u + 0u] = wc;
+            indirectDispatchArgs[(base + 2u) * 3u + 1u] = 1u;
+            indirectDispatchArgs[(base + 2u) * 3u + 2u] = 1u;
+        }
     }
 `;
 
 const prepareUniformFormat = new pc.UniformBufferFormat(device, [
     new pc.UniformFormat('visibleCount', pc.UNIFORMTYPE_UINT),
-    new pc.UniformFormat('dispatchSlotOffset', pc.UNIFORMTYPE_UINT)
+    new pc.UniformFormat('sortSlotBase', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('_pad0', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('_pad1', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortInfoX', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortInfoY', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortInfoZ', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortInfoW', pc.UNIFORMTYPE_UINT)
 ]);
 
 const prepareBindGroupFormat = new pc.BindGroupFormat(device, [
@@ -284,7 +319,11 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             needsRegen = true;
         }
     } else if (path === 'options.bits') {
-        const validBits = [4, 8, 12, 16, 20, 24, 28, 32];
+        // Only accept multiples of the active backend's radix width
+        // (4 for Multipass, 8 for OneSweep). Snapping to an invalid
+        // multiple would trigger the sortIndirect assert every frame.
+        const rb = radixSort ? radixSort.radixBits : 4;
+        const validBits = [4, 8, 12, 16, 20, 24, 28, 32].filter(b => b % rb === 0);
         const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev));
         if (nearest !== currentNumBits) {
             currentNumBits = nearest;
@@ -331,17 +370,26 @@ app.on('update', () => {
 
     if (!keysBuffer || !radixSort || !sortElementCountBuffer) return;
 
-    // Allocate per-frame indirect dispatch slot
-    const dispatchSlot = device.getIndirectDispatchSlot(1);
+    // Query backend slot requirements — varies by backend:
+    //   Multipass: [1, 2048, 0, 0]   (1 slot; see ELEMENTS_PER_WORKGROUP)
+    //   OneSweep:  [2, 3840, 32768, 0]  (2 slots: binning + globalHist)
+    const sortInfo = radixSort.prepareIndirect();
+    const slotCount = sortInfo[0];
 
-    // Write sortElementCount and dispatch args via compute shader
-    const dispatchBuffer = device.indirectDispatchBuffer;
-    const slotOffset = dispatchSlot * 3;
+    // Allocate the required number of consecutive per-frame dispatch slots.
+    const dispatchSlot = device.getIndirectDispatchSlot(slotCount);
 
+    // Write sortElementCount and all dispatch slot args via compute shader.
     prepareCompute.setParameter('sortElementCountBuf', sortElementCountBuffer);
-    prepareCompute.setParameter('indirectDispatchArgs', dispatchBuffer);
+    prepareCompute.setParameter('indirectDispatchArgs', device.indirectDispatchBuffer);
     prepareCompute.setParameter('visibleCount', visibleCount);
-    prepareCompute.setParameter('dispatchSlotOffset', slotOffset);
+    prepareCompute.setParameter('sortSlotBase', dispatchSlot);
+    prepareCompute.setParameter('_pad0', 0);
+    prepareCompute.setParameter('_pad1', 0);
+    prepareCompute.setParameter('sortInfoX', sortInfo[0]);
+    prepareCompute.setParameter('sortInfoY', sortInfo[1]);
+    prepareCompute.setParameter('sortInfoZ', sortInfo[2]);
+    prepareCompute.setParameter('sortInfoW', sortInfo[3]);
     prepareCompute.setupDispatch(1, 1, 1);
     device.computeDispatch([prepareCompute], 'PrepareIndirectTest');
 

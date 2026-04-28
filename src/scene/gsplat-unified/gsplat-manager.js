@@ -1611,8 +1611,12 @@ class GSplatManager {
 
         // number of bits used for sorting to match CPU sorter
         const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
-        // Round up to multiple of 4 for radix sort
-        const roundedNumBits = Math.ceil(numBits / 4) * 4;
+        // Round up to a multiple of the active sorter's radix width (4 for the
+        // portable multipass backend, 8 for OneSweep). Multipass would accept
+        // 4-multiples, but OneSweep asserts when numBits is not a multiple of
+        // 8, so we always align to the backend's actual radixBits.
+        const radixBits = gpuSorter.radixBits;
+        const roundedNumBits = Math.ceil(numBits / radixBits) * radixBits;
 
         // Compute min/max distances for key normalization
         const { minDist, maxDist } = this.computeDistanceRange(worldState);
@@ -1706,7 +1710,7 @@ class GSplatManager {
      * (sorting only the visible splat count determined by interval compaction).
      *
      * @param {number} elementCount - Total number of splats.
-     * @param {number} roundedNumBits - Number of sort bits (rounded to multiple of 4).
+     * @param {number} roundedNumBits - Number of sort bits aligned to the active GPU radix sorter width (4 or 8).
      * @param {number} minDist - Minimum distance for key normalization.
      * @param {number} maxDist - Maximum distance for key normalization.
      * @param {StorageBuffer|null} compactedSplatIds - Compacted splat IDs from interval compaction.

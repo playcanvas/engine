@@ -77,13 +77,13 @@ class ComputeRadixSort {
         }
 
         if (chosen === RADIX_SORT_ONESWEEP) {
-            // Hard hardware prerequisites (compute, subgroups, subgroupSize
-            // <= 32, valid minSubgroupSize) are asserted inside the OneSweep
+            // Hard hardware prerequisites (compute, subgroups, runtime
+            // subgroup size <= 32) are asserted inside the OneSweep
             // constructor. Here we only warn on soft policy mismatches
             // (non-NVIDIA vendors), so callers can opt in for experimentation
             // on devices where OneSweep has not been validated.
             if (!this._canUseOneSweep(device)) {
-                Debug.warnOnce('ComputeRadixSort: RADIX_SORT_ONESWEEP requested on a device that is not a validated OneSweep target (non-NVIDIA, or missing compute / subgroups / subgroupSize <= 32). OneSweep may hang or produce incorrect results. Consider RADIX_SORT_PORTABLE or RADIX_SORT_AUTO.');
+                Debug.warnOnce('ComputeRadixSort: RADIX_SORT_ONESWEEP requested on a device that is not a validated OneSweep target (non-NVIDIA, or minSubgroupSize > 32). OneSweep may hang or produce incorrect results. Consider RADIX_SORT_PORTABLE or RADIX_SORT_AUTO.');
             }
             this._impl = new ComputeRadixSortOneSweep(device, indirect);
         } else {
@@ -103,14 +103,20 @@ class ComputeRadixSort {
      */
     _canUseOneSweep(device) {
         if (!device.supportsCompute || !device.supportsSubgroups) return false;
-        // Adapter info may omit subgroup sizes (both stay 0); do not auto-select OneSweep then.
-        if (!device.minSubgroupSize || !device.maxSubgroupSize || device.maxSubgroupSize > 32) return false;
         // Only enable on NVIDIA for now; validated on Turing+ and Ampere.
         // Other vendors either lack forward-progress guarantees (Apple) or
         // have shown correctness issues in the lookback (Mali / Imagination /
         // some Adreno).
         const vendor = device.gpuAdapter?.info?.vendor?.toLowerCase?.();
-        return vendor === 'nvidia';
+        if (vendor !== 'nvidia') return false;
+        // NVIDIA always executes with 32-wide warps. The adapter may report
+        // a wider max (Dawn / D3D12 surfaces a spec ceiling of 128) or omit
+        // size info entirely (some Chrome / Dawn builds on Windows report 0).
+        // Only refuse if the *minimum* runtime size is guaranteed to be > 32,
+        // which would mean we'd actually receive >32 lanes and the binning
+        // shader's 32-bit ballot masks would corrupt the output.
+        if (device.minSubgroupSize > 32) return false;
+        return true;
     }
 
     /**
