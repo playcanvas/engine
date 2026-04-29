@@ -154,7 +154,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
     configureMaterial() {
         this._material.setDefine('SH_BANDS', '0');
-        this._material.setDefine('GSPLAT_INDIRECT_DRAW', '');
+        this._material.setDefine('GSPLAT_INDIRECT_DRAW', true);
         this._updateIdDefines(this._material);
 
         const dither = false;
@@ -224,7 +224,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             this._pickMaterial.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
             this._pickMaterial.setDefine('{CACHE_STRIDE}', CACHE_STRIDE);
             this._pickMaterial.setDefine('SH_BANDS', '0');
-            this._pickMaterial.setDefine('GSPLAT_INDIRECT_DRAW', '');
+            this._pickMaterial.setDefine('GSPLAT_INDIRECT_DRAW', true);
             this._pickMaterial.setDefine('DITHER_NONE', '');
             this._updateIdDefines(this._pickMaterial);
             this._pickMaterial.cull = CULLFACE_NONE;
