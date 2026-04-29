@@ -9,11 +9,16 @@
 // vertex side of the existing rasterization path.
 //
 // Layout matches gsplat-projector-constants.js (CACHE_STRIDE = 8 u32 / 32 B):
-//   [0..3] proj.xyzw  (clip-space center; w == view depth for perspective)
+//   [0..3] proj.xyzw  (clip-space center; .w is the real homogeneous w)
 //   [4]    v1.xy      (pack2x16float)  — screen-pixel eigen-vectors
 //   [5]    v2.xy      (pack2x16float)
 //   [6]    color rg   (or pcId in pick mode)
 //   [7]    color b + a (pack2x16float)
+//
+// Linear view depth (used for fog / overdraw / prepass) is reconstructed from
+// clipPos via the clipToViewZ uniform = -inverse(matrix_projection)[row 2].
+// This is correct for both perspective and orthographic projections; for
+// perspective it collapses to clip.w, matching the previous behaviour exactly.
 export default /* wgsl */`
 
 #include "gsplatHelpersVS"
@@ -22,6 +27,11 @@ export default /* wgsl */`
 attribute vertex_position: vec3f;
 
 uniform viewport_size: vec4f;
+
+// -inverse(matrix_projection)[row 2]; lets the VS reconstruct linear view
+// depth from clipPos via dot(clipToViewZ, clip). Set per-camera by the
+// renderer (see GSplatHybridRenderer).
+uniform clipToViewZ: vec4f;
 
 // Globally sorted indices into projCache (output of the radix sort).
 var<storage, read> sortedIndices: array<u32>;
@@ -104,8 +114,9 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     let clip = min(half(1.0), sqrt(log(half(255.0) * alpha)) * half(0.5));
     let cornerClipped = cornerUV * f32(clip);
 
-    // Convert pixel-space offset into clip-space. For perspective proj.w == viewDepth
-    // and c == w / viewport, matching gsplatCorner.js line 97.
+    // Convert pixel-space offset into clip-space. proj.w is the real clipPos.w,
+    // so c == clip.w / viewport matches gsplatCorner.js line 97 for both
+    // perspective (w == -view.z) and orthographic (w == 1) projections.
     let c = vec2f(proj.w) * uniform.viewport_size.zw;
     let pixelOffset = cornerClipped.x * v1 + cornerClipped.y * v2;
     let clipOffset = pixelOffset * c;
@@ -113,9 +124,11 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     output.position = proj + vec4f(clipOffset, 0.0, 0.0);
     output.gaussianUV = half2(cornerClipped);
 
-    // Apply gamma / fog / tonemap for the forward path. proj.w doubles as linear
-    // view depth (matches -center.view.z used by the existing VS).
-    let viewDepth = proj.w;
+    // Reconstruct linear view depth from clip via the per-camera clipToViewZ
+    // uniform = -inverse(matrix_projection)[row 2]. For perspective this
+    // collapses to clip.w; for ortho it produces the correct -view.z. Used by
+    // fog/overdraw/prepass below.
+    let viewDepth = dot(uniform.clipToViewZ, proj);
 
     #ifdef GSPLAT_OVERDRAW
         // Overdraw mode renders a flat colour ramp; depth-shade input not needed.

@@ -1,3 +1,4 @@
+import { Mat4 } from '../../core/math/mat4.js';
 import { SEMANTIC_POSITION, CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import {
     BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD,
@@ -8,6 +9,12 @@ import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { CACHE_STRIDE } from './gsplat-projector-constants.js';
+
+// Module-scope scratch matrix used only inside `_computeClipToViewZ`. The output
+// (`Float32Array`) lives on each renderer instance because it must remain valid
+// until the GPU upload happens at draw time, and multiple renderer instances may
+// render concurrently with different cameras.
+const _invProjMat = new Mat4();
 
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
@@ -39,6 +46,22 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
     /** @type {MeshInstance|null} */
     _pickMeshInstance = null;
+
+    /**
+     * Per-camera `clipToViewZ` value for the forward material. Persistent: the GPU
+     * upload happens at draw time, so the buffer must outlive `setHybridSortedRendering`.
+     *
+     * @type {Float32Array}
+     */
+    _clipToViewZ = new Float32Array(4);
+
+    /**
+     * Per-camera `clipToViewZ` value for the pick material. Allocated on first
+     * `prepareForPicking` call and reused thereafter.
+     *
+     * @type {Float32Array|null}
+     */
+    _clipToViewZPick = null;
 
     /** @type {number} */
     originalBlendType = BLEND_ADDITIVE;
@@ -165,6 +188,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._material.setParameter('sortedIndices', sortedIndices);
         this._material.setParameter('projCache', projCache);
         this._material.setParameter('numSplatsStorage', numSplatsBuffer);
+        this._computeClipToViewZ(this.cameraNode, this._clipToViewZ);
+        this._material.setParameter('clipToViewZ', this._clipToViewZ);
 
         this.meshInstance.visible = true;
 
@@ -181,9 +206,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @param {StorageBuffer} projCache - Per-splat projection cache produced by the projector.
      * @param {StorageBuffer} numSplatsBuffer - GPU-written visible-splat count.
      * @param {number} alphaClip - Fragment alpha threshold for picking.
+     * @param {GraphNode} cameraNode - The picker camera node, used to derive the
+     * `clipToViewZ` reconstruction uniform.
      * @returns {MeshInstance} The pick mesh instance.
      */
-    prepareForPicking(drawSlot, sortedIndices, projCache, numSplatsBuffer, alphaClip) {
+    prepareForPicking(drawSlot, sortedIndices, projCache, numSplatsBuffer, alphaClip, cameraNode) {
         if (!this._pickMaterial) {
             this._pickMaterial = new ShaderMaterial({
                 uniqueName: 'UnifiedSplatHybridPickMaterial',
@@ -224,8 +251,31 @@ class GSplatHybridRenderer extends GSplatRenderer {
         pickMaterial.setParameter('projCache', projCache);
         pickMaterial.setParameter('numSplatsStorage', numSplatsBuffer);
         pickMaterial.setParameter('alphaClip', alphaClip);
+        this._clipToViewZPick ??= new Float32Array(4);
+        this._computeClipToViewZ(cameraNode, this._clipToViewZPick);
+        pickMaterial.setParameter('clipToViewZ', this._clipToViewZPick);
 
         return pickMeshInstance;
+    }
+
+    /**
+     * Computes `-inverse(matrix_projection)[row 2]` for the given camera into `dst`. The
+     * hybrid VS dot-products this with the cached `clipPos` to recover linear view depth,
+     * which is needed for fog / overdraw / prepass under both perspective and orthographic
+     * projections. The destination buffer must be retained by the caller (typically a
+     * per-material instance field) because the GPU upload happens at draw time.
+     *
+     * @param {GraphNode} cameraNode - Camera node to derive the uniform from.
+     * @param {Float32Array} dst - 4-element destination, written in place.
+     * @private
+     */
+    _computeClipToViewZ(cameraNode, dst) {
+        _invProjMat.copy(cameraNode.camera.projectionMatrix).invert();
+        const d = _invProjMat.data;
+        dst[0] = -d[2];
+        dst[1] = -d[6];
+        dst[2] = -d[10];
+        dst[3] = -d[14];
     }
 
     /**

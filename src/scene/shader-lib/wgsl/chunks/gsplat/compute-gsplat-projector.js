@@ -3,8 +3,7 @@
 // For each visible splat (compactedSplatIds[threadIdx]) this pass:
 //   1. Projects the splat to clip + screen space (computeSplatCov), applying the same
 //      alpha / minPixelSize / minContribution / off-screen culls used by the compute renderer.
-//   2. Derives the eigen-vectors v1, v2 (same eigen-decomposition as gsplatCorner.js)
-//      and bakes the clip-space viewDepth / viewport scale into them.
+//   2. Derives the eigen-vectors v1, v2 (same eigen-decomposition as gsplatCorner.js).
 //   3. Computes a depth-based sort key (camera-relative bin weighting, same math as
 //      compute-gsplat-sort-key.js, optionally radial via RADIAL_SORT define).
 //   4. Workgroup-local atomic compaction: each thread that survives culling gets a slot
@@ -15,8 +14,9 @@
 // Bindings 0..6 are fixed; texture bindings for the work-buffer format follow them
 // (injected via gsplatFormatDeclCS, starting at binding {FIXED_BINDINGS_LEN}).
 //
-// 3DGS only for v1. Fisheye is not supported (the hybrid vertex shader assumes
-// proj.w == viewDepth, which only holds for the perspective projection).
+// 3DGS only for v1. Fisheye is not supported (the hybrid vertex shader reconstructs
+// linear view depth from clip via clipToViewZ, which is only valid for linear
+// (perspective + orthographic) projections).
 export const computeGsplatProjectorSource = /* wgsl */`
 
 #include "gsplatCommonCS"
@@ -92,7 +92,6 @@ fn main(
     var alpha: f32 = 0.0;
     var pcId: u32 = 0u;
     var sortKey: u32 = 0u;
-    var viewDepth: f32 = 0.0;
 
     let projected = projectSplatCommon(
         threadIdx,
@@ -134,12 +133,12 @@ fn main(
         v1 = l1 * dir;
         v2 = l2 * vec2f(dir.y, -dir.x);
 
-        // Clip-space center. For perspective projections clip.w == -viewCenter.z
-        // == proj.viewDepth, which is the value the hybrid VS uses for both
-        // corner-scale c and prepass linear depth.
+        // Clip-space center. The hybrid VS uses clipPos.w directly for both
+        // output.position.w (rasterizer correctness) and corner scale, and
+        // reconstructs linear view depth from clipPos via the clipToViewZ
+        // uniform (= -inverse(matrix_projection)[row 2]).
         clipPos = uniforms.viewProj * vec4f(center, 1.0);
         clipPos.z = clamp(clipPos.z, 0.0, abs(clipPos.w));
-        viewDepth = proj.viewDepth;
 
         // Sort key — same math as compute-gsplat-sort-key.js. We reuse the
         // already-loaded world-space center instead of re-fetching it.
@@ -190,7 +189,7 @@ fn main(
         projCache[base + 0u] = bitcast<u32>(clipPos.x);
         projCache[base + 1u] = bitcast<u32>(clipPos.y);
         projCache[base + 2u] = bitcast<u32>(clipPos.z);
-        projCache[base + 3u] = bitcast<u32>(viewDepth);
+        projCache[base + 3u] = bitcast<u32>(clipPos.w);
         projCache[base + 4u] = pack2x16float(v1);
         projCache[base + 5u] = pack2x16float(v2);
 

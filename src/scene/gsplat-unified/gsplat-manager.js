@@ -560,7 +560,8 @@ class GSplatManager {
                 sortedIndices,
                 /** @type {StorageBuffer} */ (proj.projCache),
                 /** @type {StorageBuffer} */ (ic.numSplatsBuffer),
-                this.scene.gsplat.alphaClip
+                this.scene.gsplat.alphaClip,
+                camera.node
             );
         }
 

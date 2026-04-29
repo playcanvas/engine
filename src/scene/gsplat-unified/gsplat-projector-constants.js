@@ -6,9 +6,12 @@
 //   [0] proj.x       (f32)            — clip-space center X (viewProj * worldCenter)
 //   [1] proj.y       (f32)            — clip-space center Y
 //   [2] proj.z       (f32)            — clip-space center Z
-//   [3] proj.w       (f32)            — clip w (drives clip-space corner-scale c = w/viewport);
-//                                       also reused as linear view depth for prepass / fog (matches
-//                                       SplatCov2D.viewDepth: -viewCenter.z, or sqrt(d²) for fisheye)
+//   [3] proj.w       (f32)            — clip-space homogeneous w; drives clip-space corner-scale
+//                                       c = w/viewport and the rasterizer's perspective divide.
+//                                       Linear view depth (used by fog / overdraw / prepass) is
+//                                       reconstructed in the hybrid VS via the clipToViewZ
+//                                       uniform = -inverse(matrix_projection)[row 2], which is
+//                                       correct for both perspective and orthographic cameras.
 //   [4] v1.xy        (pack2x16float)  — screen-pixel eigenvector × eigenvalue (axis 1)
 //   [5] v2.xy        (pack2x16float)  — screen-pixel eigenvector × eigenvalue (axis 2)
 //   [6] color rg     (pack2x16float)  — color channels R, G (or pcId in pick mode)
