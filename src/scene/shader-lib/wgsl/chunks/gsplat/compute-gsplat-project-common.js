@@ -1,7 +1,7 @@
 // Shared per-splat load + projection gate for compute GSplat paths.
 //
 // This chunk intentionally declares no bindings or uniforms. Callers provide
-// `compactedSplatIds` and include the format/read chunks before including this
+// compactedSplatIds and include the format/read chunks before including this
 // helper.
 
 export const computeGsplatProjectCommonSource = /* wgsl */`

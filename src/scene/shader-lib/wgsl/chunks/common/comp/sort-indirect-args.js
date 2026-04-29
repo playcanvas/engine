@@ -2,15 +2,15 @@ export default /* wgsl */`
 // Writes up to 3 indirect dispatch slots for a compute-based sorter, using
 // sorter-provided metadata. Each slot occupies 3 consecutive u32 entries
 // (workgroup count x, y, z) in the dispatch buffer; this helper writes a 1D
-// dispatch of \`ceil(count / granularity[i])\` workgroups into slots
-// \`baseSlot + i\` for every active slot \`i\`.
+// dispatch of ceil(count / granularity[i]) workgroups into slots
+// (baseSlot + i) for every active slot i.
 //
 // Parameters:
 //   buf       - indirect dispatch buffer (plain array<u32>, not atomic).
 //   baseSlot  - index of the first slot to write (u32 offset = baseSlot * 3).
 //   count     - number of elements the sort will process.
 //   slotInfo  - sorter metadata, obtained verbatim from
-//               \`ComputeRadixSort#prepareIndirect()\` and passed in as a
+//               ComputeRadixSort#prepareIndirect() and passed in as a
 //               vec4<u32>:
 //                 .x = slotCount (1..3)
 //                 .y/.z/.w = per-slot elements-per-workgroup (granularity);
