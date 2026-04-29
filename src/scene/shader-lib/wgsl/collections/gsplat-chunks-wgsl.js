@@ -13,6 +13,7 @@ import gsplatPS from '../chunks/gsplat/frag/gsplat.js';
 import gsplatTileCompositePS from '../chunks/gsplat/frag/gsplatTileComposite.js';
 import gsplatSourceVS from '../chunks/gsplat/vert/gsplatSource.js';
 import gsplatVS from '../chunks/gsplat/vert/gsplat.js';
+import gsplatHybridVS from '../chunks/gsplat/vert/gsplatHybrid.js';
 import gsplatPackingPS from '../chunks/gsplat/frag/gsplatPacking.js';
 import gsplatFormatVS from '../chunks/gsplat/vert/gsplatFormat.js';
 
@@ -43,6 +44,7 @@ export const gsplatChunksWGSL = {
     gsplatTileCompositePS,
     gsplatSourceVS,
     gsplatVS,
+    gsplatHybridVS,
     gsplatPackingPS,
     gsplatFormatVS,
     gsplatUncompressedVS,

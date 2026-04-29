@@ -77,6 +77,7 @@ struct Uniforms {
 #include "gsplatComputeSplatCS"
 #include "gsplatFormatDeclCS"
 #include "gsplatFormatReadCS"
+#include "gsplatProjectCommonCS"
 
 // NOTE on tile entry cap: if a tile exceeds MAX_TILE_ENTRIES (65535), the atomicAdd
 // count overcounts. Impact: the prefix sum allocates extra tileEntries slots that go
@@ -93,43 +94,37 @@ fn main(
     let threadIdx = gid.y * (numWorkgroups.x * 256u) + gid.x;
     let numVisible = sortElementCount[0];
 
-    if (threadIdx >= numVisible) {
-        return;
-    }
-
-    let splatId = compactedSplatIds[threadIdx];
-    setSplat(splatId);
-    let center = getCenter();
-    let opacity = getOpacity();
-
-    if (opacity < uniforms.alphaClip) {
-        projCache[threadIdx * {CACHE_STRIDE}u + 6u] = 0u;
-        splatPairStart[threadIdx] = 0u;
-        splatPairCount[threadIdx] = 0u;
-        return;
-    }
-
-    let rotation = half4(getRotation());
-    let scale = half3(getScale());
-
-    let proj = computeSplatCov(
-        center, rotation, scale,
-        uniforms.viewMatrix, uniforms.viewProj,
-        uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
-        uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
-        uniforms.isOrtho, uniforms.alphaClip, uniforms.minContribution,
+    let projected = projectSplatCommon(
+        threadIdx,
+        numVisible,
+        uniforms.alphaClip,
+        uniforms.minPixelSize,
+        uniforms.minContribution,
+        uniforms.viewMatrix,
+        uniforms.viewProj,
+        uniforms.focal,
+        uniforms.viewportWidth,
+        uniforms.viewportHeight,
+        uniforms.nearClip,
+        uniforms.farClip,
+        uniforms.isOrtho,
         #ifdef GSPLAT_FISHEYE
             uniforms.fisheye_k, uniforms.fisheye_inv_k,
             uniforms.fisheye_projMat00, uniforms.fisheye_projMat11,
         #endif
     );
 
-    if (!proj.valid) {
-        projCache[threadIdx * {CACHE_STRIDE}u + 6u] = 0u;
-        splatPairStart[threadIdx] = 0u;
-        splatPairCount[threadIdx] = 0u;
+    if (!projected.valid) {
+        if (threadIdx < numVisible) {
+            projCache[threadIdx * {CACHE_STRIDE}u + 6u] = 0u;
+            splatPairStart[threadIdx] = 0u;
+            splatPairCount[threadIdx] = 0u;
+        }
         return;
     }
+
+    let opacity = projected.opacity;
+    let proj = projected.proj;
 
     let det = proj.a * proj.c - proj.b * proj.b;
     let invDet = 1.0 / det;

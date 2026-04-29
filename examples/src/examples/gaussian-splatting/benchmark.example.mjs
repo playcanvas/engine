@@ -12,15 +12,21 @@ const MEASURE_FRAMES = 30;
 const RENDERER_RASTER_CPU_SORT = 1;
 const RENDERER_RASTER_GPU_SORT = 2;
 const RENDERER_COMPUTE = 3;
+const RENDERER_RASTER_HYBRID = 4;
 
 const RENDERERS = [
     { device: 'webgl2', renderer: RENDERER_RASTER_CPU_SORT, label: 'WebGL2 CPU Sort', shortLabel: 'GL2 CPU' },
     { device: 'webgpu', renderer: RENDERER_RASTER_CPU_SORT, label: 'WebGPU CPU Sort', shortLabel: 'GPU CPU' },
     { device: 'webgpu', renderer: RENDERER_RASTER_GPU_SORT, label: 'WebGPU GPU Sort', shortLabel: 'GPU Sort' },
-    { device: 'webgpu', renderer: RENDERER_COMPUTE, label: 'WebGPU Compute', shortLabel: 'Compute' }
+    { device: 'webgpu', renderer: RENDERER_COMPUTE, label: 'WebGPU Compute', shortLabel: 'Compute' },
+    { device: 'webgpu', renderer: RENDERER_RASTER_HYBRID, label: 'WebGPU Hybrid', shortLabel: 'Hybrid' }
 ];
 
-const BUDGETS = [1, 2, 4, 6, 8, 10, 20, 30]; // millions
+const BUDGETS = [1, 2, 3, 4, 6, 8, 10, 15, 20, 25, 30, 35]; // millions
+
+/** Design-time chart dimensions (CSS px); bitmap scales with table width × DPR. */
+const CHART_REF_W = 778;
+const CHART_REF_H = 389;
 
 // ── Stored results per renderer column ──
 // storedResults[col].budgetResults is length BUDGETS.length, entries are null or result object
@@ -169,9 +175,17 @@ for (let b = 0; b < BUDGETS.length; b++) {
     tbody.appendChild(tr);
 }
 table.appendChild(tbody);
-containerEl.appendChild(table);
 
-// Status line (inside container, visible when idle)
+// Wide table + chart share one column so the chart matches table width (horizontal scroll on narrow viewports).
+const benchScrollBlock = document.createElement('div');
+Object.assign(benchScrollBlock.style, {
+    width: 'max-content',
+    maxWidth: 'none',
+    boxSizing: 'border-box'
+});
+benchScrollBlock.appendChild(table);
+
+// Status line (inside scroll column, visible when idle)
 const statusEl = document.createElement('div');
 Object.assign(statusEl.style, {
     marginBottom: '12px',
@@ -181,7 +195,7 @@ Object.assign(statusEl.style, {
     minHeight: '1.4em',
     fontSize: '14px'
 });
-containerEl.appendChild(statusEl);
+benchScrollBlock.appendChild(statusEl);
 
 // Floating status overlay (visible during tests, on top of rendering)
 const floatingStatus = document.createElement('div');
@@ -201,9 +215,23 @@ Object.assign(floatingStatus.style, {
 });
 document.body.appendChild(floatingStatus);
 
-// Chart + download area
+// Chart + download area (same width as table via benchScrollBlock)
 const chartArea = document.createElement('div');
-containerEl.appendChild(chartArea);
+Object.assign(chartArea.style, {
+    width: '100%',
+    boxSizing: 'border-box'
+});
+benchScrollBlock.appendChild(chartArea);
+containerEl.appendChild(benchScrollBlock);
+
+let chartResizeTimer = 0;
+window.addEventListener('resize', () => {
+    if (!storedResults.some(r => r !== null)) return;
+    window.clearTimeout(chartResizeTimer);
+    chartResizeTimer = window.setTimeout(() => {
+        refreshChartAndDownload();
+    }, 200);
+});
 
 /**
  * @param {string} text - Status text.
@@ -580,6 +608,37 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 // ── Chart + download ──
 
 /**
+ * Size the chart canvas to the benchmark table width and allocate a sharp bitmap (CSS size × DPR).
+ *
+ * @param {HTMLCanvasElement} chartCanvas - Chart canvas.
+ */
+function layoutBenchmarkChartCanvas(chartCanvas) {
+    const tw = Math.max(
+        table.offsetWidth,
+        table.scrollWidth,
+        Math.ceil(table.getBoundingClientRect().width)
+    );
+    const cssW = Math.max(1, Math.ceil(tw));
+    const cssH = cssW * (CHART_REF_H / CHART_REF_W);
+    const dpr = typeof window.devicePixelRatio === 'number' && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
+    const pixW = Math.max(1, Math.round(cssW * dpr));
+    const pixH = Math.max(1, Math.round(cssH * dpr));
+
+    Object.assign(chartCanvas.style, {
+        display: 'block',
+        background: '#1a1a2e',
+        borderRadius: '4px',
+        width: `${cssW}px`,
+        height: `${cssH}px`,
+        marginBottom: '12px',
+        maxWidth: 'none',
+        boxSizing: 'border-box'
+    });
+    chartCanvas.width = pixW;
+    chartCanvas.height = pixH;
+}
+
+/**
  * @param {number} v - Value.
  * @returns {string} Formatted.
  */
@@ -594,18 +653,15 @@ function refreshChartAndDownload() {
     if (!anyResults) return;
 
     const chartCanvas = document.createElement('canvas');
-    chartCanvas.width = 778;
-    chartCanvas.height = 389;
-    Object.assign(chartCanvas.style, {
-        display: 'block',
-        background: '#1a1a2e',
-        borderRadius: '4px',
-        width: '100%',
-        maxWidth: '770px',
-        marginBottom: '12px'
-    });
     chartArea.appendChild(chartCanvas);
-    drawChart(chartCanvas);
+
+    const finishChart = () => {
+        layoutBenchmarkChartCanvas(chartCanvas);
+        drawChart(chartCanvas);
+    };
+    requestAnimationFrame(() => {
+        requestAnimationFrame(finishChart);
+    });
 
     const dlText = buildDownloadText();
     const btnStyle = {
@@ -736,26 +792,78 @@ function buildDownloadText() {
 }
 
 /**
- * Rasterize the visible benchmark page (containerEl) to a PNG blob,
+ * Full layout size of an element: scroll metrics plus max extent of large descendants.
+ * Mobile Safari often under-reports scrollHeight for width:100% canvases; probing fixes chart clipping.
+ *
+ * @param {HTMLElement} el - Element.
+ * @returns {{ w: number, h: number }} Pixel dimensions (ceil).
+ */
+function captureElementSize(el) {
+    const rect = el.getBoundingClientRect();
+    const rootTop = rect.top;
+    const rootLeft = rect.left;
+
+    let maxW = Math.max(el.scrollWidth, el.offsetWidth, rect.width);
+    let maxH = Math.max(el.scrollHeight, el.offsetHeight, rect.height);
+
+    const probe = (/** @type {Element} */ node) => {
+        if (!node || typeof node.getBoundingClientRect !== 'function') return;
+        const r = node.getBoundingClientRect();
+        maxW = Math.max(maxW, r.right - rootLeft);
+        maxH = Math.max(maxH, r.bottom - rootTop);
+    };
+
+    el.querySelectorAll('canvas, img, table, button').forEach(probe);
+
+    return {
+        w: Math.ceil(Math.max(1, maxW)),
+        h: Math.ceil(Math.max(1, maxH))
+    };
+}
+
+/**
+ * Rasterize the benchmark page (containerEl) to a PNG blob,
  * trimming uniform #111 background edges.
  *
  * @returns {Promise<Blob|null>} PNG blob.
  */
 async function pageToPngBlob() {
-    const { width, height } = containerEl.getBoundingClientRect();
-    const W = Math.ceil(width);
-    const H = Math.ceil(height);
+    const { w: W, h: H } = captureElementSize(containerEl);
 
     // Clone; canvases don't render inside foreignObject, so swap them for <img>.
     const clone = /** @type {HTMLElement} */ (containerEl.cloneNode(true));
     clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    // Hint full content width so mobile browsers lay out the clone like desktop (wide table).
+    clone.style.boxSizing = 'border-box';
+    clone.style.width = `${W}px`;
+    clone.style.minHeight = `${H}px`;
+    clone.style.overflow = 'visible';
+
+    const tbl = clone.querySelector('table');
+    if (tbl) {
+        tbl.style.width = 'max-content';
+        tbl.style.maxWidth = 'none';
+    }
+
     const lives = containerEl.querySelectorAll('canvas');
     clone.querySelectorAll('canvas').forEach((c, i) => {
+        const live = lives[i];
+        const rr = live.getBoundingClientRect();
         const img = document.createElement('img');
-        img.src = lives[i].toDataURL();
-        img.width = lives[i].width;
-        img.height = lives[i].height;
-        img.style.cssText = c.style.cssText;
+        img.src = live.toDataURL();
+        img.width = live.width;
+        img.height = live.height;
+        // Match on-screen CSS pixel size so foreignObject reserves full chart height (avoids squashed / clipped canvas on mobile).
+        img.style.cssText = [
+            'display:block',
+            `background:${live.style.background || '#1a1a2e'}`,
+            `border-radius:${live.style.borderRadius || '4px'}`,
+            `margin-bottom:${live.style.marginBottom || '12px'}`,
+            `width:${Math.ceil(rr.width)}px`,
+            `height:${Math.ceil(rr.height)}px`,
+            'max-width:none',
+            'box-sizing:border-box'
+        ].join(';');
         c.replaceWith(img);
     });
 
@@ -770,26 +878,52 @@ async function pageToPngBlob() {
     const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(pageImg, 0, 0);
+    ctx.drawImage(pageImg, 0, 0, W, H);
 
-    // Find bounding box of non-background pixels and crop with a small padding.
+    // Trim uniform #111 margins; keep alpha so AA edges are not misclassified as bg.
     const data = ctx.getImageData(0, 0, W, H).data;
-    const BG = 0x11, TOL = 6, PAD = 10;
-    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    const BG = 0x11;
+    const TOL = 4;
+    const PAD = 16;
+    /**
+     * Predicate for non-background pixels.
+     * @param {number} i - Index into data (rgba byte index of R).
+     * @returns {boolean} True if pixel is not uniform background.
+     */
+    const isContent = (i) => {
+        if (data[i + 3] < 255) {
+            return true;
+        }
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        return Math.abs(r - BG) > TOL || Math.abs(g - BG) > TOL || Math.abs(b - BG) > TOL;
+    };
+    let x0 = W;
+    let y0 = H;
+    let x1 = -1;
+    let y1 = -1;
     for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
             const i = (y * W + x) * 4;
-            if (Math.abs(data[i] - BG) > TOL || Math.abs(data[i + 1] - BG) > TOL || Math.abs(data[i + 2] - BG) > TOL) {
-                x0 = Math.min(x0, x); x1 = Math.max(x1, x);
-                y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+            if (isContent(i)) {
+                x0 = Math.min(x0, x);
+                x1 = Math.max(x1, x);
+                y0 = Math.min(y0, y);
+                y1 = Math.max(y1, y);
             }
         }
     }
     if (x1 < 0) {
-        x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1;
+        x0 = 0;
+        y0 = 0;
+        x1 = W - 1;
+        y1 = H - 1;
     } else {
-        x0 = Math.max(0, x0 - PAD); y0 = Math.max(0, y0 - PAD);
-        x1 = Math.min(W - 1, x1 + PAD); y1 = Math.min(H - 1, y1 + PAD);
+        x0 = Math.max(0, x0 - PAD);
+        y0 = Math.max(0, y0 - PAD);
+        x1 = Math.min(W - 1, x1 + PAD);
+        y1 = Math.min(H - 1, y1 + PAD);
     }
 
     const out = document.createElement('canvas');
@@ -810,10 +944,48 @@ function drawChart(chartCanvas) {
 
     const W = chartCanvas.width;
     const H = chartCanvas.height;
-    const PAD = { top: 30, right: 20, bottom: 40, left: 50 };
+    const scale = W / CHART_REF_W;
+
+    const PAD = {
+        top: 30 * scale,
+        right: 20 * scale,
+        bottom: 40 * scale,
+        left: 50 * scale
+    };
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
-    const COLORS = ['#ff6b6b', '#2ecc71', '#a06bff', '#f7dc6f'];
+    const COLORS = ['#ff6b6b', '#2ecc71', '#a06bff', '#f7dc6f', '#4a9eff'];
+
+    /** X-axis range from actual results only (avoids empty space past last tested budget). */
+    let chartMinM = Infinity;
+    let chartMaxM = -Infinity;
+    for (let c = 0; c < RENDERERS.length; c++) {
+        const r = storedResults[c];
+        if (!r) continue;
+        const br = /** @type {any} */ (r).budgetResults;
+        for (let i = 0; i < BUDGETS.length; i++) {
+            if (!br[i]) continue;
+            const m = BUDGETS[i];
+            if (m < chartMinM) chartMinM = m;
+            if (m > chartMaxM) chartMaxM = m;
+        }
+    }
+    if (!(chartMinM <= chartMaxM)) {
+        chartMinM = BUDGETS[0];
+        chartMaxM = BUDGETS[BUDGETS.length - 1];
+    }
+    const chartSpanM = chartMaxM - chartMinM;
+
+    /**
+     * @param {number} millions - Splat budget in millions.
+     * @returns {number} Canvas x in plot area.
+     */
+    const budgetToX = (millions) => {
+        if (chartSpanM <= 0) {
+            return PAD.left + plotW * 0.5;
+        }
+        return PAD.left + ((millions - chartMinM) / chartSpanM) * plotW;
+    };
 
     let maxVal = 0;
     for (let c = 0; c < RENDERERS.length; c++) {
@@ -830,7 +1002,7 @@ function drawChart(chartCanvas) {
     if (maxVal === 0) maxVal = 1;
 
     ctx.strokeStyle = '#444';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = Math.max(1, scale);
     ctx.beginPath();
     ctx.moveTo(PAD.left, PAD.top);
     ctx.lineTo(PAD.left, H - PAD.bottom);
@@ -838,13 +1010,13 @@ function drawChart(chartCanvas) {
     ctx.stroke();
 
     ctx.fillStyle = '#888';
-    ctx.font = '11px monospace';
+    ctx.font = `${11 * scale}px monospace`;
     ctx.textAlign = 'right';
     const yTicks = 5;
     for (let i = 0; i <= yTicks; i++) {
         const v = (maxVal / yTicks) * i;
         const y = H - PAD.bottom - (i / yTicks) * plotH;
-        ctx.fillText(v.toFixed(1), PAD.left - 5, y + 4);
+        ctx.fillText(v.toFixed(1), PAD.left - 5 * scale, y + 4 * scale);
         ctx.strokeStyle = '#333';
         ctx.beginPath();
         ctx.moveTo(PAD.left, y);
@@ -855,14 +1027,20 @@ function drawChart(chartCanvas) {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#888';
     for (let i = 0; i < BUDGETS.length; i++) {
-        const x = PAD.left + (i / (BUDGETS.length - 1)) * plotW;
-        ctx.fillText(`${BUDGETS[i]}M`, x, H - PAD.bottom + 18);
+        const m = BUDGETS[i];
+        if (m < chartMinM || m > chartMaxM) continue;
+        const x = budgetToX(m);
+        ctx.fillText(`${m}M`, x, H - PAD.bottom + 18 * scale);
     }
 
     ctx.fillStyle = '#ccc';
-    ctx.font = '12px monospace';
+    ctx.font = `${12 * scale}px monospace`;
     ctx.textAlign = 'center';
-    ctx.fillText('GPU Frame Time (ms) vs Splat Budget', W / 2, 18);
+    ctx.fillText(
+        `GPU Frame Time (ms) vs Splat Budget (M, linear x: ${chartMinM}M–${chartMaxM}M)`,
+        W / 2,
+        18 * scale
+    );
 
     for (let c = 0; c < RENDERERS.length; c++) {
         const r = storedResults[c];
@@ -872,14 +1050,14 @@ function drawChart(chartCanvas) {
         const color = COLORS[c % COLORS.length];
         ctx.strokeStyle = color;
         ctx.fillStyle = color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 * scale;
 
         /** @type {{x: number, y: number}[]} */
         const points = [];
         for (let i = 0; i < BUDGETS.length; i++) {
             if (!br[i]) continue;
             const v = br[i].avgGpu >= 0 ? br[i].avgGpu : br[i].avgCpu;
-            const x = PAD.left + (i / (BUDGETS.length - 1)) * plotW;
+            const x = budgetToX(BUDGETS[i]);
             const y = H - PAD.bottom - (v / maxVal) * plotH;
             points.push({ x, y });
         }
@@ -895,21 +1073,21 @@ function drawChart(chartCanvas) {
 
         for (const pt of points) {
             ctx.beginPath();
-            ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+            ctx.arc(pt.x, pt.y, 3 * scale, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
     // Legend
-    ctx.font = '10px monospace';
+    ctx.font = `${10 * scale}px monospace`;
     ctx.textAlign = 'left';
     for (let c = 0; c < RENDERERS.length; c++) {
         const color = COLORS[c % COLORS.length];
-        const lx = PAD.left + 10;
-        const ly = PAD.top + 10 + c * 14;
+        const lx = PAD.left + 10 * scale;
+        const ly = PAD.top + 10 * scale + c * 14 * scale;
         ctx.fillStyle = storedResults[c] ? color : '#444';
-        ctx.fillRect(lx, ly - 4, 10, 3);
-        ctx.fillText(RENDERERS[c].label, lx + 14, ly);
+        ctx.fillRect(lx, ly - 4 * scale, 10 * scale, 3 * scale);
+        ctx.fillText(RENDERERS[c].label, lx + 14 * scale, ly);
     }
 }
 

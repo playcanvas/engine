@@ -6,7 +6,9 @@ import { GSplatInfo } from './gsplat-info.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorkBuffer } from './gsplat-work-buffer.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
+import { GSplatHybridRenderer } from './gsplat-hybrid-renderer.js';
 import { GSplatComputeLocalRenderer } from './gsplat-compute-local-renderer.js';
+import { GSplatProjector } from './gsplat-projector.js';
 import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
@@ -17,7 +19,8 @@ import { ComputeRadixSort } from '../graphics/radix-sort/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
-    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
+    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_RASTER_HYBRID,
+    GSPLAT_RENDERER_COMPUTE,
     GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_AABBS
 } from '../constants.js';
 import { Color } from '../../core/math/color.js';
@@ -57,6 +60,7 @@ const _localCamPos = new Vec3();
 const _closestPt = new Vec3();
 const tempOctreesTicked = new Set();
 const _queuedSplats = new Set();
+const ALPHA_VISIBILITY_THRESHOLD = 1.0 / 255.0;
 
 const _lodColorsRaw = [
     [1, 0, 0],  // red
@@ -178,6 +182,13 @@ class GSplatManager {
      * @type {GSplatIntervalCompaction|null}
      */
     intervalCompaction = null;
+
+    /**
+     * Compute projector + sort keys for {@link GSPLAT_RENDERER_RASTER_HYBRID}.
+     *
+     * @type {GSplatProjector|null}
+     */
+    projector = null;
 
     /**
      * Indirect draw slot index for the current frame (-1 when not using indirect draw).
@@ -427,6 +438,8 @@ class GSplatManager {
         this.keyGenerator = null;
         this.gpuSorter?.destroy();
         this.gpuSorter = null;
+        this.projector?.destroy();
+        this.projector = null;
 
         // Switch renderer to CPU mode once, before destroying compaction.
         const useCpuSort = false;
@@ -475,6 +488,20 @@ class GSplatManager {
     }
 
     /**
+     * GPU radix sort + projector for hybrid raster (no separate sort-key compute pass).
+     *
+     * @private
+     */
+    initHybridSorting() {
+        if (!this.gpuSorter) {
+            this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
+        }
+        if (!this.projector) {
+            this.projector = new GSplatProjector(this.device);
+        }
+    }
+
+    /**
      * Creates the CPU sorter and prepares it for the current world state. Disables any
      * GPU-side indirect draw and hides the mesh until the first sort result arrives.
      *
@@ -502,8 +529,9 @@ class GSplatManager {
     }
 
     /**
-     * Dispatches compute pick pipeline and returns the configured pick mesh instance.
-     * Only works when the local compute renderer is active.
+     * Dispatches a renderer-specific pick pipeline and returns the configured pick mesh instance.
+     * The local compute renderer renders to pick textures; the hybrid renderer refreshes its
+     * shared projector/sort buffers for the picker camera and returns a transient pick mesh.
      *
      * @param {object} camera - The camera.
      * @param {number} width - Pick target width.
@@ -511,6 +539,31 @@ class GSplatManager {
      * @returns {import('../mesh-instance.js').MeshInstance|null} The pick mesh instance, or null.
      */
     prepareForPicking(camera, width, height) {
+        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
+            const sortedState = this.worldStates.get(this.sortedVersion);
+            if (!sortedState?.sortedBefore || !camera.node) return null;
+
+            const sortedIndices = this.sortGpuHybridForCamera(
+                sortedState,
+                camera.node,
+                width,
+                height,
+                Math.max(ALPHA_VISIBILITY_THRESHOLD, this.scene.gsplat.alphaClip),
+                !!this.workBuffer.format.getStream('pcId')
+            );
+            if (!sortedIndices) return null;
+
+            const proj = /** @type {GSplatProjector} */ (this.projector);
+            const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+            return /** @type {GSplatHybridRenderer} */ (/** @type {unknown} */ (this.renderer)).prepareForPicking(
+                this.indirectDrawSlot,
+                sortedIndices,
+                /** @type {StorageBuffer} */ (proj.projCache),
+                /** @type {StorageBuffer} */ (ic.numSplatsBuffer),
+                this.scene.gsplat.alphaClip
+            );
+        }
+
         if (this.activeRenderer !== GSPLAT_RENDERER_COMPUTE) return null;
 
         /** @type {GSplatComputeLocalRenderer} */
@@ -563,6 +616,9 @@ class GSplatManager {
     _createRenderer(mode) {
         if (mode === GSPLAT_RENDERER_COMPUTE) {
             this.renderer = new GSplatComputeLocalRenderer(this.device, this.node, this.cameraNode, this.layer, this.workBuffer);
+        } else if (mode === GSPLAT_RENDERER_RASTER_HYBRID) {
+            this.renderer = new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, this.workBuffer);
+            this.initHybridSorting();
         } else {
             this.renderer = new GSplatQuadRenderer(this.device, this.node, this.cameraNode, this.layer, this.workBuffer);
             if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
@@ -1501,6 +1557,9 @@ class GSplatManager {
                 // GPU sort runs compaction internally, so indirect draw is always valid
                 this.sortGpu(lastState);
                 gpuSortedThisFrame = true;
+            } else if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
+                this.sortGpuHybrid(lastState);
+                gpuSortedThisFrame = true;
             } else {
                 // CPU sort just posts to the worker — indirect draw still needs updating below
                 this.sortCpu(lastState);
@@ -1516,9 +1575,17 @@ class GSplatManager {
             this.lastCullingProjMat.copy(this.cameraNode.camera.projectionMatrix);
         }
 
+        // Hybrid raster needs projector + radix + fresh indirect args every frame (indirect
+        // slots are per-frame; post-projector visible count differs from interval prefix sum).
+        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID && lastState && !gpuSortedThisFrame) {
+            this.sortGpuHybrid(lastState);
+            gpuSortedThisFrame = true;
+        }
+
         // Refresh the per-frame indirect draw slot on non-sort frames
         // (sortGpu already handled GPU-sort frames).
-        if (this.activeRenderer !== GSPLAT_RENDERER_COMPUTE && this.intervalCompaction && !gpuSortedThisFrame) {
+        if (this.activeRenderer !== GSPLAT_RENDERER_COMPUTE && this.activeRenderer !== GSPLAT_RENDERER_RASTER_HYBRID &&
+            this.intervalCompaction && !gpuSortedThisFrame) {
             this.refreshIndirectDraw();
         }
 
@@ -1628,6 +1695,133 @@ class GSplatManager {
 
         // Apply sorted results to the renderer
         this.applyGpuSortResults(worldState, sortedIndices);
+    }
+
+    /**
+     * Hybrid GPU path: interval compaction, projector (keys + proj cache), indirect radix sort
+     * over projector keys (indices are dense in projCache), then hybrid raster bindings.
+     *
+     * @param {GSplatWorldState} worldState - The world state to sort.
+     */
+    sortGpuHybrid(worldState) {
+        const cam = this.cameraNode.camera;
+        const rt = cam.renderTarget;
+        const rtWidth = rt ? rt.width : this.device.width;
+        const rtHeight = rt ? rt.height : this.device.height;
+        const rect = cam.rect;
+        const viewportWidth = Math.floor(rtWidth * rect.z);
+        const viewportHeight = Math.floor(rtHeight * rect.w);
+
+        const sortedIndices = this.sortGpuHybridForCamera(
+            worldState,
+            this.cameraNode,
+            viewportWidth,
+            viewportHeight,
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, this.scene.gsplat.alphaCull),
+            false
+        );
+
+        if (sortedIndices) {
+            this.applyGpuSortResults(worldState, sortedIndices);
+        }
+    }
+
+    /**
+     * Runs the shared hybrid projector + indirect radix sort path for a specific camera.
+     *
+     * @param {GSplatWorldState} worldState - The world state to sort.
+     * @param {GraphNode} cameraNode - Camera node used for projection and sort keys.
+     * @param {number} viewportWidth - Projection viewport width in pixels.
+     * @param {number} viewportHeight - Projection viewport height in pixels.
+     * @param {number} alphaClip - Projector producer alpha threshold.
+     * @param {boolean} pickMode - Whether projector writes pcId into the cache.
+     * @returns {StorageBuffer|null} The sorted cache indices, or null if no work was dispatched.
+     * @private
+     */
+    sortGpuHybridForCamera(worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, pickMode) {
+        const gpuSorter = this.gpuSorter;
+        const projector = this.projector;
+        Debug.assert(gpuSorter && projector, 'Hybrid GPU sort not initialized');
+        if (!gpuSorter || !projector) return null;
+
+        const elementCount = worldState.totalActiveSplats;
+        if (elementCount === 0) return null;
+
+        if (!this.intervalCompaction) {
+            this.intervalCompaction = new GSplatIntervalCompaction(this.device);
+        }
+
+        if (!worldState.sortedBefore) {
+            worldState.sortedBefore = true;
+
+            this.cleanupOldWorldStates(worldState.version);
+            this.sortedVersion = worldState.version;
+
+            this.rebuildWorkBuffer(worldState, elementCount);
+        }
+
+        this.intervalCompaction.uploadIntervals(worldState);
+
+        if (this.canCull) {
+            const state = this.worldStates.get(this.sortedVersion);
+            if (state) {
+                this._runFrustumCulling(state, cameraNode);
+            }
+        }
+
+        const numIntervals = worldState.totalIntervals;
+        const totalActiveSplats = worldState.totalActiveSplats;
+        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, false);
+
+        this.allocateAndWriteIntervalIndirectArgs(numIntervals);
+
+        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+        const compactedSplatIds = ic.compactedSplatIds;
+        const gsplat = this.scene.gsplat;
+
+        const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
+        const radixBits = gpuSorter.radixBits;
+        const roundedNumBits = Math.ceil(numBits / radixBits) * radixBits;
+
+        const { minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode);
+
+        const sortIndirectInfo = gpuSorter.prepareIndirect();
+
+        projector.dispatch({
+            workBuffer: this.workBuffer,
+            cameraNode,
+            compactedSplatIds: /** @type {StorageBuffer} */ (compactedSplatIds),
+            sortElementCountBuffer: /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            totalCapacity: elementCount,
+            radialSort: gsplat.radialSorting,
+            numBits: roundedNumBits,
+            minDist,
+            maxDist,
+            alphaClip,
+            minPixelSize: gsplat.minPixelSize * 0.5,
+            minContribution: gsplat.minContribution,
+            viewportWidth,
+            viewportHeight,
+            pickMode
+        });
+
+        projector.writeIndirectArgs(
+            this.indirectDrawSlot,
+            this.indirectDispatchSlot + 1,
+            /** @type {StorageBuffer} */ (ic.numSplatsBuffer),
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            sortIndirectInfo
+        );
+
+        return gpuSorter.sortIndirect(
+            /** @type {StorageBuffer} */ (projector.sortKeys),
+            elementCount,
+            roundedNumBits,
+            this.indirectDispatchSlot + 1,
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            undefined,
+            false
+        );
     }
 
     /**
@@ -1760,6 +1954,17 @@ class GSplatManager {
      * @private
      */
     applyGpuSortResults(worldState, sortedIndices) {
+        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
+            const proj = /** @type {GSplatProjector} */ (this.projector);
+            const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+            /** @type {GSplatHybridRenderer} */ (/** @type {unknown} */ (this.renderer)).setHybridSortedRendering(
+                this.indirectDrawSlot,
+                sortedIndices,
+                /** @type {StorageBuffer} */ (proj.projCache),
+                /** @type {StorageBuffer} */ (ic.numSplatsBuffer)
+            );
+            return;
+        }
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
         this.renderer.setGpuSortedRendering(this.indirectDrawSlot, sortedIndices, /** @type {StorageBuffer} */ (ic.numSplatsBuffer), worldState.textureSize);
     }
@@ -1770,12 +1975,13 @@ class GSplatManager {
      * interval compaction compute shader.
      *
      * @param {GSplatWorldState} worldState - The world state whose splats provide transforms.
+     * @param {GraphNode} [cameraNode] - Camera node to cull against.
      * @private
      */
-    _runFrustumCulling(worldState) {
+    _runFrustumCulling(worldState, cameraNode = this.cameraNode) {
         this.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
 
-        const cam = this.cameraNode.camera;
+        const cam = cameraNode.camera;
         this.workBuffer.frustumCuller.computeFrustumPlanes(cam.projectionMatrix, cam.viewMatrix);
 
         const gsplat = this.scene.gsplat;
@@ -1784,8 +1990,8 @@ class GSplatManager {
 
         if (fp.enabled) {
             this.workBuffer.frustumCuller.setFisheyeData(
-                this.cameraNode.getPosition(),
-                this.cameraNode.forward,
+                cameraNode.getPosition(),
+                cameraNode.forward,
                 fp.maxTheta
             );
         }
@@ -1803,6 +2009,10 @@ class GSplatManager {
         const sortedState = this.worldStates.get(this.sortedVersion);
         if (!sortedState || !this.intervalCompaction) return;
 
+        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
+            return;
+        }
+
         this.allocateAndWriteIntervalIndirectArgs(this.lastCompactedNumIntervals);
         const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
@@ -1813,10 +2023,10 @@ class GSplatManager {
      * Computes the min/max effective distances for the current world state.
      *
      * @param {GSplatWorldState} worldState - The world state.
+     * @param {GraphNode} [cameraNode] - Camera node to measure distances from.
      * @returns {{minDist: number, maxDist: number}} The distance range.
      */
-    computeDistanceRange(worldState) {
-        const cameraNode = this.cameraNode;
+    computeDistanceRange(worldState, cameraNode = this.cameraNode) {
         const cameraMat = cameraNode.getWorldTransform();
         cameraMat.getTranslation(cameraPosition);
         cameraMat.getZ(cameraDirection).normalize();

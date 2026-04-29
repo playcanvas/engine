@@ -9,6 +9,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_COMPUTE,
+    GSPLAT_RENDERER_RASTER_HYBRID,
     GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
     GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS
 } from '../constants.js';
@@ -69,6 +70,7 @@ class GSplatParams {
         this._format = this._createFormat(GSPLATDATA_COMPACT);
 
         this._material.setParameter('alphaClip', 0.3);
+        this._material.setParameter('alphaCull', 1.0 / 255.0);
         this._material.setParameter('minPixelSize', 2.0);
         this._material.setParameter('minContribution', 3.0);
     }
@@ -147,6 +149,8 @@ class GSplatParams {
      * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with compute shader sorting
      * (WebGPU only, experimental).
      * - {@link GSPLAT_RENDERER_COMPUTE}: Full compute pipeline (WebGPU only, experimental).
+     * - {@link GSPLAT_RENDERER_RASTER_HYBRID}: Hybrid rasterization with a compute projection
+     * cache and global radix sort (WebGPU only, experimental, internal).
      *
      * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
      * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
@@ -160,7 +164,9 @@ class GSplatParams {
 
             if (value === GSPLAT_RENDERER_AUTO) {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
-            } else if ((value === GSPLAT_RENDERER_RASTER_GPU_SORT || value === GSPLAT_RENDERER_COMPUTE) &&
+            } else if ((value === GSPLAT_RENDERER_RASTER_GPU_SORT ||
+                        value === GSPLAT_RENDERER_COMPUTE ||
+                        value === GSPLAT_RENDERER_RASTER_HYBRID) &&
                 !this._device.isWebGPU) {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else {
@@ -591,6 +597,27 @@ class GSplatParams {
      */
     get alphaClip() {
         return this._material.getParameter('alphaClip')?.data ?? 0.3;
+    }
+
+    /**
+     * Sets the alpha threshold below which splats are discarded before forward rendering.
+     * Higher values improve performance by culling more low-opacity splats, while lower
+     * values preserve more translucent splats. Defaults to 1 / 255.
+     *
+     * @type {number}
+     */
+    set alphaCull(value) {
+        this._material.setParameter('alphaCull', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the forward alpha cull threshold.
+     *
+     * @type {number}
+     */
+    get alphaCull() {
+        return this._material.getParameter('alphaCull')?.data ?? (1.0 / 255.0);
     }
 
     /**

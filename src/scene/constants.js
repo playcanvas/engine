@@ -1242,6 +1242,17 @@ export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 export const GSPLAT_RENDERER_COMPUTE = 3;
 
 /**
+ * Hybrid rasterization renderer that performs projection, screen-space culling and sort key
+ * generation in a single compute pass, sorts globally via a compute radix sort, and rasterizes
+ * quads from a pre-projected cache. WebGPU only. Experimental with limited functionality.
+ *
+ * @type {number}
+ * @category Graphics
+ * @ignore
+ */
+export const GSPLAT_RENDERER_RASTER_HYBRID = 4;
+
+/**
  * No debug rendering for Gaussian splats. Normal rendering mode.
  *
  * @type {number}

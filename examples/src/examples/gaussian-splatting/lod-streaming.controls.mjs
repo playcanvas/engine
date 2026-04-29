@@ -170,7 +170,8 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: 0, t: 'Auto' },
                         { v: 1, t: 'Raster (CPU Sort)' },
                         { v: 2, t: 'Raster (GPU Sort)' },
-                        { v: 3, t: 'Compute' }
+                        { v: 3, t: 'Compute' },
+                        { v: 4, t: 'Raster (Hybrid)' }
                     ]
                 })
             ),
@@ -194,6 +195,17 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     min: 0,
                     max: 10,
                     precision: 1
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Alpha Cull' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'alphaCull' },
+                    min: 0,
+                    max: 1,
+                    precision: 3
                 })
             ),
             jsx(
