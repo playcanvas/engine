@@ -103,23 +103,32 @@ class GSplatProjector {
     /** @type {GSplatSortBinWeights} */
     binWeightsUtil;
 
-    /** @type {Compute|null} */
-    _projectorComputeLinear = null;
-
-    /** @type {Compute|null} */
-    _projectorComputeRadial = null;
-
-    /** @type {Compute|null} */
-    _projectorComputeLinearPick = null;
-
-    /** @type {Compute|null} */
-    _projectorComputeRadialPick = null;
+    /**
+     * Lazily-created projector compute variants keyed by `radial|pick|fisheye`
+     * combination (see `_projectorKey`). Up to 8 variants exist; only the
+     * combinations actually needed by the running app are compiled.
+     *
+     * @type {Map<string, Compute>}
+     */
+    _projectorComputes = new Map();
 
     /** @type {BindGroupFormat|null} */
     _projectorBindGroupFormat = null;
 
-    /** @type {UniformBufferFormat|null} */
+    /**
+     * Uniform buffer format for the non-fisheye projector variant.
+     *
+     * @type {UniformBufferFormat|null}
+     */
     _projectorUniformBufferFormat = null;
+
+    /**
+     * Uniform buffer format for the fisheye projector variant. Adds 4 fisheye
+     * scalar uniforms after the shared fields.
+     *
+     * @type {UniformBufferFormat|null}
+     */
+    _projectorUniformBufferFormatFisheye = null;
 
     /** @type {Compute|null} */
     _writeIndirectArgsCompute = null;
@@ -172,10 +181,11 @@ class GSplatProjector {
         this.renderCounter?.destroy();
         this.binWeightsBuffer?.destroy();
 
-        this._projectorComputeLinear?.shader?.destroy();
-        this._projectorComputeRadial?.shader?.destroy();
-        this._projectorComputeLinearPick?.shader?.destroy();
-        this._projectorComputeRadialPick?.shader?.destroy();
+        for (const compute of this._projectorComputes.values()) {
+            compute.shader?.destroy();
+        }
+        this._projectorComputes.clear();
+
         this._projectorBindGroupFormat?.destroy();
         this._writeIndirectArgsCompute?.shader?.destroy();
         this._writeArgsBindGroupFormat?.destroy();
@@ -184,12 +194,9 @@ class GSplatProjector {
         this.sortKeys = null;
         this.renderCounter = null;
         this.binWeightsBuffer = null;
-        this._projectorComputeLinear = null;
-        this._projectorComputeRadial = null;
-        this._projectorComputeLinearPick = null;
-        this._projectorComputeRadialPick = null;
         this._projectorBindGroupFormat = null;
         this._projectorUniformBufferFormat = null;
+        this._projectorUniformBufferFormatFisheye = null;
         this._writeIndirectArgsCompute = null;
         this._writeArgsBindGroupFormat = null;
         this._writeArgsUniformBufferFormat = null;
@@ -199,8 +206,8 @@ class GSplatProjector {
     _createUniformBufferFormats() {
         const device = this.device;
 
-        // Projector uniforms — kept in the same packing order the WGSL struct expects.
-        this._projectorUniformBufferFormat = new UniformBufferFormat(device, [
+        // Shared base fields — order matches the WGSL ProjectorUniforms struct.
+        const baseFields = [
             new UniformFormat('splatTextureSize', UNIFORMTYPE_UINT),
             new UniformFormat('numBins', UNIFORMTYPE_UINT),
             new UniformFormat('isOrtho', UNIFORMTYPE_UINT),
@@ -219,6 +226,18 @@ class GSplatProjector {
             new UniformFormat('minContribution', UNIFORMTYPE_FLOAT),
             new UniformFormat('minDist', UNIFORMTYPE_FLOAT),
             new UniformFormat('invRange', UNIFORMTYPE_FLOAT)
+        ];
+
+        this._projectorUniformBufferFormat = new UniformBufferFormat(device, baseFields);
+
+        // Fisheye variant appends 4 fisheye scalars (matches the GSPLAT_FISHEYE
+        // ifdef'd block in compute-gsplat-projector.js).
+        this._projectorUniformBufferFormatFisheye = new UniformBufferFormat(device, [
+            ...baseFields.map(f => new UniformFormat(f.name, f.type)),
+            new UniformFormat('fisheye_k', UNIFORMTYPE_FLOAT),
+            new UniformFormat('fisheye_inv_k', UNIFORMTYPE_FLOAT),
+            new UniformFormat('fisheye_projMat00', UNIFORMTYPE_FLOAT),
+            new UniformFormat('fisheye_projMat11', UNIFORMTYPE_FLOAT)
         ]);
 
         this._writeArgsUniformBufferFormat = new UniformBufferFormat(device, [
@@ -266,28 +285,38 @@ class GSplatProjector {
      * @private
      */
     _destroyProjectorComputes() {
-        this._projectorComputeLinear?.shader?.destroy();
-        this._projectorComputeRadial?.shader?.destroy();
-        this._projectorComputeLinearPick?.shader?.destroy();
-        this._projectorComputeRadialPick?.shader?.destroy();
+        for (const compute of this._projectorComputes.values()) {
+            compute.shader?.destroy();
+        }
+        this._projectorComputes.clear();
         this._projectorBindGroupFormat?.destroy();
-        this._projectorComputeLinear = null;
-        this._projectorComputeRadial = null;
-        this._projectorComputeLinearPick = null;
-        this._projectorComputeRadialPick = null;
         this._projectorBindGroupFormat = null;
     }
 
     /**
-     * Builds the projector Compute (one variant per sort mode).
+     * Builds the cache key for a projector variant combination.
+     *
+     * @param {boolean} radialSort - Radial vs linear sort.
+     * @param {boolean} pickMode - Pick output mode.
+     * @param {boolean} fisheyeMode - Fisheye projection mode.
+     * @returns {string} The cache key.
+     * @private
+     */
+    _projectorKey(radialSort, pickMode, fisheyeMode) {
+        return `${radialSort ? 'r' : 'l'}${pickMode ? 'p' : ''}${fisheyeMode ? 'f' : ''}`;
+    }
+
+    /**
+     * Builds the projector Compute (one variant per sort/pick/fisheye combination).
      *
      * @param {GSplatWorkBuffer} workBuffer - The current work buffer (provides format).
      * @param {boolean} radialSort - Whether to compile the RADIAL_SORT variant.
      * @param {boolean} pickMode - Whether to write pcId into the cache for picking.
+     * @param {boolean} fisheyeMode - Whether to compile the GSPLAT_FISHEYE variant.
      * @returns {Compute} The created compute instance.
      * @private
      */
-    _createProjectorCompute(workBuffer, radialSort, pickMode) {
+    _createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode) {
         const device = this.device;
         const wbFormat = workBuffer.format;
 
@@ -324,6 +353,9 @@ class GSplatProjector {
         if (pickMode) {
             cdefines.set('PICK_MODE', '');
         }
+        if (fisheyeMode) {
+            cdefines.set('GSPLAT_FISHEYE', '');
+        }
 
         // Format-specific defines mirroring the compute renderer (compute-gsplat-local-renderer.js).
         const colorStream = wbFormat.getStream('dataColor');
@@ -331,58 +363,51 @@ class GSplatProjector {
             cdefines.set('GSPLAT_COLOR_FLOAT', '');
         }
 
+        const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}`;
+
+        const ubFormat = fisheyeMode ?
+            this._projectorUniformBufferFormatFisheye :
+            this._projectorUniformBufferFormat;
+
         const shader = new Shader(device, {
-            name: `${radialSort ? 'GSplatProjectorRadial' : 'GSplatProjectorLinear'}${pickMode ? 'Pick' : ''}`,
+            name: name,
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatProjectorSource,
             cincludes: cincludes,
             cdefines: cdefines,
             computeBindGroupFormat: this._projectorBindGroupFormat,
-            computeUniformBufferFormats: { uniforms: this._projectorUniformBufferFormat }
+            computeUniformBufferFormats: { uniforms: ubFormat }
         });
 
-        return new Compute(device, shader, `${radialSort ? 'GSplatProjectorRadial' : 'GSplatProjectorLinear'}${pickMode ? 'Pick' : ''}`);
+        return new Compute(device, shader, name);
     }
 
     /**
-     * Returns the projector Compute for the requested sort mode, lazily creating it.
-     * Recreates all compute instances when the work-buffer format version changes.
+     * Returns the projector Compute for the requested sort/pick/fisheye combination,
+     * lazily creating it. Recreates all compute instances when the work-buffer format
+     * version changes.
      *
      * @param {GSplatWorkBuffer} workBuffer - The current work buffer.
      * @param {boolean} radialSort - Whether to use the radial sort variant.
      * @param {boolean} [pickMode] - Whether to use the pick-output variant.
+     * @param {boolean} [fisheyeMode] - Whether to use the fisheye projection variant.
      * @returns {Compute} The projector compute instance.
      * @private
      */
-    _getProjectorCompute(workBuffer, radialSort, pickMode = false) {
+    _getProjectorCompute(workBuffer, radialSort, pickMode = false, fisheyeMode = false) {
         const wbFormat = workBuffer.format;
         if (this._formatVersion !== wbFormat.extraStreamsVersion) {
             this._destroyProjectorComputes();
             this._formatVersion = wbFormat.extraStreamsVersion;
         }
 
-        if (radialSort) {
-            if (pickMode) {
-                if (!this._projectorComputeRadialPick) {
-                    this._projectorComputeRadialPick = this._createProjectorCompute(workBuffer, true, true);
-                }
-                return this._projectorComputeRadialPick;
-            }
-            if (!this._projectorComputeRadial) {
-                this._projectorComputeRadial = this._createProjectorCompute(workBuffer, true, false);
-            }
-            return this._projectorComputeRadial;
+        const key = this._projectorKey(radialSort, pickMode, fisheyeMode);
+        let compute = this._projectorComputes.get(key);
+        if (!compute) {
+            compute = this._createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode);
+            this._projectorComputes.set(key, compute);
         }
-        if (pickMode) {
-            if (!this._projectorComputeLinearPick) {
-                this._projectorComputeLinearPick = this._createProjectorCompute(workBuffer, false, true);
-            }
-            return this._projectorComputeLinearPick;
-        }
-        if (!this._projectorComputeLinear) {
-            this._projectorComputeLinear = this._createProjectorCompute(workBuffer, false, false);
-        }
-        return this._projectorComputeLinear;
+        return compute;
     }
 
     /**
@@ -425,14 +450,20 @@ class GSplatProjector {
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
      * @param {boolean} [params.pickMode] - Whether to write picking IDs into the cache.
+     * @param {import('../graphics/fisheye-projection.js').FisheyeProjection} [params.fisheyeProj] -
+     * Fisheye projection state. When `fisheyeProj.enabled` is true the projector picks the
+     * GSPLAT_FISHEYE variant and writes NDC-style clip data; otherwise the linear path runs.
      */
     dispatch(params) {
         const {
             workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
             totalCapacity, radialSort, numBits, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
-            viewportWidth, viewportHeight, pickMode = false
+            viewportWidth, viewportHeight, pickMode = false,
+            fisheyeProj
         } = params;
+
+        const fisheyeMode = !!fisheyeProj?.enabled;
 
         this._ensureCapacity(totalCapacity);
 
@@ -441,7 +472,7 @@ class GSplatProjector {
         // workgroups run their atomicAdds.
         this.renderCounter.clear();
 
-        const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode);
+        const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode);
 
         // Camera position / forward (camera Z basis, matching cpu-sort and key-compute).
         const cameraPos = cameraNode.getPosition();
@@ -511,6 +542,13 @@ class GSplatProjector {
         compute.setParameter('minDist', minDist);
         compute.setParameter('invRange', invRange);
         compute.setParameter('pad0', 0);
+
+        if (fisheyeMode) {
+            compute.setParameter('fisheye_k', fisheyeProj.k);
+            compute.setParameter('fisheye_inv_k', fisheyeProj.invK);
+            compute.setParameter('fisheye_projMat00', fisheyeProj.projMat00);
+            compute.setParameter('fisheye_projMat11', fisheyeProj.projMat11);
+        }
 
         // 2D dispatch over the work-buffer capacity. The shader early-outs threads beyond
         // sortElementCount[0]; sizing the dispatch for the full capacity (a CPU-known

@@ -14,9 +14,12 @@
 // Bindings 0..6 are fixed; texture bindings for the work-buffer format follow them
 // (injected via gsplatFormatDeclCS, starting at binding {FIXED_BINDINGS_LEN}).
 //
-// 3DGS only for v1. Fisheye is not supported (the hybrid vertex shader reconstructs
-// linear view depth from clip via clipToViewZ, which is only valid for linear
-// (perspective + orthographic) projections).
+// 3DGS only. Fisheye is supported via the GSPLAT_FISHEYE define: when enabled
+// the projector writes (ndc.x, ndc.y, depthNdc, 1.0) into the cache (matching
+// gsplatCenter.js) and the hybrid VS reconstructs linear view depth from clip
+// via clipToViewZ = (0, 0, far - near, near). For perspective + orthographic
+// the projector keeps writing real clipPos and the VS uses the
+// inverse-projection-derived clipToViewZ.
 export const computeGsplatProjectorSource = /* wgsl */`
 
 #include "gsplatCommonCS"
@@ -55,6 +58,12 @@ struct ProjectorUniforms {
     minContribution: f32,
     minDist: f32,
     invRange: f32,
+    #ifdef GSPLAT_FISHEYE
+        fisheye_k: f32,
+        fisheye_inv_k: f32,
+        fisheye_projMat00: f32,
+        fisheye_projMat11: f32,
+    #endif
 }
 @group(0) @binding(6) var<uniform> uniforms: ProjectorUniforms;
 
@@ -107,6 +116,12 @@ fn main(
         uniforms.nearClip,
         uniforms.farClip,
         uniforms.isOrtho,
+        #ifdef GSPLAT_FISHEYE
+            uniforms.fisheye_k,
+            uniforms.fisheye_inv_k,
+            uniforms.fisheye_projMat00,
+            uniforms.fisheye_projMat11,
+        #endif
     );
 
     if (projected.valid) {
@@ -135,10 +150,25 @@ fn main(
 
         // Clip-space center. The hybrid VS uses clipPos.w directly for both
         // output.position.w (rasterizer correctness) and corner scale, and
-        // reconstructs linear view depth from clipPos via the clipToViewZ
-        // uniform (= -inverse(matrix_projection)[row 2]).
-        clipPos = uniforms.viewProj * vec4f(center, 1.0);
-        clipPos.z = clamp(clipPos.z, 0.0, abs(clipPos.w));
+        // reconstructs linear view depth from clipPos via the clipToViewZ uniform.
+        #ifdef GSPLAT_FISHEYE
+            // Fisheye: invert the screen→pixel mapping done by computeSplatCov to recover
+            // NDC, then store NDC + linear depthNdc with w=1.0 (matches gsplatCenter.js).
+            // The rasterizer's perspective divide is a no-op (w=1), so output.position is
+            // NDC directly. The VS recovers linear -view.z via clipToViewZ = (0, 0, far-near, near).
+            let viewCenter = uniforms.viewMatrix * vec4f(center, 1.0);
+            let neg_z = -viewCenter.z;
+            let ndcX = proj.screen.x / uniforms.viewportWidth * 2.0 - 1.0;
+            let ndcY = proj.screen.y / uniforms.viewportHeight * 2.0 - 1.0;
+            let depthNdc = clamp(
+                (neg_z - uniforms.nearClip) / (uniforms.farClip - uniforms.nearClip),
+                0.0, 1.0
+            );
+            clipPos = vec4f(ndcX, ndcY, depthNdc, 1.0);
+        #else
+            clipPos = uniforms.viewProj * vec4f(center, 1.0);
+            clipPos.z = clamp(clipPos.z, 0.0, abs(clipPos.w));
+        #endif
 
         // Sort key — same math as compute-gsplat-sort-key.js. We reuse the
         // already-loaded world-space center instead of re-fetching it.

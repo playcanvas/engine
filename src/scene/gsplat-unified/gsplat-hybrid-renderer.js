@@ -259,18 +259,35 @@ class GSplatHybridRenderer extends GSplatRenderer {
     }
 
     /**
-     * Computes `-inverse(matrix_projection)[row 2]` for the given camera into `dst`. The
-     * hybrid VS dot-products this with the cached `clipPos` to recover linear view depth,
-     * which is needed for fog / overdraw / prepass under both perspective and orthographic
-     * projections. The destination buffer must be retained by the caller (typically a
-     * per-material instance field) because the GPU upload happens at draw time.
+     * Computes the per-camera `clipToViewZ` value into `dst`. The hybrid VS dot-products
+     * this with the cached `clipPos` to recover linear view depth, used by fog / overdraw
+     * / prepass.
+     *
+     * - Perspective + orthographic: `dst = -inverse(matrix_projection)[row 2]`. The
+     *   projector stores `clipPos.w` in slot [3] and the dot-product yields `-view.z`.
+     * - Fisheye: `dst = (0, 0, far - near, near)`. The projector stores depthNdc in
+     *   slot [2] and `1.0` in slot [3], so the dot-product reduces to
+     *   `depthNdc * (far - near) + near`, which equals linear `-view.z`.
+     *
+     * The destination buffer must be retained by the caller (typically a per-material
+     * instance field) because the GPU upload happens at draw time.
      *
      * @param {GraphNode} cameraNode - Camera node to derive the uniform from.
      * @param {Float32Array} dst - 4-element destination, written in place.
      * @private
      */
     _computeClipToViewZ(cameraNode, dst) {
-        _invProjMat.copy(cameraNode.camera.projectionMatrix).invert();
+        const cam = cameraNode.camera;
+        if (this.fisheyeProj.enabled) {
+            const near = cam.nearClip;
+            const far = cam.farClip;
+            dst[0] = 0;
+            dst[1] = 0;
+            dst[2] = far - near;
+            dst[3] = near;
+            return;
+        }
+        _invProjMat.copy(cam.projectionMatrix).invert();
         const d = _invProjMat.data;
         dst[0] = -d[2];
         dst[1] = -d[6];

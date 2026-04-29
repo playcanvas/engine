@@ -1770,9 +1770,10 @@ class GSplatManager {
             }
         }
 
+        const fisheyeProj = this.renderer.fisheyeProj;
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
-        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, false);
+        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, fisheyeProj.enabled);
 
         this.allocateAndWriteIntervalIndirectArgs(numIntervals);
 
@@ -1803,7 +1804,8 @@ class GSplatManager {
             minContribution: gsplat.minContribution,
             viewportWidth,
             viewportHeight,
-            pickMode
+            pickMode,
+            fisheyeProj
         });
 
         projector.writeIndirectArgs(
