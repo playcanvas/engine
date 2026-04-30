@@ -7,7 +7,19 @@ import { rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const WARMUP_FRAMES = 10;
-const MEASURE_FRAMES = 30;
+const MEASURE_FRAMES = 60;
+
+/** World dolly along camera.right (direction locked on first measure frame after yaw). Yaw+dolly only during measure frames; warmup is static. Fixed step/frame (no dt). */
+const CAMERA_SIDE_TRANSLATE_UNITS = 12;
+
+/** Lateral delta each measure frame (warmup: yaw only). */
+const CAMERA_SIDE_STEP = MEASURE_FRAMES > 0 ? CAMERA_SIDE_TRANSLATE_UNITS / MEASURE_FRAMES : CAMERA_SIDE_TRANSLATE_UNITS;
+
+/** Camera pivot rest position (world == local under root). */
+const benchPivotBasePos = new pc.Vec3(10.3, 2, -10);
+
+/** Wall-clock duration for idle rAF sampling before any benchmark run (reference FPS). */
+const IDLE_FPS_SAMPLE_MS = 1000;
 
 const RENDERER_RASTER_CPU_SORT = 1;
 const RENDERER_RASTER_GPU_SORT = 2;
@@ -39,6 +51,55 @@ const storedGpuInfos = {};
 let storedResolution = '';
 let highRes = false;
 let running = false;
+
+/** @type {number|null} Measured idle scheduling FPS from rAF (~1s sample). */
+let idleRefFps = null;
+/** @type {number} Active rAF id during idle probe; cleared when done or on destroy. */
+let idleProbeRafId = 0;
+/** @type {number} Debounced resize timer id. */
+let uiResizeTimer = 0;
+
+/** True after a WebGL2 benchmark run on a context without disjoint timer queries (GPU ms N/A). */
+let webglGpuProfilingUnavailable = false;
+
+/**
+ * Same maxPixelRatio rule as runBenchmark (High Res vs automatic DPR scaling).
+ *
+ * @returns {number} Effective max pixel ratio for the next benchmark run.
+ */
+function getBenchmarkMaxPixelRatio() {
+    const dpr = window.devicePixelRatio || 1;
+    return highRes ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
+}
+
+/**
+ * Estimated backing-store size for the fullscreen benchmark canvas on the next run.
+ *
+ * @returns {{ w: number, h: number, maxPR: number, dpr: number }} Rounded pixel size and ratio metadata.
+ */
+function getExpectedBenchmarkCanvasPixels() {
+    const dpr = window.devicePixelRatio || 1;
+    const maxPR = getBenchmarkMaxPixelRatio();
+    const w = Math.max(1, Math.floor(window.innerWidth * maxPR));
+    const h = Math.max(1, Math.floor(window.innerHeight * maxPR));
+    return { w, h, maxPR, dpr };
+}
+
+/**
+ * @param {number} avgGpu - Mean GPU ms or -1 if unavailable.
+ * @returns {string} Display text for the GPU milliseconds cell (or N/A).
+ */
+function formatGpuMsCell(avgGpu) {
+    return avgGpu >= 0 ? avgGpu.toFixed(2) : 'N/A';
+}
+
+/**
+ * @param {number} effectiveFps - Effective FPS from wall clock.
+ * @returns {string} Display text for effective FPS (or em dash if invalid).
+ */
+function formatEffectiveFpsCell(effectiveFps) {
+    return effectiveFps > 0 ? effectiveFps.toFixed(1) : '\u2014';
+}
 
 // ── UI ──
 
@@ -74,9 +135,60 @@ titleEl.textContent = 'PlayCanvas GSplat Benchmark';
 Object.assign(titleEl.style, { margin: '0 0 4px 0', fontSize: '20px', fontWeight: 'normal' });
 containerEl.appendChild(titleEl);
 
+const benchWarnEl = document.createElement('div');
+Object.assign(benchWarnEl.style, {
+    display: 'none',
+    marginBottom: '10px',
+    padding: '8px 10px',
+    background: '#2a2218',
+    border: '1px solid #664',
+    borderRadius: '4px',
+    color: '#ffb347',
+    fontSize: '12px',
+    lineHeight: '1.45',
+    maxWidth: '900px',
+    whiteSpace: 'pre-wrap'
+});
+containerEl.appendChild(benchWarnEl);
+
+function syncBenchBanner() {
+    if (!webglGpuProfilingUnavailable) {
+        benchWarnEl.style.display = 'none';
+        benchWarnEl.textContent = '';
+        return;
+    }
+    benchWarnEl.style.display = 'block';
+    benchWarnEl.textContent =
+        'GPU timings unavailable: WebGL on this device does not support EXT_disjoint_timer_query. ' +
+        'WebGL GPU table shows N/A for GPU milliseconds; Effective FPS is still measured.';
+}
+
 const gpuInfoEl = document.createElement('div');
-Object.assign(gpuInfoEl.style, { marginBottom: '12px', color: '#888', fontSize: '12px', whiteSpace: 'pre' });
+Object.assign(gpuInfoEl.style, { marginBottom: '8px', color: '#888', fontSize: '12px', whiteSpace: 'pre' });
 containerEl.appendChild(gpuInfoEl);
+
+const benchmarkLegendEl = document.createElement('div');
+benchmarkLegendEl.textContent = [
+    'Controls:',
+    'Run All — all renderer columns and all budget rows.',
+    'Column headers (GL2 CPU, …) — that renderer only, all budgets.',
+    `Left column (e.g. ${BUDGETS[0]}M \u2191) — every budget from ${BUDGETS[0]}M up through that row, all renderers.`,
+    'Right column (e.g. \u2190 10M) — only that budget, all renderers (no smaller budgets).',
+    'Grid cells — that renderer only, cumulative budgets up through that row.',
+    '',
+    'Layout: GPU ms grid + chart (top row), Effective FPS grid + chart (bottom row). Bottom grid mirrors the top; use controls on the GPU table.',
+    `GPU ms — mean GPU profiler time over ${MEASURE_FRAMES} measured frames (N/A if unsupported or any frame lacked a GPU sample).`,
+    `Effective FPS — ${MEASURE_FRAMES} divided by wall-clock seconds across those same frames (scheduling + GPU + stalls).`
+].join('\n');
+Object.assign(benchmarkLegendEl.style, {
+    marginBottom: '12px',
+    color: '#aaa',
+    fontSize: '11px',
+    lineHeight: '1.45',
+    whiteSpace: 'pre-wrap',
+    maxWidth: '900px'
+});
+containerEl.appendChild(benchmarkLegendEl);
 
 // High Res toggle
 const highResLabel = document.createElement('label');
@@ -86,6 +198,7 @@ highResCheckbox.type = 'checkbox';
 highResCheckbox.checked = highRes;
 highResCheckbox.onchange = () => {
     highRes = highResCheckbox.checked;
+    updateGpuInfo();
 };
 highResLabel.appendChild(highResCheckbox);
 highResLabel.appendChild(document.createTextNode('High Resolution'));
@@ -106,89 +219,222 @@ const headerBtnCss = [
     'white-space: nowrap'
 ].join(';');
 
-// Grid table
-const table = document.createElement('table');
-Object.assign(table.style, { borderCollapse: 'collapse', marginBottom: '12px', fontSize: '15px' });
+const compactBtnCss = headerBtnCss.replace('padding: 6px 14px', 'padding: 3px 6px').replace('font-size: 14px', 'font-size: 11px');
+const compactRowOnlyBtnCss = compactBtnCss.replace('#4a9eff', '#2fa36b');
+const compactRunAllBtnCss = compactBtnCss.replace('#4a9eff', '#e05555');
 
-const cellPad = 'padding: 10px 16px; border: 1px solid #333; text-align: center; min-width: 120px;';
-const headerCellCss = `${cellPad} background: #222;`;
+const narrowCellBase = 'padding: 4px 5px; border: 1px solid #333; text-align: center; white-space: nowrap; background: #222; color: #fff;';
+/** Same width for Run All / budget column (left) and Only column (right). */
+const COL_EDGE_W = Math.round(58 * 1.3);
+const narrowEdgeColCss = `${narrowCellBase} box-sizing: border-box; width: ${COL_EDGE_W}px; min-width: ${COL_EDGE_W}px; max-width: ${COL_EDGE_W}px;`;
 
-// Header row
-const thead = document.createElement('thead');
-const headTr = document.createElement('tr');
+/** Renderer grid columns (~30% wider than prior 84px so values don’t clip). */
+const RENDERER_COL_W = Math.round(84 * 1.3);
+const rendererCellCss = `padding: 10px 6px; border: 1px solid #333; text-align: center; box-sizing: border-box; width: ${RENDERER_COL_W}px; min-width: ${RENDERER_COL_W}px; max-width: ${RENDERER_COL_W}px;`;
+const rendererHeaderCellCss = `${rendererCellCss} background: #222; color: #fff;`;
 
-// Corner: Run All
-const cornerTh = document.createElement('th');
-cornerTh.style.cssText = headerCellCss;
-const runAllBtn = document.createElement('button');
-runAllBtn.textContent = 'Run All';
-runAllBtn.style.cssText = headerBtnCss.replace('#4a9eff', '#e05555');
-cornerTh.appendChild(runAllBtn);
-headTr.appendChild(cornerTh);
+const cellPad = rendererCellCss;
+const headerCellCss = rendererHeaderCellCss;
 
 /** @type {HTMLButtonElement[]} */
-const allBtns = [runAllBtn];
+const allBtns = [];
 
-for (let c = 0; c < RENDERERS.length; c++) {
-    const th = document.createElement('th');
-    th.style.cssText = headerCellCss;
-    const btn = document.createElement('button');
-    btn.textContent = RENDERERS[c].shortLabel;
-    btn.style.cssText = headerBtnCss;
-    btn.onclick = () => runColumn(c);
-    th.appendChild(btn);
-    headTr.appendChild(th);
-    allBtns.push(btn);
-}
-thead.appendChild(headTr);
-table.appendChild(thead);
+/**
+ * One benchmark results table (same shape). Interactive table registers Run / row / column controls.
+ *
+ * @param {boolean} interactive - True for the GPU table only.
+ * @returns {{ table: HTMLTableElement, cellEls: Map<string, HTMLTableCellElement> }} Table and map of result cells.
+ */
+function createBenchTable(interactive) {
+    const tbl = document.createElement('table');
+    Object.assign(tbl.style, {
+        borderCollapse: 'collapse',
+        marginBottom: '0',
+        fontSize: '15px',
+        width: 'max-content',
+        tableLayout: 'fixed'
+    });
 
-// Body rows
-const tbody = document.createElement('tbody');
+    const cg = document.createElement('colgroup');
+    const cc = document.createElement('col');
+    cc.style.width = `${COL_EDGE_W}px`;
+    cg.appendChild(cc);
+    for (let i = 0; i < RENDERERS.length; i++) {
+        const col = document.createElement('col');
+        col.style.width = `${RENDERER_COL_W}px`;
+        cg.appendChild(col);
+    }
+    const co = document.createElement('col');
+    co.style.width = `${COL_EDGE_W}px`;
+    cg.appendChild(co);
+    tbl.appendChild(cg);
 
-/** @type {Map<string, HTMLTableCellElement>} */
-const cellEls = new Map();
+    const thead = document.createElement('thead');
+    const headTr = document.createElement('tr');
 
-// Budget rows (clickable row headers + clickable cells)
-for (let b = 0; b < BUDGETS.length; b++) {
-    const tr = document.createElement('tr');
-    const th = document.createElement('td');
-    th.style.cssText = headerCellCss;
-    const rowBtn = document.createElement('button');
-    rowBtn.textContent = `${BUDGETS[b]}M`;
-    rowBtn.style.cssText = headerBtnCss;
-    rowBtn.onclick = () => runRow(b);
-    th.appendChild(rowBtn);
-    tr.appendChild(th);
-    allBtns.push(rowBtn);
+    const cornerTh = document.createElement('th');
+    cornerTh.style.cssText = narrowEdgeColCss;
+    if (interactive) {
+        const runAllBtn = document.createElement('button');
+        runAllBtn.textContent = 'Run All';
+        runAllBtn.style.cssText = compactRunAllBtnCss;
+        cornerTh.appendChild(runAllBtn);
+        allBtns.push(runAllBtn);
+    } else {
+        cornerTh.textContent = '\u2014';
+    }
+    headTr.appendChild(cornerTh);
 
     for (let c = 0; c < RENDERERS.length; c++) {
-        const td = document.createElement('td');
-        td.style.cssText = `${cellPad} color: #555; cursor: pointer;`;
-        td.className = 'bench-cell';
-        td.textContent = '\u2014';
-        td.title = `Run ${RENDERERS[c].shortLabel} @ ${BUDGETS[b]}M`;
-        td.onclick = () => runCell(c, b);
-        tr.appendChild(td);
-        cellEls.set(`${BUDGETS[b]}M:${c}`, td);
+        const th = document.createElement('th');
+        th.style.cssText = headerCellCss;
+        if (interactive) {
+            const btn = document.createElement('button');
+            btn.textContent = RENDERERS[c].shortLabel;
+            btn.style.cssText = headerBtnCss;
+            btn.onclick = () => runColumn(c);
+            th.appendChild(btn);
+            allBtns.push(btn);
+        } else {
+            th.textContent = RENDERERS[c].shortLabel;
+        }
+        headTr.appendChild(th);
     }
-    tbody.appendChild(tr);
-}
-table.appendChild(tbody);
 
-// Wide table + chart share one column so the chart matches table width (horizontal scroll on narrow viewports).
-const benchScrollBlock = document.createElement('div');
-Object.assign(benchScrollBlock.style, {
+    const onlyHeaderTh = document.createElement('th');
+    onlyHeaderTh.style.cssText = narrowEdgeColCss;
+    onlyHeaderTh.textContent = interactive ? 'Only' : '';
+    headTr.appendChild(onlyHeaderTh);
+
+    thead.appendChild(headTr);
+    tbl.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    /** @type {Map<string, HTMLTableCellElement>} */
+    const cellMap = new Map();
+
+    for (let b = 0; b < BUDGETS.length; b++) {
+        const tr = document.createElement('tr');
+        const firstTd = document.createElement('td');
+        firstTd.style.cssText = narrowEdgeColCss;
+        if (interactive) {
+            const rowBtn = document.createElement('button');
+            rowBtn.textContent = `${BUDGETS[b]}M \u2191`;
+            rowBtn.style.cssText = compactBtnCss;
+            rowBtn.onclick = () => runRow(b);
+            firstTd.appendChild(rowBtn);
+            allBtns.push(rowBtn);
+        } else {
+            firstTd.textContent = `${BUDGETS[b]}M`;
+        }
+        tr.appendChild(firstTd);
+
+        for (let c = 0; c < RENDERERS.length; c++) {
+            const td = document.createElement('td');
+            td.style.cssText = `${cellPad} color: #555;`;
+            td.className = 'bench-cell';
+            td.textContent = '\u2014';
+            if (interactive) {
+                td.style.cursor = 'pointer';
+                td.onclick = () => runCell(c, b);
+            } else {
+                td.style.cursor = 'default';
+            }
+            tr.appendChild(td);
+            cellMap.set(`${BUDGETS[b]}M:${c}`, td);
+        }
+
+        const onlyTd = document.createElement('td');
+        onlyTd.style.cssText = narrowEdgeColCss;
+        if (interactive) {
+            const onlyBtn = document.createElement('button');
+            onlyBtn.textContent = `\u2190 ${BUDGETS[b]}M`;
+            onlyBtn.style.cssText = compactRowOnlyBtnCss;
+            onlyBtn.onclick = () => runRowOnly(b);
+            onlyTd.appendChild(onlyBtn);
+            allBtns.push(onlyBtn);
+        }
+        tr.appendChild(onlyTd);
+
+        tbody.appendChild(tr);
+    }
+    tbl.appendChild(tbody);
+
+    return { table: tbl, cellEls: cellMap };
+}
+
+const { table: tableGpu, cellEls: cellElsGpu } = createBenchTable(true);
+const { table: tableFps, cellEls: cellElsFps } = createBenchTable(false);
+
+/**
+ * @param {string} label - Section heading.
+ * @returns {HTMLDivElement} Small heading above a benchmark table.
+ */
+function benchSectionLabel(label) {
+    const el = document.createElement('div');
+    el.textContent = label;
+    Object.assign(el.style, {
+        fontSize: '12px',
+        color: '#888',
+        marginBottom: '5px',
+        fontWeight: 'normal'
+    });
+    return el;
+}
+
+const benchMainGrid = document.createElement('div');
+Object.assign(benchMainGrid.style, {
+    display: 'grid',
+    gridTemplateColumns: 'max-content max-content',
+    columnGap: '16px',
+    rowGap: '14px',
+    alignItems: 'start',
+    justifyItems: 'start',
     width: 'max-content',
-    maxWidth: 'none',
+    maxWidth: '100%',
     boxSizing: 'border-box'
 });
-benchScrollBlock.appendChild(table);
 
-// Status line (inside scroll column, visible when idle)
+const gpuTableSection = document.createElement('div');
+gpuTableSection.appendChild(benchSectionLabel('GPU frame time (ms)'));
+gpuTableSection.appendChild(tableGpu);
+
+const gpuChartWrap = document.createElement('div');
+Object.assign(gpuChartWrap.style, { minWidth: '0' });
+
+const fpsTableSection = document.createElement('div');
+fpsTableSection.appendChild(benchSectionLabel(`Effective FPS (${MEASURE_FRAMES} frames / wall clock)`));
+fpsTableSection.appendChild(tableFps);
+
+const fpsChartWrap = document.createElement('div');
+Object.assign(fpsChartWrap.style, { minWidth: '0' });
+
+const chartActionsRow = document.createElement('div');
+Object.assign(chartActionsRow.style, {
+    gridColumn: '1 / -1',
+    marginTop: '2px'
+});
+
+benchMainGrid.appendChild(gpuTableSection);
+benchMainGrid.appendChild(gpuChartWrap);
+benchMainGrid.appendChild(fpsTableSection);
+benchMainGrid.appendChild(fpsChartWrap);
+benchMainGrid.appendChild(chartActionsRow);
+
+const benchScrollBlock = document.createElement('div');
+Object.assign(benchScrollBlock.style, {
+    display: 'inline-block',
+    width: 'max-content',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    verticalAlign: 'top'
+});
+benchScrollBlock.appendChild(benchMainGrid);
+
 const statusEl = document.createElement('div');
 Object.assign(statusEl.style, {
     marginBottom: '12px',
+    marginTop: '8px',
     color: '#aaa',
     whiteSpace: 'pre',
     lineHeight: '1.4',
@@ -197,7 +443,6 @@ Object.assign(statusEl.style, {
 });
 benchScrollBlock.appendChild(statusEl);
 
-// Floating status overlay (visible during tests, on top of rendering)
 const floatingStatus = document.createElement('div');
 Object.assign(floatingStatus.style, {
     position: 'fixed',
@@ -215,20 +460,13 @@ Object.assign(floatingStatus.style, {
 });
 document.body.appendChild(floatingStatus);
 
-// Chart + download area (same width as table via benchScrollBlock)
-const chartArea = document.createElement('div');
-Object.assign(chartArea.style, {
-    width: '100%',
-    boxSizing: 'border-box'
-});
-benchScrollBlock.appendChild(chartArea);
 containerEl.appendChild(benchScrollBlock);
 
-let chartResizeTimer = 0;
 window.addEventListener('resize', () => {
-    if (!storedResults.some(r => r !== null)) return;
-    window.clearTimeout(chartResizeTimer);
-    chartResizeTimer = window.setTimeout(() => {
+    window.clearTimeout(uiResizeTimer);
+    uiResizeTimer = window.setTimeout(() => {
+        updateGpuInfo();
+        if (!storedResults.some(r => r !== null)) return;
         refreshChartAndDownload();
     }, 200);
 });
@@ -251,14 +489,21 @@ function setTestingMode(testing) {
 
 /**
  * @param {string} key - Cell key "rowLabel:colIndex".
- * @param {string} text - Cell text.
- * @param {string} [color] - Text color.
+ * @param {string} gpuText - GPU table cell text.
+ * @param {string} fpsText - Effective FPS table cell text.
+ * @param {string} [color] - Text color for both cells.
  */
-function setCell(key, text, color) {
-    const td = cellEls.get(key);
-    if (td) {
-        td.textContent = text;
-        td.style.color = color || '#fff';
+function setBenchCells(key, gpuText, fpsText, color) {
+    const col = color || '#fff';
+    const g = cellElsGpu.get(key);
+    const f = cellElsFps.get(key);
+    if (g) {
+        g.textContent = gpuText;
+        g.style.color = col;
+    }
+    if (f) {
+        f.textContent = fpsText;
+        f.style.color = col;
     }
 }
 
@@ -271,7 +516,7 @@ function setButtonsEnabled(enabled) {
         btn.style.opacity = enabled ? '1' : '0.4';
         btn.style.cursor = enabled ? 'pointer' : 'default';
     }
-    for (const [, td] of cellEls) {
+    for (const [, td] of cellElsGpu) {
         td.style.cursor = enabled ? 'pointer' : 'default';
         td.style.pointerEvents = enabled ? 'auto' : 'none';
     }
@@ -328,16 +573,18 @@ function getGpuInfo(device) {
  * @param {pc.GraphicsDevice} device - The device.
  * @param {string} label - Status label.
  * @param {string} budgetLabel - Budget label.
- * @returns {Promise<{avgCpu: number, avgGpu: number, avgSplats: number, avgPassTimings: Map<string, number>}>} Results.
+ * @param {boolean} gpuTimingSupported - False disables GPU timer collection (WebGL without disjoint timer query).
+ * @returns {Promise<{avgGpu: number, effectiveFps: number, avgSplats: number, avgPassTimings: Map<string, number>}>} Results.
  */
-function measureFrames(app, device, label, budgetLabel) {
+function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
     return new Promise((resolve) => {
-        const cpuTimes = [];
         const gpuTimes = [];
         const splatCounts = [];
         /** @type {Map<string, number[]>} */
         const passAccum = new Map();
         let frame = 0;
+        /** @type {number|null} */
+        let wallStart = null;
 
         const onFrame = () => {
             frame++;
@@ -346,12 +593,14 @@ function measureFrames(app, device, label, budgetLabel) {
                 return;
             }
             const idx = frame - WARMUP_FRAMES;
+            if (idx === 1) {
+                wallStart = performance.now();
+            }
             setStatus(`${label} [${budgetLabel}]  Measuring ${idx}/${MEASURE_FRAMES}`);
 
-            cpuTimes.push(app.stats.frame.ms);
             splatCounts.push(app.stats.frame.gsplats);
 
-            if (device.gpuProfiler) {
+            if (gpuTimingSupported && device.gpuProfiler) {
                 const gt = device.gpuProfiler._frameTime;
                 if (gt > 0) gpuTimes.push(gt);
 
@@ -367,16 +616,18 @@ function measureFrames(app, device, label, budgetLabel) {
 
             if (idx >= MEASURE_FRAMES) {
                 app.off('frameend', onFrame);
-                const avgCpu = cpuTimes.reduce((a, b) => a + b, 0) / cpuTimes.length;
-                const avgGpu = gpuTimes.length > 0 ?
-                    gpuTimes.reduce((a, b) => a + b, 0) / gpuTimes.length : -1;
+                const wallEnd = performance.now();
+                const wallSec = wallStart !== null ? Math.max(1e-9, (wallEnd - wallStart) / 1000) : 1e-9;
+                const effectiveFps = MEASURE_FRAMES / wallSec;
+                const avgGpu = gpuTimingSupported && gpuTimes.length === MEASURE_FRAMES ?
+                    gpuTimes.reduce((a, b) => a + b, 0) / MEASURE_FRAMES : -1;
                 const avgSplats = splatCounts.reduce((a, b) => a + b, 0) / splatCounts.length;
                 /** @type {Map<string, number>} */
                 const avgPass = new Map();
                 for (const [name, times] of passAccum) {
                     avgPass.set(name, times.reduce((a, b) => a + b, 0) / times.length);
                 }
-                resolve({ avgCpu, avgGpu, avgSplats, avgPassTimings: avgPass });
+                resolve({ avgGpu, effectiveFps, avgSplats, avgPassTimings: avgPass });
             }
         };
         app.on('frameend', onFrame);
@@ -432,7 +683,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     setStatus(`${config.label}  Creating device...`);
 
     for (const bi of budgetIndices) {
-        setCell(`${BUDGETS[bi]}M:${colIndex}`, '...', '#666');
+        setBenchCells(`${BUDGETS[bi]}M:${colIndex}`, '...', '...', '#666');
     }
 
     const canvas = document.createElement('canvas');
@@ -451,6 +702,13 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     const dpr = window.devicePixelRatio || 1;
     device.maxPixelRatio = highRes ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
     const gpuInfo = getGpuInfo(device);
+
+    const extDisjointTimerQuery = /** @type {any} */ (device).extDisjointTimerQuery;
+    const gpuTimingSupported = config.device !== 'webgl2' || !!extDisjointTimerQuery;
+    if (config.device === 'webgl2') {
+        webglGpuProfilingUnavailable = !gpuTimingSupported;
+        syncBenchBanner();
+    }
 
     const dev = /** @type {any} */ (device);
     let computePerfIndex = -1;
@@ -487,7 +745,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     app.scene.gsplat.lodBehindPenalty = 3;
     app.scene.gsplat.radialSorting = true;
 
-    if (device.gpuProfiler) {
+    if (device.gpuProfiler && gpuTimingSupported) {
         device.gpuProfiler.enabled = true;
     }
 
@@ -526,7 +784,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     app.root.addChild(church);
 
     const cameraPivot = new pc.Entity('cameraPivot');
-    cameraPivot.setLocalPosition(10.3, 2, -10);
+    cameraPivot.setLocalPosition(benchPivotBasePos.x, benchPivotBasePos.y, benchPivotBasePos.z);
     app.root.addChild(cameraPivot);
 
     const camera = new pc.Entity('camera');
@@ -543,14 +801,47 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     storedResolution = `${device.width} x ${device.height}`;
 
     let rotateCamera = false;
-    app.on('update', () => {
-        if (rotateCamera) {
-            cameraPivot.rotateLocal(0, 1.0, 0);
+    let benchMotionFrame = 0;
+    let benchLateralAccum = 0;
+    let benchLateralCaptured = false;
+    const benchLateralDir = new pc.Vec3();
+
+    /**
+     * Warmup (measureFrames): camera frozen. Measure phase: yaw + lateral together each frameend (fixed steps, no dt).
+     */
+    const onBenchCameraMotion = () => {
+        if (!rotateCamera) {
+            return;
         }
-    });
+        benchMotionFrame++;
+
+        const measureIdx = benchMotionFrame - WARMUP_FRAMES;
+        if (measureIdx < 1 || measureIdx > MEASURE_FRAMES) {
+            return;
+        }
+
+        cameraPivot.rotateLocal(0, 1.0, 0);
+
+        if (measureIdx === 1) {
+            benchLateralDir.copy(camera.right);
+            benchLateralDir.normalize();
+            benchLateralCaptured = true;
+        }
+
+        if (benchLateralCaptured) {
+            benchLateralAccum += CAMERA_SIDE_STEP;
+            cameraPivot.setLocalPosition(
+                benchPivotBasePos.x + benchLateralDir.x * benchLateralAccum,
+                benchPivotBasePos.y + benchLateralDir.y * benchLateralAccum,
+                benchPivotBasePos.z + benchLateralDir.z * benchLateralAccum
+            );
+        }
+    };
+    app.on('frameend', onBenchCameraMotion);
 
     const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
-    const startAngle = -(WARMUP_FRAMES + MEASURE_FRAMES / 2) * 0.5;
+    /** Initial yaw so measure-phase orbit stays centered now that warmup does not rotate. */
+    const startAngle = -(MEASURE_FRAMES / 2) * 0.5;
 
     // Ensure storedResults[colIndex] exists with the right structure
     if (!storedResults[colIndex]) {
@@ -559,11 +850,13 @@ async function runBenchmark(config, colIndex, budgetIndices) {
             deviceType: config.device,
             gpuInfo,
             computePerfIndex,
+            gpuTimingSupported,
             budgetResults: new Array(BUDGETS.length).fill(null)
         };
     }
     const stored = /** @type {any} */ (storedResults[colIndex]);
     stored.gpuInfo = gpuInfo;
+    stored.gpuTimingSupported = gpuTimingSupported;
     if (computePerfIndex >= 0) stored.computePerfIndex = computePerfIndex;
 
     for (const bi of budgetIndices) {
@@ -572,28 +865,35 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 
         rotateCamera = false;
         cameraPivot.setLocalEulerAngles(0, startAngle, 0);
+        cameraPivot.setLocalPosition(benchPivotBasePos.x, benchPivotBasePos.y, benchPivotBasePos.z);
+        camera.setLocalPosition(0, 0, 0);
+        benchMotionFrame = 0;
+        benchLateralAccum = 0;
+        benchLateralCaptured = false;
 
         await waitForReady(gsplatSystem, app, `${config.label} [${millions}M]`); // eslint-disable-line no-await-in-loop
 
         rotateCamera = true;
 
-        const result = await measureFrames(app, device, config.label, `${millions}M`); // eslint-disable-line no-await-in-loop
+        const result = await measureFrames(app, device, config.label, `${millions}M`, gpuTimingSupported); // eslint-disable-line no-await-in-loop
+        rotateCamera = false;
+
         stored.budgetResults[bi] = {
             budget: millions,
-            avgCpu: result.avgCpu,
             avgGpu: result.avgGpu,
+            effectiveFps: result.effectiveFps,
             avgSplats: result.avgSplats,
             avgPassTimings: result.avgPassTimings
         };
 
-        const val = result.avgGpu >= 0 ? result.avgGpu : result.avgCpu;
-        setCell(`${millions}M:${colIndex}`, val.toFixed(2), '#fff');
+        setBenchCells(`${millions}M:${colIndex}`, formatGpuMsCell(result.avgGpu), formatEffectiveFpsCell(result.effectiveFps), '#fff');
     }
 
     if (computePerfIndex >= 0) storedComputePerfIndex = computePerfIndex;
     if (!storedGpuInfos[config.device]) storedGpuInfos[config.device] = gpuInfo;
 
     window.removeEventListener('resize', resize);
+    app.off('frameend', onBenchCameraMotion);
     app.destroy();
     canvas.width = 0;
     canvas.height = 0;
@@ -608,18 +908,25 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 // ── Chart + download ──
 
 /**
- * Size the chart canvas to the benchmark table width and allocate a sharp bitmap (CSS size × DPR).
+ * Size the chart canvas to match the adjacent benchmark table (width × height, × DPR).
  *
  * @param {HTMLCanvasElement} chartCanvas - Chart canvas.
+ * @param {HTMLTableElement} sizeTable - Table whose box drives chart CSS size.
  */
-function layoutBenchmarkChartCanvas(chartCanvas) {
+function layoutBenchmarkChartCanvas(chartCanvas, sizeTable) {
     const tw = Math.max(
-        table.offsetWidth,
-        table.scrollWidth,
-        Math.ceil(table.getBoundingClientRect().width)
+        sizeTable.offsetWidth,
+        sizeTable.scrollWidth,
+        Math.ceil(sizeTable.getBoundingClientRect().width)
+    );
+    const th = Math.max(
+        sizeTable.offsetHeight,
+        sizeTable.scrollHeight,
+        Math.ceil(sizeTable.getBoundingClientRect().height)
     );
     const cssW = Math.max(1, Math.ceil(tw));
-    const cssH = cssW * (CHART_REF_H / CHART_REF_W);
+    const fallbackH = Math.ceil(cssW * (CHART_REF_H / CHART_REF_W));
+    const cssH = Math.max(1, th > 0 ? Math.ceil(th) : fallbackH);
     const dpr = typeof window.devicePixelRatio === 'number' && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     const pixW = Math.max(1, Math.round(cssW * dpr));
     const pixH = Math.max(1, Math.round(cssH * dpr));
@@ -630,7 +937,7 @@ function layoutBenchmarkChartCanvas(chartCanvas) {
         borderRadius: '4px',
         width: `${cssW}px`,
         height: `${cssH}px`,
-        marginBottom: '12px',
+        marginBottom: '0',
         maxWidth: 'none',
         boxSizing: 'border-box'
     });
@@ -638,29 +945,27 @@ function layoutBenchmarkChartCanvas(chartCanvas) {
     chartCanvas.height = pixH;
 }
 
-/**
- * @param {number} v - Value.
- * @returns {string} Formatted.
- */
-function fmt(v) {
-    return v >= 0 ? v.toFixed(2) : '\u2014';
-}
-
 function refreshChartAndDownload() {
-    chartArea.innerHTML = '';
+    gpuChartWrap.innerHTML = '';
+    fpsChartWrap.innerHTML = '';
+    chartActionsRow.innerHTML = '';
 
     const anyResults = storedResults.some(r => r !== null);
     if (!anyResults) return;
 
-    const chartCanvas = document.createElement('canvas');
-    chartArea.appendChild(chartCanvas);
+    const chartGpu = document.createElement('canvas');
+    gpuChartWrap.appendChild(chartGpu);
+    const chartEff = document.createElement('canvas');
+    fpsChartWrap.appendChild(chartEff);
 
-    const finishChart = () => {
-        layoutBenchmarkChartCanvas(chartCanvas);
-        drawChart(chartCanvas);
+    const finishCharts = () => {
+        layoutBenchmarkChartCanvas(chartGpu, tableGpu);
+        layoutBenchmarkChartCanvas(chartEff, tableFps);
+        drawBudgetChart(chartGpu, 'gpu');
+        drawBudgetChart(chartEff, 'effectiveFps');
     };
     requestAnimationFrame(() => {
-        requestAnimationFrame(finishChart);
+        requestAnimationFrame(finishCharts);
     });
 
     const dlText = buildDownloadText();
@@ -687,7 +992,7 @@ function refreshChartAndDownload() {
         a.click();
         URL.revokeObjectURL(url);
     };
-    chartArea.appendChild(saveResultsBtn);
+    chartActionsRow.appendChild(saveResultsBtn);
 
     const saveChartBtn = document.createElement('button');
     saveChartBtn.textContent = 'Save Page (.png)';
@@ -702,7 +1007,7 @@ function refreshChartAndDownload() {
         a.click();
         URL.revokeObjectURL(url);
     };
-    chartArea.appendChild(saveChartBtn);
+    chartActionsRow.appendChild(saveChartBtn);
 
     console.log(dlText);
 }
@@ -717,11 +1022,29 @@ function buildDownloadText() {
 
     let text = 'GSplat Benchmark Results\n';
     text += `${'\u2550'.repeat(lineW)}\n`;
+    if (webglGpuProfilingUnavailable) {
+        text += 'Note: WebGL GPU timings unavailable (no EXT_disjoint_timer_query). WebGL GPU ms are N/A; Effective FPS is still reported.\n\n';
+    }
     if (storedGpuInfos.webgl2) text += `WebGL2:  ${storedGpuInfos.webgl2}\n`;
     if (storedGpuInfos.webgpu) text += `WebGPU:  ${storedGpuInfos.webgpu}\n`;
     text += `Compute Perf Index: ${storedComputePerfIndex >= 0 ? storedComputePerfIndex.toFixed(3) : '\u2014'} ms\n`;
     if (storedResolution) text += `Resolution: ${storedResolution}${highRes ? ' (High Res)' : ''}\n`;
+    if (idleRefFps !== null) text += `Idle ref: ~${idleRefFps.toFixed(1)} FPS (rAF)\n`;
+    const ex = getExpectedBenchmarkCanvasPixels();
+    text += `Next benchmark canvas (est. at export): ${ex.w} x ${ex.h} px`;
+    text += ` (viewport ${window.innerWidth}x${window.innerHeight}, dpr ${ex.dpr.toFixed(2)}, maxPR ${ex.maxPR.toFixed(2)})\n`;
     text += `${'\u2550'.repeat(lineW)}\n`;
+    text += [
+        'Controls:',
+        'Run All — all renderer columns and all budget rows.',
+        'Column headers — that renderer only, all budgets.',
+        `Left column (e.g. ${BUDGETS[0]}M \u2191) — every budget from ${BUDGETS[0]}M through that row, all renderers.`,
+        'Right column (e.g. \u2190 10M) — only that budget, all renderers.',
+        'Grid cells — that renderer only, cumulative budgets through that row.',
+        '',
+        `Table format (on-page): top row — GPU ms grid + chart; bottom row — Effective FPS grid + chart (${MEASURE_FRAMES} measured frames; GPU N/A if unsupported or incomplete samples).`,
+        ''
+    ].join('\n');
 
     // Find first column with at least one budget result for splat count line
     let firstValid = null;
@@ -742,37 +1065,59 @@ function buildDownloadText() {
         text += `\n${splatLine}\n`;
     }
 
-    for (const metric of ['CPU', 'GPU']) {
-        text += `\n${metric} Frame Time (ms)\n`;
-        text += `${'Renderer'.padEnd(22)} ${budgetHeader}\n`;
-        text += `${'\u2500'.repeat(lineW)}\n`;
-        for (let c = 0; c < RENDERERS.length; c++) {
-            const r = storedResults[c];
-            if (!r) continue;
-            const sr = /** @type {any} */ (r);
-            let line = sr.label.padEnd(22);
-            for (let i = 0; i < BUDGETS.length; i++) {
-                const entry = sr.budgetResults[i];
-                if (!entry) {
-                    line += '\u2014'.padStart(COL_W);
-                    continue;
-                }
-                const v = metric === 'CPU' ? entry.avgCpu : entry.avgGpu;
-                line += fmt(v).padStart(COL_W);
+    const fmtGpu = g => (g >= 0 ? g.toFixed(2) : 'N/A');
+    const fmtEff = f => (f > 0 ? f.toFixed(1) : '\u2014');
+
+    text += '\nGPU Frame Time (ms)\n';
+    text += `${'Renderer'.padEnd(22)} ${budgetHeader}\n`;
+    text += `${'\u2500'.repeat(lineW)}\n`;
+    for (let c = 0; c < RENDERERS.length; c++) {
+        const r = storedResults[c];
+        if (!r) continue;
+        const sr = /** @type {any} */ (r);
+        let line = sr.label.padEnd(22);
+        for (let i = 0; i < BUDGETS.length; i++) {
+            const entry = sr.budgetResults[i];
+            if (!entry) {
+                line += '\u2014'.padStart(COL_W);
+                continue;
             }
-            text += `${line}\n`;
+            line += fmtGpu(entry.avgGpu).padStart(COL_W);
         }
+        text += `${line}\n`;
+    }
+    text += `${'\u2500'.repeat(lineW)}\n`;
+
+    text += `\nEffective FPS (${MEASURE_FRAMES} frames / wall seconds)\n`;
+    text += `${'Renderer'.padEnd(22)} ${budgetHeader}\n`;
+    text += `${'\u2500'.repeat(lineW)}\n`;
+    for (let c = 0; c < RENDERERS.length; c++) {
+        const r = storedResults[c];
+        if (!r) continue;
+        const sr = /** @type {any} */ (r);
+        let line = sr.label.padEnd(22);
+        for (let i = 0; i < BUDGETS.length; i++) {
+            const entry = sr.budgetResults[i];
+            if (!entry) {
+                line += '\u2014'.padStart(COL_W);
+                continue;
+            }
+            const ef = entry.effectiveFps ?? 0;
+            line += fmtEff(ef).padStart(COL_W);
+        }
+        text += `${line}\n`;
     }
     text += `${'\u2500'.repeat(lineW)}\n`;
 
     text += `\n\n${'='.repeat(60)}\n`;
-    text += 'Per-Pass GPU Timings (WebGPU runs)\n';
+    text += 'Per-Pass GPU Timings (supported WebGPU / WebGL GPU timer runs only)\n';
     text += `${'='.repeat(60)}\n`;
     for (let c = 0; c < RENDERERS.length; c++) {
         const r = storedResults[c];
         if (!r) continue;
         const sr = /** @type {any} */ (r);
-        if (sr.deviceType !== 'webgpu') continue;
+        if (sr.deviceType !== 'webgpu' && sr.deviceType !== 'webgl2') continue;
+        if (sr.gpuTimingSupported === false) continue;
         for (let i = 0; i < BUDGETS.length; i++) {
             const entry = sr.budgetResults[i];
             if (!entry || !entry.avgPassTimings || entry.avgPassTimings.size === 0) continue;
@@ -839,11 +1184,10 @@ async function pageToPngBlob() {
     clone.style.minHeight = `${H}px`;
     clone.style.overflow = 'visible';
 
-    const tbl = clone.querySelector('table');
-    if (tbl) {
-        tbl.style.width = 'max-content';
-        tbl.style.maxWidth = 'none';
-    }
+    clone.querySelectorAll('table').forEach((t) => {
+        t.style.width = 'max-content';
+        t.style.maxWidth = 'none';
+    });
 
     const lives = containerEl.querySelectorAll('canvas');
     clone.querySelectorAll('canvas').forEach((c, i) => {
@@ -937,8 +1281,9 @@ async function pageToPngBlob() {
 
 /**
  * @param {HTMLCanvasElement} chartCanvas - Canvas element.
+ * @param {'gpu'|'effectiveFps'} mode - Y-axis metric.
  */
-function drawChart(chartCanvas) {
+function drawBudgetChart(chartCanvas, mode) {
     const ctx = chartCanvas.getContext('2d');
     if (!ctx) return;
 
@@ -994,7 +1339,8 @@ function drawChart(chartCanvas) {
         const br = /** @type {any} */ (r).budgetResults;
         for (let i = 0; i < BUDGETS.length; i++) {
             if (!br[i]) continue;
-            const v = br[i].avgGpu >= 0 ? br[i].avgGpu : br[i].avgCpu;
+            const v = mode === 'gpu' ? br[i].avgGpu : br[i].effectiveFps;
+            if (mode === 'gpu' && br[i].avgGpu < 0) continue;
             if (v > maxVal) maxVal = v;
         }
     }
@@ -1036,8 +1382,9 @@ function drawChart(chartCanvas) {
     ctx.fillStyle = '#ccc';
     ctx.font = `${12 * scale}px monospace`;
     ctx.textAlign = 'center';
+    const yLabel = mode === 'gpu' ? 'GPU frame time (ms)' : 'Effective FPS';
     ctx.fillText(
-        `GPU Frame Time (ms) vs Splat Budget (M, linear x: ${chartMinM}M–${chartMaxM}M)`,
+        `${yLabel} vs Splat Budget (M, linear x: ${chartMinM}M–${chartMaxM}M)`,
         W / 2,
         18 * scale
     );
@@ -1056,7 +1403,8 @@ function drawChart(chartCanvas) {
         const points = [];
         for (let i = 0; i < BUDGETS.length; i++) {
             if (!br[i]) continue;
-            const v = br[i].avgGpu >= 0 ? br[i].avgGpu : br[i].avgCpu;
+            const v = mode === 'gpu' ? br[i].avgGpu : br[i].effectiveFps;
+            if (mode === 'gpu' && br[i].avgGpu < 0) continue;
             const x = budgetToX(BUDGETS[i]);
             const y = H - PAD.bottom - (v / maxVal) * plotH;
             points.push({ x, y });
@@ -1078,26 +1426,66 @@ function drawChart(chartCanvas) {
         }
     }
 
-    // Legend
-    ctx.font = `${10 * scale}px monospace`;
+    // Legend (font + spacing 1.5× prior for readability)
+    const legendFontPx = 15 * scale;
+    const legendLineGap = 21 * scale;
+    ctx.font = `${legendFontPx}px monospace`;
     ctx.textAlign = 'left';
     for (let c = 0; c < RENDERERS.length; c++) {
         const color = COLORS[c % COLORS.length];
         const lx = PAD.left + 10 * scale;
-        const ly = PAD.top + 10 * scale + c * 14 * scale;
+        const ly = PAD.top + 10 * scale + c * legendLineGap;
         ctx.fillStyle = storedResults[c] ? color : '#444';
-        ctx.fillRect(lx, ly - 4 * scale, 10 * scale, 3 * scale);
-        ctx.fillText(RENDERERS[c].label, lx + 14 * scale, ly);
+        ctx.fillRect(lx, ly - 6 * scale, 15 * scale, 5 * scale);
+        ctx.fillText(RENDERERS[c].label, lx + 21 * scale, ly);
     }
 }
 
 function updateGpuInfo() {
     let text = '';
+    if (idleRefFps !== null) {
+        text += `Idle ref: ~${idleRefFps.toFixed(1)} FPS (rAF)\n`;
+    } else {
+        text += 'Idle ref: measuring\u2026\n';
+    }
+    const exp = getExpectedBenchmarkCanvasPixels();
+    text += `Next benchmark canvas (est.): ${exp.w} x ${exp.h} px`;
+    text += `  (CSS viewport ${window.innerWidth} x ${window.innerHeight}`;
+    text += `, devicePixelRatio ${exp.dpr.toFixed(2)}, maxPixelRatio ${exp.maxPR.toFixed(2)}`;
+    text += highRes ? ', High Res on)\n' : ')\n';
     if (storedGpuInfos.webgl2) text += `WebGL2: ${storedGpuInfos.webgl2}\n`;
     if (storedGpuInfos.webgpu) text += `WebGPU: ${storedGpuInfos.webgpu}\n`;
     if (storedComputePerfIndex >= 0) text += `Compute Perf Index: ${storedComputePerfIndex.toFixed(3)} ms\n`;
-    if (storedResolution) text += `Resolution: ${storedResolution}`;
-    gpuInfoEl.textContent = text;
+    if (storedResolution) text += `Resolution (last completed run): ${storedResolution}`;
+    gpuInfoEl.textContent = text.trimEnd();
+    syncBenchBanner();
+}
+
+/**
+ * Sample main-thread / display cadence via requestAnimationFrame (~1 s) before benchmarks run.
+ */
+function startIdleFpsProbe() {
+    if (idleRefFps !== null || idleProbeRafId !== 0) {
+        return;
+    }
+    let frames = 0;
+    const t0 = performance.now();
+
+    function tick(now) {
+        frames++;
+        const elapsed = now - t0;
+        if (elapsed >= IDLE_FPS_SAMPLE_MS) {
+            idleProbeRafId = 0;
+            idleRefFps = (frames / elapsed) * 1000;
+            updateGpuInfo();
+            return;
+        }
+        idleProbeRafId = requestAnimationFrame(tick);
+    }
+
+    idleProbeRafId = requestAnimationFrame(() => {
+        idleProbeRafId = requestAnimationFrame(tick);
+    });
 }
 
 // ── Run logic ──
@@ -1112,7 +1500,7 @@ async function runTests(colIndex, budgetIndices) {
     } catch (e) {
         console.error(`Benchmark failed for ${RENDERERS[colIndex].label}:`, e);
         for (const bi of budgetIndices) {
-            setCell(`${BUDGETS[bi]}M:${colIndex}`, 'FAIL', '#ff6b6b');
+            setBenchCells(`${BUDGETS[bi]}M:${colIndex}`, 'FAIL', '\u2014', '#ff6b6b');
         }
     }
     updateGpuInfo();
@@ -1147,6 +1535,26 @@ async function runRow(budgetIndex) {
     setTestingMode(true);
 
     const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
+    for (let c = 0; c < RENDERERS.length; c++) {
+        await runTests(c, indices); // eslint-disable-line no-await-in-loop
+    }
+
+    setTestingMode(false);
+    setStatus('');
+    running = false;
+    setButtonsEnabled(true);
+}
+
+/**
+ * @param {number} budgetIndex - Single budget (all renderers); does not run smaller budgets.
+ */
+async function runRowOnly(budgetIndex) {
+    if (running) return;
+    running = true;
+    setButtonsEnabled(false);
+    setTestingMode(true);
+
+    const indices = [budgetIndex];
     for (let c = 0; c < RENDERERS.length; c++) {
         await runTests(c, indices); // eslint-disable-line no-await-in-loop
     }
@@ -1193,9 +1601,19 @@ async function runAll() {
     setButtonsEnabled(true);
 }
 
-runAllBtn.onclick = runAll;
+allBtns[0].onclick = runAll;
+
+updateGpuInfo();
+setTimeout(() => {
+    startIdleFpsProbe();
+}, 100);
 
 const destroy = () => {
+    if (idleProbeRafId) {
+        cancelAnimationFrame(idleProbeRafId);
+        idleProbeRafId = 0;
+    }
+    window.clearTimeout(uiResizeTimer);
     containerEl.remove();
     floatingStatus.remove();
 };
