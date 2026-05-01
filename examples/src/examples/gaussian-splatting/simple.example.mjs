@@ -1,4 +1,5 @@
 // @config DESCRIPTION Basic example showing a simple Gaussian Splat with orbit camera controls.
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -52,19 +53,36 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
     // create a splat entity and place it in the world
     const biker = new pc.Entity();
     biker.addComponent('gsplat', {
         asset: assets.biker,
-        castShadows: true
+        castShadows: true,
+        unified: true
     });
     biker.setLocalPosition(-1.5, 0.05, 0);
     biker.setLocalEulerAngles(180, 90, 0);
     biker.setLocalScale(0.7, 0.7, 0.7);
     app.root.addChild(biker);
 
-    // set alpha clip value, used by shadows and picking
-    biker.gsplat.material.setParameter('alphaClip', 0.4);
+    // Orbit pivot at splat (unified gsplats have no mesh AABB for focusEntity framing).
+    const ORBIT_PIVOT = new pc.Vec3().copy(biker.getPosition());
+    ORBIT_PIVOT.y += 1;
+    const ORBIT_DISTANCE = 4;
+    const ORBIT_INITIAL_YAW = 32;
+    const ORBIT_INITIAL_PITCH = -10;
+
+    // alpha clip for unified splats (shadows); scene-level for unified path
+    app.scene.gsplat.alphaClip = 0.4;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -72,21 +90,23 @@ assetListLoader.load(() => {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         toneMapping: pc.TONEMAP_ACES
     });
-    camera.setLocalPosition(-0.8, 2, 3);
+    app.root.addChild(camera);
 
-    // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
-    camera.script.create('orbitCamera', {
+    const orbitCam = /** @type {any} */ (camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            focusEntity: biker,
             distanceMax: 60,
             frameOnStart: false
         }
-    });
+    }));
+    if (orbitCam) {
+        orbitCam.pivotPoint.copy(ORBIT_PIVOT);
+        orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
+        orbitCam._updatePosition();
+    }
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
 
     // create ground to receive shadows
     const material = new pc.StandardMaterial();

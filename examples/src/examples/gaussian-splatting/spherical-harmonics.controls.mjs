@@ -2,11 +2,8 @@
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    if (observer.get('shader') === undefined) {
-        observer.set('shader', false);
-    }
-    const { BindingTwoWay, Button, LabelGroup, SelectInput } = ReactPCUI;
+export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
+    const { BindingTwoWay, LabelGroup, SelectInput } = ReactPCUI;
     return fragment(
         jsx(
             LabelGroup,
@@ -24,12 +21,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     { v: 4, t: 'Raster (Hybrid)' }
                 ]
             })
-        ),
-        jsx(Button, {
-            text: 'Custom Shader',
-            onClick: () => {
-                observer.set('shader', !observer.get('shader'));
-            }
-        })
+        )
     );
 };
