@@ -84,10 +84,20 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
     // Create the bicycle gsplat
     const bicycle = new pc.Entity('Bicycle');
     bicycle.addComponent('gsplat', {
-        asset: assets.bicycle
+        asset: assets.bicycle,
+        unified: true
     });
     bicycle.setLocalEulerAngles(0, 0, 180);
     app.root.addChild(bicycle);
