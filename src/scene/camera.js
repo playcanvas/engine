@@ -34,6 +34,49 @@ const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3
  * @ignore
  */
 class Camera {
+    /** @private */
+    static _flipYProjectionMatrix = new Mat4().setScale(1, -1, 1);
+
+    /** @private */
+    static _webGpuDepthRangeMatrix = new Mat4().set([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 0.5, 0,
+        0, 0, 0.5, 1
+    ]);
+
+    /** @private */
+    static _applyShaderProjectionScratch = new Mat4();
+
+    /**
+     * Builds the projection matrix matching shader `matrix_projection` after optional flip-Y
+     * for render targets and optional WebGPU clip-depth range adjustment.
+     *
+     * @param {Mat4} projection - Source projection ({@link Camera#projectionMatrix}).
+     * @param {Mat4} out - Receives the transformed matrix.
+     * @param {boolean} flipY - When true, apply render-target Y flip first.
+     * @param {boolean} applyWebGpuDepthRange - When true, map clip Z from -1..1 to 0..1.
+     * @returns {Mat4} out
+     */
+    static applyShaderProjectionTransform(projection, out, flipY, applyWebGpuDepthRange) {
+        if (!flipY && !applyWebGpuDepthRange) {
+            out.copy(projection);
+            return out;
+        }
+        if (flipY && applyWebGpuDepthRange) {
+            const scratch = Camera._applyShaderProjectionScratch;
+            scratch.mul2(Camera._flipYProjectionMatrix, projection);
+            out.mul2(Camera._webGpuDepthRangeMatrix, scratch);
+            return out;
+        }
+        if (flipY) {
+            out.mul2(Camera._flipYProjectionMatrix, projection);
+            return out;
+        }
+        out.mul2(Camera._webGpuDepthRangeMatrix, projection);
+        return out;
+    }
+
     /**
      * @type {ShaderPassInfo|null}
      */

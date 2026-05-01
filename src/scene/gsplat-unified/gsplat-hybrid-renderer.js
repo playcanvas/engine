@@ -9,12 +9,14 @@ import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { CACHE_STRIDE } from './gsplat-projector-constants.js';
+import { Camera } from '../camera.js';
 
-// Module-scope scratch matrix used only inside `_computeClipToViewZ`. The output
+// Module-scope scratch matrices used only inside `_computeClipToViewZ`. The output
 // (`Float32Array`) lives on each renderer instance because it must remain valid
 // until the GPU upload happens at draw time, and multiple renderer instances may
 // render concurrently with different cameras.
 const _invProjMat = new Mat4();
+const _shaderProjMat = new Mat4();
 
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
@@ -277,7 +279,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @private
      */
     _computeClipToViewZ(cameraNode, dst) {
-        const cam = cameraNode.camera;
+        const camComp = cameraNode.camera;
+        const cam = camComp.camera;
         if (this.fisheyeProj.enabled) {
             const near = cam.nearClip;
             const far = cam.farClip;
@@ -287,7 +290,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
             dst[3] = near;
             return;
         }
-        _invProjMat.copy(cam.projectionMatrix).invert();
+        const flipY = !!camComp.renderTarget?.flipY;
+        _invProjMat.copy(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, this.device.isWebGPU)).invert();
         const d = _invProjMat.data;
         dst[0] = -d[2];
         dst[1] = -d[6];

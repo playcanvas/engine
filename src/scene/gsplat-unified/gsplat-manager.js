@@ -1804,6 +1804,7 @@ class GSplatManager {
             minContribution: gsplat.minContribution,
             viewportWidth,
             viewportHeight,
+            flipY: !!cameraNode.camera.renderTarget?.flipY,
             pickMode,
             fisheyeProj
         });

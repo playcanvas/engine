@@ -18,6 +18,7 @@ import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, FOG_NONE, GSPLAT_DEBUG_HEATMAP
 import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
+import { Camera } from '../camera.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
 import { computeGsplatLocalDispatchPrepSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-dispatch-prep.js';
@@ -85,6 +86,7 @@ const MAX_CHUNKS_PER_TILE = 8;
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
+const _shaderProjMat = new Mat4();
 const _fogColorLinear = new Color();
 const _fogColorArray = new Float32Array(3);
 
@@ -640,16 +642,17 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const cam = camera.camera;
 
         const view = cam.viewMatrix;
-        const proj = cam.projectionMatrix;
-        _viewProjMat.mul2(proj, view);
+        const flipY = !!camera.renderTarget?.flipY;
+        const webgpu = device.isWebGPU;
+        _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu), view);
         _viewProjData.set(_viewProjMat.data);
         _viewData.set(view.data);
-        const focal = width * proj.data[0];
+        const focal = width * _shaderProjMat.data[0];
 
         const alphaClip = pickMode ? this._alphaClip : (1.0 / 255.0);
 
         // Ensure fisheyeProj is up-to-date (culling may not have run this frame)
-        this.fisheyeProj.update(this._fisheye, camera.fov, proj);
+        this.fisheyeProj.update(this._fisheye, camera.fov, cam.projectionMatrix);
 
         const fisheyeEnabled = this.fisheyeProj.enabled;
         const createCountShader = (pick, fisheye) => this._createCountShaderAndFormat(pick, fisheye);

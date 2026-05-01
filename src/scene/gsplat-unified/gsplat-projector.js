@@ -27,6 +27,7 @@ import {
     UNIFORMTYPE_VEC3
 } from '../../platform/graphics/constants.js';
 import { PROJECTION_ORTHOGRAPHIC } from '../constants.js';
+import { Camera } from '../camera.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { GSplatSortBinWeights } from './gsplat-sort-bin-weights.js';
 import { CACHE_STRIDE } from './gsplat-projector-constants.js';
@@ -51,6 +52,7 @@ const _dispatchSize = new Vec2();
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
+const _shaderProjMat = new Mat4();
 
 /**
  * Owns the per-splat compute pass for the hybrid GSplat renderer (Pass B in the pipeline):
@@ -449,6 +451,8 @@ class GSplatProjector {
      * @param {number} params.minContribution - Minimum total contribution before culling.
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
+     * @param {boolean} params.flipY - Whether the active render target uses `flipY` (must match
+     * {@link Renderer#setCameraUniforms}).
      * @param {boolean} [params.pickMode] - Whether to write picking IDs into the cache.
      * @param {import('../graphics/fisheye-projection.js').FisheyeProjection} [params.fisheyeProj] -
      * Fisheye projection state. When `fisheyeProj.enabled` is true the projector picks the
@@ -459,7 +463,8 @@ class GSplatProjector {
             workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
             totalCapacity, radialSort, numBits, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
-            viewportWidth, viewportHeight, pickMode = false,
+            viewportWidth, viewportHeight, flipY,
+            pickMode = false,
             fisheyeProj
         } = params;
 
@@ -508,12 +513,12 @@ class GSplatProjector {
         const cameraComponent = cameraNode.camera;
         const cam = cameraComponent.camera;
         const view = cam.viewMatrix;
-        const proj = cam.projectionMatrix;
-        _viewProjMat.mul2(proj, view);
+        const webgpu = this.device.isWebGPU;
+        _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu), view);
         _viewProjData.set(_viewProjMat.data);
         _viewData.set(view.data);
 
-        const focal = viewportWidth * proj.data[0];
+        const focal = viewportWidth * _shaderProjMat.data[0];
 
         this.cameraPositionData[0] = cameraPos.x;
         this.cameraPositionData[1] = cameraPos.y;
