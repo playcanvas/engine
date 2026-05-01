@@ -1706,12 +1706,17 @@ class GSplatManager {
      */
     sortGpuHybrid(worldState) {
         const cam = this.cameraNode.camera;
+        const sceneCam = cam.camera;
         const rt = cam.renderTarget;
         const rtWidth = rt ? rt.width : this.device.width;
         const rtHeight = rt ? rt.height : this.device.height;
         const rect = cam.rect;
-        const viewportWidth = Math.floor(rtWidth * rect.z);
+        let viewportWidth = Math.floor(rtWidth * rect.z);
         const viewportHeight = Math.floor(rtHeight * rect.w);
+        // Match Renderer#setCameraUniforms: per-eye width for stereo XR (two views).
+        if (sceneCam.xr?.session && sceneCam.xr.views?.list?.length === 2) {
+            viewportWidth = Math.floor(viewportWidth * 0.5);
+        }
 
         const sortedIndices = this.sortGpuHybridForCamera(
             worldState,
