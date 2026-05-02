@@ -244,6 +244,12 @@ class LightComponent extends Component {
      */
     set type(value) {
         if (this._type === value) return;
+
+        // Remove from layers first so clustered-light bookkeeping uses the OLD type. Layer#removeLight
+        // gates _clusteredLightsSet.delete on `light.type !== DIRECTIONAL`, so changing the type
+        // before the removal would leak the entry (e.g. spot -> directional).
+        this.removeLightFromLayers();
+
         this._type = value;
         this._light.type = lightTypes[value];
         this.refreshProperties();
@@ -274,7 +280,7 @@ class LightComponent extends Component {
      * @type {Color}
      */
     get color() {
-        return this._light._color;
+        return this._light.getColor();
     }
 
     /**

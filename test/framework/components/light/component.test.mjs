@@ -194,6 +194,32 @@ describe('LightComponent', function () {
             expect(e.light.light.type).to.equal(LIGHTTYPE_DIRECTIONAL);
         });
 
+        it('keeps a layer\'s clustered-light set in sync when switching from spot to directional', function () {
+            const e = new Entity();
+            e.addComponent('light', { type: 'spot' });
+            app.root.addChild(e);
+
+            const worldLayer = app.scene.layers.getLayerById(LAYERID_WORLD);
+            expect(worldLayer.clusteredLightsSet.has(e.light.light)).to.equal(true);
+
+            e.light.type = 'directional';
+
+            // the spot light entry must have been removed from the clustered set, since
+            // directional lights are not clustered
+            expect(worldLayer.clusteredLightsSet.has(e.light.light)).to.equal(false);
+        });
+
+    });
+
+    describe('#color', function () {
+
+        it('returns the same Color reference as Light#getColor()', function () {
+            const e = new Entity();
+            e.addComponent('light');
+
+            expect(e.light.color).to.equal(e.light.light.getColor());
+        });
+
     });
 
     describe('#affectSpecularity', function () {
