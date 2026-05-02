@@ -46,12 +46,6 @@ const lightTypes = {
     'spot': LIGHTTYPE_SPOT
 };
 
-const lightTypeNames = {
-    [LIGHTTYPE_DIRECTIONAL]: 'directional',
-    [LIGHTTYPE_OMNI]: 'omni',
-    [LIGHTTYPE_SPOT]: 'spot'
-};
-
 // viewport in shadows map for cascades for directional light
 const directionalCascades = [
     [new Vec4(0, 0, 1, 1)],
@@ -1232,4 +1226,4 @@ class Light {
     }
 }
 
-export { Light, lightTypes, lightTypeNames };
+export { Light, lightTypes };

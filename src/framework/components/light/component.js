@@ -1,9 +1,19 @@
 import { math } from '../../../core/math/math.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { LAYERID_WORLD, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE } from '../../../scene/constants.js';
-import { Light, lightTypes, lightTypeNames } from '../../../scene/light.js';
+import {
+    LAYERID_WORLD,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE
+} from '../../../scene/constants.js';
+import { Light, lightTypes } from '../../../scene/light.js';
 import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
+
+const lightTypeNames = {
+    [LIGHTTYPE_DIRECTIONAL]: 'directional',
+    [LIGHTTYPE_OMNI]: 'omni',
+    [LIGHTTYPE_SPOT]: 'spot'
+};
 
 /**
  * @import { Color } from '../../../core/math/color.js'
