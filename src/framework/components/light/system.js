@@ -56,7 +56,7 @@ class LightComponentSystem extends ComponentSystem {
             data.cookieScale = new Vec2(data.cookieScale[0], data.cookieScale[1]);
         }
 
-        if (data.enable) {
+        if (data.hasOwnProperty('enable')) {
             console.warn('WARNING: enable: Property is deprecated. Set enabled property instead.');
             data.enabled = data.enable;
         }
