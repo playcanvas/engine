@@ -574,8 +574,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the angle at which the spotlight cone starts to fade off. The angle is specified in
-     * degrees. Affects spot lights only. Defaults to 40.
+     * Sets the half-angle (measured in degrees from the light's direction axis to the cone edge)
+     * at which the spotlight cone starts to fade off. The full inner beam angle is twice this
+     * value. Affects spot lights only. Defaults to 40 (i.e. an 80-degree full inner beam).
      *
      * @type {number}
      */
@@ -584,7 +585,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Gets the angle at which the spotlight cone starts to fade off.
+     * Gets the half-angle (measured in degrees from the light's direction axis to the cone edge)
+     * at which the spotlight cone starts to fade off.
      *
      * @type {number}
      */
@@ -593,8 +595,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the angle at which the spotlight cone has faded to nothing. The angle is specified in
-     * degrees. Affects spot lights only. Defaults to 45.
+     * Sets the half-angle (measured in degrees from the light's direction axis to the cone edge)
+     * at which the spotlight cone has faded to nothing. The full outer beam angle is twice this
+     * value. Affects spot lights only. Defaults to 45 (i.e. a 90-degree full outer beam).
      *
      * @type {number}
      */
@@ -603,7 +606,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Gets the angle at which the spotlight cone has faded to nothing.
+     * Gets the half-angle (measured in degrees from the light's direction axis to the cone edge)
+     * at which the spotlight cone has faded to nothing.
      *
      * @type {number}
      */
