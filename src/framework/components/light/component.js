@@ -55,7 +55,11 @@ const _properties = [
     'bake',
     'bakeDir',
     'isStatic',
-    'layers'
+    'layers',
+    'penumbraSize',
+    'penumbraFalloff',
+    'shadowSamples',
+    'shadowBlockerSamples'
 ];
 
 /**
