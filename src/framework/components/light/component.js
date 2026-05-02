@@ -555,7 +555,7 @@ class LightComponent extends Component {
     /**
      * Sets the half-angle (measured in degrees from the light's direction axis to the cone edge)
      * at which the spotlight cone has faded to nothing. The full outer beam angle is twice this
-     * value. Affects spot lights only. Defaults to 45 (i.e. a 90 degree full outer beam).
+     * value. Affects spot lights only. Defaults to 45 (i.e. a 90-degree full outer beam).
      *
      * @type {number}
      */
