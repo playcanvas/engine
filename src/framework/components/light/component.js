@@ -1,19 +1,9 @@
 import { math } from '../../../core/math/math.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import {
-    LAYERID_WORLD,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE
-} from '../../../scene/constants.js';
+import { LAYERID_WORLD, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE } from '../../../scene/constants.js';
 import { Light, lightTypes } from '../../../scene/light.js';
 import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
-
-const lightTypeNames = {
-    [LIGHTTYPE_DIRECTIONAL]: 'directional',
-    [LIGHTTYPE_OMNI]: 'omni',
-    [LIGHTTYPE_SPOT]: 'spot'
-};
 
 /**
  * @import { Color } from '../../../core/math/color.js'
@@ -201,6 +191,16 @@ class LightComponent extends Component {
     _layers = [LAYERID_WORLD];
 
     /**
+     * Preserves the user-facing type string. Required because `'point'` and `'omni'` both map to
+     * the same underlying int on the {@link Light}, so reverse-mapping would normalise the user's
+     * input.
+     *
+     * @type {string}
+     * @private
+     */
+    _type = 'directional';
+
+    /**
      * Create a new LightComponent instance.
      *
      * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
@@ -239,20 +239,19 @@ class LightComponent extends Component {
      * @type {string}
      */
     set type(value) {
-        const newType = lightTypes[value];
-        if (this._light._type === newType) return;
-        this._light.type = newType;
+        if (this._type === value) return;
+        this._type = value;
+        this._light.type = lightTypes[value];
         this.refreshProperties();
     }
 
     /**
-     * Gets the type of the light. Note that {@link LIGHTTYPE_OMNI} is reported as `'omni'` even
-     * if the component was originally configured with the `'point'` alias.
+     * Gets the type of the light.
      *
      * @type {string}
      */
     get type() {
-        return lightTypeNames[this._light._type];
+        return this._type;
     }
 
     /**

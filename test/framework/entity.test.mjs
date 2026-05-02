@@ -302,7 +302,7 @@ describe('Entity', function () {
 
             expect(subtree2.a_a_b.name).to.equal('a_a_b');
             expect(subtree2.a_a_b.light.intensity).to.equal(0.5);
-            expect(subtree2.a_a_b.light.type).to.equal('omni');
+            expect(subtree2.a_a_b.light.type).to.equal('point');
             expect(subtree2.a_a_b.light.color.equals(Color.YELLOW)).to.be.true;
             expect(subtree2.a_a_b.sound.pitch).to.equal(0.75);
             expect(subtree2.a_a_b.sound.volume).to.equal(0.5);
