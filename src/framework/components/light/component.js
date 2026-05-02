@@ -532,7 +532,7 @@ class LightComponent extends Component {
     /**
      * Sets the half-angle (measured in degrees from the light's direction axis to the cone edge)
      * at which the spotlight cone starts to fade off. The full inner beam angle is twice this
-     * value. Affects spot lights only. Defaults to 40 (i.e. an 80 degree full inner beam).
+     * value. Affects spot lights only. Defaults to 40 (i.e. an 80-degree full inner beam).
      *
      * @type {number}
      */
