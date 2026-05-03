@@ -1,5 +1,4 @@
 class AudioListenerComponentData {
-    // Serialized
     enabled = true;
 }
 
