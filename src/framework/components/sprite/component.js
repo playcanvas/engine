@@ -226,7 +226,10 @@ class SpriteComponent extends Component {
 
     // animated sprites
 
-    /** @private */
+    /**
+     * @type {string|null}
+     * @private
+     */
     _autoPlayClip = null;
 
     /**
@@ -857,6 +860,15 @@ class SpriteComponent extends Component {
         this._inLayers = false;
     }
 
+    /**
+     * @deprecated Use {@link SpriteComponent#removeFromLayers} instead.
+     * @ignore
+     */
+    removeModelFromLayers() {
+        Debug.deprecated('SpriteComponent#removeModelFromLayers is deprecated. Use SpriteComponent#removeFromLayers instead.');
+        this.removeFromLayers();
+    }
+
     // Set the desired mesh on the mesh instance
     _showFrame(frame) {
         if (!this.sprite) return;
@@ -1054,10 +1066,10 @@ class SpriteComponent extends Component {
     }
 
     _onLayersChanged(oldComp, newComp) {
-        oldComp.off('add', this.onLayerAdded, this);
-        oldComp.off('remove', this.onLayerRemoved, this);
-        newComp.on('add', this.onLayerAdded, this);
-        newComp.on('remove', this.onLayerRemoved, this);
+        oldComp.off('add', this._onLayerAdded, this);
+        oldComp.off('remove', this._onLayerRemoved, this);
+        newComp.on('add', this._onLayerAdded, this);
+        newComp.on('remove', this._onLayerRemoved, this);
 
         if (this.enabled && this.entity.enabled) {
             this.addToLayers();
