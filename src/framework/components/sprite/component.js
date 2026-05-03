@@ -212,7 +212,10 @@ class SpriteComponent extends Component {
     /** @private */
     _node = new GraphNode();
 
-    /** @private */
+    /**
+     * @type {MeshInstance|null}
+     * @private
+     */
     _meshInstance = null;
 
     /** @private */
