@@ -890,7 +890,7 @@ class SpriteComponent extends Component {
             this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
             this._meshInstance.setParameter(PARAM_OPACITY, this._color.a);
 
-            // now that we created the mesh instance, add the model to the scene
+            // now that we created the mesh instance, add it to the layers
             if (this.enabled && this.entity.enabled) {
                 this._addToLayers();
             }
