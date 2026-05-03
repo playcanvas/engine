@@ -76,7 +76,7 @@ class ScreenComponent extends Component {
     _screenSpace = false;
 
     /**
-     * If true, then elements inside this screen will be not be rendered when outside of the
+     * If true, then elements inside this screen will not be rendered when outside of the
      * screen (only valid when screenSpace is true).
      *
      * @type {boolean}
