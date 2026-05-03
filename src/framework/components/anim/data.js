@@ -1,7 +1,5 @@
 class AnimComponentData {
-    constructor() {
-        this.enabled = true;
-    }
+    enabled = true;
 }
 
 export { AnimComponentData };

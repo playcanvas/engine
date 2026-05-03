@@ -1,8 +1,6 @@
 class AudioListenerComponentData {
-    constructor() {
-        // Serialized
-        this.enabled = true;
-    }
+    // Serialized
+    enabled = true;
 }
 
 export { AudioListenerComponentData };

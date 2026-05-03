@@ -1,7 +1,5 @@
 class RigidBodyComponentData {
-    constructor() {
-        this.enabled = true;
-    }
+    enabled = true;
 }
 
 export { RigidBodyComponentData };
