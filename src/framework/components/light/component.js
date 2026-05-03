@@ -541,8 +541,8 @@ class LightComponent extends Component {
 
     /**
      * Sets the angular size in degrees of the area used when baking soft shadow boundaries for the
-     * directional light into the lightmap. Range is 0 to 180. Requires `bake` to be set to true
-     * and the light type to be `"directional"`. Defaults to 0.
+     * directional light into the lightmap. Range is 0 to 180. Requires {@link bake} to be set to
+     * true and the light type to be `"directional"`. Defaults to 0.
      *
      * @type {number}
      */
@@ -1110,10 +1110,10 @@ class LightComponent extends Component {
 
     /**
      * Sets whether the light's direction will contribute to directional lightmaps. The light must
-     * be enabled and `bake` set to true. Be aware that the directional lightmap is an
+     * be enabled and {@link bake} set to true. Be aware that the directional lightmap is an
      * approximation and can only hold a single direction per pixel. Intersecting multiple lights
-     * with `bakeDir = true` may lead to incorrect-looking specular/bump mapping in the area of
-     * intersection. The error is not always visible though, and is highly scene-dependent.
+     * with {@link bakeDir} set to true may lead to incorrect-looking specular/bump mapping in the
+     * area of intersection. The error is not always visible though, and is highly scene-dependent.
      * Defaults to true.
      *
      * @type {boolean}
