@@ -99,7 +99,7 @@ const _properties = [
  * - [Area Lights](https://playcanvas.github.io/#/graphics/area-lights)
  * - [Clustered Area Lights](https://playcanvas.github.io/#/graphics/clustered-area-lights)
  * - [Clustered Lighting](https://playcanvas.github.io/#/graphics/clustered-lighting)
- * - [Clustered Onmi Shadows](https://playcanvas.github.io/#/graphics/clustered-omni-shadows)
+ * - [Clustered Omni Shadows](https://playcanvas.github.io/#/graphics/clustered-omni-shadows)
  * - [Clustered Spot Shadows](https://playcanvas.github.io/#/graphics/clustered-spot-shadows)
  * - [Lights](https://playcanvas.github.io/#/graphics/lights)
  *
@@ -249,12 +249,16 @@ class LightComponent extends Component {
     /**
      * Sets the type of the light. Can be:
      *
-     * - "directional": A light that is infinitely far away and lights the entire scene from one
-     * direction.
-     * - "omni": An omni-directional light that illuminates in all directions from the light source.
-     * - "spot": An omni-directional light but is bounded by a cone.
+     * - `"directional"` ({@link LIGHTTYPE_DIRECTIONAL}): A light that is infinitely far away and
+     * lights the entire scene from one direction.
+     * - `"omni"` ({@link LIGHTTYPE_OMNI}): An omni-directional light that illuminates in all
+     * directions from the light source.
+     * - `"spot"` ({@link LIGHTTYPE_SPOT}): An omni-directional light but is bounded by a cone.
      *
-     * Defaults to "directional".
+     * `"point"` is also accepted as a backwards-compatibility alias for `"omni"` and is preserved
+     * verbatim on read-back.
+     *
+     * Defaults to `"directional"`.
      *
      * @type {string}
      */
@@ -281,8 +285,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the color of the light. The alpha component of the color is ignored. Defaults to white
-     * (`[1, 1, 1]`).
+     * Sets the color of the light in sRGB space. The alpha component of the color is ignored.
+     * Defaults to white (`[1, 1, 1]`).
      *
      * @type {Color}
      */
@@ -343,7 +347,7 @@ class LightComponent extends Component {
      * - {@link LIGHTSHAPE_DISK}: Disk shape.
      * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
      *
-     * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
+     * Defaults to {@link LIGHTSHAPE_PUNCTUAL}.
      *
      * @type {number}
      */
@@ -361,8 +365,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets whether material specularity will be affected by this light. Ignored for lights other
-     * than {@link LIGHTTYPE_DIRECTIONAL}. Defaults to true.
+     * Sets whether material specularity will be affected by this light. Only takes effect when the
+     * light type is {@link LIGHTTYPE_DIRECTIONAL}; for other types the value is preserved on the
+     * component and applied if the type later becomes directional. Defaults to true.
      *
      * @type {boolean}
      */
@@ -499,8 +504,8 @@ class LightComponent extends Component {
 
     /**
      * Sets the blend factor for cascaded shadow maps, defining the fraction of each cascade level
-     * used for blending between adjacent cascades. The value should be between 0 and 1, with
-     * a default of 0, which disables blending between cascades.
+     * used for blending between adjacent cascades. The value should be between 0 and 1. Defaults
+     * to 0, which disables blending between cascades.
      *
      * @type {number}
      */
@@ -537,8 +542,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the penumbra angle in degrees, allowing for a soft shadow boundary. Defaults to 0.
-     * Requires `bake` to be set to true and the light type is {@link LIGHTTYPE_DIRECTIONAL}.
+     * Sets the angular size in degrees of the area used when baking soft shadow boundaries for the
+     * directional light into the lightmap. Range is 0 to 180. Requires `bake` to be set to true
+     * and the light type to be {@link LIGHTTYPE_DIRECTIONAL}. Defaults to 0.
      *
      * @type {number}
      */
@@ -691,6 +697,8 @@ class LightComponent extends Component {
      * - {@link SHADOW_VSM_32F}
      * - {@link SHADOW_PCSS_32F}
      *
+     * Defaults to {@link SHADOW_PCF3_32F}.
+     *
      * @type {number}
      */
     set shadowType(value) {
@@ -707,8 +715,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the number of samples used for blurring a variance shadow map. Only uneven numbers
-     * work, even are incremented. Minimum value is 1, maximum is 25. Defaults to 11.
+     * Sets the number of samples used for blurring a variance shadow map. Only odd values are
+     * supported; even values are rounded up to the next odd value. Minimum value is 1, maximum is
+     * 25. Defaults to 11.
      *
      * @type {number}
      */
@@ -731,6 +740,8 @@ class LightComponent extends Component {
      * - {@link BLUR_BOX}: Box filter.
      * - {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
      *
+     * Defaults to {@link BLUR_GAUSSIAN}.
+     *
      * @type {number}
      */
     set vsmBlurMode(value) {
@@ -747,7 +758,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the VSM bias value.
+     * Sets the bias used to fight shadow acne when rendering variance shadow maps. Range is 0 to
+     * 1. Defaults to 0.0025.
      *
      * @type {number}
      */
@@ -765,8 +777,10 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the texture asset to be used as the cookie for this light. Only spot and omni lights can
-     * have cookies. Defaults to null.
+     * Sets the texture asset id to be used as the cookie for this light. Only spot and omni lights
+     * can have cookies. Spot lights expect a 2D texture; omni lights expect a cubemap. An
+     * {@link Asset} instance is also accepted as a convenience and is normalised to its id on
+     * read-back. Defaults to null.
      *
      * @type {number|null}
      */
@@ -807,7 +821,7 @@ class LightComponent extends Component {
 
     /**
      * Sets the texture to be used as the cookie for this light. Only spot and omni lights can have
-     * cookies. Defaults to null.
+     * cookies. Spot lights expect a 2D texture; omni lights expect a cubemap. Defaults to null.
      *
      * @type {Texture|null}
      */
@@ -845,7 +859,7 @@ class LightComponent extends Component {
     /**
      * Sets whether normal spotlight falloff is active when a cookie texture is set. When set to
      * false, a spotlight will work like a pure texture projector (only fading with distance).
-     * Default is false.
+     * Defaults to true.
      *
      * @type {boolean}
      */
@@ -863,7 +877,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the color channels of the cookie texture to use. Can be "r", "g", "b", "a", "rgb".
+     * Sets the color channels of the cookie texture to use. Can be `"r"`, `"g"`, `"b"`, `"a"` or
+     * `"rgb"`. Defaults to `"rgb"`.
      *
      * @type {string}
      */
@@ -881,7 +896,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the angle for spotlight cookie rotation (in degrees).
+     * Sets the angle for spotlight cookie rotation in degrees. Defaults to 0.
      *
      * @type {number}
      */
@@ -915,7 +930,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the spotlight cookie scale.
+     * Sets the spotlight cookie scale. Set to null to use no scaling. Defaults to null.
      *
      * @type {Vec2|null}
      */
@@ -944,7 +959,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the spotlight cookie position offset.
+     * Sets the spotlight cookie position offset. Defaults to null.
      *
      * @type {Vec2|null}
      */
@@ -962,13 +977,15 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the shadow update model. This tells the renderer how often shadows must be updated for
+     * Sets the shadow update mode. This tells the renderer how often shadows must be updated for
      * this light. Can be:
      *
      * - {@link SHADOWUPDATE_NONE}: Don't render shadows.
-     * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches
-     * to {@link SHADOWUPDATE_NONE}.
-     * - {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
+     * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to
+     * {@link SHADOWUPDATE_NONE}).
+     * - {@link SHADOWUPDATE_REALTIME}: Render shadows every frame.
+     *
+     * Defaults to {@link SHADOWUPDATE_REALTIME}.
      *
      * @type {number}
      */
@@ -977,7 +994,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Gets the shadow update model.
+     * Gets the shadow update mode.
      *
      * @type {number}
      */
@@ -986,7 +1003,10 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the mask to determine which {@link MeshInstance}s are lit by this light. Defaults to 1.
+     * Sets the bitmask that determines which {@link MeshInstance}s are lit by this light. The
+     * value is composed from {@link MASK_AFFECT_DYNAMIC}, {@link MASK_AFFECT_LIGHTMAPPED} and
+     * {@link MASK_BAKE}. The {@link affectDynamic}, {@link affectLightmapped} and {@link bake}
+     * helpers manipulate the same underlying mask. Defaults to {@link MASK_AFFECT_DYNAMIC}.
      *
      * @type {number}
      */
@@ -1004,7 +1024,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets whether the light will affect non-lightmapped objects.
+     * Sets whether the light will affect non-lightmapped objects. Toggles the
+     * {@link MASK_AFFECT_DYNAMIC} bit on {@link mask}. Defaults to true.
      *
      * @type {boolean}
      */
@@ -1029,7 +1050,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets whether the light will affect lightmapped objects.
+     * Sets whether the light will affect lightmapped objects. Toggles the
+     * {@link MASK_AFFECT_LIGHTMAPPED} bit on {@link mask}. Mutually exclusive with {@link bake} on
+     * the mask: enabling one clears the other's mask bit. Defaults to false.
      *
      * @type {boolean}
      */
@@ -1055,7 +1078,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets whether the light will be rendered into lightmaps.
+     * Sets whether the light will be rendered into lightmaps. Toggles the {@link MASK_BAKE} bit
+     * on {@link mask}. Mutually exclusive with {@link affectLightmapped} on the mask: enabling one
+     * clears the other's mask bit. Defaults to false.
      *
      * @type {boolean}
      */
@@ -1083,10 +1108,11 @@ class LightComponent extends Component {
 
     /**
      * Sets whether the light's direction will contribute to directional lightmaps. The light must
-     * be enabled and `bake` set to true. Be aware, that directional lightmap is an approximation
-     * and can only hold single direction per pixel. Intersecting multiple lights with bakeDir=true
-     * may lead to incorrect look of specular/bump-mapping in the area of intersection. The error
-     * is not always visible though, and highly scene-dependent.
+     * be enabled and `bake` set to true. Be aware that the directional lightmap is an
+     * approximation and can only hold a single direction per pixel. Intersecting multiple lights
+     * with `bakeDir = true` may lead to incorrect-looking specular/bump mapping in the area of
+     * intersection. The error is not always visible though, and is highly scene-dependent.
+     * Defaults to true.
      *
      * @type {boolean}
      */
@@ -1104,7 +1130,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets whether the light ever moves. This is an optimization hint.
+     * Sets whether the light ever moves. This is an optimization hint. Defaults to false.
      *
      * @type {boolean}
      */
@@ -1124,6 +1150,7 @@ class LightComponent extends Component {
     /**
      * Sets the array of layer IDs ({@link Layer#id}) to which this light should belong. Don't
      * push/pop/splice or modify this array. If you want to change it, set a new one instead.
+     * Defaults to `[{@link LAYERID_WORLD}]`.
      *
      * @type {number[]}
      */
@@ -1156,7 +1183,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets an array of SHADOWUPDATE_ settings per shadow cascade. Set to undefined if not used.
+     * Sets an array of SHADOWUPDATE_ settings per shadow cascade. Set to null if not used.
+     * Defaults to null.
      *
      * @type {number[] | null}
      */
@@ -1175,7 +1203,7 @@ class LightComponent extends Component {
 
     /**
      * Sets the number of shadow samples used for soft shadows when the shadow type is
-     * {@link SHADOW_PCSS_32F}. This value must be a positive whole number starting at 1. Higher
+     * {@link SHADOW_PCSS_32F}. This value should be a positive whole number starting at 1. Higher
      * values result in smoother shadows but can significantly decrease performance. Defaults to 16.
      *
      * @type {number}
@@ -1196,12 +1224,12 @@ class LightComponent extends Component {
     /**
      * Sets the number of blocker samples used for soft shadows when the shadow type is
      * {@link SHADOW_PCSS_32F}. These samples are used to estimate the distance between the shadow
-     * caster and the shadow receiver, which is then used for the estimation of contact hardening in
-     * the shadow. This value must be a positive whole number starting at 0. Higher values improve
+     * caster and the shadow receiver, which is then used for the estimation of contact hardening
+     * in the shadow. This value should be a non-negative whole number. Higher values improve
      * shadow quality by considering more occlusion points, but can decrease performance. When set
-     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 16. Note
-     * that this values can be lower than shadowSamples to optimize performance, often without large
-     * impact on quality.
+     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 16.
+     * Note that this value can be lower than shadowSamples to optimize performance, often without
+     * large impact on quality.
      *
      * @type {number}
      */
