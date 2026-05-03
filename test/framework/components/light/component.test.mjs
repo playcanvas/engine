@@ -4,7 +4,7 @@ import { Color } from '../../../../src/core/math/color.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import {
-    BLUR_GAUSSIAN,
+    BLUR_BOX,
     LAYERID_UI,
     LAYERID_WORLD,
     LIGHTFALLOFF_INVERSESQUARED,
@@ -80,18 +80,21 @@ describe('LightComponent', function () {
                 falloffMode: LIGHTFALLOFF_INVERSESQUARED,
                 shadowType: SHADOW_PCF5_32F,
                 vsmBlurSize: 13,
-                vsmBlurMode: BLUR_GAUSSIAN,
+                vsmBlurMode: BLUR_BOX,
                 vsmBias: 0.1,
                 cookieIntensity: 0.5,
                 cookieFalloff: false,
-                cookieChannel: 'rgb',
+                cookieChannel: 'rrr',
                 cookieAngle: 45,
                 cookieScale: new Vec2(2, 3),
                 cookieOffset: new Vec2(0.1, 0.2),
                 shadowUpdateMode: SHADOWUPDATE_THISFRAME,
+                // mask is intentionally omitted - the affectDynamic/affectLightmapped/bake setters
+                // mutate the mask after a direct write, so it cannot round-trip alongside them.
+                // Mask interactions are covered separately in the 'mask flags' suite below.
                 affectDynamic: false,
-                affectLightmapped: true,
-                bake: false,
+                affectLightmapped: false,
+                bake: true,
                 bakeDir: false,
                 isStatic: true,
                 layers: [LAYERID_UI],
@@ -127,11 +130,11 @@ describe('LightComponent', function () {
             expect(l.falloffMode).to.equal(LIGHTFALLOFF_INVERSESQUARED);
             expect(l.shadowType).to.equal(SHADOW_PCF5_32F);
             expect(l.vsmBlurSize).to.equal(13);
-            expect(l.vsmBlurMode).to.equal(BLUR_GAUSSIAN);
+            expect(l.vsmBlurMode).to.equal(BLUR_BOX);
             expect(l.vsmBias).to.equal(0.1);
             expect(l.cookieIntensity).to.equal(0.5);
             expect(l.cookieFalloff).to.equal(false);
-            expect(l.cookieChannel).to.equal('rgb');
+            expect(l.cookieChannel).to.equal('rrr');
             expect(l.cookieAngle).to.equal(45);
             expect(l.cookieScale.x).to.equal(2);
             expect(l.cookieScale.y).to.equal(3);
@@ -139,8 +142,8 @@ describe('LightComponent', function () {
             expect(l.cookieOffset.y).to.be.closeTo(0.2, 1e-6);
             expect(l.shadowUpdateMode).to.equal(SHADOWUPDATE_THISFRAME);
             expect(l.affectDynamic).to.equal(false);
-            expect(l.affectLightmapped).to.equal(true);
-            expect(l.bake).to.equal(false);
+            expect(l.affectLightmapped).to.equal(false);
+            expect(l.bake).to.equal(true);
             expect(l.bakeDir).to.equal(false);
             expect(l.isStatic).to.equal(true);
             expect(l.layers).to.deep.equal([LAYERID_UI]);
@@ -407,17 +410,18 @@ describe('LightComponent', function () {
                 falloffMode: LIGHTFALLOFF_INVERSESQUARED,
                 shadowType: SHADOW_PCF5_32F,
                 vsmBlurSize: 13,
-                vsmBlurMode: BLUR_GAUSSIAN,
+                vsmBlurMode: BLUR_BOX,
                 vsmBias: 0.1,
                 cookieIntensity: 0.5,
                 cookieFalloff: false,
-                cookieChannel: 'rgb',
+                cookieChannel: 'rrr',
                 cookieAngle: 45,
                 cookieScale: new Vec2(2, 3),
                 cookieOffset: new Vec2(0.1, 0.2),
                 shadowUpdateMode: SHADOWUPDATE_THISFRAME,
                 affectDynamic: false,
-                affectLightmapped: true,
+                affectLightmapped: false,
+                bake: true,
                 bakeDir: false,
                 isStatic: true,
                 layers: [LAYERID_UI],
@@ -456,11 +460,11 @@ describe('LightComponent', function () {
             expect(c.falloffMode).to.equal(LIGHTFALLOFF_INVERSESQUARED);
             expect(c.shadowType).to.equal(SHADOW_PCF5_32F);
             expect(c.vsmBlurSize).to.equal(13);
-            expect(c.vsmBlurMode).to.equal(BLUR_GAUSSIAN);
+            expect(c.vsmBlurMode).to.equal(BLUR_BOX);
             expect(c.vsmBias).to.equal(0.1);
             expect(c.cookieIntensity).to.equal(0.5);
             expect(c.cookieFalloff).to.equal(false);
-            expect(c.cookieChannel).to.equal('rgb');
+            expect(c.cookieChannel).to.equal('rrr');
             expect(c.cookieAngle).to.equal(45);
             expect(c.cookieScale.x).to.equal(2);
             expect(c.cookieScale.y).to.equal(3);
@@ -468,7 +472,8 @@ describe('LightComponent', function () {
             expect(c.cookieOffset.y).to.be.closeTo(0.2, 1e-6);
             expect(c.shadowUpdateMode).to.equal(SHADOWUPDATE_THISFRAME);
             expect(c.affectDynamic).to.equal(false);
-            expect(c.affectLightmapped).to.equal(true);
+            expect(c.affectLightmapped).to.equal(false);
+            expect(c.bake).to.equal(true);
             expect(c.bakeDir).to.equal(false);
             expect(c.isStatic).to.equal(true);
             expect(c.layers).to.deep.equal([LAYERID_UI]);
