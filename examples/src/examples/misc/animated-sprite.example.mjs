@@ -128,8 +128,8 @@ assetListLoader.load(() => {
         }
     }
 
-    // create the caveman entity and add an animation clip per row of the
-    // spritesheet; walk faces right and is flipped via entity scale for left
+    // create the caveman entity and add animation clips from contiguous frame
+    // ranges in the spritesheet; walk faces right and is flipped via entity scale for left
     const caveman = new pc.Entity('caveman');
     caveman.addComponent('sprite', {
         type: pc.SPRITETYPE_ANIMATED
