@@ -379,7 +379,7 @@ class BatchManager {
                 if (node.sprite && node.sprite._meshInstance &&
                     (group.dynamic || node.sprite.sprite._renderMode === SPRITE_RENDERMODE_SIMPLE)) {
                     arr.push(node.sprite._meshInstance);
-                    node.sprite.removeModelFromLayers();
+                    node.sprite.removeFromLayers();
                     group._sprite = true;
                 }
             }

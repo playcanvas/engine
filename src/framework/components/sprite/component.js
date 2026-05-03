@@ -300,9 +300,9 @@ class SpriteComponent extends Component {
                 this._currentClip.frame = this.frame;
 
                 if (this._currentClip.sprite) {
-                    this._addToLayers();
+                    this.addToLayers();
                 } else {
-                    this._removeFromLayers();
+                    this.removeFromLayers();
                 }
             }
 
@@ -314,9 +314,9 @@ class SpriteComponent extends Component {
             }
 
             if (this._currentClip && this._currentClip.isPlaying && this.enabled && this.entity.enabled) {
-                this._addToLayers();
+                this.addToLayers();
             } else {
-                this._removeFromLayers();
+                this.removeFromLayers();
             }
         }
     }
@@ -498,7 +498,7 @@ class SpriteComponent extends Component {
 
         // if the current clip doesn't have a sprite then remove the mesh instance from layers
         if (!this._currentClip || !this._currentClip.sprite) {
-            this._removeFromLayers();
+            this.removeFromLayers();
         }
     }
 
@@ -654,7 +654,7 @@ class SpriteComponent extends Component {
             // re-add the sprite mesh instance to layers in case it was removed by batching
             if (prev >= 0) {
                 if (this._currentClip && this._currentClip.sprite && this.enabled && this.entity.enabled) {
-                    this._addToLayers();
+                    this.addToLayers();
                 }
             }
         }
@@ -718,7 +718,7 @@ class SpriteComponent extends Component {
      */
     set layers(value) {
         if (this._inLayers) {
-            this._removeFromLayers();
+            this.removeFromLayers();
         }
 
         this._layers = value;
@@ -729,7 +729,7 @@ class SpriteComponent extends Component {
         }
 
         if (this.enabled && this.entity.enabled) {
-            this._addToLayers();
+            this.addToLayers();
         }
     }
 
@@ -762,7 +762,7 @@ class SpriteComponent extends Component {
             this._evtLayerRemoved = layers.on('remove', this._onLayerRemoved, this);
         }
 
-        this._addToLayers();
+        this.addToLayers();
         if (this._autoPlayClip) {
             this._tryAutoPlay();
         }
@@ -788,7 +788,7 @@ class SpriteComponent extends Component {
         }
 
         this.stop();
-        this._removeFromLayers();
+        this.removeFromLayers();
 
 
         if (this._batchGroupId >= 0) {
@@ -808,7 +808,7 @@ class SpriteComponent extends Component {
         }
         this._clips = null;
 
-        this._removeFromLayers();
+        this.removeFromLayers();
 
         this._node?.remove();
         this._node = null;
@@ -821,7 +821,8 @@ class SpriteComponent extends Component {
         }
     }
 
-    _addToLayers() {
+    /** @private */
+    addToLayers() {
         if (this._inLayers) return;
         if (!this._meshInstance) return;
 
@@ -837,7 +838,8 @@ class SpriteComponent extends Component {
         this._inLayers = true;
     }
 
-    _removeFromLayers() {
+    /** @private */
+    removeFromLayers() {
         if (!this._inLayers || !this._meshInstance) return;
 
         const meshInstances = [this._meshInstance];
@@ -892,7 +894,7 @@ class SpriteComponent extends Component {
 
             // now that we created the mesh instance, add it to the layers
             if (this.enabled && this.entity.enabled) {
-                this._addToLayers();
+                this.addToLayers();
             }
         }
 
@@ -1055,7 +1057,7 @@ class SpriteComponent extends Component {
         newComp.on('remove', this.onLayerRemoved, this);
 
         if (this.enabled && this.entity.enabled) {
-            this._addToLayers();
+            this.addToLayers();
         }
     }
 
@@ -1074,14 +1076,6 @@ class SpriteComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances([this._meshInstance]);
-    }
-
-    // Called by BatchManager when this sprite is absorbed into a batch. Delegates to
-    // _removeFromLayers so that `_inLayers` is kept in sync - otherwise _addToLayers
-    // would early-out when batching is undone and _onLayerAdded would re-add the
-    // mesh instance behind the batch's back.
-    removeModelFromLayers() {
-        this._removeFromLayers();
     }
 
     /**

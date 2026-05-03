@@ -209,7 +209,7 @@ class SpriteAnimationClip extends EventHandler {
                     mi.deleteParameter('texture_opacityMap');
                 }
 
-                this._component._removeFromLayers();
+                this._component.removeFromLayers();
             } else {
                 // otherwise show sprite
 
@@ -222,7 +222,7 @@ class SpriteAnimationClip extends EventHandler {
                     }
 
                     if (this._component.enabled && this._component.entity.enabled) {
-                        this._component._addToLayers();
+                        this._component.addToLayers();
                     }
                 }
 
