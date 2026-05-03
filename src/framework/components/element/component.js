@@ -322,10 +322,6 @@ class ElementComponent extends Component {
         this._addedModels = []; // store models that have been added to layer so we can re-add when layer is changed
 
         this._batchGroupId = -1;
-        // #if _DEBUG
-        this._batchGroup = null;
-        // #endif
-        //
 
         this._offsetReadAt = 0;
         this._maskOffset = 0.5;

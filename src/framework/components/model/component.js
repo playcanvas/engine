@@ -130,10 +130,6 @@ class ModelComponent extends Component {
     /** @private */
     _clonedModel = false;
 
-    // #if _DEBUG
-    _batchGroup = null;
-    // #endif
-
     /**
      * @type {EventHandle|null}
      * @private

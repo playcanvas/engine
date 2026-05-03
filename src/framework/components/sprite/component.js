@@ -208,9 +208,6 @@ class SpriteComponent extends Component {
     /** @private */
     _batchGroupId = -1;
 
-    /** @private */
-    _batchGroup = null;
-
     // node / mesh instance
 
     /** @private */

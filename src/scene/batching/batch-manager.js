@@ -315,10 +315,6 @@ class BatchManager {
             if (valid) {
                 arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(valid);
                 node.model.removeModelFromLayers();
-
-                // #if _DEBUG
-                node.model._batchGroup = group;
-                // #endif
             }
         }
 
@@ -351,9 +347,6 @@ class BatchManager {
 
         if (valid) {
             group._ui = true;
-            // #if _DEBUG
-            node.element._batchGroup = group;
-            // #endif
         }
     }
 
@@ -388,7 +381,6 @@ class BatchManager {
                     arr.push(node.sprite._meshInstance);
                     node.sprite.removeModelFromLayers();
                     group._sprite = true;
-                    node.sprite._batchGroup = group;
                 }
             }
         }
