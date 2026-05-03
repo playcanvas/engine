@@ -150,6 +150,111 @@ class SpriteComponent extends Component {
      */
     _evtLayerRemoved = null;
 
+    /** @private */
+    _type = SPRITETYPE_SIMPLE;
+
+    /** @private */
+    _material = null;
+
+    /** @private */
+    _color = new Color(1, 1, 1, 1);
+
+    /** @private */
+    _colorUniform = new Float32Array(3);
+
+    /** @private */
+    _speed = 1;
+
+    /** @private */
+    _flipX = false;
+
+    /** @private */
+    _flipY = false;
+
+    /** @private */
+    _width = 1;
+
+    /** @private */
+    _height = 1;
+
+    /** @private */
+    _drawOrder = 0;
+
+    /** @private */
+    _layers = [LAYERID_WORLD]; // assign to the default world layer
+
+    // 9-slicing
+
+    /** @private */
+    _outerScale = new Vec2(1, 1);
+
+    /** @private */
+    _outerScaleUniform = new Float32Array(2);
+
+    /** @private */
+    _innerOffset = new Vec4();
+
+    /** @private */
+    _innerOffsetUniform = new Float32Array(4);
+
+    /** @private */
+    _atlasRect = new Vec4();
+
+    /** @private */
+    _atlasRectUniform = new Float32Array(4);
+
+    // batch groups
+
+    /** @private */
+    _batchGroupId = -1;
+
+    /** @private */
+    _batchGroup = null;
+
+    // node / mesh instance
+
+    /** @private */
+    _node = new GraphNode();
+
+    /** @private */
+    _model = new Model();
+
+    /** @private */
+    _meshInstance = null;
+
+    /** @private */
+    _updateAabbFunc = null;
+
+    /** @private */
+    _addedModel = false;
+
+    // animated sprites
+
+    /** @private */
+    _autoPlayClip = null;
+
+    /**
+     * Dictionary of sprite animation clips.
+     *
+     * @type {Object<string, SpriteAnimationClip>}
+     * @private
+     */
+    _clips = {};
+
+    /**
+     * @type {SpriteAnimationClip|null}
+     * @private
+     */
+    _defaultClip = null;
+
+    /**
+     * The sprite animation clip currently playing.
+     *
+     * @type {SpriteAnimationClip|null}
+     * @private
+     */
+    _currentClip = null;
+
     /**
      * Create a new SpriteComponent instance.
      *
@@ -161,52 +266,13 @@ class SpriteComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this._type = SPRITETYPE_SIMPLE;
         this._material = system.defaultMaterial;
-        this._color = new Color(1, 1, 1, 1);
-        this._colorUniform = new Float32Array(3);
-        this._speed = 1;
-        this._flipX = false;
-        this._flipY = false;
-        this._width = 1;
-        this._height = 1;
 
-        this._drawOrder = 0;
-        this._layers = [LAYERID_WORLD]; // assign to the default world layer
-
-        // 9-slicing
-        this._outerScale = new Vec2(1, 1);
-        this._outerScaleUniform = new Float32Array(2);
-        this._innerOffset = new Vec4();
-        this._innerOffsetUniform = new Float32Array(4);
-        this._atlasRect = new Vec4();
-        this._atlasRectUniform = new Float32Array(4);
-
-        // batch groups
-        this._batchGroupId = -1;
-        this._batchGroup = null;
-
-        // node / mesh instance
-        this._node = new GraphNode();
-        this._model = new Model();
         this._model.graph = this._node;
-        this._meshInstance = null;
         entity.addChild(this._model.graph);
         this._model._entity = entity;
+
         this._updateAabbFunc = this._updateAabb.bind(this);
-
-        this._addedModel = false;
-
-        // animated sprites
-        this._autoPlayClip = null;
-
-        /**
-         * Dictionary of sprite animation clips.
-         *
-         * @type {Object<string, SpriteAnimationClip>}
-         * @private
-         */
-        this._clips = {};
 
         // create default clip for simple sprite type
         this._defaultClip = new SpriteAnimationClip(this, {
@@ -216,12 +282,6 @@ class SpriteComponent extends Component {
             spriteAsset: null
         });
 
-        /**
-         * The sprite animation clip currently playing.
-         *
-         * @type {SpriteAnimationClip}
-         * @private
-         */
         this._currentClip = this._defaultClip;
     }
 
