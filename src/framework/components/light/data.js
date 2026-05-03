@@ -1,5 +1,7 @@
 class LightComponentData {
-    enabled = true;
+    constructor() {
+        this.enabled = true;
+    }
 }
 
 export { LightComponentData };
