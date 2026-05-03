@@ -201,16 +201,6 @@ class ParticleSystemComponent extends Component {
         });
     }
 
-    // TODO: Remove this override in upgrading component
-    /**
-     * @type {ParticleSystemComponentData}
-     * @ignore
-     */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
-    }
-
     /**
      * Sets the enabled state of the component.
      *

@@ -332,16 +332,6 @@ class ElementComponent extends Component {
         this._maskedBy = null; // the entity that is masking this element
     }
 
-    // TODO: Remove this override in upgrading component
-    /**
-     * @type {ElementComponentData}
-     * @ignore
-     */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
-    }
-
     /**
      * Sets the enabled state of the component.
      *

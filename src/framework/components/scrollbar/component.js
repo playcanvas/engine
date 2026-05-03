@@ -99,16 +99,6 @@ class ScrollbarComponent extends Component {
         this._toggleLifecycleListeners('on');
     }
 
-    // TODO: Remove this override in upgrading component
-    /**
-     * @type {ScrollbarComponentData}
-     * @ignore
-     */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
-    }
-
     /**
      * Sets the enabled state of the component.
      *

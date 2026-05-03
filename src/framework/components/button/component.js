@@ -356,16 +356,6 @@ class ButtonComponent extends Component {
         this._toggleLifecycleListeners('on', system);
     }
 
-    // TODO: Remove this override in upgrading component
-    /**
-     * @type {ButtonComponentData}
-     * @ignore
-     */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
-    }
-
     /**
      * Sets the enabled state of the component.
      *

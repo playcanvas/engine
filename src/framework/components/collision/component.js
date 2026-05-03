@@ -153,16 +153,6 @@ class CollisionComponent extends Component {
         this.on('set_render', this.onSetRender, this);
     }
 
-    // TODO: Remove this override in upgrading component
-    /**
-     * @type {CollisionComponentData}
-     * @ignore
-     */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
-    }
-
     /**
      * Sets the enabled state of the component.
      *
