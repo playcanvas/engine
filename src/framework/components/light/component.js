@@ -174,6 +174,22 @@ class LightComponent extends Component {
      * @type {boolean}
      * @private
      */
+    _castShadows = false;
+
+    /**
+     * Mirrors the user-supplied value. {@link Light#affectSpecularity} silently ignores writes for
+     * non-directional lights, so storing it on the component is required to round-trip the user's
+     * intent and re-apply it when the type later becomes directional (via {@link refreshProperties}).
+     *
+     * @type {boolean}
+     * @private
+     */
+    _affectSpecularity = true;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
     _affectDynamic = true;
 
     /**
@@ -351,6 +367,9 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     set affectSpecularity(value) {
+        this._affectSpecularity = value;
+        // Light#affectSpecularity is a no-op for non-directional lights; the value is preserved on
+        // the component and re-applied via refreshProperties() if the type later becomes directional.
         this._light.affectSpecularity = value;
     }
 
@@ -360,7 +379,7 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get affectSpecularity() {
-        return this._light.affectSpecularity;
+        return this._affectSpecularity;
     }
 
     /**
@@ -369,6 +388,7 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     set castShadows(value) {
+        this._castShadows = value;
         this._light.castShadows = value;
     }
 
@@ -378,7 +398,7 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get castShadows() {
-        return this._light._castShadows;
+        return this._castShadows;
     }
 
     /**

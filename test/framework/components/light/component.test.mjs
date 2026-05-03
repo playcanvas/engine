@@ -62,6 +62,7 @@ describe('LightComponent', function () {
                 intensity: 2,
                 luminance: 100,
                 shape: LIGHTSHAPE_RECT,
+                affectSpecularity: false,
                 castShadows: true,
                 shadowDistance: 50,
                 shadowIntensity: 0.5,
@@ -108,6 +109,7 @@ describe('LightComponent', function () {
             expect(l.intensity).to.equal(2);
             expect(l.luminance).to.equal(100);
             expect(l.shape).to.equal(LIGHTSHAPE_RECT);
+            expect(l.affectSpecularity).to.equal(false);
             expect(l.castShadows).to.equal(true);
             expect(l.shadowDistance).to.equal(50);
             expect(l.shadowIntensity).to.equal(0.5);
@@ -224,15 +226,40 @@ describe('LightComponent', function () {
 
     describe('#affectSpecularity', function () {
 
-        it('only takes effect for directional lights', function () {
-            const directional = new Entity();
-            directional.addComponent('light', { type: 'directional', affectSpecularity: false });
-            expect(directional.light.affectSpecularity).to.equal(false);
+        it('round-trips the user-supplied value regardless of light type', function () {
+            const e = new Entity();
+            // Light#affectSpecularity ignores writes for non-directional types, but the
+            // component preserves the user's intent.
+            e.addComponent('light', { type: 'spot', affectSpecularity: false });
 
-            const spot = new Entity();
-            spot.addComponent('light', { type: 'spot', affectSpecularity: false });
-            // ignored for non-directional lights
-            expect(spot.light.affectSpecularity).to.equal(true);
+            expect(e.light.affectSpecularity).to.equal(false);
+            expect(e.light.light.affectSpecularity).to.equal(true);
+        });
+
+        it('applies to the underlying Light when the type later becomes directional', function () {
+            const e = new Entity();
+            e.addComponent('light', { type: 'spot', affectSpecularity: false });
+            expect(e.light.light.affectSpecularity).to.equal(true);
+
+            e.light.type = 'directional';
+
+            expect(e.light.affectSpecularity).to.equal(false);
+            expect(e.light.light.affectSpecularity).to.equal(false);
+        });
+
+    });
+
+    describe('#castShadows', function () {
+
+        it('preserves the user-supplied value even when the mask would suppress shadows', function () {
+            const e = new Entity();
+            e.addComponent('light', { castShadows: true, mask: MASK_BAKE });
+
+            // Light#castShadows is mask-aware (returns false for MASK_BAKE-only lights), but the
+            // component returns the value the user actually set so that round-trips and clones
+            // preserve intent.
+            expect(e.light.castShadows).to.equal(true);
+            expect(e.light.light.castShadows).to.equal(false);
         });
 
     });
@@ -362,6 +389,7 @@ describe('LightComponent', function () {
                 intensity: 2,
                 luminance: 100,
                 shape: LIGHTSHAPE_RECT,
+                affectSpecularity: false,
                 castShadows: true,
                 shadowDistance: 50,
                 shadowIntensity: 0.5,
@@ -410,6 +438,7 @@ describe('LightComponent', function () {
             expect(c.intensity).to.equal(2);
             expect(c.luminance).to.equal(100);
             expect(c.shape).to.equal(LIGHTSHAPE_RECT);
+            expect(c.affectSpecularity).to.equal(false);
             expect(c.castShadows).to.equal(true);
             expect(c.shadowDistance).to.equal(50);
             expect(c.shadowIntensity).to.equal(0.5);
