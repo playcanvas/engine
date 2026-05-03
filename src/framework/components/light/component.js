@@ -363,9 +363,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets whether material specularity will be affected by this light. Only takes effect when the
-     * light type is `"directional"`; for other types the value is preserved on the component and
-     * applied if the type later becomes directional. Defaults to true.
+     * Sets whether material specularity will be affected by this light. Only takes effect when
+     * {@link type} is `"directional"`; for other types the value is preserved on the component and
+     * applied if {@link type} later becomes `"directional"`. Defaults to true.
      *
      * @type {boolean}
      */
@@ -542,7 +542,7 @@ class LightComponent extends Component {
     /**
      * Sets the angular size in degrees of the area used when baking soft shadow boundaries for the
      * directional light into the lightmap. Range is 0 to 180. Requires {@link bake} to be set to
-     * true and the light type to be `"directional"`. Defaults to 0.
+     * true and {@link type} to be `"directional"`. Defaults to 0.
      *
      * @type {number}
      */
