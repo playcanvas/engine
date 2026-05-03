@@ -715,7 +715,7 @@ class LightComponent extends Component {
 
     /**
      * Sets the number of samples used for blurring a variance shadow map. Only odd values are
-     * supported; even values are rounded up to the next odd value. Minimum value is 1, maximum is
+     * supported; even values are rounded up to the next odd value. Values should be between 1 and
      * 25. Defaults to 11.
      *
      * @type {number}
