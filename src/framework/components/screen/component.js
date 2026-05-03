@@ -63,6 +63,7 @@ class ScreenComponent extends Component {
     /** @private */
     _scaleMode = SCALEMODE_NONE;
 
+    /** @ignore */
     scale = 1;
 
     /** @private */
