@@ -860,15 +860,6 @@ class SpriteComponent extends Component {
         this._inLayers = false;
     }
 
-    /**
-     * @deprecated Use {@link SpriteComponent#removeFromLayers} instead.
-     * @ignore
-     */
-    removeModelFromLayers() {
-        Debug.deprecated('SpriteComponent#removeModelFromLayers is deprecated. Use SpriteComponent#removeFromLayers instead.');
-        this.removeFromLayers();
-    }
-
     // Set the desired mesh on the mesh instance
     _showFrame(frame) {
         if (!this.sprite) return;
