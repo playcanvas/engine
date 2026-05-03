@@ -421,6 +421,7 @@ body {
     transform: translateX(-50%);
     color: #f2f2f2;
     width: 50%;
+    text-align: center;
 }
 
 #descriptionPanel.mobile {
