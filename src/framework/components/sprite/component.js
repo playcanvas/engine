@@ -496,7 +496,7 @@ class SpriteComponent extends Component {
             this._tryAutoPlay();
         }
 
-        // if the current clip doesn't have a sprite then hide the model
+        // if the current clip doesn't have a sprite then remove the mesh instance from layers
         if (!this._currentClip || !this._currentClip.sprite) {
             this._removeFromLayers();
         }
@@ -1076,12 +1076,12 @@ class SpriteComponent extends Component {
         layer.removeMeshInstances([this._meshInstance]);
     }
 
+    // Called by BatchManager when this sprite is absorbed into a batch. Delegates to
+    // _removeFromLayers so that `_inLayers` is kept in sync - otherwise _addToLayers
+    // would early-out when batching is undone and _onLayerAdded would re-add the
+    // mesh instance behind the batch's back.
     removeModelFromLayers() {
-        for (let i = 0; i < this.layers.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-            if (!layer) continue;
-            layer.removeMeshInstances([this._meshInstance]);
-        }
+        this._removeFromLayers();
     }
 
     /**
