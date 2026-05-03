@@ -1151,7 +1151,7 @@ class LightComponent extends Component {
     /**
      * Sets the array of layer IDs ({@link Layer#id}) to which this light should belong. Don't
      * push/pop/splice or modify this array. If you want to change it, set a new one instead.
-     * Defaults to `[{@link LAYERID_WORLD}]`.
+     * Defaults to [{@link LAYERID_WORLD}].
      *
      * @type {number[]}
      */
