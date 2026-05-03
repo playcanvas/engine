@@ -810,7 +810,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Gets the texture asset to be used as the cookie for this light.
+     * Gets the id of the texture asset used as the cookie for this light, or null if none is set.
      *
      * @type {number|null}
      */
