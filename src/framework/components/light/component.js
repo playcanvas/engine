@@ -249,11 +249,11 @@ class LightComponent extends Component {
     /**
      * Sets the type of the light. Can be:
      *
-     * - `"directional"` ({@link LIGHTTYPE_DIRECTIONAL}): A light that is infinitely far away and
-     * lights the entire scene from one direction.
-     * - `"omni"` ({@link LIGHTTYPE_OMNI}): An omni-directional light that illuminates in all
-     * directions from the light source.
-     * - `"spot"` ({@link LIGHTTYPE_SPOT}): An omni-directional light but is bounded by a cone.
+     * - `"directional"`: A light that is infinitely far away and lights the entire scene from one
+     * direction.
+     * - `"omni"`: An omni-directional light that illuminates in all directions from the light
+     * source.
+     * - `"spot"`: An omni-directional light but is bounded by a cone.
      *
      * `"point"` is also accepted as a backwards-compatibility alias for `"omni"` and is preserved
      * verbatim on read-back.
