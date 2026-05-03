@@ -1188,7 +1188,7 @@ class LightComponent extends Component {
      * Sets an array of SHADOWUPDATE_ settings per shadow cascade. Set to null if not used.
      * Defaults to null.
      *
-     * @type {number[] | null}
+     * @type {number[]|null}
      */
     set shadowUpdateOverrides(values) {
         this._light.shadowUpdateOverrides = values;
@@ -1197,7 +1197,7 @@ class LightComponent extends Component {
     /**
      * Gets an array of SHADOWUPDATE_ settings per shadow cascade.
      *
-     * @type {number[] | null}
+     * @type {number[]|null}
      */
     get shadowUpdateOverrides() {
         return this._light.shadowUpdateOverrides;
