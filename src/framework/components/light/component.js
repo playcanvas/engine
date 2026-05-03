@@ -255,9 +255,6 @@ class LightComponent extends Component {
      * source.
      * - `"spot"`: An omni-directional light but is bounded by a cone.
      *
-     * `"point"` is also accepted as a backwards-compatibility alias for `"omni"` and is preserved
-     * verbatim on read-back.
-     *
      * Defaults to `"directional"`.
      *
      * @type {string}
