@@ -353,15 +353,6 @@ class ButtonComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this._visualState = VisualState.DEFAULT;
-        this._isHovering = false;
-        this._hoveringCounter = 0;
-        this._isPressed = false;
-
-        this._defaultTint = new Color(1, 1, 1, 1);
-        this._defaultSpriteAsset = null;
-        this._defaultSpriteFrame = 0;
-
         this._toggleLifecycleListeners('on', system);
     }
 
