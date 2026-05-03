@@ -154,9 +154,8 @@ assetListLoader.load(() => {
     caveman.sprite.autoPlayClip = 'idle';
     app.root.addChild(caveman);
 
-    // build a sprite for a single 48x48 ground tile from the tileset,
-    // located at pixel (704, 256) in the source image (top-left origin),
-    // and spawn a row of them under the caveman's feet
+    // build a sprite for a single 48x48 grass-topped ground tile from the
+    // tileset, and spawn a row of them under the caveman's feet
     const tilesetTexture = /** @type {pc.Texture} */ (assets.tileset.resource);
     configurePixelArt(tilesetTexture);
 
@@ -165,6 +164,8 @@ assetListLoader.load(() => {
     tilesetAtlas.texture = tilesetTexture;
     tilesetAtlas.frames = {
         ground: {
+            // rect uses the atlas's bottom-left origin (same convention as
+            // the caveman atlas above)
             rect: new pc.Vec4(704, 256, TILE_PX, TILE_PX),
             // origin at top-center so y = 0 places the tile's surface on the ground line
             pivot: new pc.Vec2(0.5, 1),
