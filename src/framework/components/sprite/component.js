@@ -10,7 +10,6 @@ import {
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
-import { Model } from '../../../scene/model.js';
 import { Component } from '../component.js';
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
@@ -214,9 +213,6 @@ class SpriteComponent extends Component {
     _node = new GraphNode();
 
     /** @private */
-    _model = new Model();
-
-    /** @private */
     _meshInstance = null;
 
     /** @private */
@@ -265,9 +261,7 @@ class SpriteComponent extends Component {
 
         this._material = system.defaultMaterial;
 
-        this._model.graph = this._node;
-        entity.addChild(this._model.graph);
-        this._model._entity = entity;
+        entity.addChild(this._node);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
 
@@ -815,7 +809,6 @@ class SpriteComponent extends Component {
         this._clips = null;
 
         this._hideModel();
-        this._model = null;
 
         this._node?.remove();
         this._node = null;
@@ -889,7 +882,6 @@ class SpriteComponent extends Component {
             this._meshInstance.castShadow = false;
             this._meshInstance.receiveShadow = false;
             this._meshInstance.drawOrder = this._drawOrder;
-            this._model.meshInstances.push(this._meshInstance);
 
             // set overrides on mesh instance
             this._colorUniform[0] = this._color.r;
