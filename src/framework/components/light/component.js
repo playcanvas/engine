@@ -249,11 +249,12 @@ class LightComponent extends Component {
     /**
      * Sets the type of the light. Can be:
      *
-     * - `"directional"`: A light that is infinitely far away and lights the entire scene from one
-     * direction.
-     * - `"omni"`: An omni-directional light that illuminates in all directions from the light
-     * source.
-     * - `"spot"`: An omni-directional light but is bounded by a cone.
+     * - `"directional"`: A global light that emits light in the direction of the negative y-axis
+     * of the owner entity.
+     * - `"omni"`: A local light that emits light in all directions from the owner entity's
+     * position.
+     * - `"spot"`: A local light that emits light similarly to an omni light but is bounded by a
+     * cone centered on the owner entity's negative y-axis.
      *
      * Defaults to `"directional"`.
      *
@@ -550,7 +551,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Gets the penumbra angle in degrees.
+     * Gets the angular size in degrees of the area used when baking soft shadow boundaries for
+     * the directional light into the lightmap.
      *
      * @type {number}
      */
