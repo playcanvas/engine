@@ -62,6 +62,12 @@ class ZoneComponent extends Component {
      */
     static EVENT_REMOVE = 'remove';
 
+    /** @private */
+    _oldState = true;
+
+    /** @private */
+    _size = new Vec3();
+
     /**
      * Create a new ZoneComponent instance.
      *
@@ -71,8 +77,6 @@ class ZoneComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this._oldState = true;
-        this._size = new Vec3();
         this.on('set_enabled', this._onSetEnabled, this);
     }
 
