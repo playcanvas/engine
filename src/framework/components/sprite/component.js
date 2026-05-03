@@ -651,7 +651,7 @@ class SpriteComponent extends Component {
         if (this.entity.enabled && value >= 0) {
             this.system.app.batcher?.insert(BatchGroup.SPRITE, value, this.entity);
         } else {
-            // re-add model to scene in case it was removed by batching
+            // re-add the sprite mesh instance to layers in case it was removed by batching
             if (prev >= 0) {
                 if (this._currentClip && this._currentClip.sprite && this.enabled && this.entity.enabled) {
                     this._addToLayers();
