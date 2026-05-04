@@ -261,10 +261,8 @@ class SpriteComponent extends Component {
     /**
      * Create a new SpriteComponent instance.
      *
-     * @param {SpriteComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {SpriteComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
