@@ -118,16 +118,22 @@ class SpriteAnimationClip extends EventHandler {
     _time = 0;
 
     /**
+     * The name of this animation clip.
+     *
      * @type {string|undefined}
      */
     name;
 
     /**
+     * Frames per second for this animation clip. A negative value plays the animation backwards.
+     *
      * @type {number}
      */
     fps = 0;
 
     /**
+     * Whether to loop the animation clip when it reaches the end.
+     *
      * @type {boolean}
      */
     loop = false;
