@@ -10,7 +10,6 @@ import { ELEMENTTYPE_GROUP } from '../element/constants.js';
 
 /**
  * @import { Asset } from '../../../framework/asset/asset.js'
- * @import { ButtonComponentData } from './data.js'
  * @import { ButtonComponentSystem } from './system.js'
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
