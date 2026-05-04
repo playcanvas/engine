@@ -9,7 +9,6 @@ import { Component } from '../component.js';
  * @import { Curve } from '../../../core/math/curve.js'
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
- * @import { ParticleSystemComponentData } from './data.js'
  * @import { ParticleSystemComponentSystem } from './system.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'

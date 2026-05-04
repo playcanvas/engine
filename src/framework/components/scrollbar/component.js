@@ -9,7 +9,6 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
 /**
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Entity } from '../../entity.js'
- * @import { ScrollbarComponentData } from './data.js'
  * @import { ScrollbarComponentSystem } from './system.js'
  */
 

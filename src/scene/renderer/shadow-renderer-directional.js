@@ -15,7 +15,6 @@ import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js
  * @import { Light } from '../light.js'
  * @import { Renderer } from './renderer.js'
  * @import { ShadowRenderer } from './shadow-renderer.js'
- * @import { MeshInstance } from '../mesh-instance.js';
  */
 
 const visibleSceneAabb = new BoundingBox();

@@ -18,7 +18,6 @@ import { TextElement } from './text-element.js';
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { CanvasFont } from '../../../framework/font/canvas-font.js'
  * @import { Color } from '../../../core/math/color.js'
- * @import { ElementComponentData } from './data.js'
  * @import { ElementComponentSystem } from './system.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Font } from '../../../framework/font/font.js'

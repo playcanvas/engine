@@ -12,7 +12,6 @@ import { Component } from '../component.js';
 
 /**
  * @import { Entity } from '../../entity.js'
- * @import { ScrollViewComponentData } from './data.js'
  * @import { ScrollViewComponentSystem } from './system.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  */
