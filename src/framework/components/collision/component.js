@@ -4,7 +4,6 @@ import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
 
 /**
- * @import { CollisionComponentData } from './data.js'
  * @import { CollisionComponentSystem } from './system.js'
  * @import { Entity } from '../../entity.js'
  * @import { GraphNode } from '../../../scene/graph-node.js'
