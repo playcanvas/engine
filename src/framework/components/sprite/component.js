@@ -55,6 +55,10 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * console.log(entity.sprite.color);   // Get the sprite tint and print it
  * ```
  *
+ * Relevant Engine API examples:
+ *
+ * - [Animated sprite](https://playcanvas.github.io/#/misc/animated-sprite)
+ *
  * @hideconstructor
  * @category Graphics
  */
