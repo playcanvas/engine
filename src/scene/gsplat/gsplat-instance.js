@@ -89,6 +89,7 @@ class GSplatInstance {
             this._material = options.material;
             this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
             this.setMaterialOrderData(this._material);
+            this._material.setParameter('alphaCull', 1.0 / 255.0);
         } else {
             this._material = new ShaderMaterial({
                 uniqueName: 'SplatMaterial',
@@ -155,6 +156,7 @@ class GSplatInstance {
             this._material = value;
             this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
             this.setMaterialOrderData(this._material);
+            this._material.setParameter('alphaCull', 1.0 / 255.0);
 
             if (this.meshInstance) {
                 this.meshInstance.material = value;
@@ -180,6 +182,7 @@ class GSplatInstance {
         material.setParameter('numSplats', 0);
         this.setMaterialOrderData(material);
         material.setParameter('alphaClip', 0.3);
+        material.setParameter('alphaCull', 1.0 / 255.0);
         material.setParameter('minPixelSize', 2.0);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;
