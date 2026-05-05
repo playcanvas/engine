@@ -16,7 +16,7 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
                 options: [
                     { v: 0, t: 'Auto' },
                     { v: 1, t: 'Raster (CPU Sort)' },
-                    { v: 2, t: 'Raster (Hybrid)' },
+                    { v: 2, t: 'Raster (GPU Sort)' },
                     { v: 3, t: 'Compute' }
                 ]
             })

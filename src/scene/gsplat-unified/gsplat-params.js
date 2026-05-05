@@ -8,7 +8,7 @@ import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import {
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
-    GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_HYBRID,
+    GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
     GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS
 } from '../constants.js';
@@ -146,8 +146,8 @@ class GSplatParams {
      * - {@link GSPLAT_RENDERER_AUTO}: Automatically selects the best pipeline for the platform.
      * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
      * - {@link GSPLAT_RENDERER_COMPUTE}: Full compute pipeline (WebGPU only, experimental).
-     * - {@link GSPLAT_RENDERER_RASTER_HYBRID}: Hybrid rasterization with a compute projection
-     * cache and global radix sort (WebGPU only, experimental, internal).
+     * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with GPU-side sorting (WebGPU only,
+     * experimental).
      *
      * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
      * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
@@ -162,7 +162,7 @@ class GSplatParams {
             if (value === GSPLAT_RENDERER_AUTO) {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else if ((value === GSPLAT_RENDERER_COMPUTE ||
-                        value === GSPLAT_RENDERER_RASTER_HYBRID) &&
+                        value === GSPLAT_RENDERER_RASTER_GPU_SORT) &&
                 !this._device.isWebGPU) {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else {

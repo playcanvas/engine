@@ -18,7 +18,7 @@ import { ComputeRadixSort } from '../graphics/radix-sort/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
-    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_HYBRID,
+    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSPLAT_RENDERER_COMPUTE,
     GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_AABBS
 } from '../constants.js';
@@ -90,7 +90,7 @@ let _randomColorRaw = null;
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
  * stored and rendered from.
  *
- * Shared culling + compaction (hybrid raster and compute renderer, WebGPU only):
+ * Shared culling + compaction (raster GPU-sort path and compute renderer, WebGPU only):
  *   Interval compaction operates on contiguous intervals of splats (one per octree node).
  *   1. Cull + count (compute): each interval's bounding sphere is tested against frustum
  *      planes (or a fisheye cone). The pass writes the interval's splat count (or 0 if
@@ -154,21 +154,21 @@ class GSplatManager {
     cpuSorter = null;
 
     /**
-     * GPU-based radix sorter (hybrid raster path).
+     * GPU-based radix sorter (raster GPU sort path).
      *
      * @type {ComputeRadixSort|null}
      */
     gpuSorter = null;
 
     /**
-     * Interval-based GPU compaction (hybrid / compute paths).
+     * Interval-based GPU compaction (raster GPU sort / compute paths).
      *
      * @type {GSplatIntervalCompaction|null}
      */
     intervalCompaction = null;
 
     /**
-     * Compute projector + sort keys for {@link GSPLAT_RENDERER_RASTER_HYBRID}.
+     * Compute projector + sort keys for {@link GSPLAT_RENDERER_RASTER_GPU_SORT}.
      *
      * @type {GSplatProjector|null}
      */
@@ -180,7 +180,7 @@ class GSplatManager {
     indirectDrawSlot = -1;
 
     /**
-     * Indirect dispatch slot for hybrid raster (projector + radix) and compute paths.
+     * Indirect dispatch slot for raster GPU sort (projector + radix) and compute paths.
      * The compute local renderer builds its own indirect args in private buffers
      * and does not use these slots.
      */
@@ -507,7 +507,7 @@ class GSplatManager {
      * @returns {import('../mesh-instance.js').MeshInstance|null} The pick mesh instance, or null.
      */
     prepareForPicking(camera, width, height) {
-        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
+        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT) {
             const sortedState = this.worldStates.get(this.sortedVersion);
             if (!sortedState?.sortedBefore || !camera.node) return null;
 
@@ -585,7 +585,7 @@ class GSplatManager {
     _createRenderer(mode) {
         if (mode === GSPLAT_RENDERER_COMPUTE) {
             this.renderer = new GSplatComputeLocalRenderer(this.device, this.node, this.cameraNode, this.layer, this.workBuffer);
-        } else if (mode === GSPLAT_RENDERER_RASTER_HYBRID) {
+        } else if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
             this.renderer = new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, this.workBuffer);
             this.initHybridSorting();
         } else {
@@ -1518,7 +1518,7 @@ class GSplatManager {
                 // Compute renderer: run compaction only (no key generation or radix sort)
                 this.compactGpu(lastState);
                 gpuSortedThisFrame = true;
-            } else if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
+            } else if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT) {
                 this.sortGpuHybrid(lastState);
                 gpuSortedThisFrame = true;
             } else {
@@ -1536,9 +1536,9 @@ class GSplatManager {
             this.lastCullingProjMat.copy(this.cameraNode.camera.projectionMatrix);
         }
 
-        // Hybrid raster needs projector + radix + fresh indirect args every frame (indirect
+        // Raster GPU sort needs projector + radix + fresh indirect args every frame (indirect
         // slots are per-frame; post-projector visible count differs from interval prefix sum).
-        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID && lastState && !gpuSortedThisFrame) {
+        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT && lastState && !gpuSortedThisFrame) {
             this.sortGpuHybrid(lastState);
             gpuSortedThisFrame = true;
         }
