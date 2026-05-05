@@ -19,7 +19,6 @@ import { GSPLAT_DEBUG_NODE_AABBS } from '../constants.js';
 const _invWorldMat = new Mat4();
 const _localCameraPos = new Vec3();
 const _localCameraFwd = new Vec3();
-const _dirToNode = new Vec3();
 
 const _tempCompletedUrls = [];
 const _tempDebugAabb = new BoundingBox();
@@ -220,6 +219,14 @@ class GSplatOctreeInstance {
      * @private
      */
     _deviceLostEvent = null;
+
+    /**
+     * Reusable scratch for LOD distance thresholds.
+     *
+     * @type {Float32Array|null}
+     * @private
+     */
+    _lodMinDistThresholds = null;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -453,10 +460,36 @@ class GSplatOctreeInstance {
 
         // Pass 1: Evaluate optimal LOD for each node (distance-based)
         const uniformScale = this.placement.node.getWorldTransform().getScale().x;
-        this.evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale);
+        this.evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale, false);
 
         // Pass 2: Calculate desired LOD (underfill) and apply changes
         this.applyLodChanges(maxLod, params);
+    }
+
+    /**
+     * Ensures the reusable threshold buffer can store indices 1 through maxLod and fills
+     * buf[k] = d0 * m^(k-1) for k from 1 to maxLod (same distance bands as truncating 1 + log(d/d0) / log(m)).
+     *
+     * @param {number} maxLod - Maximum LOD index (>= 1).
+     * @param {number} d0 - lodBaseDistance in FOV-adjusted distance space.
+     * @param {number} m - lodMultiplier.
+     * @returns {Float32Array} Buffer; index 0 unused; entries 1..maxLod set.
+     * @private
+     */
+    _ensureLodMinDistThresholds(maxLod, d0, m) {
+        const needLen = maxLod + 1;
+        let buf = this._lodMinDistThresholds;
+        if (!buf || buf.length < needLen) {
+            buf = new Float32Array(needLen);
+            this._lodMinDistThresholds = buf;
+        }
+        let t = d0;
+        buf[1] = t;
+        for (let k = 2; k <= maxLod; k++) {
+            t *= m;
+            buf[k] = t;
+        }
+        return buf;
     }
 
     /**
@@ -474,10 +507,11 @@ class GSplatOctreeInstance {
      * @param {number} rangeMax - Maximum allowed LOD index.
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      * @param {number} uniformScale - Uniform scale of the octree transform for world-space conversion.
-     * @returns {number} Total number of splats that would be used by optimal LODs.
+     * @param {boolean} [accumulateSplats] - When true (default), sum splat counts for the chosen LOD per node and return the total (budget path). When false, skip counting (faster; return value unused).
+     * @returns {number} Total number of splats that would be used by optimal LODs when accumulateSplats is true; otherwise 0.
      * @private
      */
-    evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale) {
+    evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale, accumulateSplats = true) {
         const { lodBehindPenalty } = params;
 
         // Compute FOV compensation: use min(tanHalfV, tanHalfH) to handle ultra-wide and portrait
@@ -489,9 +523,6 @@ class GSplatOctreeInstance {
         const tanHalfHFov = tanHalfVFov * camera.aspectRatio;
         const fovScale = Math.min(tanHalfVFov, tanHalfHFov) / REF_TAN_HALF_FOV;
 
-        // Precompute inverse log of multiplier for O(1) LOD index computation
-        const invLogMult = 1.0 / Math.log(lodMultiplier);
-
         // transform camera position to octree local space
         const worldCameraPosition = cameraNode.getPosition();
         const octreeWorldTransform = this.placement.node.getWorldTransform();
@@ -502,25 +533,60 @@ class GSplatOctreeInstance {
 
         const nodes = this.octree.nodes;
         const nodeInfos = this.nodeInfos;
+
+        // Packed [minX,minY,minZ,maxX,maxY,maxZ] per node — see GSplatOctree.nodeBoundsMinMax (hot path; avoids BoundingBox.closestPoint per iteration).
+        const boundsFlat = this.octree.nodeBoundsMinMax;
+
+        // Camera position and forward in octree local space (scalars cached for the inner loop).
+        const px = localCameraPosition.x;
+        const py = localCameraPosition.y;
+        const pz = localCameraPosition.z;
+        const fwx = localCameraForward.x;
+        const fwy = localCameraForward.y;
+        const fwz = localCameraForward.z;
         let totalSplats = 0;
 
+        /** @type {Float32Array|null} */
+        let minDistBuf = null;
+        if (maxLod >= 1) {
+            minDistBuf = this._ensureLodMinDistThresholds(maxLod, lodBaseDistance, lodMultiplier);
+        }
+
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
-            const node = nodes[nodeIndex];
             const nodeInfo = nodeInfos[nodeIndex];
 
-            // Calculate the nearest point on the bounding box to the camera for accurate distance
-            node.bounds.closestPoint(localCameraPosition, _dirToNode);
+            // Nearest point on this node's AABB to the camera (same result as BoundingBox.closestPoint).
+            const b = nodeIndex * 6;
+            let qx = px;
+            const minX = boundsFlat[b];
+            const maxX = boundsFlat[b + 3];
+            if (qx < minX) qx = minX;
+            else if (qx > maxX) qx = maxX;
 
-            // Calculate direction from camera to nearest point on box
-            _dirToNode.sub(localCameraPosition);
-            const actualDistance = _dirToNode.length();
+            let qy = py;
+            const minY = boundsFlat[b + 1];
+            const maxY = boundsFlat[b + 4];
+            if (qy < minY) qy = minY;
+            else if (qy > maxY) qy = maxY;
+
+            let qz = pz;
+            const minZ = boundsFlat[b + 2];
+            const maxZ = boundsFlat[b + 5];
+            if (qz < minZ) qz = minZ;
+            else if (qz > maxZ) qz = maxZ;
+
+            // Vector from camera to closest point on the box; length is world-space distance to the volume.
+            const dx = qx - px;
+            const dy = qy - py;
+            const dz = qz - pz;
+            const actualDistance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
             // Apply angular-based multiplier for nodes behind the camera when enabled
             let penalizedDistance = actualDistance;
 
             if (lodBehindPenalty > 1 && actualDistance > 0.01) {
-                // dot using unnormalized direction to avoid extra normalize; divide by distance
-                const dotOverDistance = localCameraForward.dot(_dirToNode) / actualDistance;
+                // forward · (dx,dy,dz) / |d| — same as Vec3.dot(dir, forward) / distance without temporaries
+                const dotOverDistance = (fwx * dx + fwy * dy + fwz * dz) / actualDistance;
 
                 // Only apply penalty when behind the camera (dot < 0)
                 if (dotOverDistance < 0) {
@@ -530,14 +596,16 @@ class GSplatOctreeInstance {
                 }
             }
 
-            // Compute LOD index via logarithm with FOV compensation
+            // LOD index from geometric distance bands (equivalent to 1 + log(d/d0)/log(m) truncated; coarse-first scan).
             const fovAdjustedDistance = penalizedDistance * fovScale;
             let optimalLodIndex;
-            if (fovAdjustedDistance < lodBaseDistance) {
+            if (maxLod === 0 || fovAdjustedDistance < lodBaseDistance) {
                 optimalLodIndex = 0;
             } else {
-                const rawLod = 1 + Math.log(fovAdjustedDistance / lodBaseDistance) * invLogMult;
-                optimalLodIndex = Math.min(maxLod, rawLod | 0);
+                optimalLodIndex = maxLod;
+                while (optimalLodIndex > 1 && fovAdjustedDistance < minDistBuf[optimalLodIndex]) {
+                    optimalLodIndex--;
+                }
             }
 
             // Clamp to configured range
@@ -547,10 +615,12 @@ class GSplatOctreeInstance {
             nodeInfo.optimalLod = optimalLodIndex;
             nodeInfo.worldDistance = fovAdjustedDistance * uniformScale;
 
-            // Count splats for this optimal LOD
-            const lod = nodes[nodeIndex].lods[optimalLodIndex];
-            if (lod && lod.count) {
-                totalSplats += lod.count;
+            if (accumulateSplats) {
+                // Count splats for this optimal LOD
+                const lod = nodes[nodeIndex].lods[optimalLodIndex];
+                if (lod && lod.count) {
+                    totalSplats += lod.count;
+                }
             }
         }
 
