@@ -33,6 +33,9 @@ uniform viewport_size: vec4f;
 // renderer (see GSplatHybridRenderer).
 uniform clipToViewZ: vec4f;
 
+// Forward-pass opacity floor (scene.gsplat.alphaCull); matches gsplatCommonVS clipCorner.
+uniform alphaCull: f32;
+
 // Globally sorted indices into projCache (output of the radix sort).
 var<storage, read> sortedIndices: array<u32>;
 
@@ -111,7 +114,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     // clipCorner: shrink the quad to exclude near-zero alpha regions. Mirrors the
     // helper in gsplatCommonVS (kept inline to avoid pulling in the full gsplatCommonVS).
     let cornerUV = vec2f(vertex_position.xy);
-    let clip = min(half(1.0), sqrt(log(half(255.0) * alpha)) * half(0.5));
+    let clip = min(half(1.0), sqrt(max(half(0.0), log(alpha / half(uniform.alphaCull)))) * half(0.5));
     let cornerClipped = cornerUV * f32(clip);
 
     // Convert pixel-space offset into clip-space. proj.w is the real clipPos.w,

@@ -12,9 +12,11 @@ export default /* glsl */`
 #include "gsplatCornerVS"
 #include "gsplatOutputVS"
 
-// modify the gaussian corner so it excludes gaussian regions with alpha less than 1/255
+uniform float alphaCull;
+
+// modify the gaussian corner so it excludes gaussian regions below alphaCull (forward pass)
 void clipCorner(inout SplatCorner corner, float alpha) {
-    float clip = min(1.0, sqrt(log(255.0 * alpha)) * 0.5);
+    float clip = min(1.0, sqrt(max(0.0, log(alpha / alphaCull))) * 0.5);
     corner.offset *= clip;
     corner.uv *= clip;
 }

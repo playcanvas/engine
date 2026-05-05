@@ -38,7 +38,7 @@ import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/comp
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import { GSplatTileComposite } from './gsplat-tile-composite.js';
 import { GSplatLocalDispatchSet } from './gsplat-local-dispatch-set.js';
-import { CACHE_STRIDE } from './constants.js';
+import { ALPHA_VISIBILITY_THRESHOLD, CACHE_STRIDE } from './constants.js';
 import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
 
 /**
@@ -163,6 +163,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
     /** @type {number} */
     _alphaClip = 0.3;
+
+    /** @type {number} */
+    _alphaCull = ALPHA_VISIBILITY_THRESHOLD;
 
     /** @type {number} */
     _exposure = 1.0;
@@ -432,6 +435,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._minPixelSize = gsplat.minPixelSize;
         this._minContribution = gsplat.minContribution;
         this._alphaClip = gsplat.alphaClip;
+        this._alphaCull = gsplat.alphaCull;
         this._exposure = exposure ?? 1.0;
         this._fisheye = gsplat.fisheye;
         this._fogParams = fogParams ?? null;
@@ -649,7 +653,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         _viewData.set(view.data);
         const focal = width * _shaderProjMat.data[0];
 
-        const alphaClip = pickMode ? this._alphaClip : (1.0 / 255.0);
+        const alphaClip = pickMode ? this._alphaClip : Math.max(ALPHA_VISIBILITY_THRESHOLD, this._alphaCull);
 
         // Ensure fisheyeProj is up-to-date (culling may not have run this frame)
         this.fisheyeProj.update(this._fisheye, camera.fov, cam.projectionMatrix);

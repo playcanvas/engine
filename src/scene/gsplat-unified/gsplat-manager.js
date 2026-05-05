@@ -25,6 +25,7 @@ import {
 import { Color } from '../../core/math/color.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
 import { BlockAllocator } from '../../core/block-allocator.js';
+import { ALPHA_VISIBILITY_THRESHOLD } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -59,7 +60,6 @@ const _localCamPos = new Vec3();
 const _closestPt = new Vec3();
 const tempOctreesTicked = new Set();
 const _queuedSplats = new Set();
-const ALPHA_VISIBILITY_THRESHOLD = 1.0 / 255.0;
 
 const _lodColorsRaw = [
     [1, 0, 0],  // red

@@ -315,7 +315,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
     frameUpdate(params) {
         this._material.setParameter('alphaClip', params.alphaClip);
+        this._material.setParameter('alphaCull', params.alphaCull);
         this._pickMaterial?.setParameter('alphaClip', params.alphaClip);
+        this._pickMaterial?.setParameter('alphaCull', params.alphaCull);
 
         if (params.colorRamp) {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);

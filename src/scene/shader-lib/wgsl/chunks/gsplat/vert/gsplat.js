@@ -88,7 +88,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     clr = half4(clrF32);
 
     // discard splats with alpha too low to contribute any visible pixel
-    if (half(255.0) * clr.w <= half(1.0)) {
+    if (clr.w <= half(uniform.alphaCull)) {
         output.position = discardVec;
         return output;
     }
