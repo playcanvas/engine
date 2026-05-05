@@ -4,8 +4,8 @@
 //   1. Projects the splat to clip + screen space (computeSplatCov), applying the same
 //      alpha / minPixelSize / minContribution / off-screen culls used by the compute renderer.
 //   2. Derives the eigen-vectors v1, v2 (same eigen-decomposition as gsplatCorner.js).
-//   3. Computes a depth-based sort key (camera-relative bin weighting, same math as
-//      compute-gsplat-sort-key.js, optionally radial via RADIAL_SORT define).
+//   3. Computes a depth-based sort key (camera-relative bin weighting; matches CPU worker sort keys,
+//      optionally radial via RADIAL_SORT define).
 //   4. Workgroup-local atomic compaction: each thread that survives culling gets a slot
 //      via a shared atomic, then the workgroup leader reserves a contiguous range in the
 //      global renderCounter. This caps global atomics at one per workgroup.
@@ -31,8 +31,7 @@ export const computeGsplatProjectorSource = /* wgsl */`
 @group(0) @binding(3) var<storage, read_write> sortKeys: array<u32>;
 @group(0) @binding(4) var<storage, read_write> renderCounter: array<atomic<u32>>;
 
-// Camera-relative bin weighting for sort key computation (same layout as
-// compute-gsplat-sort-key.js: 32 entries of {base, divider}).
+// Camera-relative bin weighting for sort key computation (32 entries of {base, divider}).
 struct BinWeight {
     base: f32,
     divider: f32
@@ -88,8 +87,8 @@ fn main(
     }
     workgroupBarrier();
 
-    // Match the indirect dispatch linearisation used by compute-gsplat-sort-key.js
-    // / compute-gsplat-local-tile-count.js: a 2D grid expanded into a flat thread index.
+    // Match the indirect dispatch linearisation used by compute-gsplat-local-tile-count.js:
+    // a 2D grid expanded into a flat thread index.
     let threadIdx = gid.y * (numWorkgroups.x * 256u) + gid.x;
     let numVisible = sortElementCount[0];
 
@@ -170,8 +169,7 @@ fn main(
             clipPos.z = clamp(clipPos.z, 0.0, abs(clipPos.w));
         #endif
 
-        // Sort key — same math as compute-gsplat-sort-key.js. We reuse the
-        // already-loaded world-space center instead of re-fetching it.
+        // Sort key — shared depth-bin weighting (same as CPU worker).
         #ifdef RADIAL_SORT
             let delta = center - uniforms.cameraPosition;
             let radialDist = length(delta);

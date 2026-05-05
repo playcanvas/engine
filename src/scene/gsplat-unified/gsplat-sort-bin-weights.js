@@ -1,7 +1,7 @@
 /**
  * A utility class for computing camera-relative bin weights used in GSplat sorting.
  * Pre-allocates a single interleaved Float32Array that is reused across frames.
- * Used by both GPU (GSplatSortKeyCompute) and CPU worker sorting paths.
+ * Used by the hybrid projector compute shader and CPU worker sorting paths.
  *
  * This class is stringified and injected into the worker blob, so it must be
  * fully self-contained: no imports, and all constants as static properties.

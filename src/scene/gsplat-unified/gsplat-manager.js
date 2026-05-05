@@ -13,13 +13,12 @@ import { GSplatOctreeInstance } from './gsplat-octree-instance.js';
 import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
-import { GSplatSortKeyCompute } from './gsplat-sort-key-compute.js';
 import { GSplatIntervalCompaction } from './gsplat-interval-compaction.js';
 import { ComputeRadixSort } from '../graphics/radix-sort/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
-    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_RASTER_HYBRID,
+    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_HYBRID,
     GSPLAT_RENDERER_COMPUTE,
     GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_AABBS
 } from '../constants.js';
@@ -91,7 +90,7 @@ let _randomColorRaw = null;
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
  * stored and rendered from.
  *
- * Shared culling + compaction (GPU sorting and compute renderer, WebGPU only):
+ * Shared culling + compaction (hybrid raster and compute renderer, WebGPU only):
  *   Interval compaction operates on contiguous intervals of splats (one per octree node).
  *   1. Cull + count (compute): each interval's bounding sphere is tested against frustum
  *      planes (or a fisheye cone). The pass writes the interval's splat count (or 0 if
@@ -100,14 +99,6 @@ let _randomColorRaw = null;
  *      The last element gives visibleCount.
  *   3. Scatter (compute): one workgroup per interval expands visible intervals into
  *      compactedSplatIds (flat list of work-buffer pixel indices).
- *
- * Raster renderer — GPU sorting (WebGPU, {@link GSplatQuadRenderer}):
- *   Uses shared steps 1-3 above, then:
- *   4. Generate sort keys: an indirect compute dispatch (visibleCount threads) reads each
- *      compactedSplatIds[i] to look up the splat's depth and writes a sort key to keysBuffer.
- *   5. Radix sort: an indirect GPU radix sort over keysBuffer, with compactedSplatIds supplied
- *      as initial values, produces a buffer of sorted splat IDs directly.
- *   6. Render: the vertex shader reads sortedSplatIds[vertexId] → splatId.
  *
  * Raster renderer — CPU sorting (WebGPU and WebGL, {@link GSplatQuadRenderer}):
  *   1. Sort on worker: camera position and splat centers are sent to a web worker which
@@ -163,21 +154,14 @@ class GSplatManager {
     cpuSorter = null;
 
     /**
-     * GPU-based key generator (when using GPU sorting).
-     *
-     * @type {GSplatSortKeyCompute|null}
-     */
-    keyGenerator = null;
-
-    /**
-     * GPU-based radix sorter (when using GPU sorting).
+     * GPU-based radix sorter (hybrid raster path).
      *
      * @type {ComputeRadixSort|null}
      */
     gpuSorter = null;
 
     /**
-     * Interval-based GPU compaction (always-on for GPU sort path).
+     * Interval-based GPU compaction (hybrid / compute paths).
      *
      * @type {GSplatIntervalCompaction|null}
      */
@@ -196,9 +180,9 @@ class GSplatManager {
     indirectDrawSlot = -1;
 
     /**
-     * Indirect dispatch slot index for GPU-sort indirect dispatch args.
-     * Slot +0 = key gen, slot +1 = sort. The compute local renderer builds
-     * its own indirect args in private buffers and does not use these slots.
+     * Indirect dispatch slot for hybrid raster (projector + radix) and compute paths.
+     * The compute local renderer builds its own indirect args in private buffers
+     * and does not use these slots.
      */
     indirectDispatchSlot = -1;
 
@@ -429,13 +413,11 @@ class GSplatManager {
     }
 
     /**
-     * Destroys GPU sorting resources (key generator, radix sorter, compaction).
+     * Destroys GPU sorting resources (radix sorter, projector, compaction).
      *
      * @private
      */
     destroyGpuSorting() {
-        this.keyGenerator?.destroy();
-        this.keyGenerator = null;
         this.gpuSorter?.destroy();
         this.gpuSorter = null;
         this.projector?.destroy();
@@ -471,20 +453,6 @@ class GSplatManager {
     destroyCpuSorting() {
         this.cpuSorter?.destroy();
         this.cpuSorter = null;
-    }
-
-    /**
-     * Creates GPU sorting resources (key generator, radix sorter) if not already present.
-     *
-     * @private
-     */
-    initGpuSorting() {
-        if (!this.keyGenerator) {
-            this.keyGenerator = new GSplatSortKeyCompute(this.device);
-        }
-        if (!this.gpuSorter) {
-            this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
-        }
     }
 
     /**
@@ -622,18 +590,14 @@ class GSplatManager {
             this.initHybridSorting();
         } else {
             this.renderer = new GSplatQuadRenderer(this.device, this.node, this.cameraNode, this.layer, this.workBuffer);
-            if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
-                this.initGpuSorting();
-            } else {
-                this.initCpuSorting();
-            }
+            this.initCpuSorting();
         }
         this.activeRenderer = mode;
     }
 
     /**
      * Checks whether the resolved renderer mode has changed and transitions to the new mode.
-     * Handles both sort-mode transitions (CPU <-> GPU sort) and full renderer swaps
+     * Handles renderer mode transitions (CPU raster, hybrid, compute)
      * (quad <-> compute).
      *
      * @private
@@ -1554,10 +1518,6 @@ class GSplatManager {
                 // Compute renderer: run compaction only (no key generation or radix sort)
                 this.compactGpu(lastState);
                 gpuSortedThisFrame = true;
-            } else if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT) {
-                // GPU sort runs compaction internally, so indirect draw is always valid
-                this.sortGpu(lastState);
-                gpuSortedThisFrame = true;
             } else if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
                 this.sortGpuHybrid(lastState);
                 gpuSortedThisFrame = true;
@@ -1581,13 +1541,6 @@ class GSplatManager {
         if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID && lastState && !gpuSortedThisFrame) {
             this.sortGpuHybrid(lastState);
             gpuSortedThisFrame = true;
-        }
-
-        // Refresh the per-frame indirect draw slot on non-sort frames
-        // (sortGpu already handled GPU-sort frames).
-        if (this.activeRenderer !== GSPLAT_RENDERER_COMPUTE && this.activeRenderer !== GSPLAT_RENDERER_RASTER_HYBRID &&
-            this.intervalCompaction && !gpuSortedThisFrame) {
-            this.refreshIndirectDraw();
         }
 
         // renderer per-frame update (material syncing, deferred setup)
@@ -1627,78 +1580,6 @@ class GSplatManager {
     }
 
     /**
-     * Sorts the splats using GPU compute shaders
-     *
-     * @param {GSplatWorldState} worldState - The world state to sort.
-     */
-    sortGpu(worldState) {
-        const keyGenerator = this.keyGenerator;
-        const gpuSorter = this.gpuSorter;
-        Debug.assert(keyGenerator && gpuSorter, 'GPU sorter not initialized');
-        if (!keyGenerator || !gpuSorter) return;
-
-        const elementCount = worldState.totalActiveSplats;
-        if (elementCount === 0) return;
-
-        // Lazily create interval compaction
-        if (!this.intervalCompaction) {
-            this.intervalCompaction = new GSplatIntervalCompaction(this.device);
-        }
-
-        // Handle first-time setup for GPU path
-        if (!worldState.sortedBefore) {
-            worldState.sortedBefore = true;
-
-            // Clean up old states first so skipped upload requirements are merged
-            // into this world state before rebuildWorkBuffer renders them
-            this.cleanupOldWorldStates(worldState.version);
-            this.sortedVersion = worldState.version;
-
-            this.rebuildWorkBuffer(worldState, elementCount);
-        }
-
-        // Upload interval metadata after rebuild so boundsBaseIndex is assigned
-        this.intervalCompaction.uploadIntervals(worldState);
-
-        // Run frustum culling when bounds data is available
-        if (this.canCull) {
-            const state = this.worldStates.get(this.sortedVersion);
-            if (state) {
-                this._runFrustumCulling(state);
-            }
-        }
-
-        const numIntervals = worldState.totalIntervals;
-        const totalActiveSplats = worldState.totalActiveSplats;
-        this.intervalCompaction.dispatchCompact(this.workBuffer.frustumCuller, numIntervals, totalActiveSplats, this.renderer.fisheyeProj.enabled);
-
-        // Allocate indirect draw/dispatch slots and write args from visible count
-        this.allocateAndWriteIntervalIndirectArgs(numIntervals);
-
-        const compactedSplatIds = this.intervalCompaction.compactedSplatIds;
-
-        // number of bits used for sorting to match CPU sorter
-        const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
-        // Round up to a multiple of the active sorter's radix width (4 for the
-        // portable multipass backend, 8 for OneSweep). Multipass would accept
-        // 4-multiples, but OneSweep asserts when numBits is not a multiple of
-        // 8, so we always align to the backend's actual radixBits.
-        const radixBits = gpuSorter.radixBits;
-        const roundedNumBits = Math.ceil(numBits / radixBits) * radixBits;
-
-        // Compute min/max distances for key normalization
-        const { minDist, maxDist } = this.computeDistanceRange(worldState);
-
-        // Generate sort keys and run GPU radix sort (always indirect, compaction is always on)
-        const sortedIndices = this.dispatchGpuSort(
-            elementCount, roundedNumBits, minDist, maxDist, compactedSplatIds
-        );
-
-        // Apply sorted results to the renderer
-        this.applyGpuSortResults(worldState, sortedIndices);
-    }
-
-    /**
      * Hybrid GPU path: interval compaction, projector (keys + proj cache), indirect radix sort
      * over projector keys (indices are dense in projCache), then hybrid raster bindings.
      *
@@ -1728,7 +1609,7 @@ class GSplatManager {
         );
 
         if (sortedIndices) {
-            this.applyGpuSortResults(worldState, sortedIndices);
+            this.applyGpuSortResults(sortedIndices);
         }
     }
 
@@ -1901,7 +1782,7 @@ class GSplatManager {
         const sortSlotCount = sortInfo[0];
 
         this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);
-        // Reserve contiguous dispatch slots: [keygen, sort0, sort1?, sort2?].
+        // Reserve contiguous dispatch slots for hybrid / legacy layout (e.g. sort passes).
         this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(1 + sortSlotCount);
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
         ic.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, numIntervals, sortInfo);
@@ -1909,73 +1790,20 @@ class GSplatManager {
     }
 
     /**
-     * Generates sort keys and runs GPU radix sort using indirect dispatch
-     * (sorting only the visible splat count determined by interval compaction).
+     * Applies hybrid GPU sort results to the renderer with indirect draw from interval compaction.
      *
-     * @param {number} elementCount - Total number of splats.
-     * @param {number} roundedNumBits - Number of sort bits aligned to the active GPU radix sorter width (4 or 8).
-     * @param {number} minDist - Minimum distance for key normalization.
-     * @param {number} maxDist - Maximum distance for key normalization.
-     * @param {StorageBuffer|null} compactedSplatIds - Compacted splat IDs from interval compaction.
-     * @returns {StorageBuffer} The sorted indices buffer.
-     * @private
-     */
-    dispatchGpuSort(elementCount, roundedNumBits, minDist, maxDist, compactedSplatIds) {
-        const keyGenerator = /** @type {GSplatSortKeyCompute} */ (this.keyGenerator);
-        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
-        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-
-        // Generate sort keys using indirect dispatch (slot 0: key gen workgroups)
-        const keysBuffer = keyGenerator.generateIndirect(
-            this.workBuffer,
-            this.cameraNode,
-            this.scene.gsplat.radialSorting,
-            elementCount,
-            roundedNumBits,
-            minDist,
-            maxDist,
-            /** @type {StorageBuffer} */ (compactedSplatIds),
-            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
-            this.indirectDispatchSlot
-        );
-
-        // Run GPU radix sort with indirect dispatch (slot 1: sort workgroups).
-        // Pass compactedSplatIds as initial values so the sort output contains actual
-        // splat IDs rather than indices into the compacted buffer (single indirection).
-        return gpuSorter.sortIndirect(
-            keysBuffer,
-            elementCount,
-            roundedNumBits,
-            this.indirectDispatchSlot + 1,
-            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
-            /** @type {StorageBuffer} */ (compactedSplatIds),
-            true
-        );
-    }
-
-    /**
-     * Applies GPU sort results to the renderer with indirect draw from interval compaction.
-     * The sortedIndices buffer already contains actual splat IDs (single indirection) because
-     * compactedSplatIds were fed as initial values to the radix sort.
-     *
-     * @param {GSplatWorldState} worldState - The world state being sorted.
      * @param {StorageBuffer} sortedIndices - Buffer containing sorted splat IDs.
      * @private
      */
-    applyGpuSortResults(worldState, sortedIndices) {
-        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
-            const proj = /** @type {GSplatProjector} */ (this.projector);
-            const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-            /** @type {GSplatHybridRenderer} */ (/** @type {unknown} */ (this.renderer)).setHybridSortedRendering(
-                this.indirectDrawSlot,
-                sortedIndices,
-                /** @type {StorageBuffer} */ (proj.projCache),
-                /** @type {StorageBuffer} */ (ic.numSplatsBuffer)
-            );
-            return;
-        }
+    applyGpuSortResults(sortedIndices) {
+        const proj = /** @type {GSplatProjector} */ (this.projector);
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-        this.renderer.setGpuSortedRendering(this.indirectDrawSlot, sortedIndices, /** @type {StorageBuffer} */ (ic.numSplatsBuffer), worldState.textureSize);
+        /** @type {GSplatHybridRenderer} */ (/** @type {unknown} */ (this.renderer)).setHybridSortedRendering(
+            this.indirectDrawSlot,
+            sortedIndices,
+            /** @type {StorageBuffer} */ (proj.projCache),
+            /** @type {StorageBuffer} */ (ic.numSplatsBuffer)
+        );
     }
 
     /**
@@ -2004,28 +1832,6 @@ class GSplatManager {
                 fp.maxTheta
             );
         }
-    }
-
-    /**
-     * Refreshes indirect draw parameters on non-sort frames.
-     * Allocates a new per-frame draw slot and re-runs writeIndirectArgs to write
-     * draw args from the visibleCount that was established during the last sort.
-     * Does NOT re-run compaction (the compacted buffer must stay stable).
-     *
-     * @private
-     */
-    refreshIndirectDraw() {
-        const sortedState = this.worldStates.get(this.sortedVersion);
-        if (!sortedState || !this.intervalCompaction) return;
-
-        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_HYBRID) {
-            return;
-        }
-
-        this.allocateAndWriteIntervalIndirectArgs(this.lastCompactedNumIntervals);
-        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
-        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-        this.renderer.setGpuSortedRendering(this.indirectDrawSlot, /** @type {StorageBuffer} */ (gpuSorter.sortedIndices), /** @type {StorageBuffer} */ (ic.numSplatsBuffer), sortedState.textureSize);
     }
 
     /**

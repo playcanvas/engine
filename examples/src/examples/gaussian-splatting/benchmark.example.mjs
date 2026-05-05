@@ -21,17 +21,11 @@ const benchPivotBasePos = new pc.Vec3(10.3, 2, -10);
 /** Wall-clock duration for idle rAF sampling before any benchmark run (reference FPS). */
 const IDLE_FPS_SAMPLE_MS = 1000;
 
-const RENDERER_RASTER_CPU_SORT = 1;
-const RENDERER_RASTER_GPU_SORT = 2;
-const RENDERER_COMPUTE = 3;
-const RENDERER_RASTER_HYBRID = 4;
-
 const RENDERERS = [
-    { device: 'webgl2', renderer: RENDERER_RASTER_CPU_SORT, label: 'WebGL2 CPU Sort', shortLabel: 'GL2 CPU' },
-    { device: 'webgpu', renderer: RENDERER_RASTER_CPU_SORT, label: 'WebGPU CPU Sort', shortLabel: 'GPU CPU' },
-    { device: 'webgpu', renderer: RENDERER_RASTER_GPU_SORT, label: 'WebGPU GPU Sort', shortLabel: 'GPU Sort' },
-    { device: 'webgpu', renderer: RENDERER_COMPUTE, label: 'WebGPU Compute', shortLabel: 'Compute' },
-    { device: 'webgpu', renderer: RENDERER_RASTER_HYBRID, label: 'WebGPU Hybrid', shortLabel: 'Hybrid' }
+    { device: 'webgl2', renderer: pc.GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGL2 CPU Sort', shortLabel: 'GL2 CPU' },
+    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGPU CPU Sort', shortLabel: 'GPU CPU' },
+    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_HYBRID, label: 'WebGPU Hybrid', shortLabel: 'Hybrid' },
+    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_COMPUTE, label: 'WebGPU Compute', shortLabel: 'Compute' }
 ];
 
 const BUDGETS = [1, 2, 3, 4, 6, 8, 10, 15, 20, 25, 30, 35]; // millions

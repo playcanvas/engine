@@ -479,7 +479,7 @@ class GSplatProjector {
 
         const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode);
 
-        // Camera position / forward (camera Z basis, matching cpu-sort and key-compute).
+        // Camera position / forward (camera Z basis, matching cpu-sort path).
         const cameraPos = cameraNode.getPosition();
         const cameraMat = cameraNode.getWorldTransform();
         const cameraDir = cameraMat.getZ(_cameraDir).normalize();
@@ -487,7 +487,7 @@ class GSplatProjector {
         const range = maxDist - minDist;
         const invRange = range > 0 ? 1.0 / range : 1.0;
 
-        // Bin weights — same pattern as GSplatSortKeyCompute.
+        // Bin weights — same pattern as CPU-side sort key preparation.
         const bucketCount = (1 << numBits);
         const cameraBin = GSplatSortBinWeights.computeCameraBin(radialSort, minDist, range);
         const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
