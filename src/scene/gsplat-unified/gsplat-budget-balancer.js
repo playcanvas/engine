@@ -43,9 +43,8 @@ class GSplatBudgetBalancer {
      * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - Map of
      * GSplatOctreeInstance objects.
      * @param {number} budget - Target splat budget for octrees.
-     * @param {number} _globalMaxDistance - Unused; bucket indices are precomputed during LOD evaluation.
      */
-    balance(octreeInstances, budget, _globalMaxDistance) {
+    balance(octreeInstances, budget) {
         // Initialize buckets on first use
         this._initBuckets();
 

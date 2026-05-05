@@ -1316,7 +1316,7 @@ class GSplatManager {
         }
 
         // Budget balancing across all octrees
-        this._budgetBalancer.balance(this.octreeInstances, adjustedBudget, globalMaxDistance);
+        this._budgetBalancer.balance(this.octreeInstances, adjustedBudget);
 
         // Apply LOD changes
         for (const [, inst] of this.octreeInstances) {
