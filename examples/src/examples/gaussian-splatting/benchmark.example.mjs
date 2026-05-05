@@ -45,7 +45,6 @@ const CHART_REF_H = 389;
 
 /** @type {(object|null)[]} */
 const storedResults = new Array(RENDERERS.length).fill(null);
-let storedComputePerfIndex = -1;
 /** @type {Record<string, string>} */
 const storedGpuInfos = {};
 let storedResolution = '';
@@ -710,12 +709,6 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         syncBenchBanner();
     }
 
-    const dev = /** @type {any} */ (device);
-    let computePerfIndex = -1;
-    if (device.isWebGPU && dev.computePerfIndex !== undefined) {
-        computePerfIndex = dev.computePerfIndex;
-    }
-
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
     createOptions.componentSystems = [
@@ -849,7 +842,6 @@ async function runBenchmark(config, colIndex, budgetIndices) {
             label: config.label,
             deviceType: config.device,
             gpuInfo,
-            computePerfIndex,
             gpuTimingSupported,
             budgetResults: new Array(BUDGETS.length).fill(null)
         };
@@ -857,7 +849,6 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     const stored = /** @type {any} */ (storedResults[colIndex]);
     stored.gpuInfo = gpuInfo;
     stored.gpuTimingSupported = gpuTimingSupported;
-    if (computePerfIndex >= 0) stored.computePerfIndex = computePerfIndex;
 
     for (const bi of budgetIndices) {
         const millions = BUDGETS[bi];
@@ -889,7 +880,6 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         setBenchCells(`${millions}M:${colIndex}`, formatGpuMsCell(result.avgGpu), formatEffectiveFpsCell(result.effectiveFps), '#fff');
     }
 
-    if (computePerfIndex >= 0) storedComputePerfIndex = computePerfIndex;
     if (!storedGpuInfos[config.device]) storedGpuInfos[config.device] = gpuInfo;
 
     window.removeEventListener('resize', resize);
@@ -1027,7 +1017,6 @@ function buildDownloadText() {
     }
     if (storedGpuInfos.webgl2) text += `WebGL2:  ${storedGpuInfos.webgl2}\n`;
     if (storedGpuInfos.webgpu) text += `WebGPU:  ${storedGpuInfos.webgpu}\n`;
-    text += `Compute Perf Index: ${storedComputePerfIndex >= 0 ? storedComputePerfIndex.toFixed(3) : '\u2014'} ms\n`;
     if (storedResolution) text += `Resolution: ${storedResolution}${highRes ? ' (High Res)' : ''}\n`;
     if (idleRefFps !== null) text += `Idle ref: ~${idleRefFps.toFixed(1)} FPS (rAF)\n`;
     const ex = getExpectedBenchmarkCanvasPixels();
@@ -1455,7 +1444,6 @@ function updateGpuInfo() {
     text += highRes ? ', High Res on)\n' : ')\n';
     if (storedGpuInfos.webgl2) text += `WebGL2: ${storedGpuInfos.webgl2}\n`;
     if (storedGpuInfos.webgpu) text += `WebGPU: ${storedGpuInfos.webgpu}\n`;
-    if (storedComputePerfIndex >= 0) text += `Compute Perf Index: ${storedComputePerfIndex.toFixed(3)} ms\n`;
     if (storedResolution) text += `Resolution (last completed run): ${storedResolution}`;
     gpuInfoEl.textContent = text.trimEnd();
     syncBenchBanner();

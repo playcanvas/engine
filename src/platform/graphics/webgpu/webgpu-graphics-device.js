@@ -33,7 +33,6 @@ import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
 import { WebgpuUploadStream } from './webgpu-upload-stream.js';
-import { WebgpuComputeBenchmark } from './webgpu-compute-benchmark.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -373,16 +372,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
-
-        /**
-         * Compute performance index measured at startup (milliseconds for a fixed benchmark
-         * workload). Used by GSplat auto-selection to choose between compute and V/F renderers.
-         * -1 if timestamp queries are unavailable.
-         *
-         * @type {number}
-         * @ignore
-         */
-        this.computePerfIndex = await WebgpuComputeBenchmark.run(this.wgpu, this.supportsTimestampQuery);
 
         this.initDeviceCaps();
 
