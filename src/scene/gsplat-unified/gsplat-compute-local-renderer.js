@@ -38,7 +38,7 @@ import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/comp
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import { GSplatTileComposite } from './gsplat-tile-composite.js';
 import { GSplatLocalDispatchSet } from './gsplat-local-dispatch-set.js';
-import { CACHE_STRIDE } from './gsplat-local-constants.js';
+import { CACHE_STRIDE } from './constants.js';
 import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
 
 /**

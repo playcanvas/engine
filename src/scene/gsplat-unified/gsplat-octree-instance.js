@@ -8,6 +8,7 @@ import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 import { GsplatAllocId } from './gsplat-alloc-id.js';
 import { GSPLAT_DEBUG_NODE_AABBS } from '../constants.js';
+import { NUM_BUCKETS } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -75,6 +76,15 @@ class NodeInfo {
      * @type {Array|null}
      */
     lods = null;
+
+    /**
+     * Distance bucket index [0, NUM_BUCKETS - 1] for global budget balancing (sqrt mapping).
+     * Written during {@link GSplatOctreeInstance.evaluateNodeLods} when a global max distance
+     * is supplied (budget enforcement path only).
+     *
+     * @type {number}
+     */
+    budgetBucket = 0;
 
     /**
      * Unique allocation identifier for persistent work buffer allocation tracking.
@@ -508,10 +518,11 @@ class GSplatOctreeInstance {
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      * @param {number} uniformScale - Uniform scale of the octree transform for world-space conversion.
      * @param {boolean} [accumulateSplats] - When true (default), sum splat counts for the chosen LOD per node and return the total (budget path). When false, skip counting (faster; return value unused).
+     * @param {number} [globalMaxDistanceForBuckets] - When > 0, writes {@link NodeInfo.budgetBucket} using the same sqrt mapping as the budget balancer. Omit or pass 0 when not enforcing global budget.
      * @returns {number} Total number of splats that would be used by optimal LODs when accumulateSplats is true; otherwise 0.
      * @private
      */
-    evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale, accumulateSplats = true) {
+    evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale, accumulateSplats = true, globalMaxDistanceForBuckets = 0) {
         const { lodBehindPenalty } = params;
 
         // Compute FOV compensation: use min(tanHalfV, tanHalfH) to handle ultra-wide and portrait
@@ -551,6 +562,8 @@ class GSplatOctreeInstance {
         if (maxLod >= 1) {
             minDistBuf = this._ensureLodMinDistThresholds(maxLod, lodBaseDistance, lodMultiplier);
         }
+
+        const bucketScale = globalMaxDistanceForBuckets > 0 ? NUM_BUCKETS / Math.sqrt(globalMaxDistanceForBuckets) : 0;
 
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
             const nodeInfo = nodeInfos[nodeIndex];
@@ -615,6 +628,12 @@ class GSplatOctreeInstance {
             nodeInfo.optimalLod = optimalLodIndex;
             nodeInfo.worldDistance = fovAdjustedDistance * uniformScale;
 
+            // Budget balancer bucket (sqrt mapping; must match GSplatBudgetBalancer). Fused here when enforcing budget.
+            if (bucketScale > 0 && optimalLodIndex >= 0) {
+                const bucket = (Math.sqrt(nodeInfo.worldDistance) * bucketScale) >>> 0;
+                nodeInfo.budgetBucket = bucket < NUM_BUCKETS ? bucket : NUM_BUCKETS - 1;
+            }
+
             if (accumulateSplats) {
                 // Count splats for this optimal LOD
                 const lod = nodes[nodeIndex].lods[optimalLodIndex];
@@ -636,9 +655,10 @@ class GSplatOctreeInstance {
      * @param {number} [budgetScale] - Dynamic scale applied to LOD parameters to shift
      * boundaries closer to the budget target. Applied to lodBaseDistance directly, and
      * gently to lodMultiplier via pow(budgetScale, -0.2). Defaults to 1.
+     * @param {number} [globalMaxDistanceForBuckets] - When > 0, {@link NodeInfo.budgetBucket} is populated during LOD evaluation for budget balancing.
      * @returns {number} Total optimal splat count.
      */
-    evaluateOptimalLods(cameraNode, params, budgetScale = 1) {
+    evaluateOptimalLods(cameraNode, params, budgetScale = 1, globalMaxDistanceForBuckets = 0) {
         const maxLod = this.octree.lodLevels - 1;
         const { lodBaseDistance, lodMultiplier } = this.placement;
         const { lodRangeMin, lodRangeMax } = params;
@@ -656,7 +676,7 @@ class GSplatOctreeInstance {
         const effectiveMult = Math.max(1.2, lodMultiplier * Math.pow(budgetScale, -0.2));
 
         return this.evaluateNodeLods(cameraNode, maxLod, effectiveBase, effectiveMult,
-            rangeMin, rangeMax, params, uniformScale);
+            rangeMin, rangeMax, params, uniformScale, true, globalMaxDistanceForBuckets);
     }
 
     /**

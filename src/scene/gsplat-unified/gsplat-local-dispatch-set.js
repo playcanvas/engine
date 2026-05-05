@@ -19,7 +19,7 @@ import {
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { computeGsplatLocalRasterizeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-rasterize.js';
-import { CACHE_STRIDE } from './gsplat-local-constants.js';
+import { CACHE_STRIDE } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
