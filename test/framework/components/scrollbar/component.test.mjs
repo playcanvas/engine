@@ -169,6 +169,26 @@ describe('ScrollbarComponent', function () {
             expect(handle.element.height).to.equal(heightBefore);
         });
 
+        it('rebuilds the drag helper for the new axis when orientation changes at runtime', function () {
+            const handle = new Entity();
+            handle.addComponent('element', { type: ELEMENTTYPE_IMAGE });
+
+            const e = new Entity();
+            e.addChild(handle);
+            e.addComponent('element', { type: ELEMENTTYPE_IMAGE });
+            e.addComponent('scrollbar', { handleEntity: handle, orientation: ORIENTATION_HORIZONTAL });
+            app.root.addChild(e);
+
+            // ElementDragHelper captures its axis at construction, so the helper must be
+            // rebuilt for the new axis when orientation flips - otherwise drags stay on the
+            // old axis and value updates can stop working
+            expect(e.scrollbar._handleDragHelper._axis).to.equal('x');
+
+            e.scrollbar.orientation = ORIENTATION_VERTICAL;
+
+            expect(e.scrollbar._handleDragHelper._axis).to.equal('y');
+        });
+
     });
 
     describe('#handleEntity', function () {

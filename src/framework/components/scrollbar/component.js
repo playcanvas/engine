@@ -118,8 +118,12 @@ class ScrollbarComponent extends Component {
 
         this._orientation = arg;
 
+        // ElementDragHelper captures its axis at construction, so an existing helper
+        // must be rebuilt to keep dragging in sync with the new orientation
         if (this._handleEntity?.element) {
             this._handleEntity.element[this._getOppositeDimension()] = 0;
+            this._rebuildDragHelper();
+            this._updateHandlePositionAndSize();
         }
     }
 
@@ -253,14 +257,17 @@ class ScrollbarComponent extends Component {
 
     _onHandleElementGain() {
         this._handleEntityElementSubscribe();
+        this._rebuildDragHelper();
+        this._updateHandlePositionAndSize();
+    }
+
+    _rebuildDragHelper() {
         this._destroyDragHelper();
         this._handleDragHelper = new ElementDragHelper(this._handleEntity.element, this._getAxis());
         // ElementDragHelper defaults to enabled; mirror the component's current state so a helper
         // built while the scrollbar is disabled does not start out draggable
         this._handleDragHelper.enabled = this.enabled && this.entity.enabled;
         this._handleDragHelper.on('drag:move', this._onHandleDrag, this);
-
-        this._updateHandlePositionAndSize();
     }
 
     _onHandleElementLose() {
