@@ -5,11 +5,17 @@ import { GSplatFormat } from './gsplat-format.js';
 
 /**
  * @import { GSplatSogData } from './gsplat-sog-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
 class GSplatSogResource extends GSplatResourceBase {
-    constructor(device, gsplatData) {
-        super(device, gsplatData);
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatSogData} gsplatData - The splat data.
+     * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
+     */
+    constructor(device, gsplatData, options = {}) {
+        super(device, gsplatData, options);
 
         const { meta, means_l } = gsplatData;
         const isV2 = meta.version === 2;

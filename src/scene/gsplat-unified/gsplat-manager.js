@@ -147,6 +147,14 @@ class GSplatManager {
     activeRenderer;
 
     /**
+     * When true, {@link updateWorldState} must rebuild the splat set.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _worldStateDirty = false;
+
+    /**
      * CPU-based sorter (when not using GPU sorting).
      *
      * @type {GSplatUnifiedSorter|null}
@@ -607,6 +615,10 @@ class GSplatManager {
         const requested = this.scene.gsplat.currentRenderer;
         if (requested === this.activeRenderer) return;
 
+        // CPU raster sort vs GPU paths differ on which placements need centers; force a full
+        // updateWorldState rebuild so splats[] matches the new sorter (see hasCenters gates).
+        this._worldStateDirty = true;
+
         this.destroyGpuSorting();
         this.destroyCpuSorting();
         this.renderer.destroy();
@@ -693,13 +705,17 @@ class GSplatManager {
 
         // Recreate world state if there are changes
         const placementsChanged = this.layerPlacementsDirty;
-        const worldChanged = placementsChanged || stateChanged || this.worldStates.size === 0;
+        const worldChanged = placementsChanged || stateChanged || this.worldStates.size === 0 || this._worldStateDirty;
         if (worldChanged) {
             this.lastWorldStateVersion++;
             const splats = [];
 
             // add standalone splats
             for (const p of this.layerPlacements) {
+                if (this.cpuSorter && !p.resource.hasCenters) {
+                    Debug.warnOnce(`Skipping gsplat resource id ${p.resource.id} on the CPU sorting path — no centers buffer. See Scene#gsplatCentersEnabled.`);
+                    continue;
+                }
                 p.ensureInstanceStreams(this.device);
                 const splatInfo = new GSplatInfo(this.device, p.resource, p, p.consumeRenderDirty.bind(p));
                 splats.push(splatInfo);
@@ -709,6 +725,11 @@ class GSplatManager {
             for (const [, inst] of this.octreeInstances) {
                 inst.activePlacements.forEach((p) => {
                     if (p.resource) {
+                        const leafResource = /** @type {GSplatResourceBase} */ (p.resource);
+                        if (this.cpuSorter && !leafResource.hasCenters) {
+                            Debug.warnOnce(`Skipping gsplat resource id ${leafResource.id} on the CPU sorting path — no centers buffer. See Scene#gsplatCentersEnabled.`);
+                            return;
+                        }
                         p.ensureInstanceStreams(this.device);
                         const octreeNodes = p.intervals.size > 0 ? inst.octree.nodes : null;
                         const nodeInfos = octreeNodes ? inst.nodeInfos : null;
@@ -792,6 +813,8 @@ class GSplatManager {
 
             this.layerPlacementsDirty = false;
             this._placementSetChanged = false;
+
+            this._worldStateDirty = false;
 
             // New world state requires sorting
             this.sortNeeded = true;

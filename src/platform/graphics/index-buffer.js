@@ -113,6 +113,16 @@ class IndexBuffer {
     }
 
     /**
+     * Called when the rendering context is restored. Recreates the GPU buffer and uploads from
+     * {@link IndexBuffer#lock|lock} storage.
+     *
+     * @ignore
+     */
+    restoreContext() {
+        this.unlock();
+    }
+
+    /**
      * Returns the data format of the specified index buffer.
      *
      * @returns {number} The data format of the specified index buffer. Can be:

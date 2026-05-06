@@ -114,12 +114,16 @@ class GSplatInstance {
         // only start rendering the splat after we've received the splat order data
         this.meshInstance.instancingCount = 0;
 
-        const centers = resource.centers.slice();
-        const chunks = resource.chunks?.slice();
+        if (resource.hasCenters) {
+            const centers = resource.centers.slice();
+            const chunks = resource.chunks?.slice();
 
-        const orderTarget = this.orderBuffer ?? this.orderTexture;
-        this.sorter = new GSplatSorter(device, options.scene);
-        this.sorter.init(orderTarget, numSplats, centers, chunks);
+            const orderTarget = this.orderBuffer ?? this.orderTexture;
+            this.sorter = new GSplatSorter(device, options.scene);
+            this.sorter.init(orderTarget, numSplats, centers, chunks);
+        } else {
+            Debug.warnOnce(`Skipping gsplat resource id ${resource.id} on the non-unified rendering path — no centers buffer. Scene#gsplatCentersEnabled needs to be true.`);
+        }
 
         this.setHighQualitySH(options.highQualitySH ?? false);
     }
