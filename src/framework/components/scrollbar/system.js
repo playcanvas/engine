@@ -1,3 +1,4 @@
+import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ScrollbarComponent } from './component.js';
 import { ScrollbarComponentData } from './data.js';
@@ -6,12 +7,9 @@ import { ScrollbarComponentData } from './data.js';
  * @import { AppBase } from '../../app-base.js'
  */
 
-const _schema = [
-    { name: 'enabled', type: 'boolean' },
-    { name: 'orientation', type: 'number' },
-    { name: 'value', type: 'number' },
-    { name: 'handleSize', type: 'number' }
-];
+const _schema = ['enabled'];
+
+const _properties = ['orientation', 'value', 'handleSize', 'handleEntity'];
 
 /**
  * Manages creation of {@link ScrollbarComponent}s.
@@ -40,8 +38,25 @@ class ScrollbarComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            if (data.hasOwnProperty(property)) {
+                component[property] = data[property];
+            }
+        }
+
         super.initializeComponentData(component, data, _schema);
-        component.handleEntity = data.handleEntity;
+    }
+
+    cloneComponent(entity, clone) {
+        const c = entity.scrollbar;
+        return this.addComponent(clone, {
+            enabled: c.enabled,
+            orientation: c.orientation,
+            value: c.value,
+            handleSize: c.handleSize,
+            handleEntity: c.handleEntity
+        });
     }
 
     _onAddComponent(entity) {
@@ -52,5 +67,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
         component.onRemove();
     }
 }
+
+Component._buildAccessors(ScrollbarComponent.prototype, _schema);
 
 export { ScrollbarComponentSystem };

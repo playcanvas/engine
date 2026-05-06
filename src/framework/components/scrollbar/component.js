@@ -9,7 +9,6 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
 /**
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Entity } from '../../entity.js'
- * @import { ScrollbarComponentSystem } from './system.js'
  */
 
 /**
@@ -69,6 +68,15 @@ class ScrollbarComponent extends Component {
      */
     static EVENT_SETVALUE = 'set:value';
 
+    /** @private */
+    _orientation = ORIENTATION_HORIZONTAL;
+
+    /** @private */
+    _value = 0;
+
+    /** @private */
+    _handleSize = 0;
+
     /**
      * @type {Entity|null}
      * @private
@@ -88,35 +96,6 @@ class ScrollbarComponent extends Component {
     _evtHandleEntityChanges = [];
 
     /**
-     * Create a new ScrollbarComponent.
-     *
-     * @param {ScrollbarComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
-     */
-    constructor(system, entity) {
-        super(system, entity);
-        this._toggleLifecycleListeners('on');
-    }
-
-    /**
-     * Sets the enabled state of the component.
-     *
-     * @type {boolean}
-     */
-    set enabled(arg) {
-        this._setValue('enabled', arg);
-    }
-
-    /**
-     * Gets the enabled state of the component.
-     *
-     * @type {boolean}
-     */
-    get enabled() {
-        return this.data.enabled;
-    }
-
-    /**
      * Sets whether the scrollbar moves horizontally or vertically. Can be:
      *
      * - {@link ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
@@ -127,7 +106,15 @@ class ScrollbarComponent extends Component {
      * @type {number}
      */
     set orientation(arg) {
-        this._setValue('orientation', arg);
+        if (this._orientation === arg) {
+            return;
+        }
+
+        this._orientation = arg;
+
+        if (this._handleEntity?.element) {
+            this._handleEntity.element[this._getOppositeDimension()] = 0;
+        }
     }
 
     /**
@@ -136,7 +123,7 @@ class ScrollbarComponent extends Component {
      * @type {number}
      */
     get orientation() {
-        return this.data.orientation;
+        return this._orientation;
     }
 
     /**
@@ -145,7 +132,11 @@ class ScrollbarComponent extends Component {
      * @type {number}
      */
     set value(arg) {
-        this._setValue('value', arg);
+        if (Math.abs(arg - this._value) > 1e-5) {
+            this._value = math.clamp(arg, 0, 1);
+            this._updateHandlePositionAndSize();
+            this.fire('set:value', this._value);
+        }
     }
 
     /**
@@ -154,7 +145,7 @@ class ScrollbarComponent extends Component {
      * @type {number}
      */
     get value() {
-        return this.data.value;
+        return this._value;
     }
 
     /**
@@ -165,7 +156,10 @@ class ScrollbarComponent extends Component {
      * @type {number}
      */
     set handleSize(arg) {
-        this._setValue('handleSize', arg);
+        if (Math.abs(arg - this._handleSize) > 1e-5) {
+            this._handleSize = math.clamp(arg, 0, 1);
+            this._updateHandlePositionAndSize();
+        }
     }
 
     /**
@@ -174,7 +168,7 @@ class ScrollbarComponent extends Component {
      * @type {number}
      */
     get handleSize() {
-        return this.data.handleSize;
+        return this._handleSize;
     }
 
     /**
@@ -208,12 +202,6 @@ class ScrollbarComponent extends Component {
         if (this._handleEntity) {
             this._handleEntitySubscribe();
         }
-
-        if (this._handleEntity) {
-            this.data.handleEntity = this._handleEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.handleEntity = arg;
-        }
     }
 
     /**
@@ -223,26 +211,6 @@ class ScrollbarComponent extends Component {
      */
     get handleEntity() {
         return this._handleEntity;
-    }
-
-    /** @ignore */
-    _setValue(name, value) {
-        const data = this.data;
-        const oldValue = data[name];
-        data[name] = value;
-        this.fire('set', name, oldValue, value);
-    }
-
-    /**
-     * @param {string} onOrOff - 'on' or 'off'.
-     * @private
-     */
-    _toggleLifecycleListeners(onOrOff) {
-        this[onOrOff]('set_value', this._onSetValue, this);
-        this[onOrOff]('set_handleSize', this._onSetHandleSize, this);
-        this[onOrOff]('set_orientation', this._onSetOrientation, this);
-
-        // TODO Handle scrollwheel events
     }
 
     _handleEntitySubscribe() {
@@ -299,29 +267,8 @@ class ScrollbarComponent extends Component {
         }
     }
 
-    _onSetValue(name, oldValue, newValue) {
-        if (Math.abs(newValue - oldValue) > 1e-5) {
-            this.data.value = math.clamp(newValue, 0, 1);
-            this._updateHandlePositionAndSize();
-            this.fire('set:value', this.data.value);
-        }
-    }
-
-    _onSetHandleSize(name, oldValue, newValue) {
-        if (Math.abs(newValue - oldValue) > 1e-5) {
-            this.data.handleSize = math.clamp(newValue, 0, 1);
-            this._updateHandlePositionAndSize();
-        }
-    }
-
     _onSetHandleAlignment() {
         this._updateHandlePositionAndSize();
-    }
-
-    _onSetOrientation(name, oldValue, newValue) {
-        if (newValue !== oldValue && this._handleEntity?.element) {
-            this._handleEntity.element[this._getOppositeDimension()] = 0;
-        }
     }
 
     _updateHandlePositionAndSize() {
@@ -353,34 +300,34 @@ class ScrollbarComponent extends Component {
 
     _getTrackLength() {
         if (this.entity.element) {
-            return this.orientation === ORIENTATION_HORIZONTAL ? this.entity.element.calculatedWidth : this.entity.element.calculatedHeight;
+            return this._orientation === ORIENTATION_HORIZONTAL ? this.entity.element.calculatedWidth : this.entity.element.calculatedHeight;
         }
 
         return 0;
     }
 
     _getHandleLength() {
-        return this._getTrackLength() * this.handleSize;
+        return this._getTrackLength() * this._handleSize;
     }
 
     _getHandlePosition() {
-        return this._scrollValueToHandlePosition(this.value);
+        return this._scrollValueToHandlePosition(this._value);
     }
 
     _getSign() {
-        return this.orientation === ORIENTATION_HORIZONTAL ? 1 : -1;
+        return this._orientation === ORIENTATION_HORIZONTAL ? 1 : -1;
     }
 
     _getAxis() {
-        return this.orientation === ORIENTATION_HORIZONTAL ? 'x' : 'y';
+        return this._orientation === ORIENTATION_HORIZONTAL ? 'x' : 'y';
     }
 
     _getDimension() {
-        return this.orientation === ORIENTATION_HORIZONTAL ? 'width' : 'height';
+        return this._orientation === ORIENTATION_HORIZONTAL ? 'width' : 'height';
     }
 
     _getOppositeDimension() {
-        return this.orientation === ORIENTATION_HORIZONTAL ? 'height' : 'width';
+        return this._orientation === ORIENTATION_HORIZONTAL ? 'height' : 'width';
     }
 
     _destroyDragHelper() {
@@ -405,7 +352,6 @@ class ScrollbarComponent extends Component {
 
     onRemove() {
         this._destroyDragHelper();
-        this._toggleLifecycleListeners('off');
     }
 
     resolveDuplicatedEntityReferenceProperties(oldScrollbar, duplicatedIdsMap) {
