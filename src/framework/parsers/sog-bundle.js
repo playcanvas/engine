@@ -165,6 +165,8 @@ class SogBundleParser {
      * @param {Asset} asset - Container asset.
      */
     async load(url, callback, asset) {
+        const gsplatCentersEnabledAtLoad = this.app.scene?.gsplatCentersEnabled !== false;
+
         try {
             const arrayBuffer = await downloadArrayBuffer(url, asset);
 
@@ -271,12 +273,15 @@ class SogBundleParser {
             if (!decompress) {
                 // no need to prepare gpu data if decompressing
                 data.prepareCodebook();
-                await data.prepareGpuData();
+                if (gsplatCentersEnabledAtLoad) {
+                    await data.prepareGpuData();
+                }
             }
 
+            const prepareCenters = gsplatCentersEnabledAtLoad;
             const resource = decompress ?
-                new GSplatResource(this.app.graphicsDevice, await data.decompress()) :
-                new GSplatSogResource(this.app.graphicsDevice, data);
+                new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
+                new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
 
             callback(null, resource);
         } catch (err) {

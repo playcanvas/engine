@@ -28,8 +28,10 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  * // pixels is Float32Array, fill with [x, y, z, 0, x, y, z, 0, ...]
  * centerTex.unlock();
  *
- * // Set bounding box and centers (required for culling/sorting)
+ * // Set bounding box
  * container.aabb = new pc.BoundingBox();
+ *
+ * // fill centers only if you need CPU sorting or non-unified rendering
  * container.centers.set([x0, y0, z0, x1, y1, z1, ...]);  // xyz per splat
  *
  * // Add to scene
@@ -93,17 +95,15 @@ class GSplatContainer extends GSplatResourceBase {
     constructor(device, maxSplats, format) {
         Debug.assert(format);
 
-        // Pre-allocate data before super() since gsplatData callbacks need it
-        const centers = new Float32Array(maxSplats * 3);
         const aabb = new BoundingBox();
 
         // Create minimal gsplatData interface for base class
         const gsplatData = {
             numSplats: maxSplats,
-            getCenters: () => centers,
+            getCenters: () => null,
             calcAabb: box => box.copy(aabb)
         };
-        super(device, gsplatData);
+        super(device, gsplatData, { prepareCenters: false });
 
         this._format = format;
         this._maxSplats = maxSplats;
@@ -111,6 +111,24 @@ class GSplatContainer extends GSplatResourceBase {
 
         // Use streams to create textures from format
         this.streams.init(this._format, maxSplats);
+    }
+
+    /**
+     * CPU-side xyz per splat. Allocated lazily on first read; GPU-only unified rendering can omit
+     * touching this property to avoid the extra buffer.
+     *
+     * @type {Float32Array}
+     */
+    set centers(value) {
+        this._centers = value;
+    }
+
+    get centers() {
+        if (this._centers === null) {
+            this._centers = new Float32Array(this._maxSplats * 3);
+            this.centersVersion++;
+        }
+        return /** @type {Float32Array} */ (this._centers);
     }
 
     /**

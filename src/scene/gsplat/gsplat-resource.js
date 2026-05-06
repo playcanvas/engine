@@ -28,9 +28,10 @@ class GSplatResource extends GSplatResourceBase {
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatData} gsplatData - The splat data.
+     * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
      */
-    constructor(device, gsplatData) {
-        super(device, gsplatData);
+    constructor(device, gsplatData, options = {}) {
+        super(device, gsplatData, options);
 
         const numSplats = gsplatData.numSplats;
 

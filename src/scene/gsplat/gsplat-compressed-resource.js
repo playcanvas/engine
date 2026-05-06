@@ -23,9 +23,10 @@ class GSplatCompressedResource extends GSplatResourceBase {
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatCompressedData} gsplatData - The splat data.
+     * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
      */
-    constructor(device, gsplatData) {
-        super(device, gsplatData);
+    constructor(device, gsplatData, options = {}) {
+        super(device, gsplatData, options);
 
         const { chunkData, chunkSize, numChunks, numSplats, vertexData, shBands } = gsplatData;
 

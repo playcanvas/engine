@@ -37,8 +37,34 @@ class GSplatResourceBase {
      */
     gsplatData;
 
-    /** @type {Float32Array} */
-    centers;
+    /**
+     * CPU-side splat center positions (xyz per splat), or null when not built for this resource.
+     *
+     * @type {Float32Array|null}
+     */
+    set centers(value) {
+        this._centers = value;
+    }
+
+    get centers() {
+        return this._centers;
+    }
+
+    /**
+     * True when a centers buffer has been allocated ({@link GSplatResourceBase#centers} is non-null).
+     * Reads internal storage only so checks do not trigger lazy allocation in {@link GSplatContainer}.
+     *
+     * @type {boolean}
+     */
+    get hasCenters() {
+        return this._centers != null;
+    }
+
+    /**
+     * @type {Float32Array|null}
+     * @protected
+     */
+    _centers = null;
 
     /**
      * Version counter for centers array changes. Remains 0 for static resources.
@@ -105,12 +131,24 @@ class GSplatResourceBase {
     /** @private */
     _meshRefCount = 0;
 
-    constructor(device, gsplatData) {
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {object} gsplatData - Data source with getCenters(), calcAabb(), numSplats, etc.
+     * @param {object} [options] - Construction options.
+     * @param {boolean} [options.prepareCenters] - When omitted or true, calls gsplatData.getCenters()
+     * and stores the result. When false, {@link GSplatResourceBase#centers} stays null until set or
+     * materialized by a subclass (e.g. lazy allocation in GSplatContainer).
+     */
+    constructor(device, gsplatData, options = {}) {
         this.device = device;
         this.gsplatData = gsplatData;
         this.streams = new GSplatStreams(device);
 
-        this.centers = gsplatData.getCenters();
+        if (options.prepareCenters !== false) {
+            this._centers = gsplatData.getCenters();
+        } else {
+            this._centers = null;
+        }
 
         this.aabb = new BoundingBox();
         gsplatData.calcAabb(this.aabb);
