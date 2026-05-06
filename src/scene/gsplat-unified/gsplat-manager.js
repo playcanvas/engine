@@ -529,6 +529,7 @@ class GSplatManager {
                 /** @type {StorageBuffer} */ (proj.projCache),
                 /** @type {StorageBuffer} */ (ic.numSplatsBuffer),
                 this.scene.gsplat.alphaClip,
+                this.scene.gsplat.alphaCull,
                 camera.node
             );
         }

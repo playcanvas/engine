@@ -208,11 +208,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @param {StorageBuffer} projCache - Per-splat projection cache produced by the projector.
      * @param {StorageBuffer} numSplatsBuffer - GPU-written visible-splat count.
      * @param {number} alphaClip - Fragment alpha threshold for picking.
+     * @param {number} alphaCull - Forward alpha floor (must match {@link GSplatRenderer#frameUpdate}).
      * @param {GraphNode} cameraNode - The picker camera node, used to derive the
      * `clipToViewZ` reconstruction uniform.
      * @returns {MeshInstance} The pick mesh instance.
      */
-    prepareForPicking(drawSlot, sortedIndices, projCache, numSplatsBuffer, alphaClip, cameraNode) {
+    prepareForPicking(drawSlot, sortedIndices, projCache, numSplatsBuffer, alphaClip, alphaCull, cameraNode) {
         if (!this._pickMaterial) {
             this._pickMaterial = new ShaderMaterial({
                 uniqueName: 'UnifiedSplatHybridPickMaterial',
@@ -253,6 +254,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         pickMaterial.setParameter('projCache', projCache);
         pickMaterial.setParameter('numSplatsStorage', numSplatsBuffer);
         pickMaterial.setParameter('alphaClip', alphaClip);
+        pickMaterial.setParameter('alphaCull', alphaCull);
         this._clipToViewZPick ??= new Float32Array(4);
         this._computeClipToViewZ(cameraNode, this._clipToViewZPick);
         pickMaterial.setParameter('clipToViewZ', this._clipToViewZPick);
