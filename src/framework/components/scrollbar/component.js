@@ -182,8 +182,8 @@ class ScrollbarComponent extends Component {
     }
 
     /**
-     * Sets the entity to be used as the scrollbar handle. This entity must have a
-     * {@link ScrollbarComponent}.
+     * Sets the entity to be used as the scrollbar handle. This entity must have an
+     * {@link ElementComponent} (with `useInput: true` for the handle to be draggable).
      *
      * @type {Entity|string|null}
      */
