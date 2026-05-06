@@ -38,7 +38,11 @@ class StorageBuffer {
         const usage = addStorageUsage ? (BUFFERUSAGE_STORAGE | bufferUsage) : bufferUsage;
         this.impl = graphicsDevice.createBufferImpl(usage);
         this.impl.allocate(graphicsDevice, byteSize);
-        this.device.buffers.add(this);
+
+        // Note: not registered in device.buffers — storage buffer contents are not
+        // recoverable on device-lost (no CPU-side shadow, may be GPU-written), so
+        // they don't participate in the engine's auto lose/restore iteration.
+        // Consumers handling device-lost must destroy() and recreate storage buffers.
 
         this.adjustVramSizeTracking(graphicsDevice._vram, this.byteSize);
     }
@@ -47,22 +51,8 @@ class StorageBuffer {
      * Frees resources associated with this storage buffer.
      */
     destroy() {
-
-        // stop tracking the buffer
-        const device = this.device;
-        device.buffers.delete(this);
-
-        this.adjustVramSizeTracking(device._vram, -this.byteSize);
-        this.impl.destroy(device);
-    }
-
-    /**
-     * Called when the device context was lost. Releases the underlying GPU buffer.
-     *
-     * @ignore
-     */
-    loseContext() {
-        this.impl.loseContext();
+        this.adjustVramSizeTracking(this.device._vram, -this.byteSize);
+        this.impl.destroy(this.device);
     }
 
     adjustVramSizeTracking(vram, size) {
