@@ -56,6 +56,15 @@ class StorageBuffer {
         this.impl.destroy(device);
     }
 
+    /**
+     * Called when the device context was lost. Releases the underlying GPU buffer.
+     *
+     * @ignore
+     */
+    loseContext() {
+        this.impl.loseContext();
+    }
+
     adjustVramSizeTracking(vram, size) {
         Debug.trace(TRACEID_VRAM_SB, `${this.id} size: ${size} vram.sb: ${vram.sb} => ${vram.sb + size}`);
         vram.sb += size;
