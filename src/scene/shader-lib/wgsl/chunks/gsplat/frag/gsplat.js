@@ -16,7 +16,7 @@ export default /* wgsl */`
 #endif
 
 #if !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
-    uniform alphaCull: f32;
+    uniform alphaClipForward: f32;
 #endif
 
 const EXP4: half = exp(half(-4.0));
@@ -80,7 +80,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #else
 
-        if (alpha < half(uniform.alphaCull)) {
+        if (alpha < half(uniform.alphaClipForward)) {
             discard;
             return output;
         }

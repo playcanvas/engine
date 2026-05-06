@@ -69,7 +69,7 @@ class GSplatParams {
         this._format = this._createFormat(GSPLATDATA_COMPACT);
 
         this._material.setParameter('alphaClip', 0.3);
-        this._material.setParameter('alphaCull', 1.0 / 255.0);
+        this._material.setParameter('alphaClipForward', 1.0 / 255.0);
         this._material.setParameter('minPixelSize', 2.0);
         this._material.setParameter('minContribution', 3.0);
     }
@@ -575,8 +575,8 @@ class GSplatParams {
     }
 
     /**
-     * Sets the alpha threshold below which splats are discarded during shadow, pick, and prepass
-     * rendering. Higher values create more aggressive clipping, while lower values preserve more
+     * Sets the alpha threshold for shadow, pick, and prepass rendering (not the main forward
+     * splat pass). Higher values create more aggressive clipping, while lower values preserve more
      * translucent splats. Defaults to 0.3.
      *
      * @type {number}
@@ -587,7 +587,7 @@ class GSplatParams {
     }
 
     /**
-     * Gets the alpha clip threshold.
+     * Gets the alpha threshold for shadow, pick, and prepass rendering.
      *
      * @type {number}
      */
@@ -596,24 +596,25 @@ class GSplatParams {
     }
 
     /**
-     * Sets the alpha threshold below which splats are discarded before forward rendering.
-     * Higher values improve performance by culling more low-opacity splats, while lower
-     * values preserve more translucent splats. Defaults to 1 / 255.
+     * Sets the alpha threshold below which splats are culled or clipped in the **forward** splat
+     * rendering pass. Does not apply to shadow, pick, or prepass — use {@link GSplatParams#alphaClip}
+     * for those. Higher values improve performance by culling more low-opacity splats; lower values
+     * preserve more translucent splats. Defaults to 1 / 255.
      *
      * @type {number}
      */
-    set alphaCull(value) {
-        this._material.setParameter('alphaCull', value);
+    set alphaClipForward(value) {
+        this._material.setParameter('alphaClipForward', value);
         this._material.update();
     }
 
     /**
-     * Gets the forward alpha cull threshold.
+     * Gets the forward-pass alpha threshold.
      *
      * @type {number}
      */
-    get alphaCull() {
-        return this._material.getParameter('alphaCull')?.data ?? (1.0 / 255.0);
+    get alphaClipForward() {
+        return this._material.getParameter('alphaClipForward')?.data ?? (1.0 / 255.0);
     }
 
     /**

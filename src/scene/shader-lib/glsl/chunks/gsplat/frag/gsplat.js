@@ -16,7 +16,7 @@ export default /* glsl */`
 #endif
 
 #if !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
-    uniform float alphaCull;
+    uniform float alphaClipForward;
 #endif
 
 varying mediump vec2 gaussianUV;
@@ -73,7 +73,7 @@ void main(void) {
         gl_FragColor = float2vec4(vLinearDepth);
 
     #else
-        if (alpha < alphaCull) {
+        if (alpha < alphaClipForward) {
             discard;
         }
 

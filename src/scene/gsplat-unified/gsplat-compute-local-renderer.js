@@ -165,7 +165,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
     _alphaClip = 0.3;
 
     /** @type {number} */
-    _alphaCull = ALPHA_VISIBILITY_THRESHOLD;
+    _alphaClipForward = ALPHA_VISIBILITY_THRESHOLD;
 
     /** @type {number} */
     _exposure = 1.0;
@@ -435,7 +435,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._minPixelSize = gsplat.minPixelSize;
         this._minContribution = gsplat.minContribution;
         this._alphaClip = gsplat.alphaClip;
-        this._alphaCull = gsplat.alphaCull;
+        this._alphaClipForward = gsplat.alphaClipForward;
         this._exposure = exposure ?? 1.0;
         this._fisheye = gsplat.fisheye;
         this._fogParams = fogParams ?? null;
@@ -653,7 +653,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         _viewData.set(view.data);
         const focal = width * _shaderProjMat.data[0];
 
-        const alphaClip = pickMode ? this._alphaClip : Math.max(ALPHA_VISIBILITY_THRESHOLD, this._alphaCull);
+        const alphaClip = pickMode ? this._alphaClip : Math.max(ALPHA_VISIBILITY_THRESHOLD, this._alphaClipForward);
 
         // Ensure fisheyeProj is up-to-date (culling may not have run this frame)
         this.fisheyeProj.update(this._fisheye, camera.fov, cam.projectionMatrix);

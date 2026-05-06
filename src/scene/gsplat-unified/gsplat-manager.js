@@ -529,7 +529,7 @@ class GSplatManager {
                 /** @type {StorageBuffer} */ (proj.projCache),
                 /** @type {StorageBuffer} */ (ic.numSplatsBuffer),
                 this.scene.gsplat.alphaClip,
-                this.scene.gsplat.alphaCull,
+                this.scene.gsplat.alphaClipForward,
                 camera.node
             );
         }
@@ -1605,7 +1605,7 @@ class GSplatManager {
             this.cameraNode,
             viewportWidth,
             viewportHeight,
-            Math.max(ALPHA_VISIBILITY_THRESHOLD, this.scene.gsplat.alphaCull),
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, this.scene.gsplat.alphaClipForward),
             false
         );
 

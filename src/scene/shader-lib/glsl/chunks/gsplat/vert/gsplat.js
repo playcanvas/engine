@@ -80,8 +80,13 @@ void main(void) {
 
     modifySplatColor(modelCenter, clr);
 
-    // discard splats with alpha too low to contribute any visible pixel
-    if (clr.w <= alphaCull) {
+    // discard splats with alpha too low to contribute any visible pixel (threshold matches frag pass)
+    #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+        float alphaClipValue = alphaClip;
+    #else
+        float alphaClipValue = alphaClipForward;
+    #endif
+    if (clr.w <= alphaClipValue) {
         gl_Position = discardVec;
         return;
     }

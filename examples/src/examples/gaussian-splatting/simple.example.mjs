@@ -60,7 +60,17 @@ assetListLoader.load(() => {
             setTimeout(() => data.set('renderer', current), 0);
         }
     });
+    data.on('alphaClip:set', () => {
+        app.scene.gsplat.alphaClip = data.get('alphaClip');
+    });
+    data.on('alphaClipForward:set', () => {
+        app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
+    });
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+    data.set('alphaClip', 0.4);
+    data.set('alphaClipForward', 1 / 255);
+    app.scene.gsplat.alphaClip = data.get('alphaClip');
+    app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
 
     // create a splat entity and place it in the world
     const biker = new pc.Entity();
@@ -80,9 +90,6 @@ assetListLoader.load(() => {
     const ORBIT_DISTANCE = 4;
     const ORBIT_INITIAL_YAW = 32;
     const ORBIT_INITIAL_PITCH = -10;
-
-    // alpha clip for unified splats (shadows); scene-level for unified path
-    app.scene.gsplat.alphaClip = 0.4;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();

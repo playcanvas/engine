@@ -23,7 +23,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
         ),
         jsx(
             LabelGroup,
-            { text: 'Alpha Clip' },
+            { text: 'Shadow Clip' },
             jsx(SliderInput, {
                 binding: new BindingTwoWay(),
                 link: { observer, path: 'alphaClip' },

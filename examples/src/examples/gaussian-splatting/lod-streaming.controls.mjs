@@ -198,10 +198,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Alpha Cull' },
+                { text: 'Alpha Clip' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'alphaCull' },
+                    link: { observer, path: 'alphaClipForward' },
                     min: 0,
                     max: 1,
                     precision: 3
