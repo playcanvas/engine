@@ -255,6 +255,9 @@ class ScrollbarComponent extends Component {
         this._handleEntityElementSubscribe();
         this._destroyDragHelper();
         this._handleDragHelper = new ElementDragHelper(this._handleEntity.element, this._getAxis());
+        // ElementDragHelper defaults to enabled; mirror the component's current state so a helper
+        // built while the scrollbar is disabled does not start out draggable
+        this._handleDragHelper.enabled = this.enabled && this.entity.enabled;
         this._handleDragHelper.on('drag:move', this._onHandleDrag, this);
 
         this._updateHandlePositionAndSize();

@@ -210,6 +210,23 @@ describe('ScrollbarComponent', function () {
             expect(e.scrollbar.handleEntity).to.equal(null);
         });
 
+        it('does not leave a newly-built drag helper enabled when the scrollbar is disabled', function () {
+            const handle = new Entity();
+            // intentionally no element yet — adding it later triggers _onHandleElementGain and
+            // builds a fresh ElementDragHelper, which defaults to enabled = true
+
+            const e = new Entity();
+            e.addComponent('element', { type: ELEMENTTYPE_IMAGE });
+            e.addComponent('scrollbar', { enabled: false, handleEntity: handle });
+            app.root.addChild(e);
+
+            handle.addComponent('element', { type: ELEMENTTYPE_IMAGE });
+
+            // helper must mirror the component's disabled state, not its own default
+            expect(e.scrollbar._handleDragHelper).to.exist;
+            expect(e.scrollbar._handleDragHelper.enabled).to.equal(false);
+        });
+
         it('unsubscribes from the previous handle entity when reassigned', function () {
             const handle1 = new Entity();
             handle1.addComponent('element', { type: ELEMENTTYPE_IMAGE });
