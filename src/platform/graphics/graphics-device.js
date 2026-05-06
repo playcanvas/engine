@@ -784,9 +784,9 @@ class GraphicsDevice extends EventHandler {
         this.initializeRenderState();
         this.initializeContextCaches();
 
-        // Recreate buffer objects and reupload buffer data to the GPU
+        // Recreate buffer GPU objects; vertex/index reupload from CPU storage, storage buffers empty
         for (const buffer of this.buffers) {
-            buffer.unlock();
+            buffer.restoreContext();
         }
 
         this.gpuProfiler?.restoreContext?.();

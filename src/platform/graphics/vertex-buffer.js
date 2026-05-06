@@ -92,6 +92,16 @@ class VertexBuffer {
     }
 
     /**
+     * Called when the rendering context is restored. Recreates the GPU buffer and uploads from
+     * {@link VertexBuffer#lock|lock} storage.
+     *
+     * @ignore
+     */
+    restoreContext() {
+        this.unlock();
+    }
+
+    /**
      * Returns the data format of the specified vertex buffer.
      *
      * @returns {VertexFormat} The data format of the specified vertex buffer.
