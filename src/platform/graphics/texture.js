@@ -1039,7 +1039,7 @@ class Texture {
         this._lockedLevel = options.level;
 
         const levels = this.cubemap ? this._levels[options.face] : this._levels;
-        if (levels[options.level] === null) {
+        if (!levels[options.level]) {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
