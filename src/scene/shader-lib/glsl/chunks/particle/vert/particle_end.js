@@ -3,7 +3,11 @@ export default /* glsl */`
     localPos += particlePos;
 
     #ifdef SCREEN_SPACE
-    gl_Position = vec4(localPos.x, localPos.y, 0.0, 1.0);
+        #ifdef REVERSE_Z
+            gl_Position = vec4(localPos.x, localPos.y, 1.0, 1.0);
+        #else
+            gl_Position = vec4(localPos.x, localPos.y, 0.0, 1.0);
+        #endif
     #else
     gl_Position = matrix_viewProjection * vec4(localPos.xyz, 1.0);
     #endif

@@ -191,6 +191,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
+        // Pass `reverseZ: true` in the create options to enable reverse-z depth (improves
+        // precision over large view distances). WebGPU only.
+        this.isReverseZ = options.reverseZ ?? false;
         this._deviceType = DEVICETYPE_WEBGPU;
         this.featureLevel = options.featureLevel;
 
@@ -945,7 +948,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         // set up clear / store / load settings
-        wrt.setupForRenderPass(renderPass, rt);
+        wrt.setupForRenderPass(renderPass, rt, this.isReverseZ);
 
         const renderPassDesc = wrt.renderPassDescriptor;
 

@@ -23,8 +23,14 @@ fn encodePickOutput(id: u32) -> vec4f {
     fn getPickDepth() -> vec4f {
         var linearDepth: f32;
         if (uniform.camera_params.w > 0.5) {
-            linearDepth = pcPosition.z;
+            // orthographic: pcPosition.z IS the hardware NDC z, flip for reverse-z
+            #ifdef REVERSE_Z
+                linearDepth = 1.0 - pcPosition.z;
+            #else
+                linearDepth = pcPosition.z;
+            #endif
         } else {
+            // perspective: 1/w is view distance, independent of z convention
             let viewDist = 1.0 / pcPosition.w;
             linearDepth = (viewDist - uniform.camera_params.z) / (uniform.camera_params.y - uniform.camera_params.z);
         }

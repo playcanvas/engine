@@ -107,6 +107,12 @@ class Immediate {
                     varying vec2 uv0;
                     void main(void) {
                         gl_Position = matrix_model * vec4(vertex_position, 0, 1);
+                        // immediate-mode quad bypasses projection — place at near plane so it
+                        // wins depth test against skybox/world (z=0 is near in forward-z, far
+                        // in reverse-z, so flip)
+                        #ifdef REVERSE_Z
+                            gl_Position.z = gl_Position.w;
+                        #endif
                         uv0 = vertex_position.xy + 0.5;
                     }
                 `,
@@ -118,6 +124,9 @@ class Immediate {
                     @vertex fn vertexMain(input: VertexInput) -> VertexOutput {
                         var output: VertexOutput;
                         output.position = uniform.matrix_model * vec4f(input.vertex_position, 0.0, 1.0);
+                        #ifdef REVERSE_Z
+                            output.position.z = output.position.w;
+                        #endif
                         output.uv0 = input.vertex_position.xy + vec2f(0.5);
                         return output;
                     }

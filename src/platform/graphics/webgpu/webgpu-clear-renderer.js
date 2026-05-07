@@ -122,7 +122,9 @@ class WebgpuClearRenderer {
             let depthState;
             if ((flags & CLEARFLAG_DEPTH) && renderTarget.depth) {
                 const depth = options.depth ?? defaultOptions.depth;
-                uniformBuffer.set('depth', depth);
+                // user-facing depth follows standard convention (1=far). Translate to hardware
+                // convention for reverse-z (0=far) so the clear writes the correct value.
+                uniformBuffer.set('depth', device.isReverseZ ? (1 - depth) : depth);
                 depthState = DepthState.WRITEDEPTH;
             } else {
                 uniformBuffer.set('depth', 1);

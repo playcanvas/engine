@@ -26,7 +26,12 @@ fn normalOffsetPointShadow(shadowParams: vec4f, lightPos: vec3f, lightDir: vec3f
         let shadowTextureResolution: f32 = shadowParams.x;
         let uv: vec2f = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, lightDir);
 
-        let shadowZ: f32 = length(lightDir) * shadowParams.w + shadowParams.z;
+        let zForward: f32 = length(lightDir) * shadowParams.w + shadowParams.z;
+        #ifdef REVERSE_Z
+            let shadowZ: f32 = 1.0 - zForward;
+        #else
+            let shadowZ: f32 = zForward;
+        #endif
         return textureSampleCompareLevel(shadowMap, shadowMapSampler, uv, shadowZ);
     }
 
@@ -39,7 +44,12 @@ fn normalOffsetPointShadow(shadowParams: vec4f, lightPos: vec3f, lightDir: vec3f
         let shadowTextureResolution: f32 = shadowParams.x;
         let uv: vec2f = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, lightDir);
 
-        let shadowZ: f32 = length(lightDir) * shadowParams.w + shadowParams.z;
+        let zForward: f32 = length(lightDir) * shadowParams.w + shadowParams.z;
+        #ifdef REVERSE_Z
+            let shadowZ: f32 = 1.0 - zForward;
+        #else
+            let shadowZ: f32 = zForward;
+        #endif
         let shadowCoord: vec3f = vec3f(uv, shadowZ);
         return getShadowPCF3x3(shadowMap, shadowMapSampler, shadowCoord, shadowParams);
     }
@@ -53,7 +63,12 @@ fn normalOffsetPointShadow(shadowParams: vec4f, lightPos: vec3f, lightDir: vec3f
         let shadowTextureResolution: f32 = shadowParams.x;
         let uv: vec2f = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, lightDir);
 
-        let shadowZ: f32 = length(lightDir) * shadowParams.w + shadowParams.z;
+        let zForward: f32 = length(lightDir) * shadowParams.w + shadowParams.z;
+        #ifdef REVERSE_Z
+            let shadowZ: f32 = 1.0 - zForward;
+        #else
+            let shadowZ: f32 = zForward;
+        #endif
         let shadowCoord: vec3f = vec3f(uv, shadowZ);
         return getShadowPCF5x5(shadowMap, shadowMapSampler, shadowCoord, shadowParams);
     }

@@ -20,6 +20,9 @@ uniform highp sampler2D uSceneDepthMap;
     #endif
 
     float linearizeDepth(float z) {
+        #ifdef REVERSE_Z
+            z = 1.0 - z;
+        #endif
         if (camera_params.w == 0.0)
             return (camera_params.z * camera_params.y) / (camera_params.y + z * (camera_params.z - camera_params.y));
         else
@@ -28,11 +31,16 @@ uniform highp sampler2D uSceneDepthMap;
 #endif
 
 float delinearizeDepth(float linearDepth) {
+    float z;
     if (camera_params.w == 0.0) {
-        return (camera_params.y * (camera_params.z - linearDepth)) / (linearDepth * (camera_params.z - camera_params.y));
+        z = (camera_params.y * (camera_params.z - linearDepth)) / (linearDepth * (camera_params.z - camera_params.y));
     } else {
-        return (linearDepth - camera_params.z) / (camera_params.y - camera_params.z);
+        z = (linearDepth - camera_params.z) / (camera_params.y - camera_params.z);
     }
+    #ifdef REVERSE_Z
+        z = 1.0 - z;
+    #endif
+    return z;
 }
 
 // Retrieves rendered linear camera depth by UV

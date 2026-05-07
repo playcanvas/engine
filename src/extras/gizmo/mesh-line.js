@@ -43,7 +43,7 @@ class MeshLine {
 
         this._material.blendState = BlendState.ALPHABLEND;
         this._material.setDefine('DEPTH_WRITE', '1');
-        this._material.setParameter('uDepth', 0);
+        this._material.setParameter('uDepth', app.graphicsDevice.isReverseZ ? 1 : 0);
         this._material.update();
 
         const mesh = Mesh.fromGeometry(app.graphicsDevice, new CylinderGeometry());

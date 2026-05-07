@@ -121,6 +121,17 @@ class GraphicsDevice extends EventHandler {
     isNull = false;
 
     /**
+     * True if reverse-z (reversed depth buffer) is enabled. When enabled, projection matrices map
+     * the near plane to z=1 and the far plane to z=0, the depth buffer is cleared to 0, and the
+     * default depth comparison uses GREATER/GREATEREQUAL. This significantly improves depth
+     * precision over large view distances. Opt-in via the `reverseZ` create option (WebGPU only).
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isReverseZ = false;
+
+    /**
      * True if the back-buffer is using HDR format, which means that the browser will display the
      * rendered images in high dynamic range mode. This is true if the options.displayFormat is set
      * to {@link DISPLAYFORMAT_HDR} when creating the graphics device using

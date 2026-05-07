@@ -28,6 +28,9 @@ float getShadowOmniClusteredPCF1(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams,
     vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, lightDir);
 
     float shadowZ = length(lightDir) * shadowParams.w + shadowParams.z;
+    #ifdef REVERSE_Z
+        shadowZ = 1.0 - shadowZ;
+    #endif
     return textureShadow(shadowMap, vec3(uv, shadowZ));
 }
 
@@ -41,6 +44,9 @@ float getShadowOmniClusteredPCF3(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams,
     vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, lightDir);
 
     float shadowZ = length(lightDir) * shadowParams.w + shadowParams.z;
+    #ifdef REVERSE_Z
+        shadowZ = 1.0 - shadowZ;
+    #endif
     vec3 shadowCoord = vec3(uv, shadowZ);
     return getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
 }
@@ -55,6 +61,9 @@ float getShadowOmniClusteredPCF5(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams,
     vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, lightDir);
 
     float shadowZ = length(lightDir) * shadowParams.w + shadowParams.z;
+    #ifdef REVERSE_Z
+        shadowZ = 1.0 - shadowZ;
+    #endif
     vec3 shadowCoord = vec3(uv, shadowZ);
     return getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
 }

@@ -19,7 +19,11 @@ var<private> dBlendModeFogFactor : f32 = 1.0;
     fn getFogFactor(depth: f32) -> f32 {
 #else
     fn getFogFactor() -> f32 {
-        let depth = pcPosition.z / pcPosition.w;
+        #ifdef REVERSE_Z
+            let depth = (1.0 - pcPosition.z) / pcPosition.w;
+        #else
+            let depth = pcPosition.z / pcPosition.w;
+        #endif
 #endif
 
     #if (FOG == LINEAR)

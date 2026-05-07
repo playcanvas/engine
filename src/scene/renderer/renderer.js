@@ -325,8 +325,9 @@ class Renderer {
             let projMatSkybox = camera.getProjectionMatrixSkybox();
 
             const webgpu = this.device.isWebGPU;
-            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu);
-            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu);
+            const reverseZ = this.device.isReverseZ;
+            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu, reverseZ);
+            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu, reverseZ);
 
             // camera jitter
             const { jitter } = camera;

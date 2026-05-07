@@ -66,6 +66,19 @@ const _compareFunction = [
     'always'                // FUNC_ALWAYS
 ];
 
+// reverse-z translation: maps user-facing "closer passes" intent (LESS/LESSEQUAL) to hardware-z
+// (GREATER/GREATEREQUAL) when reverse-z is enabled. Symmetric for explicit GREATER/GREATEREQUAL.
+const _compareFunctionReverseZ = [
+    'never',                // FUNC_NEVER
+    'greater',              // FUNC_LESS
+    'equal',                // FUNC_EQUAL
+    'greater-equal',        // FUNC_LESSEQUAL
+    'less',                 // FUNC_GREATER
+    'not-equal',            // FUNC_NOTEQUAL
+    'less-equal',           // FUNC_GREATEREQUAL
+    'always'                // FUNC_ALWAYS
+];
+
 const _cullModes = [
     'none',                 // CULLFACE_NONE
     'back',                 // CULLFACE_BACK
@@ -282,11 +295,15 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             // depth
             if (depth) {
                 depthStencil.depthWriteEnabled = depthState.write;
-                depthStencil.depthCompare = _compareFunction[depthState.func];
+                const compareTable = this.device.isReverseZ ? _compareFunctionReverseZ : _compareFunction;
+                depthStencil.depthCompare = compareTable[depthState.func];
 
                 const biasAllowed = primitiveTopology === 'triangle-list' || primitiveTopology === 'triangle-strip';
-                depthStencil.depthBias = biasAllowed ? depthState.depthBias : 0;
-                depthStencil.depthBiasSlopeScale = biasAllowed ? depthState.depthBiasSlope : 0;
+                // depth bias sign flips with reverse-z: a positive bias should still push fragments
+                // away from camera (towards far plane), which is towards 0 in reverse-z.
+                const biasSign = this.device.isReverseZ ? -1 : 1;
+                depthStencil.depthBias = biasAllowed ? biasSign * depthState.depthBias : 0;
+                depthStencil.depthBiasSlopeScale = biasAllowed ? biasSign * depthState.depthBiasSlope : 0;
             } else {
                 // if render target does not have depth buffer
                 depthStencil.depthWriteEnabled = false;
