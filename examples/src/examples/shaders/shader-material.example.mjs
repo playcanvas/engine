@@ -1,5 +1,3 @@
-// @config WEBGL_DISABLED
-// @config HIDDEN
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -11,19 +9,12 @@ const assets = {
     diffuse: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` })
 };
 
-// Even though we're using WGSL, we still need to provide glslang
-// and twgsl to compile shaders used internally by the engine.
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
-
-if (!device.isWebGPU) {
-    throw new Error('WebGPU is required for this example.');
-}
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -50,16 +41,19 @@ assetListLoader.load(() => {
     });
 
     const material = new pc.ShaderMaterial({
-        uniqueName: 'MyWGSLShader',
-        vertexWGSL: files['shader.vert.wgsl'],
-        fragmentWGSL: files['shader.frag.wgsl'],
+        uniqueName: 'ShaderMaterialExample',
+        vertexGLSL: files['shader.glsl.vert'],
+        fragmentGLSL: files['shader.glsl.frag'],
+        vertexWGSL: files['shader.wgsl.vert'],
+        fragmentWGSL: files['shader.wgsl.frag'],
         attributes: {
-            position: pc.SEMANTIC_POSITION,
-            texCoords: pc.SEMANTIC_TEXCOORD0
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
         }
     });
 
     material.setParameter('diffuseTexture', assets.diffuse.resource);
+    material.update();
 
     // create box entity
     const box = new pc.Entity('cube');
