@@ -21,11 +21,11 @@ class GSplatOctreeResource {
      * fields the octree itself does not consume (for example application-specific
      * metadata accompanying a `lod-meta.json`). The `tree` field is nulled out by the
      * constructor since {@link GSplatOctree} consumes it — access node hierarchy via
-     * {@link GSplatOctreeResource#octree} instead. Cleared to `null` by {@link destroy}.
+     * {@link GSplatOctreeResource#octree} instead.
      *
-     * @type {object|null}
+     * @type {object}
      */
-    data = null;
+    data;
 
     /**
      * @param {string} assetFileUrl - The file URL of the container asset.
@@ -48,7 +48,6 @@ class GSplatOctreeResource {
     destroy() {
         this.octree?.destroy();
         this.octree = null;
-        this.data = null;
     }
 }
 
