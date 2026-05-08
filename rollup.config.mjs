@@ -9,30 +9,30 @@ const BOLD_OUT = '\x1b[1m';
 const REGULAR_OUT = '\x1b[22m';
 const RESET_OUT = '\x1b[0m';
 
-const BUILD_TYPES = /** @type {const} */ (['release', 'debug', 'profiler', 'min']);
+const BUILD_TYPES = /** @type {const} */ (['std', 'dbg', 'prf', 'min']);
 const MODULE_FORMAT = /** @type {const} */ (['umd', 'esm']);
 const BUNDLE_STATES = /** @type {const} */ (['unbundled', 'bundled']);
 
-const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+const envBuild = process.env.build ? process.env.build.toLowerCase() : null;
 const bundleSource = process.env.bundleSource ? process.env.bundleSource.toLowerCase() : null;
 
 const title = [
     'Building PlayCanvas Engine',
     `version ${BOLD_OUT}v${version}${REGULAR_OUT}`,
     `revision ${BOLD_OUT}${revision}${REGULAR_OUT}`,
-    `target ${BOLD_OUT}${envTarget ?? 'all'}${REGULAR_OUT}`
+    `build ${BOLD_OUT}${envBuild ?? 'all'}${REGULAR_OUT}`
 ].join('\n');
 console.log(`${BLUE_OUT}${title}${RESET_OUT}`);
 
 function includeBuild(buildType, moduleFormat, bundleState) {
-    return envTarget === null ||
-        envTarget === buildType ||
-        envTarget === moduleFormat ||
-        envTarget === bundleState ||
-        envTarget === `${moduleFormat}:${buildType}` ||
-        envTarget === `${moduleFormat}:${bundleState}` ||
-        envTarget === `${buildType}:${bundleState}` ||
-        envTarget === `${moduleFormat}:${buildType}:${bundleState}`;
+    return envBuild === null ||
+        envBuild === buildType ||
+        envBuild === moduleFormat ||
+        envBuild === bundleState ||
+        envBuild === `${moduleFormat}:${buildType}` ||
+        envBuild === `${moduleFormat}:${bundleState}` ||
+        envBuild === `${buildType}:${bundleState}` ||
+        envBuild === `${moduleFormat}:${buildType}:${bundleState}`;
 }
 
 /**
@@ -63,7 +63,7 @@ BUILD_TYPES.forEach((buildType) => {
     });
 });
 
-if (envTarget === null || envTarget === 'types') {
+if (envBuild === null || envBuild === 'types') {
     targets.push(buildTypesOption());
 }
 
