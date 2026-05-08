@@ -14,7 +14,29 @@ import { NUM_BUCKETS } from './constants.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { GSplatOctree } from './gsplat-octree.js'
+ * @import { GSplatOctreeNode } from './gsplat-octree-node.js'
  * @import { EventHandle } from '../../core/event-handle.js'
+ */
+
+/**
+ * Optional per-node LOD override callback invoked by
+ * {@link GSplatOctreeInstance#evaluateNodeLods} after the engine computes and clamps the
+ * optimal LOD index for a node. Returning a number replaces the engine-computed value;
+ * the override bypasses the `rangeMin`/`rangeMax` clamp, so consumers may route nodes to
+ * a level outside the configured range (e.g. an injected empty level for visibility
+ * culling). Returning `undefined` leaves the engine's value unchanged.
+ *
+ * @callback NodeLodFilter
+ * @param {number} nodeIndex - Index of the node within {@link GSplatOctree#nodes}.
+ * @param {GSplatOctreeNode} node - The octree node.
+ * @param {number} optimalLodIndex - Engine-computed LOD index, already clamped to the
+ *     instance's `rangeMin`..`rangeMax`.
+ * @param {Vec3} localCameraPosition - Camera position transformed to octree-local space.
+ * @param {Vec3} localCameraForward - Camera forward (normalized) in octree-local space.
+ * @param {number} actualDistance - Closest-point distance from the camera to this node's
+ *     AABB, in octree-local units (before FOV compensation).
+ * @returns {number|undefined} LOD index to use instead, or `undefined` to keep the
+ *     engine-computed value.
  */
 
 const _invWorldMat = new Mat4();
@@ -237,6 +259,17 @@ class GSplatOctreeInstance {
      * @private
      */
     _lodMinDistThresholds = null;
+
+    /**
+     * Optional per-node LOD override callback. When set, called once per node from
+     * {@link GSplatOctreeInstance#evaluateNodeLods} after the engine computes and clamps
+     * the optimal LOD index. See the {@link NodeLodFilter} typedef for callback semantics.
+     *
+     * Default `null`. When `null`, evaluation cost is a single null-check per node.
+     *
+     * @type {NodeLodFilter|null}
+     */
+    nodeLodFilter = null;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -624,6 +657,17 @@ class GSplatOctreeInstance {
             // Clamp to configured range
             if (optimalLodIndex < rangeMin) optimalLodIndex = rangeMin;
             if (optimalLodIndex > rangeMax) optimalLodIndex = rangeMax;
+
+            // Optional per-node LOD override hook. The override bypasses the range clamp
+            // above, so consumers may route nodes to a level outside rangeMin..rangeMax
+            // (e.g. an injected empty level for visibility culling).
+            if (this.nodeLodFilter) {
+                const override = this.nodeLodFilter(
+                    nodeIndex, nodes[nodeIndex], optimalLodIndex,
+                    localCameraPosition, localCameraForward, actualDistance
+                );
+                if (typeof override === 'number') optimalLodIndex = override;
+            }
 
             nodeInfo.optimalLod = optimalLodIndex;
             nodeInfo.worldDistance = fovAdjustedDistance * uniformScale;
