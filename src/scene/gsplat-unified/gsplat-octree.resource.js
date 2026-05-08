@@ -19,7 +19,9 @@ class GSplatOctreeResource {
     /**
      * Raw parsed manifest data, retained for consumers that read custom or extension
      * fields the octree itself does not consume (for example application-specific
-     * metadata accompanying a `lod-meta.json`). Cleared to `null` by {@link destroy}.
+     * metadata accompanying a `lod-meta.json`). The `tree` field is nulled out by the
+     * constructor since {@link GSplatOctree} consumes it — access node hierarchy via
+     * {@link GSplatOctreeResource#octree} instead. Cleared to `null` by {@link destroy}.
      *
      * @type {object|null}
      */
@@ -35,6 +37,9 @@ class GSplatOctreeResource {
         this.octree.assetLoader = assetLoader;
         this.aabb.setMinMax(new Vec3(data.tree.bound.min), new Vec3(data.tree.bound.max));
         this.data = data;
+        // Tree hierarchy is fully consumed by GSplatOctree above; null it out so this
+        // retained reference doesn't keep the (typically large) tree data alive.
+        this.data.tree = null;
     }
 
     /**
