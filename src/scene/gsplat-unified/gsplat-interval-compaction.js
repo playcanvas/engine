@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
@@ -119,6 +119,8 @@ class GSplatIntervalCompaction {
 
         this.numSplatsBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
         this.sortElementCountBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
+        DebugHelper.setName(this.numSplatsBuffer, 'GsplatIntervalCompaction.numSplats');
+        DebugHelper.setName(this.sortElementCountBuffer, 'GsplatIntervalCompaction.sortElementCount');
         this.prefixSumKernel = new PrefixSumKernel(device);
 
         this._createUniformBufferFormats();
@@ -329,6 +331,7 @@ class GSplatIntervalCompaction {
             this.compactedSplatIds?.destroy();
             this.allocatedCompactedCount = totalActiveSplats;
             this.compactedSplatIds = new StorageBuffer(this.device, totalActiveSplats * 4, BUFFERUSAGE_COPY_SRC);
+            DebugHelper.setName(this.compactedSplatIds, 'GsplatIntervalCompaction.compactedSplatIds');
         }
 
         const requiredCountSize = numIntervals + 1;
@@ -336,6 +339,7 @@ class GSplatIntervalCompaction {
             this.countBuffer?.destroy();
             this.allocatedCountBufferSize = requiredCountSize;
             this.countBuffer = new StorageBuffer(this.device, requiredCountSize * 4);
+            DebugHelper.setName(this.countBuffer, 'GsplatIntervalCompaction.count');
 
             if (this.prefixSumKernel) {
                 this.prefixSumKernel.destroyPasses();
@@ -363,6 +367,7 @@ class GSplatIntervalCompaction {
             this.intervalsBuffer?.destroy();
             this.allocatedIntervalCount = numIntervals;
             this.intervalsBuffer = new StorageBuffer(this.device, numIntervals * INTERVAL_STRIDE * 4, BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this.intervalsBuffer, 'GsplatIntervalCompaction.intervals');
         }
 
         const data = new Uint32Array(numIntervals * INTERVAL_STRIDE);

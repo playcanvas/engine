@@ -6,7 +6,7 @@ import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
-import { TRACEID_TEXTURES } from '../../core/constants.js';
+import { TRACEID_BUFFERS, TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     BUFFER_STATIC,
     CULLFACE_BACK, CULLFACE_NONE,
@@ -25,6 +25,7 @@ import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { StorageBuffer } from './storage-buffer.js';
 
 /**
  * @import { Compute } from './compute.js'
@@ -34,7 +35,6 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
- * @import { StorageBuffer } from './storage-buffer.js';
  * @import { DrawCommands } from './draw-commands.js';
  */
 
@@ -1286,6 +1286,52 @@ class GraphicsDevice extends EventHandler {
                     Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
+            }
+
+            // log out all tracked GPU buffers, sorted by size
+            if (Tracing.get(TRACEID_BUFFERS)) {
+                const entries = [...this.buffers].map((buffer) => {
+                    let kind;
+                    let size;
+                    if (buffer instanceof VertexBuffer) {
+                        kind = 'VB';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? 0;
+                    } else if (buffer instanceof IndexBuffer) {
+                        kind = 'IB';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? 0;
+                    } else if (buffer instanceof StorageBuffer) {
+                        kind = 'SB';
+                        size = buffer.byteSize ?? 0;
+                    } else {
+                        kind = buffer.constructor?.name ?? '?';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? buffer.byteSize ?? 0;
+                    }
+                    return { buffer, kind, size };
+                });
+                entries.sort((a, b) => b.size - a.size);
+                Debug.log(`Buffers: ${entries.length}`);
+                let total = 0;
+                let totalVB = 0;
+                let totalIB = 0;
+                let totalSB = 0;
+                entries.forEach((entry, index) => {
+                    const { buffer, kind, size } = entry;
+                    total += size;
+                    if (kind === 'VB') {
+                        totalVB += size;
+                    } else if (kind === 'IB') {
+                        totalIB += size;
+                    } else if (kind === 'SB') {
+                        totalSB += size;
+                    }
+                    const namePart = buffer.name ? ` ${buffer.name}` : '';
+                    Debug.log(`${index}. ${kind} Id: ${buffer.id}${namePart} VRAM: ${(size / 1024 / 1024).toFixed(2)} MB`);
+                });
+                const mb = n => (n / 1024 / 1024).toFixed(2);
+                Debug.log(`Total VB: ${totalVB} bytes (${mb(totalVB)} MB)`);
+                Debug.log(`Total IB: ${totalIB} bytes (${mb(totalIB)} MB)`);
+                Debug.log(`Total SB: ${totalSB} bytes (${mb(totalSB)} MB)`);
+                Debug.log(`Total: ${total} bytes (${mb(total)} MB)`);
             }
         });
     }

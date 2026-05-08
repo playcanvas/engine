@@ -611,6 +611,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // allocate buffer
         if (this._indirectDrawBuffer === null) {
             this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this._indirectDrawBuffer, 'WebgpuGraphicsDevice.indirectDraw');
             this._indirectDrawBufferCount = this.maxIndirectDrawCount;
         }
     }
@@ -644,6 +645,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // allocate buffer
         if (this._indirectDispatchBuffer === null) {
             this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this._indirectDispatchBuffer, 'WebgpuGraphicsDevice.indirectDispatch');
             this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
         }
     }

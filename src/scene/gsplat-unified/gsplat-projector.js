@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
@@ -169,9 +169,11 @@ class GSplatProjector {
             GSplatSortBinWeights.NUM_BINS * 2 * 4,
             BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST
         );
+        DebugHelper.setName(this.binWeightsBuffer, 'GsplatProjector.binWeights');
 
         // 4 B counter, cleared every frame on the GPU via clear().
         this.renderCounter = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
+        DebugHelper.setName(this.renderCounter, 'GsplatProjector.renderCounter');
 
         this._createUniformBufferFormats();
         this._createWriteIndirectArgsCompute();
@@ -427,6 +429,8 @@ class GSplatProjector {
             this._allocatedCacheCount = capacity;
             this.projCache = new StorageBuffer(this.device, capacity * CACHE_STRIDE * 4);
             this.sortKeys = new StorageBuffer(this.device, capacity * 4, BUFFERUSAGE_COPY_SRC);
+            DebugHelper.setName(this.projCache, 'GsplatProjector.projCache');
+            DebugHelper.setName(this.sortKeys, 'GsplatProjector.sortKeys');
         }
     }
 

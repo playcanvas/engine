@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Compute } from '../../../platform/graphics/compute.js';
 import { Shader } from '../../../platform/graphics/shader.js';
@@ -388,6 +388,9 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
             this._globalHist = new StorageBuffer(device, MAX_PASSES * RADIX * 4, BUFFERUSAGE_COPY_DST);
             this._passHist = new StorageBuffer(device, MAX_PASSES * allocThreadBlocks * RADIX * 4, BUFFERUSAGE_COPY_DST);
             this._index = new StorageBuffer(device, MAX_PASSES * 4, BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this._globalHist, 'ComputeRadixSortOnesweep.globalHist');
+            DebugHelper.setName(this._passHist, 'ComputeRadixSortOnesweep.passHist');
+            DebugHelper.setName(this._index, 'ComputeRadixSortOnesweep.index');
         }
 
         // Current sort's working size: the shader computes passHist offsets

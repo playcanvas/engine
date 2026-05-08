@@ -304,6 +304,12 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 onClick: () => {
                     observer.emit('logTextures');
                 }
+            }),
+            jsx(Button, {
+                text: 'Log Buffers',
+                onClick: () => {
+                    observer.emit('logBuffers');
+                }
             })
         ),
         jsx(

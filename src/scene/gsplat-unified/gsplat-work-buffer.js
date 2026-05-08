@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U,
     BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION, getGlslShaderType
@@ -197,6 +197,7 @@ class GSplatWorkBuffer {
         // Use storage buffer on WebGPU, texture on WebGL
         if (device.isWebGPU) {
             this.orderBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this.orderBuffer, 'GsplatWorkBuffer.order');
         } else {
             this.orderTexture = new Texture(device, {
                 name: 'SplatGlobalOrder',
@@ -320,6 +321,7 @@ class GSplatWorkBuffer {
             if (this.orderBuffer.byteSize < newByteSize) {
                 this.orderBuffer.destroy();
                 this.orderBuffer = new StorageBuffer(this.device, newByteSize, BUFFERUSAGE_COPY_DST);
+                DebugHelper.setName(this.orderBuffer, 'GsplatWorkBuffer.order');
             }
         } else {
             this.orderTexture.resize(textureSize, textureSize);

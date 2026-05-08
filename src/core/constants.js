@@ -140,6 +140,13 @@ export const TRACEID_ELEMENT = 'Element';
 export const TRACEID_TEXTURES = 'Textures';
 
 /**
+ * Logs GPU buffer memory tracked on the graphics device (vertex, index, storage).
+ *
+ * @category Debug
+ */
+export const TRACEID_BUFFERS = 'Buffers';
+
+/**
  * Logs all assets in the asset registry.
  *
  * @category Debug

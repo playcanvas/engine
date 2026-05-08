@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Compute } from '../../../platform/graphics/compute.js';
 import { Shader } from '../../../platform/graphics/shader.js';
@@ -320,6 +320,7 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
 
             // Create block sums buffer (BUCKET_COUNT entries per workgroup)
             this._blockSums = new StorageBuffer(this.device, blockSumSize, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this._blockSums, 'ComputeRadixSortMultipass.blockSums');
 
             // Create prefix sum kernel (hierarchical Blelloch scan, exclusive).
             // The radix sort reorder shader requires an exclusive scan over

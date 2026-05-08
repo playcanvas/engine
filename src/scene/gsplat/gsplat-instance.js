@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
@@ -77,6 +77,7 @@ class GSplatInstance {
         // create order target: StorageBuffer on WebGPU, Texture on WebGL
         if (device.isWebGPU) {
             this.orderBuffer = new StorageBuffer(device, numSplats * 4, BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this.orderBuffer, 'GsplatInstance.order');
         } else {
             this.orderTexture = resource.streams.createTexture(
                 'splatOrder',

@@ -17,6 +17,10 @@ let id = 0;
  * recreated at the same byte size but its contents are undefined until you write to it again or
  * repopulate it via compute.
  *
+ * For debug identification in buffer memory listings (when the {@link TRACEID_BUFFERS} trace
+ * channel is enabled), call sites may assign the instance's `name` property to a descriptive
+ * string.
+ *
  * @category Graphics
  */
 class StorageBuffer {

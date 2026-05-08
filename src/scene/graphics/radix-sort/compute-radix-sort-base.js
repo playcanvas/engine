@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 import { BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC } from '../../../platform/graphics/constants.js';
 import { StorageBuffer } from '../../../platform/graphics/storage-buffer.js';
 
@@ -245,6 +245,11 @@ class ComputeRadixSortBase {
         this._values0 = new StorageBuffer(device, elementSize, usage);
         this._values1 = new StorageBuffer(device, elementSize, usage);
         this._sortedIndices = new StorageBuffer(device, elementSize, usage);
+        DebugHelper.setName(this._keys0, 'ComputeRadixSort.keys0');
+        DebugHelper.setName(this._keys1, 'ComputeRadixSort.keys1');
+        DebugHelper.setName(this._values0, 'ComputeRadixSort.values0');
+        DebugHelper.setName(this._values1, 'ComputeRadixSort.values1');
+        DebugHelper.setName(this._sortedIndices, 'ComputeRadixSort.sortedIndices');
     }
 
     /**
