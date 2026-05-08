@@ -536,8 +536,26 @@ assetListLoader.load(async () => {
         });
     });
 
-    // update HUD stats every frame
+    let logTexturesRequested = false;
+    data.on('logTextures', () => {
+        logTexturesRequested = true;
+    });
+
+    let logBuffersRequested = false;
+    data.on('logBuffers', () => {
+        logBuffersRequested = true;
+    });
+
     app.on('update', () => {
+
+        // log textures for one frame if requested
+        pc.Tracing.set(pc.TRACEID_TEXTURES, logTexturesRequested);
+        logTexturesRequested = false;
+
+        // eslint-disable-next-line import/namespace
+        pc.Tracing.set(pc.TRACEID_BUFFERS, logBuffersRequested);
+        logBuffersRequested = false;
+
         data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
         const bb = app.graphicsDevice.backBufferSize;
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);

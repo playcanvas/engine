@@ -1,6 +1,7 @@
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
+import { DebugHelper } from '../../core/debug.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { SHADERLANGUAGE_WGSL, SHADERSTAGE_COMPUTE, UNIFORMTYPE_UINT } from '../../platform/graphics/constants.js';
@@ -128,6 +129,7 @@ class PrefixSumKernel {
 
         // Create buffer for block sums
         const blockSumBuffer = new StorageBuffer(this.device, workgroupCount * 4);
+        DebugHelper.setName(blockSumBuffer, 'PrefixSumKernel.blockSum');
 
         // Create scan compute instance using shared shader
         const scanCompute = new Compute(this.device, this._scanShader, 'PrefixSumScan');
