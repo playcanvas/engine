@@ -1,0 +1,132 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    ".git/HEAD",
+    ".git/packed-refs",
+    ".git/refs/heads/**",
+    "build.mjs",
+    "package-lock.json",
+    "package.json",
+    "rollup.config.mjs",
+    "tsconfig*.json",
+    "utils/plugins/**/*.mjs",
+    "utils/rollup-*.mjs"
+  ],
+  "tasks": {
+    "target:release:umd": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.js"
+      ]
+    },
+    "target:release:esm:unbundled": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas/modules/**/*.js",
+        "build/playcanvas/src/**/*.js"
+      ]
+    },
+    "target:release:esm": {
+      "dependsOn": [
+        "target:release:esm:unbundled"
+      ],
+      "inputs": [
+        "package.json"
+      ],
+      "outputs": [
+        "build/playcanvas.mjs"
+      ]
+    },
+    "target:debug:umd": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.dbg.js"
+      ]
+    },
+    "target:debug:esm:unbundled": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.dbg/modules/**/*.js",
+        "build/playcanvas.dbg/src/**/*.js"
+      ]
+    },
+    "target:debug:esm": {
+      "dependsOn": [
+        "target:debug:esm:unbundled"
+      ],
+      "inputs": [
+        "package.json"
+      ],
+      "outputs": [
+        "build/playcanvas.dbg.mjs"
+      ]
+    },
+    "target:profiler:umd": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.prf.js"
+      ]
+    },
+    "target:profiler:esm:unbundled": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.prf/modules/**/*.js",
+        "build/playcanvas.prf/src/**/*.js"
+      ]
+    },
+    "target:profiler:esm": {
+      "dependsOn": [
+        "target:profiler:esm:unbundled"
+      ],
+      "inputs": [
+        "package.json"
+      ],
+      "outputs": [
+        "build/playcanvas.prf.mjs"
+      ]
+    },
+    "target:min:umd": {
+      "dependsOn": [
+        "target:release:umd"
+      ],
+      "inputs": [
+        "package.json"
+      ],
+      "outputs": [
+        "build/playcanvas.min.js"
+      ]
+    },
+    "target:min:esm": {
+      "dependsOn": [
+        "target:release:esm"
+      ],
+      "inputs": [
+        "package.json"
+      ],
+      "outputs": [
+        "build/playcanvas.min.mjs"
+      ]
+    },
+    "target:types": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.d.ts",
+        "build/playcanvas/src/**/*.d.ts"
+      ]
+    }
+  }
+}

@@ -2,6 +2,7 @@
 .cursor
 .idea/
 .vscode/
+.turbo
 build
 tree*.*.html
 coverage

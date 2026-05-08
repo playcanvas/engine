@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildJSOptions, buildTypesOption } from './utils/rollup-build-target.mjs';
 
@@ -15,6 +14,7 @@ const MODULE_FORMAT = /** @type {const} */ (['umd', 'esm']);
 const BUNDLE_STATES = /** @type {const} */ (['unbundled', 'bundled']);
 
 const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+const bundleSource = process.env.bundleSource ? process.env.bundleSource.toLowerCase() : null;
 
 const title = [
     'Building PlayCanvas Engine',
@@ -23,11 +23,6 @@ const title = [
     `target ${BOLD_OUT}${envTarget ?? 'all'}${REGULAR_OUT}`
 ].join('\n');
 console.log(`${BLUE_OUT}${title}${RESET_OUT}`);
-
-if (envTarget === null && fs.existsSync('build')) {
-    // no targets specified, clean build directory
-    fs.rmSync('build', { recursive: true });
-}
 
 function includeBuild(buildType, moduleFormat, bundleState) {
     return envTarget === null ||
@@ -61,7 +56,8 @@ BUILD_TYPES.forEach((buildType) => {
             targets.push(...buildJSOptions({
                 moduleFormat,
                 buildType,
-                bundleState
+                bundleState,
+                bundleSource
             }));
         });
     });
