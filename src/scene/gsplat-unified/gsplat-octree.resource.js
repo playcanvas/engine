@@ -19,11 +19,11 @@ class GSplatOctreeResource {
     /**
      * Raw parsed manifest data, retained for consumers that read custom or extension
      * fields the octree itself does not consume (for example application-specific
-     * metadata accompanying a `lod-meta.json`).
+     * metadata accompanying a `lod-meta.json`). Cleared to `null` by {@link destroy}.
      *
-     * @type {object}
+     * @type {object|null}
      */
-    data;
+    data = null;
 
     /**
      * @param {string} assetFileUrl - The file URL of the container asset.
@@ -43,6 +43,7 @@ class GSplatOctreeResource {
     destroy() {
         this.octree?.destroy();
         this.octree = null;
+        this.data = null;
     }
 }
 
