@@ -86,6 +86,16 @@ class ComputeRadixSortBase {
     _skipLastPassKeyWrite = false;
 
     /**
+     * When true, the caller permits the sort to overwrite `keysBuffer` after pass 0 reads it.
+     * `_keys1` is not owned by the sorter in this mode — it is assigned to `keysBuffer` before
+     * each pass loop and must not be destroyed on realloc/destroy.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _destructiveKeys = false;
+
+    /**
      * Internal keys buffer 0 (ping-pong).
      *
      * @type {StorageBuffer|null}
@@ -94,7 +104,8 @@ class ComputeRadixSortBase {
     _keys0 = null;
 
     /**
-     * Internal keys buffer 1 (ping-pong).
+     * Internal keys buffer 1 (ping-pong). When `_destructiveKeys` is true this is borrowed from
+     * the caller's `keysBuffer` and must not be destroyed by the sorter.
      *
      * @type {StorageBuffer|null}
      * @protected
@@ -118,14 +129,6 @@ class ComputeRadixSortBase {
     _values1 = null;
 
     /**
-     * Output sorted indices (or caller values) buffer.
-     *
-     * @type {StorageBuffer|null}
-     * @protected
-     */
-    _sortedIndices = null;
-
-    /**
      * Stable metadata buffer returned by {@link prepareIndirect}. Preallocated as four `u32`
      * entries; concrete backends assign `[slotCount, g0, g1, g2]` after `super(device)`. The caller
      * uploads its contents into a GPU uniform unchanged.
@@ -137,12 +140,15 @@ class ComputeRadixSortBase {
 
     /**
      * Returns the sorted indices (or values, when `initialValues` was passed) buffer of the last
-     * completed sort.
+     * completed sort. The result lives in whichever ping-pong values buffer was written last,
+     * determined by pass-count parity — no separate output buffer is allocated.
      *
      * @type {StorageBuffer|null}
      */
     get sortedIndices() {
-        return this._sortedIndices;
+        if (!this._values0) return null;
+        const numPasses = this._numBits / this.radixBits;
+        return (numPasses % 2 === 1) ? this._values1 : this._values0;
     }
 
     /**
@@ -180,10 +186,13 @@ class ComputeRadixSortBase {
      * @param {number} [numBits] - Number of bits to sort.
      * @param {StorageBuffer} [initialValues] - Optional initial values buffer for pass 0.
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing keys on the last pass.
+     * @param {boolean} [destructiveKeys] - When true, the sort may overwrite `keysBuffer` after
+     * the first pass reads it (saves one internal key buffer). The caller must not read
+     * `keysBuffer` after the sort returns.
      * @returns {StorageBuffer} Sorted values buffer.
      * @abstract
      */
-    sort(keysBuffer, elementCount, numBits, initialValues, skipLastPassKeyWrite) {
+    sort(keysBuffer, elementCount, numBits, initialValues, skipLastPassKeyWrite, destructiveKeys) {
         Debug.error('ComputeRadixSortBase.sort must be implemented by a subclass');
         return /** @type {any} */ (null);
     }
@@ -201,10 +210,13 @@ class ComputeRadixSortBase {
      * @param {StorageBuffer} sortElementCountBuffer - GPU-written element count buffer.
      * @param {StorageBuffer} [initialValues] - Optional initial values buffer for pass 0.
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing keys on the last pass.
+     * @param {boolean} [destructiveKeys] - When true, the sort may overwrite `keysBuffer` after
+     * the first pass reads it (saves one internal key buffer). The caller must not read
+     * `keysBuffer` after the sort returns.
      * @returns {StorageBuffer} Sorted values buffer.
      * @abstract
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite) {
+    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite, destructiveKeys) {
         Debug.error('ComputeRadixSortBase.sortIndirect must be implemented by a subclass');
         return /** @type {any} */ (null);
     }
@@ -231,7 +243,9 @@ class ComputeRadixSortBase {
     }
 
     /**
-     * Allocates ping-pong key/value buffers and the sorted output buffer (`u32` per element).
+     * Allocates ping-pong key/value buffers (`u32` per element). When `_destructiveKeys` is true,
+     * `_keys1` is left null — the caller's `keysBuffer` will be borrowed into it before each pass
+     * loop instead.
      *
      * @param {number} effectiveCount - Element high-water count (same units as `capacity` sizing).
      * @protected
@@ -241,34 +255,33 @@ class ComputeRadixSortBase {
         const usage = BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST;
         const device = this.device;
         this._keys0 = new StorageBuffer(device, elementSize, usage);
-        this._keys1 = new StorageBuffer(device, elementSize, usage);
+        DebugHelper.setName(this._keys0, 'ComputeRadixSort.keys0');
+        if (!this._destructiveKeys) {
+            this._keys1 = new StorageBuffer(device, elementSize, usage);
+            DebugHelper.setName(this._keys1, 'ComputeRadixSort.keys1');
+        }
         this._values0 = new StorageBuffer(device, elementSize, usage);
         this._values1 = new StorageBuffer(device, elementSize, usage);
-        this._sortedIndices = new StorageBuffer(device, elementSize, usage);
-        DebugHelper.setName(this._keys0, 'ComputeRadixSort.keys0');
-        DebugHelper.setName(this._keys1, 'ComputeRadixSort.keys1');
         DebugHelper.setName(this._values0, 'ComputeRadixSort.values0');
         DebugHelper.setName(this._values1, 'ComputeRadixSort.values1');
-        DebugHelper.setName(this._sortedIndices, 'ComputeRadixSort.sortedIndices');
     }
 
     /**
-     * Destroys ping-pong keys/values and sorted output buffers owned by the base.
+     * Destroys ping-pong keys/values buffers owned by the base. When `_destructiveKeys` is true,
+     * `_keys1` is borrowed from the caller and is not destroyed.
      *
      * @protected
      */
     _destroyPingPongBuffers() {
         this._keys0?.destroy();
-        this._keys1?.destroy();
+        if (!this._destructiveKeys) this._keys1?.destroy();
         this._values0?.destroy();
         this._values1?.destroy();
-        this._sortedIndices?.destroy();
 
         this._keys0 = null;
         this._keys1 = null;
         this._values0 = null;
         this._values1 = null;
-        this._sortedIndices = null;
     }
 
     /**

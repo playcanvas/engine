@@ -286,9 +286,10 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      * @param {number} numBits - Number of bits to sort.
      * @param {boolean} hasInitialValues - Whether pass 0 reads caller-supplied initial values.
      * @param {boolean} skipLastPassKeyWrite - Whether the last pass skips writing keys.
+     * @param {boolean} [forceRealloc] - Force buffer reallocation even if sizes match.
      * @private
      */
-    _allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite) {
+    _allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite, forceRealloc = false) {
         // Buffer sizing is driven by `capacity` (the high-water mark) to avoid
         // realloc churn when the workload shrinks. Dispatch and scan sizes
         // must track the CURRENT sort's elementCount - otherwise a 1M sort
@@ -299,7 +300,7 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
         const allocWorkgroupCount = Math.ceil(effectiveCount / ELEMENTS_PER_WORKGROUP);
         const currentWorkgroupCount = Math.max(1, Math.ceil(elementCount / ELEMENTS_PER_WORKGROUP));
 
-        const buffersNeedRealloc = allocWorkgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
+        const buffersNeedRealloc = forceRealloc || allocWorkgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
 
         // Recreate passes when numBits, initial-values mode, or key-write mode changes
         const passesNeedRecreate = numBits !== this._numBits ||
@@ -389,13 +390,16 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      * sequential indices. The buffer is only read, never modified.
      * @param {boolean} [skipLastPassKeyWrite] - When true, the last pass skips writing sorted
      * keys for a small performance gain. Only use when sorted keys are not needed after sorting.
+     * @param {boolean} [destructiveKeys] - When true, the sort may overwrite `keysBuffer` after
+     * the first pass reads it (saves one internal key buffer). The caller must not read
+     * `keysBuffer` after the sort returns.
      * @returns {StorageBuffer} Storage buffer containing sorted indices (or values if
      * initialValues was provided).
      */
-    sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite = false) {
+    sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
         Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSortMultipass.sort: numBits must be a multiple of ${BITS_PER_PASS}`);
 
-        return this._execute(keysBuffer, elementCount, numBits, -1, null, initialValues, skipLastPassKeyWrite);
+        return this._execute(keysBuffer, elementCount, numBits, -1, null, initialValues, skipLastPassKeyWrite, destructiveKeys);
     }
 
     /**
@@ -414,12 +418,15 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      * sequential indices. The buffer is only read, never modified.
      * @param {boolean} [skipLastPassKeyWrite] - When true, the last pass skips writing sorted
      * keys for a small performance gain. Only use when sorted keys are not needed after sorting.
+     * @param {boolean} [destructiveKeys] - When true, the sort may overwrite `keysBuffer` after
+     * the first pass reads it (saves one internal key buffer). The caller must not read
+     * `keysBuffer` after the sort returns.
      * @returns {StorageBuffer} Storage buffer containing sorted values.
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false) {
+    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
         Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSortMultipass.sortIndirect: numBits must be a multiple of ${BITS_PER_PASS}`);
 
-        return this._execute(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite);
+        return this._execute(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite, destructiveKeys);
     }
 
     /**
@@ -433,15 +440,26 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      * @param {StorageBuffer} [initialValues] - Optional initial values buffer for pass 0.
      * @param {boolean} [skipLastPassKeyWrite] - When true, the last pass skips writing sorted
      * keys for a small performance gain. Only use when sorted keys are not needed after sorting.
+     * @param {boolean} [destructiveKeys] - When true, borrow `keysBuffer` as the second ping-pong
+     * key buffer (saves one N×4 allocation). The sort may overwrite `keysBuffer` after pass 0.
      * @returns {StorageBuffer} Storage buffer containing sorted values.
      * @private
      */
-    _execute(keysBuffer, elementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false) {
+    _execute(keysBuffer, elementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
         this._elementCount = elementCount;
         const hasInitialValues = !!initialValues;
 
+        // Trigger realloc when the destructiveKeys mode changes (affects which buffers are owned).
+        const prevDestructiveKeys = this._destructiveKeys;
+        this._destructiveKeys = destructiveKeys;
+
         // Allocate buffers and create passes if needed
-        this._allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite);
+        this._allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite, destructiveKeys !== prevDestructiveKeys);
+
+        // When destructiveKeys, borrow keysBuffer as _keys1 (not owned; not destroyed on realloc).
+        if (destructiveKeys) {
+            this._keys1 = keysBuffer;
+        }
 
         const device = this.device;
         const numPasses = numBits / BITS_PER_PASS;
@@ -485,13 +503,11 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
             this._prefixSumKernel.dispatch(device);
 
             // Phase 3: Ranked scatter - recompute local ranks in shared memory and scatter
-            const outputValues = isLastPass ? this._sortedIndices : nextValues;
-
             reorderCompute.setParameter('inputKeys', currentKeys);
             reorderCompute.setParameter('outputKeys', nextKeys);
             reorderCompute.setParameter('prefix_block_sum', this._blockSums);
             reorderCompute.setParameter('inputValues', currentValues);
-            reorderCompute.setParameter('outputValues', outputValues);
+            reorderCompute.setParameter('outputValues', nextValues);
             reorderCompute.setParameter('workgroupCount', this._workgroupCount);
             reorderCompute.setParameter('elementCount', elementCount);
 
@@ -513,7 +529,7 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
             }
         }
 
-        return this._sortedIndices;
+        return this.sortedIndices;
     }
 }
 

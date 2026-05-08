@@ -360,9 +360,10 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
      * Allocates or resizes internal buffers.
      *
      * @param {number} elementCount - Number of elements to sort.
+     * @param {boolean} [forceRealloc] - Force buffer reallocation even if sizes match.
      * @private
      */
-    _allocateBuffers(elementCount) {
+    _allocateBuffers(elementCount, forceRealloc = false) {
         // Buffer sizing is driven by `capacity` (the high-water mark) to avoid
         // realloc churn when the workload shrinks. Dispatch/clear sizes must
         // track the CURRENT sort's elementCount - otherwise a 1M sort that
@@ -373,7 +374,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         const allocThreadBlocks = Math.max(1, Math.ceil(effectiveCount / PART_SIZE));
         const currentThreadBlocks = Math.max(1, Math.ceil(elementCount / PART_SIZE));
 
-        const needRealloc = allocThreadBlocks !== this._allocatedThreadBlocks || !this._keys0;
+        const needRealloc = forceRealloc || allocThreadBlocks !== this._allocatedThreadBlocks || !this._keys0;
 
         if (needRealloc) {
             this._destroyBuffers();
@@ -435,9 +436,12 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing sorted keys on
      * the last pass. Marginal perf win; only use when sorted keys are not
      * needed.
+     * @param {boolean} [destructiveKeys] - When true, the sort may overwrite
+     * `keysBuffer` after the first pass reads it (saves one internal key
+     * buffer). The caller must not read `keysBuffer` after the sort returns.
      * @returns {StorageBuffer} Sorted values buffer.
      */
-    sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite = false) {
+    sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
         Debug.assert(numBits <= 32, `ComputeRadixSortOneSweep.sort: numBits must be <= 32, got ${numBits}`);
 
         const numPasses = numBits / 8;
@@ -448,8 +452,15 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         this._hasInitialValues = hasInitialValues;
         this._skipLastPassKeyWrite = skipLastPassKeyWrite;
 
-        this._allocateBuffers(elementCount);
+        const prevDestructiveKeys = this._destructiveKeys;
+        this._destructiveKeys = destructiveKeys;
+
+        this._allocateBuffers(elementCount, destructiveKeys !== prevDestructiveKeys);
         this._ensureBinningComputes(numPasses);
+
+        if (destructiveKeys) {
+            this._keys1 = keysBuffer;
+        }
 
         const device = this.device;
 
@@ -491,14 +502,13 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         for (let pass = 0; pass < numPasses; pass++) {
             const isFirstPass = pass === 0 && !hasInitialValues;
             const isLastPass = pass === numPasses - 1;
-            const outputValues = isLastPass ? this._sortedIndices : nextValues;
             const flags = (isFirstPass ? 1 : 0) | (isLastPass && skipLastPassKeyWrite ? 2 : 0);
 
             const binCompute = this._binningComputes[pass];
             binCompute.setParameter('inputKeys', currentKeys);
             binCompute.setParameter('outputKeys', nextKeys);
             binCompute.setParameter('inputValues', currentValues);
-            binCompute.setParameter('outputValues', outputValues);
+            binCompute.setParameter('outputValues', nextValues);
             binCompute.setParameter('b_passHist', this._passHist);
             binCompute.setParameter('b_index', this._index);
             binCompute.setParameter('numKeys', elementCount);
@@ -517,7 +527,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
             }
         }
 
-        return this._sortedIndices;
+        return this.sortedIndices;
     }
 
     /**
@@ -543,9 +553,12 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
      * buffer; element `[0]` holds the actual number of keys to sort.
      * @param {StorageBuffer} [initialValues] - Optional initial values for pass 0.
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing keys on the last pass.
+     * @param {boolean} [destructiveKeys] - When true, the sort may overwrite
+     * `keysBuffer` after the first pass reads it (saves one internal key
+     * buffer). The caller must not read `keysBuffer` after the sort returns.
      * @returns {StorageBuffer} Sorted values buffer.
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false) {
+    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
         Debug.assert(numBits <= 32, `ComputeRadixSortOneSweep.sortIndirect: numBits must be <= 32, got ${numBits}`);
 
         const numPasses = numBits / 8;
@@ -556,8 +569,15 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         this._hasInitialValues = hasInitialValues;
         this._skipLastPassKeyWrite = skipLastPassKeyWrite;
 
-        this._allocateBuffers(maxElementCount);
+        const prevDestructiveKeys = this._destructiveKeys;
+        this._destructiveKeys = destructiveKeys;
+
+        this._allocateBuffers(maxElementCount, destructiveKeys !== prevDestructiveKeys);
         this._ensureBinningComputes(numPasses);
+
+        if (destructiveKeys) {
+            this._keys1 = keysBuffer;
+        }
 
         const device = this.device;
 
@@ -603,14 +623,13 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         for (let pass = 0; pass < numPasses; pass++) {
             const isFirstPass = pass === 0 && !hasInitialValues;
             const isLastPass = pass === numPasses - 1;
-            const outputValues = isLastPass ? this._sortedIndices : nextValues;
             const flags = (isFirstPass ? 1 : 0) | (isLastPass && skipLastPassKeyWrite ? 2 : 0);
 
             const binCompute = this._binningComputes[pass];
             binCompute.setParameter('inputKeys', currentKeys);
             binCompute.setParameter('outputKeys', nextKeys);
             binCompute.setParameter('inputValues', currentValues);
-            binCompute.setParameter('outputValues', outputValues);
+            binCompute.setParameter('outputValues', nextValues);
             binCompute.setParameter('b_passHist', this._passHist);
             binCompute.setParameter('b_index', this._index);
             binCompute.setParameter('b_sortElementCount', sortElementCountBuffer);
@@ -630,7 +649,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
             }
         }
 
-        return this._sortedIndices;
+        return this.sortedIndices;
     }
 }
 

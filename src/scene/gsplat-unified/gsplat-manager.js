@@ -1734,7 +1734,8 @@ class GSplatManager {
             this.indirectDispatchSlot + 1,
             /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
             undefined,
-            false
+            false,
+            true  // destructiveKeys: projector overwrites sortKeys each frame before the sort
         );
     }
 
