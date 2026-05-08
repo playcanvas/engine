@@ -51,7 +51,7 @@ body {
 }
 
 #sideBar {
-    background-color: #324447;
+    background-color: #283437;
     min-width: 280px;
     max-width: 280px;
     margin: 8px;
@@ -160,7 +160,7 @@ body {
 }
 
 #sideBar .nav-item-text {
-    color: rgb(177, 184, 186) !important;
+    color: #c7ced1 !important;
     user-select: none;
 }
 
@@ -178,7 +178,7 @@ body {
 
 #sideBar .nav-item-text a {
     text-decoration: none;
-    color: rgb(177, 184, 186) !important;
+    color: #c7ced1 !important;
 }
 
 #sideBar .nav-item-text:hover {
@@ -212,8 +212,10 @@ body {
 
 #sideBar .categoryPanel {
     margin: 0 8px 8px 8px !important;
-    border: 1px solid #5b7073;
+    background-color: #334044;
+    border: 1px solid #4a5a5f;
     border-radius: 4px;
+    overflow: hidden;
 }
 
 .categoryPanel:first-child {
@@ -226,19 +228,19 @@ body {
 
 /* Category panel header styling */
 #sideBar .categoryPanel > .pcui-panel-header {
-    background-color: #1a2426;
+    background-color: #20292b;
 }
 
 .nav-item {
     margin: 12px;
     overflow: auto;
     border-radius: 4px;
-    background-color: #2C393C;
+    background-color: #2a3437;
     position: relative;
 }
 
 .nav-item:last-child {
-    margin: 12px 12px 4px 12px;
+    margin: 12px;
 }
 
 .nav-item.selected {
