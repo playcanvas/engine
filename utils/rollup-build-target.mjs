@@ -6,7 +6,7 @@ import swcPlugin from '@rollup/plugin-swc';
 // unofficial package plugins
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
-import { visualizer } from 'rollup-plugin-visualizer'; // eslint-disable-line import/no-unresolved
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // custom plugins
 import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
@@ -162,6 +162,7 @@ function getOutPlugins(type) {
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
  * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
  * @param {'unbundled'|'bundled'} [options.bundleState] - The bundle state.
+ * @param {'unbundled'|'release'|null} [options.bundleSource] - The generated input source.
  * @param {string} [options.input] - Only used for examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @returns {RollupOptions[]} Rollup targets.
@@ -170,6 +171,7 @@ function buildJSOptions({
     moduleFormat,
     buildType,
     bundleState,
+    bundleSource = null,
     input = 'src/index.js',
     dir = 'build'
 }) {
@@ -182,6 +184,53 @@ function buildJSOptions({
     const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
 
     const targets = [];
+
+    // bundle from the generated esm tree in a separate turbo task.
+    if (bundled && bundleSource === 'unbundled') {
+        /**
+         * @type {RollupOptions}
+         */
+        const target = {
+            input: `${dir}/${prefix}/src/index.js`,
+            output: {
+                banner: getBanner(BANNER[buildType]),
+                format: 'es',
+                indent: '\t',
+                sourcemap: isDebug && 'inline',
+                name: 'pc',
+                preserveModules: false,
+                file: `${dir}/${prefix}.mjs`
+            }
+        };
+
+        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
+        targets.push(target);
+
+        return targets;
+    }
+
+    // minify from the generated release bundle in a separate turbo task.
+    if (isMin && bundleSource === 'release') {
+        /**
+         * @type {RollupOptions}
+         */
+        const target = {
+            input: `${dir}/${OUT_PREFIX.release}${isUMD ? '.js' : '.mjs'}`,
+            plugins: [
+                swcPlugin({ swc: swcOptions(isDebug, isMin) })
+            ],
+            output: {
+                banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
+                file: `${dir}/${file}`
+            },
+            context: isUMD ? 'this' : undefined
+        };
+
+        HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
+        targets.push(target);
+
+        return targets;
+    }
 
     // bundle from unbundled
     if (bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
