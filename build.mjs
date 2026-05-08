@@ -1,105 +1,66 @@
 /**
  * Build helper scripts
- * Usage: node build.mjs [options] -- [rollup options]
+ * Usage: node build.mjs [options]
  *
  * Options:
- * target[:<moduleFormat>][:<buildType>][:<bundleState>] - Specify the target
- *     - moduleFormat (esm, umd)
- *     - buildType (release, debug, profiler, min)
- *     - bundleState (unbundled, bundled)
- * Example: target:esm:release:bundled
+ * --std, --dbg, --prf, --min, --types - Specify the build type.
+ * --umd, --esm - Specify the module format.
+ * --watch - Rebuild the Rollup leaf build when inputs change.
+ * --sourcemaps - Build with source maps using Rollup directly.
  *
- * treemap - Enable treemap build visualization (release only).
- * treenet - Enable treenet build visualization (release only).
- * treesun - Enable treesun build visualization (release only).
- * treeflame - Enable treeflame build visualization (release only).
+ * treemap - Enable treemap build visualization (std only).
+ * treenet - Enable treenet build visualization (std only).
+ * treesun - Enable treesun build visualization (std only).
+ * treeflame - Enable treeflame build visualization (std only).
  */
 
-import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { parseArgs } from 'node:util';
 
-const BUILD_TYPES = /** @type {const} */ (['release', 'debug', 'profiler', 'min']);
-const MODULE_FORMAT = /** @type {const} */ (['umd', 'esm']);
-const BUNDLE_STATES = /** @type {const} */ (['unbundled', 'bundled']);
+const BUILD_TYPES = /** @type {const} */ (['std', 'dbg', 'prf', 'min']);
+const MODULE_FORMATS = /** @type {const} */ (['umd', 'esm']);
 
-const TREE_FLAGS = new Set(['treemap', 'treenet', 'treesun', 'treeflame']);
-const TURBO_ARGS = ['--single-package', '--ui=stream', '--output-logs=full'];
+const TREE_FLAGS = ['treemap', 'treenet', 'treesun', 'treeflame'];
 const BIN_DIR = path.join('node_modules', '.bin');
+const USAGE = `Usage: node build.mjs [options]
 
-const args = process.argv.slice(2).filter(arg => arg !== '--');
-const rollupArgs = [];
-const trees = [];
-let target = null;
-let watch = false;
+Options:
+  --std, --dbg, --prf, --min, --types
+  --umd, --esm
+  --watch, -w
+  --sourcemaps, -m
+  --treemap, --treenet, --treesun, --treeflame
 
-for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
+Use npm run build or turbo run build:all for aggregate builds.`;
 
-    if (arg === '-w' || arg === '--watch') {
-        watch = true;
-        continue;
-    }
+const { values } = parseArgs({
+    args: process.argv.slice(2),
+    options: {
+        std: { type: 'boolean' },
+        dbg: { type: 'boolean' },
+        prf: { type: 'boolean' },
+        min: { type: 'boolean' },
+        types: { type: 'boolean' },
+        umd: { type: 'boolean' },
+        esm: { type: 'boolean' },
+        watch: { type: 'boolean', short: 'w' },
+        sourcemaps: { type: 'boolean', short: 'm' },
+        treemap: { type: 'boolean' },
+        treenet: { type: 'boolean' },
+        treesun: { type: 'boolean' },
+        treeflame: { type: 'boolean' },
+        help: { type: 'boolean', short: 'h' }
+    },
+    allowPositionals: false
+});
 
-    if (arg.startsWith('target') && args[i - 1] !== '--environment') {
-        target = arg.startsWith('target:') ? arg.slice('target:'.length) : '';
-        continue;
-    }
-
-    if (TREE_FLAGS.has(arg) && args[i - 1] !== '--environment') {
-        trees.push(arg);
-        continue;
-    }
-
-    rollupArgs.push(arg);
-}
-
-const includeBuild = (env, buildType, moduleFormat, bundleState) => {
-    return env === null ||
-        env === buildType ||
-        env === moduleFormat ||
-        env === bundleState ||
-        env === `${moduleFormat}:${buildType}` ||
-        env === `${moduleFormat}:${bundleState}` ||
-        env === `${buildType}:${bundleState}` ||
-        env === `${moduleFormat}:${buildType}:${bundleState}`;
-};
-
-const getTasks = (env) => {
-    const tasks = new Set();
-
-    for (const buildType of BUILD_TYPES) {
-        for (const moduleFormat of MODULE_FORMAT) {
-            for (const bundleState of BUNDLE_STATES) {
-                if (bundleState === 'unbundled' && moduleFormat === 'umd') {
-                    continue;
-                }
-                if (bundleState === 'unbundled' && buildType === 'min') {
-                    continue;
-                }
-                if (!includeBuild(env, buildType, moduleFormat, bundleState)) {
-                    continue;
-                }
-
-                if (buildType === 'min') {
-                    tasks.add(`target:min:${moduleFormat}`);
-                } else if (moduleFormat === 'umd') {
-                    tasks.add(`target:${buildType}:umd`);
-                } else if (bundleState === 'unbundled') {
-                    tasks.add(`target:${buildType}:esm:unbundled`);
-                } else {
-                    tasks.add(`target:${buildType}:esm`);
-                }
-            }
-        }
-    }
-
-    if (env === null || env === 'types') {
-        tasks.add('target:types');
-    }
-
-    return Array.from(tasks);
-};
+const types = BUILD_TYPES.filter(type => values[type]);
+const formats = MODULE_FORMATS.filter(format => values[format]);
+const trees = TREE_FLAGS.filter(flag => values[flag]);
+const treeDefault = trees.length && !types.length && !values.types;
+const rollup = values.sourcemaps || trees.length;
+const leaf = values.types || (types.length === 1 && formats.length === 1);
 
 const run = (cmd, args) => {
     const res = spawnSync(cmd, args, {
@@ -112,46 +73,76 @@ const run = (cmd, args) => {
     process.exit(res.status ?? 1);
 };
 
+const fail = (msg) => {
+    console.error(msg);
+    process.exit(1);
+};
+
 const bin = name => path.join(BIN_DIR, process.platform === 'win32' ? `${name}.cmd` : name);
-const info = rollupArgs.includes('-h') ||
-    rollupArgs.includes('--help') ||
-    rollupArgs.includes('-v') ||
-    rollupArgs.includes('--version');
+
+const getRollupBuild = () => {
+    if (!leaf && !rollup) {
+        fail('Use npm run build, npm run watch, or turbo run build:<task> for aggregate builds');
+    }
+
+    if (values.types) {
+        if (types.length || formats.length) {
+            fail('--types cannot be combined with JS build flags in Rollup mode');
+        }
+        return 'build:types';
+    }
+
+    if (trees.length && types.length && (types.length > 1 || types[0] !== 'std')) {
+        fail('tree visualizers only support --std');
+    }
+
+    if (types.length > 1 || formats.length > 1) {
+        fail('Rollup mode accepts at most one build type and one module format');
+    }
+
+    const type = treeDefault ? 'std' : types[0];
+    const format = formats[0];
+
+    if (type === 'min' && format) {
+        return `build:${format}:min:bundled,bundleSource:std`;
+    }
+    if (type && format) {
+        return `build:${format}:${type}${format === 'umd' ? ':bundled' : ''}`;
+    }
+    if (type) {
+        return `build:${type}`;
+    }
+    if (format) {
+        return `build:${format}`;
+    }
+    return null;
+};
 
 const runRollup = () => {
     const env = [];
-    if (target !== null) {
-        env.push(`target:${target}`);
+    const build = getRollupBuild();
+    if (build) {
+        env.push(build);
     }
     env.push(...trees);
 
-    const args = ['-c', ...rollupArgs];
+    const args = ['-c'];
+    if (values.sourcemaps) {
+        args.push('-m');
+    }
     for (const item of env) {
         args.push('--environment', item);
     }
-    if (watch) {
+    if (values.watch) {
         args.push('-w');
     }
 
     run(bin('rollup'), args);
 };
 
-if (target === null && !info && fs.existsSync('build')) {
-    fs.rmSync('build', { recursive: true });
+if (values.help) {
+    console.log(USAGE);
+    process.exit(0);
 }
 
-// rollup-specific options and visualizers keep the legacy single-process path.
-if (trees.length || rollupArgs.length) {
-    runRollup();
-}
-
-const tasks = getTasks(target);
-if (!tasks.length) {
-    runRollup();
-}
-
-run(bin('turbo'), [
-    watch ? 'watch' : 'run',
-    ...tasks,
-    ...TURBO_ARGS
-]);
+runRollup();

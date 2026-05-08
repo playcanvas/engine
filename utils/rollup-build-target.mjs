@@ -62,28 +62,28 @@ const STRIP_FUNCTIONS = [
 ];
 
 const BANNER = {
-    debug: ' (DEBUG)',
-    release: ' (RELEASE)',
-    profiler: ' (PROFILE)',
+    dbg: ' (DEBUG)',
+    std: ' (RELEASE)',
+    prf: ' (PROFILE)',
     min: ' (RELEASE)'
 };
 
 const OUT_PREFIX = {
-    debug: 'playcanvas.dbg',
-    release: 'playcanvas',
-    profiler: 'playcanvas.prf',
+    dbg: 'playcanvas.dbg',
+    std: 'playcanvas',
+    prf: 'playcanvas.prf',
     min: 'playcanvas.min'
 };
 
 const HISTORY = new Map();
 
 /**
- * @param {'debug'|'release'|'profiler'} buildType - The build type.
+ * @param {'dbg'|'std'|'prf'} buildType - The build type.
  * @returns {object} - The JSCC options.
  */
 function getJSCCOptions(buildType) {
     const options = {
-        debug: {
+        dbg: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
@@ -93,14 +93,14 @@ function getJSCCOptions(buildType) {
             asloader: false,
             keepLines: true
         },
-        release: {
+        std: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision
             },
             asloader: false
         },
-        profiler: {
+        prf: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
@@ -154,15 +154,15 @@ function getOutPlugins(type) {
 /**
  * Build rollup options for JS (bundled and unbundled).
  *
- * For faster subsequent builds, the unbundled and release builds are cached in the HISTORY map to
+ * For faster subsequent builds, the unbundled and std builds are cached in the HISTORY map to
  * be used for bundled and minified builds. They are stored in the HISTORY map with the key:
- * `<debug|release|profiler>-<umd|esm>-<bundled>`.
+ * `<dbg|std|prf>-<umd|esm>-<bundled>`.
  *
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
- * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
+ * @param {'dbg'|'std'|'prf'|'min'} options.buildType - The build type.
  * @param {'unbundled'|'bundled'} [options.bundleState] - The bundle state.
- * @param {'unbundled'|'release'|null} [options.bundleSource] - The generated input source.
+ * @param {'std'|null} [options.bundleSource] - The generated input source.
  * @param {string} [options.input] - Only used for examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @returns {RollupOptions[]} Rollup targets.
@@ -176,7 +176,7 @@ function buildJSOptions({
     dir = 'build'
 }) {
     const isUMD = moduleFormat === 'umd';
-    const isDebug = buildType === 'debug';
+    const isDebug = buildType === 'dbg';
     const isMin = buildType === 'min';
     const bundled = isUMD || isMin || bundleState === 'bundled';
 
@@ -185,37 +185,13 @@ function buildJSOptions({
 
     const targets = [];
 
-    // bundle from the generated esm tree in a separate turbo task.
-    if (bundled && bundleSource === 'unbundled') {
+    // minify from the generated std bundle in a separate turbo task.
+    if (isMin && bundleSource === 'std') {
         /**
          * @type {RollupOptions}
          */
         const target = {
-            input: `${dir}/${prefix}/src/index.js`,
-            output: {
-                banner: getBanner(BANNER[buildType]),
-                format: 'es',
-                indent: '\t',
-                sourcemap: isDebug && 'inline',
-                name: 'pc',
-                preserveModules: false,
-                file: `${dir}/${prefix}.mjs`
-            }
-        };
-
-        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
-        targets.push(target);
-
-        return targets;
-    }
-
-    // minify from the generated release bundle in a separate turbo task.
-    if (isMin && bundleSource === 'release') {
-        /**
-         * @type {RollupOptions}
-         */
-        const target = {
-            input: `${dir}/${OUT_PREFIX.release}${isUMD ? '.js' : '.mjs'}`,
+            input: `${dir}/${OUT_PREFIX.std}${isUMD ? '.js' : '.mjs'}`,
             plugins: [
                 swcPlugin({ swc: swcOptions(isDebug, isMin) })
             ],
@@ -258,15 +234,15 @@ function buildJSOptions({
         return targets;
     }
 
-    // minify from release build
-    if (isMin && HISTORY.has(`release-${moduleFormat}-true`)) {
-        const release = HISTORY.get(`release-${moduleFormat}-true`);
+    // minify from std build
+    if (isMin && HISTORY.has(`std-${moduleFormat}-true`)) {
+        const std = HISTORY.get(`std-${moduleFormat}-true`);
 
         /**
          * @type {RollupOptions}
          */
         const target = {
-            input: release.output.file,
+            input: std.output.file,
             plugins: [
                 swcPlugin({ swc: swcOptions(isDebug, isMin) })
             ],
@@ -290,7 +266,7 @@ function buildJSOptions({
         input,
         output: {
             banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: buildType === 'release' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
+            plugins: buildType === 'std' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
             format: isUMD ? 'umd' : 'es',
             indent: '\t',
             sourcemap: bundled && isDebug && 'inline',
@@ -303,7 +279,7 @@ function buildJSOptions({
         },
         plugins: [
             resolve(),
-            jscc(getJSCCOptions(isMin ? 'release' : buildType)),
+            jscc(getJSCCOptions(isMin ? 'std' : buildType)),
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
