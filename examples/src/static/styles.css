@@ -415,6 +415,17 @@ body {
     background-color: #364346;
 }
 
+/* Landscape/desktop: tall controls scroll inside the panel (same idea as #sideBar-contents). */
+#controlPanel.landscape {
+    overflow: hidden;
+}
+
+#controlPanel.landscape > .pcui-panel-content {
+    overflow-y: auto;
+    max-height: calc(100vh - 48px);
+    min-height: 0;
+}
+
 #descriptionPanel {
     /* center on the bottom of the page */
     position: absolute;
