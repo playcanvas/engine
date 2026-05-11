@@ -3,7 +3,6 @@
   "globalDependencies": [
     ".git/HEAD",
     ".git/packed-refs",
-    ".git/refs/heads/**",
     "build.mjs",
     "package-lock.json",
     "package.json",
@@ -125,22 +124,16 @@
       ]
     },
     "build:min:umd": {
-      "dependsOn": [
-        "build:rel:umd"
-      ],
       "inputs": [
-        "package.json"
+        "src/**/*.js"
       ],
       "outputs": [
         "build/playcanvas.min.js"
       ]
     },
     "build:min:esm": {
-      "dependsOn": [
-        "build:rel:esm"
-      ],
       "inputs": [
-        "package.json"
+        "src/**/*.js"
       ],
       "outputs": [
         "build/playcanvas.min.mjs"

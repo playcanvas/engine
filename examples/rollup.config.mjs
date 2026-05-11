@@ -220,7 +220,7 @@ const ENGINE_TARGETS = (() => {
             ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'rel',
-                bundleState: 'bundled',
+                preserveModules: false,
                 input: '../src/index.js',
                 dir: 'dist/iframe'
             })
@@ -232,7 +232,7 @@ const ENGINE_TARGETS = (() => {
             ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'dbg',
-                bundleState: 'bundled',
+                preserveModules: false,
                 input: '../src/index.js',
                 dir: 'dist/iframe'
             })
@@ -244,7 +244,7 @@ const ENGINE_TARGETS = (() => {
             ...buildJSOptions({
                 moduleFormat: 'esm',
                 buildType: 'prf',
-                bundleState: 'bundled',
+                preserveModules: false,
                 input: '../src/index.js',
                 dir: 'dist/iframe'
             })
