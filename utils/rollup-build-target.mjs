@@ -76,17 +76,6 @@ const OUT_PREFIX = {
     min: 'playcanvas.min'
 };
 
-const MINIFY_OPTIONS = {
-    compress: {
-        drop_console: true,
-        pure_funcs: []
-    },
-    mangle: true,
-    format: {
-        comments: false
-    }
-};
-
 /**
  * @param {'rel'|'dbg'|'prf'} buildType - The build type.
  * @returns {object} - The JSCC options.
@@ -161,13 +150,27 @@ function getOutPlugins(type) {
     return plugins;
 }
 
+/**
+ * Create a Rollup plugin to minify the output using SWC.
+ *
+ * @param {boolean} esm - Whether the output is an ES module.
+ * @param {string} banner - The banner to prepend to the minified code.
+ * @returns {import('rollup').Plugin} The Rollup plugin.
+ */
 function minifyOutput(esm, banner) {
     return {
         name: 'swc-minify',
         async renderChunk(code) {
             const result = await minify(code, {
-                ...MINIFY_OPTIONS,
-                module: esm
+                module: esm,
+                compress: {
+                    drop_console: true,
+                    pure_funcs: []
+                },
+                mangle: true,
+                format: {
+                    comments: false
+                }
             });
             return {
                 code: `${banner}\n${result.code}`,
@@ -204,6 +207,7 @@ function buildJSOptions({
     const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
     const banner = getBanner(BANNER[buildType]);
 
+    /** @type {OutputOptions[]} */
     const output = [{
         banner: isMin ? undefined : banner,
         plugins: buildType === 'rel' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
