@@ -3,6 +3,7 @@ import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_R16U, XRDEPTHSENSINGFORMAT_F32 } from './constants.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
@@ -270,6 +271,14 @@ class XrManager extends EventHandler {
 
     /** @private */
     _height = 0;
+
+    /**
+     * Scratch for {@link XrBridge#getFramebufferSize}; avoids per-frame allocation.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _framebufferSize = new Vec2();
 
     /** @private */
     _framebufferScaleFactor = 1.0;
@@ -824,8 +833,9 @@ class XrManager extends EventHandler {
         if (!this._session) return false;
 
         // canvas resolution should be set on first frame availability or resolution changes
-        const width = frame.session.renderState.baseLayer.framebufferWidth;
-        const height = frame.session.renderState.baseLayer.framebufferHeight;
+        this.xrBridge.getFramebufferSize(frame, this._framebufferSize);
+        const width = this._framebufferSize.x;
+        const height = this._framebufferSize.y;
         if (this._width !== width || this._height !== height) {
             this._width = width;
             this._height = height;

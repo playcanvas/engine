@@ -2,6 +2,7 @@
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { EventHandler } from '../../core/event-handler.js'
  * @import { EventHandle } from '../../core/event-handle.js'
+ * @import { Vec2 } from '../../core/math/vec2.js'
  */
 
 /**
@@ -120,6 +121,28 @@ class XrBridge {
 
     releasePresentation() {
         this.impl.releasePresentation();
+    }
+
+    /**
+     * Writes immersive framebuffer size in pixels for this frame (backend-specific source)
+     * into {@link Vec2#x} (width) and {@link Vec2#y} (height).
+     *
+     * @param {XRFrame} frame - Current XR frame.
+     * @param {Vec2} out - Receives width and height; reused by the caller to avoid per-frame allocation.
+     */
+    getFramebufferSize(frame, out) {
+        this.impl.getFramebufferSize(frame, out);
+    }
+
+    /**
+     * Viewport rectangle for an XR view within the immersive framebuffer (or per-view texture).
+     *
+     * @param {XRFrame} frame - Current XR frame.
+     * @param {XRView} xrView - WebXR view.
+     * @returns {XRViewport} Viewport for this view.
+     */
+    getViewport(frame, xrView) {
+        return this.impl.getViewport(frame, xrView);
     }
 
     /**

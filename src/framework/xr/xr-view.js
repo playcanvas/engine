@@ -330,10 +330,8 @@ class XrView extends EventHandler {
             this._xrCamera = this._xrView.camera;
         }
 
-        const layer = frame.session.renderState.baseLayer;
-
         // viewport
-        const viewport = layer.getViewport(this._xrView);
+        const viewport = this._manager.xrBridge.getViewport(frame, this._xrView);
         this._viewport.x = viewport.x;
         this._viewport.y = viewport.y;
         this._viewport.z = viewport.width;

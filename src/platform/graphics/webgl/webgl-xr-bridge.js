@@ -1,6 +1,7 @@
 /**
  * @import { XrBridge } from '../xr-bridge.js'
  * @import { GraphicsDevice } from '../graphics-device.js'
+ * @import { Vec2 } from '../../../core/math/vec2.js'
  */
 
 /**
@@ -49,6 +50,28 @@ class WebglXrBridge {
      */
     get graphicsBinding() {
         return this._graphicsBinding;
+    }
+
+    /**
+     * @param {XRFrame} frame - Current XR frame.
+     * @param {Vec2} out - Width in {@link Vec2#x}, height in {@link Vec2#y}.
+     */
+    getFramebufferSize(frame, out) {
+        const baseLayer = frame.session.renderState.baseLayer;
+        if (!baseLayer) {
+            out.set(0, 0);
+            return;
+        }
+        out.set(baseLayer.framebufferWidth, baseLayer.framebufferHeight);
+    }
+
+    /**
+     * @param {XRFrame} frame - Current XR frame.
+     * @param {XRView} xrView - WebXR view.
+     * @returns {XRViewport} Viewport from the session base layer.
+     */
+    getViewport(frame, xrView) {
+        return frame.session.renderState.baseLayer.getViewport(xrView);
     }
 
     /**
