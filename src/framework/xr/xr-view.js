@@ -354,7 +354,7 @@ class XrView extends EventHandler {
             return;
         }
 
-        const binding = this._manager.webglBinding;
+        const binding = this._manager.graphicsBinding;
         if (!binding) {
             return;
         }
@@ -418,7 +418,7 @@ class XrView extends EventHandler {
 
         const gpu = this._manager.views.depthGpuOptimized;
 
-        const infoSource = gpu ? this._manager.webglBinding : frame;
+        const infoSource = gpu ? this._manager.graphicsBinding : frame;
         if (!infoSource) {
             this._depthInfo = null;
             return;

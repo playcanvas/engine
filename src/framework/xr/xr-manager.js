@@ -14,6 +14,7 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
 import { XrAnchors } from './xr-anchors.js';
 import { XrMeshDetection } from './xr-mesh-detection.js';
 import { XrViews } from './xr-views.js';
+import { XrBridge } from '../../platform/graphics/xr-bridge.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -154,16 +155,21 @@ class XrManager extends EventHandler {
     _session = null;
 
     /**
-     * @type {XRWebGLLayer|null}
-     * @private
-     */
-    _baseLayer = null;
-
-    /**
-     * @type {XRWebGLBinding|null}
+     * Graphics-backend XR glue for the active session.
+     *
+     * @type {XrBridge|null}
      * @ignore
      */
-    webglBinding = null;
+    xrBridge = null;
+
+    /**
+     * Backend-specific XR binding for GPU camera/depth paths (e.g. WebGL {@link XRWebGLBinding}).
+     *
+     * @type {XRWebGLBinding|null}
+     */
+    get graphicsBinding() {
+        return this.xrBridge?.graphicsBinding ?? null;
+    }
 
     /**
      * @type {XRReferenceSpace|null}
@@ -304,9 +310,6 @@ class XrManager extends EventHandler {
                 this._deviceAvailabilityCheck();
             });
             this._deviceAvailabilityCheck();
-
-            this.app.graphicsDevice.on('devicelost', this._onDeviceLost, this);
-            this.app.graphicsDevice.on('devicerestored', this._onDeviceRestored, this);
         }
     }
 
@@ -315,7 +318,12 @@ class XrManager extends EventHandler {
      *
      * @ignore
      */
-    destroy() { }
+    destroy() {
+        if (this.xrBridge) {
+            this.xrBridge.destroy();
+            this.xrBridge = null;
+        }
+    }
 
     /**
      * Attempts to start XR session for provided {@link CameraComponent} and optionally fires
@@ -562,7 +570,7 @@ class XrManager extends EventHandler {
             return;
         }
 
-        this.webglBinding = null;
+        this.xrBridge?.releasePresentation();
 
         if (callback) this.once('end', callback);
 
@@ -685,6 +693,8 @@ class XrManager extends EventHandler {
 
         this._session = session;
 
+        this.xrBridge = new XrBridge(this.app.graphicsDevice, this);
+
         const onVisibilityChange = () => {
             this.fire('visibility:change', session.visibilityState);
         };
@@ -712,6 +722,11 @@ class XrManager extends EventHandler {
 
             if (!failed) this.fire('end');
 
+            if (this.xrBridge) {
+                this.xrBridge.destroy();
+                this.xrBridge = null;
+            }
+
             this._session = null;
             this._referenceSpace = null;
             this._width = 0;
@@ -737,7 +752,17 @@ class XrManager extends EventHandler {
         // we've set this in the graphics device
         Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
 
-        this._createBaseLayer();
+        const gd = this.app.graphicsDevice;
+        const framebufferScaleFactor = (gd.maxPixelRatio / window.devicePixelRatio) * this._framebufferScaleFactor;
+
+        this.xrBridge.attachPresentation(this._session, {
+            framebufferScaleFactor,
+            depthNear: this._depthNear,
+            depthFar: this._depthFar,
+            onBindingError: (ex) => {
+                this.fire('error', ex);
+            }
+        });
 
         if (this.session.supportedFrameRates) {
             this._supportedFrameRates = Array.from(this.session.supportedFrameRates);
@@ -788,69 +813,6 @@ class XrManager extends EventHandler {
             depthNear: this._depthNear,
             depthFar: this._depthFar
         });
-    }
-
-    _createBaseLayer() {
-        const device = this.app.graphicsDevice;
-        const framebufferScaleFactor = (device.maxPixelRatio / window.devicePixelRatio) * this._framebufferScaleFactor;
-
-        this._baseLayer = new XRWebGLLayer(this._session, device.gl, {
-            alpha: true,
-            depth: true,
-            stencil: true,
-            framebufferScaleFactor: framebufferScaleFactor,
-            antialias: false
-        });
-
-        if (device?.isWebGL2 && window.XRWebGLBinding) {
-            try {
-                this.webglBinding = new XRWebGLBinding(this._session, device.gl);
-            } catch (ex) {
-                this.fire('error', ex);
-            }
-        }
-
-        this._session.updateRenderState({
-            baseLayer: this._baseLayer,
-            depthNear: this._depthNear,
-            depthFar: this._depthFar
-        });
-    }
-
-    /** @private */
-    _onDeviceLost() {
-        if (!this._session) {
-            return;
-        }
-
-        if (this.webglBinding) {
-            this.webglBinding = null;
-        }
-
-        this._baseLayer = null;
-
-        this._session.updateRenderState({
-            baseLayer: this._baseLayer,
-            depthNear: this._depthNear,
-            depthFar: this._depthFar
-        });
-    }
-
-    /** @private */
-    _onDeviceRestored() {
-        if (!this._session) {
-            return;
-        }
-
-        setTimeout(() => {
-            this.app.graphicsDevice.gl.makeXRCompatible()
-            .then(() => {
-                this._createBaseLayer();
-            })
-            .catch((ex) => {
-                this.fire('error', ex);
-            });
-        }, 0);
     }
 
     /**
@@ -1031,12 +993,13 @@ class XrManager extends EventHandler {
      * @type {number}
      */
     set fixedFoveation(value) {
-        if ((this._baseLayer?.fixedFoveation ?? null) !== null) {
+        const layer = this.xrBridge?.presentationLayer;
+        if ((layer?.fixedFoveation ?? null) !== null) {
             if (this.app.graphicsDevice.samples > 1) {
                 Debug.warn('Fixed Foveation is ignored. Disable anti-aliasing for it to be effective.');
             }
 
-            this._baseLayer.fixedFoveation = value;
+            layer.fixedFoveation = value;
         }
     }
 
@@ -1047,7 +1010,8 @@ class XrManager extends EventHandler {
      * @type {number|null}
      */
     get fixedFoveation() {
-        return this._baseLayer?.fixedFoveation ?? null;
+        const layer = this.xrBridge?.presentationLayer;
+        return layer?.fixedFoveation ?? null;
     }
 
     /**

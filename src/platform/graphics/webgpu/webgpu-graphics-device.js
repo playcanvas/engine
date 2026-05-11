@@ -33,6 +33,7 @@ import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
 import { WebgpuUploadStream } from './webgpu-upload-stream.js';
+import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -573,6 +574,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     createTextureImpl(texture) {
         this.textures.add(texture);
         return new WebgpuTexture(texture);
+    }
+
+    createXrBridgeImpl(xrBridge) {
+        return new WebgpuXrBridge(xrBridge);
     }
 
     createRenderTargetImpl(renderTarget) {

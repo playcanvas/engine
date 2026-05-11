@@ -1,7 +1,6 @@
+// @config HIDDEN
 // @config WEBGPU_DISABLED
 // @config NO_MINISTATS
-// @config DESCRIPTION LOD-streamed Gaussian splats (Roman Parish) with radial reveal and WebXR VR; WebGL only. Desktop fly controls; Quest-style thumbstick locomotion when in VR.
-// Example route: #/gaussian-splatting-xr/vr-lod
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
