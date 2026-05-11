@@ -14,8 +14,9 @@
  * treeflame - Enable treeflame build visualization (rel only).
  */
 
-import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { rm } from 'node:fs/promises';
+import path from 'node:path';
 import { parseArgs, stripVTControlCharacters } from 'node:util';
 
 const JS_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf', 'min']);
@@ -31,6 +32,7 @@ Options:
   --format <esm|umd> (default: esm)
   --watch, -w
   --sourcemaps, -m
+  --clean
   --treemap, --treenet, --treesun, --treeflame
 
 Use npm run build or turbo run build:all for aggregate builds.`;
@@ -42,6 +44,7 @@ const { values } = parseArgs({
         format: { type: 'string' },
         watch: { type: 'boolean', short: 'w' },
         sourcemaps: { type: 'boolean', short: 'm' },
+        clean: { type: 'boolean' },
         treemap: { type: 'boolean' },
         treenet: { type: 'boolean' },
         treesun: { type: 'boolean' },
@@ -161,6 +164,11 @@ const runRollup = () => {
 
 if (values.help) {
     console.log(USAGE);
+    process.exit(0);
+}
+
+if (values.clean) {
+    await rm('build', { recursive: true, force: true });
     process.exit(0);
 }
 
