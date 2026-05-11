@@ -121,7 +121,6 @@
   },
   "scripts": {
     "build": "turbo run build:all",
-    "clean": "node build.mjs --clean",
     "build:types": "node build.mjs --type=types",
     "build:rel:umd": "node build.mjs --format=umd",
     "build:rel:esm": "node build.mjs",
@@ -142,6 +141,7 @@
     "watch:prf": "node build.mjs --type=prf --watch",
     "watch:min": "node build.mjs --type=min --watch",
     "watch:types": "node build.mjs --type=types --watch",
+    "clean": "node build.mjs --clean",
     "docs": "typedoc",
     "lint": "eslint scripts src test utils build.mjs eslint.config.mjs rollup.config.mjs",
     "publint": "publint --level error",
