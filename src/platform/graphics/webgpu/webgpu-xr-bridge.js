@@ -12,13 +12,13 @@ import { Vec2 } from '../../../core/math/vec2.js';
  */
 class WebgpuXrBridge {
     /**
-     * @type {XRGPUBinding|null}
+     * @type {any} // `XRGPUBinding | null`; using `any` to avoid exporting WebXR GPU types in published typings.
      * @private
      */
     _binding = null;
 
     /**
-     * @type {XRProjectionLayer|null}
+     * @type {any} // `XRProjectionLayer | null`; using `any` to avoid exporting WebXR GPU types in published typings.
      * @private
      */
     _layer = null;
@@ -69,7 +69,7 @@ class WebgpuXrBridge {
             return;
         }
 
-        /** @type {XRGPUSubImage|null} */
+        /** @type {any} // `XRGPUSubImage | null`; using `any` to avoid exporting WebXR GPU types in published typings. */
         let firstSub = null;
         for (let i = 0; i < pose.views.length; i++) {
             try {
@@ -101,14 +101,14 @@ class WebgpuXrBridge {
     }
 
     /**
-     * @returns {XRProjectionLayer|null} Active projection layer, if any.
+     * @returns {any} // `XRProjectionLayer | null`; using `any` to avoid exporting WebXR GPU types in published typings.
      */
     get presentationLayer() {
         return this._layer;
     }
 
     /**
-     * @returns {XRGPUBinding|null} WebXR WebGPU binding, if any.
+     * @returns {any} // `XRGPUBinding | null`; using `any` to avoid exporting WebXR GPU types in published typings.
      */
     get graphicsBinding() {
         return this._binding;

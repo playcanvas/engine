@@ -188,8 +188,8 @@ class WebgpuRenderTarget {
      * Assign a color buffer. This allows the color buffer of the main framebuffer
      * to be swapped each frame to a buffer provided by the context.
      *
-     * @param {GPUTexture} gpuTexture - The color buffer.
-     * @param {GPUTextureFormat} viewFormat - View format for the render pass attachment (may differ from texture storage for sRGB).
+     * @param {any} gpuTexture - // `GPUTexture`; using `any` to avoid exporting WebGPU types in published typings.
+     * @param {any} viewFormat - // `GPUTextureFormat`; using `any` to avoid exporting WebGPU types in published typings (may differ from texture storage for sRGB).
      */
     assignColorTexture(gpuTexture, viewFormat) {
 

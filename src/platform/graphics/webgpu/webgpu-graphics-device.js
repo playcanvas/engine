@@ -158,16 +158,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * When set, immersive XR writes color to this texture instead of the canvas swapchain.
-     *
-     * @type {GPUTexture|null}
+     * @type {any} // `GPUTexture | null`; using `any` to avoid exporting WebGPU types in published typings.
      * @ignore
      */
     xrColorTexture = null;
 
     /**
      * View format of {@link WebgpuGraphicsDevice#xrColorTexture} for render pass attachment views.
-     *
-     * @type {GPUTextureFormat|null}
+     * @type {any} // `GPUTextureFormat | null`; using `any` to avoid exporting WebGPU types in published typings.
      * @ignore
      */
     xrColorTextureViewFormat = null;
