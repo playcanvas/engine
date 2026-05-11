@@ -1,5 +1,4 @@
 // @config HIDDEN
-// @config WEBGPU_DISABLED
 // @config NO_MINISTATS
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';

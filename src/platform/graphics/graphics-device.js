@@ -600,6 +600,9 @@ class GraphicsDevice extends EventHandler {
         this.initOptions.powerPreference ??= 'high-performance';
         this.initOptions.displayFormat ??= DISPLAYFORMAT_LDR;
 
+        // If WebXR is exposed, default to an XR-suitable GPU
+        this.initOptions.xrCompatible ??= platform.browser && !!navigator.xr;
+
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;

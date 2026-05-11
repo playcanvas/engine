@@ -288,7 +288,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
             powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined,
-            xrCompatible: this.initOptions.xrCompatible
+
+            // Required for WebXR sessions using WebGPU
+            xrCompatible: !!this.initOptions.xrCompatible
         };
 
         /**
