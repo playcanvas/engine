@@ -415,15 +415,29 @@ body {
     background-color: #364346;
 }
 
-/* Landscape/desktop: tall controls scroll inside the panel (same idea as #sideBar-contents). */
+/* Landscape/desktop: scroll only the example controls, not the device selector, so PCUI
+   SelectInput dropdowns (position: absolute) are not clipped by overflow. */
 #controlPanel.landscape {
-    overflow: hidden;
+    overflow: visible;
+    max-height: min(calc(100% - 16px), calc(100vh - 48px));
 }
 
 #controlPanel.landscape > .pcui-panel-content {
-    overflow-y: auto;
-    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     min-height: 0;
+    overflow: visible;
+}
+
+#controlPanel.landscape #deviceTypeSelectInput {
+    flex-shrink: 0;
+}
+
+#controlPanel-scroll-region {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 #descriptionPanel {

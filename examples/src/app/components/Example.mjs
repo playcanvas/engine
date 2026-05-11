@@ -386,7 +386,13 @@ class Example extends TypedComponent {
                     collapsed
                 },
                 this.renderDeviceSelector(),
-                this.renderControls()
+                jsx(
+                    Container,
+                    {
+                        id: 'controlPanel-scroll-region'
+                    },
+                    this.renderControls()
+                )
             ),
             this.renderDescription()
         );
