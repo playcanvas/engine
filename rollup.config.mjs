@@ -7,21 +7,15 @@ const BOLD_OUT = '\x1b[1m';
 const RESET_OUT = '\x1b[0m';
 
 const BUILD_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf', 'min']);
-const MODULE_FORMAT = /** @type {const} */ (['umd', 'esm']);
-const BUNDLE_STATES = /** @type {const} */ (['unbundled', 'bundled']);
+const MODULE_FORMATS = /** @type {const} */ (['umd', 'esm']);
 
 const envBuild = process.env.build ? process.env.build.toLowerCase() : null;
-const bundleSource = process.env.bundleSource ? process.env.bundleSource.toLowerCase() : null;
 
-function includeBuild(buildType, moduleFormat, bundleState) {
+function includeBuild(buildType, moduleFormat) {
     return envBuild === null ||
         envBuild === buildType ||
         envBuild === moduleFormat ||
-        envBuild === bundleState ||
-        envBuild === `${moduleFormat}:${buildType}` ||
-        envBuild === `${moduleFormat}:${bundleState}` ||
-        envBuild === `${buildType}:${bundleState}` ||
-        envBuild === `${moduleFormat}:${buildType}:${bundleState}`;
+        envBuild === `${moduleFormat}:${buildType}`;
 }
 
 /**
@@ -29,26 +23,15 @@ function includeBuild(buildType, moduleFormat, bundleState) {
  */
 const targets = [];
 BUILD_TYPES.forEach((buildType) => {
-    MODULE_FORMAT.forEach((moduleFormat) => {
-        BUNDLE_STATES.forEach((bundleState) => {
-            if (bundleState === 'unbundled' && moduleFormat === 'umd') {
-                return;
-            }
-            if (bundleState === 'unbundled' && buildType === 'min') {
-                return;
-            }
+    MODULE_FORMATS.forEach((moduleFormat) => {
+        if (!includeBuild(buildType, moduleFormat)) {
+            return;
+        }
 
-            if (!includeBuild(buildType, moduleFormat, bundleState)) {
-                return;
-            }
-
-            targets.push(...buildJSOptions({
-                moduleFormat,
-                buildType,
-                bundleState,
-                bundleSource
-            }));
-        });
+        targets.push(...buildJSOptions({
+            moduleFormat,
+            buildType
+        }));
     });
 });
 

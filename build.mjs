@@ -16,7 +16,6 @@
  */
 
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs, stripVTControlCharacters } from 'node:util';
@@ -116,8 +115,6 @@ const fail = (msg) => {
 
 const bin = name => path.join(BIN_DIR, process.platform === 'win32' ? `${name}.cmd` : name);
 
-const relBundle = () => path.join('build', `playcanvas${format === 'umd' ? '.js' : '.mjs'}`);
-
 const getRollupBuild = () => {
     if (!BUILD_TYPES.includes(type)) {
         fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
@@ -142,12 +139,7 @@ const getRollupBuild = () => {
         return 'build:types';
     }
 
-    if (type === 'min') {
-        const build = `build:${format}:min:bundled`;
-        return existsSync(relBundle()) ? `${build},bundleSource:rel` : build;
-    }
-
-    return `build:${format}:${type}${format === 'umd' ? ':bundled' : ''}`;
+    return `build:${format}:${type}`;
 };
 
 const runRollup = () => {
