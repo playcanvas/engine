@@ -196,7 +196,7 @@ function buildJSOptions({
                 swcPlugin({ swc: swcOptions(isDebug, isMin) })
             ],
             output: {
-                banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
+                banner: getBanner(BANNER[buildType]),
                 file: `${dir}/${file}`
             },
             context: isUMD ? 'this' : undefined
@@ -247,7 +247,7 @@ function buildJSOptions({
                 swcPlugin({ swc: swcOptions(isDebug, isMin) })
             ],
             output: {
-                banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
+                banner: getBanner(BANNER[buildType]),
                 file: `${dir}/${file}`
             },
             context: isUMD ? 'this' : undefined
