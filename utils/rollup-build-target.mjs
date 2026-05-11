@@ -63,14 +63,14 @@ const STRIP_FUNCTIONS = [
 
 const BANNER = {
     dbg: ' (DEBUG)',
-    std: ' (RELEASE)',
+    rel: ' (RELEASE)',
     prf: ' (PROFILE)',
     min: ' (RELEASE)'
 };
 
 const OUT_PREFIX = {
     dbg: 'playcanvas.dbg',
-    std: 'playcanvas',
+    rel: 'playcanvas',
     prf: 'playcanvas.prf',
     min: 'playcanvas.min'
 };
@@ -78,7 +78,7 @@ const OUT_PREFIX = {
 const HISTORY = new Map();
 
 /**
- * @param {'dbg'|'std'|'prf'} buildType - The build type.
+ * @param {'rel'|'dbg'|'prf'} buildType - The build type.
  * @returns {object} - The JSCC options.
  */
 function getJSCCOptions(buildType) {
@@ -93,7 +93,7 @@ function getJSCCOptions(buildType) {
             asloader: false,
             keepLines: true
         },
-        std: {
+        rel: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision
@@ -154,15 +154,15 @@ function getOutPlugins(type) {
 /**
  * Build rollup options for JS (bundled and unbundled).
  *
- * For faster subsequent builds, the unbundled and std builds are cached in the HISTORY map to
+ * For faster subsequent builds, the unbundled and rel builds are cached in the HISTORY map to
  * be used for bundled and minified builds. They are stored in the HISTORY map with the key:
- * `<dbg|std|prf>-<umd|esm>-<bundled>`.
+ * `<rel|dbg|prf>-<umd|esm>-<bundled>`.
  *
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
- * @param {'dbg'|'std'|'prf'|'min'} options.buildType - The build type.
+ * @param {'rel'|'dbg'|'prf'|'min'} options.buildType - The build type.
  * @param {'unbundled'|'bundled'} [options.bundleState] - The bundle state.
- * @param {'std'|null} [options.bundleSource] - The generated input source.
+ * @param {'rel'|null} [options.bundleSource] - The generated input source.
  * @param {string} [options.input] - Only used for examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @returns {RollupOptions[]} Rollup targets.
@@ -185,13 +185,13 @@ function buildJSOptions({
 
     const targets = [];
 
-    // minify from the generated std bundle in a separate turbo task.
-    if (isMin && bundleSource === 'std') {
+    // minify from the generated rel bundle in a separate turbo task.
+    if (isMin && bundleSource === 'rel') {
         /**
          * @type {RollupOptions}
          */
         const target = {
-            input: `${dir}/${OUT_PREFIX.std}${isUMD ? '.js' : '.mjs'}`,
+            input: `${dir}/${OUT_PREFIX.rel}${isUMD ? '.js' : '.mjs'}`,
             plugins: [
                 swcPlugin({ swc: swcOptions(isDebug, isMin) })
             ],
@@ -234,15 +234,15 @@ function buildJSOptions({
         return targets;
     }
 
-    // minify from std build
-    if (isMin && HISTORY.has(`std-${moduleFormat}-true`)) {
-        const std = HISTORY.get(`std-${moduleFormat}-true`);
+    // minify from rel build
+    if (isMin && HISTORY.has(`rel-${moduleFormat}-true`)) {
+        const rel = HISTORY.get(`rel-${moduleFormat}-true`);
 
         /**
          * @type {RollupOptions}
          */
         const target = {
-            input: std.output.file,
+            input: rel.output.file,
             plugins: [
                 swcPlugin({ swc: swcOptions(isDebug, isMin) })
             ],
@@ -266,7 +266,7 @@ function buildJSOptions({
         input,
         output: {
             banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: buildType === 'std' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
+            plugins: buildType === 'rel' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
             format: isUMD ? 'umd' : 'es',
             indent: '\t',
             sourcemap: bundled && isDebug && 'inline',
@@ -279,7 +279,7 @@ function buildJSOptions({
         },
         plugins: [
             resolve(),
-            jscc(getJSCCOptions(isMin ? 'std' : buildType)),
+            jscc(getJSCCOptions(isMin ? 'rel' : buildType)),
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,

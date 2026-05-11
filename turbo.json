@@ -21,11 +21,11 @@
         "build:types"
       ]
     },
-    "build:std": {
+    "build:rel": {
       "cache": false,
       "dependsOn": [
-        "build:std:umd",
-        "build:std:esm"
+        "build:rel:umd",
+        "build:rel:esm"
       ]
     },
     "build:dbg": {
@@ -52,7 +52,7 @@
     "build:umd": {
       "cache": false,
       "dependsOn": [
-        "build:std:umd",
+        "build:rel:umd",
         "build:dbg:umd",
         "build:prf:umd",
         "build:min:umd"
@@ -61,13 +61,13 @@
     "build:esm": {
       "cache": false,
       "dependsOn": [
-        "build:std:esm",
+        "build:rel:esm",
         "build:dbg:esm",
         "build:prf:esm",
         "build:min:esm"
       ]
     },
-    "build:std:umd": {
+    "build:rel:umd": {
       "inputs": [
         "src/**/*.js"
       ],
@@ -75,7 +75,7 @@
         "build/playcanvas.js"
       ]
     },
-    "build:std:esm": {
+    "build:rel:esm": {
       "inputs": [
         "src/**/*.js"
       ],
@@ -123,7 +123,7 @@
     },
     "build:min:umd": {
       "dependsOn": [
-        "build:std:umd"
+        "build:rel:umd"
       ],
       "inputs": [
         "package.json"
@@ -134,7 +134,7 @@
     },
     "build:min:esm": {
       "dependsOn": [
-        "build:std:esm"
+        "build:rel:esm"
       ],
       "inputs": [
         "package.json"
