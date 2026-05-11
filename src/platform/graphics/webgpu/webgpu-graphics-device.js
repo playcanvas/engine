@@ -37,6 +37,7 @@ import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
+ * @import { Texture } from '../texture.js'
  */
 
 const _uniqueLocations = new Map();
@@ -156,6 +157,33 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     submitVersion = 0;
 
     /**
+     * When set, immersive XR writes color to this texture instead of the canvas swapchain.
+     *
+     * @type {GPUTexture|null}
+     * @ignore
+     */
+    xrColorTexture = null;
+
+    /**
+     * View format of {@link WebgpuGraphicsDevice#xrColorTexture} for render pass attachment views.
+     *
+     * @type {GPUTextureFormat|null}
+     * @ignore
+     */
+    xrColorTextureViewFormat = null;
+
+    /**
+     * When set, used as the main color attachment in {@link WebgpuGraphicsDevice#frameStart} if there is
+     * no XR color texture and no canvas {@link GPUCanvasContext#getCurrentTexture} (for example headless
+     * or custom-surface hosts). Must be a WebGPU-backed {@link Texture}; {@link Texture#impl} must expose
+     * {@link WebgpuTexture#gpuTexture}.
+     *
+     * @type {Texture|null}
+     * @ignore
+     */
+    externalBackbuffer = null;
+
+    /**
      * Current command buffer encoder.
      *
      * @type {GPUCommandEncoder|null}
@@ -211,6 +239,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.resolver.destroy();
         this.resolver = null;
+
+        this.xrColorTexture = null;
+        this.xrColorTextureViewFormat = null;
+
+        this.externalBackbuffer = null;
 
         super.destroy();
     }
@@ -504,8 +537,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
 
-        // current frame color output buffer (fallback to external backbuffer if not available)
-        const outColorBuffer = this.gpuContext?.getCurrentTexture?.() ?? this.externalBackbuffer?.impl.gpuTexture;
+        // current frame color output buffer (XR overrides canvas swapchain; external backbuffer is last resort)
+        const outColorBuffer =
+            this.xrColorTexture ??
+            this.gpuContext?.getCurrentTexture?.() ??
+            this.externalBackbuffer?.impl.gpuTexture;
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture
@@ -522,13 +558,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const rt = this.backBuffer;
         const wrt = rt.impl;
 
+        const attachmentViewFormat = (outColorBuffer === this.xrColorTexture && this.xrColorTextureViewFormat) ?
+            this.xrColorTextureViewFormat :
+            this.backBufferViewFormat;
+
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-        wrt.setColorAttachment(0, undefined, this.backBufferViewFormat);
+        wrt.setColorAttachment(0, undefined, attachmentViewFormat);
 
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
-        wrt.assignColorTexture(this, outColorBuffer);
+        wrt.assignColorTexture(outColorBuffer, attachmentViewFormat);
 
         WebgpuDebug.end(this, 'frameStart');
         WebgpuDebug.end(this, 'frameStart');

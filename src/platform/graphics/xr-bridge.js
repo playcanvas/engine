@@ -128,9 +128,11 @@ class XrBridge {
      * Called once per XR frame before rendering to set the backend render target for this frame.
      *
      * @param {XRFrame} frame - Current XR frame.
+     * @param {XRReferenceSpace|null} referenceSpace - Active XR reference space (WebGPU path uses
+     * it for subimages).
      */
-    beginFrame(frame) {
-        this.impl.beginFrame(frame);
+    beginFrame(frame, referenceSpace) {
+        this.impl.beginFrame(frame, referenceSpace);
     }
 
     /**

@@ -188,16 +188,16 @@ class WebgpuRenderTarget {
      * Assign a color buffer. This allows the color buffer of the main framebuffer
      * to be swapped each frame to a buffer provided by the context.
      *
-     * @param {WebgpuGraphicsDevice} device - The WebGPU graphics device.
-     * @param {any} gpuTexture - The color buffer.
+     * @param {GPUTexture} gpuTexture - The color buffer.
+     * @param {GPUTextureFormat} viewFormat - View format for the render pass attachment (may differ from texture storage for sRGB).
      */
-    assignColorTexture(device, gpuTexture) {
+    assignColorTexture(gpuTexture, viewFormat) {
 
         Debug.assert(gpuTexture);
         this.assignedColorTexture = gpuTexture;
 
         // create view (optionally handles srgb conversion)
-        const view = gpuTexture.createView({ format: device.backBufferViewFormat });
+        const view = gpuTexture.createView({ format: viewFormat });
         DebugHelper.setLabel(view, 'Framebuffer.assignedColor');
 
         // use it as render buffer or resolve target
@@ -210,7 +210,7 @@ class WebgpuRenderTarget {
         }
 
         // for main framebuffer, this is how the format is obtained
-        this.setColorAttachment(0, undefined, device.backBufferViewFormat);
+        this.setColorAttachment(0, undefined, viewFormat);
 
         this.updateKey();
     }
@@ -431,7 +431,12 @@ class WebgpuRenderTarget {
         // multi-sampled color buffer
         if (samples > 1) {
 
-            const format = this.isBackbuffer ? device.backBufferViewFormat : colorBuffer.impl.format;
+            // Main framebuffer: MSAA texture format must match the attachment view format used for
+            // resolve; WebgpuGraphicsDevice#frameStart sets that on this impl via setColorAttachment
+            // before the first init.
+            const format = this.isBackbuffer ?
+                (this.colorAttachments[index]?.format ?? device.backBufferViewFormat) :
+                colorBuffer.impl.format;
 
             /** @type {GPUTextureDescriptor} */
             const multisampledTextureDesc = {

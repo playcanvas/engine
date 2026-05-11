@@ -44,8 +44,9 @@ class WebglXrBridge {
      * canvas framebuffer by assigning null.
      *
      * @param {XRFrame} frame - Current XR frame.
+     * @param {XRReferenceSpace|null} _referenceSpace - Active XR reference space.
      */
-    beginFrame(frame) {
+    beginFrame(frame, _referenceSpace) {
         const baseLayer = frame.session.renderState.baseLayer;
         this.xrBridge.device.defaultFramebuffer = baseLayer ? baseLayer.framebuffer : null;
     }

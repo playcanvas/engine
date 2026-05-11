@@ -915,7 +915,7 @@ class XrManager extends EventHandler {
 
         this.fire('update', frame);
 
-        this.xrBridge.beginFrame(frame);
+        this.xrBridge.beginFrame(frame, this._referenceSpace);
 
         return true;
     }
