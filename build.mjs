@@ -31,7 +31,7 @@ const USAGE = `Usage: node build.mjs [options]
 
 Options:
   --type <rel|dbg|prf|min|types> (default: rel)
-  --format <esm|umd> (default: esm)
+  --format <esm|umd> (default: esm, tree visualizers default to both)
   --watch, -w
   --sourcemaps, -m
   --clean
@@ -57,6 +57,7 @@ const { values } = parseArgs({
 });
 
 const type = values.type ?? 'rel';
+const hasFormat = values.format !== undefined;
 const format = values.format ?? 'esm';
 const trees = TREE_FLAGS.filter(flag => values[flag]);
 
@@ -122,12 +123,16 @@ const getRollupBuild = () => {
         fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
     }
 
-    if (values.format && !MODULE_FORMATS.includes(format)) {
+    if (hasFormat && !MODULE_FORMATS.includes(format)) {
         fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
     }
 
     if (trees.length && type !== 'rel') {
         fail('tree visualizers only support --type=rel');
+    }
+
+    if (trees.length && !hasFormat) {
+        return `build:${type}`;
     }
 
     if (type === 'types') {

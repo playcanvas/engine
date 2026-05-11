@@ -71,9 +71,6 @@
       ]
     },
     "build:rel:umd": {
-      "dependsOn": [
-        "clean"
-      ],
       "inputs": [
         "src/**/*.js"
       ],
@@ -82,9 +79,6 @@
       ]
     },
     "build:rel:esm": {
-      "dependsOn": [
-        "clean"
-      ],
       "inputs": [
         "src/**/*.js"
       ],
@@ -95,9 +89,6 @@
       ]
     },
     "build:dbg:umd": {
-      "dependsOn": [
-        "clean"
-      ],
       "inputs": [
         "src/**/*.js"
       ],
@@ -106,9 +97,6 @@
       ]
     },
     "build:dbg:esm": {
-      "dependsOn": [
-        "clean"
-      ],
       "inputs": [
         "src/**/*.js"
       ],
@@ -119,9 +107,6 @@
       ]
     },
     "build:prf:umd": {
-      "dependsOn": [
-        "clean"
-      ],
       "inputs": [
         "src/**/*.js"
       ],
@@ -130,9 +115,6 @@
       ]
     },
     "build:prf:esm": {
-      "dependsOn": [
-        "clean"
-      ],
       "inputs": [
         "src/**/*.js"
       ],
@@ -144,7 +126,6 @@
     },
     "build:min:umd": {
       "dependsOn": [
-        "clean",
         "build:rel:umd"
       ],
       "inputs": [
@@ -156,7 +137,6 @@
     },
     "build:min:esm": {
       "dependsOn": [
-        "clean",
         "build:rel:esm"
       ],
       "inputs": [
@@ -167,9 +147,6 @@
       ]
     },
     "build:types": {
-      "dependsOn": [
-        "clean"
-      ],
       "inputs": [
         "src/**/*.js"
       ],
