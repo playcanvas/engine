@@ -491,7 +491,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             super.loseContext(); // 'super' works correctly here
             this.fire('devicelost');
 
-            await this.createDevice(); // Ensure this method is defined in your class
+            await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
 
             super.restoreContext(); // 'super' works correctly here
             this.fire('devicerestored');
