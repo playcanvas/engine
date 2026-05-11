@@ -55,6 +55,7 @@ const { values } = parseArgs({
     allowPositionals: false
 });
 
+const hasType = values.type !== undefined;
 const type = values.type ?? 'rel';
 const hasFormat = values.format !== undefined;
 const format = values.format ?? 'esm';
@@ -128,7 +129,11 @@ const getRollupBuild = () => {
         fail('tree visualizers only support --type=rel');
     }
 
-    if (trees.length && !hasFormat) {
+    if (values.watch && !hasType && !hasFormat) {
+        return null;
+    }
+
+    if ((values.watch || trees.length) && !hasFormat) {
         return `build:${type}`;
     }
 
@@ -158,7 +163,7 @@ const runRollup = () => {
         args.push('--environment', item);
     }
     if (values.watch) {
-        args.push('-w');
+        args.push('-w', '--no-watch.clearScreen');
     }
 
     return run(bin('rollup'), args);
