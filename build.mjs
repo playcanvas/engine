@@ -3,22 +3,22 @@
  * Usage: node build.mjs [options]
  *
  * Options:
- * --type - Specify the build type: std, dbg, prf, min, types.
+ * --type - Specify the build type: rel, dbg, prf, min, types.
  * --format - Specify the module format: esm, umd.
  * --watch - Rebuild the Rollup leaf build when inputs change.
  * --sourcemaps - Build with source maps using Rollup directly.
  *
- * treemap - Enable treemap build visualization (std only).
- * treenet - Enable treenet build visualization (std only).
- * treesun - Enable treesun build visualization (std only).
- * treeflame - Enable treeflame build visualization (std only).
+ * treemap - Enable treemap build visualization (rel only).
+ * treenet - Enable treenet build visualization (rel only).
+ * treesun - Enable treesun build visualization (rel only).
+ * treeflame - Enable treeflame build visualization (rel only).
  */
 
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { parseArgs, stripVTControlCharacters } from 'node:util';
 
-const JS_TYPES = /** @type {const} */ (['std', 'dbg', 'prf', 'min']);
+const JS_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf', 'min']);
 const BUILD_TYPES = /** @type {const} */ ([...JS_TYPES, 'types']);
 const MODULE_FORMATS = /** @type {const} */ (['umd', 'esm']);
 
@@ -27,7 +27,7 @@ const BIN_DIR = path.join('node_modules', '.bin');
 const USAGE = `Usage: node build.mjs [options]
 
 Options:
-  --type <std|dbg|prf|min|types> (default: std)
+  --type <rel|dbg|prf|min|types> (default: rel)
   --format <esm|umd> (default: esm)
   --watch, -w
   --sourcemaps, -m
@@ -51,7 +51,7 @@ const { values } = parseArgs({
     allowPositionals: false
 });
 
-const type = values.type ?? 'std';
+const type = values.type ?? 'rel';
 const format = values.format ?? 'esm';
 const trees = TREE_FLAGS.filter(flag => values[flag]);
 
@@ -113,8 +113,8 @@ const getRollupBuild = () => {
         fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
     }
 
-    if (trees.length && type !== 'std') {
-        fail('tree visualizers only support --type=std');
+    if (trees.length && type !== 'rel') {
+        fail('tree visualizers only support --type=rel');
     }
 
     if (type === 'types') {
@@ -125,7 +125,7 @@ const getRollupBuild = () => {
     }
 
     if (type === 'min') {
-        return `build:${format}:min:bundled,bundleSource:std`;
+        return `build:${format}:min:bundled,bundleSource:rel`;
     }
 
     return `build:${format}:${type}${format === 'umd' ? ':bundled' : ''}`;

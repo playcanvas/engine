@@ -122,8 +122,8 @@
   "scripts": {
     "build": "turbo run build:all",
     "build:types": "node build.mjs --type=types",
-    "build:std:umd": "node build.mjs --format=umd",
-    "build:std:esm": "node build.mjs",
+    "build:rel:umd": "node build.mjs --format=umd",
+    "build:rel:esm": "node build.mjs",
     "build:dbg:umd": "node build.mjs --type=dbg --format=umd",
     "build:dbg:esm": "node build.mjs --type=dbg",
     "build:prf:umd": "node build.mjs --type=prf --format=umd",

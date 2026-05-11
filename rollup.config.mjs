@@ -6,7 +6,7 @@ const RED_OUT = '\x1b[31m';
 const BOLD_OUT = '\x1b[1m';
 const RESET_OUT = '\x1b[0m';
 
-const BUILD_TYPES = /** @type {const} */ (['std', 'dbg', 'prf', 'min']);
+const BUILD_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf', 'min']);
 const MODULE_FORMAT = /** @type {const} */ (['umd', 'esm']);
 const BUNDLE_STATES = /** @type {const} */ (['unbundled', 'bundled']);
 
