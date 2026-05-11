@@ -750,6 +750,8 @@ class GraphicsDevice extends EventHandler {
      */
     loseContext() {
 
+        Debug.log('pc.GraphicsDevice: Graphics context lost.');
+
         this.contextLost = true;
 
         // force the back-buffer to be recreated on restore
@@ -781,6 +783,8 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     restoreContext() {
+
+        Debug.log('pc.GraphicsDevice: Graphics context restored.');
 
         this.contextLost = false;
 

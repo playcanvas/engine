@@ -201,10 +201,64 @@ class WebgpuXrBridge {
         this._binding = null;
     }
 
+    /**
+     * Clears WebXR WebGPU binding and projection layer references and removes immersive layers from
+     * the session (mirrors {@link WebglXrBridge#onGraphicsDeviceLost} clearing the base layer).
+     */
     onGraphicsDeviceLost() {
+        const bridge = this.xrBridge;
+        const session = bridge._session;
+
+        if (!session) {
+            return;
+        }
+
+        const rs = session.renderState;
+        const device = bridge.device;
+
+        this._binding = null;
+        this._layer = null;
+        this._cachedFramebufferSize.set(0, 0);
+        device.xrColorTexture = null;
+        device.xrColorTextureViewFormat = null;
+
+        session.updateRenderState({
+            layers: [],
+            depthNear: rs.depthNear,
+            depthFar: rs.depthFar
+        });
     }
 
+    /**
+     * Recreates WebXR WebGPU presentation after GPU restore; fires `"error"` on the bridge
+     * {@link XrBridge#eventHandler} if re-attachment fails.
+     */
     onGraphicsDeviceRestored() {
+        const bridge = this.xrBridge;
+
+        if (!bridge._session) {
+            return;
+        }
+
+        const eventHandler = bridge.eventHandler;
+
+        setTimeout(() => {
+            if (!bridge._session) {
+                return;
+            }
+
+            try {
+                const rs = bridge._session.renderState;
+                bridge.attachPresentation(bridge._session, {
+                    framebufferScaleFactor: bridge._framebufferScaleFactor,
+                    depthNear: rs.depthNear,
+                    depthFar: rs.depthFar,
+                    onBindingError: bridge._onBindingError
+                });
+            } catch (ex) {
+                eventHandler.fire('error', ex);
+            }
+        }, 0);
     }
 }
 

@@ -164,9 +164,10 @@ class XrManager extends EventHandler {
     xrBridge = null;
 
     /**
-     * Backend-specific XR binding for GPU camera/depth paths (e.g. WebGL {@link XRWebGLBinding}).
+     * Backend-specific XR binding for GPU camera/depth paths when available (for example WebGL
+     * {@link XRWebGLBinding} or WebGPU `XRGPUBinding` when exposed by the user agent).
      *
-     * @type {XRWebGLBinding|null}
+     * @type {Object|null}
      */
     get graphicsBinding() {
         return this.xrBridge?.graphicsBinding ?? null;

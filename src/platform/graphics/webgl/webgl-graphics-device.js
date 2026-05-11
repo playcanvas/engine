@@ -158,14 +158,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._contextLostHandler = (event) => {
             event.preventDefault();
             this.loseContext();
-            Debug.log('pc.GraphicsDevice: WebGL context lost.');
-            this.fire('devicelost');
         };
 
         this._contextRestoredHandler = () => {
-            Debug.log('pc.GraphicsDevice: WebGL context restored.');
             this.restoreContext();
-            this.fire('devicerestored');
         };
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
@@ -1030,6 +1026,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const shader of this.shaders) {
             shader.loseContext();
         }
+
+        this.fire('devicelost');
     }
 
     /**
@@ -1048,6 +1046,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const shader of this.shaders) {
             shader.restoreContext();
         }
+
+        this.fire('devicerestored');
     }
 
     /**
