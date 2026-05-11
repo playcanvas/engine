@@ -57,22 +57,28 @@ const trees = TREE_FLAGS.filter(flag => values[flag]);
 
 const pipe = (input, output) => {
     let text = '';
+    let style = '';
     input.setEncoding('utf8');
     input.on('data', (chunk) => {
         text += chunk.replace(/\r/g, '\n');
         const lines = text.split('\n');
         text = lines.pop();
         for (const line of lines) {
+            const raw = line.trimEnd();
             const out = stripVTControlCharacters(line).trimEnd();
             if (out.trim()) {
-                output.write(`${out}\n`);
+                output.write(`${style}${raw}\n`);
+                style = '';
+            } else if (raw) {
+                style += raw;
             }
         }
     });
     input.on('end', () => {
+        const raw = text.trimEnd();
         const out = stripVTControlCharacters(text).trimEnd();
         if (out.trim()) {
-            output.write(`${out}\n`);
+            output.write(`${style}${raw}\n`);
         }
     });
 };
