@@ -120,9 +120,8 @@
     "canvas": "3.2.3"
   },
   "scripts": {
-    "build": "turbo run build:all --single-package --ui=stream --output-logs=full",
+    "build": "turbo run build:all",
     "build:types": "node build.mjs --types",
-    "watch": "turbo watch build:all --single-package --ui=stream --output-logs=full",
     "build:std:umd": "node build.mjs --std --umd",
     "build:std:esm": "node build.mjs --std --esm",
     "build:dbg:umd": "node build.mjs --dbg --umd",
@@ -131,6 +130,7 @@
     "build:prf:esm": "node build.mjs --prf --esm",
     "build:min:umd": "node build.mjs --min --umd",
     "build:min:esm": "node build.mjs --min --esm",
+    "watch": "turbo watch build:all",
     "docs": "typedoc",
     "lint": "eslint scripts src test utils build.mjs eslint.config.mjs rollup.config.mjs",
     "publint": "publint --level error",
