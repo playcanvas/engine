@@ -121,6 +121,7 @@
   },
   "scripts": {
     "build": "turbo run build:all",
+    "clean": "node build.mjs --clean",
     "build:types": "node build.mjs --type=types",
     "build:rel:umd": "node build.mjs --format=umd",
     "build:rel:esm": "node build.mjs",
