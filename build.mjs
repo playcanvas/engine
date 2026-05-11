@@ -15,8 +15,8 @@
  */
 
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import { parseArgs } from 'node:util';
+import { spawn } from 'node:child_process';
+import { parseArgs, stripVTControlCharacters } from 'node:util';
 
 const BUILD_TYPES = /** @type {const} */ (['std', 'dbg', 'prf', 'min']);
 const MODULE_FORMATS = /** @type {const} */ (['umd', 'esm']);
@@ -62,15 +62,46 @@ const treeDefault = trees.length && !types.length && !values.types;
 const rollup = values.sourcemaps || trees.length;
 const leaf = values.types || (types.length === 1 && formats.length === 1);
 
-const run = (cmd, args) => {
-    const res = spawnSync(cmd, args, {
-        shell: process.platform === 'win32',
-        stdio: 'inherit'
+const pipe = (input, output) => {
+    let text = '';
+    input.setEncoding('utf8');
+    input.on('data', (chunk) => {
+        text += chunk.replace(/\r/g, '\n');
+        const lines = text.split('\n');
+        text = lines.pop();
+        for (const line of lines) {
+            const out = stripVTControlCharacters(line).trimEnd();
+            if (out.trim()) {
+                output.write(`${out}\n`);
+            }
+        }
     });
-    if (res.error) {
-        console.error(res.error.message);
+    input.on('end', () => {
+        const out = stripVTControlCharacters(text).trimEnd();
+        if (out.trim()) {
+            output.write(`${out}\n`);
+        }
+    });
+};
+
+const run = (cmd, args) => {
+    const child = spawn(cmd, args, {
+        shell: process.platform === 'win32',
+        stdio: values.watch ? 'inherit' : ['inherit', 'pipe', 'pipe']
+    });
+    if (child.stdout) {
+        pipe(child.stdout, process.stdout);
     }
-    process.exit(res.status ?? 1);
+    if (child.stderr) {
+        pipe(child.stderr, process.stderr);
+    }
+    return new Promise((resolve) => {
+        child.on('error', (err) => {
+            console.error(err.message);
+            resolve(1);
+        });
+        child.on('close', code => resolve(code ?? 1));
+    });
 };
 
 const fail = (msg) => {
@@ -137,7 +168,7 @@ const runRollup = () => {
         args.push('-w');
     }
 
-    run(bin('rollup'), args);
+    return run(bin('rollup'), args);
 };
 
 if (values.help) {
@@ -145,4 +176,4 @@ if (values.help) {
     process.exit(0);
 }
 
-runRollup();
+process.exitCode = await runRollup();
