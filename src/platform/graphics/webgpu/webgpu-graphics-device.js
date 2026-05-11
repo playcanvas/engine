@@ -540,6 +540,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             this.xrColorTexture ??
             this.gpuContext?.getCurrentTexture?.() ??
             this.externalBackbuffer?.impl.gpuTexture;
+        Debug.assert(outColorBuffer, 'WebGPU frameStart requires an XR color texture, canvas swapchain texture, or externalBackbuffer.');
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture

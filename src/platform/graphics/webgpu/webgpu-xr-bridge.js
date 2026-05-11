@@ -138,7 +138,7 @@ class WebgpuXrBridge {
     /**
      * @param {XRFrame} frame - Current XR frame.
      * @param {XRView} xrView - WebXR view.
-     * @returns {XRViewport|null} Viewport for this view, or null if unavailable.
+     * @returns {XRViewport} Viewport for this view, or zeros if unavailable.
      */
     getViewport(_frame, xrView) {
         if (this._binding && this._layer) {
