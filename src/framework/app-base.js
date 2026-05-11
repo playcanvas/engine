@@ -244,9 +244,6 @@ class AppBase extends EventHandler {
 
         if (xrFrame) {
             skipUpdate = !this.xr?.update(xrFrame);
-            this.graphicsDevice.defaultFramebuffer = xrFrame.session.renderState.baseLayer.framebuffer;
-        } else {
-            this.graphicsDevice.defaultFramebuffer = null;
         }
 
         if (!skipUpdate) {

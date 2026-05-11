@@ -85,6 +85,7 @@ class XrBridge {
             this._evtDeviceRestored?.off();
             this._evtDeviceRestored = null;
 
+            this.impl.endFrame();
             this.impl.destroy(device);
             this.impl = null;
 
@@ -121,6 +122,22 @@ class XrBridge {
 
     releasePresentation() {
         this.impl.releasePresentation();
+    }
+
+    /**
+     * Called once per XR frame before rendering to set the backend render target for this frame.
+     *
+     * @param {XRFrame} frame - Current XR frame.
+     */
+    beginFrame(frame) {
+        this.impl.beginFrame(frame);
+    }
+
+    /**
+     * Resets the backend render target after the XR session ends.
+     */
+    endFrame() {
+        this.impl.endFrame();
     }
 
     /**

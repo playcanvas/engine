@@ -7,6 +7,8 @@ import * as pc from 'playcanvas';
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
+const { XrSession } = await fileImport(`${rootPath}/static/scripts/esm/xr-session.mjs`);
+const { XrNavigation } = await fileImport(`${rootPath}/static/scripts/esm/xr-navigation.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -167,6 +169,21 @@ assetListLoader.load(() => {
         focusPoint: focusPoint
     });
 
+    cameraRig.addComponent('script');
+    cameraRig.script.create(XrSession, {
+        properties: {
+            startVrEvent: 'vr:start',
+            endEvent: 'xr:end'
+        }
+    });
+    cameraRig.script.create(XrNavigation, {
+        properties: {
+            enableTeleport: false,
+            enableSnapVertical: false,
+            movementThreshold: 0
+        }
+    });
+
     /** @type {pc.Entity|null} */
     let gsplatEntity = null;
     /** @type {any} */
@@ -246,114 +263,63 @@ assetListLoader.load(() => {
         cc.enabled = !app.xr.active;
     };
 
-    const activateXr = () => {
+    const tryStartVr = () => {
+        if (!app.xr.supported) {
+            setMessage('WebXR is not supported');
+            return;
+        }
         if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            camera.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-                callback: function (err) {
-                    if (err) setMessage(`WebXR VR failed to start: ${err.message}`);
-                }
-            });
+            app.fire('vr:start', pc.XRSPACE_LOCAL);
         } else {
             setMessage('Immersive VR is not available');
         }
     };
 
-    if (app.xr.supported) {
-        app.mouse.on('mousedown', () => {
-            if (!app.xr.active) activateXr();
-        });
+    data.on('vr:enter', tryStartVr);
+    data.on('xr:exit', () => {
+        app.fire('xr:end');
+    });
 
+    data.set('xrActive', false);
+
+    if (app.xr.supported) {
         if (app.touch) {
             app.touch.on('touchend', (evt) => {
-                if (!app.xr.active) {
-                    activateXr();
-                } else {
-                    camera.camera.endXr();
+                if (app.xr.active) {
+                    app.fire('xr:end');
+                    evt.event.preventDefault();
+                    evt.event.stopPropagation();
                 }
-                evt.event.preventDefault();
-                evt.event.stopPropagation();
             });
         }
 
-        app.keyboard.on('keydown', (evt) => {
-            if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
-                app.xr.end();
-            }
-        });
-
         app.xr.on('start', () => {
+            data.set('xrActive', true);
             setCameraControlsForXr();
-            setMessage('VR active — left thumbstick: move, right: snap turn; tap to exit');
+            setMessage('VR active — left thumbstick: move, right: snap turn; tap to exit or use Exit VR in the XR panel');
         });
         app.xr.on('end', () => {
+            data.set('xrActive', false);
             setCameraControlsForXr();
-            setMessage('VR ended — click or tap to enter VR');
+            setMessage('VR ended — use Enter VR in the XR panel to re-enter');
         });
         app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
-            setMessage(available ? 'Click or tap to enter VR' : 'Immersive VR is unavailable');
+            setMessage(available ? 'Use Enter VR in the XR panel' : 'Immersive VR is unavailable');
         });
 
         if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
             setMessage('Immersive VR is not available');
         } else {
-            setMessage('Click or tap to enter VR');
+            setMessage('Use Enter VR in the XR panel');
         }
     } else {
         setMessage('WebXR is not supported');
     }
 
-    const movementSpeed = 1.5;
-    const rotateSpeed = 45;
-    const rotateThreshold = 0.5;
-    const rotateResetThreshold = 0.25;
-    let lastRotateValue = 0;
-
-    const tmpVec2A = new pc.Vec2();
-    const tmpVec2B = new pc.Vec2();
-    const tmpVec3A = new pc.Vec3();
-
-    app.on('update', (dt) => {
+    app.on('update', () => {
         data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
         const bb = app.graphicsDevice.backBufferSize;
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
-
-        if (!app.xr.active) return;
-
-        const sources = app.xr.input.inputSources;
-        for (let i = 0; i < sources.length; i++) {
-            const inputSource = sources[i];
-            if (!inputSource.gamepad) continue;
-
-            if (inputSource.handedness === pc.XRHAND_LEFT) {
-                tmpVec2A.set(inputSource.gamepad.axes[2], inputSource.gamepad.axes[3]);
-                if (tmpVec2A.length()) {
-                    tmpVec2A.normalize();
-                    tmpVec2B.x = camera.forward.x;
-                    tmpVec2B.y = camera.forward.z;
-                    tmpVec2B.normalize();
-                    const rad = Math.atan2(tmpVec2B.x, tmpVec2B.y) - Math.PI / 2;
-                    const t = tmpVec2A.x * Math.sin(rad) - tmpVec2A.y * Math.cos(rad);
-                    tmpVec2A.y = tmpVec2A.y * Math.sin(rad) + tmpVec2A.x * Math.cos(rad);
-                    tmpVec2A.x = t;
-                    tmpVec2A.mulScalar(movementSpeed * dt);
-                    cameraRig.translate(tmpVec2A.x, 0, tmpVec2A.y);
-                }
-            } else if (inputSource.handedness === pc.XRHAND_RIGHT) {
-                const rotate = -inputSource.gamepad.axes[2];
-                if (lastRotateValue > 0 && rotate < rotateResetThreshold) {
-                    lastRotateValue = 0;
-                } else if (lastRotateValue < 0 && rotate > -rotateResetThreshold) {
-                    lastRotateValue = 0;
-                }
-                if (lastRotateValue === 0 && Math.abs(rotate) > rotateThreshold) {
-                    lastRotateValue = Math.sign(rotate);
-                    tmpVec3A.copy(camera.getLocalPosition());
-                    cameraRig.translateLocal(tmpVec3A);
-                    cameraRig.rotateLocal(0, Math.sign(rotate) * rotateSpeed, 0);
-                    cameraRig.translateLocal(tmpVec3A.mulScalar(-1));
-                }
-            }
-        }
     });
 });
 

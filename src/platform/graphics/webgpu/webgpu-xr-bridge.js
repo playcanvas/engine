@@ -25,6 +25,15 @@ class WebgpuXrBridge {
     }
 
     /**
+     * @param {XRFrame} _frame - Current XR frame.
+     */
+    beginFrame(_frame) {
+    }
+
+    endFrame() {
+    }
+
+    /**
      * @returns {null} WebGPU XR presentation is not implemented yet.
      */
     get presentationLayer() {

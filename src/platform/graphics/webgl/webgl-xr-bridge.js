@@ -39,6 +39,22 @@ class WebglXrBridge {
     }
 
     /**
+     * Sets the WebGL default framebuffer to the XR session's base layer framebuffer.
+     *
+     * @param {XRFrame} frame - Current XR frame.
+     */
+    beginFrame(frame) {
+        this.xrBridge.device.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
+    }
+
+    /**
+     * Resets the WebGL default framebuffer to the canvas (null).
+     */
+    endFrame() {
+        this.xrBridge.device.defaultFramebuffer = null;
+    }
+
+    /**
      * @returns {XRWebGLLayer|null} The active XR output layer, if any.
      */
     get presentationLayer() {
