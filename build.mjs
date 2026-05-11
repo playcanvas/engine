@@ -7,11 +7,12 @@
  * --format - Specify the module format: esm, umd.
  * --watch - Rebuild the Rollup leaf build when inputs change.
  * --sourcemaps - Build with source maps using Rollup directly.
+ * --clean - Remove build output.
  *
- * treemap - Enable treemap build visualization (rel only).
- * treenet - Enable treenet build visualization (rel only).
- * treesun - Enable treesun build visualization (rel only).
- * treeflame - Enable treeflame build visualization (rel only).
+ * --treemap - Enable treemap build visualization (rel only).
+ * --treenet - Enable treenet build visualization (rel only).
+ * --treesun - Enable treesun build visualization (rel only).
+ * --treeflame - Enable treeflame build visualization (rel only).
  */
 
 import { spawn } from 'node:child_process';
