@@ -59,8 +59,22 @@ const OUT_PREFIX = {
 const EXTERNALS = ['node:worker_threads', 'url'];
 const FFLATE = 'fflate';
 const TARGET = 'es2020';
+const FFLATE_EXPORTS = ['zipSync', 'strToU8'];
+const PRUNABLE_IMPORTS = new Set([
+    'Debug',
+    'DebugGraphics',
+    'DebugHelper',
+    'WebgpuDebug',
+    'WorldClustersDebug',
+    'validateUserChunks'
+]);
 
 const toPosix = value => value.split(path.sep).join('/');
+
+const parseModule = source => parse(source, {
+    ecmaVersion: 'latest',
+    sourceType: 'module'
+});
 
 const getJSCCOptions = (type) => {
     const base = {
@@ -238,50 +252,79 @@ const resolveSource = (source, importer) => {
     return path.extname(resolved) ? resolved : `${resolved}.js`;
 };
 
-const collectGraph = async (input, jscc) => {
-    const seen = new Set();
+const collectIdentifiers = (node, used) => {
+    if (!node || typeof node !== 'object' || node.type === 'ImportDeclaration') {
+        return;
+    }
+    if (node.type === 'Identifier') {
+        used.add(node.name);
+    }
 
-    const walk = async (file) => {
-        if (seen.has(file)) {
-            return;
+    for (const key in node) {
+        if (key === 'start' || key === 'end' || key === 'loc' || key === 'range') {
+            continue;
         }
-        seen.add(file);
 
-        const source = await fs.promises.readFile(file, 'utf8');
-        const code = applyTransforms(source, {
-            jsccValues: jscc.values,
-            jsccKeepLines: jscc.keepLines,
-            strip: null,
-            processShaders: false,
-            dynamicImportLegacy: false,
-            dynamicImportSuppress: false,
-            stripComments: false,
-            importMetaUrl: null
-        }, file);
-        const ast = parse(code, {
-            ecmaVersion: 'latest',
-            sourceType: 'module'
+        const value = node[key];
+        if (Array.isArray(value)) {
+            value.forEach(item => collectIdentifiers(item, used));
+        } else {
+            collectIdentifiers(value, used);
+        }
+    }
+};
+
+const pruneUnusedImports = (source) => {
+    const ast = parseModule(source);
+    const used = new Set();
+    ast.body.forEach(node => collectIdentifiers(node, used));
+
+    const ranges = [];
+    for (const node of ast.body) {
+        if (node.type !== 'ImportDeclaration' || !node.specifiers.length) {
+            continue;
+        }
+
+        const removable = node.specifiers.every((spec) => {
+            return PRUNABLE_IMPORTS.has(spec.local.name) && !used.has(spec.local.name);
         });
-
-        const imports = [];
-        for (const node of ast.body) {
-            const source = node.source?.value;
-            if (!source || source === FFLATE) {
-                continue;
+        if (removable) {
+            let end = node.end;
+            while (source[end] === '\r' || source[end] === '\n') {
+                end++;
             }
+            ranges.push([node.start, end]);
+        }
+    }
 
-            const resolved = resolveSource(source, file);
-            if (resolved) {
-                imports.push(resolved);
-            }
+    for (const [start, end] of ranges.reverse()) {
+        source = `${source.slice(0, start)}${source.slice(end)}`;
+    }
+
+    return source;
+};
+
+const collectImports = (source, file) => {
+    const ast = parseModule(source);
+    const imports = [];
+
+    for (const node of ast.body) {
+        const name = node.source?.value;
+        if (!name || name === FFLATE) {
+            continue;
         }
 
-        await Promise.all(imports.map(walk));
-    };
+        const resolved = resolveSource(name, file);
+        if (resolved) {
+            imports.push(resolved);
+        }
+    }
 
-    await walk(path.resolve(input));
+    return imports.sort();
+};
 
-    return [...seen].sort();
+const sameImports = (a, b) => {
+    return a.length === b.length && a.every((value, i) => value === b[i]);
 };
 
 const rewriteFflate = (source, file, input) => {
@@ -296,12 +339,127 @@ const rewriteFflate = (source, file, input) => {
     return source.replace(/from ['"]fflate['"]/g, `from '${modulePath}'`);
 };
 
-const copyFflate = async (outDir) => {
-    const src = path.join(rootDir, 'node_modules', FFLATE, 'esm', 'browser.js');
+const writeFflate = async (outDir) => {
     const dest = path.join(outDir, 'modules', FFLATE, 'esm', 'browser.js');
 
     await fs.promises.mkdir(path.dirname(dest), { recursive: true });
-    await fs.promises.copyFile(src, dest);
+    await esbuild.build({
+        stdin: {
+            contents: `export { ${FFLATE_EXPORTS.join(', ')} } from '${FFLATE}';`,
+            resolveDir: rootDir,
+            sourcefile: `${FFLATE}.js`
+        },
+        bundle: true,
+        write: true,
+        outfile: dest,
+        format: 'esm',
+        target: TARGET,
+        minify: true,
+        legalComments: 'none',
+        logLevel: 'silent'
+    });
+};
+
+const getUnbundledContext = ({
+    buildType,
+    input = 'src/index.js',
+    dir = 'build',
+    sourcemaps = false
+}) => {
+    const isDebug = buildType === 'dbg';
+    const prefix = OUT_PREFIX[buildType];
+    const jscc = getJSCCOptions(buildType);
+
+    return {
+        input,
+        output: `${dir}/${prefix}`,
+        outDir: path.resolve(`${dir}/${prefix}`),
+        sourcemaps,
+        isDebug,
+        jscc,
+        strip: !isDebug ? createStripTransform(STRIP_FUNCTIONS) : null
+    };
+};
+
+const transformFile = async (file, ctx) => {
+    let source = await fs.promises.readFile(file, 'utf8');
+    source = applyTransforms(source, {
+        jsccValues: ctx.jscc.values,
+        jsccKeepLines: ctx.jscc.keepLines,
+        strip: ctx.strip,
+        processShaders: !ctx.isDebug,
+        dynamicImportLegacy: false,
+        dynamicImportSuppress: true,
+        stripComments: !ctx.isDebug,
+        importMetaUrl: null
+    }, file);
+    source = pruneUnusedImports(source);
+    const imports = collectImports(source, file);
+    source = rewriteFflate(source, file, ctx.input);
+
+    const result = await esbuild.transform(source, {
+        loader: 'js',
+        target: TARGET,
+        format: 'esm',
+        sourcemap: ctx.sourcemaps,
+        sourcefile: path.relative(rootDir, file),
+        legalComments: 'none'
+    });
+    const rel = path.relative(rootDir, file);
+
+    return {
+        file,
+        imports,
+        code: result.code,
+        map: result.map,
+        dest: path.join(ctx.outDir, rel)
+    };
+};
+
+const buildGraph = async (ctx) => {
+    const graph = new Map();
+    const pending = new Map();
+
+    const walk = (file) => {
+        file = path.resolve(file);
+        if (graph.has(file)) {
+            return graph.get(file);
+        }
+
+        const queued = pending.get(file);
+        if (queued) {
+            return queued;
+        }
+
+        const promise = transformFile(file, ctx).then(async (item) => {
+            graph.set(file, item);
+            await Promise.all(item.imports.map(walk));
+            pending.delete(file);
+            return item;
+        });
+        pending.set(file, promise);
+
+        return promise;
+    };
+
+    await walk(ctx.input);
+
+    return graph;
+};
+
+const writeItem = async (item, sourcemaps) => {
+    await fs.promises.writeFile(item.dest, item.code);
+    if (sourcemaps && item.map) {
+        await fs.promises.writeFile(`${item.dest}.map`, item.map);
+        await fs.promises.appendFile(item.dest, `\n//# sourceMappingURL=${path.basename(item.dest)}.map\n`);
+    }
+};
+
+const writeGraph = async (graph, sourcemaps) => {
+    const dirs = new Set([...graph.values()].map(item => path.dirname(item.dest)));
+
+    await Promise.all([...dirs].map(dir => fs.promises.mkdir(dir, { recursive: true })));
+    await Promise.all([...graph.values()].map(item => writeItem(item, sourcemaps)));
 };
 
 const buildUnbundled = async ({
@@ -310,95 +468,107 @@ const buildUnbundled = async ({
     dir = 'build',
     sourcemaps = false
 }) => {
-    const isDebug = buildType === 'dbg';
-    const prefix = OUT_PREFIX[buildType];
-    const outDir = path.resolve(`${dir}/${prefix}`);
-    const jscc = getJSCCOptions(buildType);
-    const strip = !isDebug ? createStripTransform(STRIP_FUNCTIONS) : null;
-    const files = await collectGraph(input, jscc);
+    const ctx = getUnbundledContext({
+        buildType,
+        input,
+        dir,
+        sourcemaps
+    });
+    const graph = await buildGraph(ctx);
 
-    await fs.promises.rm(outDir, { recursive: true, force: true });
-    await Promise.all(files.map(async (file) => {
-        let source = await fs.promises.readFile(file, 'utf8');
-        source = applyTransforms(source, {
-            jsccValues: jscc.values,
-            jsccKeepLines: jscc.keepLines,
-            strip,
-            processShaders: !isDebug,
-            dynamicImportLegacy: false,
-            dynamicImportSuppress: true,
-            stripComments: !isDebug,
-            importMetaUrl: null
-        }, file);
-        source = rewriteFflate(source, file, input);
-
-        const result = await esbuild.transform(source, {
-            loader: 'js',
-            target: TARGET,
-            format: 'esm',
-            sourcemap: sourcemaps ? true : isDebug ? 'inline' : false,
-            sourcefile: path.relative(rootDir, file),
-            legalComments: 'none'
-        });
-        const rel = path.relative(rootDir, file);
-        const dest = path.join(outDir, rel);
-
-        await fs.promises.mkdir(path.dirname(dest), { recursive: true });
-        await fs.promises.writeFile(dest, result.code);
-        if (sourcemaps && result.map) {
-            await fs.promises.writeFile(`${dest}.map`, result.map);
-            await fs.promises.appendFile(dest, `\n//# sourceMappingURL=${path.basename(dest)}.map\n`);
-        }
-    }));
-    await copyFflate(outDir);
+    await fs.promises.rm(ctx.outDir, { recursive: true, force: true });
+    await writeGraph(graph, sourcemaps);
+    await writeFflate(ctx.outDir);
 };
 
 const watchUnbundled = async (options, startLog, log) => {
     const input = options.input ?? 'src/index.js';
-    const output = `${options.dir ?? 'build'}/${OUT_PREFIX[options.buildType]}`;
+    const ctx = getUnbundledContext({
+        ...options,
+        input
+    });
+    let graph = null;
     let active = false;
     let pending = false;
     let timer = null;
 
-    const run = () => {
-        startLog(input, output);
+    const fullBuild = async () => {
+        graph = await buildGraph(ctx);
+        await fs.promises.rm(ctx.outDir, { recursive: true, force: true });
+        await writeGraph(graph, ctx.sourcemaps);
+        await writeFflate(ctx.outDir);
+    };
+
+    const update = async (file) => {
+        if (!file || !graph?.has(file)) {
+            await fullBuild();
+            return;
+        }
+
+        const stat = await fs.promises.stat(file).then(value => value, () => null);
+        if (!stat?.isFile()) {
+            await fullBuild();
+            return;
+        }
+
+        const next = await transformFile(file, ctx);
+        const prev = graph.get(file);
+        if (!sameImports(prev.imports, next.imports)) {
+            await fullBuild();
+            return;
+        }
+
+        graph.set(file, next);
+        await fs.promises.mkdir(path.dirname(next.dest), { recursive: true });
+        await writeItem(next, ctx.sourcemaps);
+    };
+
+    const queue = (file) => {
+        pending = !file || pending === true || (pending && pending !== file) ? true : file;
+    };
+
+    const run = (file) => {
+        startLog(input, ctx.output);
         const start = performance.now();
-        return buildUnbundled(options).then(() => {
-            log(output, performance.now() - start, 0);
+        return update(file).then(() => {
+            log(ctx.output, performance.now() - start, 0);
         }, (err) => {
             console.error(err.message);
-            log(output, performance.now() - start, 1);
+            log(ctx.output, performance.now() - start, 1);
         });
     };
 
-    const rebuild = () => {
+    const rebuild = (file) => {
         if (active) {
-            pending = true;
+            queue(file);
             return;
         }
 
         active = true;
-        run().then(() => {
+        run(file).then(() => {
             active = false;
             if (pending) {
+                const file = pending === true ? null : pending;
                 pending = false;
-                rebuild();
+                rebuild(file);
             }
         });
     };
 
-    await run();
+    await run(null);
 
     const watcher = fs.watch(path.dirname(options.input ?? 'src/index.js'), { recursive: true }, (event, file) => {
         if (!file?.endsWith('.js')) {
             return;
         }
+        const source = path.resolve(path.dirname(input), file);
         clearTimeout(timer);
-        timer = setTimeout(rebuild, 100);
+        timer = setTimeout(() => rebuild(source), 100);
     });
 
     return {
         dispose() {
+            clearTimeout(timer);
             watcher.close();
         }
     };
