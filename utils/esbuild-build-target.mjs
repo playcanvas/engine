@@ -462,6 +462,29 @@ const writeGraph = async (graph, sourcemaps) => {
     await Promise.all([...graph.values()].map(item => writeItem(item, sourcemaps)));
 };
 
+const cleanOutDir = async (dir, preserveTypes) => {
+    if (!preserveTypes) {
+        await fs.promises.rm(dir, { recursive: true, force: true });
+        return;
+    }
+
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true }).then(value => value, () => []);
+    await Promise.all(entries.map(async (entry) => {
+        const file = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            await cleanOutDir(file, true);
+            const left = await fs.promises.readdir(file).then(value => value, () => []);
+            if (!left.length) {
+                await fs.promises.rm(file, { recursive: true, force: true });
+            }
+            return;
+        }
+        if (!file.endsWith('.d.ts')) {
+            await fs.promises.rm(file, { force: true });
+        }
+    }));
+};
+
 const buildUnbundled = async ({
     buildType,
     input = 'src/index.js',
@@ -476,7 +499,7 @@ const buildUnbundled = async ({
     });
     const graph = await buildGraph(ctx);
 
-    await fs.promises.rm(ctx.outDir, { recursive: true, force: true });
+    await cleanOutDir(ctx.outDir, buildType === 'rel');
     await writeGraph(graph, sourcemaps);
     await writeFflate(ctx.outDir);
 };
@@ -494,7 +517,7 @@ const watchUnbundled = async (options, startLog, log) => {
 
     const fullBuild = async () => {
         graph = await buildGraph(ctx);
-        await fs.promises.rm(ctx.outDir, { recursive: true, force: true });
+        await cleanOutDir(ctx.outDir, options.buildType === 'rel');
         await writeGraph(graph, ctx.sourcemaps);
         await writeFflate(ctx.outDir);
     };

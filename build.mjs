@@ -5,7 +5,7 @@
  * Options:
  * --type - Specify the build type: rel, dbg, prf, min, types.
  * --format - Specify the module format: esm, umd.
- * --watch - Rebuild the Rollup leaf build when inputs change.
+ * --watch - Rebuild when inputs change.
  * --sourcemaps - Build with source maps using Rollup directly.
  * --clean - Remove build output.
  *
@@ -21,6 +21,7 @@ import path from 'node:path';
 import { parseArgs, stripVTControlCharacters } from 'node:util';
 
 import { buildTarget, OUT_PREFIX, watchTarget } from './utils/esbuild-build-target.mjs';
+import { buildTypes, TYPES_INPUT, TYPES_OUTPUT, watchTypes } from './utils/types-build-target.mjs';
 
 const JS_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf', 'min']);
 const BUILD_TYPES = /** @type {const} */ ([...JS_TYPES, 'types']);
@@ -46,7 +47,8 @@ Options:
   --clean
   --treemap, --treenet, --treesun, --treeflame
 
-Use npm run build or turbo run build:all for aggregate builds.`;
+Use npm run build or turbo run build:all for aggregate builds.
+Use npm run watch or turbo run watch:all for aggregate watches.`;
 
 const { values } = parseArgs({
     args: process.argv.slice(2),
@@ -181,6 +183,10 @@ const runRollup = (items) => {
     return run(bin('rollup'), args);
 };
 
+const runTurboWatch = () => {
+    return run(bin('turbo'), ['run', 'watch:all']);
+};
+
 const ms = (value) => {
     return value >= 1000 ? `${(value / 1000).toFixed(1)}s` : `${Math.round(value)}ms`;
 };
@@ -303,6 +309,36 @@ const watchJS = async () => {
     return watchers.flat();
 };
 
+const buildTypesTarget = async () => {
+    if (values.format) {
+        fail('--type=types cannot be combined with --format');
+    }
+
+    startLog(TYPES_INPUT, TYPES_OUTPUT);
+    const start = performance.now();
+    await buildTypes();
+    createdLog(TYPES_OUTPUT, performance.now() - start);
+
+    return 0;
+};
+
+const watchTypesTarget = () => {
+    if (values.format) {
+        fail('--type=types cannot be combined with --format');
+    }
+
+    return watchTypes({
+        start: startLog,
+        log(path, elapsed, errors) {
+            if (errors) {
+                failedLog(path, elapsed);
+            } else {
+                createdLog(path, elapsed);
+            }
+        }
+    });
+};
+
 if (values.help) {
     console.log(USAGE);
     process.exit(0);
@@ -313,12 +349,21 @@ if (values.clean) {
     process.exit(0);
 }
 
-if (type === 'types' || trees.length) {
+if (trees.length) {
     process.exitCode = await runRollup();
+} else if (values.watch && !hasType && !hasFormat) {
+    process.exitCode = await runTurboWatch();
+} else if (type === 'types') {
+    if (values.watch) {
+        await watchTypesTarget();
+        await new Promise(() => {});
+    } else {
+        process.exitCode = await buildTypesTarget();
+    }
 } else if (values.watch) {
-    await watchJS();
+    const watchers = await watchJS();
     if (!hasType && !hasFormat) {
-        runRollup(['build:types']);
+        watchers.push(await watchTypesTarget());
     }
     await new Promise(() => {});
 } else {
