@@ -162,6 +162,8 @@ function minifyOutput(esm, banner) {
         name: 'swc-minify',
         async renderChunk(code) {
             const result = await minify(code, {
+                sourceMap: true,
+                inlineSourcesContent: true,
                 module: esm,
                 compress: {
                     drop_console: true,
@@ -169,12 +171,13 @@ function minifyOutput(esm, banner) {
                 },
                 mangle: true,
                 format: {
-                    comments: false
+                    comments: false,
+                    preamble: `${banner}\n`
                 }
             });
             return {
-                code: `${banner}\n${result.code}`,
-                map: null
+                code: result.code,
+                map: result.map ? JSON.parse(result.map) : null
             };
         }
     };
