@@ -1,0 +1,467 @@
+import esbuild from 'esbuild';
+import fs from 'node:fs';
+import path from 'node:path';
+import { parse } from 'acorn';
+import { fileURLToPath } from 'node:url';
+
+import { importValidationPlugin } from './plugins/esbuild-import-validation.mjs';
+import { applyTransforms, createStripTransform, transformPipelinePlugin } from './plugins/esbuild-transform-pipeline.mjs';
+import { getBanner } from './rollup-get-banner.mjs';
+import { revision, version } from './rollup-version-revision.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..');
+
+const STRIP_FUNCTIONS = [
+    'Debug.assert',
+    'Debug.assertDeprecated',
+    'Debug.assertDestroyed',
+    'Debug.call',
+    'Debug.deprecated',
+    'Debug.warn',
+    'Debug.warnOnce',
+    'Debug.error',
+    'Debug.errorOnce',
+    'Debug.log',
+    'Debug.logOnce',
+    'Debug.removed',
+    'Debug.trace',
+    'DebugHelper.setName',
+    'DebugHelper.setLabel',
+    'DebugHelper.setDestroyed',
+    'DebugGraphics.toString',
+    'DebugGraphics.clearGpuMarkers',
+    'DebugGraphics.pushGpuMarker',
+    'DebugGraphics.popGpuMarker',
+    'WebgpuDebug.validate',
+    'WebgpuDebug.memory',
+    'WebgpuDebug.internal',
+    'WebgpuDebug.end',
+    'WebgpuDebug.endShader',
+    'WorldClustersDebug.render'
+];
+
+const BANNER = {
+    dbg: ' (DEBUG)',
+    rel: ' (RELEASE)',
+    prf: ' (PROFILE)',
+    min: ' (RELEASE)'
+};
+
+const OUT_PREFIX = {
+    dbg: 'playcanvas.dbg',
+    rel: 'playcanvas',
+    prf: 'playcanvas.prf',
+    min: 'playcanvas.min'
+};
+
+const EXTERNALS = ['node:worker_threads', 'url'];
+const FFLATE = 'fflate';
+const TARGET = 'es2020';
+
+const toPosix = value => value.split(path.sep).join('/');
+
+const getJSCCOptions = (type) => {
+    const base = {
+        _CURRENT_SDK_VERSION: version,
+        _CURRENT_SDK_REVISION: revision
+    };
+
+    return {
+        dbg: {
+            values: {
+                ...base,
+                _DEBUG: 1,
+                _PROFILER: 1
+            },
+            keepLines: true
+        },
+        rel: {
+            values: base,
+            keepLines: false
+        },
+        prf: {
+            values: {
+                ...base,
+                _PROFILER: 1
+            },
+            keepLines: false
+        }
+    }[type];
+};
+
+const getImportMetaUrl = (file) => {
+    return `(typeof document === 'undefined' && typeof location === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : typeof document === 'undefined' ? location.href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('${file}', document.baseURI).href))`;
+};
+
+const getUmdBanner = (banner) => {
+    return [
+        banner,
+        '(function (global, factory) {',
+        '\ttypeof exports === \'object\' && typeof module !== \'undefined\' ? factory(exports) :',
+        '\ttypeof define === \'function\' && define.amd ? define([\'exports\'], factory) :',
+        '\t(global = typeof globalThis !== \'undefined\' ? globalThis : global || self, factory(global.pc = {}));',
+        '})(this, (function (exports) { \'use strict\';',
+        '\tvar _documentCurrentScript = typeof document !== \'undefined\' ? document.currentScript : null;'
+    ].join('\n');
+};
+
+const getUmdFooter = () => {
+    return [
+        'Object.assign(exports, pc);',
+        '}));'
+    ].join('\n');
+};
+
+const getPlugins = ({
+    input,
+    buildType,
+    moduleFormat,
+    file
+}) => {
+    const isDebug = buildType === 'dbg';
+    const isUMD = moduleFormat === 'umd';
+    const jscc = getJSCCOptions(buildType === 'min' ? 'rel' : buildType);
+    const plugins = [
+        transformPipelinePlugin({
+            jsccValues: jscc.values,
+            jsccKeepLines: jscc.keepLines,
+            stripFunctions: !isDebug ? STRIP_FUNCTIONS : null,
+            processShaders: !isDebug,
+            dynamicImportLegacy: isUMD,
+            dynamicImportSuppress: !isUMD,
+            stripComments: !isDebug,
+            importMetaUrl: isUMD ? getImportMetaUrl(file) : null
+        })
+    ];
+
+    if (isDebug) {
+        plugins.push(importValidationPlugin(input));
+    }
+
+    return plugins;
+};
+
+const getBundledOptions = ({
+    moduleFormat,
+    buildType,
+    input = 'src/index.js',
+    dir = 'build',
+    sourcemaps = false,
+    watch = false
+}) => {
+    const isUMD = moduleFormat === 'umd';
+    const isDebug = buildType === 'dbg';
+    const isMin = buildType === 'min';
+    const prefix = OUT_PREFIX[buildType];
+    const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
+    const outfile = `${dir}/${file}`;
+    const banner = getBanner(BANNER[buildType]);
+
+    return {
+        entryPoints: [input],
+        bundle: true,
+        outfile,
+        format: isUMD ? 'iife' : 'esm',
+        globalName: isUMD ? 'pc' : undefined,
+        target: TARGET,
+        sourcemap: sourcemaps ? true : isDebug ? 'inline' : false,
+        minify: isMin,
+        drop: isMin ? ['console'] : undefined,
+        legalComments: 'none',
+        banner: {
+            js: isUMD ? getUmdBanner(banner) : banner
+        },
+        footer: isUMD ? {
+            js: getUmdFooter()
+        } : undefined,
+        plugins: getPlugins({
+            input,
+            buildType,
+            moduleFormat,
+            file
+        }),
+        external: EXTERNALS,
+        logLevel: watch ? 'silent' : 'warning'
+    };
+};
+
+const buildBundled = async (options) => {
+    const opts = getBundledOptions(options);
+    await esbuild.build(opts);
+    if (!options.sourcemaps) {
+        await fs.promises.rm(`${opts.outfile}.map`, { force: true });
+    }
+};
+
+const watchBundled = async (options, startLog, log) => {
+    const opts = getBundledOptions({
+        ...options,
+        watch: true
+    });
+    const input = options.input ?? 'src/index.js';
+    const output = opts.outfile;
+    if (!options.sourcemaps) {
+        await fs.promises.rm(`${output}.map`, { force: true });
+    }
+    const ctx = await esbuild.context({
+        ...opts,
+        plugins: [
+            ...(opts.plugins ?? []),
+            {
+                name: 'watch-log',
+                setup(build) {
+                    let start = 0;
+                    build.onStart(() => {
+                        start = performance.now();
+                        startLog(input, output);
+                    });
+                    build.onEnd((result) => {
+                        log(output, performance.now() - start, result.errors.length);
+                    });
+                }
+            }
+        ]
+    });
+    await ctx.watch();
+
+    return ctx;
+};
+
+const resolveSource = (source, importer) => {
+    if (!source.startsWith('.')) {
+        return null;
+    }
+
+    const resolved = path.resolve(path.dirname(importer), source);
+    return path.extname(resolved) ? resolved : `${resolved}.js`;
+};
+
+const collectGraph = async (input, jscc) => {
+    const seen = new Set();
+
+    const walk = async (file) => {
+        if (seen.has(file)) {
+            return;
+        }
+        seen.add(file);
+
+        const source = await fs.promises.readFile(file, 'utf8');
+        const code = applyTransforms(source, {
+            jsccValues: jscc.values,
+            jsccKeepLines: jscc.keepLines,
+            strip: null,
+            processShaders: false,
+            dynamicImportLegacy: false,
+            dynamicImportSuppress: false,
+            stripComments: false,
+            importMetaUrl: null
+        }, file);
+        const ast = parse(code, {
+            ecmaVersion: 'latest',
+            sourceType: 'module'
+        });
+
+        const imports = [];
+        for (const node of ast.body) {
+            const source = node.source?.value;
+            if (!source || source === FFLATE) {
+                continue;
+            }
+
+            const resolved = resolveSource(source, file);
+            if (resolved) {
+                imports.push(resolved);
+            }
+        }
+
+        await Promise.all(imports.map(walk));
+    };
+
+    await walk(path.resolve(input));
+
+    return [...seen].sort();
+};
+
+const rewriteFflate = (source, file, input) => {
+    if (!source.includes(`from '${FFLATE}'`) && !source.includes(`from "${FFLATE}"`)) {
+        return source;
+    }
+
+    const root = path.dirname(path.resolve(input));
+    const rel = toPosix(path.relative(path.dirname(file), root));
+    const modulePath = path.posix.join(rel, '..', 'modules', FFLATE, 'esm', 'browser.js');
+
+    return source.replace(/from ['"]fflate['"]/g, `from '${modulePath}'`);
+};
+
+const copyFflate = async (outDir) => {
+    const src = path.join(rootDir, 'node_modules', FFLATE, 'esm', 'browser.js');
+    const dest = path.join(outDir, 'modules', FFLATE, 'esm', 'browser.js');
+
+    await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+    await fs.promises.copyFile(src, dest);
+};
+
+const buildUnbundled = async ({
+    buildType,
+    input = 'src/index.js',
+    dir = 'build',
+    sourcemaps = false
+}) => {
+    const isDebug = buildType === 'dbg';
+    const prefix = OUT_PREFIX[buildType];
+    const outDir = path.resolve(`${dir}/${prefix}`);
+    const jscc = getJSCCOptions(buildType);
+    const strip = !isDebug ? createStripTransform(STRIP_FUNCTIONS) : null;
+    const files = await collectGraph(input, jscc);
+
+    await fs.promises.rm(outDir, { recursive: true, force: true });
+    await Promise.all(files.map(async (file) => {
+        let source = await fs.promises.readFile(file, 'utf8');
+        source = applyTransforms(source, {
+            jsccValues: jscc.values,
+            jsccKeepLines: jscc.keepLines,
+            strip,
+            processShaders: !isDebug,
+            dynamicImportLegacy: false,
+            dynamicImportSuppress: true,
+            stripComments: !isDebug,
+            importMetaUrl: null
+        }, file);
+        source = rewriteFflate(source, file, input);
+
+        const result = await esbuild.transform(source, {
+            loader: 'js',
+            target: TARGET,
+            format: 'esm',
+            sourcemap: sourcemaps ? true : isDebug ? 'inline' : false,
+            sourcefile: path.relative(rootDir, file),
+            legalComments: 'none'
+        });
+        const rel = path.relative(rootDir, file);
+        const dest = path.join(outDir, rel);
+
+        await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+        await fs.promises.writeFile(dest, result.code);
+        if (sourcemaps && result.map) {
+            await fs.promises.writeFile(`${dest}.map`, result.map);
+            await fs.promises.appendFile(dest, `\n//# sourceMappingURL=${path.basename(dest)}.map\n`);
+        }
+    }));
+    await copyFflate(outDir);
+};
+
+const watchUnbundled = async (options, startLog, log) => {
+    const input = options.input ?? 'src/index.js';
+    const output = `${options.dir ?? 'build'}/${OUT_PREFIX[options.buildType]}`;
+    let active = false;
+    let pending = false;
+    let timer = null;
+
+    const run = () => {
+        startLog(input, output);
+        const start = performance.now();
+        return buildUnbundled(options).then(() => {
+            log(output, performance.now() - start, 0);
+        }, (err) => {
+            console.error(err.message);
+            log(output, performance.now() - start, 1);
+        });
+    };
+
+    const rebuild = () => {
+        if (active) {
+            pending = true;
+            return;
+        }
+
+        active = true;
+        run().then(() => {
+            active = false;
+            if (pending) {
+                pending = false;
+                rebuild();
+            }
+        });
+    };
+
+    await run();
+
+    const watcher = fs.watch(path.dirname(options.input ?? 'src/index.js'), { recursive: true }, (event, file) => {
+        if (!file?.endsWith('.js')) {
+            return;
+        }
+        clearTimeout(timer);
+        timer = setTimeout(rebuild, 100);
+    });
+
+    return {
+        dispose() {
+            watcher.close();
+        }
+    };
+};
+
+const buildTarget = async ({
+    moduleFormat,
+    buildType,
+    input = 'src/index.js',
+    dir = 'build',
+    preserveModules = moduleFormat === 'esm' && buildType !== 'min',
+    sourcemaps = false
+}) => {
+    const tasks = [buildBundled({
+        moduleFormat,
+        buildType,
+        input,
+        dir,
+        sourcemaps
+    })];
+
+    if (preserveModules) {
+        tasks.push(buildUnbundled({
+            buildType,
+            input,
+            dir,
+            sourcemaps
+        }));
+    }
+
+    await Promise.all(tasks);
+};
+
+const watchTarget = async ({
+    moduleFormat,
+    buildType,
+    input = 'src/index.js',
+    dir = 'build',
+    preserveModules = moduleFormat === 'esm' && buildType !== 'min',
+    sourcemaps = false,
+    start,
+    log
+}) => {
+    const watchers = [
+        await watchBundled({
+            moduleFormat,
+            buildType,
+            input,
+            dir,
+            sourcemaps
+        }, start, log)
+    ];
+
+    if (preserveModules) {
+        watchers.push(await watchUnbundled({
+            buildType,
+            input,
+            dir,
+            sourcemaps
+        }, start, log));
+    }
+
+    return watchers;
+};
+
+export { buildTarget, OUT_PREFIX, watchTarget };

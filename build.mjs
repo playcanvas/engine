@@ -20,12 +20,22 @@ import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs, stripVTControlCharacters } from 'node:util';
 
+import { buildTarget, OUT_PREFIX, watchTarget } from './utils/esbuild-build-target.mjs';
+
 const JS_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf', 'min']);
 const BUILD_TYPES = /** @type {const} */ ([...JS_TYPES, 'types']);
 const MODULE_FORMATS = /** @type {const} */ (['umd', 'esm']);
 
+const INPUT = 'src/index.js';
 const TREE_FLAGS = ['treemap', 'treenet', 'treesun', 'treeflame'];
 const BIN_DIR = path.join('node_modules', '.bin');
+const BOLD = '\x1b[1m';
+const REGULAR = '\x1b[22m';
+const CYAN = '\x1b[36m';
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
+const RESET = '\x1b[39m';
+const COLORS = process.env.FORCE_COLOR !== '0' && !process.env.NO_COLOR;
 const USAGE = `Usage: node build.mjs [options]
 
 Options:
@@ -147,11 +157,13 @@ const getRollupBuild = () => {
     return `build:${format}:${type}`;
 };
 
-const runRollup = () => {
-    const env = [];
-    const build = getRollupBuild();
-    if (build) {
-        env.push(build);
+const runRollup = (items) => {
+    const env = items ? [...items] : [];
+    if (!items) {
+        const build = getRollupBuild();
+        if (build) {
+            env.push(build);
+        }
     }
     env.push(...trees);
 
@@ -169,6 +181,128 @@ const runRollup = () => {
     return run(bin('rollup'), args);
 };
 
+const ms = (value) => {
+    return value >= 1000 ? `${(value / 1000).toFixed(1)}s` : `${Math.round(value)}ms`;
+};
+
+const bold = (value) => {
+    return COLORS ? `${BOLD}${value}${REGULAR}` : value;
+};
+
+const color = (code, value) => {
+    return COLORS ? `${code}${value}${RESET}` : value;
+};
+
+const writeLog = (stream, code, value) => {
+    stream.write(`${color(code, value)}\n`);
+};
+
+const startLog = (input, output) => writeLog(process.stderr, CYAN, `${bold(input)} → ${bold(output)}...`);
+
+const createdLog = (output, elapsed) => {
+    writeLog(process.stderr, GREEN, `created ${bold(output)} in ${bold(ms(elapsed))}`);
+};
+
+const failedLog = (output, elapsed) => {
+    writeLog(process.stderr, RED, `failed ${bold(output)} in ${bold(ms(elapsed))}`);
+};
+
+const targetOutput = (buildType, moduleFormat) => {
+    const prefix = OUT_PREFIX[buildType];
+    const file = `build/${prefix}${moduleFormat === 'umd' ? '.js' : '.mjs'}`;
+    return moduleFormat === 'esm' && buildType !== 'min' ? `${file}, build/${prefix}/` : file;
+};
+
+const includeJSTarget = (buildType, moduleFormat) => {
+    if (type === 'types' || trees.length) {
+        return false;
+    }
+
+    if (values.watch && !hasType && !hasFormat) {
+        return true;
+    }
+
+    if ((values.watch || trees.length) && !hasFormat) {
+        return buildType === type;
+    }
+
+    return buildType === type && moduleFormat === format;
+};
+
+const getJSTargets = () => {
+    if (!BUILD_TYPES.includes(type)) {
+        fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
+    }
+
+    if (hasFormat && !MODULE_FORMATS.includes(format)) {
+        fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
+    }
+
+    if (trees.length && type !== 'rel') {
+        fail('tree visualizers only support --type=rel');
+    }
+
+    if (type === 'types' && values.format) {
+        fail('--type=types cannot be combined with --format');
+    }
+
+    /** @type {{ buildType: 'rel'|'dbg'|'prf'|'min', moduleFormat: 'umd'|'esm' }[]} */
+    const targets = [];
+    JS_TYPES.forEach((buildType) => {
+        MODULE_FORMATS.forEach((moduleFormat) => {
+            if (includeJSTarget(buildType, moduleFormat)) {
+                targets.push({ buildType, moduleFormat });
+            }
+        });
+    });
+
+    return targets;
+};
+
+const buildJS = async () => {
+    const targets = getJSTargets();
+    if (!targets.length) {
+        return 0;
+    }
+
+    await Promise.all(targets.map(async (target) => {
+        const output = targetOutput(target.buildType, target.moduleFormat);
+        startLog(INPUT, output);
+        const start = performance.now();
+        await buildTarget({
+            ...target,
+            sourcemaps: values.sourcemaps
+        });
+        createdLog(output, performance.now() - start);
+    }));
+
+    return 0;
+};
+
+const watchJS = async () => {
+    const targets = getJSTargets();
+    if (!targets.length) {
+        return [];
+    }
+
+    const watchers = await Promise.all(targets.map((target) => {
+        return watchTarget({
+            ...target,
+            sourcemaps: values.sourcemaps,
+            start: startLog,
+            log(path, elapsed, errors) {
+                if (errors) {
+                    failedLog(path, elapsed);
+                } else {
+                    createdLog(path, elapsed);
+                }
+            }
+        });
+    }));
+
+    return watchers.flat();
+};
+
 if (values.help) {
     console.log(USAGE);
     process.exit(0);
@@ -179,4 +313,14 @@ if (values.clean) {
     process.exit(0);
 }
 
-process.exitCode = await runRollup();
+if (type === 'types' || trees.length) {
+    process.exitCode = await runRollup();
+} else if (values.watch) {
+    await watchJS();
+    if (!hasType && !hasFormat) {
+        runRollup(['build:types']);
+    }
+    await new Promise(() => {});
+} else {
+    process.exitCode = await buildJS();
+}

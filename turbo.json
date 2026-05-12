@@ -8,6 +8,7 @@
     "package.json",
     "rollup.config.mjs",
     "tsconfig*.json",
+    "utils/esbuild-*.mjs",
     "utils/plugins/**/*.mjs",
     "utils/rollup-*.mjs"
   ],
