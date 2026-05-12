@@ -1,6 +1,7 @@
 /**
  * @import { XrBridge } from '../xr-bridge.js'
  * @import { GraphicsDevice } from '../graphics-device.js'
+ * @import { Texture } from '../texture.js'
  */
 
 import { Vec2 } from '../../../core/math/vec2.js';
@@ -192,6 +193,45 @@ class WebgpuXrBridge {
             depthNear: options.depthNear,
             depthFar: options.depthFar
         });
+    }
+
+    /**
+     * Copies the XR passthrough camera image for the given XRCamera into a PlayCanvas
+     * {@link Texture} using `copyTextureToTexture`. No-ops if `XRGPUBinding.getCameraImage` is
+     * unavailable or returns nothing this frame.
+     *
+     * @param {any} xrCamera - The XR camera whose image should be copied (XRCamera from WebXR API).
+     * @param {Texture} texture - Destination engine texture.
+     */
+    syncCameraColorTexture(xrCamera, texture) {
+        if (!this._binding?.getCameraImage) {
+            return;
+        }
+
+        const src = this._binding.getCameraImage(xrCamera);
+        if (!src) {
+            return;
+        }
+
+        const dst = texture.impl?.gpuTexture;
+        if (!dst) {
+            return;
+        }
+
+        const device = this.xrBridge.device;
+        const encoder = device.commandEncoder;
+        if (!encoder) {
+            return;
+        }
+
+        const width = xrCamera.width;
+        const height = xrCamera.height;
+
+        encoder.copyTextureToTexture(
+            { texture: src },
+            { texture: dst },
+            [width, height, 1]
+        );
     }
 
     /**

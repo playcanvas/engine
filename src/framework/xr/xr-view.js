@@ -352,57 +352,7 @@ class XrView extends EventHandler {
             return;
         }
 
-        const binding = this._manager.graphicsBinding;
-        if (!binding) {
-            return;
-        }
-
-        const texture = binding.getCameraImage(this._xrCamera);
-        if (!texture) {
-            return;
-        }
-
-        const device = this._manager.app.graphicsDevice;
-        const gl = device.gl;
-
-        if (!this._frameBufferSource) {
-            // create frame buffer to read from
-            this._frameBufferSource = gl.createFramebuffer();
-
-            // create frame buffer to write to
-            this._frameBuffer = gl.createFramebuffer();
-        } else {
-            const attachmentBaseConstant = gl.COLOR_ATTACHMENT0;
-            const width = this._xrCamera.width;
-            const height = this._xrCamera.height;
-
-            // set frame buffer to read from
-            device.setFramebuffer(this._frameBufferSource);
-            gl.framebufferTexture2D(
-                gl.FRAMEBUFFER,
-                attachmentBaseConstant,
-                gl.TEXTURE_2D,
-                texture,
-                0
-            );
-
-            // set frame buffer to write to
-            device.setFramebuffer(this._frameBuffer);
-            gl.framebufferTexture2D(
-                gl.FRAMEBUFFER,
-                attachmentBaseConstant,
-                gl.TEXTURE_2D,
-                this._textureColor.impl._glTexture,
-                0
-            );
-
-            // bind buffers
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
-
-            // copy buffers with flip Y
-            gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
-        }
+        this._manager.xrBridge?.syncCameraColorTexture(this._xrCamera, this._textureColor);
     }
 
     /**
@@ -519,8 +469,6 @@ class XrView extends EventHandler {
     }
 
     _onDeviceLost() {
-        this._frameBufferSource = null;
-        this._frameBuffer = null;
         this._depthInfo = null;
     }
 
@@ -560,16 +508,6 @@ class XrView extends EventHandler {
         if (this._textureDepth) {
             this._textureDepth.destroy();
             this._textureDepth = null;
-        }
-
-        if (this._frameBufferSource) {
-            const gl = this._manager.app.graphicsDevice.gl;
-
-            gl.deleteFramebuffer(this._frameBufferSource);
-            this._frameBufferSource = null;
-
-            gl.deleteFramebuffer(this._frameBuffer);
-            this._frameBuffer = null;
         }
     }
 }

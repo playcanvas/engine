@@ -454,8 +454,6 @@ class XrManager extends EventHandler {
             opts.requiredFeatures.push('webgpu');
         }
 
-        const webgl = device?.isWebGL2;
-
         if (type === XRTYPE_AR) {
             opts.optionalFeatures.push('light-estimation');
             opts.optionalFeatures.push('hit-test');
@@ -510,7 +508,7 @@ class XrManager extends EventHandler {
                 };
             }
 
-            if (webgl && options && options.cameraColor && this.views.supportedColor) {
+            if (options && options.cameraColor && this.views.supportedColor) {
                 opts.optionalFeatures.push('camera-access');
             }
         }

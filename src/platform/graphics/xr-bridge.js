@@ -2,6 +2,7 @@
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { EventHandler } from '../../core/event-handler.js'
  * @import { EventHandle } from '../../core/event-handle.js'
+ * @import { Texture } from './texture.js'
  * @import { Vec2 } from '../../core/math/vec2.js'
  */
 
@@ -162,6 +163,17 @@ class XrBridge {
      */
     getViewport(frame, xrView) {
         return this.impl.getViewport(frame, xrView);
+    }
+
+    /**
+     * Copies the XR passthrough camera image for the given `XRCamera` into a PlayCanvas
+     * {@link Texture}. Delegates to the backend implementation; no-ops if not supported.
+     *
+     * @param {any} xrCamera - The XR camera whose image should be copied (XRCamera from WebXR API).
+     * @param {Texture} texture - Destination engine texture.
+     */
+    syncCameraColorTexture(xrCamera, texture) {
+        this.impl?.syncCameraColorTexture?.(xrCamera, texture);
     }
 
     /**

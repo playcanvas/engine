@@ -68,7 +68,7 @@ class XrViews extends EventHandler {
      * @type {boolean}
      * @private
      */
-    _supportedColor = platform.browser && !!window.XRCamera && !!window.XRWebGLBinding;
+    _supportedColor = false;
 
     /**
      * @type {boolean}
@@ -108,6 +108,16 @@ class XrViews extends EventHandler {
         super();
 
         this._manager = manager;
+
+        const gd = manager.app?.graphicsDevice;
+        if (platform.browser && !!window.XRCamera) {
+            if (gd?.isWebGL2 && !!window.XRWebGLBinding) {
+                this._supportedColor = true;
+            } else if (gd?.isWebGPU && !!window.XRGPUBinding) {
+                this._supportedColor = true;
+            }
+        }
+
         this._manager.on('start', this._onSessionStart, this);
         this._manager.on('end', this._onSessionEnd, this);
     }

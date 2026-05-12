@@ -1,6 +1,7 @@
 /**
  * @import { XrBridge } from '../xr-bridge.js'
  * @import { GraphicsDevice } from '../graphics-device.js'
+ * @import { Texture } from '../texture.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
  */
 
@@ -23,6 +24,22 @@ class WebglXrBridge {
     _graphicsBinding = null;
 
     /**
+     * Read framebuffer used to blit the XR camera image into the engine texture.
+     *
+     * @type {WebGLFramebuffer|null}
+     * @private
+     */
+    _cameraFbSource = null;
+
+    /**
+     * Draw framebuffer used to blit the XR camera image into the engine texture.
+     *
+     * @type {WebGLFramebuffer|null}
+     * @private
+     */
+    _cameraFbDest = null;
+
+    /**
      * @param {XrBridge} xrBridge - The XR bridge.
      */
     constructor(xrBridge) {
@@ -31,11 +48,26 @@ class WebglXrBridge {
     }
 
     /**
-     * @param {GraphicsDevice} _device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      */
-    destroy(_device) {
+    destroy(device) {
         this._graphicsBinding = null;
         this._presentationLayer = null;
+        this._deleteCameraFramebuffers(device);
+    }
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @private
+     */
+    _deleteCameraFramebuffers(device) {
+        if (this._cameraFbSource) {
+            const gl = device.gl;
+            gl.deleteFramebuffer(this._cameraFbSource);
+            this._cameraFbSource = null;
+            gl.deleteFramebuffer(this._cameraFbDest);
+            this._cameraFbDest = null;
+        }
     }
 
     /**
@@ -139,6 +171,54 @@ class WebglXrBridge {
         this._graphicsBinding = null;
     }
 
+    /**
+     * Copies the XR passthrough camera image for the given XRCamera into a PlayCanvas
+     * {@link Texture}, with a Y-flip to match engine UV conventions. No-ops if the graphics
+     * binding is unavailable or the camera image is not ready this frame.
+     *
+     * @param {any} xrCamera - The XR camera whose image should be copied (XRCamera from WebXR API).
+     * @param {Texture} texture - Destination engine texture (must be GPU-uploaded).
+     */
+    syncCameraColorTexture(xrCamera, texture) {
+        if (!this._graphicsBinding) {
+            return;
+        }
+
+        const device = this.xrBridge.device;
+        const gl = device.gl;
+
+        const src = this._graphicsBinding.getCameraImage(xrCamera);
+        if (!src) {
+            return;
+        }
+
+        if (!this._cameraFbSource) {
+            // create frame buffer to read from
+            this._cameraFbSource = gl.createFramebuffer();
+
+            // create frame buffer to write to
+            this._cameraFbDest = gl.createFramebuffer();
+        }
+
+        const width = xrCamera.width;
+        const height = xrCamera.height;
+
+        // set frame buffer to read from
+        device.setFramebuffer(this._cameraFbSource);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, src, 0);
+
+        // set frame buffer to write to
+        device.setFramebuffer(this._cameraFbDest);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.impl._glTexture, 0);
+
+        // bind buffers
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._cameraFbSource);
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._cameraFbDest);
+
+        // copy buffers with flip Y
+        gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+    }
+
     onGraphicsDeviceLost() {
         const session = this.xrBridge._session;
 
@@ -150,6 +230,10 @@ class WebglXrBridge {
 
         this._graphicsBinding = null;
         this._presentationLayer = null;
+
+        // FBO handles are invalid after context loss; just null them out without calling gl.delete
+        this._cameraFbSource = null;
+        this._cameraFbDest = null;
 
         session.updateRenderState({
             baseLayer: this._presentationLayer,
