@@ -3,7 +3,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
  * @import { XrManager } from './xr-manager.js'
@@ -406,33 +406,11 @@ class XrView extends EventHandler {
         // update texture
         if (this._depthInfo) {
             if (gpu) {
-                // gpu
-                if (this._depthInfo.texture) {
-                    const gl = this._manager.app.graphicsDevice.gl;
-
-                    this._textureDepth.impl._glTexture = this._depthInfo.texture;
-
-                    if (this._depthInfo.textureType === 'texture-array') {
-                        this._textureDepth.impl._glTarget = gl.TEXTURE_2D_ARRAY;
-                    } else {
-                        this._textureDepth.impl._glTarget = gl.TEXTURE_2D;
-                    }
-
-                    switch (this._manager.views.depthPixelFormat) {
-                        case PIXELFORMAT_R32F:
-                            this._textureDepth.impl._glInternalFormat = gl.R32F;
-                            this._textureDepth.impl._glPixelType = gl.FLOAT;
-                            this._textureDepth.impl._glFormat = gl.RED;
-                            break;
-                        case PIXELFORMAT_DEPTH:
-                            this._textureDepth.impl._glInternalFormat = gl.DEPTH_COMPONENT16;
-                            this._textureDepth.impl._glPixelType = gl.UNSIGNED_SHORT;
-                            this._textureDepth.impl._glFormat = gl.DEPTH_COMPONENT;
-                            break;
-                    }
-
-                    this._textureDepth.impl._glCreated = true;
-                }
+                this._manager.xrBridge?.syncCameraDepthTexture(
+                    this._depthInfo,
+                    this._textureDepth,
+                    this._manager.views.depthPixelFormat ?? PIXELFORMAT_R32F
+                );
             } else {
                 // cpu
                 this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);

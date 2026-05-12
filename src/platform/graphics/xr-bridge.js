@@ -177,6 +177,18 @@ class XrBridge {
     }
 
     /**
+     * Binds XR GPU depth information to the engine depth texture on backends that support it
+     * (WebGL). No-ops on WebGPU until a binding API exists.
+     *
+     * @param {any} depthInfo - Depth information from WebXR (`getDepthInformation`).
+     * @param {Texture} texture - Destination engine texture.
+     * @param {number} depthPixelFormat - Resolved depth pixel format constant (`PIXELFORMAT_*`).
+     */
+    syncCameraDepthTexture(depthInfo, texture, depthPixelFormat) {
+        this.impl?.syncCameraDepthTexture?.(depthInfo, texture, depthPixelFormat);
+    }
+
+    /**
      * @returns {XRLayer|null} Backend output layer (e.g. XRWebGLLayer), if any.
      */
     get presentationLayer() {

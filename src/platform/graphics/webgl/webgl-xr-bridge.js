@@ -5,6 +5,8 @@
  * @import { Vec2 } from '../../../core/math/vec2.js'
  */
 
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_R32F } from '../constants.js';
+
 /**
  * WebGL graphics implementation for {@link XrBridge}.
  *
@@ -217,6 +219,46 @@ class WebglXrBridge {
 
         // copy buffers with flip Y
         gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+
+        device.setFramebuffer(device.defaultFramebuffer);
+    }
+
+    /**
+     * Aliases the XR runtime depth GL texture into the engine {@link Texture} implementation.
+     *
+     * @param {any} depthInfo - Depth information from WebXR (`getDepthInformation`).
+     * @param {Texture} texture - Destination engine texture.
+     * @param {number} depthPixelFormat - Resolved depth pixel format (`PIXELFORMAT_R32F` or `PIXELFORMAT_DEPTH`).
+     */
+    syncCameraDepthTexture(depthInfo, texture, depthPixelFormat) {
+        if (!depthInfo?.texture) {
+            return;
+        }
+
+        const gl = this.xrBridge.device.gl;
+
+        texture.impl._glTexture = depthInfo.texture;
+
+        if (depthInfo.textureType === 'texture-array') {
+            texture.impl._glTarget = gl.TEXTURE_2D_ARRAY;
+        } else {
+            texture.impl._glTarget = gl.TEXTURE_2D;
+        }
+
+        switch (depthPixelFormat) {
+            case PIXELFORMAT_R32F:
+                texture.impl._glInternalFormat = gl.R32F;
+                texture.impl._glPixelType = gl.FLOAT;
+                texture.impl._glFormat = gl.RED;
+                break;
+            case PIXELFORMAT_DEPTH:
+                texture.impl._glInternalFormat = gl.DEPTH_COMPONENT16;
+                texture.impl._glPixelType = gl.UNSIGNED_SHORT;
+                texture.impl._glFormat = gl.DEPTH_COMPONENT;
+                break;
+        }
+
+        texture.impl._glCreated = true;
     }
 
     onGraphicsDeviceLost() {

@@ -4,6 +4,7 @@
  * @import { Texture } from '../texture.js'
  */
 
+import { Debug } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 
 /**
@@ -219,10 +220,7 @@ class WebgpuXrBridge {
         }
 
         const device = this.xrBridge.device;
-        const encoder = device.commandEncoder;
-        if (!encoder) {
-            return;
-        }
+        const encoder = device.getCommandEncoder();
 
         const width = xrCamera.width;
         const height = xrCamera.height;
@@ -232,6 +230,19 @@ class WebgpuXrBridge {
             { texture: dst },
             [width, height, 1]
         );
+    }
+
+    /**
+     * GPU XR depth texture binding is not implemented for WebGPU yet (`XRGPUBinding` has no depth API).
+     *
+     * @param {any} depthInfo - Depth information from WebXR (`getDepthInformation`); when `texture` is set, GPU depth was negotiated.
+     * @param {Texture} _texture - Unused until WebGPU depth is implemented.
+     * @param {number} _depthPixelFormat - Unused until WebGPU depth is implemented.
+     */
+    syncCameraDepthTexture(depthInfo, _texture, _depthPixelFormat) {
+        if (depthInfo?.texture) {
+            Debug.warnOnce('WebXR GPU depth textures are not supported on WebGPU in this engine build; use CPU depth or WebGL until XRGPUBinding exposes depth.');
+        }
     }
 
     /**
