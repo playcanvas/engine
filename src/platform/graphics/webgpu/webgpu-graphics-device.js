@@ -588,7 +588,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(outColorBuffer, 'WebGPU frameStart requires an XR color texture, canvas swapchain texture, or externalBackbuffer.');
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
-        // reallocate framebuffer if dimensions change, to match the output texture
+        // Reallocate framebuffer if dimensions change, to match the output texture. For WebXR
+        // WebGPU projection color targets that are 2d-array textures, width/height are the per-layer
+        // extent (same for every view), which matches what the render pass and internal depth need.
         if (this.backBufferSize.x !== outColorBuffer.width || this.backBufferSize.y !== outColorBuffer.height) {
 
             this.backBufferSize.set(outColorBuffer.width, outColorBuffer.height);

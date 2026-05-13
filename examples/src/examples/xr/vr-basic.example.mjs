@@ -1,4 +1,4 @@
-// @config WEBGPU_DISABLED
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -18,11 +18,34 @@ const message = function (msg) {
     el.textContent = msg;
 };
 
-const app = new pc.Application(canvas, {
-    mouse: new pc.Mouse(canvas),
-    touch: new pc.TouchDevice(canvas),
-    keyboard: new pc.Keyboard(window)
-});
+const gfxOptions = {
+    deviceTypes: [deviceType],
+    alpha: true
+};
+
+const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = window.devicePixelRatio;
+
+const createOptions = new pc.AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new pc.Mouse(canvas);
+createOptions.touch = new pc.TouchDevice(canvas);
+createOptions.keyboard = new pc.Keyboard(window);
+createOptions.xr = pc.XrManager;
+
+createOptions.componentSystems = [
+    pc.RenderComponentSystem,
+    pc.CameraComponentSystem,
+    pc.LightComponentSystem
+];
+createOptions.resourceHandlers = [
+    pc.TextureHandler,
+    pc.ContainerHandler
+];
+
+const app = new pc.AppBase(canvas);
+app.init(createOptions);
+
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -33,104 +56,94 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// use device pixel ratio
-app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
-
-app.start();
-
-// create camera
-const c = new pc.Entity();
-c.addComponent('camera', {
-    clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
-    farClip: 10000
-});
-app.root.addChild(c);
-
-const l = new pc.Entity();
-l.addComponent('light', {
-    type: 'spot',
-    range: 30
-});
-l.translate(0, 10, 0);
-app.root.addChild(l);
-
-/**
- * @param {number} x - The x coordinate.
- * @param {number} y - The y coordinate.
- * @param {number} z - The z coordinate.
- */
-const createCube = function (x, y, z) {
-    const cube = new pc.Entity();
-    cube.addComponent('render', {
-        type: 'box'
-    });
-    cube.setLocalScale(1, 1, 1);
-    cube.translate(x, y, z);
-    app.root.addChild(cube);
+const assets = {
+    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/xr_gallery.glb` })
 };
 
-// create a grid of cubes
-const SIZE = 16;
-for (let x = 0; x < SIZE; x++) {
-    for (let y = 0; y < SIZE; y++) {
-        createCube(2 * x - SIZE, -1.5, 2 * y - SIZE);
-    }
-}
+const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+assetListLoader.load(() => {
+    app.start();
 
-if (app.xr.supported) {
-    const activate = function () {
-        if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-                callback: function (err) {
-                    if (err) message(`WebXR Immersive VR failed to start: ${err.message}`);
+    const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
+    app.root.addChild(galleryEntity);
+
+    // Initial camera (desktop / before XR): offset to the side and higher than default eye height.
+    const camX = 1.35;
+    const camY = 2.45;
+    const camZ = 3.0;
+    const lookX = 0;
+    const lookY = 1.25;
+    const lookZ = 0;
+
+    const c = new pc.Entity();
+    c.addComponent('camera', {
+        clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
+        farClip: 10000
+    });
+    c.setLocalPosition(camX, camY, camZ);
+    c.lookAt(lookX, lookY, lookZ);
+    app.root.addChild(c);
+
+    const l = new pc.Entity();
+    l.addComponent('light', {
+        type: 'spot',
+        range: 30
+    });
+    l.translate(0, 10, 0);
+    app.root.addChild(l);
+
+    if (app.xr.supported) {
+        const activate = function () {
+            if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+                c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
+                    callback: function (err) {
+                        if (err) message(`WebXR Immersive VR failed to start: ${err.message}`);
+                    }
+                });
+            } else {
+                message('Immersive VR is not available');
+            }
+        };
+
+        app.mouse.on('mousedown', () => {
+            if (!app.xr.active) activate();
+        });
+
+        if (app.touch) {
+            app.touch.on('touchend', (evt) => {
+                if (!app.xr.active) {
+                    activate();
+                } else {
+                    c.camera.endXr();
                 }
+
+                evt.event.preventDefault();
+                evt.event.stopPropagation();
             });
-        } else {
+        }
+
+        app.keyboard.on('keydown', (evt) => {
+            if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+                app.xr.end();
+            }
+        });
+
+        app.xr.on('start', () => {
+            message('Immersive VR session has started');
+        });
+        app.xr.on('end', () => {
+            message('Immersive VR session has ended');
+        });
+        app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
+            message(`Immersive VR is ${available ? 'available' : 'unavailable'}`);
+        });
+
+        if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
             message('Immersive VR is not available');
         }
-    };
-
-    app.mouse.on('mousedown', () => {
-        if (!app.xr.active) activate();
-    });
-
-    if (app.touch) {
-        app.touch.on('touchend', (evt) => {
-            if (!app.xr.active) {
-                // if not in VR, activate
-                activate();
-            } else {
-                // otherwise reset camera
-                c.camera.endXr();
-            }
-
-            evt.event.preventDefault();
-            evt.event.stopPropagation();
-        });
+    } else {
+        message('WebXR is not supported');
     }
-
-    // end session by keyboard ESC
-    app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
-            app.xr.end();
-        }
-    });
-
-    app.xr.on('start', () => {
-        message('Immersive VR session has started');
-    });
-    app.xr.on('end', () => {
-        message('Immersive VR session has ended');
-    });
-    app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
-        message(`Immersive VR is ${available ? 'available' : 'unavailable'}`);
-    });
-
-    if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
-        message('Immersive VR is not available');
-    }
-} else {
-    message('WebXR is not supported');
-}
+});
 
 export { app };

@@ -200,12 +200,23 @@ class WebgpuXrBridge {
 
         const colorFormat = this._binding.getPreferredColorFormat();
 
-        this._layer = this._binding.createProjectionLayer({
+        const layerOpts = {
             colorFormat,
-            // TODO: Support textureType 'texture-array' for stereo array layouts (multiview / per-eye slices).
-            textureType: 'texture',
             scaleFactor: options.framebufferScaleFactor
-        });
+        };
+
+        // Prefer texture-array for stereo (per-eye array layers); some runtimes only support 'texture'.
+        try {
+            this._layer = this._binding.createProjectionLayer({
+                ...layerOpts,
+                textureType: 'texture-array'
+            });
+        } catch {
+            this._layer = this._binding.createProjectionLayer({
+                ...layerOpts,
+                textureType: 'texture'
+            });
+        }
 
         session.updateRenderState({
             layers: [this._layer],
