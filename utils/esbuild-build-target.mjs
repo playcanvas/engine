@@ -64,6 +64,7 @@ const EXTERNALS = ['node:worker_threads', 'url'];
 const FFLATE = 'fflate';
 const TARGET = 'es2020';
 const FFLATE_EXPORTS = ['zipSync', 'strToU8'];
+const BUNDLE_SECTION_COMMENT = /^\/\/ (?:\.\.\/)?(?:src|node_modules|modules)\/.*\n/gm;
 const PRUNABLE_IMPORTS = new Set([
     'Debug',
     'DebugGraphics',
@@ -208,9 +209,16 @@ const getBundledOptions = ({
 const buildBundled = async (options) => {
     const opts = getBundledOptions(options);
     await esbuild.build(opts);
-    if (shouldCompactIndent(options)) {
-        const code = await fs.promises.readFile(opts.outfile, 'utf8');
-        await fs.promises.writeFile(opts.outfile, compactIndent(code));
+    const stripSections = !options.sourcemaps && options.moduleFormat === 'esm' && options.buildType !== 'dbg';
+    if (stripSections || shouldCompactIndent(options)) {
+        let code = await fs.promises.readFile(opts.outfile, 'utf8');
+        if (stripSections) {
+            code = code.replace(BUNDLE_SECTION_COMMENT, '');
+        }
+        if (shouldCompactIndent(options)) {
+            code = compactIndent(code);
+        }
+        await fs.promises.writeFile(opts.outfile, code);
     }
     if (!options.sourcemaps) {
         await fs.promises.rm(`${opts.outfile}.map`, { force: true });
@@ -240,9 +248,18 @@ const watchBundled = async (options, startLog, log) => {
                         startLog(input, output);
                     });
                     build.onEnd(async (result) => {
-                        if (!result.errors.length && shouldCompactIndent(options)) {
-                            const code = await fs.promises.readFile(output, 'utf8');
-                            await fs.promises.writeFile(output, compactIndent(code));
+                        const stripSections = !options.sourcemaps &&
+                            options.moduleFormat === 'esm' &&
+                            options.buildType !== 'dbg';
+                        if (!result.errors.length && (stripSections || shouldCompactIndent(options))) {
+                            let code = await fs.promises.readFile(output, 'utf8');
+                            if (stripSections) {
+                                code = code.replace(BUNDLE_SECTION_COMMENT, '');
+                            }
+                            if (shouldCompactIndent(options)) {
+                                code = compactIndent(code);
+                            }
+                            await fs.promises.writeFile(output, code);
                         }
                         log(output, performance.now() - start, result.errors.length);
                     });
