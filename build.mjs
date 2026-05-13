@@ -40,13 +40,14 @@ const COLORS = process.env.FORCE_COLOR !== '0' && !process.env.NO_COLOR;
 const USAGE = `Usage: node build.mjs [options]
 
 Options:
-  --type <rel|dbg|prf|min|types> (default: rel)
-  --format <esm|umd> (default: esm, tree visualizers default to both)
+  --type <rel|dbg|prf|min|types>
+  --format <esm|umd> (required for JS builds, tree visualizers default to both)
   --watch, -w
   --sourcemaps, -m
   --clean
   --treemap, --treenet, --treesun, --treeflame
 
+Tree visualizers default to --type=rel and both formats.
 Use npm run build or turbo run build:all for aggregate builds.
 Use npm run watch or turbo run watch:all for aggregate watches.`;
 
@@ -68,9 +69,9 @@ const { values } = parseArgs({
 });
 
 const hasType = values.type !== undefined;
-const type = values.type ?? 'rel';
+const type = values.type;
 const hasFormat = values.format !== undefined;
-const format = values.format ?? 'esm';
+const format = values.format;
 const trees = TREE_FLAGS.filter(flag => values[flag]);
 
 const pipe = (input, output) => {
@@ -129,34 +130,25 @@ const fail = (msg) => {
 const bin = name => path.join(BIN_DIR, process.platform === 'win32' ? `${name}.cmd` : name);
 
 const getRollupBuild = () => {
-    if (!BUILD_TYPES.includes(type)) {
+    const buildType = type ?? 'rel';
+
+    if (!BUILD_TYPES.includes(buildType)) {
         fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
+    }
+
+    if (buildType !== 'rel') {
+        fail('tree visualizers only support --type=rel');
     }
 
     if (hasFormat && !MODULE_FORMATS.includes(format)) {
         fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
     }
 
-    if (trees.length && type !== 'rel') {
-        fail('tree visualizers only support --type=rel');
+    if (!hasFormat) {
+        return `build:${buildType}`;
     }
 
-    if (values.watch && !hasType && !hasFormat) {
-        return null;
-    }
-
-    if ((values.watch || trees.length) && !hasFormat) {
-        return `build:${type}`;
-    }
-
-    if (type === 'types') {
-        if (values.format) {
-            fail('--type=types cannot be combined with --format');
-        }
-        return 'build:types';
-    }
-
-    return `build:${format}:${type}`;
+    return `build:${format}:${buildType}`;
 };
 
 const runRollup = (items) => {
@@ -181,10 +173,6 @@ const runRollup = (items) => {
     }
 
     return run(bin('rollup'), args);
-};
-
-const runTurboWatch = () => {
-    return run(bin('turbo'), ['run', 'watch:all']);
 };
 
 const ms = (value) => {
@@ -224,28 +212,24 @@ const includeJSTarget = (buildType, moduleFormat) => {
         return false;
     }
 
-    if (values.watch && !hasType && !hasFormat) {
-        return true;
-    }
-
-    if ((values.watch || trees.length) && !hasFormat) {
-        return buildType === type;
-    }
-
     return buildType === type && moduleFormat === format;
 };
 
 const getJSTargets = () => {
+    if (!hasType) {
+        fail('--type is required');
+    }
+
     if (!BUILD_TYPES.includes(type)) {
         fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
     }
 
-    if (hasFormat && !MODULE_FORMATS.includes(format)) {
-        fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
+    if (!hasFormat) {
+        fail('--format is required for JS builds');
     }
 
-    if (trees.length && type !== 'rel') {
-        fail('tree visualizers only support --type=rel');
+    if (!MODULE_FORMATS.includes(format)) {
+        fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
     }
 
     if (type === 'types' && values.format) {
@@ -349,14 +333,14 @@ if (values.clean) {
     process.exit(0);
 }
 
-if (values.watch && values.sourcemaps && !hasType && !hasFormat) {
+if (values.watch && values.sourcemaps && !hasType && !hasFormat && !trees.length) {
     fail('--sourcemaps cannot be combined with aggregate --watch');
 }
 
 if (trees.length) {
     process.exitCode = await runRollup();
 } else if (values.watch && !hasType && !hasFormat) {
-    process.exitCode = await runTurboWatch();
+    fail('aggregate watch must be run with npm run watch or turbo run watch:all');
 } else if (type === 'types') {
     if (values.watch) {
         await watchTypesTarget();
@@ -365,10 +349,7 @@ if (trees.length) {
         process.exitCode = await buildTypesTarget();
     }
 } else if (values.watch) {
-    const watchers = await watchJS();
-    if (!hasType && !hasFormat) {
-        watchers.push(await watchTypesTarget());
-    }
+    await watchJS();
     await new Promise(() => {});
 } else {
     process.exitCode = await buildJS();
