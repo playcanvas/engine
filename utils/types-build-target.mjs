@@ -20,8 +20,6 @@ const REQUIRED_TYPES = [
     'build/playcanvas/src/framework/script/script-type.d.ts'
 ];
 
-const bin = name => path.join(BIN_DIR, process.platform === 'win32' ? `${name}.cmd` : name);
-
 const exists = (file) => {
     return fs.promises.stat(file).then(() => true, () => false);
 };
@@ -45,7 +43,8 @@ const latestTypesMtime = async (dir) => {
 
 const runTsc = (root) => {
     return new Promise((resolve, reject) => {
-        const child = spawn(bin('tsc'), ['--project', path.join(root, TSC_CONFIG)], {
+        const cmd = path.join(BIN_DIR, process.platform === 'win32' ? 'tsc.cmd' : 'tsc');
+        const child = spawn(cmd, ['--project', path.join(root, TSC_CONFIG)], {
             shell: process.platform === 'win32',
             stdio: 'inherit'
         });
@@ -60,16 +59,11 @@ const runTsc = (root) => {
     });
 };
 
-const missingTypes = async (root) => {
+const emitTypes = async (root) => {
     const found = await Promise.all(REQUIRED_TYPES.map((file) => {
         return exists(path.join(root, file));
     }));
-
-    return found.some(value => !value);
-};
-
-const emitTypes = async (root) => {
-    if (await missingTypes(root)) {
+    if (found.some(value => !value)) {
         await fs.promises.rm(path.join(root, TSC_INFO), { force: true });
     }
     await runTsc(root);

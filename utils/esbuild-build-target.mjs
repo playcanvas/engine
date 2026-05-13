@@ -5,7 +5,11 @@ import { parse } from 'acorn';
 import { fileURLToPath } from 'node:url';
 
 import { importValidationPlugin } from './plugins/esbuild-import-validation.mjs';
-import { applyTransforms, createStripTransform, transformPipelinePlugin } from './plugins/esbuild-transform-pipeline.mjs';
+import {
+    applyTransforms,
+    createStripTransform,
+    transformPipelinePlugin
+} from './plugins/esbuild-transform-pipeline.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
 import { revision, version } from './rollup-version-revision.mjs';
 
@@ -69,8 +73,6 @@ const PRUNABLE_IMPORTS = new Set([
     'validateUserChunks'
 ]);
 
-const toPosix = value => value.split(path.sep).join('/');
-
 const compactIndent = code => code.replace(/^ +/gm, spaces => spaces.replace(/ {2}/g, '\t'));
 
 const shouldCompactIndent = ({ buildType, sourcemaps }) => {
@@ -116,22 +118,18 @@ const getImportMetaUrl = (file) => {
 };
 
 const getUmdBanner = (banner) => {
-    return [
-        banner,
-        '(function (global, factory) {',
-        '\ttypeof exports === \'object\' && typeof module !== \'undefined\' ? factory(exports) :',
-        '\ttypeof define === \'function\' && define.amd ? define([\'exports\'], factory) :',
-        '\t(global = typeof globalThis !== \'undefined\' ? globalThis : global || self, factory(global.pc = {}));',
-        '})(this, (function (exports) { \'use strict\';',
-        '\tvar _documentCurrentScript = typeof document !== \'undefined\' ? document.currentScript : null;'
-    ].join('\n');
+    return `${banner}
+(function (global, factory) {
+\ttypeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+\ttypeof define === 'function' && define.amd ? define(['exports'], factory) :
+\t(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pc = {}));
+})(this, (function (exports) { 'use strict';
+\tvar _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;`;
 };
 
 const getUmdFooter = () => {
-    return [
-        'Object.assign(exports, pc);',
-        '}));'
-    ].join('\n');
+    return `Object.assign(exports, pc);
+}));`;
 };
 
 const getPlugins = ({
@@ -257,15 +255,6 @@ const watchBundled = async (options, startLog, log) => {
     return ctx;
 };
 
-const resolveSource = (source, importer) => {
-    if (!source.startsWith('.')) {
-        return null;
-    }
-
-    const resolved = path.resolve(path.dirname(importer), source);
-    return path.extname(resolved) ? resolved : `${resolved}.js`;
-};
-
 const collectIdentifiers = (node, used) => {
     if (!node || typeof node !== 'object' || node.type === 'ImportDeclaration') {
         return;
@@ -328,17 +317,13 @@ const collectImports = (source, file) => {
             continue;
         }
 
-        const resolved = resolveSource(name, file);
-        if (resolved) {
-            imports.push(resolved);
+        if (name.startsWith('.')) {
+            const resolved = path.resolve(path.dirname(file), name);
+            imports.push(path.extname(resolved) ? resolved : `${resolved}.js`);
         }
     }
 
     return imports.sort();
-};
-
-const sameImports = (a, b) => {
-    return a.length === b.length && a.every((value, i) => value === b[i]);
 };
 
 const rewriteFflate = (source, file, input) => {
@@ -347,7 +332,7 @@ const rewriteFflate = (source, file, input) => {
     }
 
     const root = path.dirname(path.resolve(input));
-    const rel = toPosix(path.relative(path.dirname(file), root));
+    const rel = path.relative(path.dirname(file), root).split(path.sep).join('/');
     const modulePath = path.posix.join(rel, '..', 'modules', FFLATE, 'esm', 'browser.js');
 
     return source.replace(/from ['"]fflate['"]/g, `from '${modulePath}'`);
@@ -551,7 +536,10 @@ const watchUnbundled = async (options, startLog, log) => {
 
         const next = await transformFile(file, ctx);
         const prev = graph.get(file);
-        if (!sameImports(prev.imports, next.imports)) {
+        if (
+            prev.imports.length !== next.imports.length ||
+            !prev.imports.every((value, i) => value === next.imports[i])
+        ) {
             await fullBuild();
             return;
         }

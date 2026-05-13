@@ -1,9 +1,31 @@
 import fs from 'node:fs';
+import jscc from 'jscc';
 
-import { applyDynamicImportLegacy, applyDynamicImportSuppress } from './esbuild-dynamic.mjs';
-import { processJSCC } from './esbuild-jscc.mjs';
-import { processShaderChunks } from './esbuild-shader-chunks.mjs';
 import { createStripTransform } from './esbuild-strip.mjs';
+
+const processJSCC = (source, values, keepLines) => {
+    const result = jscc(source, null, {
+        values,
+        keepLines,
+        sourceMap: false,
+        prefixes: ['// ']
+    });
+
+    return result.code;
+};
+
+const processShaderChunks = (source) => {
+    return source.replace(/\/\* *(glsl|wgsl) *\*\/\s*(`.*?`)/gs, (match, type, code) => {
+        return code
+        .trim()
+        .replace(/\r/g, '')
+        .replace(/ {4}/g, '\t')
+        .replace(/[ \t]*\/\/.*/g, '')
+        .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')
+        .concat('\n')
+        .replace(/\n{2,}/g, '\n');
+    });
+};
 
 /**
  * @param {string} source - The source code.
@@ -43,10 +65,10 @@ const applyTransforms = (source, {
         source = source.replace(/import\.meta\.url/g, importMetaUrl);
     }
     if (dynamicImportLegacy) {
-        source = applyDynamicImportLegacy(source);
+        source = source.replace(/(\W)import\(/g, '$1new Function("modulePath", "return import(modulePath)")(');
     }
     if (dynamicImportSuppress) {
-        source = applyDynamicImportSuppress(source);
+        source = source.replace(/import\(([^'])/g, 'import(/* @vite-ignore */ /* webpackIgnore: true */ $1');
     }
 
     return source;

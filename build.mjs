@@ -127,8 +127,6 @@ const fail = (msg) => {
     process.exit(1);
 };
 
-const bin = name => path.join(BIN_DIR, process.platform === 'win32' ? `${name}.cmd` : name);
-
 const getTreeBuild = () => {
     const buildType = type ?? 'rel';
 
@@ -151,14 +149,8 @@ const getTreeBuild = () => {
     return `build:${format}:${buildType}`;
 };
 
-const runTreeBuild = (items) => {
-    const env = items ? [...items] : [];
-    if (!items) {
-        const build = getTreeBuild();
-        if (build) {
-            env.push(build);
-        }
-    }
+const runTreeBuild = () => {
+    const env = [getTreeBuild()];
     env.push(...trees);
 
     const args = ['-c'];
@@ -172,7 +164,7 @@ const runTreeBuild = (items) => {
         args.push('-w', '--no-watch.clearScreen');
     }
 
-    return run(bin('rollup'), args);
+    return run(path.join(BIN_DIR, process.platform === 'win32' ? 'rollup.cmd' : 'rollup'), args);
 };
 
 const ms = (value) => {
@@ -183,12 +175,9 @@ const bold = (value) => {
     return COLORS ? `${BOLD}${value}${REGULAR}` : value;
 };
 
-const color = (code, value) => {
-    return COLORS ? `${code}${value}${RESET}` : value;
-};
-
 const writeLog = (stream, code, value) => {
-    stream.write(`${color(code, value)}\n`);
+    const text = COLORS ? `${code}${value}${RESET}` : value;
+    stream.write(`${text}\n`);
 };
 
 const startLog = (input, output) => writeLog(process.stderr, CYAN, `${bold(input)} → ${bold(output)}...`);
@@ -205,14 +194,6 @@ const targetOutput = (buildType, moduleFormat) => {
     const prefix = OUT_PREFIX[buildType];
     const file = `build/${prefix}${moduleFormat === 'umd' ? '.js' : '.mjs'}`;
     return moduleFormat === 'esm' && buildType !== 'min' ? `${file}, build/${prefix}/` : file;
-};
-
-const includeJSTarget = (buildType, moduleFormat) => {
-    if (type === 'types' || trees.length) {
-        return false;
-    }
-
-    return buildType === type && moduleFormat === format;
 };
 
 const getJSTargets = () => {
@@ -240,7 +221,7 @@ const getJSTargets = () => {
     const targets = [];
     JS_TYPES.forEach((buildType) => {
         MODULE_FORMATS.forEach((moduleFormat) => {
-            if (includeJSTarget(buildType, moduleFormat)) {
+            if (type !== 'types' && !trees.length && buildType === type && moduleFormat === format) {
                 targets.push({ buildType, moduleFormat });
             }
         });
