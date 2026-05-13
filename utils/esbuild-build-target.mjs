@@ -71,6 +71,12 @@ const PRUNABLE_IMPORTS = new Set([
 
 const toPosix = value => value.split(path.sep).join('/');
 
+const compactIndent = code => code.replace(/^ +/gm, spaces => spaces.replace(/ {2}/g, '\t'));
+
+const shouldCompactIndent = ({ buildType, sourcemaps }) => {
+    return !sourcemaps && (buildType === 'rel' || buildType === 'prf');
+};
+
 const parseModule = source => parse(source, {
     ecmaVersion: 'latest',
     sourceType: 'module'
@@ -204,6 +210,10 @@ const getBundledOptions = ({
 const buildBundled = async (options) => {
     const opts = getBundledOptions(options);
     await esbuild.build(opts);
+    if (shouldCompactIndent(options)) {
+        const code = await fs.promises.readFile(opts.outfile, 'utf8');
+        await fs.promises.writeFile(opts.outfile, compactIndent(code));
+    }
     if (!options.sourcemaps) {
         await fs.promises.rm(`${opts.outfile}.map`, { force: true });
     }
@@ -231,7 +241,11 @@ const watchBundled = async (options, startLog, log) => {
                         start = performance.now();
                         startLog(input, output);
                     });
-                    build.onEnd((result) => {
+                    build.onEnd(async (result) => {
+                        if (!result.errors.length && shouldCompactIndent(options)) {
+                            const code = await fs.promises.readFile(output, 'utf8');
+                            await fs.promises.writeFile(output, compactIndent(code));
+                        }
                         log(output, performance.now() - start, result.errors.length);
                     });
                 }
@@ -375,6 +389,7 @@ const getUnbundledContext = ({
         output: `${dir}/${prefix}`,
         outDir: path.resolve(`${dir}/${prefix}`),
         sourcemaps,
+        compact: shouldCompactIndent({ buildType, sourcemaps }),
         isDebug,
         jscc,
         strip: !isDebug ? createStripTransform(STRIP_FUNCTIONS) : null
@@ -410,7 +425,7 @@ const transformFile = async (file, ctx) => {
     return {
         file,
         imports,
-        code: result.code,
+        code: ctx.compact ? compactIndent(result.code) : result.code,
         map: result.map,
         dest: path.join(ctx.outDir, rel)
     };
