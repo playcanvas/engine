@@ -6,7 +6,7 @@
  * --type - Specify the build type: rel, dbg, prf, min, types.
  * --format - Specify the module format: esm, umd.
  * --watch - Rebuild when inputs change.
- * --sourcemaps - Build with source maps using Rollup directly.
+ * --sourcemaps - Build with source maps.
  * --clean - Remove build output.
  *
  * --treemap - Enable treemap build visualization (rel only).
@@ -347,6 +347,10 @@ if (values.help) {
 if (values.clean) {
     await rm('build', { recursive: true, force: true });
     process.exit(0);
+}
+
+if (values.watch && values.sourcemaps && !hasType && !hasFormat) {
+    fail('--sourcemaps cannot be combined with aggregate --watch');
 }
 
 if (trees.length) {
