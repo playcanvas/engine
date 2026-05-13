@@ -129,7 +129,7 @@ const fail = (msg) => {
 
 const bin = name => path.join(BIN_DIR, process.platform === 'win32' ? `${name}.cmd` : name);
 
-const getRollupBuild = () => {
+const getTreeBuild = () => {
     const buildType = type ?? 'rel';
 
     if (!BUILD_TYPES.includes(buildType)) {
@@ -151,10 +151,10 @@ const getRollupBuild = () => {
     return `build:${format}:${buildType}`;
 };
 
-const runRollup = (items) => {
+const runTreeBuild = (items) => {
     const env = items ? [...items] : [];
     if (!items) {
-        const build = getRollupBuild();
+        const build = getTreeBuild();
         if (build) {
             env.push(build);
         }
@@ -338,7 +338,7 @@ if (values.watch && values.sourcemaps && !hasType && !hasFormat && !trees.length
 }
 
 if (trees.length) {
-    process.exitCode = await runRollup();
+    process.exitCode = await runTreeBuild();
 } else if (values.watch && !hasType && !hasFormat) {
     fail('aggregate watch must be run with npm run watch or turbo run watch:all');
 } else if (type === 'types') {
