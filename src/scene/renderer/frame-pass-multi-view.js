@@ -108,13 +108,13 @@ class FramePassMultiView extends FramePass {
             }
         }
 
-        // reset all per-eye state; then selectively restore xrColorTexture to whatever it was
-        // before the loop (guarded: no-op in real XR where the bridge keeps it pointing at the
-        // projection-layer texture)
-        device._clearXrState();
-        if (savedXrColorTexture !== null) {
-            device.xrColorTexture = savedXrColorTexture;
-        }
+        // Clear only wrapper-owned XR device fields. Do not call _clearXrState() here: that also
+        // clears xrSubImages / xrColorTextureViewFormat for the frame, which would break a second
+        // FramePassMultiView in the same frame (numViews would read as 0). The XR bridge clears
+        // full state at endFrame.
+        device.xrCurrentViewIndex = -1;
+        device.xrColorTextureViewDescriptor = null;
+        device.xrColorTexture = savedXrColorTexture ?? null;
 
         // restore the backbuffer to whatever it was bound to before the per-eye loop, but only if
         // it actually changed - skips the cost of a redundant view re-creation in the common XR

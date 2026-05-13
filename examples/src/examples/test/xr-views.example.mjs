@@ -66,7 +66,8 @@ class CompositeArrayPass extends pc.RenderPassShaderQuad {
                 @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
                     var output: FragmentOutput;
                     let q = floor(input.uv0 * 2.0);
-                    let layer = i32(q.x + q.y * 2.0);
+                    // clamp layer: at uv edge (1,1) q can be 2, giving layer 4 for a 4-layer array
+                    let layer = clamp(i32(q.x + q.y * 2.0), 0, 3);
                     let localUV = input.uv0 * 2.0 - q;
                     output.color = textureSample(sourceTexture, sourceTextureSampler, localUV, layer);
                     return output;
