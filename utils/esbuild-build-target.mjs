@@ -65,6 +65,10 @@ const FFLATE = 'fflate';
 const TARGET = 'es2020';
 const FFLATE_EXPORTS = ['zipSync', 'strToU8'];
 const BUNDLE_SECTION_COMMENT = /^\/\/ (?:\.\.\/)?(?:src|node_modules|modules)\/.*\n/gm;
+const CLASS_FIELD_SUPPORT = {
+    'class-field': true,
+    'class-static-field': true
+};
 const PRUNABLE_IMPORTS = new Set([
     'Debug',
     'DebugGraphics',
@@ -177,6 +181,7 @@ const getBundledOptions = ({
     const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
     const outfile = `${dir}/${file}`;
     const banner = getBanner(BANNER[buildType]);
+    const preserveClassFields = moduleFormat === 'esm' && (buildType === 'rel' || buildType === 'prf');
 
     return {
         entryPoints: [input],
@@ -185,6 +190,7 @@ const getBundledOptions = ({
         format: isUMD ? 'iife' : 'esm',
         globalName: isUMD ? 'pc' : undefined,
         target: TARGET,
+        ...(preserveClassFields ? { supported: CLASS_FIELD_SUPPORT } : {}),
         sourcemap: sourcemaps ? true : isDebug ? 'inline' : false,
         minify: isMin,
         drop: isMin ? ['console'] : undefined,
@@ -392,6 +398,7 @@ const getUnbundledContext = ({
         outDir: path.resolve(`${dir}/${prefix}`),
         sourcemaps,
         compact: shouldCompactIndent({ buildType, sourcemaps }),
+        preserveClassFields: buildType === 'rel' || buildType === 'prf',
         isDebug,
         jscc,
         strip: !isDebug ? createStripTransform(STRIP_FUNCTIONS) : null
@@ -418,6 +425,7 @@ const transformFile = async (file, ctx) => {
         loader: 'js',
         target: TARGET,
         format: 'esm',
+        ...(ctx.preserveClassFields ? { supported: CLASS_FIELD_SUPPORT } : {}),
         sourcemap: ctx.sourcemaps,
         sourcefile: path.relative(rootDir, file),
         legalComments: 'none'
