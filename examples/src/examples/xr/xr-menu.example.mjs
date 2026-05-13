@@ -1,4 +1,3 @@
-// @config WEBGPU_DISABLED
 import files from 'examples/files';
 import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -68,13 +67,13 @@ const gfxOptions = {
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// Create application with required component systems for UI and physics
+// AppBase with minimal component systems for UI, scripts, audio, and physics
 const createOptions = new pc.AppOptions();
-createOptions.xr = pc.XrManager;
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new pc.Mouse(canvas);
+createOptions.touch = new pc.TouchDevice(canvas);
 createOptions.keyboard = new pc.Keyboard(window);
+createOptions.xr = pc.XrManager;
 createOptions.elementInput = new pc.ElementInput(canvas);
 createOptions.soundManager = new pc.SoundManager();
 
