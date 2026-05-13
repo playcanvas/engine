@@ -171,6 +171,36 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     xrColorTextureViewFormat = null;
 
     /**
+     * Optional `GPUTextureViewDescriptor` describing how the framebuffer's color attachment view
+     * should be created from {@link WebgpuGraphicsDevice#xrColorTexture}. Used to pick the right
+     * array layer / mip when XR provides a layered (texture array) projection layer. Set per eye
+     * by {@link FramePassMultiView}; cleared back to `null` outside the per-view loop.
+     *
+     * @type {any} // `GPUTextureViewDescriptor | null`; using `any` to avoid exporting WebGPU types in published typings.
+     * @ignore
+     */
+    xrColorTextureViewDescriptor = null;
+
+    /**
+     * Per-view XR sub-image entries populated each frame by the WebGPU XR bridge. Each entry
+     * describes one XR view: the underlying GPU color texture, the view descriptor that selects the
+     * right slice, the viewport, and the view's GPU format. Empty outside immersive WebGPU XR.
+     *
+     * @type {{ colorTexture: any, viewDescriptor: any, viewport: any, viewFormat: any }[]}
+     * @ignore
+     */
+    xrSubImages = [];
+
+    /**
+     * Active XR view index for the multi-view rendering wrapper, or `-1` when not iterating views.
+     * Read by the forward renderer's per-view inner loop to render only the active eye.
+     *
+     * @type {number}
+     * @ignore
+     */
+    xrCurrentViewIndex = -1;
+
+    /**
      * When set, used as the main color attachment in {@link WebgpuGraphicsDevice#frameStart} if there is
      * no XR color texture and no canvas {@link GPUCanvasContext#getCurrentTexture} (for example headless
      * or custom-surface hosts). Must be a WebGPU-backed {@link Texture}; {@link Texture#impl} must expose
@@ -238,12 +268,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.resolver.destroy();
         this.resolver = null;
 
-        this.xrColorTexture = null;
-        this.xrColorTextureViewFormat = null;
+        this._clearXrState();
 
         this.externalBackbuffer = null;
 
         super.destroy();
+    }
+
+    /**
+     * Reset all per-frame WebGPU XR render state to its inactive defaults. Called by the XR bridge
+     * at the end of each XR frame and on session teardown, and by the graphics device on destroy.
+     *
+     * @ignore
+     */
+    _clearXrState() {
+        this.xrColorTexture = null;
+        this.xrColorTextureViewFormat = null;
+        this.xrColorTextureViewDescriptor = null;
+        this.xrSubImages.length = 0;
+        this.xrCurrentViewIndex = -1;
     }
 
     initDeviceCaps() {

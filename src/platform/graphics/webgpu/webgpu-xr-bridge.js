@@ -48,8 +48,7 @@ class WebgpuXrBridge {
         this._binding = null;
         this._layer = null;
         this._cachedFramebufferSize.set(0, 0);
-        device.xrColorTexture = null;
-        device.xrColorTextureViewFormat = null;
+        device._clearXrState();
     }
 
     /**
@@ -59,8 +58,7 @@ class WebgpuXrBridge {
     beginFrame(frame, referenceSpace) {
         const device = this.xrBridge.device;
 
-        device.xrColorTexture = null;
-        device.xrColorTextureViewFormat = null;
+        device._clearXrState();
 
         if (!this._binding || !this._layer || !referenceSpace) {
             return;
@@ -71,35 +69,55 @@ class WebgpuXrBridge {
             return;
         }
 
-        /** @type {XRGPUSubImage|null} */
-        let firstSub = null;
+        const subImages = device.xrSubImages;
         for (let i = 0; i < pose.views.length; i++) {
+            let sub;
             try {
-                const sub = this._binding.getViewSubImage(this._layer, pose.views[i]);
-                // TODO: stereo / multiview WebGPU — drive per-eye color (e.g. texture-array projection layer);
-                // v1 only keeps the first view for xrColorTexture (see createProjectionLayer TODO).
-                if (i === 0) {
-                    firstSub = sub;
-                }
+                sub = this._binding.getViewSubImage(this._layer, pose.views[i]);
             } catch (e) {
                 this.xrBridge._onBindingError?.(e);
                 return;
             }
+
+            const colorTexture = sub?.colorTexture;
+            if (!colorTexture) continue;
+
+            // pull the per-view GPUTextureViewDescriptor from the sub-image when available; this is
+            // required when the runtime returns a layered texture (texture-array) for stereo so each
+            // eye binds the right slice
+            let viewDescriptor = null;
+            if (typeof sub.getViewDescriptor === 'function') {
+                try {
+                    const desc = sub.getViewDescriptor();
+                    if (desc) {
+                        viewDescriptor = { ...desc };
+                    }
+                } catch (e) {
+                    // descriptor optional - fall through to default view
+                }
+            }
+
+            subImages.push({
+                colorTexture,
+                viewDescriptor,
+                viewport: sub.viewport,
+                viewFormat: colorTexture.format
+            });
         }
 
-        if (firstSub?.colorTexture) {
-            device.xrColorTexture = firstSub.colorTexture;
-            device.xrColorTextureViewFormat = firstSub.colorTexture.format;
-            this._cachedFramebufferSize.set(firstSub.colorTexture.width, firstSub.colorTexture.height);
+        // First view: seeds device.xr* for WebGPU frameStart (runs before per-eye rendering) and
+        // caches texture size for getFramebufferSize when the projection layer omits dimensions.
+        const first = subImages[0];
+        if (first) {
+            device.xrColorTexture = first.colorTexture;
+            device.xrColorTextureViewFormat = first.viewFormat;
+            this._cachedFramebufferSize.set(first.colorTexture.width, first.colorTexture.height);
         }
     }
 
     endFrame() {
         const device = this.xrBridge.device;
-        if (device) {
-            device.xrColorTexture = null;
-            device.xrColorTextureViewFormat = null;
-        }
+        device?._clearXrState();
     }
 
     /**
@@ -270,8 +288,7 @@ class WebgpuXrBridge {
         this._binding = null;
         this._layer = null;
         this._cachedFramebufferSize.set(0, 0);
-        device.xrColorTexture = null;
-        device.xrColorTextureViewFormat = null;
+        device._clearXrState();
 
         session.updateRenderState({
             layers: [],

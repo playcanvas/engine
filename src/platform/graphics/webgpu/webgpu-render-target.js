@@ -196,9 +196,15 @@ class WebgpuRenderTarget {
         Debug.assert(gpuTexture);
         this.assignedColorTexture = gpuTexture;
 
-        // create view (optionally handles srgb conversion)
-        const view = gpuTexture.createView({ format: viewFormat });
-        DebugHelper.setLabel(view, 'Framebuffer.assignedColor');
+        const wgpuDevice = /** @type {WebgpuGraphicsDevice} */ (this.renderTarget.device);
+        const xrViewDesc = wgpuDevice?.xrColorTextureViewDescriptor;
+        // WebXR may supply a per-eye view descriptor (e.g. array layer); merge in our view format
+        // for sRGB / reinterpret when it matches the session color texture.
+        const xrSlice = xrViewDesc && gpuTexture === wgpuDevice.xrColorTexture;
+        const view = gpuTexture.createView(
+            xrSlice ? { ...xrViewDesc, format: viewFormat } : { format: viewFormat }
+        );
+        DebugHelper.setLabel(view, xrSlice ? 'Framebuffer.xrColorTextureView' : 'Framebuffer.contextColorTextureView');
 
         // use it as render buffer or resolve target
         const colorAttachment = this.renderPassDescriptor.colorAttachments[0];
