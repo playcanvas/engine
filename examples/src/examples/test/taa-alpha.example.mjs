@@ -150,10 +150,11 @@ assetListLoader.load(() => {
     cubeMaterial.update();
 
     /**
-     * @param {string} primitiveType
-     * @param {pc.Vec3} position
-     * @param {pc.Vec3} scale
-     * @param {pc.Material} mat
+     * @param {string} primitiveType - Primitive mesh type (e.g. `'box'`).
+     * @param {pc.Vec3} position - World-space position for the new entity.
+     * @param {pc.Vec3} scale - Local scale of the primitive.
+     * @param {pc.Material} mat - Material assigned to the render component.
+     * @returns {pc.Entity} The created entity (already parented under `app.root`).
      */
     function createPrimitive(primitiveType, position, scale, mat) {
         const primitive = new pc.Entity();
