@@ -774,7 +774,7 @@ class GltfExporter extends CoreExporter {
                                 return false;
                             }
 
-                            // This ensures that the seconds UV channel info doesn't get stripped out.
+                            // Preserve UV sets that are referenced by any material texture slot.
                             const uv = material[`${texSemantic}Uv`] ?? 0;
                             return uv === texCoordIndex;
                         });
