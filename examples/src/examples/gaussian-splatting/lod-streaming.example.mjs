@@ -552,7 +552,7 @@ assetListLoader.load(async () => {
         pc.Tracing.set(pc.TRACEID_TEXTURES, logTexturesRequested);
         logTexturesRequested = false;
 
-        // eslint-disable-next-line import/namespace
+
         pc.Tracing.set(pc.TRACEID_BUFFERS, logBuffersRequested);
         logBuffersRequested = false;
 
