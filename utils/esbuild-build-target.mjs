@@ -119,11 +119,11 @@ const getJSCCOptions = (type) => {
 };
 
 const getImportMetaUrl = (file) => {
-    return `(typeof document === 'undefined' && typeof location === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : typeof document === 'undefined' ? location.href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('${file}', document.baseURI).href))`;
+    return /* js */ `(typeof document === 'undefined' && typeof location === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : typeof document === 'undefined' ? location.href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('${file}', document.baseURI).href))`;
 };
 
 const getUmdBanner = (banner) => {
-    return `${banner}
+    return /* js */ `${banner}
 (function (global, factory) {
 \ttypeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 \ttypeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -133,7 +133,7 @@ const getUmdBanner = (banner) => {
 };
 
 const getUmdFooter = () => {
-    return `Object.assign(exports, pc);
+    return /* js */ `Object.assign(exports, pc);
 }));`;
 };
 
@@ -374,7 +374,7 @@ const writeFflate = async (outDir) => {
     await fs.promises.mkdir(path.dirname(dest), { recursive: true });
     await esbuild.build({
         stdin: {
-            contents: `export { ${FFLATE_EXPORTS.join(', ')} } from '${FFLATE}';`,
+            contents: /* js */ `export { ${FFLATE_EXPORTS.join(', ')} } from '${FFLATE}';`,
             resolveDir: rootDir,
             sourcefile: `${FFLATE}.js`
         },
