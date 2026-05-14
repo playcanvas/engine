@@ -12,11 +12,10 @@
  * --treemap - Enable treemap build visualization (rel only).
  * --treenet - Enable treenet build visualization (rel only).
  * --treesun - Enable treesun build visualization (rel only).
- * --treeflame - Enable treeflame build visualization (rel only).
  */
 
 import { spawn } from 'node:child_process';
-import { rm } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs, stripVTControlCharacters } from 'node:util';
 
@@ -28,8 +27,14 @@ const BUILD_TYPES = /** @type {const} */ ([...JS_TYPES, 'types']);
 const MODULE_FORMATS = /** @type {const} */ (['umd', 'esm']);
 
 const INPUT = 'src/index.js';
-const TREE_FLAGS = ['treemap', 'treenet', 'treesun', 'treeflame'];
+const TREE_FLAGS = ['treemap', 'treenet', 'treesun'];
+const TREE_TEMPLATES = {
+    treemap: 'treemap',
+    treenet: 'network',
+    treesun: 'sunburst'
+};
 const BIN_DIR = path.join('node_modules', '.bin');
+const VISUALIZER = process.platform === 'win32' ? 'esbuild-visualizer.cmd' : 'esbuild-visualizer';
 const BOLD = '\x1b[1m';
 const REGULAR = '\x1b[22m';
 const CYAN = '\x1b[36m';
@@ -45,7 +50,7 @@ Options:
   --watch, -w
   --sourcemaps, -m
   --clean
-  --treemap, --treenet, --treesun, --treeflame
+  --treemap, --treenet, --treesun
 
 Tree visualizers default to --type=rel and both formats.
 Use npm run build or turbo run build:all for aggregate builds.
@@ -62,7 +67,6 @@ const { values } = parseArgs({
         treemap: { type: 'boolean' },
         treenet: { type: 'boolean' },
         treesun: { type: 'boolean' },
-        treeflame: { type: 'boolean' },
         help: { type: 'boolean', short: 'h' }
     },
     allowPositionals: false
@@ -127,7 +131,7 @@ const fail = (msg) => {
     process.exit(1);
 };
 
-const getTreeBuild = () => {
+const getTreeTargets = () => {
     const buildType = type ?? 'rel';
 
     if (!BUILD_TYPES.includes(buildType)) {
@@ -142,29 +146,10 @@ const getTreeBuild = () => {
         fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
     }
 
-    if (!hasFormat) {
-        return `build:${buildType}`;
-    }
-
-    return `build:${format}:${buildType}`;
-};
-
-const runTreeBuild = () => {
-    const env = [getTreeBuild()];
-    env.push(...trees);
-
-    const args = ['-c'];
-    if (values.sourcemaps) {
-        args.push('-m');
-    }
-    for (const item of env) {
-        args.push('--environment', item);
-    }
-    if (values.watch) {
-        args.push('-w', '--no-watch.clearScreen');
-    }
-
-    return run(path.join(BIN_DIR, process.platform === 'win32' ? 'rollup.cmd' : 'rollup'), args);
+    return (hasFormat ? [format] : MODULE_FORMATS).map(moduleFormat => ({
+        buildType,
+        moduleFormat
+    }));
 };
 
 const ms = (value) => {
@@ -190,10 +175,86 @@ const failedLog = (output, elapsed) => {
     writeLog(process.stderr, RED, `failed ${bold(output)} in ${bold(ms(elapsed))}`);
 };
 
+const runTreeVisualizers = async (moduleFormat, metafile) => {
+    const suffix = moduleFormat === 'esm' ? 'es' : 'umd';
+    const metadata = `build/.esbuild-metafile.${moduleFormat}.json`;
+
+    await writeFile(metadata, JSON.stringify(metafile));
+
+    const codes = await Promise.all(trees.map(async (flag) => {
+        const output = `${flag}.${suffix}.html`;
+        startLog(metadata, output);
+        const start = performance.now();
+        const code = await run(path.join(BIN_DIR, VISUALIZER), [
+            '--metadata', metadata,
+            '--filename', output,
+            '--template', TREE_TEMPLATES[flag]
+        ]);
+        if (code) {
+            failedLog(output, performance.now() - start);
+            return code;
+        }
+        createdLog(output, performance.now() - start);
+
+        return 0;
+    }));
+    const code = codes.find(Boolean) ?? 0;
+    if (code) {
+        return code;
+    }
+
+    await rm(metadata, { force: true });
+
+    return 0;
+};
+
 const targetOutput = (buildType, moduleFormat) => {
     const prefix = OUT_PREFIX[buildType];
     const file = `build/${prefix}${moduleFormat === 'umd' ? '.js' : '.mjs'}`;
     return moduleFormat === 'esm' && buildType !== 'min' ? `${file}, build/${prefix}/` : file;
+};
+
+const buildTreeTarget = async (target) => {
+    const output = targetOutput(target.buildType, target.moduleFormat);
+    startLog(INPUT, output);
+    const start = performance.now();
+    const result = await buildTarget({
+        ...target,
+        sourcemaps: values.sourcemaps,
+        metafile: true
+    });
+    createdLog(output, performance.now() - start);
+
+    return runTreeVisualizers(target.moduleFormat, result.metafile);
+};
+
+const buildTrees = async () => {
+    const codes = await Promise.all(getTreeTargets().map(target => buildTreeTarget(target)));
+
+    return codes.find(Boolean) ?? 0;
+};
+
+const watchTrees = async () => {
+    const watchers = await Promise.all(getTreeTargets().map((target) => {
+        return watchTarget({
+            ...target,
+            sourcemaps: values.sourcemaps,
+            metafile: true,
+            start: startLog,
+            log(path, elapsed, errors) {
+                if (errors) {
+                    failedLog(path, elapsed);
+                } else {
+                    createdLog(path, elapsed);
+                }
+            },
+            end(result) {
+                return runTreeVisualizers(target.moduleFormat, result.metafile);
+            }
+        });
+    }));
+
+    return watchers.flat();
 };
 
 const getJSTargets = () => {
@@ -319,7 +380,12 @@ if (values.watch && values.sourcemaps && !hasType && !hasFormat && !trees.length
 }
 
 if (trees.length) {
-    process.exitCode = await runTreeBuild();
+    if (values.watch) {
+        await watchTrees();
+        await new Promise(() => {});
+    } else {
+        process.exitCode = await buildTrees();
+    }
 } else if (values.watch && !hasType && !hasFormat) {
     fail('aggregate watch must be run with npm run watch or turbo run watch:all');
 } else if (type === 'types') {

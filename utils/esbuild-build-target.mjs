@@ -172,7 +172,8 @@ const getBundledOptions = ({
     input = 'src/index.js',
     dir = 'build',
     sourcemaps = false,
-    watch = false
+    watch = false,
+    metafile = false
 }) => {
     const isUMD = moduleFormat === 'umd';
     const isDebug = buildType === 'dbg';
@@ -190,6 +191,7 @@ const getBundledOptions = ({
         format: isUMD ? 'iife' : 'esm',
         globalName: isUMD ? 'pc' : undefined,
         target: TARGET,
+        metafile,
         ...(preserveClassFields ? { supported: CLASS_FIELD_SUPPORT } : {}),
         sourcemap: sourcemaps ? true : isDebug ? 'inline' : false,
         minify: isMin,
@@ -214,7 +216,7 @@ const getBundledOptions = ({
 
 const buildBundled = async (options) => {
     const opts = getBundledOptions(options);
-    await esbuild.build(opts);
+    const result = await esbuild.build(opts);
     const stripSections = !options.sourcemaps && options.moduleFormat === 'esm' && options.buildType !== 'dbg';
     if (stripSections || shouldCompactIndent(options)) {
         let code = await fs.promises.readFile(opts.outfile, 'utf8');
@@ -229,6 +231,8 @@ const buildBundled = async (options) => {
     if (!options.sourcemaps) {
         await fs.promises.rm(`${opts.outfile}.map`, { force: true });
     }
+
+    return result;
 };
 
 const watchBundled = async (options, startLog, log) => {
@@ -268,6 +272,9 @@ const watchBundled = async (options, startLog, log) => {
                             await fs.promises.writeFile(output, code);
                         }
                         log(output, performance.now() - start, result.errors.length);
+                        if (!result.errors.length) {
+                            await options.end?.(result);
+                        }
                     });
                 }
             }
@@ -631,14 +638,16 @@ const buildTarget = async ({
     input = 'src/index.js',
     dir = 'build',
     preserveModules = moduleFormat === 'esm' && buildType !== 'min',
-    sourcemaps = false
+    sourcemaps = false,
+    metafile = false
 }) => {
     const tasks = [buildBundled({
         moduleFormat,
         buildType,
         input,
         dir,
-        sourcemaps
+        sourcemaps,
+        metafile
     })];
 
     if (preserveModules) {
@@ -650,7 +659,9 @@ const buildTarget = async ({
         }));
     }
 
-    await Promise.all(tasks);
+    const [result] = await Promise.all(tasks);
+
+    return result;
 };
 
 const watchTarget = async ({
@@ -660,8 +671,10 @@ const watchTarget = async ({
     dir = 'build',
     preserveModules = moduleFormat === 'esm' && buildType !== 'min',
     sourcemaps = false,
+    metafile = false,
     start,
-    log
+    log,
+    end
 }) => {
     const watchers = [
         await watchBundled({
@@ -669,7 +682,9 @@ const watchTarget = async ({
             buildType,
             input,
             dir,
-            sourcemaps
+            sourcemaps,
+            metafile,
+            end
         }, start, log)
     ];
 
