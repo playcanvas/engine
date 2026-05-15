@@ -10,7 +10,7 @@
     "build:thumbnails": "node build.mjs --thumbnails",
     "clean": "node build.mjs --clean",
     "develop": "npm run -s build:metadata && cross-env NODE_ENV=development vite",
-    "develop:no-hmr": "npm run -s build:metadata && cross-env NODE_ENV=development vite --no-hmr",
+    "develop:no-hmr": "npm run -s build:metadata && cross-env NODE_ENV=development EXAMPLES_HMR=false vite",
     "lint": "eslint .",
     "serve": "vite preview",
     "type:check": "npm run -s type:check:app && npm run -s type:check:examples",
