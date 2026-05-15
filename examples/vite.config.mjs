@@ -14,8 +14,11 @@ const examplesPreviewServer = () => ({
 
     configurePreviewServer(server) {
         server.middlewares.use((req, _res, next) => {
-            if (new URL(req.url ?? '/', 'http://localhost').pathname === '/') {
-                req.url = '/index.html';
+            const url = new URL(req.url ?? '/', 'http://localhost');
+            if (url.pathname === '/') {
+                req.url = `/index.html${url.search}`;
+            } else if (url.pathname.startsWith('/share/') && !path.extname(url.pathname)) {
+                req.url = `${url.pathname.replace(/\/$/, '')}/index.html${url.search}`;
             }
             next();
         });
