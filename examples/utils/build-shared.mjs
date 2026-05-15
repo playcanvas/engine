@@ -80,7 +80,6 @@ export const EXTERNAL_LOCAL = [
 ];
 
 const CONFIG_COMMENT = /^[ \t]*\/\/ @config .*(?:\r?\n|$)/gm;
-const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
 
 /**
  * @returns {Promise<ExampleMetadata[]>} loaded metadata.
@@ -133,7 +132,6 @@ export const copyTargets = (targets, parallel = true) => {
 export const transformSource = (source) => {
     return source
     .replace(CONFIG_COMMENT, '')
-    .replace(PC_IMPORT, '')
     .replace(/^(?:[ \t]*\r?\n)+/, '');
 };
 
