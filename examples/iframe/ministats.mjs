@@ -1,13 +1,15 @@
 import { getQueryParams } from 'examples/utils';
 
+/** @import { AppBase, MiniStats as PcMiniStats } from 'playcanvas' */
+
 const params = getQueryParams(window.top?.location.href ?? '');
 
 export default class MiniStats {
-    /** @type {import('playcanvas').MiniStats | null} */
+    /** @type {PcMiniStats | null} */
     static instance = null;
 
     /**
-     * @param {import('playcanvas').AppBase} app - The app instance.
+     * @param {AppBase} app - The app instance.
      * @param {any} state - The enabled state.
      */
     static enable(app, state) {

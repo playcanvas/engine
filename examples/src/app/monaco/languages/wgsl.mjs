@@ -27,6 +27,10 @@ export const conf = {
 
 // Returns a list of empty strings, from a possibly multi-line string,
 // stripping blanks and line endings. Emulates Perls 'qw' function.
+/**
+ * @param {string} str - The string to split.
+ * @returns {string[]} The words.
+ */
 function qw(str) {
     const result = [];
     const words = str.split(/\t+|\r+|\n+| +/);

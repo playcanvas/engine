@@ -1,18 +1,30 @@
 /**
  * This file spawns a pool of puppeteer instances to take screenshots of each example for thumbnail.
  */
-import fs from 'fs';
 import { spawn, execSync } from 'node:child_process';
+import fs from 'node:fs';
 
 import { launch } from 'puppeteer';
 import sharp from 'sharp';
 
-import { exampleMetaData } from '../cache/metadata.mjs';
+import { loadExampleMetaData } from './build-shared.mjs';
 
-const PORT = process.env.PORT || '12321';
+/**
+ * @import { ChildProcess } from 'node:child_process'
+ * @import { Browser, Page } from 'puppeteer'
+ * @import { ExampleMetadata } from './build-shared.mjs'
+ */
+
+/**
+ * @typedef {Parameters<typeof launch>[0]} PuppeteerLaunchOptions
+ *
+ * @typedef {object} PoolItem
+ * @property {Browser} browser - Browser instance.
+ * @property {number} pages - Number of open pages.
+ */
+
+const PORT = process.env.PORT ?? '12321';
 const TIMEOUT = 1e8;
-const DEBUG = process.argv.includes('--debug');
-const CLEAN = process.argv.includes('--clean');
 
 /**
  * @param {number} ms - The milliseconds to sleep.
@@ -40,12 +52,7 @@ class PuppeteerPool {
     _size = 4;
 
     /**
-     * @typedef {object} Item
-     * @property {import("puppeteer").Browser} browser - Browser instance.
-     * @property {number} pages - Number of open pages.
-     */
-    /**
-     * @type {Item[]}
+     * @type {PoolItem[]}
      */
     _pool = [];
 
@@ -60,7 +67,8 @@ class PuppeteerPool {
     }
 
     /**
-     * @param {Parameters<typeof launch>[0]} options - Launch options.
+     * @param {PuppeteerLaunchOptions} options - Launch options.
+     * @returns {Promise<void>} completion promise.
      */
     async launch(options = {}) {
         const promises = [];
@@ -80,7 +88,7 @@ class PuppeteerPool {
     /**
      * Allocates the pool items whos browser has the fewest pages open.
      *
-     * @returns {Item} - The pool item
+     * @returns {PoolItem} - The pool item
      */
     allocPoolItem() {
         for (let i = 0; i < this._pool.length; i++) {
@@ -93,8 +101,8 @@ class PuppeteerPool {
     }
 
     /**
-     * @param {Item} item - The pool item.
-     * @returns {Promise<import("puppeteer").Page>} - The created page
+     * @param {PoolItem} item - The pool item.
+     * @returns {Promise<Page>} - The created page
      */
     newPage(item) {
         const promise = item.browser.newPage();
@@ -103,8 +111,8 @@ class PuppeteerPool {
     }
 
     /**
-     * @param {Item} item - The pool item.
-     * @param {import("puppeteer").Page} page - The page to close.
+     * @param {PoolItem} item - The pool item.
+     * @param {Page} page - The page to close.
      * @returns {Promise<void>} - The close promise
      */
     closePage(item, page) {
@@ -113,6 +121,9 @@ class PuppeteerPool {
         return promise;
     }
 
+    /**
+     * @returns {Promise<void[]>} close promises.
+     */
     close() {
         return Promise.all(
             this._pool.map((item) => {
@@ -127,11 +138,13 @@ class PuppeteerPool {
  * @param {PuppeteerPool} pool - The pool instance.
  * @param {string} categoryKebab - Category kebab name.
  * @param {string} exampleNameKebab - Example kebab name.
+ * @param {boolean} debug - Enable debug logs.
+ * @returns {Promise<void>} completion promise.
  */
-const takeThumbnails = async (pool, categoryKebab, exampleNameKebab) => {
+const takeThumbnails = async (pool, categoryKebab, exampleNameKebab, debug) => {
     const poolItem = pool.allocPoolItem();
     const page = await pool.newPage(poolItem);
-    if (DEBUG) {
+    if (debug) {
         page.on('console', message => console.log(`[CONSOLE] ${message.type().substring(0, 3).toUpperCase()} ${message.text()}`)
         );
         page.on('pageerror', ({ message }) => console.log(`[PAGE ERROR] ${message}`));
@@ -141,13 +154,13 @@ const takeThumbnails = async (pool, categoryKebab, exampleNameKebab) => {
 
     // navigate to example
     const link = `http://localhost:${PORT}/iframe/${categoryKebab}_${exampleNameKebab}.html?miniStats=false&deviceType=webgl2`;
-    if (DEBUG) {
+    if (debug) {
         console.log('goto', link);
     }
     await page.goto(link, { timeout: TIMEOUT });
 
     // wait to load
-    if (DEBUG) {
+    if (debug) {
         console.log('wait for', link);
     }
     await page.waitForFunction('window?.pc?.app?._time > 1000', { timeout: TIMEOUT });
@@ -179,14 +192,18 @@ const takeThumbnails = async (pool, categoryKebab, exampleNameKebab) => {
 };
 
 /**
- * @param {typeof exampleMetaData} metadata - Example metadata.
+ * @param {ExampleMetadata[]} metadata - Example metadata.
+ * @param {object} options - Thumbnail options.
+ * @param {boolean} options.clean - Remove cached thumbnails first.
+ * @param {boolean} options.debug - Enable debug logs.
+ * @returns {Promise<void>} completion promise.
  */
-const takeScreenshots = async (metadata) => {
+const takeScreenshots = async (metadata, options) => {
     if (metadata.length === 0) {
         return;
     }
 
-    if (CLEAN) {
+    if (options.clean) {
         fs.rmSync('thumbnails', { recursive: true, force: true });
     }
     if (!fs.existsSync('thumbnails')) {
@@ -208,7 +225,7 @@ const takeScreenshots = async (metadata) => {
         }
 
         screenshotPromises.push(
-            takeThumbnails(pool, categoryKebab, exampleNameKebab)
+            takeThumbnails(pool, categoryKebab, exampleNameKebab, options.debug)
         );
     }
 
@@ -219,29 +236,54 @@ const takeScreenshots = async (metadata) => {
     await pool.close();
 };
 
+/**
+ * @param {ChildProcess} server - The server process.
+ * @param {boolean} isWin - True when running on Windows.
+ * @returns {void} no return value.
+ */
+const stopServer = (server, isWin) => {
+    if (isWin) {
+        execSync(`taskkill /f /pid ${server.pid}`);
+        console.log('Killed server on', PORT);
+        return;
+    }
+    server.kill();
+    console.log('Killed server on', PORT);
+};
 
-const main = async () => {
+/**
+ * @param {object} [options] - Thumbnail options.
+ * @param {boolean} [options.clean] - Remove cached thumbnails first.
+ * @param {boolean} [options.debug] - Enable debug logs.
+ * @returns {Promise<void>} completion promise.
+ */
+export const buildThumbnails = async (options = {}) => {
+    const metadata = await loadExampleMetaData();
     console.log('Spawn server on', PORT);
     const isWin = process.platform === 'win32';
     const cmd = isWin ? 'npx.cmd' : 'npx';
-    const server = spawn(cmd, ['serve', 'dist', '-l', PORT, '--no-request-logging', '--config', '../serve.json'], {
+    const server = spawn(cmd, ['vite', 'preview'], {
+        env: {
+            ...process.env,
+            EXAMPLES_PORT: PORT
+        },
         shell: true
     });
     await sleep(1000); // give a second to spawn server
     console.log('Starting puppeteer screenshot process');
-    try {
+
+    const task = Promise.resolve().then(async () => {
         console.time('Time');
-        await takeScreenshots(exampleMetaData);
+        await takeScreenshots(metadata, {
+            clean: !!options.clean,
+            debug: !!options.debug
+        });
         console.timeEnd('Time');
-    } catch (e) {
-        console.error(e);
+    });
+    const err = await task.then(() => null, err => err);
+
+    stopServer(server, isWin);
+    if (err) {
+        throw err;
     }
-    if (isWin) {
-        execSync(`taskkill /f /pid ${server.pid}`);
-    } else {
-        server.kill();
-    }
-    console.log('Killed server on', PORT);
-    return 0;
 };
-main().then(process.exit);

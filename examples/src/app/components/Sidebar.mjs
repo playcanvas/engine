@@ -10,6 +10,8 @@ import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
 import { getOrientation } from '../utils.mjs';
 
+/** @import { ReactElement } from 'react' */
+
 /**
  * @typedef {object} Props
  * @property {{ pathname: string, hash: string }} location - The router location.
@@ -21,6 +23,7 @@ import { getOrientation } from '../utils.mjs';
  * @property {Record<string, Record<string, object>>|null} filteredCategories - The filtered categories.
  * @property {Observer} observer - The observer.
  * @property {boolean} collapsed - Collapsed or not.
+ * @property {string} filterText - The current filter.
  * @property {string} orientation - Current orientation.
  */
 
@@ -81,8 +84,9 @@ class SideBar extends TypedComponent {
             return;
         }
 
-        /** @type {HTMLElement | null} */
-        const sideBarHeader = sideBar.querySelector('.pcui-panel-header');
+        const sideBarHeader = /** @type {HTMLElement | null} */ (
+            /** @type {unknown} */ (sideBar.querySelector('.pcui-panel-header'))
+        );
         if (!sideBarHeader) {
             return;
         }
@@ -108,8 +112,9 @@ class SideBar extends TypedComponent {
         this.state.observer.on('largeThumbnails:set', () => {
             let minTopNavItemDistance = Number.MAX_VALUE;
 
-            /** @type {NodeListOf<HTMLElement>} */
-            const navItems = document.querySelectorAll('.nav-item');
+            const navItems = /** @type {NodeListOf<HTMLElement>} */ (
+                /** @type {unknown} */ (document.querySelectorAll('.nav-item'))
+            );
             for (let i = 0; i < navItems.length; i++) {
                 const nav = navItems[i];
                 const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
@@ -196,7 +201,7 @@ class SideBar extends TypedComponent {
     clearFilter() {
         const input = document.querySelector('.filter-input input');
         if (input) {
-            /** @type {HTMLInputElement} */ (input).value = '';
+            /** @type {HTMLInputElement} */ (/** @type {unknown} */ (input)).value = '';
         }
         this.onChangeFilter('');
     }
@@ -241,7 +246,7 @@ class SideBar extends TypedComponent {
                     .map((example) => {
                         const path = `/${category}/${example}`;
                         const isSelected = pathname === path;
-                        const className = `nav-item ${isSelected ? 'selected' : null}`;
+                        const className = `nav-item ${isSelected ? 'selected' : ''}`;
                         return jsx(
                             Link,
                             {
@@ -284,7 +289,7 @@ class SideBar extends TypedComponent {
             collapsible: true,
             collapsed: false,
             id: 'sideBar',
-            class: ['small-thumbnails', collapsed ? 'collapsed' : null]
+            class: ['small-thumbnails', ...(collapsed ? ['collapsed'] : [])]
         };
         if (orientation === 'portrait') {
             panelOptions.class = ['small-thumbnails'];
@@ -296,8 +301,8 @@ class SideBar extends TypedComponent {
             panelOptions,
             jsx(
                 Container,
-                { class: ['filter-container', this.state.filterText ? 'has-filter-text' : null] },
-                jsx(TextInput, {
+                { class: ['filter-container', ...(this.state.filterText ? ['has-filter-text'] : [])] },
+                jsx(/** @type {any} */ (TextInput), {
                     class: 'filter-input',
                     keyChange: true,
                     placeholder: 'Filter...',
@@ -328,7 +333,7 @@ class SideBar extends TypedComponent {
 
 /**
  * Wrapper component to provide router location to the class component.
- * @returns {JSX.Element} The SideBar component with router location.
+ * @returns {ReactElement} The SideBar component with router location.
  */
 function SideBarWithRouter() {
     const location = useLocation();

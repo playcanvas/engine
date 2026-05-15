@@ -19,6 +19,11 @@ npm run develop
 ```
 Visit the url mentioned in your terminal to view the examples browser.
 
+To disable automatic browser and example reloads:
+```
+npm run develop:no-reload
+```
+
 You can also run the examples browser with a specific version of the engine by running the following command:
 
 ```
@@ -55,7 +60,7 @@ export { app };
 
 This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
 
-Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `scripts/utils.mjs` file for the full list.
+Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `utils/example-source.mjs` file for the full list.
 
 ```js
 // @config DESCRIPTION This is a description
@@ -131,12 +136,12 @@ const data = localImport('data.mjs');
 
 
 ### Testing your example
-Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
+Run `npm run develop` from the `Local examples browser development` section to serve the examples browser with Vite.
 
-You can view the full collection of example iframes by visiting [http://localhost:5000/iframe/]() in your browser.
+You can view an individual iframe directly, for example [http://localhost:5555/iframe/misc_hello-world.html]().
 
 ### Debug and performance engine development
-By default, the examples app uses the local version of the playcanvas engine located at `../build/playcanvas.js`. If you'd like to test the examples browser with the debug or performance versions of the engine instead, you can run `npm run watch:debug` or `npm run watch:profiler` commands.
+By default, `npm run develop` serves the engine from `../src/index.js`. To test against a built ESM engine instead, pass `ENGINE_PATH`, for example `ENGINE_PATH=../build/playcanvas.mjs npm run develop`.
 
 ## Example Modules
 
