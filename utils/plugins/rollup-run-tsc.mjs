@@ -22,7 +22,9 @@ const addWatch = (context, src) => {
         const stats = fs.statSync(fullPath);
         if (stats.isFile()) {
             context.addWatchFile(path.resolve('.', fullPath));
-        } else if (stats.isDirectory()) {
+            continue;
+        }
+        if (stats.isDirectory()) {
             addWatch(context, fullPath);
         }
     }
