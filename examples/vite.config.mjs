@@ -7,7 +7,7 @@ import { examplesDevServer } from './utils/vite-dev-server.mjs';
 
 const HOST = process.env.EXAMPLES_HOST ?? '0.0.0.0';
 const PORT = Number(process.env.EXAMPLES_PORT ?? 5555);
-const HMR = process.env.EXAMPLES_HMR !== 'false';
+const AUTO_RELOAD = process.env.EXAMPLES_AUTO_RELOAD !== 'false';
 
 const examplesPreviewServer = () => ({
     name: 'playcanvas-examples-preview-server',
@@ -27,7 +27,7 @@ export default defineConfig({
     clearScreen: false,
     publicDir: false,
     server: {
-        hmr: HMR ? undefined : false,
+        hmr: AUTO_RELOAD ? undefined : false,
         host: HOST,
         port: PORT,
         fs: {
@@ -52,7 +52,7 @@ export default defineConfig({
         'process.env.REVISION': JSON.stringify(revision)
     },
     plugins: [
-        examplesDevServer({ hmr: HMR }),
+        examplesDevServer({ hmr: AUTO_RELOAD }),
         examplesPreviewServer()
     ]
 });
