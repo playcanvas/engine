@@ -10,6 +10,8 @@ import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
 import { getOrientation } from '../utils.mjs';
 
+/** @import { ReactElement } from 'react' */
+
 /**
  * @typedef {object} Props
  * @property {{ pathname: string, hash: string }} location - The router location.
@@ -331,7 +333,7 @@ class SideBar extends TypedComponent {
 
 /**
  * Wrapper component to provide router location to the class component.
- * @returns {import('react').ReactElement} The SideBar component with router location.
+ * @returns {ReactElement} The SideBar component with router location.
  */
 function SideBarWithRouter() {
     const location = useLocation();

@@ -13,8 +13,11 @@ import { jsx, fragment } from '../jsx.mjs';
 import { iframePath } from '../paths.mjs';
 import { getOrientation } from '../utils.mjs';
 
-/** @typedef {import('../events.js').StateEvent} StateEvent */
-/** @typedef {import('../events.js').LoadingEvent} LoadingEvent */
+/**
+ * @import { Observer } from '@playcanvas/observer'
+ * @import { ComponentType, ReactElement } from 'react'
+ * @import { LoadingEvent, StateEvent } from '../events.js'
+ */
 
 /**
  * @template {Record<string, string>} [FILES=Record<string, string>]
@@ -22,22 +25,22 @@ import { getOrientation } from '../utils.mjs';
  * @property {Function} loadES5 - The async function to load ES5 files.
  * @property {HTMLCanvasElement} canvas - The canvas.
  * @property {string} deviceType - The device type.
- * @property {import('@playcanvas/observer').Observer} data - The data.
+ * @property {Observer} data - The data.
  * @property {FILES} files - The files.
  */
 
 /**
  * @typedef {object} ControlOptions
- * @property {import('@playcanvas/observer').Observer} observer - The PCUI observer.
- * @property {import('@playcanvas/pcui')} PCUI - The PCUI vanilla module.
- * @property {import('@playcanvas/pcui/react')} ReactPCUI - The PCUI React module.
- * @property {import('react')} React - The PCUI React module.
- * @property {import('../jsx.mjs').jsx} jsx - Shortcut for creating a React JSX Element.
- * @property {import('../jsx.mjs').fragment} fragment - Shortcut for creating a React JSX fragment.
+ * @property {Observer} observer - The PCUI observer.
+ * @property {typeof PCUI} PCUI - The PCUI vanilla module.
+ * @property {typeof ReactPCUI} ReactPCUI - The PCUI React module.
+ * @property {typeof React} React - The PCUI React module.
+ * @property {typeof jsx} jsx - Shortcut for creating a React JSX Element.
+ * @property {typeof fragment} fragment - Shortcut for creating a React JSX fragment.
  */
 
 /**
- * @typedef {import('react').ComponentType<ControlOptions>} Control
+ * @typedef {ComponentType<ControlOptions>} Control
  */
 
 /**
@@ -51,7 +54,7 @@ import { getOrientation } from '../utils.mjs';
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
  * @property {Control | null} controls - Controls function from example.
- * @property {import('@playcanvas/observer').Observer | null} observer - The PCUI observer
+ * @property {Observer | null} observer - The PCUI observer
  * @property {boolean} showDeviceSelector - Show device selector.
  * @property {'code' | 'parameters' | 'description'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
@@ -426,7 +429,7 @@ class Example extends TypedComponent {
 
 /**
  * Wrapper component to provide router params to the class component.
- * @returns {import('react').ReactElement} The Example component with router params.
+ * @returns {ReactElement} The Example component with router params.
  */
 function ExampleWithRouter() {
     const params = useParams();

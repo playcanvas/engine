@@ -3,10 +3,11 @@ import { Component } from 'react';
 
 import { jsx } from '../jsx.mjs';
 
+/** @import { ReactNode } from 'react' */
 
 /**
  * @typedef {object} Props
- * @property {import('react').ReactNode} children - The children.
+ * @property {ReactNode} children - The children.
  */
 
 /**

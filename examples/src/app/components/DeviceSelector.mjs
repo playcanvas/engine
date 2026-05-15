@@ -9,6 +9,8 @@ import {
 } from '../constants.mjs';
 import { jsx } from '../jsx.mjs';
 
+/** @import { DeviceEvent } from '../events.js' */
+
 /**
  * @param {string} dt - The device type.
  * @returns {boolean} True if the device type is WebGPU.
@@ -22,8 +24,6 @@ const deviceTypeNames = {
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
     [DEVICETYPE_NULL]: 'Null'
 };
-
-/** @typedef {import('../events.js').DeviceEvent} DeviceEvent */
 
 /**
  * @typedef {object} Props

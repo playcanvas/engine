@@ -4,8 +4,10 @@ import path from 'node:path';
 import { isModuleWithExternalDependencies, parseConfig } from './example-source.mjs';
 
 /**
- * @typedef {import('./example-source.mjs').ExampleConfig} ExampleConfig
- *
+ * @import { ExampleConfig } from './example-source.mjs'
+ */
+
+/**
  * @typedef {object} CopyTarget
  * @property {string} src - source path.
  * @property {string} dest - destination path.

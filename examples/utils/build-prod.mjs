@@ -29,11 +29,12 @@ import { revision, version } from '../../utils/rollup-version-revision.mjs';
 import { buildTypes } from '../../utils/types-build-target.mjs';
 
 /**
- * @typedef {import('esbuild').BuildOptions} EsbuildOptions
- * @typedef {import('esbuild').Plugin} EsbuildPlugin
- * @typedef {import('vite').InlineConfig} ViteConfig
- * @typedef {import('vite').Plugin} VitePlugin
- * @typedef {import('./build-shared.mjs').CopyTarget} CopyTarget
+ * @import { BuildOptions as EsbuildOptions, Plugin as EsbuildPlugin } from 'esbuild'
+ * @import { InlineConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+ * @import { CopyTarget } from './build-shared.mjs'
+ */
+
+/**
  * @typedef {ReturnType<typeof viteBuild>} ViteBuildResult
  */
 

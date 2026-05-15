@@ -17,14 +17,10 @@ import {
 import { buildTypes } from '../../utils/types-build-target.mjs';
 
 /**
- * @typedef {import('node:http').IncomingMessage} HttpRequest
- * @typedef {import('node:http').ServerResponse} HttpResponse
- * @typedef {import('vite').Logger} ViteLogger
- * @typedef {import('vite').Plugin} VitePlugin
- * @typedef {import('vite').ViteDevServer} ViteServer
- * @typedef {import('./build-shared.mjs').EnginePathInfo} EnginePathInfo
- * @typedef {import('./build-shared.mjs').ExampleMetadata} ExampleMetadata
- * @typedef {import('./example-source.mjs').ExampleConfig} ExampleConfig
+ * @import { IncomingMessage as HttpRequest, ServerResponse as HttpResponse } from 'node:http'
+ * @import { Logger as ViteLogger, Plugin as VitePlugin, ViteDevServer as ViteServer } from 'vite'
+ * @import { EnginePathInfo, ExampleMetadata } from './build-shared.mjs'
+ * @import { ExampleConfig } from './example-source.mjs'
  */
 
 /**

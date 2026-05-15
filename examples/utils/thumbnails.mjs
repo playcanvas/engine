@@ -10,10 +10,12 @@ import sharp from 'sharp';
 import { loadExampleMetaData } from './build-shared.mjs';
 
 /**
- * @typedef {import('node:child_process').ChildProcess} ChildProcess
- * @typedef {import('puppeteer').Browser} Browser
- * @typedef {import('puppeteer').Page} Page
- * @typedef {import('./build-shared.mjs').ExampleMetadata} ExampleMetadata
+ * @import { ChildProcess } from 'node:child_process'
+ * @import { Browser, Page } from 'puppeteer'
+ * @import { ExampleMetadata } from './build-shared.mjs'
+ */
+
+/**
  * @typedef {Parameters<typeof launch>[0]} PuppeteerLaunchOptions
  *
  * @typedef {object} PoolItem

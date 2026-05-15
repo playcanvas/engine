@@ -1,7 +1,7 @@
-/** @typedef {import('./constants.mjs').DEVICETYPE_WEBGPU} DEVICETYPE_WEBGPU  */
-/** @typedef {import('./constants.mjs').DEVICETYPE_WEBGPU_BARE} DEVICETYPE_WEBGPU_BARE  */
-/** @typedef {import('./constants.mjs').DEVICETYPE_WEBGL2} DEVICETYPE_WEBGL2  */
-/** @typedef {import('./constants.mjs').DEVICETYPE_NULL} DEVICETYPE_NULL  */
+/**
+ * @import { Observer } from '@playcanvas/observer'
+ * @import { DEVICETYPE_NULL, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE } from './constants.mjs'
+ */
 
 /**
  * @typedef {object} LoadingEventDetail
@@ -12,7 +12,7 @@
 
 /**
  * @typedef {object} StateEventDetail
- * @property {import('@playcanvas/observer').Observer} observer - The PCUI observer.
+ * @property {Observer} observer - The PCUI observer.
  * @property {Record<string, string>} files - The example files.
  * @property {string} description - The example description.
  *

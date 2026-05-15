@@ -4,6 +4,8 @@ import { deviceType as selectedDeviceType, updateDeviceType, fetchFile, localImp
 
 import MiniStats from './ministats.mjs';
 
+/** @import { AppBase } from 'playcanvas' */
+
 class ExampleLoader {
     /**
      * @type {Record<string, any>}
@@ -30,7 +32,7 @@ class ExampleLoader {
     _name = '';
 
     /**
-     * @type {import('playcanvas').AppBase}
+     * @type {AppBase}
      * @private
      */
     _app;

@@ -7,7 +7,12 @@ import { playcanvasTheme } from '../../monaco/theme.mjs';
 import { jsRules } from '../../monaco/tokenizer-rules.mjs';
 import { pcTypes } from '../../paths.mjs';
 
-/** @typedef {import('../../events.js').StateEvent} StateEvent */
+/**
+ * @import { Monaco } from '@monaco-editor/react'
+ * @import { editor } from 'monaco-editor'
+ * @import { ReactElement } from 'react'
+ * @import { StateEvent } from '../../events.js'
+ */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
@@ -94,7 +99,7 @@ class CodeEditorBase extends TypedComponent {
     }
 
     /**
-     * @param {import('@monaco-editor/react').Monaco} monaco - The monaco editor.
+     * @param {Monaco} monaco - The monaco editor.
      */
     beforeMount(monaco) {
         // set languages
@@ -133,7 +138,7 @@ class CodeEditorBase extends TypedComponent {
     }
 
     /**
-     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor - The monaco editor.
+     * @param {editor.IStandaloneCodeEditor} editor - The monaco editor.
      */
     editorDidMount(editor) {
         // @ts-ignore
@@ -145,7 +150,7 @@ class CodeEditorBase extends TypedComponent {
     }
 
     /**
-     * @returns {import('react').ReactElement} - The rendered component.
+     * @returns {ReactElement} - The rendered component.
      */
     render() {
         return jsx('pre', null, 'Not implemented');

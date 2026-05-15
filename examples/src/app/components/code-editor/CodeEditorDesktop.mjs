@@ -6,9 +6,13 @@ import { iframe } from '../../iframe.mjs';
 import { jsx } from '../../jsx.mjs';
 import { removeRedundantSpaces } from '../../strings.mjs';
 
-/** @typedef {import('../../events.js').StateEvent} StateEvent */
-/** @typedef {import('../../events.js').ErrorEvent} ExampleErrorEvent */
-/** @typedef {import('./CodeEditorBase.mjs').State} State */
+/**
+ * @import { EditorProps } from '@monaco-editor/react'
+ * @import { editor } from 'monaco-editor'
+ * @import { ReactElement } from 'react'
+ * @import { ErrorEvent as ExampleErrorEvent, StateEvent } from '../../events.js'
+ * @import { State } from './CodeEditorBase.mjs'
+ */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
@@ -38,7 +42,7 @@ const FILE_TYPE_LANGUAGES = {
 };
 
 /**
- * @type {import('monaco-editor').editor.IStandaloneCodeEditor}
+ * @type {editor.IStandaloneCodeEditor}
  */
 let monacoEditor;
 
@@ -51,7 +55,7 @@ class CodeEditorDesktop extends CodeEditorBase {
     /** @type {string[]} */
     _decorators = [];
 
-    /** @type {Map<string, import('monaco-editor').editor.IModelDeltaDecoration[]>} */
+    /** @type {Map<string, editor.IModelDeltaDecoration[]>} */
     _decoratorMap = new Map();
 
     /**
@@ -162,7 +166,7 @@ class CodeEditorDesktop extends CodeEditorBase {
 
 
     /**
-     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor - The monaco editor.
+     * @param {editor.IStandaloneCodeEditor} editor - The monaco editor.
      */
     editorDidMount(editor) {
         super.editorDidMount(editor);
@@ -237,7 +241,7 @@ class CodeEditorDesktop extends CodeEditorBase {
 
     renderTabs() {
         const { files, selectedFile } = this.state;
-        /** @type {import('react').ReactElement[]} */
+        /** @type {ReactElement[]} */
         const tabs = [];
         for (const name in files) {
             const button = jsx(Button, {
@@ -266,7 +270,7 @@ class CodeEditorDesktop extends CodeEditorBase {
             value = '// reloading, please wait';
         }
 
-        /** @type {import('@monaco-editor/react').EditorProps} */
+        /** @type {EditorProps} */
         const options = {
             value,
             language,
