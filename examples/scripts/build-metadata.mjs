@@ -2,7 +2,11 @@ import fs from 'fs';
 import path from 'path';
 
 import { toKebabCase } from '../src/app/strings.mjs';
+import { bold, createdLog, startLog, writeLog, YELLOW } from '../utils/log.mjs';
 import { parseConfig } from '../utils/utils.mjs';
+
+const ROOT_PATH = 'src/examples';
+const OUTPUT = 'cache/metadata.mjs';
 
 /**
  * @type {{
@@ -13,6 +17,7 @@ import { parseConfig } from '../utils/utils.mjs';
  * }[]}
  */
 const exampleMetaData = [];
+const hiddenExamples = [];
 
 /**
  * @param {object} obj - The object.
@@ -39,11 +44,12 @@ const getDirFiles = (path) => {
 
 
 const main = () => {
-    const rootPath = 'src/examples';
-    const categories = getDirFiles(rootPath);
+    startLog('metadata', OUTPUT);
+    const start = performance.now();
+    const categories = getDirFiles(ROOT_PATH);
 
     categories.forEach((category) => {
-        const categoryPath = path.resolve(`${rootPath}/${category}`);
+        const categoryPath = path.resolve(`${ROOT_PATH}/${category}`);
         const examplesFiles = getDirFiles(categoryPath);
         const categoryKebab = toKebabCase(category);
 
@@ -58,7 +64,7 @@ const main = () => {
             const config = parseConfig(fs.readFileSync(examplePath, 'utf-8'));
             const hidden = !!config.HIDDEN;
             if (hidden) {
-                console.info(`hidden (not listed in sidebar): ${categoryKebab}/${exampleNameKebab}`);
+                hiddenExamples.push(`${categoryKebab}/${exampleNameKebab}`);
             }
 
             exampleMetaData.push({
@@ -74,6 +80,13 @@ const main = () => {
         fs.mkdirSync('cache');
     }
 
-    fs.writeFileSync('cache/metadata.mjs', `export const exampleMetaData = ${objStringify(exampleMetaData)};\n`);
+    fs.writeFileSync(OUTPUT, `export const exampleMetaData = ${objStringify(exampleMetaData)};\n`);
+
+    if (hiddenExamples.length) {
+        writeLog(process.stderr, YELLOW, `hidden examples (${bold(hiddenExamples.length)})`);
+        hiddenExamples.forEach(example => writeLog(process.stderr, YELLOW, `  ${example}`));
+    }
+
+    createdLog(OUTPUT, performance.now() - start);
 };
 main();

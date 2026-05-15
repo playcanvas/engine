@@ -6,6 +6,10 @@ import { jsx } from './jsx.mjs';
 
 import '@playcanvas/pcui/styles';
 
+if (process.env.NODE_ENV === 'development' && import.meta.hot) {
+    import('./dev-server.mjs');
+}
+
 function main() {
     // render out the app
     const container = document.getElementById('app');

@@ -11,6 +11,6 @@
         "strictNullChecks": true,
         "target": "esnext",
     },
-    "include": ["src", "scripts", "iframe", "templates", "utils", "rollup.config.mjs"],
+    "include": ["src", "scripts", "iframe", "templates", "utils", "build.mjs", "vite.config.mjs"],
     "exclude": ["node_modules", "src/lib"]
 }

@@ -12,6 +12,24 @@ class ExampleLoader {
     _config;
 
     /**
+     * @type {Record<string, any>}
+     * @private
+     */
+    _baseConfig = {};
+
+    /**
+     * @type {string[]}
+     * @private
+     */
+    _fileNames = [];
+
+    /**
+     * @type {string}
+     * @private
+     */
+    _name = '';
+
+    /**
      * @type {import('playcanvas').AppBase}
      * @private
      */
@@ -102,33 +120,51 @@ class ExampleLoader {
         return locations;
     }
 
+    _clearFiles() {
+        for (const name of Object.keys(files)) {
+            delete files[name];
+        }
+    }
+
     /**
-     * @param {{ engineUrl: string, fileNames: string[] }} options - Options to start the loader
+     * @param {string} [stamp] - The cache-busting stamp.
      */
-    async start({ engineUrl, fileNames }) {
-        window.pc = await import(engineUrl);
-
-        // @ts-ignore
-        window.top.pc = window.pc;
-
+    async _fetchFiles(stamp = '') {
+        const suffix = stamp ? `?t=${stamp}` : '';
         // extracts example category and name from the URL
         const match = /([^/]+)\.html$/.exec(new URL(location.href).pathname);
         if (!match) {
             return;
         }
+        this._name = match[1];
 
         // loads each files
         /**
          * @type {Record<string, string>}
          */
         const unorderedFiles = {};
-        await Promise.all(fileNames.map(async (name) => {
-            unorderedFiles[name] = await fetchFile(`./${match[1]}.${name}`);
+        await Promise.all(this._fileNames.map(async (name) => {
+            unorderedFiles[name] = await fetchFile(`./${this._name}.${name}${suffix}`);
         }));
+        this._clearFiles();
         for (const name of Object.keys(unorderedFiles).sort()) {
             files[name] = unorderedFiles[name];
         }
+    }
 
+    /**
+     * @param {{ engineUrl: string, fileNames: string[], config?: Record<string, any> }} options - Options to start the loader
+     */
+    async start({ engineUrl, fileNames, config = {} }) {
+        this._baseConfig = config;
+        this._fileNames = fileNames;
+
+        window.pc = await import(engineUrl);
+
+        // @ts-ignore
+        window.top.pc = window.pc;
+
+        await this._fetchFiles();
 
         await this.load();
     }
@@ -140,7 +176,10 @@ class ExampleLoader {
         refresh();
 
         // parse config
-        this._config = parseConfig(files['example.mjs']);
+        this._config = {
+            ...this._baseConfig,
+            ...parseConfig(files['example.mjs'])
+        };
 
         // update device type
         updateDeviceType(this._config);
@@ -190,6 +229,25 @@ class ExampleLoader {
 
     sendRequestedFiles() {
         fire('requestedFiles', { files });
+    }
+
+    /**
+     * @param {{ stamp?: string, config?: Record<string, any>, files?: string[] }} [options] - Reload options.
+     */
+    async reloadFiles({ stamp = '', config = null, files: names = null } = {}) {
+        if (!this._allowRestart) {
+            console.warn('Dropping restart while still restarting');
+            return;
+        }
+        if (config) {
+            this._baseConfig = config;
+        }
+        if (names) {
+            this._fileNames = names;
+        }
+        await this._fetchFiles(stamp);
+        this.sendRequestedFiles();
+        this.hotReload();
     }
 
     /**

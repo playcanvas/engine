@@ -11,6 +11,8 @@ import { pcTypes } from '../../paths.mjs';
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
+const EDITOR_DIRTY_EVENT = 'editorDirty';
+
 function getShowMinimap() {
     let showMinimap = true;
     if (localStorage.getItem('showMinimap')) {
@@ -56,11 +58,20 @@ class CodeEditorBase extends TypedComponent {
      */
     _handleExampleLoad(event) {
         const { files } = event.detail;
+        this._setDirty(false);
         this.mergeState({ files, selectedFile: 'example.mjs' });
     }
 
     _handleExampleLoading() {
+        this._setDirty(false);
         this.mergeState({ files: { 'example.mjs': '// reloading' } });
+    }
+
+    /**
+     * @param {boolean} dirty - The dirty state.
+     */
+    _setDirty(dirty) {
+        window.dispatchEvent(new CustomEvent(EDITOR_DIRTY_EVENT, { detail: { dirty } }));
     }
 
     /**

@@ -121,6 +121,7 @@ class CodeEditorDesktop extends CodeEditorBase {
      */
     _handleRequestedFiles(event) {
         const { files } = event.detail;
+        this._setDirty(false);
         this.mergeState({ files });
     }
 
@@ -213,7 +214,11 @@ class CodeEditorDesktop extends CodeEditorBase {
      */
     onChange(value) {
         const { files, selectedFile } = this.state;
+        if (files[selectedFile] === value) {
+            return;
+        }
         files[selectedFile] = value;
+        this._setDirty(true);
     }
 
     /**

@@ -96,7 +96,8 @@ class Example extends TypedComponent {
         this._controlsUrl = URL.createObjectURL(blob);
         let controls;
         try {
-            const module = await import(this._controlsUrl);
+            // eslint-disable-next-line jsdoc/no-bad-blocks
+            const module = await import(/* @vite-ignore */ this._controlsUrl);
             controls = module.controls;
         } catch (e) {
             controls = () => jsx('pre', null, e.message);
@@ -229,7 +230,7 @@ class Example extends TypedComponent {
     get iframePath() {
         const categoryKebab = this.props.match.params.category;
         const exampleNameKebab = this.props.match.params.example;
-        return `${iframePath}/${categoryKebab}_${exampleNameKebab}.html`;
+        return `${iframePath}${categoryKebab}_${exampleNameKebab}.html`;
     }
 
     renderDeviceSelector() {

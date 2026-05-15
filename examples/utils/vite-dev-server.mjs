@@ -1,0 +1,384 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+import {
+    createExampleHtml,
+    exampleMetaData,
+    getEnginePath,
+    getEnginePathInfo,
+    getExample,
+    getExamplePath,
+    getFiles,
+    readExampleConfig,
+    slash,
+    transformSource
+} from './build-shared.mjs';
+import { buildTypes } from '../../utils/types-build-target.mjs';
+
+const NODE_ENV = 'development';
+const UPDATE_EVENT = 'playcanvas:examples-update';
+const ENGINE_PREFIX = '/iframe/ENGINE_PATH/';
+const IFRAME_PREFIX = '/iframe/';
+const TEXT = 'text/plain; charset=utf-8';
+const TYPES_DIR = '../build';
+const STATIC_ROUTES = [
+    { url: '/static/assets/', root: 'assets' },
+    { url: '/static/lib/', root: 'src/lib' },
+    { url: '/static/scripts/', root: '../scripts' },
+    { url: '/thumbnails/', root: 'thumbnails' },
+    { url: '/modules/monaco-editor/min/vs/', root: 'node_modules/monaco-editor/min/vs' },
+    { url: '/modules/fflate/esm/', root: '../node_modules/fflate/esm' }
+];
+const ROOT_FILES = {
+    '/styles.css': 'src/static/styles.css',
+    '/playcanvas-logo.png': 'src/static/playcanvas-logo.png',
+    '/playcanvas.d.ts': '../build/playcanvas.d.ts'
+};
+const IFRAME_FILES = {
+    '/iframe/files.mjs': 'iframe/files.mjs',
+    '/iframe/loader.mjs': 'iframe/loader.mjs',
+    '/iframe/main.css': 'iframe/main.css',
+    '/iframe/ministats.mjs': 'iframe/ministats.mjs',
+    '/iframe/observer.mjs': 'iframe/observer.mjs',
+    '/iframe/polyfill.js': 'iframe/polyfill.js',
+    '/iframe/utils.mjs': 'iframe/utils.mjs',
+    '/iframe/playcanvas-observer.mjs': 'node_modules/@playcanvas/observer/dist/index.mjs',
+    '/iframe/playcanvas.d.ts': '../build/playcanvas.d.ts'
+};
+
+const mime = (file) => {
+    if (file.endsWith('.d.ts')) {
+        return TEXT;
+    }
+    switch (path.extname(file)) {
+        case '.css':
+            return 'text/css; charset=utf-8';
+        case '.html':
+            return 'text/html; charset=utf-8';
+        case '.js':
+        case '.mjs':
+            return 'text/javascript; charset=utf-8';
+        case '.json':
+            return 'application/json; charset=utf-8';
+        case '.png':
+            return 'image/png';
+        case '.jpg':
+        case '.jpeg':
+            return 'image/jpeg';
+        case '.svg':
+            return 'image/svg+xml';
+        case '.wasm':
+            return 'application/wasm';
+    }
+    return TEXT;
+};
+
+const pathname = (req) => {
+    return new URL(req.url ?? '/', 'http://localhost').pathname;
+};
+
+const isInside = (file, root) => {
+    return file === root || file.startsWith(`${root}${path.sep}`);
+};
+
+const sendText = (res, text, type = TEXT) => {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', type);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.end(text);
+};
+
+const sendFile = async (res, file, root = '') => {
+    const abs = path.resolve(file);
+    const base = root ? path.resolve(root) : '';
+    if (base && !isInside(abs, base)) {
+        res.statusCode = 403;
+        res.end();
+        return true;
+    }
+
+    const stat = await fs.promises.stat(abs).then(value => value, () => null);
+    if (!stat?.isFile()) {
+        return false;
+    }
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', mime(abs));
+    res.setHeader('Cache-Control', 'no-cache');
+    fs.createReadStream(abs).on('error', () => {
+        if (!res.headersSent) {
+            res.statusCode = 500;
+        }
+        res.end();
+    }).pipe(res);
+    return true;
+};
+
+const notFound = (res) => {
+    res.statusCode = 404;
+    res.end();
+    return true;
+};
+
+const serveRoutes = async (url, res, routes) => {
+    const route = routes.find(item => url.startsWith(item.url));
+    if (!route) {
+        return false;
+    }
+    const file = path.join(route.root, url.slice(route.url.length));
+    const found = await sendFile(res, file, route.root);
+    return found || notFound(res);
+};
+
+const appHtml = async (server, url) => {
+    const html = await fs.promises.readFile('src/static/index.html', 'utf8');
+    const dev = html.replace(
+        /<script src="index\.js"><\/script>/,
+        '<script type="module" src="/src/app/index.mjs"></script>'
+    );
+    return server.transformIndexHtml(url, dev);
+};
+
+const exampleFromFile = (file) => {
+    const abs = slash(path.resolve(file));
+    for (let i = 0; i < exampleMetaData.length; i++) {
+        const item = exampleMetaData[i];
+        const dir = slash(path.resolve(item.path));
+        if (abs.startsWith(`${dir}/`) && path.basename(file).startsWith(`${item.exampleNameKebab}.`)) {
+            return item;
+        }
+    }
+    return null;
+};
+
+const relative = file => slash(path.relative(process.cwd(), file));
+
+const createUpdate = async (file, engine) => {
+    const abs = path.resolve(file);
+    const stamp = Date.now().toString(36);
+    const item = exampleFromFile(abs);
+    if (item) {
+        return {
+            kind: 'example',
+            path: relative(abs),
+            example: `/${item.categoryKebab}/${item.exampleNameKebab}`,
+            stamp,
+            config: await readExampleConfig(item),
+            files: getFiles(item)
+        };
+    }
+    if ((engine.unpacked && isInside(abs, engine.root)) || (!engine.unpacked && abs === engine.src)) {
+        return {
+            kind: 'engine',
+            path: relative(abs),
+            stamp
+        };
+    }
+    if (isInside(abs, path.resolve('iframe')) ||
+            isInside(abs, path.resolve('templates')) ||
+            isInside(abs, path.resolve('assets')) ||
+            isInside(abs, path.resolve('../scripts'))) {
+        return {
+            kind: 'iframe',
+            path: relative(abs),
+            stamp
+        };
+    }
+    return null;
+};
+
+const createTypesBuilder = (logger) => {
+    let active = false;
+    let pending = false;
+    let timer = null;
+
+    const run = () => {
+        if (active) {
+            pending = true;
+            return;
+        }
+
+        active = true;
+        buildTypes({
+            root: '..',
+            dir: TYPES_DIR,
+            skipUnchanged: true
+        }).then(() => {
+            active = false;
+            if (pending) {
+                pending = false;
+                run();
+            }
+        }, (err) => {
+            active = false;
+            logger.error(err.message);
+            if (pending) {
+                pending = false;
+                run();
+            }
+        });
+    };
+
+    return {
+        run,
+        schedule() {
+            clearTimeout(timer);
+            timer = setTimeout(run, 100);
+        }
+    };
+};
+
+const serveEngine = (url, res, info) => {
+    if (!url.startsWith(ENGINE_PREFIX)) {
+        return false;
+    }
+
+    const rel = url.slice(ENGINE_PREFIX.length);
+    if (!info.unpacked) {
+        return rel === 'index.js' ? sendFile(res, info.src) : false;
+    }
+    return sendFile(res, path.join(info.root, rel), info.root);
+};
+
+const serveExampleFile = async (url, res) => {
+    const name = url.slice(IFRAME_PREFIX.length);
+    const dot = name.indexOf('.');
+    const target = dot === -1 ? '' : name.slice(0, dot);
+    const file = dot === -1 ? '' : name.slice(dot + 1);
+    if (!target || !target.includes('_') || !file) {
+        return false;
+    }
+
+    const item = getExample(target);
+    if (!item || !getFiles(item).includes(file)) {
+        return false;
+    }
+
+    const src = getExamplePath(item, file);
+    if (!/\.(?:mjs|js)$/.test(file)) {
+        return sendFile(res, src, path.dirname(src));
+    }
+
+    const source = await fs.promises.readFile(src, 'utf8').then(value => value, () => null);
+    if (source === null) {
+        return false;
+    }
+    const code = file === 'example.mjs' || file === 'controls.mjs' ? transformSource(source) : source;
+    sendText(res, code, 'text/javascript; charset=utf-8');
+    return true;
+};
+
+const handle = async (server, req, res, engineInfo, engineStamp) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+        return false;
+    }
+
+    const url = pathname(req);
+    if (url === '/' || url === '/index.html') {
+        sendText(res, await appHtml(server, req.url ?? '/'), 'text/html; charset=utf-8');
+        return true;
+    }
+
+    if (ROOT_FILES[url]) {
+        const found = await sendFile(res, ROOT_FILES[url]);
+        return found || notFound(res);
+    }
+    if (IFRAME_FILES[url]) {
+        const found = await sendFile(res, IFRAME_FILES[url]);
+        return found || notFound(res);
+    }
+    if (await serveRoutes(url, res, STATIC_ROUTES)) {
+        return true;
+    }
+    if (await serveEngine(url, res, engineInfo)) {
+        return true;
+    }
+
+    if (url.startsWith(IFRAME_PREFIX) && url.endsWith('.html')) {
+        const name = url.slice(IFRAME_PREFIX.length, -'.html'.length);
+        const item = getExample(name);
+        if (!item) {
+            return false;
+        }
+        const params = new URL(req.url ?? '/', 'http://localhost').searchParams;
+        sendText(res, await createExampleHtml(item, getFiles(item), {
+            nodeEnv: NODE_ENV,
+            enginePath: getEnginePath(NODE_ENV),
+            engineStamp: params.get('t') ?? engineStamp
+        }), 'text/html; charset=utf-8');
+        return true;
+    }
+
+    if (url.startsWith(IFRAME_PREFIX)) {
+        return serveExampleFile(url, res);
+    }
+
+    return false;
+};
+
+export const examplesDevServer = () => {
+    const enginePath = getEnginePath(NODE_ENV);
+    let engineStamp = '';
+    let engineInfo;
+
+    return {
+        name: 'playcanvas-examples-dev-server',
+
+        configureServer(server) {
+            const types = createTypesBuilder(server.config.logger);
+            const roots = [
+                path.resolve('src/examples'),
+                path.resolve('templates'),
+                path.resolve('iframe'),
+                path.resolve('assets'),
+                path.resolve('../scripts')
+            ];
+
+            server.watcher.add(roots);
+            const info = engineInfo ??= getEnginePathInfo(enginePath);
+            info.then((value) => {
+                server.watcher.add(value.unpacked ? value.root : value.src);
+            }, (err) => {
+                server.config.logger.error(err.message);
+            });
+            types.run();
+
+            const update = (file) => {
+                const current = engineInfo ??= getEnginePathInfo(enginePath);
+                current.then((value) => {
+                    return createUpdate(file, value);
+                }).then((data) => {
+                    if (!data) {
+                        return;
+                    }
+                    if (data.kind === 'engine') {
+                        engineStamp = data.stamp;
+                        types.schedule();
+                    }
+                    server.ws.send({
+                        type: 'custom',
+                        event: UPDATE_EVENT,
+                        data
+                    });
+                }, (err) => {
+                    server.config.logger.error(err.message);
+                });
+            };
+
+            server.watcher.on('add', update);
+            server.watcher.on('change', update);
+            server.watcher.on('unlink', update);
+
+            server.middlewares.use((req, res, next) => {
+                const info = engineInfo ??= getEnginePathInfo(enginePath);
+                info.then((value) => {
+                    return handle(server, req, res, value, engineStamp);
+                }).then((handled) => {
+                    if (!handled) {
+                        next();
+                    }
+                }, next);
+            });
+        }
+    };
+};
