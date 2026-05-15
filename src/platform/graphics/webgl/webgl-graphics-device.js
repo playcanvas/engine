@@ -38,6 +38,7 @@ import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { WebglUploadStream } from './webgl-upload-stream.js';
 import { WebglXrBridge } from './webgl-xr-bridge.js';
+import { WebglXrMsaaCopy } from './webgl-xr-msaa-copy.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -103,6 +104,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     _defaultFramebufferChanged = false;
+
+    /**
+     * Helper for resolving MSAA color into the XR framebuffer via two quad draws on visionOS.
+     * Created lazily; null on all other platforms.
+     *
+     * @type {import('./webgl-xr-msaa-copy.js').WebglXrMsaaCopy|null}
+     * @private
+     */
+    _xrMsaaCopy = null;
 
     /**
      * Creates a new WebglGraphicsDevice instance.
@@ -629,6 +639,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.clearVertexArrayObjectCache();
 
+        this._xrMsaaCopy?.destroy();
+        this._xrMsaaCopy = null;
+
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
         this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
@@ -1098,6 +1111,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
             this.activeFramebuffer = fb;
         }
+    }
+
+    /**
+     * Resolve multisampled color into the WebXR session framebuffer via two textured quad draws
+     * (horizontal SBS). Used on visionOS / Apple Vision Pro where direct `blitFramebuffer` into
+     * the XR opaque framebuffer does not produce correct results.
+     *
+     * @param {WebGLFramebuffer} msaaReadFbo - Multisampled source framebuffer.
+     * @param {WebGLFramebuffer} xrDrawFbo - XR base layer framebuffer.
+     * @param {number} width - Full SBS framebuffer width in pixels.
+     * @param {number} height - Framebuffer height in pixels.
+     * @ignore
+     */
+    resolveMsaaColorToXrFramebufferViaQuads(msaaReadFbo, xrDrawFbo, width, height) {
+        this._xrMsaaCopy ??= new WebglXrMsaaCopy(this);
+        this._xrMsaaCopy.copy(msaaReadFbo, xrDrawFbo, width, height);
     }
 
     /**
