@@ -1,4 +1,5 @@
 /** @typedef {import('./constants.mjs').DEVICETYPE_WEBGPU} DEVICETYPE_WEBGPU  */
+/** @typedef {import('./constants.mjs').DEVICETYPE_WEBGPU_BARE} DEVICETYPE_WEBGPU_BARE  */
 /** @typedef {import('./constants.mjs').DEVICETYPE_WEBGL2} DEVICETYPE_WEBGL2  */
 /** @typedef {import('./constants.mjs').DEVICETYPE_NULL} DEVICETYPE_NULL  */
 
@@ -20,15 +21,18 @@
 
 /**
  * @typedef {object} DeviceEventDetail
- * @property {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} deviceType - The device type.
+ * @property {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGPU_BARE | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} deviceType - The device type.
  *
  * @typedef {CustomEvent<DeviceEventDetail>} DeviceEvent
  */
 
 /**
  * @typedef {object} ErrorEventDetail
+ * @property {string} name - The error name.
  * @property {string} message - The error message.
- * @property {{ file: string, line: string, column: string }[]} locations - The error locations.
+ * @property {{ file: string, line: number, column: number }[]} locations - The error locations.
  *
  * @typedef {CustomEvent<ErrorEventDetail>} ErrorEvent
  */
+
+export {};

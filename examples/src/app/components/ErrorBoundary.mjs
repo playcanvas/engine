@@ -29,16 +29,13 @@ class ErrorBoundary extends TypedComponent {
     }
 
     /**
-     * @returns {object} - The state.
+     * @param {string} stack - The stack trace.
+     * @returns {{ file: string, line: number, column: number }[]} The error locations.
      */
-    static getDerivedStateFromError() {
-        // Update state so the next render will show the fallback UI.
-        return { hasError: true };
-    }
-
     _parseErrorLocations(stack) {
-        const lines = stack.split('\n');
+        /** @type {{ file: string, line: number, column: number }[]} */
         const locations = [];
+        const lines = stack.split('\n');
         lines.forEach((line) => {
             const match = /\((.+):(\d+):(\d+)\)$/.exec(line);
             if (!match) {
@@ -51,6 +48,14 @@ class ErrorBoundary extends TypedComponent {
             });
         });
         return locations;
+    }
+
+    /**
+     * @returns {object} - The state.
+     */
+    static getDerivedStateFromError() {
+        // Update state so the next render will show the fallback UI.
+        return { hasError: true };
     }
 
     _handleReset() {
@@ -71,7 +76,7 @@ class ErrorBoundary extends TypedComponent {
      */
     componentDidCatch(error, info) {
         console.error(error, info);
-        const locations = this._parseErrorLocations(error.stack);
+        const locations = this._parseErrorLocations(error.stack ?? '');
         window.dispatchEvent(new CustomEvent('exampleError', {
             detail: {
                 name: error.constructor.name,

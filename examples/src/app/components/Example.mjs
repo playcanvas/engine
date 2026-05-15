@@ -37,6 +37,10 @@ import { getOrientation } from '../utils.mjs';
  */
 
 /**
+ * @typedef {import('react').ComponentType<ControlOptions>} Control
+ */
+
+/**
  * @typedef {object} Props
  * @property {{params: {category: string, example: string}}} match - The match object.
  */
@@ -46,10 +50,10 @@ import { getOrientation } from '../utils.mjs';
  * @property {'portrait' | 'landscape'} orientation - The orientation.
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
- * @property {Function | null} controls - Controls function from example.
+ * @property {Control | null} controls - Controls function from example.
  * @property {import('@playcanvas/observer').Observer | null} observer - The PCUI observer
  * @property {boolean} showDeviceSelector - Show device selector.
- * @property {'code' | 'parameters'} show - Used in case of mobile view.
+ * @property {'code' | 'parameters' | 'description'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
  */
@@ -64,7 +68,7 @@ class Example extends TypedComponent {
         // @ts-ignore
         collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
         exampleLoaded: false,
-        controls: () => undefined,
+        controls: () => null,
         showDeviceSelector: true,
         show: 'code',
         files: { 'example.mjs': '// loading' },
@@ -86,7 +90,7 @@ class Example extends TypedComponent {
 
     /**
      * @param {string} src - The source string.
-     * @returns {Promise<Function>} - The controls jsx object.
+     * @returns {Promise<Control>} - The controls jsx object.
      */
     async _buildControls(src) {
         const blob = new Blob([src], { type: 'text/javascript' });
@@ -94,13 +98,14 @@ class Example extends TypedComponent {
             URL.revokeObjectURL(this._controlsUrl);
         }
         this._controlsUrl = URL.createObjectURL(blob);
+        /** @type {Control} */
         let controls;
         try {
             // eslint-disable-next-line jsdoc/no-bad-blocks
             const module = await import(/* @vite-ignore */ this._controlsUrl);
             controls = module.controls;
         } catch (e) {
-            controls = () => jsx('pre', null, e.message);
+            controls = () => jsx('pre', null, /** @type {any} */ (e).message);
         }
         return controls;
     }
@@ -197,8 +202,9 @@ class Example extends TypedComponent {
             return;
         }
 
-        /** @type {HTMLElement | null} */
-        const controlPanelHeader = controlPanel.querySelector('.pcui-panel-header');
+        const controlPanelHeader = /** @type {HTMLElement | null} */ (
+            /** @type {unknown} */ (controlPanel.querySelector('.pcui-panel-header'))
+        );
         if (!controlPanelHeader) {
             return;
         }
@@ -275,7 +281,7 @@ class Example extends TypedComponent {
             Container,
             {
                 id: 'descriptionPanel',
-                class: orientation === 'portrait' ? 'mobile' : null
+                class: orientation === 'portrait' ? 'mobile' : undefined
             },
             jsx('span', {
                 dangerouslySetInnerHTML: {
@@ -338,19 +344,19 @@ class Example extends TypedComponent {
                         jsx(Button, {
                             text: 'CODE',
                             id: 'codeButton',
-                            class: show === 'code' ? 'selected' : null,
+                            class: show === 'code' ? 'selected' : undefined,
                             onClick: () => this.mergeState({ show: 'code' })
                         }),
                         jsx(Button, {
                             text: 'PARAMETERS',
-                            class: show === 'parameters' ? 'selected' : null,
+                            class: show === 'parameters' ? 'selected' : undefined,
                             id: 'paramButton',
                             onClick: () => this.mergeState({ show: 'parameters' })
                         }),
                         description ?
                             jsx(Button, {
                                 text: 'DESCRIPTION',
-                                class: show === 'description' ? 'selected' : null,
+                                class: show === 'description' ? 'selected' : undefined,
                                 id: 'descButton',
                                 onClick: () => this.mergeState({ show: 'description' })
                             }) :
@@ -420,7 +426,7 @@ class Example extends TypedComponent {
 
 /**
  * Wrapper component to provide router params to the class component.
- * @returns {JSX.Element} The Example component with router params.
+ * @returns {import('react').ReactElement} The Example component with router params.
  */
 function ExampleWithRouter() {
     const params = useParams();

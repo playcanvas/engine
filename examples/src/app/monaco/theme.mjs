@@ -1,3 +1,4 @@
+/** @type {import('monaco-editor').editor.IStandaloneThemeData} */
 export const playcanvasTheme = {
     base: 'vs-dark',
     inherit: true,

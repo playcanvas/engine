@@ -108,7 +108,7 @@ class CodeEditorBase extends TypedComponent {
 
         // patches highlighter tokenizer for javascript to include jsdoc
         const allLangs = monaco.languages.getLanguages();
-        const jsLang = allLangs.find(({ id }) => id === 'javascript');
+        const jsLang = /** @type {any[]} */ (allLangs).find(({ id }) => id === 'javascript');
         // @ts-ignore
         jsLang?.loader()?.then(({ language }) => {
             Object.assign(language.tokenizer, jsRules);
@@ -119,12 +119,13 @@ class CodeEditorBase extends TypedComponent {
             return r.text();
         })
         .then((playcanvasDefs) => {
+            const typescript = /** @type {any} */ (monaco.languages.typescript);
             // set types
-            monaco.languages.typescript.typescriptDefaults.addExtraLib(
+            typescript.typescriptDefaults.addExtraLib(
                 playcanvasDefs,
                 '@playcanvas/playcanvas.d.ts'
             );
-            monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            typescript.javascriptDefaults.addExtraLib(
                 playcanvasDefs,
                 '@playcanvas/playcanvas.d.ts'
             );
@@ -144,7 +145,7 @@ class CodeEditorBase extends TypedComponent {
     }
 
     /**
-     * @returns {JSX.Element} - The rendered component.
+     * @returns {import('react').ReactElement} - The rendered component.
      */
     render() {
         return jsx('pre', null, 'Not implemented');

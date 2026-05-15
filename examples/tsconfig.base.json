@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "noEmit": true,
+        "paths": {
+            "examples/files": ["./iframe/files.mjs"],
+            "examples/observer": ["./iframe/observer.mjs"],
+            "examples/utils": ["./iframe/utils.mjs"]
+        },
+        "skipLibCheck": true,
+        "target": "esnext",
+        "types": ["node", "vite/client"]
+    }
+}

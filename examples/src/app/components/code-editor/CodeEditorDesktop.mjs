@@ -7,6 +7,8 @@ import { jsx } from '../../jsx.mjs';
 import { removeRedundantSpaces } from '../../strings.mjs';
 
 /** @typedef {import('../../events.js').StateEvent} StateEvent */
+/** @typedef {import('../../events.js').ErrorEvent} ExampleErrorEvent */
+/** @typedef {import('./CodeEditorBase.mjs').State} State */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
@@ -49,7 +51,7 @@ class CodeEditorDesktop extends CodeEditorBase {
     /** @type {string[]} */
     _decorators = [];
 
-    /** @type {Map<string, object[]>} */
+    /** @type {Map<string, import('monaco-editor').editor.IModelDeltaDecoration[]>} */
     _decoratorMap = new Map();
 
     /**
@@ -63,7 +65,7 @@ class CodeEditorDesktop extends CodeEditorBase {
     }
 
     /**
-     * @param {ErrorEvent} event - The event.
+     * @param {ExampleErrorEvent} event - The event.
      */
     _handleExampleError(event) {
         const editor = window.editor;
@@ -94,7 +96,11 @@ class CodeEditorDesktop extends CodeEditorBase {
         const { line, column } = locations[0];
 
         const messageMarkdown = `**${name}: ${message}** [Ln ${line}, Col ${column}]`;
-        const lineText = editor.getModel().getLineContent(line);
+        const model = editor.getModel();
+        if (!model) {
+            return;
+        }
+        const lineText = model.getLineContent(line);
         const decorator = {
             range: new monaco.Range(line, 0, line, lineText.length),
             options: {
@@ -181,7 +187,7 @@ class CodeEditorDesktop extends CodeEditorBase {
                 selectedFile: 'example.mjs'
             });
         }
-        codePane.ui.on('resize', () => localStorage.setItem('codePaneStyle', codePane.getAttribute('style') ?? ''));
+        /** @type {any} */ (codePane).ui.on('resize', () => localStorage.setItem('codePaneStyle', codePane.getAttribute('style') ?? ''));
         const codePaneStyle = localStorage.getItem('codePaneStyle');
         if (codePaneStyle) {
             codePane.setAttribute('style', codePaneStyle);
@@ -231,14 +237,14 @@ class CodeEditorDesktop extends CodeEditorBase {
 
     renderTabs() {
         const { files, selectedFile } = this.state;
-        /** @type {JSX.Element[]} */
+        /** @type {import('react').ReactElement[]} */
         const tabs = [];
         for (const name in files) {
             const button = jsx(Button, {
                 key: name,
                 id: `code-editor-file-tab-${name}`,
                 text: name,
-                class: name === selectedFile ? 'selected' : null,
+                class: name === selectedFile ? 'selected' : undefined,
                 onClick: () => this.selectFile(name)
             });
             tabs.push(button);
@@ -291,7 +297,7 @@ class CodeEditorDesktop extends CodeEditorBase {
             {
                 headerText: 'CODE',
                 id: 'codePane',
-                class: localStorage.getItem('codePaneCollapsed') === 'true' ? 'collapsed' : null,
+                class: localStorage.getItem('codePaneCollapsed') === 'true' ? 'collapsed' : undefined,
                 resizable: 'left',
                 resizeMax: 2000
             },

@@ -13,6 +13,10 @@ const isDirty = () => {
     return dirty;
 };
 
+/**
+ * @param {string} kind - The reload kind.
+ * @returns {boolean} True if reload should be skipped.
+ */
 const skipDirty = (kind) => {
     if (!isDirty()) {
         return false;

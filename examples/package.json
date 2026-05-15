@@ -11,7 +11,10 @@
     "clean": "node ./scripts/clean.mjs",
     "develop": "npm run -s build:metadata && cross-env NODE_ENV=development vite --host 0.0.0.0 --port 5555",
     "lint": "eslint .",
-    "serve": "serve dist -l 5555 --no-request-logging --config ../serve.json"
+    "serve": "serve dist -l 5555 --no-request-logging --config ../serve.json",
+    "type:check": "npm run -s type:check:app && npm run -s type:check:examples",
+    "type:check:app": "npm run -s build:metadata && tsc -p tsconfig.app.json --pretty false",
+    "type:check:examples": "tsc -p tsconfig.examples.json --pretty false"
   },
   "devDependencies": {
     "@babel/standalone": "7.29.2",
