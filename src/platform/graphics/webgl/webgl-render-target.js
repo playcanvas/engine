@@ -483,8 +483,8 @@ class WebglRenderTarget {
 
             // On visionOS / Apple Vision Pro, blitFramebuffer into the opaque XR FBO produces
             // incorrect results (content appears scaled to a small sub-region). Instead we resolve
-            // MSAA to an intermediate scratch texture first and copy into the XR FBO via two
-            // textured quad draws
+            // MSAA into an intermediate scratch texture first, then copy it into the XR FBO with
+            // a single fullscreen textured quad.
             const xrColorQuad = color && isXrFramebuffer && platform.visionos;
 
             if (xrColorQuad) {

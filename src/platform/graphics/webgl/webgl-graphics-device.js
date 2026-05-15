@@ -106,8 +106,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
     _defaultFramebufferChanged = false;
 
     /**
-     * Helper for resolving MSAA color into the XR framebuffer via two quad draws on visionOS.
-     * Created lazily; null on all other platforms.
+     * Helper for resolving MSAA color into the XR framebuffer via a blit-to-scratch + fullscreen
+     * quad copy on visionOS. Created lazily; null on all other platforms.
      *
      * @type {import('./webgl-xr-msaa-copy.js').WebglXrMsaaCopy|null}
      * @private
@@ -1114,9 +1114,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Resolve multisampled color into the WebXR session framebuffer via two textured quad draws
-     * (horizontal SBS). Used on visionOS / Apple Vision Pro where direct `blitFramebuffer` into
-     * the XR opaque framebuffer does not produce correct results.
+     * Resolve multisampled color into the WebXR session framebuffer by first blitting MSAA into
+     * an internal scratch texture, then copying that texture into the XR FBO with a single
+     * fullscreen textured quad. Used on visionOS / Apple Vision Pro where direct
+     * `blitFramebuffer` into the XR opaque framebuffer does not produce correct results.
      *
      * @param {WebGLFramebuffer} msaaReadFbo - Multisampled source framebuffer.
      * @param {WebGLFramebuffer} xrDrawFbo - XR base layer framebuffer.

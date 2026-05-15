@@ -131,12 +131,17 @@ class WebglXrMsaaCopy {
         // Create if not present.
         if (!this._scratchTex) {
             this._scratchTex = Texture.createDataTexture2D(device, 'XrMsaaScratch', width, height, device.backBufferFormat);
-            this._scratchRt = new RenderTarget({ colorBuffer: this._scratchTex });
+            this._scratchRt = new RenderTarget({
+                colorBuffer: this._scratchTex,
+                depth: false,
+                stencil: false
+            });
         }
 
-        // Re-initialize the FBO if context was lost and restored since last call.
-        // The engine restores Texture/Shader automatically, but our RenderTarget bypasses
-        // startRenderPass so its FBO must be re-created explicitly here.
+        // Initialize the underlying GL FBO. Handles both first-time creation (a freshly
+        // constructed RenderTarget has initialized === false) and context-loss restore (engine
+        // restores Texture/Shader automatically, but this RT bypasses startRenderPass so its
+        // FBO must be re-created explicitly here).
         if (!this._scratchRt.impl.initialized) {
             this._scratchRt.impl.init(device, this._scratchRt);
         }
