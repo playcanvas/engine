@@ -8,7 +8,6 @@
         "src/**/*.mjs",
         "src/**/*.js",
         "src/**/*.d.ts",
-        "scripts/**/*.mjs",
         "iframe/**/*.mjs",
         "iframe/**/*.js",
         "templates/**/*.mjs",

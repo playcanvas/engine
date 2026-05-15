@@ -8,27 +8,56 @@ const REGULAR = '\x1b[22m';
 const RESET = '\x1b[39m';
 const COLORS = process.env.FORCE_COLOR !== '0' && !process.env.NO_COLOR;
 
+/**
+ * @param {number} value - millisecond value.
+ * @returns {string} formatted duration.
+ */
 export const ms = (value) => {
     return value >= 1000 ? `${(value / 1000).toFixed(1)}s` : `${Math.round(value)}ms`;
 };
 
+/**
+ * @param {string | number} value - value to format.
+ * @returns {string | number} bold value.
+ */
 export const bold = (value) => {
     return COLORS ? `${BOLD}${value}${REGULAR}` : value;
 };
 
+/**
+ * @param {NodeJS.WritableStream} stream - output stream.
+ * @param {string} code - color code.
+ * @param {string | number} value - log value.
+ * @returns {void} no return value.
+ */
 export const writeLog = (stream, code, value) => {
     const text = COLORS ? `${code}${value}${RESET}` : value;
     stream.write(`${text}\n`);
 };
 
+/**
+ * @param {string} input - source label.
+ * @param {string} output - output label.
+ * @returns {void} no return value.
+ */
 export const startLog = (input, output) => {
     writeLog(process.stderr, CYAN, `${bold(input)} → ${bold(output)}...`);
 };
 
+/**
+ * @param {string} output - output label.
+ * @param {number} elapsed - elapsed milliseconds.
+ * @returns {void} no return value.
+ */
 export const createdLog = (output, elapsed) => {
     writeLog(process.stderr, GREEN, `created ${bold(output)} in ${bold(ms(elapsed))}`);
 };
 
+/**
+ * @param {string} output - output label.
+ * @param {number} elapsed - elapsed milliseconds.
+ * @returns {void} no return value.
+ */
 export const failedLog = (output, elapsed) => {
     writeLog(process.stderr, RED, `failed ${bold(output)} in ${bold(ms(elapsed))}`);
 };

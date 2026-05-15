@@ -9,11 +9,56 @@ import {
     getExample,
     getExamplePath,
     getFiles,
+    loadExampleMetaData,
     readExampleConfig,
     slash,
     transformSource
 } from './build-shared.mjs';
 import { buildTypes } from '../../utils/types-build-target.mjs';
+
+/**
+ * @typedef {import('node:http').IncomingMessage} HttpRequest
+ * @typedef {import('node:http').ServerResponse} HttpResponse
+ * @typedef {import('vite').Logger} ViteLogger
+ * @typedef {import('vite').Plugin} VitePlugin
+ * @typedef {import('vite').ViteDevServer} ViteServer
+ * @typedef {import('./build-shared.mjs').EnginePathInfo} EnginePathInfo
+ * @typedef {import('./build-shared.mjs').ExampleMetadata} ExampleMetadata
+ * @typedef {import('./example-source.mjs').ExampleConfig} ExampleConfig
+ */
+
+/**
+ * @typedef {object} StaticRoute
+ * @property {string} url - url prefix.
+ * @property {string} root - file root.
+ */
+
+/**
+ * @typedef {object} ExampleUpdate
+ * @property {'example'} kind - update kind.
+ * @property {string} path - changed path.
+ * @property {string} example - example route.
+ * @property {string} stamp - cache stamp.
+ * @property {ExampleConfig} config - example config.
+ * @property {string[]} files - example files.
+ */
+
+/**
+ * @typedef {object} FileUpdate
+ * @property {'engine' | 'iframe'} kind - update kind.
+ * @property {string} path - changed path.
+ * @property {string} stamp - cache stamp.
+ */
+
+/**
+ * @typedef {ExampleUpdate | FileUpdate} DevUpdate
+ */
+
+/**
+ * @typedef {object} TypesBuilder
+ * @property {() => void} run - start a types build.
+ * @property {() => void} schedule - schedule a types build.
+ */
 
 const NODE_ENV = 'development';
 const UPDATE_EVENT = 'playcanvas:examples-update';
@@ -46,6 +91,10 @@ const IFRAME_FILES = {
     '/iframe/playcanvas.d.ts': '../build/playcanvas.d.ts'
 };
 
+/**
+ * @param {string} file - file path.
+ * @returns {string} mime type.
+ */
 const mime = (file) => {
     if (file.endsWith('.d.ts')) {
         return TEXT;
@@ -73,14 +122,29 @@ const mime = (file) => {
     return TEXT;
 };
 
+/**
+ * @param {HttpRequest} req - http request.
+ * @returns {string} request pathname.
+ */
 const pathname = (req) => {
     return new URL(req.url ?? '/', 'http://localhost').pathname;
 };
 
+/**
+ * @param {string} file - file path.
+ * @param {string} root - root path.
+ * @returns {boolean} true if file is inside root.
+ */
 const isInside = (file, root) => {
     return file === root || file.startsWith(`${root}${path.sep}`);
 };
 
+/**
+ * @param {HttpResponse} res - http response.
+ * @param {string} text - response body.
+ * @param {string} [type] - content type.
+ * @returns {void} no return value.
+ */
 const sendText = (res, text, type = TEXT) => {
     res.statusCode = 200;
     res.setHeader('Content-Type', type);
@@ -88,6 +152,12 @@ const sendText = (res, text, type = TEXT) => {
     res.end(text);
 };
 
+/**
+ * @param {HttpResponse} res - http response.
+ * @param {string} file - file path.
+ * @param {string} [root] - allowed root.
+ * @returns {Promise<boolean>} true if handled.
+ */
 const sendFile = async (res, file, root = '') => {
     const abs = path.resolve(file);
     const base = root ? path.resolve(root) : '';
@@ -114,12 +184,22 @@ const sendFile = async (res, file, root = '') => {
     return true;
 };
 
+/**
+ * @param {HttpResponse} res - http response.
+ * @returns {boolean} true if handled.
+ */
 const notFound = (res) => {
     res.statusCode = 404;
     res.end();
     return true;
 };
 
+/**
+ * @param {string} url - request url.
+ * @param {HttpResponse} res - http response.
+ * @param {StaticRoute[]} routes - static routes.
+ * @returns {Promise<boolean>} true if handled.
+ */
 const serveRoutes = async (url, res, routes) => {
     const route = routes.find(item => url.startsWith(item.url));
     if (!route) {
@@ -130,6 +210,11 @@ const serveRoutes = async (url, res, routes) => {
     return found || notFound(res);
 };
 
+/**
+ * @param {ViteServer} server - vite server.
+ * @param {string} url - request url.
+ * @returns {Promise<string>} transformed html.
+ */
 const appHtml = async (server, url) => {
     const html = await fs.promises.readFile('src/static/index.html', 'utf8');
     const dev = html.replace(
@@ -139,6 +224,10 @@ const appHtml = async (server, url) => {
     return server.transformIndexHtml(url, dev);
 };
 
+/**
+ * @param {string} file - file path.
+ * @returns {ExampleMetadata | null} matching example.
+ */
 const exampleFromFile = (file) => {
     const abs = slash(path.resolve(file));
     for (let i = 0; i < exampleMetaData.length; i++) {
@@ -151,8 +240,17 @@ const exampleFromFile = (file) => {
     return null;
 };
 
+/**
+ * @param {string} file - file path.
+ * @returns {string} relative path.
+ */
 const relative = file => slash(path.relative(process.cwd(), file));
 
+/**
+ * @param {string} file - changed file.
+ * @param {EnginePathInfo} engine - engine path info.
+ * @returns {Promise<DevUpdate | null>} dev update.
+ */
 const createUpdate = async (file, engine) => {
     const abs = path.resolve(file);
     const stamp = Date.now().toString(36);
@@ -187,11 +285,19 @@ const createUpdate = async (file, engine) => {
     return null;
 };
 
+/**
+ * @param {ViteLogger} logger - vite logger.
+ * @returns {TypesBuilder} types builder.
+ */
 const createTypesBuilder = (logger) => {
     let active = false;
     let pending = false;
+    /** @type {NodeJS.Timeout | null} */
     let timer = null;
 
+    /**
+     * @returns {void} no return value.
+     */
     const run = () => {
         if (active) {
             pending = true;
@@ -221,6 +327,9 @@ const createTypesBuilder = (logger) => {
 
     return {
         run,
+        /**
+         * @returns {void} no return value.
+         */
         schedule() {
             clearTimeout(timer);
             timer = setTimeout(run, 100);
@@ -228,6 +337,12 @@ const createTypesBuilder = (logger) => {
     };
 };
 
+/**
+ * @param {string} url - request url.
+ * @param {HttpResponse} res - http response.
+ * @param {EnginePathInfo} info - engine path info.
+ * @returns {boolean | Promise<boolean>} true if handled.
+ */
 const serveEngine = (url, res, info) => {
     if (!url.startsWith(ENGINE_PREFIX)) {
         return false;
@@ -240,6 +355,11 @@ const serveEngine = (url, res, info) => {
     return sendFile(res, path.join(info.root, rel), info.root);
 };
 
+/**
+ * @param {string} url - request url.
+ * @param {HttpResponse} res - http response.
+ * @returns {Promise<boolean>} true if handled.
+ */
 const serveExampleFile = async (url, res) => {
     const name = url.slice(IFRAME_PREFIX.length);
     const dot = name.indexOf('.');
@@ -268,6 +388,14 @@ const serveExampleFile = async (url, res) => {
     return true;
 };
 
+/**
+ * @param {ViteServer} server - vite server.
+ * @param {HttpRequest} req - http request.
+ * @param {HttpResponse} res - http response.
+ * @param {EnginePathInfo} engineInfo - engine path info.
+ * @param {string} engineStamp - engine cache stamp.
+ * @returns {Promise<boolean>} true if handled.
+ */
 const handle = async (server, req, res, engineInfo, engineStamp) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
         return false;
@@ -316,6 +444,9 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
     return false;
 };
 
+/**
+ * @returns {VitePlugin} vite plugin.
+ */
 export const examplesDevServer = () => {
     const enginePath = getEnginePath(NODE_ENV);
     let engineStamp = '';
@@ -324,7 +455,12 @@ export const examplesDevServer = () => {
     return {
         name: 'playcanvas-examples-dev-server',
 
-        configureServer(server) {
+        /**
+         * @param {ViteServer} server - vite server.
+         * @returns {Promise<void>} completion promise.
+         */
+        async configureServer(server) {
+            await loadExampleMetaData();
             const types = createTypesBuilder(server.config.logger);
             const roots = [
                 path.resolve('src/examples'),
@@ -343,6 +479,10 @@ export const examplesDevServer = () => {
             });
             types.run();
 
+            /**
+             * @param {string} file - changed file.
+             * @returns {void} no return value.
+             */
             const update = (file) => {
                 const current = engineInfo ??= getEnginePathInfo(enginePath);
                 current.then((value) => {

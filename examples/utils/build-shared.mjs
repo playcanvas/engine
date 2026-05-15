@@ -1,10 +1,57 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { isModuleWithExternalDependencies, parseConfig } from './utils.mjs';
-import { exampleMetaData } from '../cache/metadata.mjs';
+import { isModuleWithExternalDependencies, parseConfig } from './example-source.mjs';
 
-export { exampleMetaData };
+/**
+ * @typedef {import('./example-source.mjs').ExampleConfig} ExampleConfig
+ *
+ * @typedef {object} CopyTarget
+ * @property {string} src - source path.
+ * @property {string} dest - destination path.
+ */
+
+/**
+ * @typedef {object} ExampleMetadata
+ * @property {string} path - example directory.
+ * @property {string} categoryKebab - category name.
+ * @property {string} exampleNameKebab - example name.
+ * @property {boolean} hidden - true if hidden from production navigation.
+ */
+
+/**
+ * @typedef {object} ExampleHtmlTarget
+ * @property {ExampleMetadata} item - example metadata.
+ * @property {string[]} files - example files.
+ */
+
+/**
+ * @typedef {object} ExampleTargets
+ * @property {Record<string, string>} local - bundled module entries.
+ * @property {CopyTarget[]} sources - transformed source files.
+ * @property {CopyTarget[]} assets - copied asset files.
+ * @property {ExampleHtmlTarget[]} html - iframe html targets.
+ * @property {ExampleMetadata[]} share - share page targets.
+ */
+
+/**
+ * @typedef {object} CreateExampleHtmlOptions
+ * @property {string} [nodeEnv] - node environment.
+ * @property {string} [enginePath] - engine path override.
+ * @property {string} [engineStamp] - engine cache stamp.
+ */
+
+/**
+ * @typedef {object} EnginePathInfo
+ * @property {string} root - root directory.
+ * @property {string} src - source file.
+ * @property {boolean} unpacked - true if source imports other files.
+ */
+
+/**
+ * @type {ExampleMetadata[]}
+ */
+export let exampleMetaData = [];
 
 export const BUILD_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf']);
 export const TARGET = 'es2020';
@@ -33,15 +80,41 @@ export const EXTERNAL_LOCAL = [
 const CONFIG_COMMENT = /^[ \t]*\/\/ @config .*(?:\r?\n|$)/gm;
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
 
+/**
+ * @returns {Promise<ExampleMetadata[]>} loaded metadata.
+ */
+export const loadExampleMetaData = async () => {
+    const metadata = await import('../cache/metadata.mjs');
+    exampleMetaData = metadata.exampleMetaData;
+    return exampleMetaData;
+};
+
+/**
+ * @param {string} file - file path.
+ * @returns {Promise<boolean>} true if the file exists.
+ */
 export const exists = file => fs.promises.stat(file).then(() => true, () => false);
 
+/**
+ * @param {string} file - file path.
+ * @returns {string} path with forward slashes.
+ */
 export const slash = file => file.split(path.sep).join('/');
 
+/**
+ * @param {CopyTarget} target - copy target.
+ * @returns {Promise<void>} completion promise.
+ */
 export const copyFile = async ({ src, dest }) => {
     await fs.promises.mkdir(path.dirname(dest), { recursive: true });
     await fs.promises.cp(src, dest, { recursive: true });
 };
 
+/**
+ * @param {CopyTarget[]} targets - copy targets.
+ * @param {boolean} [parallel] - true to copy in parallel.
+ * @returns {Promise<void[] | void>} completion promise.
+ */
 export const copyTargets = (targets, parallel = true) => {
     if (parallel) {
         return Promise.all(targets.map(copyFile));
@@ -51,6 +124,10 @@ export const copyTargets = (targets, parallel = true) => {
     }, Promise.resolve());
 };
 
+/**
+ * @param {string} source - example source.
+ * @returns {string} transformed source.
+ */
 export const transformSource = (source) => {
     return source
     .replace(CONFIG_COMMENT, '')
@@ -58,11 +135,19 @@ export const transformSource = (source) => {
     .replace(/^(?:[ \t]*\r?\n)+/, '');
 };
 
+/**
+ * @param {string} [nodeEnv] - node environment.
+ * @returns {string} engine path.
+ */
 export const getEnginePath = (nodeEnv = process.env.NODE_ENV ?? '') => {
     return !process.env.ENGINE_PATH && nodeEnv === 'development' ?
         '../src/index.js' : process.env.ENGINE_PATH ?? '';
 };
 
+/**
+ * @param {ExampleConfig['ENGINE']} [type] - engine type.
+ * @returns {string} engine url.
+ */
 export const engineUrl = (type) => {
     switch (type) {
         case 'development':
@@ -75,16 +160,34 @@ export const engineUrl = (type) => {
     return './playcanvas.mjs';
 };
 
+/**
+ * @param {string} url - base url.
+ * @param {string} stamp - cache stamp.
+ * @returns {string} stamped url.
+ */
 export const stampedUrl = (url, stamp) => {
     return stamp ? `${url}${url.includes('?') ? '&' : '?'}t=${stamp}` : url;
 };
 
+/**
+ * @param {Pick<ExampleMetadata, 'categoryKebab' | 'exampleNameKebab'>} item - example metadata.
+ * @returns {string} target name.
+ */
 export const targetName = ({ categoryKebab, exampleNameKebab }) => `${categoryKebab}_${exampleNameKebab}`;
 
+/**
+ * @param {string} name - target name.
+ * @returns {ExampleMetadata | undefined} example metadata.
+ */
 export const getExample = (name) => {
     return exampleMetaData.find(item => targetName(item) === name);
 };
 
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @param {string} file - example file suffix.
+ * @returns {string} source file path.
+ */
 export const getExamplePath = (item, file) => {
     const input = path.join(item.path, `${item.exampleNameKebab}.${file}`);
     if (fs.existsSync(input)) {
@@ -93,6 +196,10 @@ export const getExamplePath = (item, file) => {
     return file === 'controls.mjs' ? 'templates/controls.mjs' : input;
 };
 
+/**
+ * @param {Pick<ExampleMetadata, 'path' | 'exampleNameKebab'>} item - example metadata.
+ * @returns {string[]} example file suffixes.
+ */
 export const getFiles = ({ path: dir, exampleNameKebab }) => {
     const prefix = `${exampleNameKebab}.`;
     const files = fs.readdirSync(dir)
@@ -104,14 +211,29 @@ export const getFiles = ({ path: dir, exampleNameKebab }) => {
     return files;
 };
 
+/**
+ * @param {string} name - target name.
+ * @param {string} file - file name.
+ * @returns {string} entry key.
+ */
 export const entryKey = (name, file) => `${name}.${file.replace(/\.(?:mjs|js)$/, '')}`;
 
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @returns {Promise<ExampleConfig>} parsed example config.
+ */
 export const readExampleConfig = async (item) => {
     const src = path.join(item.path, `${item.exampleNameKebab}.example.mjs`);
     const code = await fs.promises.readFile(src, 'utf8');
     return parseConfig(code);
 };
 
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @param {string[]} files - example file suffixes.
+ * @param {CreateExampleHtmlOptions} [options] - html options.
+ * @returns {Promise<string>} generated html.
+ */
 export const createExampleHtml = async (item, files, {
     nodeEnv = process.env.NODE_ENV ?? '',
     enginePath = getEnginePath(nodeEnv),
@@ -131,6 +253,12 @@ export const createExampleHtml = async (item, files, {
     return html;
 };
 
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @param {string[]} files - example file suffixes.
+ * @param {CreateExampleHtmlOptions} [options] - html options.
+ * @returns {Promise<void>} completion promise.
+ */
 export const writeExampleHtml = async (item, files, options) => {
     const name = targetName(item);
     const html = await createExampleHtml(item, files, options);
@@ -138,6 +266,10 @@ export const writeExampleHtml = async (item, files, options) => {
     await fs.promises.writeFile(`${IFRAME_DIR}/${name}.html`, html);
 };
 
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @returns {Promise<void>} completion promise.
+ */
 export const writeShareHtml = async (item) => {
     const name = targetName(item);
     const template = await fs.promises.readFile(SHARE_TEMPLATE, 'utf8');
@@ -153,6 +285,10 @@ export const writeShareHtml = async (item) => {
     await fs.promises.writeFile(`${dir}/index.html`, html);
 };
 
+/**
+ * @param {string} [nodeEnv] - node environment.
+ * @returns {ExampleTargets} example build targets.
+ */
 export const getExampleTargets = (nodeEnv = process.env.NODE_ENV ?? '') => {
     const local = {};
     const sources = [];
@@ -173,21 +309,25 @@ export const getExampleTargets = (nodeEnv = process.env.NODE_ENV ?? '') => {
             const file = files[j];
             const input = getExamplePath(item, file);
             const output = `${IFRAME_DIR}/${name}.${file}`;
-            if (/\.(?:mjs|js)$/.test(file)) {
-                if (file === 'example.mjs' || file === 'controls.mjs') {
-                    sources.push({ src: input, dest: output });
-                } else {
-                    local[entryKey(name, file)] = input;
-                }
-            } else {
+            if (!/\.(?:mjs|js)$/.test(file)) {
                 assets.push({ src: input, dest: output });
+                continue;
             }
+            if (file === 'example.mjs' || file === 'controls.mjs') {
+                sources.push({ src: input, dest: output });
+                continue;
+            }
+            local[entryKey(name, file)] = input;
         }
     }
 
     return { local, sources, assets, html, share };
 };
 
+/**
+ * @param {string} enginePath - engine path.
+ * @returns {Promise<EnginePathInfo>} engine path info.
+ */
 export const getEnginePathInfo = async (enginePath) => {
     const src = path.resolve(enginePath);
     const content = await fs.promises.readFile(src, 'utf8');
