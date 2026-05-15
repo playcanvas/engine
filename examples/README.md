@@ -19,6 +19,11 @@ npm run develop
 ```
 Visit the url mentioned in your terminal to view the examples browser.
 
+To disable hot module replacement and automatic example reloads:
+```
+npm run develop:no-hmr
+```
+
 You can also run the examples browser with a specific version of the engine by running the following command:
 
 ```

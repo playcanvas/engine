@@ -60,6 +60,11 @@ import { buildTypes } from '../../utils/types-build-target.mjs';
  * @property {() => void} schedule - schedule a types build.
  */
 
+/**
+ * @typedef {object} DevServerOptions
+ * @property {boolean} [hmr=true] - send hmr updates.
+ */
+
 const NODE_ENV = 'development';
 const UPDATE_EVENT = 'playcanvas:examples-update';
 const ENGINE_PREFIX = '/iframe/ENGINE_PATH/';
@@ -445,9 +450,10 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
 };
 
 /**
+ * @param {DevServerOptions} [options] - dev server options.
  * @returns {VitePlugin} vite plugin.
  */
-export const examplesDevServer = () => {
+export const examplesDevServer = ({ hmr = true } = {}) => {
     const enginePath = getEnginePath(NODE_ENV);
     let engineStamp = '';
     let engineInfo;
@@ -494,6 +500,9 @@ export const examplesDevServer = () => {
                     if (data.kind === 'engine') {
                         engineStamp = data.stamp;
                         types.schedule();
+                    }
+                    if (!hmr) {
+                        return;
                     }
                     server.ws.send({
                         type: 'custom',
