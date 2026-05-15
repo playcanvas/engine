@@ -9,9 +9,9 @@
     "build:metadata": "node ./scripts/build-metadata.mjs",
     "build:thumbnails": "node ./scripts/build-thumbnails.mjs",
     "clean": "node ./scripts/clean.mjs",
-    "develop": "npm run -s build:metadata && cross-env NODE_ENV=development vite --host 0.0.0.0 --port 5555",
+    "develop": "npm run -s build:metadata && cross-env NODE_ENV=development vite",
     "lint": "eslint .",
-    "serve": "serve dist -l 5555 --no-request-logging --config ../serve.json",
+    "serve": "vite preview",
     "type:check": "npm run -s type:check:app && npm run -s type:check:examples",
     "type:check:app": "npm run -s build:metadata && tsc -p tsconfig.app.json --pretty false",
     "type:check:examples": "tsc -p tsconfig.examples.json --pretty false"
@@ -39,7 +39,6 @@
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-router-dom": "7.14.2",
-    "serve": "14.2.6",
     "sharp": "0.34.5",
     "typescript": "5.9.3",
     "vite": "6.4.2"
