@@ -9,6 +9,7 @@
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "outDir": "types",
+        "rootDir": ".",
         "strictNullChecks": true,
         "strictPropertyInitialization": true,
         "target": "es6",
