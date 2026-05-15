@@ -2,10 +2,9 @@
     "compilerOptions": {
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
-        "baseUrl": ".",
         "checkJs": true,
         "module": "es6",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "noUnusedLocals": true,
