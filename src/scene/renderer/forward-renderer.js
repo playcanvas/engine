@@ -487,7 +487,7 @@ class ForwardRenderer extends Renderer {
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass) {
+    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass, viewInstancing = false) {
 
         // fog params from the scene, or overridden by the camera
         const fogParams = camera.fogParams ?? this.scene.fog;
@@ -562,7 +562,9 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
+            const viewUniformFormat = viewInstancing ? this.viewUniformFormatViewInstancing : this.viewUniformFormat;
+            const viewBindGroupFormat = viewInstancing ? this.viewBindGroupFormatViewInstancing : this.viewBindGroupFormat;
+            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, viewUniformFormat, viewBindGroupFormat, sortedLights, viewInstancing);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -574,7 +576,7 @@ class ForwardRenderer extends Renderer {
         return _drawCallList;
     }
 
-    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups) {
+    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups, viewInstancing = false) {
         const device = this.device;
         const scene = this.scene;
         const passFlag = 1 << pass;
@@ -588,6 +590,7 @@ class ForwardRenderer extends Renderer {
         // (xrCurrentViewIndex === -1 means "no wrapper active": fall back to the default behaviour
         // of rendering all views or the single non-XR view)
         const activeView = device.xrCurrentViewIndex ?? -1;
+        const nativeViewInstancing = !!(viewList && viewInstancing && activeView < 0);
         const viewListStart = (viewList && activeView >= 0) ? activeView : 0;
         const viewListEnd = (viewList && activeView >= 0) ? activeView + 1 : (viewList ? viewList.length : 0);
 
@@ -666,7 +669,24 @@ class ForwardRenderer extends Renderer {
 
             const indirectData = drawCall.getDrawCommands(camera);
 
-            if (viewList) {
+            if (nativeViewInstancing) {
+                const viewport = device.xrSubImages[0]?.viewport ?? viewList[0].viewport;
+                device.setViewport(viewport.x, viewport.y, viewport.width ?? viewport.z, viewport.height ?? viewport.w);
+
+                if (device.supportsUniformBuffers) {
+                    device.setBindGroup(BINDGROUP_VIEW, viewBindGroups[0]);
+                } else {
+                    this.setupViewUniforms(viewList[0], 0);
+                }
+
+                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData);
+
+                this._forwardDrawCalls++;
+                if (drawCall.instancingData) {
+                    this._instancedDrawCalls++;
+                }
+
+            } else if (viewList) {
                 for (let v = viewListStart; v < viewListEnd; v++) {
                     const view = viewList[v];
 
@@ -709,17 +729,17 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewBindGroups) {
+    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewBindGroups, viewInstancing = false) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass, viewInstancing);
 
         // render mesh instances
-        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups);
+        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups, viewInstancing);
 
         _drawCallList.clear();
 
@@ -811,8 +831,11 @@ class ForwardRenderer extends Renderer {
         this.setFogConstants(fogParams);
 
         const viewList = this.setCameraUniforms(camera, renderTarget);
+        const nativeViewInstancing = !!(viewList && device.xrNativeViewInstancing);
         if (device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewList);
+            const viewUniformFormat = nativeViewInstancing ? this.viewUniformFormatViewInstancing : this.viewUniformFormat;
+            const viewBindGroupFormat = nativeViewInstancing ? this.viewBindGroupFormatViewInstancing : this.viewBindGroupFormat;
+            this.setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewList, nativeViewInstancing);
         }
 
         // clearing - do it after the view bind groups are set up, to avoid overriding those
@@ -835,7 +858,8 @@ class ForwardRenderer extends Renderer {
             null,
             layer,
             flipFaces,
-            viewBindGroups);
+            viewBindGroups,
+            nativeViewInstancing);
 
         if (layer) {
             layer._forwardDrawCalls += this._forwardDrawCalls - forwardDrawCalls;

@@ -12,7 +12,7 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
-    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
+    UNIFORMTYPE_UINT, SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_NONE,
     BINDGROUP_MESH_UB,
     FRONTFACE_CCW,
@@ -87,6 +87,7 @@ const _tempProjMat1 = new Mat4();
 const _tempProjMat4 = new Mat4();
 const _tempProjMat5 = new Mat4();
 const _tempSet = new Set();
+const VIEW_UNIFORM_ARRAY_COUNT = 2;
 
 const _tempMeshInstances = [];
 const _tempMeshInstancesSkinned = [];
@@ -189,6 +190,8 @@ class Renderer {
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
         this.viewBindGroupFormat = null;
+        this.viewUniformFormatViewInstancing = null;
+        this.viewBindGroupFormatViewInstancing = null;
 
         // timing
         this._skinTime = 0;
@@ -230,6 +233,11 @@ class Renderer {
         this.viewportSizeId = scope.resolve('viewport_size');
         this.viewIndexId = scope.resolve('view_index');
         this.viewIndexId.setValue(0);
+        this.viewInstancingId = scope.resolve('view_instancing');
+        this.viewInstancingId.setValue(0);
+
+        this.viewArrayIds = null;
+        this.viewArrayData = null;
 
         this.blueNoiseJitterVersion = 0;
         this.blueNoiseJitterVec = new Vec4();
@@ -685,64 +693,103 @@ class Renderer {
 
         if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
-            // format of the view uniform buffer
-            const uniforms = [
-                new UniformFormat('matrix_view', UNIFORMTYPE_MAT4),
-                new UniformFormat('matrix_viewInverse', UNIFORMTYPE_MAT4),
-                new UniformFormat('matrix_projection', UNIFORMTYPE_MAT4),
-                new UniformFormat('matrix_projectionSkybox', UNIFORMTYPE_MAT4),
-                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
-                new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
-                new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
-                new UniformFormat('view_position', UNIFORMTYPE_VEC3),
-                new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
-                new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
-                new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
-                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
-                new UniformFormat('view_index', UNIFORMTYPE_FLOAT)
-            ];
+            const createViewFormats = (viewArrayCount) => {
+                const viewUniform = (name, type) => new UniformFormat(name, type, viewArrayCount);
 
-            if (isClustered) {
-                uniforms.push(...[
-                    new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
-                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
-                    new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
-                    new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
-                    new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
-                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
-                ]);
-            }
+                // format of the view uniform buffer
+                const uniforms = [
+                    viewUniform('matrix_view', UNIFORMTYPE_MAT4),
+                    viewUniform('matrix_viewInverse', UNIFORMTYPE_MAT4),
+                    viewUniform('matrix_projection', UNIFORMTYPE_MAT4),
+                    viewUniform('matrix_projectionSkybox', UNIFORMTYPE_MAT4),
+                    viewUniform('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                    new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
+                    new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
+                    viewUniform('view_position', UNIFORMTYPE_VEC3),
+                    viewUniform('viewport_size', UNIFORMTYPE_VEC4),
+                    new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
+                    new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
+                    new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
+                    new UniformFormat('view_index', UNIFORMTYPE_UINT),
+                    new UniformFormat('view_instancing', UNIFORMTYPE_UINT)
+                ];
 
-            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
+                if (isClustered) {
+                    uniforms.push(...[
+                        new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
+                        new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
+                        new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
+                        new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
+                        new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
+                        new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
+                        new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
+                        new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
+                        new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
+                    ]);
+                }
 
-            // format of the view bind group - contains single uniform buffer, and some textures
-            const formats = [
+                const viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
+                if (viewArrayCount) {
+                    const scope = this.device.scope;
+                    this.viewArrayIds = {
+                        view: scope.resolve('matrix_view[0]'),
+                        viewInv: scope.resolve('matrix_viewInverse[0]'),
+                        proj: scope.resolve('matrix_projection[0]'),
+                        projSkybox: scope.resolve('matrix_projectionSkybox[0]'),
+                        viewProj: scope.resolve('matrix_viewProjection[0]'),
+                        viewPos: scope.resolve('view_position[0]'),
+                        viewportSize: scope.resolve('viewport_size[0]')
+                    };
+                    this.viewArrayData = {
+                        view: new Float32Array(viewArrayCount * 16),
+                        viewInv: new Float32Array(viewArrayCount * 16),
+                        proj: new Float32Array(viewArrayCount * 16),
+                        projSkybox: new Float32Array(viewArrayCount * 16),
+                        viewProj: new Float32Array(viewArrayCount * 16),
+                        viewPos: new Float32Array(viewArrayCount * 3),
+                        viewportSize: new Float32Array(viewArrayCount * 4)
+                    };
+                }
 
-                // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
-                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
+                // format of the view bind group - contains single uniform buffer, and some textures
+                const formats = [
+
+                    // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
+                    new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
+
+                    // disable view level textures, as they consume texture slots. They get automatically added to mesh bind group
+                    // for the meshes that uses them
+                    // new BindTextureFormat('lightsTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                    // new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
+                    // new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+
+                    // new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+                    // new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
+                ];
 
                 // disable view level textures, as they consume texture slots. They get automatically added to mesh bind group
                 // for the meshes that uses them
-                // new BindTextureFormat('lightsTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
-                // new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
-                // new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+                // if (isClustered) {
+                //     formats.push(...[
+                //         new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
+                //     ]);
+                // }
 
-                // new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
-                // new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
-            ];
+                return {
+                    viewUniformFormat,
+                    viewBindGroupFormat: new BindGroupFormat(this.device, formats)
+                };
+            };
 
-            // disable view level textures, as they consume texture slots. They get automatically added to mesh bind group
-            // for the meshes that uses them
-            // if (isClustered) {
-            //     formats.push(...[
-            //         new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
-            //     ]);
-            // }
+            const viewFormats = createViewFormats(0);
+            this.viewUniformFormat = viewFormats.viewUniformFormat;
+            this.viewBindGroupFormat = viewFormats.viewBindGroupFormat;
 
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, formats);
+            if (this.device.supportsViewInstancing) {
+                const instancingViewFormats = createViewFormats(VIEW_UNIFORM_ARRAY_COUNT);
+                this.viewUniformFormatViewInstancing = instancingViewFormats.viewUniformFormat;
+                this.viewBindGroupFormatViewInstancing = instancingViewFormats.viewBindGroupFormat;
+            }
         }
     }
 
@@ -762,21 +809,105 @@ class Renderer {
         this.viewIndexId.setValue(index);
     }
 
-    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewList) {
+    /**
+     * Sets view uniform arrays used by WebGPU native XR view instancing.
+     *
+     * @param {object[]|null} viewList - XR views, or null for a single camera view.
+     * @private
+     */
+    setupViewUniformArrays(viewList) {
+        const ids = this.viewArrayIds;
+        const data = this.viewArrayData;
+        if (!ids || !data) {
+            return;
+        }
+
+        const count = viewList ? Math.min(viewList.length, VIEW_UNIFORM_ARRAY_COUNT) : 1;
+
+        for (let i = 0; i < VIEW_UNIFORM_ARRAY_COUNT; i++) {
+            const view = viewList?.[Math.min(i, count - 1)];
+            const matOffset = i * 16;
+            const vec3Offset = i * 3;
+            const vec4Offset = i * 4;
+
+            if (view) {
+                data.view.set(view.viewOffMat.data, matOffset);
+                data.viewInv.set(view.viewInvOffMat.data, matOffset);
+                data.proj.set(view.projMat.data, matOffset);
+                data.projSkybox.set(view.projMat.data, matOffset);
+                data.viewProj.set(view.projViewOffMat.data, matOffset);
+                data.viewPos.set(view.positionData, vec3Offset);
+
+                const viewport = view.viewport;
+                data.viewportSize[vec4Offset] = viewport.z;
+                data.viewportSize[vec4Offset + 1] = viewport.w;
+                data.viewportSize[vec4Offset + 2] = 1 / viewport.z;
+                data.viewportSize[vec4Offset + 3] = 1 / viewport.w;
+            } else {
+                data.view.set(this.viewId.value, matOffset);
+                data.viewInv.set(this.viewInvId.value, matOffset);
+                data.proj.set(this.projId.value, matOffset);
+                data.projSkybox.set(this.projSkyboxId.value, matOffset);
+                data.viewProj.set(this.viewProjId.value, matOffset);
+                data.viewPos.set(this.viewPosId.value, vec3Offset);
+                data.viewportSize.set(this.viewportSizeId.value, vec4Offset);
+            }
+        }
+
+        ids.view.setValue(data.view);
+        ids.viewInv.setValue(data.viewInv);
+        ids.proj.setValue(data.proj);
+        ids.projSkybox.setValue(data.projSkybox);
+        ids.viewProj.setValue(data.viewProj);
+        ids.viewPos.setValue(data.viewPos);
+        ids.viewportSize.setValue(data.viewportSize);
+
+        if (viewList?.length) {
+            const view = viewList[0];
+            this.projId.setValue(view.projMat.data);
+            this.projSkyboxId.setValue(view.projMat.data);
+            this.viewId.setValue(view.viewOffMat.data);
+            this.viewInvId.setValue(view.viewInvOffMat.data);
+            this.viewId3.setValue(view.viewMat3.data);
+            this.viewProjId.setValue(view.projViewOffMat.data);
+            this.viewPosId.setValue(view.positionData);
+        }
+    }
+
+    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewList, viewInstancing = false) {
 
         Debug.assert(Array.isArray(viewBindGroups), 'viewBindGroups must be an array');
         const { device } = this;
 
+        // The same render action can render with scalar view uniforms in 2D and array view uniforms
+        // in native XR. Rebuild its cached view bind groups when the format changes.
+        if (viewBindGroups.length > 0 && viewBindGroups[0].format !== viewBindGroupFormat) {
+            viewBindGroups.forEach((bg) => {
+                bg.destroy();
+            });
+            viewBindGroups.length = 0;
+        }
+
         // make sure we have bind group for each view
         const viewCount = viewList?.length ?? 1;
-        while (viewBindGroups.length < viewCount) {
+        const bindGroupCount = viewInstancing ? 1 : viewCount;
+        while (viewBindGroups.length < bindGroupCount) {
             const ub = new UniformBuffer(device, viewUniformFormat, false);
             const bg = new BindGroup(device, viewBindGroupFormat, ub);
             DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
             viewBindGroups.push(bg);
         }
 
-        if (viewList) {
+        this.viewInstancingId.setValue(viewInstancing ? 1 : 0);
+
+        if (viewInstancing && this.viewArrayIds) {
+            this.setupViewUniformArrays(viewList);
+            this.viewIndexId.setValue(0);
+            const viewBindGroup = viewBindGroups[0];
+            viewBindGroup.defaultUniformBuffer.update();
+            viewBindGroup.update();
+
+        } else if (viewList) {
 
             for (let i = 0; i < viewCount; i++) {
 

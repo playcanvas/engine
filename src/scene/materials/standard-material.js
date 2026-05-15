@@ -864,7 +864,7 @@ class StandardMaterial extends Material {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat, params.viewInstancing);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);

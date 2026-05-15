@@ -123,7 +123,7 @@ class WebgpuBindGroupFormat {
             // texture
             const sampleType = textureFormat.sampleType;
             const viewDimension = textureFormat.textureDimension;
-            const multisampled = false;
+            const multisampled = textureFormat.multisampled;
 
             const gpuSampleType = sampleTypes[sampleType];
             Debug.assert(gpuSampleType);

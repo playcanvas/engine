@@ -63,6 +63,7 @@ let id = 0;
  * @property {UniformBufferFormat|undefined} viewUniformFormat - The view uniform format.
  * @property {BindGroupFormat|undefined} viewBindGroupFormat - The view bind group format.
  * @property {VertexFormat} vertexFormat - The vertex format.
+ * @property {boolean} [viewInstancing] - True if the shader is used by a native view-instanced pass.
  * @ignore
  */
 
