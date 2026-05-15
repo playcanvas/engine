@@ -7,6 +7,7 @@ import { toKebabCase } from '../src/app/strings.mjs';
 
 const ROOT_PATH = 'src/examples';
 const OUTPUT = 'cache/metadata.mjs';
+const LOG_HIDDEN_EXAMPLES = process.env.NODE_ENV === 'production';
 
 /**
  * @typedef {object} ExampleMetadata
@@ -81,7 +82,7 @@ export const buildMetadata = () => {
     fs.mkdirSync('cache', { recursive: true });
     fs.writeFileSync(OUTPUT, `export const exampleMetaData = ${objStringify(exampleMetaData)};\n`);
 
-    if (hiddenExamples.length) {
+    if (LOG_HIDDEN_EXAMPLES && hiddenExamples.length) {
         writeLog(process.stderr, YELLOW, `hidden examples (${bold(hiddenExamples.length)})`);
         hiddenExamples.forEach(example => writeLog(process.stderr, YELLOW, `  ${example}`));
     }
