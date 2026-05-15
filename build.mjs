@@ -92,7 +92,9 @@ const pipe = (input, output) => {
             if (out.trim()) {
                 output.write(`${style}${raw}\n`);
                 style = '';
-            } else if (raw) {
+                continue;
+            }
+            if (raw) {
                 style += raw;
             }
         }
@@ -128,22 +130,22 @@ const run = (cmd, args) => {
 
 const fail = (msg) => {
     console.error(msg);
-    process.exit(1);
+    return process.exit(1);
 };
 
 const getTreeTargets = () => {
     const buildType = type ?? 'rel';
 
     if (!BUILD_TYPES.includes(buildType)) {
-        fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
+        return fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
     }
 
     if (buildType !== 'rel') {
-        fail('tree visualizers only support --type=rel');
+        return fail('tree visualizers only support --type=rel');
     }
 
     if (hasFormat && !MODULE_FORMATS.includes(format)) {
-        fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
+        return fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
     }
 
     return (hasFormat ? [format] : MODULE_FORMATS).map(moduleFormat => ({
@@ -244,9 +246,9 @@ const watchTrees = async () => {
             log(path, elapsed, errors) {
                 if (errors) {
                     failedLog(path, elapsed);
-                } else {
-                    createdLog(path, elapsed);
+                    return;
                 }
+                createdLog(path, elapsed);
             },
             end(result) {
                 return runTreeVisualizers(target.moduleFormat, result.metafile);
@@ -259,23 +261,23 @@ const watchTrees = async () => {
 
 const getJSTargets = () => {
     if (!hasType) {
-        fail('--type is required');
+        return fail('--type is required');
     }
 
     if (!BUILD_TYPES.includes(type)) {
-        fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
+        return fail(`--type must be one of: ${BUILD_TYPES.join(', ')}`);
     }
 
     if (!hasFormat) {
-        fail('--format is required for JS builds');
+        return fail('--format is required for JS builds');
     }
 
     if (!MODULE_FORMATS.includes(format)) {
-        fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
+        return fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
     }
 
     if (type === 'types' && values.format) {
-        fail('--type=types cannot be combined with --format');
+        return fail('--type=types cannot be combined with --format');
     }
 
     /** @type {{ buildType: 'rel'|'dbg'|'prf'|'min', moduleFormat: 'umd'|'esm' }[]} */
@@ -325,9 +327,9 @@ const watchJS = async () => {
             log(path, elapsed, errors) {
                 if (errors) {
                     failedLog(path, elapsed);
-                } else {
-                    createdLog(path, elapsed);
+                    return;
                 }
+                createdLog(path, elapsed);
             }
         });
     }));
@@ -337,7 +339,7 @@ const watchJS = async () => {
 
 const buildTypesTarget = async () => {
     if (values.format) {
-        fail('--type=types cannot be combined with --format');
+        return fail('--type=types cannot be combined with --format');
     }
 
     startLog(TYPES_INPUT, TYPES_OUTPUT);
@@ -350,7 +352,7 @@ const buildTypesTarget = async () => {
 
 const watchTypesTarget = () => {
     if (values.format) {
-        fail('--type=types cannot be combined with --format');
+        return fail('--type=types cannot be combined with --format');
     }
 
     return watchTypes({
@@ -358,46 +360,59 @@ const watchTypesTarget = () => {
         log(path, elapsed, errors) {
             if (errors) {
                 failedLog(path, elapsed);
-            } else {
-                createdLog(path, elapsed);
+                return;
             }
+            createdLog(path, elapsed);
         }
     });
 };
 
-if (values.help) {
-    console.log(USAGE);
-    process.exit(0);
-}
+const main = async () => {
+    if (values.help) {
+        console.log(USAGE);
+        return 0;
+    }
 
-if (values.clean) {
-    await rm('build', { recursive: true, force: true });
-    process.exit(0);
-}
+    if (values.clean) {
+        await rm('build', { recursive: true, force: true });
+        return 0;
+    }
 
-if (values.watch && values.sourcemaps && !hasType && !hasFormat && !trees.length) {
-    fail('--sourcemaps cannot be combined with aggregate --watch');
-}
+    if (values.watch && values.sourcemaps && !hasType && !hasFormat && !trees.length) {
+        return fail('--sourcemaps cannot be combined with aggregate --watch');
+    }
 
-if (trees.length) {
-    if (values.watch) {
+    if (trees.length && values.watch) {
         await watchTrees();
         await new Promise(() => {});
-    } else {
-        process.exitCode = await buildTrees();
+        return 0;
     }
-} else if (values.watch && !hasType && !hasFormat) {
-    fail('aggregate watch must be run with npm run watch or turbo run watch:all');
-} else if (type === 'types') {
-    if (values.watch) {
+
+    if (trees.length) {
+        return buildTrees();
+    }
+
+    if (values.watch && !hasType && !hasFormat) {
+        return fail('aggregate watch must be run with npm run watch or turbo run watch:all');
+    }
+
+    if (type === 'types' && values.watch) {
         await watchTypesTarget();
         await new Promise(() => {});
-    } else {
-        process.exitCode = await buildTypesTarget();
+        return 0;
     }
-} else if (values.watch) {
-    await watchJS();
-    await new Promise(() => {});
-} else {
-    process.exitCode = await buildJS();
-}
+
+    if (type === 'types') {
+        return buildTypesTarget();
+    }
+
+    if (values.watch) {
+        await watchJS();
+        await new Promise(() => {});
+        return 0;
+    }
+
+    return buildJS();
+};
+
+process.exitCode = await main();

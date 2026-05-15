@@ -301,9 +301,9 @@ const collectIdentifiers = (node, used) => {
         const value = node[key];
         if (Array.isArray(value)) {
             value.forEach(item => collectIdentifiers(item, used));
-        } else {
-            collectIdentifiers(value, used);
+            continue;
         }
+        collectIdentifiers(value, used);
     }
 };
 
