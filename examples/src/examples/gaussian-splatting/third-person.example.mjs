@@ -300,23 +300,38 @@ characterModel.anim.loadStateGraph({
             transitions: [
                 { from: 'START', to: 'Idle', time: 0, priority: 0 },
                 {
-                    from: 'Idle', to: 'Walk', time: 0.1, priority: 0,
+                    from: 'Idle',
+                    to: 'Walk',
+                    time: 0.1,
+                    priority: 0,
                     conditions: [{ parameterName: 'speed', predicate: pc.ANIM_GREATER_THAN, value: 0 }]
                 },
                 {
-                    from: 'Walk', to: 'Idle', time: 0.1, priority: 0,
+                    from: 'Walk',
+                    to: 'Idle',
+                    time: 0.1,
+                    priority: 0,
                     conditions: [{ parameterName: 'speed', predicate: pc.ANIM_LESS_THAN_EQUAL_TO, value: 0 }]
                 },
                 {
-                    from: 'Walk', to: 'Jog', time: 0.1, priority: 0,
+                    from: 'Walk',
+                    to: 'Jog',
+                    time: 0.1,
+                    priority: 0,
                     conditions: [{ parameterName: 'speed', predicate: pc.ANIM_GREATER_THAN, value: 1 }]
                 },
                 {
-                    from: 'Jog', to: 'Walk', time: 0.1, priority: 0,
+                    from: 'Jog',
+                    to: 'Walk',
+                    time: 0.1,
+                    priority: 0,
                     conditions: [{ parameterName: 'speed', predicate: pc.ANIM_LESS_THAN, value: 2 }]
                 },
                 {
-                    from: 'ANY', to: 'Jump', time: 0.1, priority: 0,
+                    from: 'ANY',
+                    to: 'Jump',
+                    time: 0.1,
+                    priority: 0,
                     conditions: [{ parameterName: 'jump', predicate: pc.ANIM_EQUAL_TO, value: true }]
                 },
                 { from: 'Jump', to: 'Idle', time: 0.2, priority: 0, exitTime: 0.8 },
