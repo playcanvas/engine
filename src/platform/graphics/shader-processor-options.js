@@ -22,20 +22,26 @@ class ShaderProcessorOptions {
     /** @type {VertexFormat[]} */
     vertexFormat;
 
+    /** @type {boolean} */
+    viewInstancing = false;
+
     /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
      * @param {UniformBufferFormat} [viewUniformFormat] - Format of the uniform buffer.
      * @param {BindGroupFormat} [viewBindGroupFormat] - Format of the bind group.
      * @param {VertexFormat} [vertexFormat] - Format of the vertex buffer.
+     * @param {boolean} [viewInstancing] - True to process the shader for WebGPU native view
+     * instancing. Defaults to false.
      */
-    constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat, viewInstancing = false) {
 
         // construct a sparse array
         this.uniformFormats[BINDGROUP_VIEW] = viewUniformFormat;
         this.bindGroupFormats[BINDGROUP_VIEW] = viewBindGroupFormat;
 
         this.vertexFormat = vertexFormat;
+        this.viewInstancing = viewInstancing;
     }
 
     /**
@@ -45,15 +51,25 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the uniform exists, false otherwise.
      */
     hasUniform(name) {
+        return !!this.getUniform(name);
+    }
 
+    /**
+     * Get the uniform format for the uniform name.
+     *
+     * @param {string} name - The name of the uniform.
+     * @returns {UniformFormat|undefined} - Returns the uniform format if it exists.
+     */
+    getUniform(name) {
         for (let i = 0; i < this.uniformFormats.length; i++) {
             const uniformFormat = this.uniformFormats[i];
-            if (uniformFormat?.get(name)) {
-                return true;
+            const format = uniformFormat?.get(name) ?? uniformFormat?.get(`${name}[0]`);
+            if (format) {
+                return format;
             }
         }
 
-        return false;
+        return undefined;
     }
 
     /**
@@ -92,6 +108,7 @@ class ShaderProcessorOptions {
         // WebGPU shaders are processed per vertex format
         if (device.isWebGPU) {
             key += this.vertexFormat?.shaderProcessingHashString;
+            key += `#viewInstancing:${this.viewInstancing ? 1 : 0}`;
         }
 
         return key;

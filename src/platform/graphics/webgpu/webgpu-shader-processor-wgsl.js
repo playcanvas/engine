@@ -54,6 +54,7 @@ const textureBaseInfo = {
     'texture_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_FLOAT },
     'texture_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_FLOAT },
     'texture_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_multisampled_2d_array': { viewDimension: TEXTUREDIMENSION_2D_ARRAY, baseSampleType: SAMPLETYPE_FLOAT },
     'texture_depth_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_DEPTH },
     'texture_depth_2d_array': { viewDimension: TEXTUREDIMENSION_2D_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
     'texture_depth_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_DEPTH },
@@ -68,7 +69,7 @@ const getTextureInfo = (baseType, componentType) => {
     Debug.assert(baseInfo);
 
     let finalSampleType = baseInfo.baseSampleType;
-    if (baseInfo.baseSampleType === SAMPLETYPE_FLOAT && baseType !== 'texture_multisampled_2d') {
+    if (baseInfo.baseSampleType === SAMPLETYPE_FLOAT) {
         switch (componentType) {
             case 'u32': finalSampleType = SAMPLETYPE_UINT; break;
             case 'i32': finalSampleType = SAMPLETYPE_INT; break;
@@ -87,7 +88,28 @@ const getTextureInfo = (baseType, componentType) => {
 
 // reverse to getTextureInfo, convert view dimension and sample type to texture declaration
 // example: 2d_array & float -> texture_2d_array<f32>
-const getTextureDeclarationType = (viewDimension, sampleType) => {
+const getTextureDeclarationType = (viewDimension, sampleType, multisampled = false) => {
+
+    // multisampled texture declarations
+    if (multisampled) {
+        let baseTypeString;
+        switch (viewDimension) {
+            case TEXTUREDIMENSION_2D:       baseTypeString = 'texture_multisampled_2d'; break;
+            case TEXTUREDIMENSION_2D_ARRAY: baseTypeString = 'texture_multisampled_2d_array'; break;
+            default: Debug.assert(false);
+        }
+
+        let coreFormatString;
+        switch (sampleType) {
+            case SAMPLETYPE_FLOAT:
+            case SAMPLETYPE_UNFILTERABLE_FLOAT: coreFormatString = 'f32'; break;
+            case SAMPLETYPE_UINT: coreFormatString = 'u32'; break;
+            case SAMPLETYPE_INT: coreFormatString = 'i32'; break;
+            default: Debug.assert(false);
+        }
+
+        return `${baseTypeString}<${coreFormatString}>`;
+    }
 
     // types without template specifiers
     if (sampleType === SAMPLETYPE_DEPTH) {
@@ -156,6 +178,8 @@ class UniformLine {
     ubName = null;
 
     arraySize = 0;
+
+    arrayIndexExpression = '';
 
     constructor(line, shader) {
         // Save the raw line
@@ -227,6 +251,7 @@ class ResourceLine {
         this.isExternalTexture = false;
         this.type = '';
         this.matchedElements = [];
+        this.multisampled = false;
 
         // handle texture type
         const textureMatch = this.line.match(TEXTURE_REGEX);
@@ -235,6 +260,7 @@ class ResourceLine {
             this.type = textureMatch[2]; // texture type (e.g., texture_2d or texture_cube_array)
             this.textureFormat = textureMatch[3]; // texture format (e.g., f32)
             this.isTexture = true;
+            this.multisampled = this.type.startsWith('texture_multisampled_');
             this.matchedElements.push(...textureMatch);
 
             // get dimension and sample type
@@ -304,6 +330,7 @@ class ResourceLine {
         if (this.access !== other.access) return false;
         if (this.accessMode !== other.accessMode) return false;
         if (this.samplerType !== other.samplerType) return false;
+        if (this.multisampled !== other.multisampled) return false;
         return true;
     }
 }
@@ -332,13 +359,14 @@ class WebgpuShaderProcessorWGSL {
 
         // VS - convert a list of attributes to a shader block with fixed locations
         const attributesMap = new Map();
-        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions, shader);
+        const processingOptions = shaderDefinition.processingOptions;
+        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, processingOptions, shader);
 
         // VS - convert a list of varyings to a shader block
-        const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true, device);
+        const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true, device, processingOptions);
 
         // FS - convert a list of varyings to a shader block
-        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false, device);
+        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false, device, processingOptions);
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
         // Note that as both vertex and fragment can declare the same uniform, we need to remove duplicates
@@ -357,7 +385,7 @@ class WebgpuShaderProcessorWGSL {
                 map.set(uni.name, uni.line);
             });
         });
-        const uniformsData = WebgpuShaderProcessorWGSL.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions, shader);
+        const uniformsData = WebgpuShaderProcessorWGSL.processUniforms(device, parsedUniforms, processingOptions, shader);
 
         // rename references to uniforms to match the uniform buffer
         vertexExtracted.src = WebgpuShaderProcessorWGSL.renameUniformAccess(vertexExtracted.src, parsedUniforms);
@@ -365,7 +393,7 @@ class WebgpuShaderProcessorWGSL {
 
         // parse resource lines
         const parsedResources = WebgpuShaderProcessorWGSL.mergeResources(vertexExtracted.resources, fragmentExtracted.resources, shader);
-        const resourcesData = WebgpuShaderProcessorWGSL.processResources(device, parsedResources, shaderDefinition.processingOptions, shader);
+        const resourcesData = WebgpuShaderProcessorWGSL.processResources(device, parsedResources, processingOptions, shader);
 
         // generate fragment output struct
         const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(fragmentExtracted.src, device.maxColorAttachments);
@@ -376,11 +404,17 @@ class WebgpuShaderProcessorWGSL {
 
         // VS - insert the blocks to the source
         const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}\n${resourcesData.code}\n`;
-        const vshader = vertexExtracted.src.replace(MARKER, vBlock);
+        const vertexViewInstancingEnable = processingOptions.viewInstancing && !vertexExtracted.src.includes('enable view_instancing;') ?
+            'enable view_instancing;\n' :
+            '';
+        const vshader = vertexViewInstancingEnable + vertexExtracted.src.replace(MARKER, vBlock);
 
         // FS - insert the blocks to the source
         const fBlock = `${fragmentVaryingsBlock}\n${fOutput}\n${uniformsData.code}\n${resourcesData.code}\n`;
-        const fshader = fragmentExtracted.src.replace(MARKER, fBlock);
+        const fragmentViewInstancingEnable = processingOptions.viewInstancing && !fragmentExtracted.src.includes('enable view_instancing;') ?
+            'enable view_instancing;\n' :
+            '';
+        const fshader = fragmentViewInstancingEnable + fragmentExtracted.src.replace(MARKER, fBlock);
 
         return {
             vshader: vshader,
@@ -464,7 +498,8 @@ class WebgpuShaderProcessorWGSL {
         const meshUniforms = [];
         uniforms.forEach((uniform) => {
             // uniforms not already in supplied uniform buffers go to the mesh buffer
-            if (!processingOptions.hasUniform(uniform.name)) {
+            const existingUniform = processingOptions.getUniform(uniform.name);
+            if (!existingUniform) {
 
                 uniform.ubName = 'ub_mesh_ub';
 
@@ -478,6 +513,9 @@ class WebgpuShaderProcessorWGSL {
 
                 // TODO: when we add material ub, this name will need to be updated
                 uniform.ubName = 'ub_view';
+                if (existingUniform.isArrayType && processingOptions.viewInstancing) {
+                    uniform.arrayIndexExpression = 'select(ub_view.view_index, pcViewIndex, ub_view.view_instancing != 0u)';
+                }
 
                 // Validate types here if needed
                 Debug.assert(true, `Uniform ${uniform.name} already processed, skipping additional validation.`);
@@ -522,7 +560,9 @@ class WebgpuShaderProcessorWGSL {
     static renameUniformAccess(source, uniforms) {
         uniforms.forEach((uniform) => {
             const srcName = `uniform.${uniform.name}`;
-            const dstName = `${uniform.ubName}.${uniform.name}`;
+            const dstName = uniform.arrayIndexExpression ?
+                `${uniform.ubName}.${uniform.name}[${uniform.arrayIndexExpression}]` :
+                `${uniform.ubName}.${uniform.name}`;
             // Use a regular expression to match `uniform.name` as a whole word.
             const regex = new RegExp(`\\b${srcName}\\b`, 'g');
             source = source.replace(regex, dstName);
@@ -570,14 +610,14 @@ class WebgpuShaderProcessorWGSL {
 
                 // followed by optional sampler uniform
                 const sampler = resources[i + 1];
-                const hasSampler = sampler?.isSampler;
+                const hasSampler = !resource.multisampled && sampler?.isSampler;
 
                 // TODO: handle external, and storage types
                 const sampleType = resource.sampleType;
                 const dimension = resource.textureDimension;
 
                 // TODO: we could optimize visibility to only stages that use any of the data
-                textureFormats.push(new BindTextureFormat(resource.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, dimension, sampleType, hasSampler, hasSampler ? sampler.name : null));
+                textureFormats.push(new BindTextureFormat(resource.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, dimension, sampleType, hasSampler, hasSampler ? sampler.name : null, resource.multisampled));
 
                 // following sampler was already handled
                 if (hasSampler) i++;
@@ -678,7 +718,7 @@ class WebgpuShaderProcessorWGSL {
 
         format.textureFormats.forEach((format) => {
 
-            const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType);
+            const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType, format.multisampled);
             code += `@group(${bindGroup}) @binding(${format.slot}) var ${format.name}: ${textureTypeName};\n`;
 
             if (format.hasSampler) {
@@ -701,7 +741,7 @@ class WebgpuShaderProcessorWGSL {
         return code;
     }
 
-    static processVaryings(varyingLines, varyingMap, isVertex, device) {
+    static processVaryings(varyingLines, varyingMap, isVertex, device, processingOptions) {
         let block = '';
         let blockPrivates = '';
         let blockCopy = '';
@@ -740,6 +780,9 @@ class WebgpuShaderProcessorWGSL {
         if (isVertex) {
             block += '    @builtin(position) position : vec4f,\n';          // output position
         } else {
+            if (processingOptions.viewInstancing) {
+                block += '    @builtin(view_index) viewIndex : u32,\n';
+            }
             block += '    @builtin(position) position : vec4f,\n';          // interpolated fragment position
             block += '    @builtin(front_facing) frontFacing : bool,\n';    // front-facing
             block += '    @builtin(sample_index) sampleIndex : u32,\n';     // sample index for MSAA
@@ -755,12 +798,19 @@ class WebgpuShaderProcessorWGSL {
         const primitiveIndexCopy = device.supportsPrimitiveIndex ? `
                 pcPrimitiveIndex = input.primitiveIndex;
         ` : '';
+        const viewIndexGlobals = processingOptions.viewInstancing ? `
+            var<private> pcViewIndex: u32;
+        ` : '';
+        const viewIndexCopy = processingOptions.viewInstancing ? `
+                pcViewIndex = input.viewIndex;
+        ` : '';
 
         // global variables for build-in input into fragment shader
         const fragmentGlobals = isVertex ? '' : `
             var<private> pcPosition: vec4f;
             var<private> pcFrontFacing: bool;
             var<private> pcSampleIndex: u32;
+            ${viewIndexGlobals}
             ${primitiveIndexGlobals}
             ${blockPrivates}
             
@@ -770,6 +820,7 @@ class WebgpuShaderProcessorWGSL {
                 pcPosition = input.position;
                 pcFrontFacing = input.frontFacing;
                 pcSampleIndex = input.sampleIndex;
+                ${viewIndexCopy}
                 ${primitiveIndexCopy}
             }
         `;
@@ -879,21 +930,34 @@ class WebgpuShaderProcessorWGSL {
             }
         });
 
+        const viewIndexInput = processingOptions.viewInstancing ?
+            '@builtin(view_index) viewIndex : u32,' :
+            '';
+        const viewIndexGlobal = processingOptions.viewInstancing ?
+            'var<private> pcViewIndex: u32;' :
+            '';
+        const viewIndexCopy = processingOptions.viewInstancing ?
+            'pcViewIndex = input.viewIndex;' :
+            '';
+
         return `
             struct VertexInput {
                 ${blockAttributes}
                 @builtin(vertex_index) vertexIndex : u32,       // built-in vertex index
-                @builtin(instance_index) instanceIndex : u32    // built-in instance index
+                @builtin(instance_index) instanceIndex : u32,   // built-in instance index
+                ${viewIndexInput}
             };
 
             ${blockPrivates}
             var<private> pcVertexIndex: u32;
             var<private> pcInstanceIndex: u32;
+            ${viewIndexGlobal}
 
             fn _pcCopyInputs(input: VertexInput) {
                 ${blockCopy}
                 pcVertexIndex = input.vertexIndex;
                 pcInstanceIndex = input.instanceIndex;
+                ${viewIndexCopy}
             }
         `;
     }

@@ -109,8 +109,13 @@ class WebgpuXrBridge {
         // caches texture size for getFramebufferSize when the projection layer omits dimensions.
         const first = subImages[0];
         if (first) {
+            const nativeViewDescriptor = this._getNativeViewDescriptor(subImages);
+
             device.xrColorTexture = first.colorTexture;
             device.xrColorTextureViewFormat = first.viewFormat;
+            device.xrColorTextureViewDescriptor = nativeViewDescriptor;
+            device.xrNativeViewInstancing = !!nativeViewDescriptor;
+            device.xrViewCount = nativeViewDescriptor ? subImages.length : 1;
             this._cachedFramebufferSize.set(first.colorTexture.width, first.colorTexture.height);
         }
     }
@@ -171,6 +176,70 @@ class WebgpuXrBridge {
             }
         }
         return /** @type {XRViewport} */ ({ x: 0, y: 0, width: 0, height: 0 });
+    }
+
+    /**
+     * @param {{ colorTexture: any, viewDescriptor: any, viewport: any, viewFormat: any }[]} subImages - XR sub-images for the frame.
+     * @returns {any} A GPUTextureViewDescriptor covering all XR view layers, or null for fallback.
+     * @private
+     */
+    _getNativeViewDescriptor(subImages) {
+        const device = this.xrBridge.device;
+        const viewCount = subImages.length;
+        if (
+            viewCount < 2 ||
+            viewCount > device.maxXrViews ||
+            viewCount > device.maxViewInstanceCount ||
+            !device.supportsViewInstancing ||
+            (device.samples > 1 && !device.supportsMultisampledArrayTextures)
+        ) {
+            return null;
+        }
+
+        const first = subImages[0];
+        const firstViewport = first.viewport;
+        const textureArrayLength = this._layer?.textureArrayLength ?? first.colorTexture.depthOrArrayLayers ?? 1;
+        if (!first.viewDescriptor && textureArrayLength < viewCount) {
+            return null;
+        }
+
+        const firstBaseArrayLayer = first.viewDescriptor?.baseArrayLayer;
+        if (first.viewDescriptor && firstBaseArrayLayer === undefined) {
+            return null;
+        }
+
+        const baseArrayLayer = firstBaseArrayLayer ?? 0;
+        for (let i = 0; i < viewCount; i++) {
+            const sub = subImages[i];
+            if (
+                sub.colorTexture !== first.colorTexture ||
+                sub.viewFormat !== first.viewFormat ||
+                sub.viewport.x !== firstViewport.x ||
+                sub.viewport.y !== firstViewport.y ||
+                sub.viewport.width !== firstViewport.width ||
+                sub.viewport.height !== firstViewport.height
+            ) {
+                return null;
+            }
+
+            const desc = sub.viewDescriptor;
+            if (desc) {
+                const layer = desc.baseArrayLayer;
+                if (layer === undefined) {
+                    return null;
+                }
+                if (layer !== baseArrayLayer + i) {
+                    return null;
+                }
+            }
+        }
+
+        return {
+            ...first.viewDescriptor,
+            dimension: '2d-array',
+            baseArrayLayer,
+            arrayLayerCount: viewCount
+        };
     }
 
     /**

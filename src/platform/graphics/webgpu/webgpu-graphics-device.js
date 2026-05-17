@@ -182,6 +182,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     xrColorTextureViewDescriptor = null;
 
     /**
+     * True when the active XR frame is rendered using WebGPU view instancing into a texture array.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    xrNativeViewInstancing = false;
+
+    /**
+     * Number of XR views rendered by a native view-instanced render pass.
+     *
+     * @type {number}
+     * @ignore
+     */
+    xrViewCount = 1;
+
+    /**
+     * View count used to allocate the current WebGPU backbuffer attachments.
+     *
+     * @type {number}
+     * @private
+     */
+    _backBufferViewCount = 1;
+
+    /**
      * Per-view XR sub-image entries populated each frame by the WebGPU XR bridge. Each entry
      * describes one XR view: the underlying GPU color texture, the view descriptor that selects the
      * right slice, the viewport, and the view's GPU format. Empty outside immersive WebGPU XR.
@@ -199,6 +223,38 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     xrCurrentViewIndex = -1;
+
+    /**
+     * True when the WebGPU `view-instancing` feature is available on the device.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    supportsViewInstancing = false;
+
+    /**
+     * True when the WebGPU `multisampled-array-textures` feature is available on the device.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    supportsMultisampledArrayTextures = false;
+
+    /**
+     * Maximum view count requested for WebGPU view instancing.
+     *
+     * @type {number}
+     * @ignore
+     */
+    maxViewInstanceCount = 1;
+
+    /**
+     * Fixed shader uniform array size for XR stereo views.
+     *
+     * @type {number}
+     * @ignore
+     */
+    maxXrViews = 2;
 
     /**
      * When set, used as the main color attachment in {@link WebgpuGraphicsDevice#frameStart} if there is
@@ -285,6 +341,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.xrColorTexture = null;
         this.xrColorTextureViewFormat = null;
         this.xrColorTextureViewDescriptor = null;
+        this.xrNativeViewInstancing = false;
+        this.xrViewCount = 1;
         this.xrSubImages.length = 0;
         this.xrCurrentViewIndex = -1;
     }
@@ -405,6 +463,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         this.supportsSubgroups = requireFeature('subgroups');
+        this.supportsMultisampledArrayTextures = requireFeature('multisampled-array-textures');
+
+        const adapterLimits = this.gpuAdapter?.limits;
+        const maxViewInstanceCount = adapterLimits?.maxViewInstanceCount ?? 1;
+        this.supportsViewInstancing = !bare &&
+            this.gpuAdapter.features.has('view-instancing') &&
+            maxViewInstanceCount >= this.maxXrViews;
+        if (this.supportsViewInstancing) {
+            requiredFeatures.push('view-instancing');
+            this.maxViewInstanceCount = maxViewInstanceCount;
+        } else {
+            this.maxViewInstanceCount = 1;
+        }
+
         this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMaxSize ?? 0) : 0;
         this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
         Debug.log(
@@ -427,6 +499,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     requiredLimits[limitName] = adapterLimits[limitName];
                 }
             }
+        }
+        if (this.supportsViewInstancing && requiredLimits.maxViewInstanceCount === undefined) {
+            requiredLimits.maxViewInstanceCount = this.maxXrViews;
         }
 
         /** @type {GPUDeviceDescriptor} */
@@ -591,9 +666,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // Reallocate framebuffer if dimensions change, to match the output texture. For WebXR
         // WebGPU projection color targets that are 2d-array textures, width/height are the per-layer
         // extent (same for every view), which matches what the render pass and internal depth need.
-        if (this.backBufferSize.x !== outColorBuffer.width || this.backBufferSize.y !== outColorBuffer.height) {
+        const viewCount = this.xrNativeViewInstancing ? this.xrViewCount : 1;
+        if (
+            this.backBufferSize.x !== outColorBuffer.width ||
+            this.backBufferSize.y !== outColorBuffer.height ||
+            this._backBufferViewCount !== viewCount
+        ) {
 
             this.backBufferSize.set(outColorBuffer.width, outColorBuffer.height);
+            this._backBufferViewCount = viewCount;
 
             this.backBuffer.destroy();
             this.backBuffer = null;

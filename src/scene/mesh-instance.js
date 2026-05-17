@@ -51,7 +51,7 @@ const _tempSphere = new BoundingSphere();
 const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
-const lookupHashes = new Uint32Array(4);
+const lookupHashes = new Uint32Array(5);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -724,10 +724,11 @@ class MeshInstance {
      * @param {UniformBufferFormat} [viewUniformFormat] - The format of the view uniform buffer.
      * @param {BindGroupFormat} [viewBindGroupFormat] - The format of the view bind group.
      * @param {any} [sortedLights] - Array of arrays of lights.
+     * @param {boolean} [viewInstancing] - True if the shader needs native WebGPU view instancing.
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, viewBindGroupFormat, sortedLights) {
+    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, viewBindGroupFormat, sortedLights, viewInstancing = false) {
 
         const shaderDefs = this._shaderDefs;
 
@@ -736,6 +737,7 @@ class MeshInstance {
         lookupHashes[1] = lightHash;
         lookupHashes[2] = shaderDefs;
         lookupHashes[3] = cameraShaderParams.hash;
+        lookupHashes[4] = viewInstancing ? 1 : 0;
         const hash = hash32Fnv1a(lookupHashes);
 
         // look up the cache
@@ -766,7 +768,8 @@ class MeshInstance {
                     sortedLights: sortedLights,
                     viewUniformFormat: viewUniformFormat,
                     viewBindGroupFormat: viewBindGroupFormat,
-                    vertexFormat: this.mesh.vertexBuffer?.format
+                    vertexFormat: this.mesh.vertexBuffer?.format,
+                    viewInstancing: viewInstancing
                 });
 
                 DebugGraphics.popGpuMarker(this.mesh.device);

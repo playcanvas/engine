@@ -132,8 +132,10 @@ class BindTextureFormat extends BindBaseFormat {
      * sampler is used, it will take up an additional slot, directly following the texture slot.
      * Defaults to true.
      * @param {string|null} [samplerName] - Optional name of the sampler. Defaults to null.
+     * @param {boolean} [multisampled] - True if the texture binding is multisampled. Defaults to
+     * false.
      */
-    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null) {
+    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null, multisampled = false) {
         super(name, visibility);
 
         // TEXTUREDIMENSION_***
@@ -147,6 +149,9 @@ class BindTextureFormat extends BindBaseFormat {
 
         // optional name of the sampler (its automatically generated if not provided)
         this.samplerName = samplerName ?? `${name}_sampler`;
+
+        // whether the texture is multisampled
+        this.multisampled = multisampled;
     }
 }
 

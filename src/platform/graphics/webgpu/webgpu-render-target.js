@@ -236,6 +236,15 @@ class WebgpuRenderTarget {
     }
 
     /**
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @returns {number} Number of array layers rendered by a native view-instanced backbuffer pass.
+     * @private
+     */
+    getViewCount(device) {
+        return this.isBackbuffer && device.xrNativeViewInstancing ? device.xrViewCount : 1;
+    }
+
+    /**
      * Initialize render target for rendering one time.
      *
      * @param {WebgpuGraphicsDevice} device - The graphics device.
@@ -277,6 +286,13 @@ class WebgpuRenderTarget {
 
         this.updateKey();
 
+        const viewCount = this.getViewCount(device);
+        if (viewCount > 1) {
+            this.renderPassDescriptor.viewCount = viewCount;
+        } else {
+            delete this.renderPassDescriptor.viewCount;
+        }
+
         this.initialized = true;
 
         WebgpuDebug.end(device, 'RenderTarget initialization', { renderTarget });
@@ -286,6 +302,12 @@ class WebgpuRenderTarget {
     initDepthStencil(device, wgpu, renderTarget) {
 
         const { samples, width, height, depth, depthBuffer } = renderTarget;
+        const viewCount = this.getViewCount(device);
+        const viewDesc = viewCount > 1 ? {
+            dimension: '2d-array',
+            baseArrayLayer: 0,
+            arrayLayerCount: viewCount
+        } : undefined;
 
         // depth buffer that we render to (single or multi-sampled). We don't create resolve
         // depth buffer as we don't currently resolve it. This might need to change in the future.
@@ -302,7 +324,7 @@ class WebgpuRenderTarget {
 
                 /** @type {GPUTextureDescriptor} */
                 const depthTextureDesc = {
-                    size: [width, height, 1],
+                    size: [width, height, viewCount],
                     dimension: '2d',
                     sampleCount: samples,
                     format: this.depthAttachment.format,
@@ -325,7 +347,7 @@ class WebgpuRenderTarget {
                 this.depthAttachment.depthTexture = depthTexture;
                 this.depthAttachment.depthTextureInternal = true;
 
-                renderingView = depthTexture.createView();
+                renderingView = depthTexture.createView(viewDesc);
                 DebugHelper.setLabel(renderingView, `${renderTarget.name}.autoDepthView`);
 
             } else {  // use provided depth buffer
@@ -341,7 +363,7 @@ class WebgpuRenderTarget {
                     this.depthAttachment.hasStencil = depthFormat === 'depth24plus-stencil8';
 
                     // key for matching multi-sampled depth buffer
-                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthFormat}`;
+                    const key = `${depthBuffer.id}:${width}:${height}:${viewCount}:${samples}:${depthFormat}`;
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
                     const msTextures = getMultisampledTextureCache(device);
@@ -350,7 +372,7 @@ class WebgpuRenderTarget {
 
                         /** @type {GPUTextureDescriptor} */
                         const multisampledDepthDesc = {
-                            size: [width, height, 1],
+                            size: [width, height, viewCount],
                             dimension: '2d',
                             sampleCount: samples,
                             format: depthFormat,
@@ -370,7 +392,7 @@ class WebgpuRenderTarget {
                     this.depthAttachment.multisampledDepthBuffer = msDepthTexture;
                     this.depthAttachment.multisampledDepthBufferKey = key;
 
-                    renderingView = msDepthTexture.createView();
+                    renderingView = msDepthTexture.createView(viewDesc);
                     DebugHelper.setLabel(renderingView, `${renderTarget.name}.multisampledDepthView`);
 
                 } else {
@@ -379,7 +401,7 @@ class WebgpuRenderTarget {
                     const depthTexture = depthBuffer.impl.gpuTexture;
                     this.depthAttachment.depthTexture = depthTexture;
 
-                    renderingView = depthTexture.createView();
+                    renderingView = depthTexture.createView(viewDesc);
                     DebugHelper.setLabel(renderingView, `${renderTarget.name}.depthView`);
                 }
             }
@@ -409,6 +431,12 @@ class WebgpuRenderTarget {
 
         const { samples, width, height, mipLevel } = renderTarget;
         const colorBuffer = renderTarget.getColorBuffer(index);
+        const viewCount = this.getViewCount(device);
+        const viewDesc = viewCount > 1 ? {
+            dimension: '2d-array',
+            baseArrayLayer: 0,
+            arrayLayerCount: viewCount
+        } : undefined;
 
         // view used to write to the color buffer (either by rendering to it, or resolving to it)
         let colorView = null;
@@ -446,7 +474,7 @@ class WebgpuRenderTarget {
 
             /** @type {GPUTextureDescriptor} */
             const multisampledTextureDesc = {
-                size: [width, height, 1],
+                size: [width, height, viewCount],
                 dimension: '2d',
                 sampleCount: samples,
                 format: format,
@@ -458,7 +486,7 @@ class WebgpuRenderTarget {
             DebugHelper.setLabel(multisampledColorBuffer, `${renderTarget.name}.multisampledColor`);
             this.setColorAttachment(index, multisampledColorBuffer, multisampledTextureDesc.format);
 
-            colorAttachment.view = multisampledColorBuffer.createView();
+            colorAttachment.view = multisampledColorBuffer.createView(viewDesc);
             DebugHelper.setLabel(colorAttachment.view, `${renderTarget.name}.multisampledColorView`);
 
             colorAttachment.resolveTarget = colorView;

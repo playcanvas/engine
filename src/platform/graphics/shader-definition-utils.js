@@ -221,6 +221,9 @@ class ShaderDefinitionUtils {
         if (shaderType === 'fragment' && device.supportsPrimitiveIndex) {
             code += 'enable primitive_index;\n';
         }
+        if (device.supportsMultisampledArrayTextures) {
+            code += 'enable multisampled_array_textures;\n';
+        }
         if (device.supportsSubgroups) {
             code += 'enable subgroups;\n';
         }
