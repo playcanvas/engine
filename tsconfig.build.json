@@ -4,7 +4,10 @@
         "allowJs": true,
         "declaration": true,
         "emitDeclarationOnly": true,
+        "incremental": true,
         "outDir": "build/playcanvas/src",
+        "skipLibCheck": true,
+        "tsBuildInfoFile": "build/.cache/playcanvas-types.tsbuildinfo",
         "typeRoots": [ "./node_modules/@types" ]
     }
 }

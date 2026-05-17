@@ -48,6 +48,22 @@ class ShadowCatcher extends Script {
     geometry;
 
     /**
+     * Draw bucket applied to the shadow catcher's mesh instances. Used to
+     * coarsely control where the catcher sits in the transparent render order
+     * relative to other transparent objects (in `SORTMODE_BACK2FRONT` mode,
+     * higher buckets render first). The default `250` puts the catcher very
+     * early in the transparent pass so its shadow can darken the skybox /
+     * background. Lower it (e.g. to `0`) when the catcher needs to render
+     * AFTER a transparent object that would otherwise overwrite it - for
+     * example a Gaussian Splat ground.
+     *
+     * @attribute
+     * @title Draw Bucket
+     * @type {number}
+     */
+    drawBucket = 250;
+
+    /**
      * @type {boolean}
      * @private
      */
@@ -92,10 +108,6 @@ class ShadowCatcher extends Script {
 
         this.geometry?.render?.meshInstances.forEach((mi) => {
 
-            // set up the geometry to render very early during the transparent pass, before other transparent objects
-            // use drawBucket for coarse sorting - higher bucket renders first in back-to-front mode
-            mi.drawBucket = 250;
-
             // if geometry was provided, set the material
             if (!this._geometryCreated) {
                 mi.material = shadowCatcherMaterial;
@@ -112,6 +124,11 @@ class ShadowCatcher extends Script {
 
     update() {
         this.geometry?.setLocalScale(this.scale);
+
+        // apply drawBucket every frame so runtime changes take effect
+        this.geometry?.render?.meshInstances.forEach((mi) => {
+            mi.drawBucket = this.drawBucket;
+        });
     }
 }
 

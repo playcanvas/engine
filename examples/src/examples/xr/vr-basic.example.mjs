@@ -57,12 +57,23 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/xr_gallery.glb` })
+    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/xr_gallery.glb` }),
+    envatlas: new pc.Asset(
+        'env-atlas',
+        'texture',
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+    )
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
+
+    // skydome
+    app.scene.envAtlas = assets.envatlas.resource;
+    app.scene.skyboxMip = 0;
+    app.scene.exposure = 0.5;
 
     const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
     app.root.addChild(galleryEntity);
