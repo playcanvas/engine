@@ -7,7 +7,6 @@ import { minify } from '@swc/core';
 // unofficial package plugins
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
-import { visualizer } from 'rollup-plugin-visualizer';
 
 // custom plugins
 import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
@@ -112,45 +111,6 @@ function getJSCCOptions(buildType) {
 }
 
 /**
- * @param {string} type - The type of the output (e.g., 'umd', 'es').
- * @returns {OutputOptions['plugins']} - The output plugins.
- */
-function getOutPlugins(type) {
-    const plugins = [];
-
-    if (process.env.treemap) {
-        plugins.push(visualizer({
-            filename: `treemap.${type}.html`,
-            brotliSize: true,
-            gzipSize: true
-        }));
-    }
-
-    if (process.env.treenet) {
-        plugins.push(visualizer({
-            filename: `treenet.${type}.html`,
-            template: 'network'
-        }));
-    }
-
-    if (process.env.treesun) {
-        plugins.push(visualizer({
-            filename: `treesun.${type}.html`,
-            template: 'sunburst'
-        }));
-    }
-
-    if (process.env.treeflame) {
-        plugins.push(visualizer({
-            filename: `treeflame.${type}.html`,
-            template: 'flamegraph'
-        }));
-    }
-
-    return plugins;
-}
-
-/**
  * Create a Rollup plugin to minify the output using SWC.
  *
  * @param {boolean} esm - Whether the output is an ES module.
@@ -213,7 +173,6 @@ function buildJSOptions({
     /** @type {OutputOptions[]} */
     const output = [{
         banner: isMin ? undefined : banner,
-        plugins: buildType === 'rel' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
         format: isUMD ? 'umd' : 'es',
         indent: '\t',
         sourcemap: isDebug && 'inline',

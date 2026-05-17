@@ -6,8 +6,8 @@ export default /* wgsl */`
 var<private> tAw: u32;
 var<private> tBcached: vec4f;
 
-fn unpackRotation(packed: vec3f) -> vec4f {
-    return vec4f(packed.xyz, sqrt(max(0.0, 1.0 - dot(packed, packed))));
+fn unpackRotation(data: vec3f) -> vec4f {
+    return vec4f(data.xyz, sqrt(max(0.0, 1.0 - dot(data, data))));
 }
 
 // read the model-space center of the gaussian
