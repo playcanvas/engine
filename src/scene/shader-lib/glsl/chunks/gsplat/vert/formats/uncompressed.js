@@ -6,8 +6,8 @@ export default /* glsl */`
 uint tAw;
 vec4 tBcached;
 
-vec4 unpackRotation(vec3 packed) {
-    return vec4(packed.xyz, sqrt(max(0.0, 1.0 - dot(packed, packed))));
+vec4 unpackRotation(vec3 data) {
+    return vec4(data.xyz, sqrt(max(0.0, 1.0 - dot(data, data))));
 }
 
 // read the model-space center of the gaussian
