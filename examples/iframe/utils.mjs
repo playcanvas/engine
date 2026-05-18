@@ -8,8 +8,12 @@ const MODULE_EXTENSION = /\.mjs$/;
 const TEXT_EXTENSION = /\.(?:frag|vert|wgsl|glsl|html|css|txt)$/;
 const JSON_EXTENSION = /\.json$/;
 const MODULE_TYPE = 'text/javascript';
+const RAW_QUERY = 'raw';
+const URL_QUERY = 'url';
 const RELATIVE_SPECIFIER = /^\.{1,2}\//;
-const IMPORT_EXPORT_SPECIFIER = /(\b(?:from|import)[ \t\r\n]*)(['"])(\.{1,2}\/[^'"\r\n]+)\2/g;
+const ASSET_PREFIX = 'examples/assets/';
+const SCRIPT_PREFIX = 'engine/scripts/';
+const IMPORT_EXPORT_SPECIFIER = /(\b(?:from|import)[ \t\r\n]*)(['"])([^'"\r\n]+)\2/g;
 
 /**
  * @type {string}
@@ -62,13 +66,58 @@ const moduleUrlTasks = new Map();
 const moduleStack = [];
 
 /**
+ * @param {string} name - The module name.
+ * @returns {{ path: string, query: string }} The parsed request.
+ */
+const parseModuleRequest = (name) => {
+    const idx = name.indexOf('?');
+    return idx === -1 ? {
+        path: name,
+        query: ''
+    } : {
+        path: name.slice(0, idx),
+        query: name.slice(idx + 1)
+    };
+};
+
+/**
  * @param {string} name - The name of the current file.
  * @param {string} specifier - The relative module specifier.
  * @returns {string} The resolved file name.
  */
 const resolveModuleName = (name, specifier) => {
-    const url = new URL(specifier, `https://example.local/${name}`);
-    return url.pathname.slice(1);
+    const url = new URL(specifier, `https://example.local/${parseModuleRequest(name).path}`);
+    return `${url.pathname.slice(1)}${url.search}`;
+};
+
+/**
+ * @param {string} specifier - The module specifier.
+ * @returns {string | null} The runtime URL.
+ */
+const resolveStaticUrl = (specifier) => {
+    const { path, query } = parseModuleRequest(specifier);
+    if (query !== URL_QUERY) {
+        return null;
+    }
+    if (path.startsWith(ASSET_PREFIX)) {
+        return `${rootPath}/static/assets/${path.slice(ASSET_PREFIX.length)}`;
+    }
+    if (path.startsWith(SCRIPT_PREFIX)) {
+        return `${rootPath}/static/scripts/${path.slice(SCRIPT_PREFIX.length)}`;
+    }
+    return null;
+};
+
+/**
+ * @param {string} name - The name of the current file.
+ * @param {string} specifier - The module specifier.
+ * @returns {string | null} The resolved module name.
+ */
+const resolveImport = (name, specifier) => {
+    if (RELATIVE_SPECIFIER.test(specifier)) {
+        return resolveModuleName(name, specifier);
+    }
+    return resolveStaticUrl(specifier) ? specifier : null;
 };
 
 /**
@@ -93,13 +142,18 @@ function createModuleUrl(name, stack = moduleStack) {
     if (moduleUrls.has(name)) {
         return Promise.resolve(moduleUrls.get(name));
     }
-    if (files[name] === undefined) {
-        throw new Error(`Module not found: ${name}`);
+    const staticUrl = resolveStaticUrl(name);
+    if (staticUrl) {
+        return Promise.resolve(createBlobModule(name, `export default ${JSON.stringify(staticUrl)};`));
     }
-    if (MODULE_EXTENSION.test(name)) {
-        const idx = stack.indexOf(name);
+    const { path } = parseModuleRequest(name);
+    if (files[path] === undefined) {
+        throw new Error(`Module not found: ${path}`);
+    }
+    if (MODULE_EXTENSION.test(path)) {
+        const idx = stack.indexOf(path);
         if (idx !== -1) {
-            throw new Error(`Circular module import: ${stack.slice(idx).concat(name).join(' -> ')}`);
+            throw new Error(`Circular module import: ${stack.slice(idx).concat(path).join(' -> ')}`);
         }
     }
     if (moduleUrlTasks.has(name)) {
@@ -123,30 +177,40 @@ function createModuleUrl(name, stack = moduleStack) {
  * @returns {Promise<string>} The module URL.
  */
 async function createModuleUrlTask(name, stack) {
-    if (TEXT_EXTENSION.test(name)) {
-        const source = `export default ${JSON.stringify(files[name])};`;
+    const { path, query } = parseModuleRequest(name);
+
+    if (query === RAW_QUERY) {
+        if (!TEXT_EXTENSION.test(path)) {
+            throw new Error(`Invalid raw module: ${name}`);
+        }
+        const source = `export default ${JSON.stringify(files[path])};`;
         return createBlobModule(name, source);
     }
 
-    if (JSON_EXTENSION.test(name)) {
+    if (query) {
+        throw new Error(`Invalid module query: ${name}`);
+    }
+
+    if (JSON_EXTENSION.test(path)) {
         const json = await Promise.resolve()
-        .then(() => JSON.parse(files[name]))
+        .then(() => JSON.parse(files[path]))
         .then(value => value, (err) => {
-            throw new Error(`Invalid JSON module: ${name}`, { cause: err });
+            throw new Error(`Invalid JSON module: ${path}`, { cause: err });
         });
         const source = `export default ${JSON.stringify(json)};`;
         return createBlobModule(name, source);
     }
 
-    if (!MODULE_EXTENSION.test(name)) {
+    if (!MODULE_EXTENSION.test(path)) {
         throw new Error(`Invalid module: ${name}`);
     }
 
-    const next = stack.concat(name);
+    const next = stack.concat(path);
     const imports = [];
-    for (const match of files[name].matchAll(IMPORT_EXPORT_SPECIFIER)) {
+    for (const match of files[path].matchAll(IMPORT_EXPORT_SPECIFIER)) {
         const [text, prefix, quote, specifier] = match;
-        if (!RELATIVE_SPECIFIER.test(specifier)) {
+        const request = resolveImport(name, specifier);
+        if (!request) {
             continue;
         }
         imports.push({
@@ -154,20 +218,21 @@ async function createModuleUrlTask(name, stack) {
             prefix,
             quote,
             specifier,
+            request,
             index: match.index
         });
     }
 
-    const urls = await Promise.all(imports.map(item => createModuleUrl(resolveModuleName(name, item.specifier), next)));
+    const urls = await Promise.all(imports.map(item => createModuleUrl(item.request, next)));
     const parts = [];
     let offset = 0;
     for (let i = 0; i < imports.length; i++) {
         const item = imports[i];
-        parts.push(files[name].slice(offset, item.index));
+        parts.push(files[path].slice(offset, item.index));
         parts.push(`${item.prefix}${item.quote}${urls[i]}${item.quote}`);
         offset = item.index + item.text.length;
     }
-    parts.push(files[name].slice(offset));
+    parts.push(files[path].slice(offset));
 
     return createBlobModule(name, parts.join(''));
 }

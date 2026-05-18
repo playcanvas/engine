@@ -9,7 +9,7 @@
         "paths": {
             "examples/observer": ["./iframe/observer.mjs"],
             "examples/utils": ["./iframe/utils.mjs"],
-            "playcanvas/scripts/*": ["../scripts/*"],
+            "engine/scripts/*": ["../scripts/*"],
             "examples/assets/*": ["./assets/*"]
         },
         "skipLibCheck": true,

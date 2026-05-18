@@ -45,6 +45,11 @@ const ENGINE_OUTPUT = {
     dbg: 'playcanvas.dbg.mjs',
     prf: 'playcanvas.prf.mjs'
 };
+const URL_IMPORT_NAMESPACE = 'example-url';
+const URL_IMPORT_FILTER = /^(?:examples\/assets\/|engine\/scripts\/).+\?url$/;
+const URL_QUERY = '?url';
+const ASSET_PREFIX = 'examples/assets/';
+const SCRIPT_PREFIX = 'engine/scripts/';
 const TEXT_LOADERS = {
     '.frag': 'text',
     '.vert': 'text',
@@ -57,6 +62,21 @@ const TEXT_LOADERS = {
 const MODULE_LOADERS = {
     ...TEXT_LOADERS,
     '.json': 'json'
+};
+
+/**
+ * @param {string} request - module request.
+ * @returns {string} runtime URL.
+ */
+const resolveUrlImport = (request) => {
+    const file = request.slice(0, -URL_QUERY.length);
+    if (file.startsWith(ASSET_PREFIX)) {
+        return `../static/assets/${file.slice(ASSET_PREFIX.length)}`;
+    }
+    if (file.startsWith(SCRIPT_PREFIX)) {
+        return `../static/scripts/${file.slice(SCRIPT_PREFIX.length)}`;
+    }
+    throw new Error(`Invalid URL import: ${request}`);
 };
 
 /**
@@ -106,6 +126,25 @@ const urlExternalPlugin = () => {
 };
 
 /**
+ * @returns {EsbuildPlugin} esbuild plugin.
+ */
+const urlImportPlugin = () => {
+    return {
+        name: 'url-import',
+        setup(build) {
+            build.onResolve({ filter: URL_IMPORT_FILTER }, args => ({
+                path: args.path,
+                namespace: URL_IMPORT_NAMESPACE
+            }));
+            build.onLoad({ filter: /.*/, namespace: URL_IMPORT_NAMESPACE }, args => ({
+                contents: `export default ${JSON.stringify(resolveUrlImport(args.path))};`,
+                loader: 'js'
+            }));
+        }
+    };
+};
+
+/**
  * @param {Record<string, string>} entryPoints - entry point map.
  * @param {string[]} external - external modules.
  * @returns {EsbuildOptions} esbuild options.
@@ -123,6 +162,7 @@ const exampleOptions = (entryPoints, external) => ({
     loader: MODULE_LOADERS,
     external,
     plugins: [
+        urlImportPlugin(),
         urlExternalPlugin()
     ],
     logLevel: 'warning'

@@ -244,12 +244,14 @@ console.log(data.get('flash'));
 Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be imported from the example using their relative file name:
 
 ```js
-import shaderVert from './shader.vert';
-import shaderFrag from './shader.frag';
+import shaderVert from './shader.vert?raw';
+import shaderFrag from './shader.frag?raw';
 import data from './data.json';
+import statueUrl from 'examples/assets/models/statue.glb?url';
+import orbitCameraUrl from 'engine/scripts/camera/orbit-camera.js?url';
 ```
 
-Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions are imported as strings. JSON files are imported as parsed values. Local `.mjs` files are imported as standard JavaScript modules.
+Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions use `?raw` and are imported as strings. JSON files are imported as parsed values. Shared example assets use `examples/assets/...` with `?url`, engine scripts use `engine/scripts/...` with `?url`, and local `.mjs` files are imported as standard JavaScript modules.
 
 
 ### Testing your example
@@ -266,6 +268,8 @@ The example script allows you to import examples only modules that interact with
 
 - `examples/observer` - The observer object `data`.
 - `examples/utils` - Contains utility functions such as `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
+- `examples/assets/*` - Shared example assets. Use `?url` when a runtime URL string is needed.
+- `engine/scripts/*` - Shared engine scripts. Use `?url` when a runtime URL string is needed.
 
 ## Deployment
 
