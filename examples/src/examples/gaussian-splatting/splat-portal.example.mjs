@@ -1,11 +1,11 @@
 // @config NO_MINISTATS
 // @config DESCRIPTION Two LOD-streamed Gaussian Splat scenes joined by a stencil-masked portal that swaps as you walk through it.
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { GsplatWeather } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/gsplat-weather.mjs`);
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { GsplatWeather } from 'engine/scripts/esm/gsplat/gsplat-weather.mjs';
+import { data } from 'examples/observer';
+import { deviceType } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -54,11 +54,11 @@ const INSIDE_URL = 'https://code.playcanvas.com/examples_data/example_skatepark_
 const assets = {
     outside: new pc.Asset('outside', 'gsplat', { url: OUTSIDE_URL }),
     inside: new pc.Asset('inside', 'gsplat', { url: INSIDE_URL }),
-    portal: new pc.Asset('portal', 'container', { url: `${rootPath}/static/assets/models/portal.glb` }),
+    portal: new pc.Asset('portal', 'container', { url: './assets/models/portal.glb' }),
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

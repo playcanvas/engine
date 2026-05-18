@@ -1,20 +1,21 @@
 // @config DESCRIPTION This example loads the Khronos SpecularTest grid to visually verify the glTF KHR_materials_specular extension. Rows 1/2, 3/4 and 5/6 should each look identical (factor-only vs. texture-only with matching factor), and the last sphere on row 7 should look like a mirror ball.
 // @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/SpecularTest.glb` })
+    model: new pc.Asset('model', 'container', { url: './assets/models/SpecularTest.glb' })
 };
 
 const gfxOptions = {
