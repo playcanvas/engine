@@ -59,10 +59,6 @@ const TEXT_LOADERS = {
     '.css': 'text',
     '.txt': 'text'
 };
-const MODULE_LOADERS = {
-    ...TEXT_LOADERS,
-    '.json': 'json'
-};
 
 /**
  * @param {string} request - module request.
@@ -159,7 +155,7 @@ const exampleOptions = (entryPoints, external) => ({
     outExtension: {
         '.js': '.mjs'
     },
-    loader: MODULE_LOADERS,
+    loader: TEXT_LOADERS,
     external,
     plugins: [
         urlImportPlugin(),

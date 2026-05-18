@@ -63,7 +63,6 @@ export async function loadES5(url) {
 const blobUrls = [];
 const moduleUrls = new Map();
 const moduleUrlTasks = new Map();
-const moduleStack = [];
 
 /**
  * @param {string} name - The module name.
@@ -138,7 +137,7 @@ const createBlobModule = (name, source) => {
  * @param {string[]} [stack] - The module stack.
  * @returns {Promise<string>} The module URL.
  */
-function createModuleUrl(name, stack = moduleStack) {
+function createModuleUrl(name, stack = []) {
     if (moduleUrls.has(name)) {
         return Promise.resolve(moduleUrls.get(name));
     }
@@ -255,7 +254,6 @@ export function clearImports() {
     blobUrls.length = 0;
     moduleUrls.clear();
     moduleUrlTasks.clear();
-    moduleStack.length = 0;
 }
 
 /**
