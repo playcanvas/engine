@@ -1,9 +1,11 @@
 // @config DESCRIPTION This example shows a basic usage of indirect drawing, and the compute shader changes the number of instances that are rendered.
 // @config WEBGL_DISABLED
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import computeShaderWgsl from './compute-shader.wgsl';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+
+import computeShaderWgsl from './compute-shader.wgsl?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -12,7 +14,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

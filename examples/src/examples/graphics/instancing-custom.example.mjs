@@ -1,9 +1,11 @@
 // @config DESCRIPTION This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import transformInstancingGlslVert from './transform-instancing.glsl.vert';
-import transformInstancingWgslVert from './transform-instancing.wgsl.vert';
+import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
+
+import transformInstancingGlslVert from './transform-instancing.glsl.vert?raw';
+import transformInstancingWgslVert from './transform-instancing.wgsl.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -12,7 +14,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: cubemapsTableMountainEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

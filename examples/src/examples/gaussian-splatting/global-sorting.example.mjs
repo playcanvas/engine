@@ -1,7 +1,12 @@
 // @config DESCRIPTION This example demonstrates unified gsplat rendering, where all individual gaussian splats are consistently sorted in a global order, rather than rendering splat meshes based on camera distance.
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';
+import splatsGuitarCompressedPlyUrl from 'examples/assets/splats/guitar.compressed.ply?url';
+import splatsHotelCulptureCompressedPlyUrl from 'examples/assets/splats/hotel-culpture.compressed.ply?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -45,10 +50,10 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/hotel-culpture.compressed.ply` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    hotel: new pc.Asset('gsplat', 'gsplat', { url: splatsHotelCulptureCompressedPlyUrl }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: splatsBikerCompressedPlyUrl }),
+    guitar: new pc.Asset('gsplat', 'gsplat', { url: splatsGuitarCompressedPlyUrl }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

@@ -1,24 +1,33 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
+import modelsIridescentdishwitholivesGlbUrl from 'examples/assets/models/IridescentDishWithOlives.glb?url';
+import modelsMosquitoinamberGlbUrl from 'examples/assets/models/MosquitoInAmber.glb?url';
+import modelsSheenchairGlbUrl from 'examples/assets/models/SheenChair.glb?url';
+import modelsStainedglasslampGlbUrl from 'examples/assets/models/StainedGlassLamp.glb?url';
+import texturesCheckboardPngUrl from 'examples/assets/textures/checkboard.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    dish: new pc.Asset('dish', 'container', { url: `${rootPath}/static/assets/models/IridescentDishWithOlives.glb` }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: `${rootPath}/static/assets/models/MosquitoInAmber.glb` }),
-    sheen: new pc.Asset('sheen', 'container', { url: `${rootPath}/static/assets/models/SheenChair.glb` }),
-    lamp: new pc.Asset('lamp', 'container', { url: `${rootPath}/static/assets/models/StainedGlassLamp.glb` }),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` })
+    dish: new pc.Asset('dish', 'container', { url: modelsIridescentdishwitholivesGlbUrl }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: modelsMosquitoinamberGlbUrl }),
+    sheen: new pc.Asset('sheen', 'container', { url: modelsSheenchairGlbUrl }),
+    lamp: new pc.Asset('lamp', 'container', { url: modelsStainedglasslampGlbUrl }),
+    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl }),
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: texturesCheckboardPngUrl })
 };
 
 const gfxOptions = {

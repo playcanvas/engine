@@ -1,13 +1,17 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
+import texturesCheckboardPngUrl from 'examples/assets/textures/checkboard.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    checkboard: new pc.Asset('checkboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` }),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    checkboard: new pc.Asset('checkboard', 'texture', { url: texturesCheckboardPngUrl }),
+    font: new pc.Asset('font', 'font', { url: fontsCourierJsonUrl }),
+    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
 };
 
 const gfxOptions = {

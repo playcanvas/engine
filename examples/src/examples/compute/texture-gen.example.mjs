@@ -1,19 +1,23 @@
 // @config WEBGL_DISABLED
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import computeShaderWgsl from './compute-shader.wgsl';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsIcosahedronGlbUrl from 'examples/assets/models/icosahedron.glb?url';
+import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
+
+import computeShaderWgsl from './compute-shader.wgsl?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    texture: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    solid: new pc.Asset('solid', 'container', { url: `${rootPath}/static/assets/models/icosahedron.glb` }),
+    texture: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }),
+    solid: new pc.Asset('solid', 'container', { url: modelsIcosahedronGlbUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

@@ -1,21 +1,26 @@
 // @config DESCRIPTION This example demonstrates how a custom shader can be used to render instanced geometry, but also skinned, morphed and static geometry. A simple Gooch shading shader is used.
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import animationsBitmojiWinDanceGlbUrl from 'examples/assets/animations/bitmoji/win-dance.glb?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
+import modelsLowPolyTreeGlbUrl from 'examples/assets/models/low-poly-tree.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/low-poly-tree.glb` }),
+    tree: new pc.Asset('cube', 'container', { url: modelsLowPolyTreeGlbUrl }),
 
-    bitmoji: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
-    danceAnim: new pc.Asset('walkAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb` }),
+    bitmoji: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
+    danceAnim: new pc.Asset('walkAnim', 'container', { url: animationsBitmojiWinDanceGlbUrl }),
 
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

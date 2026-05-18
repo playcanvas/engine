@@ -1,18 +1,23 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
+import modelsPbrHouseGlbUrl from 'examples/assets/models/pbr-house.glb?url';
+import modelsPlaycanvasCubeGlbUrl from 'examples/assets/models/playcanvas-cube.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    house: new pc.Asset('house', 'container', { url: `${rootPath}/static/assets/models/pbr-house.glb` }),
-    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    house: new pc.Asset('house', 'container', { url: modelsPbrHouseGlbUrl }),
+    cube: new pc.Asset('cube', 'container', { url: modelsPlaycanvasCubeGlbUrl }),
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: cubemapsTableMountainEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

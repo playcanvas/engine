@@ -1,12 +1,14 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import texturesPlaycanvasGreyPngUrl from 'examples/assets/textures/playcanvas-grey.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     playcanvasGrey: new pc.Asset('playcanvasGrey', 'texture', {
-        url: `${rootPath}/static/assets/textures/playcanvas-grey.png`
+        url: texturesPlaycanvasGreyPngUrl
     })
 };
 

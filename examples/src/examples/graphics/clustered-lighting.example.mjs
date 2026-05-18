@@ -1,13 +1,16 @@
 // @config ENGINE performance
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import texturesNormalMapPngUrl from 'examples/assets/textures/normal-map.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` })
+    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    normal: new pc.Asset('normal', 'texture', { url: texturesNormalMapPngUrl })
 };
 
 const gfxOptions = {

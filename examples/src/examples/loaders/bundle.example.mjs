@@ -1,6 +1,8 @@
 import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
+import bundlesBundleTarUrl from 'examples/assets/bundles/bundle.tar?url';
+
 // The example demonstrates loading multiple assets from a single bundle file
 
 // This tar file has been created by a command line:
@@ -11,7 +13,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    bundle: new pc.Asset('bundle', 'bundle', { url: '/static/assets/bundles/bundle.tar' }),
+    bundle: new pc.Asset('bundle', 'bundle', { url: bundlesBundleTarUrl }),
     scene: new pc.Asset('scene', 'container', { url: 'assets/models/geometry-camera-light.glb' }),
     torus: new pc.Asset('torus', 'container', { url: 'assets/models/torus.glb' })
 };

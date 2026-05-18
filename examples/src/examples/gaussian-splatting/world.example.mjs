@@ -1,8 +1,12 @@
 // @config DESCRIPTION Shows a large world scene with LOD streaming and additional moving splats.
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
+import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';
+import splatsPlaycanvasLogoMetaJsonUrl from 'examples/assets/splats/playcanvas-logo/meta.json?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -73,13 +77,13 @@ const LOD_PRESETS = {
 
 const assets = {
     skatepark: new pc.Asset('skatepark', 'gsplat', { url: config.url }),
-    logo: new pc.Asset('logo', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
-    biker: new pc.Asset('biker', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
+    logo: new pc.Asset('logo', 'gsplat', { url: splatsPlaycanvasLogoMetaJsonUrl }),
+    biker: new pc.Asset('biker', 'gsplat', { url: splatsBikerCompressedPlyUrl }),
 
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: cubemapsTableMountainEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

@@ -1,22 +1,29 @@
 // @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
+import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
+import texturesSeasideRocks01GlossJpgUrl from 'examples/assets/textures/seaside-rocks01-gloss.jpg?url';
+import texturesSeasideRocks01NormalJpgUrl from 'examples/assets/textures/seaside-rocks01-normal.jpg?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
-    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
-    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` })
+    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl }),
+    color: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }),
+    normal: new pc.Asset('normal', 'texture', { url: texturesSeasideRocks01NormalJpgUrl }),
+    gloss: new pc.Asset('gloss', 'texture', { url: texturesSeasideRocks01GlossJpgUrl })
 };
 
 const gfxOptions = {

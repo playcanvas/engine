@@ -1,8 +1,11 @@
+import { BlurredPlanarReflection } from 'engine/scripts/esm/blurred-planar-reflection.mjs';
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
+import modelsSunglasseskhronosGlbUrl from 'examples/assets/models/SunglassesKhronos.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -11,10 +14,10 @@ const assets = {
     envatlas: new pc.Asset(
         'morning-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: cubemapsMorningEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    sunglasses: new pc.Asset('sunglasses', 'container', { url: `${rootPath}/static/assets/models/SunglassesKhronos.glb` })
+    sunglasses: new pc.Asset('sunglasses', 'container', { url: modelsSunglasseskhronosGlbUrl })
 };
 
 const gfxOptions = {

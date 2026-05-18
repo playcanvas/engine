@@ -1,14 +1,16 @@
 // @config DESCRIPTION This example demonstrates how to use the Anim Component to animate the properties of other Components.
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import texturesPlaycanvasGreyPngUrl from 'examples/assets/textures/playcanvas-grey.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', {
-        url: `${rootPath}/static/assets/textures/playcanvas-grey.png`
+        url: texturesPlaycanvasGreyPngUrl
     })
 };
 const gfxOptions = {

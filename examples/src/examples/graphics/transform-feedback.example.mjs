@@ -1,10 +1,12 @@
 // @config WEBGPU_DISABLED
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderCloudFrag from './shaderCloud.frag';
-import shaderCloudVert from './shaderCloud.vert';
-import shaderFeedbackVert from './shaderFeedback.vert';
+import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
+
+import shaderCloudFrag from './shaderCloud.frag?raw';
+import shaderCloudVert from './shaderCloud.vert?raw';
+import shaderFeedbackVert from './shaderFeedback.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -26,7 +28,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
+    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

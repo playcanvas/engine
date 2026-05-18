@@ -1,39 +1,53 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import posteffectsPosteffectBloomJsUrl from 'engine/scripts/posteffects/posteffect-bloom.js?url';
+import posteffectsPosteffectBokehJsUrl from 'engine/scripts/posteffects/posteffect-bokeh.js?url';
+import posteffectsPosteffectSepiaJsUrl from 'engine/scripts/posteffects/posteffect-sepia.js?url';
+import posteffectsPosteffectSsaoJsUrl from 'engine/scripts/posteffects/posteffect-ssao.js?url';
+import posteffectsPosteffectVignetteJsUrl from 'engine/scripts/posteffects/posteffect-vignette.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
+import modelsChessBoardGlbUrl from 'examples/assets/models/chess-board.glb?url';
+import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
+import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
+import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
+import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
+import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: wasmDracoDracoWasmJsUrl,
+    wasmUrl: wasmDracoDracoWasmWasmUrl,
+    fallbackUrl: wasmDracoDracoJsUrl
 });
 
 const assets = {
-    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
-    bloom: new pc.Asset('bloom', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-bloom.js` }),
-    bokeh: new pc.Asset('bokeh', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-bokeh.js` }),
-    sepia: new pc.Asset('sepia', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-sepia.js` }),
+    board: new pc.Asset('statue', 'container', { url: modelsChessBoardGlbUrl }),
+    bloom: new pc.Asset('bloom', 'script', { url: posteffectsPosteffectBloomJsUrl }),
+    bokeh: new pc.Asset('bokeh', 'script', { url: posteffectsPosteffectBokehJsUrl }),
+    sepia: new pc.Asset('sepia', 'script', { url: posteffectsPosteffectSepiaJsUrl }),
     vignette: new pc.Asset('vignette', 'script', {
-        url: `${rootPath}/static/scripts/posteffects/posteffect-vignette.js`
+        url: posteffectsPosteffectVignetteJsUrl
     }),
-    ssao: new pc.Asset('ssao', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-ssao.js` }),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
+    ssao: new pc.Asset('ssao', 'script', { url: posteffectsPosteffectSsaoJsUrl }),
+    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: wasmGlslangGlslangJsUrl,
+    twgslUrl: wasmTwgslTwgslJsUrl
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

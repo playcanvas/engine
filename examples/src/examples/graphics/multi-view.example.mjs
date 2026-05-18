@@ -1,15 +1,22 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsChessBoardGlbUrl from 'examples/assets/models/chess-board.glb?url';
+import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
+import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
+import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: wasmDracoDracoWasmJsUrl,
+    wasmUrl: wasmDracoDracoWasmWasmUrl,
+    fallbackUrl: wasmDracoDracoJsUrl
 });
 
 await new Promise((resolve) => {
@@ -17,14 +24,14 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` })
+    board: new pc.Asset('statue', 'container', { url: modelsChessBoardGlbUrl })
 };
 
 const gfxOptions = {

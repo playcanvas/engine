@@ -1,22 +1,32 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { XrControllers } from 'engine/scripts/esm/xr-controllers.mjs';
+import { XrMenu } from 'engine/scripts/esm/xr-menu.mjs';
+import { XrNavigation } from 'engine/scripts/esm/xr-navigation.mjs';
+import { XrSession } from 'engine/scripts/esm/xr-session.mjs';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { XrControllers } from 'playcanvas/scripts/esm/xr-controllers.mjs';
-import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
-import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
-import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
 
-import uiCss from './ui.css';
-import uiHtml from './ui.html';
+import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
+import fontsRobotoExtralightJsonUrl from 'examples/assets/fonts/roboto-extralight.json?url';
+import modelsPlaycanvasCubeGlbUrl from 'examples/assets/models/playcanvas-cube.glb?url';
+import modelsVrGalleryGlbUrl from 'examples/assets/models/vr-gallery.glb?url';
+import soundsClickMp3Url from 'examples/assets/sounds/click.mp3?url';
+import texturesBlueButtonPngUrl from 'examples/assets/textures/blue-button.png?url';
+import wasmAmmoAmmoJsUrl from 'examples/assets/wasm/ammo/ammo.js?url';
+import wasmAmmoAmmoWasmJsUrl from 'examples/assets/wasm/ammo/ammo.wasm.js?url';
+import wasmAmmoAmmoWasmWasmUrl from 'examples/assets/wasm/ammo/ammo.wasm.wasm?url';
+
+import uiCss from './ui.css?raw';
+import uiHtml from './ui.html?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // Load Ammo.js physics engine
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
+    glueUrl: wasmAmmoAmmoWasmJsUrl,
+    wasmUrl: wasmAmmoAmmoWasmWasmUrl,
+    fallbackUrl: wasmAmmoAmmoJsUrl
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
@@ -45,17 +55,17 @@ const message = (msg) => {
 
 // Assets
 const assets = {
-    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: `${rootPath}/static/assets/textures/blue-button.png` }),
-    click: new pc.Asset('click', 'audio', { url: `${rootPath}/static/assets/sounds/click.mp3` }),
-    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
+    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: texturesBlueButtonPngUrl }),
+    click: new pc.Asset('click', 'audio', { url: soundsClickMp3Url }),
+    cube: new pc.Asset('cube', 'container', { url: modelsPlaycanvasCubeGlbUrl }),
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: cubemapsMorningEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/roboto-extralight.json` }),
-    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` })
+    font: new pc.Asset('font', 'font', { url: fontsRobotoExtralightJsonUrl }),
+    gallery: new pc.Asset('gallery', 'container', { url: modelsVrGalleryGlbUrl })
 };
 
 // Create graphics device

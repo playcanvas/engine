@@ -1,12 +1,16 @@
 // @config DESCRIPTION Procedural shapes rendered using gaussian splats. Demonstrates lines, text and image-based splats.
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { GsplatImage } from 'engine/scripts/esm/gsplat/gsplat-image.mjs';
+import { GsplatLines } from 'engine/scripts/esm/gsplat/gsplat-lines.mjs';
+import { GsplatText } from 'engine/scripts/esm/gsplat/gsplat-text.mjs';
+import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-box.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatImage } from 'playcanvas/scripts/esm/gsplat/gsplat-image.mjs';
-import { GsplatLines } from 'playcanvas/scripts/esm/gsplat/gsplat-lines.mjs';
-import { GsplatText } from 'playcanvas/scripts/esm/gsplat/gsplat-text.mjs';
-import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
+
+import splatsBicycleSogUrl from 'examples/assets/splats/bicycle.sog?url';
+import texturesColorsWebpUrl from 'examples/assets/textures/colors.webp?url';
+import texturesGearPngUrl from 'examples/assets/textures/gear.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -67,9 +71,9 @@ camera.script.create(CameraControls, {
 app.root.addChild(camera);
 
 const assets = {
-    bicycle: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/bicycle.sog` }),
-    groundTexture: new pc.Asset('ground', 'texture', { url: `${rootPath}/static/assets/textures/colors.webp` }),
-    gearTexture: new pc.Asset('gear', 'texture', { url: `${rootPath}/static/assets/textures/gear.png` })
+    bicycle: new pc.Asset('gsplat', 'gsplat', { url: splatsBicycleSogUrl }),
+    groundTexture: new pc.Asset('ground', 'texture', { url: texturesColorsWebpUrl }),
+    gearTexture: new pc.Asset('gear', 'texture', { url: texturesGearPngUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

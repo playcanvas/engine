@@ -1,5 +1,10 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import texturesFlakes5cPngUrl from 'examples/assets/textures/flakes5c.png?url';
+import texturesFlakes5nPngUrl from 'examples/assets/textures/flakes5n.png?url';
+import texturesFlakes5oPngUrl from 'examples/assets/textures/flakes5o.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,12 +13,12 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/flakes5n.png` }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/flakes5c.png` }),
-    other: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/flakes5o.png` })
+    normal: new pc.Asset('normal', 'texture', { url: texturesFlakes5nPngUrl }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: texturesFlakes5cPngUrl }),
+    other: new pc.Asset('other', 'texture', { url: texturesFlakes5oPngUrl })
 };
 
 const gfxOptions = {

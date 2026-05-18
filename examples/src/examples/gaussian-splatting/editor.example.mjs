@@ -1,7 +1,11 @@
 // @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse Button - orbit </span><br>GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import splatsApartmentSogUrl from 'examples/assets/splats/apartment.sog?url';
+import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';
 
 import { copyProcessor } from './copy-processor.mjs';
 import { deleteProcessor } from './delete-processor.mjs';
@@ -49,9 +53,9 @@ app.on('destroy', () => {
 data.set('boxSize', 0.67);
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    biker: new pc.Asset('biker', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    apartment: new pc.Asset('apartment', 'gsplat', { url: `${rootPath}/static/assets/splats/apartment.sog` })
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    biker: new pc.Asset('biker', 'gsplat', { url: splatsBikerCompressedPlyUrl }),
+    apartment: new pc.Asset('apartment', 'gsplat', { url: splatsApartmentSogUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

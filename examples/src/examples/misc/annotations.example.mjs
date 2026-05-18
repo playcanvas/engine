@@ -1,33 +1,42 @@
+import { Annotation, AnnotationManager } from 'engine/scripts/esm/annotations.mjs';
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { Annotation, AnnotationManager } from 'playcanvas/scripts/esm/annotations.mjs';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
+
+import hdriShanghaiRiverside4kHdrUrl from 'examples/assets/hdri/shanghai-riverside-4k.hdr?url';
+import modelsJetFighterGlbUrl from 'examples/assets/models/jet-fighter.glb?url';
+import wasmBasisBasisJsUrl from 'examples/assets/wasm/basis/basis.js?url';
+import wasmBasisBasisWasmJsUrl from 'examples/assets/wasm/basis/basis.wasm.js?url';
+import wasmBasisBasisWasmWasmUrl from 'examples/assets/wasm/basis/basis.wasm.wasm?url';
+import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
+import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
+import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // Set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: wasmDracoDracoWasmJsUrl,
+    wasmUrl: wasmDracoDracoWasmWasmUrl,
+    fallbackUrl: wasmDracoDracoJsUrl
 });
 
 // Initialize basis to allow loading of compressed textures
 pc.basisInitialize({
-    glueUrl: `${rootPath}/static/lib/basis/basis.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/basis/basis.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/basis/basis.js`
+    glueUrl: wasmBasisBasisWasmJsUrl,
+    wasmUrl: wasmBasisBasisWasmWasmUrl,
+    fallbackUrl: wasmBasisBasisJsUrl
 });
 
 const assets = {
-    jetFighter: new pc.Asset('jet-fighter', 'container', { url: `${rootPath}/static/assets/models/jet-fighter.glb` }),
+    jetFighter: new pc.Asset('jet-fighter', 'container', { url: modelsJetFighterGlbUrl }),
     shanghai: new pc.Asset(
         'shanghai',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/shanghai-riverside-4k.hdr` },
+        { url: hdriShanghaiRiverside4kHdrUrl },
         { mipmaps: false }
     )
 };

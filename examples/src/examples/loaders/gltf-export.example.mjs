@@ -1,6 +1,20 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsBenchWooden01GlbUrl from 'examples/assets/models/bench_wooden_01.glb?url';
+import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
+import modelsBoomBoxGlbUrl from 'examples/assets/models/boom-box.glb?url';
+import modelsChessBoardGlbUrl from 'examples/assets/models/chess-board.glb?url';
+import texturesSeasideRocks01ColorBasisUrl from 'examples/assets/textures/seaside-rocks01-color.basis?url';
+import texturesTransparentPngUrl from 'examples/assets/textures/transparent.png?url';
+import wasmBasisBasisJsUrl from 'examples/assets/wasm/basis/basis.js?url';
+import wasmBasisBasisWasmJsUrl from 'examples/assets/wasm/basis/basis.wasm.js?url';
+import wasmBasisBasisWasmWasmUrl from 'examples/assets/wasm/basis/basis.wasm.wasm?url';
+import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
+import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
+import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -11,16 +25,16 @@ const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
 div.innerHTML = `<div style="text-align: center;">
     <a id="ar-link" rel="ar" download="scene.glb">
-        <img src="${rootPath}/static/assets/textures/transparent.png" id="button" width="200"/>
+        <img src="${texturesTransparentPngUrl}" id="button" width="200"/>
     </a>    
 </div>`;
 appInner.appendChild(div);
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: wasmDracoDracoWasmJsUrl,
+    wasmUrl: wasmDracoDracoWasmWasmUrl,
+    fallbackUrl: wasmDracoDracoJsUrl
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
@@ -28,23 +42,23 @@ await new Promise((resolve) => {
 
 // initialize basis to allow to load compressed textures
 pc.basisInitialize({
-    glueUrl: `${rootPath}/static/lib/basis/basis.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/basis/basis.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/basis/basis.js`
+    glueUrl: wasmBasisBasisWasmJsUrl,
+    wasmUrl: wasmBasisBasisWasmWasmUrl,
+    fallbackUrl: wasmBasisBasisJsUrl
 });
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset('bench', 'container', { url: `${rootPath}/static/assets/models/bench_wooden_01.glb` }),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
-    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
-    boombox: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/boom-box.glb` }),
-    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.basis` })
+    bench: new pc.Asset('bench', 'container', { url: modelsBenchWooden01GlbUrl }),
+    model: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
+    board: new pc.Asset('statue', 'container', { url: modelsChessBoardGlbUrl }),
+    boombox: new pc.Asset('statue', 'container', { url: modelsBoomBoxGlbUrl }),
+    color: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorBasisUrl })
 };
 
 const gfxOptions = {

@@ -1,7 +1,10 @@
 // @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
+import modelsTwosidedplaneGlbUrl from 'examples/assets/models/TwoSidedPlane.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,10 +13,10 @@ const assets = {
     helipad: new pc.Asset(
         'morning-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: cubemapsMorningEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/TwoSidedPlane.glb` })
+    model: new pc.Asset('model', 'container', { url: modelsTwosidedplaneGlbUrl })
 };
 
 const gfxOptions = {

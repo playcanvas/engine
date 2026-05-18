@@ -1,5 +1,9 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import animationsPlaybotPlaybotRunJsonUrl from 'examples/assets/animations/playbot/playbot-run.json?url';
+import modelsPlaybotPlaybotJsonUrl from 'examples/assets/models/playbot/playbot.json?url';
+import soundsFootstepsMp3Url from 'examples/assets/sounds/footsteps.mp3?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -50,11 +54,11 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    model: new pc.Asset('model', 'model', { url: `${rootPath}/static/assets/models/playbot/playbot.json` }),
+    model: new pc.Asset('model', 'model', { url: modelsPlaybotPlaybotJsonUrl }),
     runAnim: new pc.Asset('runAnim', 'animation', {
-        url: `${rootPath}/static/assets/animations/playbot/playbot-run.json`
+        url: animationsPlaybotPlaybotRunJsonUrl
     }),
-    gravel: new pc.Asset('gravel', 'audio', { url: `${rootPath}/static/assets/sounds/footsteps.mp3` })
+    gravel: new pc.Asset('gravel', 'audio', { url: soundsFootstepsMp3Url })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

@@ -1,12 +1,12 @@
 // @config HIDDEN
 // @config NO_MINISTATS
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { GsplatRevealRadial } from 'engine/scripts/esm/gsplat/reveal-radial.mjs';
+import { XrNavigation } from 'engine/scripts/esm/xr-navigation.mjs';
+import { XrSession } from 'engine/scripts/esm/xr-session.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
-import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
-import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

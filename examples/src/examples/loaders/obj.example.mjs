@@ -1,5 +1,8 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import parsersObjModelJsUrl from 'engine/scripts/parsers/obj-model.js?url';
+import modelsMonkeyObjUrl from 'examples/assets/models/monkey.obj?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -39,8 +42,8 @@ app.on('destroy', () => {
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-const objurl = `${rootPath}/static/assets/models/monkey.obj`;
-const scripturl = `${rootPath}/static/scripts/parsers/obj-model.js`;
+const objurl = modelsMonkeyObjUrl;
+const scripturl = parsersObjModelJsUrl;
 /** @type {pc.Entity} */
 let entity;
 app.assets.loadFromUrl(scripturl, 'script', () => {

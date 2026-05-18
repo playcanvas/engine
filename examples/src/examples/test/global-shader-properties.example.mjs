@@ -1,20 +1,26 @@
 // @config HIDDEN
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
+import modelsTerrainGlbUrl from 'examples/assets/models/terrain.glb?url';
+import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';
+
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    terrain: new pc.Asset('terrain', 'container', { url: `${rootPath}/static/assets/models/terrain.glb` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
+    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    terrain: new pc.Asset('terrain', 'container', { url: modelsTerrainGlbUrl }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: splatsBikerCompressedPlyUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: cubemapsTableMountainEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

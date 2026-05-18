@@ -10,9 +10,13 @@
 // as a fixed DOM overlay on top of the canvas instead of a 3D textured plane.
 // Click handling works identically in both modes via standard DOM events.
 //
-import { deviceType, rootPath } from 'examples/utils';
+import { BlurredPlanarReflection } from 'engine/scripts/esm/blurred-planar-reflection.mjs';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
+
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsMaterialsvariantsshoeGlbUrl from 'examples/assets/models/MaterialsVariantsShoe.glb?url';
+import texturesBackgroundShoesPngUrl from 'examples/assets/textures/background_shoes.png?url';
 
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.
@@ -119,11 +123,11 @@ const assets = {
     envatlas: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    shoe: new pc.Asset('shoe', 'container', { url: `${rootPath}/static/assets/models/MaterialsVariantsShoe.glb` }),
-    background: new pc.Asset('background', 'texture', { url: `${rootPath}/static/assets/textures/background_shoes.png` }, { srgb: true })
+    shoe: new pc.Asset('shoe', 'container', { url: modelsMaterialsvariantsshoeGlbUrl }),
+    background: new pc.Asset('background', 'texture', { url: texturesBackgroundShoesPngUrl }, { srgb: true })
 };
 
 const gfxOptions = {

@@ -1,9 +1,11 @@
 // @config DESCRIPTION Demonstrates LOD streaming combined with spherical harmonics for view-dependent effects.
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { GsplatRevealGridEruption } from 'engine/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
+
+import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -88,7 +90,7 @@ const assets = {
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: cubemapsTableMountainEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

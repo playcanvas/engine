@@ -1,25 +1,34 @@
 // @config HIDDEN
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraFlyCameraJsUrl from 'engine/scripts/camera/fly-camera.js?url';
+import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
+import texturesNormalMapPngUrl from 'examples/assets/textures/normal-map.png?url';
+import texturesPlaycanvasGreyPngUrl from 'examples/assets/textures/playcanvas-grey.png?url';
+import texturesPlaycanvasPngUrl from 'examples/assets/textures/playcanvas.png?url';
+import texturesSeasideRocks01AoJpgUrl from 'examples/assets/textures/seaside-rocks01-ao.jpg?url';
+import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
+import texturesSeasideRocks01NormalJpgUrl from 'examples/assets/textures/seaside-rocks01-normal.jpg?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    fly: new pc.Asset('fly', 'script', { url: `${rootPath}/static/scripts/camera/fly-camera.js` }),
+    fly: new pc.Asset('fly', 'script', { url: cameraFlyCameraJsUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: cubemapsMorningEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    diffuseDetail: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
-    normalDetail: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
-    ao: new pc.Asset('ao', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-ao.jpg` }),
-    aoDetail: new pc.Asset('ao', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas-grey.png` })
+    diffuse: new pc.Asset('diffuse', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }),
+    diffuseDetail: new pc.Asset('diffuse', 'texture', { url: texturesPlaycanvasPngUrl }),
+    normal: new pc.Asset('normal', 'texture', { url: texturesSeasideRocks01NormalJpgUrl }),
+    normalDetail: new pc.Asset('normal', 'texture', { url: texturesNormalMapPngUrl }),
+    ao: new pc.Asset('ao', 'texture', { url: texturesSeasideRocks01AoJpgUrl }),
+    aoDetail: new pc.Asset('ao', 'texture', { url: texturesPlaycanvasGreyPngUrl })
 };
 
 const gfxOptions = {

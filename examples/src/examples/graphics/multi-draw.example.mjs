@@ -1,7 +1,11 @@
 // @config DESCRIPTION Terrain rendering using a single draw call built from a grid of displaced planes. Each patch is a sub-draw and can be culled (hidden) dynamically.
-import { deviceType, rootPath } from 'examples/utils';
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
+import texturesTerrainCanyonDiffuseJpgUrl from 'examples/assets/textures/terrain/Canyon-Diffuse.jpg?url';
+import texturesTerrainCanyonHeightJpgUrl from 'examples/assets/textures/terrain/Canyon-Height.jpg?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,18 +14,18 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: cubemapsTableMountainEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
     height: new pc.Asset(
         'height',
         'texture',
-        { url: `${rootPath}/static/assets/textures/terrain/Canyon-Height.jpg` }
+        { url: texturesTerrainCanyonHeightJpgUrl }
     ),
     diffuse: new pc.Asset(
         'diffuse',
         'texture',
-        { url: `${rootPath}/static/assets/textures/terrain/Canyon-Diffuse.jpg` }
+        { url: texturesTerrainCanyonDiffuseJpgUrl }
     )
 };
 

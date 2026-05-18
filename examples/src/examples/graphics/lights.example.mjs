@@ -1,6 +1,16 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsXmasFacesXmasNegxPngUrl from 'examples/assets/cubemaps/xmas_faces/xmas_negx.png?url';
+import cubemapsXmasFacesXmasNegyPngUrl from 'examples/assets/cubemaps/xmas_faces/xmas_negy.png?url';
+import cubemapsXmasFacesXmasNegzPngUrl from 'examples/assets/cubemaps/xmas_faces/xmas_negz.png?url';
+import cubemapsXmasFacesXmasPosxPngUrl from 'examples/assets/cubemaps/xmas_faces/xmas_posx.png?url';
+import cubemapsXmasFacesXmasPosyPngUrl from 'examples/assets/cubemaps/xmas_faces/xmas_posy.png?url';
+import cubemapsXmasFacesXmasPoszPngUrl from 'examples/assets/cubemaps/xmas_faces/xmas_posz.png?url';
+import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
+import texturesHeartPngUrl from 'examples/assets/textures/heart.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -15,26 +25,26 @@ function createMaterial(colors) {
 }
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` }),
+    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    heart: new pc.Asset('heart', 'texture', { url: texturesHeartPngUrl }),
     xmas_negx: new pc.Asset('xmas_negx', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negx.png`
+        url: cubemapsXmasFacesXmasNegxPngUrl
     }),
     xmas_negy: new pc.Asset('xmas_negy', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negy.png`
+        url: cubemapsXmasFacesXmasNegyPngUrl
     }),
     xmas_negz: new pc.Asset('xmas_negz', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negz.png`
+        url: cubemapsXmasFacesXmasNegzPngUrl
     }),
     xmas_posx: new pc.Asset('xmas_posx', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posx.png`
+        url: cubemapsXmasFacesXmasPosxPngUrl
     }),
     xmas_posy: new pc.Asset('xmas_posy', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posy.png`
+        url: cubemapsXmasFacesXmasPosyPngUrl
     }),
     xmas_posz: new pc.Asset('xmas_posz', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posz.png`
+        url: cubemapsXmasFacesXmasPoszPngUrl
     })
 };
 

@@ -1,13 +1,18 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import modelsHeartDracoGlbUrl from 'examples/assets/models/heart_draco.glb?url';
+import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
+import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
+import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: wasmDracoDracoWasmJsUrl,
+    wasmUrl: wasmDracoDracoWasmWasmUrl,
+    fallbackUrl: wasmDracoDracoJsUrl
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
@@ -41,7 +46,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    heart: new pc.Asset('heart', 'container', { url: `${rootPath}/static/assets/models/heart_draco.glb` })
+    heart: new pc.Asset('heart', 'container', { url: modelsHeartDracoGlbUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

@@ -1,11 +1,13 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
+    font: new pc.Asset('font', 'font', { url: fontsCourierJsonUrl })
 };
 
 const gfxOptions = {

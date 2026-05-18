@@ -1,8 +1,11 @@
 // @config WEBGL_DISABLED
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import computeShaderWgsl from './compute-shader.wgsl';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsIcosahedronGlbUrl from 'examples/assets/models/icosahedron.glb?url';
+
+import computeShaderWgsl from './compute-shader.wgsl?raw';
 
 // Note: the example is based on this article:
 // https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html
@@ -12,11 +15,11 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    solid: new pc.Asset('solid', 'container', { url: `${rootPath}/static/assets/models/icosahedron.glb` }),
+    solid: new pc.Asset('solid', 'container', { url: modelsIcosahedronGlbUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

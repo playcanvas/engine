@@ -1,22 +1,29 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import animationsBitmojiIdleGlbUrl from 'examples/assets/animations/bitmoji/idle.glb?url';
+import animationsBitmojiRunGlbUrl from 'examples/assets/animations/bitmoji/run.glb?url';
+import animationsBitmojiWalkGlbUrl from 'examples/assets/animations/bitmoji/walk.glb?url';
+import animationsBitmojiWinDanceGlbUrl from 'examples/assets/animations/bitmoji/win-dance.glb?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/idle.glb` }),
-    walkAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/walk.glb` }),
-    jogAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/run.glb` }),
+    model: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: animationsBitmojiIdleGlbUrl }),
+    walkAnim: new pc.Asset('idleAnim', 'container', { url: animationsBitmojiWalkGlbUrl }),
+    jogAnim: new pc.Asset('idleAnim', 'container', { url: animationsBitmojiRunGlbUrl }),
     danceAnim: new pc.Asset('danceAnim', 'container', {
-        url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb`
+        url: animationsBitmojiWinDanceGlbUrl
     }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

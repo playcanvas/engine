@@ -1,9 +1,12 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import uiText from './text.txt';
-import uiCss from './ui.css';
-import uiHtml from './ui.html';
+import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
+import templatesMonitorJsonUrl from 'examples/assets/templates/monitor.json?url';
+
+import uiText from './text.txt?raw';
+import uiCss from './ui.css?raw';
+import uiHtml from './ui.html?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -26,8 +29,8 @@ const message = function (msg) {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` }),
-    monitor: new pc.Asset('monitor', 'template', { url: `${rootPath}/static/assets/templates/monitor.json` })
+    font: new pc.Asset('font', 'font', { url: fontsCourierJsonUrl }),
+    monitor: new pc.Asset('monitor', 'template', { url: templatesMonitorJsonUrl })
 };
 
 assets.font.id = 42;

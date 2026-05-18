@@ -1,14 +1,19 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import utilsCubemapRendererJsUrl from 'engine/scripts/utils/cubemap-renderer.js?url';
+import texturesNormalMapPngUrl from 'examples/assets/textures/normal-map.png?url';
+import videoSamplevideo1280x7201mbMp4Url from 'examples/assets/video/SampleVideo_1280x720_1mb.mp4?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script1: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    script2: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/utils/cubemap-renderer.js` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` })
+    script1: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    script2: new pc.Asset('script', 'script', { url: utilsCubemapRendererJsUrl }),
+    normal: new pc.Asset('normal', 'texture', { url: texturesNormalMapPngUrl })
 };
 
 const gfxOptions = {
@@ -145,7 +150,7 @@ assetListLoader.load(() => {
         'style',
         'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
     );
-    video.src = `${rootPath}/static/assets/video/SampleVideo_1280x720_1mb.mp4`;
+    video.src = videoSamplevideo1280x7201mbMp4Url;
     document.body.append(video);
     video.addEventListener('canplaythrough', () => {
         videoTexture.setSource(video);

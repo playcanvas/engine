@@ -1,20 +1,24 @@
 // @config DESCRIPTION Procedural mesh converted to gaussian splats. Demonstrates converting a terrain scene with animated clouds to splat representation.
+import { GsplatMesh } from 'engine/scripts/esm/gsplat/gsplat-mesh.mjs';
+import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-box.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { GsplatMesh } from 'playcanvas/scripts/esm/gsplat/gsplat-mesh.mjs';
-import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsTerrainGlbUrl from 'examples/assets/models/terrain.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    terrain: new pc.Asset('terrain', 'container', { url: `${rootPath}/static/assets/models/terrain.glb` }),
+    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    terrain: new pc.Asset('terrain', 'container', { url: modelsTerrainGlbUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

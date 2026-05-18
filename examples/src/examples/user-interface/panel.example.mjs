@@ -1,14 +1,16 @@
 // 9-scaled image rendering, using an asset from https://help.umajin.com/nine-slice-tutorial/
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import buttonGreyButtonPngUrl from 'examples/assets/button/grey_button.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     grey_button: new pc.Asset('grey_button', 'texture', {
-        url: `${rootPath}/static/assets/button/grey_button.png`
+        url: buttonGreyButtonPngUrl
     }, { srgb: true })
 };
 

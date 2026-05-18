@@ -1,16 +1,25 @@
 // @config HIDDEN
 // @config WEBGPU_DISABLED
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import jsonAreaLightLutsJsonUrl from 'examples/assets/json/area-light-luts.json?url';
+import modelsPlaycanvasCubeGlbUrl from 'examples/assets/models/playcanvas-cube.glb?url';
+import modelsRobotArmGlbUrl from 'examples/assets/models/robot-arm.glb?url';
+import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
+import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
+import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: wasmDracoDracoWasmJsUrl,
+    wasmUrl: wasmDracoDracoWasmWasmUrl,
+    fallbackUrl: wasmDracoDracoJsUrl
 });
 
 await new Promise((resolve) => {
@@ -18,16 +27,16 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
-    luts: new pc.Asset('luts', 'json', { url: `${rootPath}/static/assets/json/area-light-luts.json` }),
-    asset: new pc.Asset('asset', 'container', { url: `${rootPath}/static/assets/models/robot-arm.glb` })
+    cube: new pc.Asset('cube', 'container', { url: modelsPlaycanvasCubeGlbUrl }),
+    luts: new pc.Asset('luts', 'json', { url: jsonAreaLightLutsJsonUrl }),
+    asset: new pc.Asset('asset', 'container', { url: modelsRobotArmGlbUrl })
 };
 
 const gfxOptions = {

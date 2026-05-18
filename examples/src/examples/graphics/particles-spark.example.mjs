@@ -1,11 +1,13 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import texturesSparkPngUrl from 'examples/assets/textures/spark.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    spark: new pc.Asset('spark', 'texture', { url: `${rootPath}/static/assets/textures/spark.png` }, { srgb: true })
+    spark: new pc.Asset('spark', 'texture', { url: texturesSparkPngUrl }, { srgb: true })
 };
 
 const gfxOptions = {

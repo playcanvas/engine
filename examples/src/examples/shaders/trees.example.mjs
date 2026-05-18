@@ -1,6 +1,8 @@
 // @config DESCRIPTION <div style='color: black;'>This example shows how to override shader chunks of StandardMaterial.</div>
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import modelsLowPolyTreeGlbUrl from 'examples/assets/models/low-poly-tree.glb?url';
 
 import * as shaderChunksGlsl from './shader-chunks.glsl.mjs';
 import * as shaderChunksWgsl from './shader-chunks.wgsl.mjs';
@@ -9,7 +11,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/low-poly-tree.glb` })
+    tree: new pc.Asset('cube', 'container', { url: modelsLowPolyTreeGlbUrl })
 };
 
 const gfxOptions = {

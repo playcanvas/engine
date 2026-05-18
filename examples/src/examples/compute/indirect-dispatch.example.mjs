@@ -1,24 +1,28 @@
 // @config DESCRIPTION This example demonstrates indirect compute dispatch. A scan shader classifies tiles by detecting depth discontinuities (edges/silhouettes), then indirectly dispatches effect shaders to colorize edge (red) and smooth (blue) regions.
 // @config WEBGL_DISABLED
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import effectShaderWgsl from './effect-shader.wgsl';
-import scanShaderWgsl from './scan-shader.wgsl';
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import hdriWideStreetHdrUrl from 'examples/assets/hdri/wide-street.hdr?url';
+import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
+
+import effectShaderWgsl from './effect-shader.wgsl?raw';
+import scanShaderWgsl from './scan-shader.wgsl?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
     hdri: new pc.Asset(
         'hdri',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/wide-street.hdr` },
+        { url: hdriWideStreetHdrUrl },
         { mipmaps: false }
     ),
-    orbit: new pc.Asset('orbit', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    orbit: new pc.Asset('orbit', 'script', { url: cameraOrbitCameraJsUrl })
 };
 
 const gfxOptions = {

@@ -1,19 +1,24 @@
 // @config DESCRIPTION This example shows how to customize the final compose pass by injecting a simple pixelation post-effect. Useful if no additional render passes are needed. Changes are applied globally to all CameraFrames.
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsApartmentGlbUrl from 'examples/assets/models/apartment.glb?url';
+import modelsLoveGlbUrl from 'examples/assets/models/love.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    apartment: new pc.Asset('apartment', 'container', { url: `${rootPath}/static/assets/models/apartment.glb` }),
-    love: new pc.Asset('love', 'container', { url: `${rootPath}/static/assets/models/love.glb` }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    apartment: new pc.Asset('apartment', 'container', { url: modelsApartmentGlbUrl }),
+    love: new pc.Asset('love', 'container', { url: modelsLoveGlbUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

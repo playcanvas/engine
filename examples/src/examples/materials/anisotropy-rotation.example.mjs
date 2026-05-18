@@ -1,19 +1,23 @@
 // @config DESCRIPTION This example demonstrates anisotropy rotation. Visually, the model showcases the effects of anisotropic highlights as the light interacts with the surface.
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
+import modelsAnisotropyrotationtestGlbUrl from 'examples/assets/models/AnisotropyRotationTest.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: cubemapsMorningEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/AnisotropyRotationTest.glb` })
+    model: new pc.Asset('model', 'container', { url: modelsAnisotropyrotationtestGlbUrl })
 };
 
 const gfxOptions = {

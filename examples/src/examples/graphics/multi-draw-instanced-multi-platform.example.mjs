@@ -1,7 +1,9 @@
-import { rootPath, deviceType } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import transformInstancingVert from './transform-instancing.vert';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+
+import transformInstancingVert from './transform-instancing.vert?raw';
 
 // @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in one call. WebGL2 lacks support for firstInstance for sub-draws, so instance data lives in a data texture and is fetched in the vertex shader via base[gl_DrawID] + gl_InstanceID — portable and fast workaround.
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -11,7 +13,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

@@ -1,25 +1,30 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderGlslFrag from './shader.glsl.frag';
-import shaderGlslVert from './shader.glsl.vert';
-import shaderWgslFrag from './shader.wgsl.frag';
-import shaderWgslVert from './shader.wgsl.vert';
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsTerrainGlbUrl from 'examples/assets/models/terrain.glb?url';
+import texturesCloudsJpgUrl from 'examples/assets/textures/clouds.jpg?url';
+
+import shaderGlslFrag from './shader.glsl.frag?raw';
+import shaderGlslVert from './shader.glsl.vert?raw';
+import shaderWgslFrag from './shader.wgsl.frag?raw';
+import shaderWgslVert from './shader.wgsl.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    terrain: new pc.Asset('terrain', 'container', { url: `${rootPath}/static/assets/models/terrain.glb` }),
+    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    terrain: new pc.Asset('terrain', 'container', { url: modelsTerrainGlbUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    texture: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/clouds.jpg` })
+    texture: new pc.Asset('color', 'texture', { url: texturesCloudsJpgUrl })
 };
 
 const gfxOptions = {

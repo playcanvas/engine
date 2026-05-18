@@ -1,16 +1,18 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderGlslFrag from './shader.glsl.frag';
-import shaderGlslVert from './shader.glsl.vert';
-import shaderWgslFrag from './shader.wgsl.frag';
-import shaderWgslVert from './shader.wgsl.vert';
+import texturesPlaycanvasPngUrl from 'examples/assets/textures/playcanvas.png?url';
+
+import shaderGlslFrag from './shader.glsl.frag?raw';
+import shaderGlslVert from './shader.glsl.vert?raw';
+import shaderWgslFrag from './shader.wgsl.frag?raw';
+import shaderWgslVert from './shader.wgsl.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    playcanvas: new pc.Asset('playcanvas', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` }, { srgb: true })
+    playcanvas: new pc.Asset('playcanvas', 'texture', { url: texturesPlaycanvasPngUrl }, { srgb: true })
 };
 
 const gfxOptions = {

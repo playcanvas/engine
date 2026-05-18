@@ -1,7 +1,11 @@
 // @config DESCRIPTION <div style='color: white;'>This example demonstrates scrolling cloud shadows using a shader chunk override on StandardMaterial.</div>
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
+import modelsLowPolyTreeGlbUrl from 'examples/assets/models/low-poly-tree.glb?url';
+import texturesCloudsJpgUrl from 'examples/assets/textures/clouds.jpg?url';
 
 import * as shaderChunksGlsl from './shader-chunks.glsl.mjs';
 import * as shaderChunksWgsl from './shader-chunks.wgsl.mjs';
@@ -10,12 +14,12 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('tree', 'container', { url: `${rootPath}/static/assets/models/low-poly-tree.glb` }),
-    clouds: new pc.Asset('clouds', 'texture', { url: `${rootPath}/static/assets/textures/clouds.jpg` }),
+    tree: new pc.Asset('tree', 'container', { url: modelsLowPolyTreeGlbUrl }),
+    clouds: new pc.Asset('clouds', 'texture', { url: texturesCloudsJpgUrl }),
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: cubemapsMorningEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

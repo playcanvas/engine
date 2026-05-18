@@ -1,10 +1,14 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderGlslFrag from './shader.glsl.frag';
-import shaderGlslVert from './shader.glsl.vert';
-import shaderWgslFrag from './shader.wgsl.frag';
-import shaderWgslVert from './shader.wgsl.vert';
+import utilsPlanarRendererJsUrl from 'engine/scripts/utils/planar-renderer.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
+
+import shaderGlslFrag from './shader.glsl.frag?raw';
+import shaderGlslVert from './shader.glsl.vert?raw';
+import shaderWgslFrag from './shader.wgsl.frag?raw';
+import shaderWgslVert from './shader.wgsl.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -13,11 +17,11 @@ const assets = {
     envatlas: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/utils/planar-renderer.js` })
+    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
+    script: new pc.Asset('script', 'script', { url: utilsPlanarRendererJsUrl })
 };
 
 const gfxOptions = {

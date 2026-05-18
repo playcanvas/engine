@@ -1,21 +1,25 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderGlslFrag from './shader.glsl.frag';
-import shaderGlslVert from './shader.glsl.vert';
-import shaderWgslFrag from './shader.wgsl.frag';
-import shaderWgslVert from './shader.wgsl.vert';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import texturesNormalMapPngUrl from 'examples/assets/textures/normal-map.png?url';
+import texturesPcGrayPngUrl from 'examples/assets/textures/pc-gray.png?url';
+
+import shaderGlslFrag from './shader.glsl.frag?raw';
+import shaderGlslVert from './shader.glsl.vert?raw';
+import shaderWgslFrag from './shader.wgsl.frag?raw';
+import shaderWgslVert from './shader.wgsl.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
-    roughness: new pc.Asset('roughness', 'texture', { url: `${rootPath}/static/assets/textures/pc-gray.png` }),
+    normal: new pc.Asset('normal', 'texture', { url: texturesNormalMapPngUrl }),
+    roughness: new pc.Asset('roughness', 'texture', { url: texturesPcGrayPngUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

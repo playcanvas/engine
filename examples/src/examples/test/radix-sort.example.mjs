@@ -2,23 +2,26 @@
 // @config HIDDEN
 // @config WEBGPU_BARE_DISABLED
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import sortedGlslFrag from './sorted.glsl.frag';
-import sortedWgslFrag from './sorted.wgsl.frag';
-import unsortedGlslFrag from './unsorted.glsl.frag';
-import unsortedWgslFrag from './unsorted.wgsl.frag';
-import vertGlsl from './vert.glsl';
-import vertWgsl from './vert.wgsl';
+import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
+import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
+
+import sortedGlslFrag from './sorted.glsl.frag?raw';
+import sortedWgslFrag from './sorted.wgsl.frag?raw';
+import unsortedGlslFrag from './unsorted.glsl.frag?raw';
+import unsortedWgslFrag from './unsorted.wgsl.frag?raw';
+import vertGlsl from './vert.glsl?raw';
+import vertWgsl from './vert.wgsl?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: wasmGlslangGlslangJsUrl,
+    twgslUrl: wasmTwgslTwgslJsUrl
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

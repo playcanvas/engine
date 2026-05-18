@@ -1,11 +1,13 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import texturesHeartPngUrl from 'examples/assets/textures/heart.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` })
+    heart: new pc.Asset('heart', 'texture', { url: texturesHeartPngUrl })
 };
 
 const gfxOptions = {

@@ -1,8 +1,11 @@
 // @config DESCRIPTION This example demonstrates shader effects for gaussian splats.
+import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-box.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import splatsHotelCulptureCompressedPlyUrl from 'examples/assets/splats/hotel-culpture.compressed.ply?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -46,8 +49,8 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/hotel-culpture.compressed.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    hotel: new pc.Asset('gsplat', 'gsplat', { url: splatsHotelCulptureCompressedPlyUrl }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

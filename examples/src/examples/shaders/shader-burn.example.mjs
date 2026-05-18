@@ -1,17 +1,20 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderGlslFrag from './shader.glsl.frag';
-import shaderGlslVert from './shader.glsl.vert';
-import shaderWgslFrag from './shader.wgsl.frag';
-import shaderWgslVert from './shader.wgsl.vert';
+import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
+import texturesCloudsJpgUrl from 'examples/assets/textures/clouds.jpg?url';
+
+import shaderGlslFrag from './shader.glsl.frag?raw';
+import shaderGlslVert from './shader.glsl.vert?raw';
+import shaderWgslFrag from './shader.wgsl.frag?raw';
+import shaderWgslVert from './shader.wgsl.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
-    clouds: new pc.Asset('clouds', 'texture', { url: `${rootPath}/static/assets/textures/clouds.jpg` })
+    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
+    clouds: new pc.Asset('clouds', 'texture', { url: texturesCloudsJpgUrl })
 };
 
 const gfxOptions = {

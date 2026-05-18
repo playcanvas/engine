@@ -1,7 +1,10 @@
 // @config DESCRIPTION Shows view-dependent color effects using spherical harmonics with Gaussian Splats.
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import splatsSkullCompressedPlyUrl from 'examples/assets/splats/skull.compressed.ply?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -45,8 +48,8 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.compressed.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    skull: new pc.Asset('gsplat', 'gsplat', { url: splatsSkullCompressedPlyUrl }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

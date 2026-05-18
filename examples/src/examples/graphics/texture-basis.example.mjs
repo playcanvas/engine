@@ -1,29 +1,37 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import texturesSeasideRocks01ColorBasisUrl from 'examples/assets/textures/seaside-rocks01-color.basis?url';
+import texturesSeasideRocks01GlossBasisUrl from 'examples/assets/textures/seaside-rocks01-gloss.basis?url';
+import texturesSeasideRocks01NormalBasisUrl from 'examples/assets/textures/seaside-rocks01-normal.basis?url';
+import wasmBasisBasisJsUrl from 'examples/assets/wasm/basis/basis.js?url';
+import wasmBasisBasisWasmJsUrl from 'examples/assets/wasm/basis/basis.wasm.js?url';
+import wasmBasisBasisWasmWasmUrl from 'examples/assets/wasm/basis/basis.wasm.wasm?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // initialize basis
 pc.basisInitialize({
-    glueUrl: `${rootPath}/static/lib/basis/basis.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/basis/basis.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/basis/basis.js`
+    glueUrl: wasmBasisBasisWasmJsUrl,
+    wasmUrl: wasmBasisBasisWasmWasmUrl,
+    fallbackUrl: wasmBasisBasisJsUrl
 });
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.basis` }, { srgb: true }),
-    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.basis` }),
+    color: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorBasisUrl }, { srgb: true }),
+    gloss: new pc.Asset('gloss', 'texture', { url: texturesSeasideRocks01GlossBasisUrl }),
     normal: new pc.Asset(
         'normal',
         'texture',
-        { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.basis` },
+        { url: texturesSeasideRocks01NormalBasisUrl },
         { type: pc.TEXTURETYPE_SWIZZLEGGGR }
     ),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

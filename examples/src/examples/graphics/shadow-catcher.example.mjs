@@ -1,18 +1,22 @@
+import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import hdriStPetersSquareHdrUrl from 'examples/assets/hdri/st-peters-square.hdr?url';
+import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
     hdri_street: new pc.Asset(
         'hdri',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/st-peters-square.hdr` },
+        { url: hdriStPetersSquareHdrUrl },
         { mipmaps: false }
     )
 };

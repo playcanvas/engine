@@ -1,5 +1,9 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import texturesCheckboardPngUrl from 'examples/assets/textures/checkboard.png?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -17,11 +21,11 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: texturesCheckboardPngUrl }),
+    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
 };
 
 const gfxOptions = {

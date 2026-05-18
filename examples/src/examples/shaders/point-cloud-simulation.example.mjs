@@ -1,16 +1,19 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderFrag from './shader.frag';
-import shaderVert from './shader.vert';
+import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
+import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
+
+import shaderFrag from './shader.frag?raw';
+import shaderVert from './shader.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: wasmGlslangGlslangJsUrl,
+    twgslUrl: wasmTwgslTwgslJsUrl
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

@@ -1,13 +1,19 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import groundGlslFrag from './ground.glsl.frag';
-import groundWgslFrag from './ground.wgsl.frag';
-import shaderGlslFrag from './shader.glsl.frag';
-import shaderGlslVert from './shader.glsl.vert';
-import shaderWgslFrag from './shader.wgsl.frag';
-import shaderWgslVert from './shader.wgsl.vert';
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import texturesAerialRocks02Diff1kJpgUrl from 'examples/assets/textures/aerial_rocks_02_diff_1k.jpg?url';
+import texturesCoastSandRocks02Diff1kJpgUrl from 'examples/assets/textures/coast_sand_rocks_02_diff_1k.jpg?url';
+import texturesRockBoulderCrackedDiff1kJpgUrl from 'examples/assets/textures/rock_boulder_cracked_diff_1k.jpg?url';
+import texturesRockyTrailDiff1kJpgUrl from 'examples/assets/textures/rocky_trail_diff_1k.jpg?url';
+
+import groundGlslFrag from './ground.glsl.frag?raw';
+import groundWgslFrag from './ground.wgsl.frag?raw';
+import shaderGlslFrag from './shader.glsl.frag?raw';
+import shaderGlslVert from './shader.glsl.vert?raw';
+import shaderWgslFrag from './shader.wgsl.frag?raw';
+import shaderWgslVert from './shader.wgsl.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -52,11 +58,11 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: `${rootPath}/static/assets/textures/rocky_trail_diff_1k.jpg` }, { srgb: true }),
-    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: `${rootPath}/static/assets/textures/rock_boulder_cracked_diff_1k.jpg` }, { srgb: true }),
-    coastSand: new pc.Asset('coastSand', 'texture', { url: `${rootPath}/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg` }, { srgb: true }),
-    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: `${rootPath}/static/assets/textures/aerial_rocks_02_diff_1k.jpg` }, { srgb: true }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: texturesRockyTrailDiff1kJpgUrl }, { srgb: true }),
+    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: texturesRockBoulderCrackedDiff1kJpgUrl }, { srgb: true }),
+    coastSand: new pc.Asset('coastSand', 'texture', { url: texturesCoastSandRocks02Diff1kJpgUrl }, { srgb: true }),
+    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: texturesAerialRocks02Diff1kJpgUrl }, { srgb: true }),
+    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
 };
 
 const gfxOptions = {

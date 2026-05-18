@@ -1,10 +1,12 @@
 // @config NO_MINISTATS
 // @config DESCRIPTION Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
+import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
+import { GsplatRevealRadial } from 'engine/scripts/esm/gsplat/reveal-radial.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+
+import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
@@ -151,7 +153,7 @@ const assets = {
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: cubemapsTableMountainEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

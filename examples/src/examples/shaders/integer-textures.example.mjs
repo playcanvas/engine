@@ -1,12 +1,17 @@
 // @config DESCRIPTION <ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import renderOutputGlslFrag from './renderOutput.glsl.frag';
-import renderOutputWgslFrag from './renderOutput.wgsl.frag';
-import sandSimulationGlslFrag from './sandSimulation.glsl.frag';
-import sandSimulationWgslFrag from './sandSimulation.wgsl.frag';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
+import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
+import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
+
+import renderOutputGlslFrag from './renderOutput.glsl.frag?raw';
+import renderOutputWgslFrag from './renderOutput.wgsl.frag?raw';
+import sandSimulationGlslFrag from './sandSimulation.glsl.frag?raw';
+import sandSimulationWgslFrag from './sandSimulation.wgsl.frag?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -32,16 +37,16 @@ const TEXTURE_WIDTH = TEXTURE_HEIGHT * TEXTURE_RATIO;
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: wasmDracoDracoWasmJsUrl,
+    wasmUrl: wasmDracoDracoWasmWasmUrl,
+    fallbackUrl: wasmDracoDracoJsUrl
 });
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

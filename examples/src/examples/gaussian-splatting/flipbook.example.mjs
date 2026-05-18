@@ -1,18 +1,25 @@
 // @config DESCRIPTION This example demonstrates gsplat flipbook animation using dynamically loaded splat sequence of ply files.
 // @config NO_MINISTATS
+import { GsplatFlipbook } from 'engine/scripts/esm/gsplat/gsplat-flipbook.mjs';
+import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { GsplatFlipbook } from 'playcanvas/scripts/esm/gsplat/gsplat-flipbook.mjs';
-import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
+
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+import modelsApartmentGlbUrl from 'examples/assets/models/apartment.glb?url';
+import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
+import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
+
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
+    glslangUrl: wasmGlslangGlslangJsUrl,
+    twgslUrl: wasmTwgslTwgslJsUrl,
 
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
@@ -54,11 +61,11 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    apartment: new pc.Asset('apartment', 'container', { url: `${rootPath}/static/assets/models/apartment.glb` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    apartment: new pc.Asset('apartment', 'container', { url: modelsApartmentGlbUrl }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

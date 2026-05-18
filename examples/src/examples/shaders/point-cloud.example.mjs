@@ -1,16 +1,20 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderFrag from './shader.frag';
-import shaderVert from './shader.vert';
+import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
+import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
+import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
+
+import shaderFrag from './shader.frag?raw';
+import shaderVert from './shader.vert?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: wasmGlslangGlslangJsUrl,
+    twgslUrl: wasmTwgslTwgslJsUrl
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -26,7 +30,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
+    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

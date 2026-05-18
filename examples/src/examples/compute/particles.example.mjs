@@ -1,21 +1,24 @@
 // @config WEBGL_DISABLED
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-import shaderRenderingFragmentWgsl from './shader-rendering.fragment.wgsl';
-import shaderRenderingVertexWgsl from './shader-rendering.vertex.wgsl';
-import shaderSharedWgsl from './shader-shared.wgsl';
-import shaderSimulationWgsl from './shader-simulation.wgsl';
+import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
+import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
+
+import shaderRenderingFragmentWgsl from './shader-rendering.fragment.wgsl?raw';
+import shaderRenderingVertexWgsl from './shader-rendering.vertex.wgsl?raw';
+import shaderSharedWgsl from './shader-shared.wgsl?raw';
+import shaderSimulationWgsl from './shader-simulation.wgsl?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: cubemapsHelipadEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

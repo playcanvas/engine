@@ -1,5 +1,8 @@
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
+import modelsXrGalleryGlbUrl from 'examples/assets/models/xr_gallery.glb?url';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -57,11 +60,11 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/xr_gallery.glb` }),
+    gallery: new pc.Asset('gallery', 'container', { url: modelsXrGalleryGlbUrl }),
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: cubemapsTableMountainEnvAtlasPngUrl },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
