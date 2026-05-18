@@ -208,12 +208,17 @@ class StandardMaterialOptionsBuilder {
                             (stdMat.clearCoat > 0));
 
         const useSpecularColor = (!stdMat.useMetalness || stdMat.useMetalnessSpecularColor);
+
+        // The constant specular color / specularity factor is included whenever it differs from
+        // the multiplicative identity (white / 1), regardless of whether a map is also present.
+        // This matches the glTF KHR_materials_specular spec (specularFactor * specularTexture) and
+        // mirrors how metalness is handled below. The legacy `specularTint` / `specularityFactorTint`
+        // flags are still honored as explicit overrides.
         const specularTint = useSpecular &&
-                             (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
-                             notWhite(stdMat.specular);
+                             (stdMat.specularTint || notWhite(stdMat.specular));
 
         const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
-                                      (stdMat.specularityFactorTint || (stdMat.specularityFactor < 1 && !stdMat.specularityFactorMap));
+                                      (stdMat.specularityFactorTint || stdMat.specularityFactor !== 1);
 
         const isPackedNormalMap = texture => (texture ? (texture.format === PIXELFORMAT_DXT5 || texture.type === TEXTURETYPE_SWIZZLEGGGR) : false);
 

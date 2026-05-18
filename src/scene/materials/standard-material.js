@@ -100,8 +100,10 @@ const _tempColor = new Color();
  * @property {Color} specular The specular color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1. Defines surface reflection/specular color.
  * Affects specular intensity and tint.
- * @property {boolean} specularTint Multiply specular map and/or specular vertex color by the
- * constant specular value.
+ * @property {boolean} specularTint Force inclusion of the constant `specular` color when
+ * compositing with `specularMap` and/or specular vertex colors. Defaults to `false`. Setting
+ * this to `true` is rarely needed - the constant is automatically applied whenever `specular`
+ * differs from white. Provided as an explicit override.
  * @property {Texture|null} specularMap The specular map of the material (default is null).
  * @property {number} specularMapUv Specular map UV channel.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
@@ -114,8 +116,10 @@ const _tempColor = new Color();
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} specularityFactorTint Multiply specularity factor map and/or specular vertex color by the
- * constant specular value.
+ * @property {boolean} specularityFactorTint Force inclusion of the constant `specularityFactor`
+ * when compositing with `specularityFactorMap` and/or specularity factor vertex colors. Defaults
+ * to `false`. Setting this to `true` is rarely needed - the constant is automatically applied
+ * whenever `specularityFactor` differs from 1. Provided as an explicit override.
  * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is
  * null).
@@ -699,14 +703,21 @@ class StandardMaterial extends Material {
         this._setParameter('material_diffuse', getUniform('diffuse'));
         this._setParameter('material_aoIntensity', this.aoIntensity);
 
+        // The constant specular color / specularity factor is uploaded whenever it differs from the
+        // multiplicative identity (white / 1), so that it always composites with the corresponding
+        // map. The legacy tint flags remain as explicit overrides. This must stay in sync with
+        // StandardMaterialOptionsBuilder.
+        const specularNotWhite = this.specular.r !== 1 || this.specular.g !== 1 || this.specular.b !== 1;
+        const useSpecularConstant = !this.specularMap || this.specularTint || specularNotWhite;
+
         if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
             }
-            if (!this.specularMap || this.specularTint) {
+            if (useSpecularConstant) {
                 this._setParameter('material_specular', getUniform('specular'));
             }
-            if (!this.specularityFactorMap || this.specularityFactorTint) {
+            if (!this.specularityFactorMap || this.specularityFactorTint || this.specularityFactor !== 1) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
 
@@ -715,7 +726,7 @@ class StandardMaterial extends Material {
 
             this._setParameter('material_refractionIndex', this.refractionIndex);
         } else {
-            if (!this.specularMap || this.specularTint) {
+            if (useSpecularConstant) {
                 this._setParameter('material_specular', getUniform('specular'));
             }
         }
