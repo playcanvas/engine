@@ -15,19 +15,19 @@ npm install
 ```
 Now run the following command:
 ```
-npm run develop
+npm run dev
 ```
 Visit the url mentioned in your terminal to view the examples browser.
 
-To disable automatic browser and example reloads:
+To run without automatic browser and example reloads:
 ```
-npm run develop:no-reload
+npm run develop
 ```
 
 You can also run the examples browser with a specific version of the engine by running the following command:
 
 ```
-ENGINE_PATH=../build/playcanvas.mjs npm run develop
+ENGINE_PATH=../build/playcanvas.mjs npm run dev
 ```
 
 Where `../build/playcanvas.mjs` is the path to the ESM version of the engine.
@@ -35,7 +35,7 @@ Where `../build/playcanvas.mjs` is the path to the ESM version of the engine.
 Or directly from the source:
 
 ```
-ENGINE_PATH=../src/index.js npm run develop
+ENGINE_PATH=../src/index.js npm run dev
 ```
 
 ## HTTPS dev for mobile / XR device testing
@@ -257,12 +257,12 @@ const assets = {
 Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions use `?raw` and are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine script asset URLs use `./scripts/...`, and local `.mjs` files are imported as standard JavaScript modules.
 
 ### Testing your example
-Run `npm run develop` from the `Local examples browser development` section to serve the examples browser with Vite.
+Run `npm run dev` from the `Local examples browser development` section to serve the examples browser with Vite. Use `npm run develop` when automatic reloads should be disabled.
 
 You can view an individual iframe directly, for example [http://localhost:5555/iframe/misc_hello-world.html]().
 
 ### Debug and performance engine development
-By default, `npm run develop` serves the engine from `../src/index.js`. To test against a built ESM engine instead, pass `ENGINE_PATH`, for example `ENGINE_PATH=../build/playcanvas.mjs npm run develop`.
+By default, `npm run dev` and `npm run develop` serve the engine from `../src/index.js`. To test against a built ESM engine instead, pass `ENGINE_PATH`, for example `ENGINE_PATH=../build/playcanvas.mjs npm run dev`.
 
 ## Example Modules
 
