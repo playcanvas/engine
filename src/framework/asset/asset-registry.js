@@ -663,7 +663,7 @@ class AssetRegistry extends EventHandler {
         }
 
         const onTextureLoaded = (err, texture) => {
-            if (err) console.error(err);
+            if (err) console.error(`Failed to load material texture for "${materialAsset.name}": ${err?.message ?? err}`, err);
             textures.push(texture);
             if (textures.length === count) {
                 callback(null, textures);
