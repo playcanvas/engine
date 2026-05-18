@@ -69,7 +69,6 @@ const TEXT = 'text/plain; charset=utf-8';
 const TYPES_DIR = '../build';
 const STATIC_ROUTES = [
     { url: '/static/assets/', root: 'assets' },
-    { url: '/static/lib/', root: 'src/lib' },
     { url: '/static/scripts/', root: '../scripts' },
     { url: '/thumbnails/', root: 'thumbnails' },
     { url: '/modules/monaco-editor/min/vs/', root: 'node_modules/monaco-editor/min/vs' },

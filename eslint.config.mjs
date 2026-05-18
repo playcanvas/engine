@@ -61,7 +61,7 @@ export default [
     },
     {
         ignores: [
-            'examples/lib/*',
+            'examples/assets/wasm/*',
             'scripts/textmesh/*.min.js',
             'src/polyfill/*',
             'scripts/spine/*'

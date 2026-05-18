@@ -66,7 +66,6 @@ export const STATIC_TARGETS = [
     { src: './iframe', dest: 'dist/iframe' },
     { src: './assets', dest: 'dist/static/assets/' },
     { src: './thumbnails', dest: 'dist/thumbnails/' },
-    { src: './src/lib', dest: 'dist/static/lib/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     {
         src: './node_modules/@playcanvas/observer/dist/index.mjs',
