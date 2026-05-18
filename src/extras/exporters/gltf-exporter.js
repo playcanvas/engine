@@ -349,15 +349,19 @@ class GltfExporter extends CoreExporter {
 
     attachTexture(resources, material, destination, name, textureSemantic, json) {
         const texture = material[textureSemantic];
-        const textureTexCoord = material[`${textureSemantic}Uv`] ?? 0;
 
         if (texture) {
             const textureIndex = resources.textures.indexOf(texture);
             if (textureIndex < 0) console.warn(`Texture ${texture.name} wasn't collected.`);
             destination[name] = {
-                index: textureIndex,
-                texCoord: textureTexCoord
+                index: textureIndex
             };
+
+            // glTF defaults texCoord to 0, so only emit it when a non-default UV set is used
+            const textureTexCoord = material[`${textureSemantic}Uv`] ?? 0;
+            if (textureTexCoord !== 0) {
+                destination[name].texCoord = textureTexCoord;
+            }
 
             const scale = material[`${textureSemantic}Tiling`];
             const offset = material[`${textureSemantic}Offset`];
