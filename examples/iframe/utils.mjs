@@ -4,6 +4,9 @@ const href = window.top?.location.href ?? '';
 const params = getQueryParams(href);
 const url = new URL(href);
 const root = url.pathname.replace(/\/([^/]+\.html)?$/g, '');
+const MODULE_EXTENSION = /\.mjs$/;
+const RELATIVE_SPECIFIER = /^\.{1,2}\//;
+const IMPORT_EXPORT_SPECIFIER = /(\b(?:from|import)[ \t\r\n]*)(['"])(\.{1,2}\/[^'"\r\n]+)\2/g;
 
 /**
  * @type {string}
@@ -51,6 +54,55 @@ export async function loadES5(url) {
  * @type {string[]}
  */
 const blobUrls = [];
+const moduleUrls = new Map();
+const moduleStack = [];
+
+/**
+ * @param {string} name - The name of the current file.
+ * @param {string} specifier - The relative module specifier.
+ * @returns {string} The resolved file name.
+ */
+const resolveModuleName = (name, specifier) => {
+    const url = new URL(specifier, `https://example.local/${name}`);
+    return url.pathname.slice(1);
+};
+
+/**
+ * @param {string} name - The name of the local file.
+ * @param {string[]} [stack] - The module stack.
+ * @returns {string} The module URL.
+ */
+const createModuleUrl = (name, stack = moduleStack) => {
+    if (!MODULE_EXTENSION.test(name)) {
+        throw new Error(`Invalid module: ${name}`);
+    }
+    if (moduleUrls.has(name)) {
+        return moduleUrls.get(name);
+    }
+    if (files[name] === undefined) {
+        throw new Error(`Module not found: ${name}`);
+    }
+
+    const idx = stack.indexOf(name);
+    if (idx !== -1) {
+        throw new Error(`Circular module import: ${stack.slice(idx).concat(name).join(' -> ')}`);
+    }
+
+    const next = stack.concat(name);
+    const source = files[name].replace(IMPORT_EXPORT_SPECIFIER, (match, prefix, quote, specifier) => {
+        if (!RELATIVE_SPECIFIER.test(specifier)) {
+            return match;
+        }
+        const url = createModuleUrl(resolveModuleName(name, specifier), next);
+        return `${prefix}${quote}${url}${quote}`;
+    });
+
+    const blob = new Blob([source], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    moduleUrls.set(name, url);
+    blobUrls.push(url);
+    return url;
+};
 
 /**
  * Imports a local file as a module.
@@ -58,14 +110,8 @@ const blobUrls = [];
  * @param {string} name - The name of the local file.
  * @returns {Promise<any>} - The module exports.
  */
-export function localImport(name) {
-    if (!/\.mjs$/.test(name)) {
-        throw new Error(`Invalid module: ${name}`);
-    }
-    const blob = new Blob([files[name]], { type: 'text/javascript' });
-    const url = URL.createObjectURL(blob);
-    blobUrls.push(url);
-    return import(url);
+export function importModule(name) {
+    return import(createModuleUrl(name));
 }
 
 /**
@@ -73,6 +119,9 @@ export function localImport(name) {
  */
 export function clearImports() {
     blobUrls.forEach(URL.revokeObjectURL);
+    blobUrls.length = 0;
+    moduleUrls.clear();
+    moduleStack.length = 0;
 }
 
 /**

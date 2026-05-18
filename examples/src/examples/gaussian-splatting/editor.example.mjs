@@ -1,8 +1,12 @@
 // @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse Button - orbit </span><br>GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
 import { data } from 'examples/observer';
-import { deviceType, rootPath, localImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
+import { copyProcessor } from './copy-processor.mjs';
+import { deleteProcessor } from './delete-processor.mjs';
+import { selectionProcessor } from './selection-processor.mjs';
+import { workBufferModifier } from './workbuffer-modifier.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -49,12 +53,6 @@ const assets = {
     biker: new pc.Asset('biker', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
     apartment: new pc.Asset('apartment', 'gsplat', { url: `${rootPath}/static/assets/splats/apartment.sog` })
 };
-
-// Import shader modules
-const { workBufferModifier } = await localImport('workbuffer-modifier.mjs');
-const { selectionProcessor } = await localImport('selection-processor.mjs');
-const { deleteProcessor } = await localImport('delete-processor.mjs');
-const { copyProcessor } = await localImport('copy-processor.mjs');
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {

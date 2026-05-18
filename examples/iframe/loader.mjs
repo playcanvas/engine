@@ -1,6 +1,6 @@
 import files from 'examples/files';
 import { data, refresh } from 'examples/observer';
-import { deviceType as selectedDeviceType, updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
+import { deviceType as selectedDeviceType, updateDeviceType, fetchFile, importModule, clearImports, parseConfig, fire } from 'examples/utils';
 
 import MiniStats from './ministats.mjs';
 
@@ -195,7 +195,7 @@ class ExampleLoader {
 
         try {
             // import local file
-            const module = await localImport('example.mjs');
+            const module = await importModule('example.mjs');
             this._app = module.app;
 
             // additional destroy handler in case no app provided
