@@ -1,6 +1,7 @@
 // @config DESCRIPTION This example demonstrates anisotropy rotation. Visually, the model showcases the effects of anisotropic highlights as the light interacts with the surface.
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';

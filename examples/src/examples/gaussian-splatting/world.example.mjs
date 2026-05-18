@@ -1,8 +1,9 @@
 // @config DESCRIPTION Shows a large world scene with LOD streaming and additional moving splats.
+import * as pc from 'playcanvas';
+
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
 import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';

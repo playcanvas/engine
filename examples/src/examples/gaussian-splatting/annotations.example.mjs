@@ -1,10 +1,11 @@
 // @config DESCRIPTION Interactive 3D annotations on a gaussian splat model. Click hotspots to reveal product details with tooltips that follow the 3D positions.
+import * as pc from 'playcanvas';
+
 import { Annotation, AnnotationManager } from 'engine/scripts/esm/annotations.mjs';
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { CameraFrame } from 'engine/scripts/esm/camera-frame.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import splatsBicycleSogUrl from 'examples/assets/splats/bicycle.sog?url';
 

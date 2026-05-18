@@ -1,7 +1,8 @@
 // @config DESCRIPTION This example shows a basic usage of indirect drawing, and the compute shader changes the number of instances that are rendered.
 // @config WEBGL_DISABLED
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
 

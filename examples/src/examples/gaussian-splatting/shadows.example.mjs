@@ -1,9 +1,10 @@
 // @config HIDDEN
 // @config DESCRIPTION Demonstrates shadow catching with Gaussian Splats.
+import * as pc from 'playcanvas';
+
 import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import hdriStPetersSquareHdrUrl from 'examples/assets/hdri/st-peters-square.hdr?url';

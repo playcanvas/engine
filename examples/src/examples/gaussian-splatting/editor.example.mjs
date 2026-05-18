@@ -1,7 +1,8 @@
 // @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse Button - orbit </span><br>GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import splatsApartmentSogUrl from 'examples/assets/splats/apartment.sog?url';

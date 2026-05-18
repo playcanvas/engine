@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import spinePlaycanvasSpine38JsUrl from 'engine/scripts/spine/playcanvas-spine.3.8.js?url';
 import spineSpineboyProAtlasUrl from 'examples/assets/spine/spineboy-pro.atlas?url';

@@ -1,8 +1,9 @@
 // @config DESCRIPTION This example demonstrates shader effects for gaussian splats.
+import * as pc from 'playcanvas';
+
 import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-box.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import splatsHotelCulptureCompressedPlyUrl from 'examples/assets/splats/hotel-culpture.compressed.ply?url';

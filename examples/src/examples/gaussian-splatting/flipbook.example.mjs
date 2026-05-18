@@ -1,10 +1,11 @@
 // @config DESCRIPTION This example demonstrates gsplat flipbook animation using dynamically loaded splat sequence of ply files.
 // @config NO_MINISTATS
+import * as pc from 'playcanvas';
+
 import { GsplatFlipbook } from 'engine/scripts/esm/gsplat/gsplat-flipbook.mjs';
 import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';

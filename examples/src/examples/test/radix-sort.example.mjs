@@ -1,9 +1,10 @@
 // @config DESCRIPTION Test example for FramePassRadixSort - GPU radix sort using mipmap binary search
 // @config HIDDEN
 // @config WEBGPU_BARE_DISABLED
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
 import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';

@@ -1,8 +1,9 @@
+import * as pc from 'playcanvas';
+
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { Grid } from 'engine/scripts/esm/grid.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
 

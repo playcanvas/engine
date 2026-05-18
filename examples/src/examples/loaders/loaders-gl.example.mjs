@@ -1,6 +1,7 @@
 // @config WEBGPU_DISABLED
-import { deviceType, loadES5 } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType, loadES5 } from 'examples/utils';
 
 import modelsParkPointsDrcUrl from 'examples/assets/models/park_points.drc?url';
 import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';

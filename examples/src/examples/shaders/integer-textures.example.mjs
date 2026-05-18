@@ -1,7 +1,8 @@
 // @config DESCRIPTION <ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
 import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';

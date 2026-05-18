@@ -1,7 +1,8 @@
 // @config HIDDEN
+import * as pc from 'playcanvas';
+
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
 import modelsTwosidedplaneGlbUrl from 'examples/assets/models/TwoSidedPlane.glb?url';

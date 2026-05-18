@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
 

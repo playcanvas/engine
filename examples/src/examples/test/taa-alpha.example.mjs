@@ -2,9 +2,10 @@
 // Temporary repro: TAA + transparent clear — RT alpha should stay 0 in empty regions when correct.
 // Dev sidebar: test / taa-alpha
 
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 

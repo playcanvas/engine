@@ -1,7 +1,8 @@
 // @config HIDDEN
+import * as pc from 'playcanvas';
+
 import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

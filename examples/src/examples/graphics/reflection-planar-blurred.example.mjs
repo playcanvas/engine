@@ -1,8 +1,9 @@
+import * as pc from 'playcanvas';
+
 import { BlurredPlanarReflection } from 'engine/scripts/esm/blurred-planar-reflection.mjs';
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
 import modelsSunglasseskhronosGlbUrl from 'examples/assets/models/SunglassesKhronos.glb?url';

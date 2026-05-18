@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import buttonRedButtonAtlasPngUrl from 'examples/assets/button/red_button_atlas.png?url';
 import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';

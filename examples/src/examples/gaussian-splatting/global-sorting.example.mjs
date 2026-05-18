@@ -1,7 +1,8 @@
 // @config DESCRIPTION This example demonstrates unified gsplat rendering, where all individual gaussian splats are consistently sorted in a global order, rather than rendering splat meshes based on camera distance.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';

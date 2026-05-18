@@ -1,6 +1,7 @@
 // @config DESCRIPTION This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
 

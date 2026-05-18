@@ -1,8 +1,9 @@
 // @config HIDDEN
+import * as pc from 'playcanvas';
+
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';

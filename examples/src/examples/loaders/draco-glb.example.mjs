@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import modelsHeartDracoGlbUrl from 'examples/assets/models/heart_draco.glb?url';
 import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';

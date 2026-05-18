@@ -1,6 +1,7 @@
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import hdriWideStreetHdrUrl from 'examples/assets/hdri/wide-street.hdr?url';

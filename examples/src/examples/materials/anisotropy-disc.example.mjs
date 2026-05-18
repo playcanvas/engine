@@ -1,6 +1,7 @@
 // @config DESCRIPTION This example demonstrates anisotropy on a disc model. It showcases the rendering of anisotropic highlights and material properties.
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';

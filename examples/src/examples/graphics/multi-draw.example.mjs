@@ -1,7 +1,8 @@
 // @config DESCRIPTION Terrain rendering using a single draw call built from a grid of displaced planes. Each patch is a sub-draw and can be culled (hidden) dynamically.
+import * as pc from 'playcanvas';
+
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
 import texturesTerrainCanyonDiffuseJpgUrl from 'examples/assets/textures/terrain/Canyon-Diffuse.jpg?url';

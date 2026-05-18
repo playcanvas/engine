@@ -1,6 +1,7 @@
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import animationsBitmojiIdleEagerGlbUrl from 'examples/assets/animations/bitmoji/idle-eager.glb?url';
 import animationsBitmojiIdleGlbUrl from 'examples/assets/animations/bitmoji/idle.glb?url';

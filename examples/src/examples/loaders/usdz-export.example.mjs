@@ -1,6 +1,7 @@
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
 import modelsBenchWooden01GlbUrl from 'examples/assets/models/bench_wooden_01.glb?url';

@@ -1,7 +1,8 @@
 // @config HIDDEN
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraFlyCameraJsUrl from 'engine/scripts/camera/fly-camera.js?url';
 import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';

@@ -1,7 +1,8 @@
 // @config DESCRIPTION This example demonstrates how to use the Anim Component to animate the properties of other Components.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import texturesPlaycanvasGreyPngUrl from 'examples/assets/textures/playcanvas-grey.png?url';
 

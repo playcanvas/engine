@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import modelsTvGlbUrl from 'examples/assets/models/tv.glb?url';
 import videoSamplevideo1280x7201mbMp4Url from 'examples/assets/video/SampleVideo_1280x720_1mb.mp4?url';

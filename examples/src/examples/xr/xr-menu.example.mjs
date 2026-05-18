@@ -1,10 +1,11 @@
+import * as pc from 'playcanvas';
+
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { XrControllers } from 'engine/scripts/esm/xr-controllers.mjs';
 import { XrMenu } from 'engine/scripts/esm/xr-menu.mjs';
 import { XrNavigation } from 'engine/scripts/esm/xr-navigation.mjs';
 import { XrSession } from 'engine/scripts/esm/xr-session.mjs';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
 import fontsRobotoExtralightJsonUrl from 'examples/assets/fonts/roboto-extralight.json?url';

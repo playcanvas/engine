@@ -1,6 +1,7 @@
 // @config ENGINE performance
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import texturesNormalMapPngUrl from 'examples/assets/textures/normal-map.png?url';

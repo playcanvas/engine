@@ -1,9 +1,10 @@
 // @config DESCRIPTION Demonstrates LOD streaming combined with spherical harmonics for view-dependent effects.
+import * as pc from 'playcanvas';
+
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { GsplatRevealGridEruption } from 'engine/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
 

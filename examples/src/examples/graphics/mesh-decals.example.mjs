@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import texturesHeartPngUrl from 'examples/assets/textures/heart.png?url';
 

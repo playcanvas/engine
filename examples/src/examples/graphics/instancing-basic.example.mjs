@@ -1,6 +1,7 @@
 // @config DESCRIPTION This example shows how to use the instancing feature of a StandardMaterial to render multiple copies of a mesh.
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
 

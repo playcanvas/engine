@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cameraTrackingCameraJsUrl from 'engine/scripts/camera/tracking-camera.js?url';
 import physicsActionPhysicsResetJsUrl from 'engine/scripts/physics/action-physics-reset.js?url';

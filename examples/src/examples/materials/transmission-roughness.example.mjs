@@ -1,6 +1,7 @@
 // @config DESCRIPTION This example demonstrates the interaction between roughness and IOR in transmissive materials. Higher IOR values cause more blurriness in transmission as roughness increases, while IOR=1.0 produces sharp transmission regardless of roughness.
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';

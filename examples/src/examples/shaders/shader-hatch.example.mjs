@@ -1,7 +1,8 @@
+import * as pc from 'playcanvas';
+
 import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import animationsBitmojiWinDanceGlbUrl from 'examples/assets/animations/bitmoji/win-dance.glb?url';

@@ -1,7 +1,8 @@
 // @config HIDDEN
 // @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene using legacy (non-unified) mode.
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';

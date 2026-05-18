@@ -1,8 +1,9 @@
 // @config DESCRIPTION This example demonstrates indirect compute dispatch. A scan shader classifies tiles by detecting depth discontinuities (edges/silhouettes), then indirectly dispatches effect shaders to colorize edge (red) and smooth (blue) regions.
 // @config WEBGL_DISABLED
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import hdriWideStreetHdrUrl from 'examples/assets/hdri/wide-street.hdr?url';

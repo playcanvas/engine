@@ -1,6 +1,7 @@
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import posteffectsPosteffectBloomJsUrl from 'engine/scripts/posteffects/posteffect-bloom.js?url';
 import posteffectsPosteffectBokehJsUrl from 'engine/scripts/posteffects/posteffect-bokeh.js?url';

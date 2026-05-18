@@ -1,6 +1,7 @@
 // @config DESCRIPTION <div style='color: black;'>This example shows how to override shader chunks of StandardMaterial.</div>
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import modelsLowPolyTreeGlbUrl from 'examples/assets/models/low-poly-tree.glb?url';
 

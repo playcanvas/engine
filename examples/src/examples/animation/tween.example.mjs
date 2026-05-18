@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import animationTweenJsUrl from 'engine/scripts/animation/tween.js?url';
 import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';

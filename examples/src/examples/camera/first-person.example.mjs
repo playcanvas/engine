@@ -1,7 +1,8 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
+import * as pc from 'playcanvas';
+
 import { FirstPersonController } from 'engine/scripts/esm/first-person-controller.mjs';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
 import modelsFpsMapGlbUrl from 'examples/assets/models/fps-map.glb?url';

@@ -10,9 +10,10 @@
 // as a fixed DOM overlay on top of the canvas instead of a 3D textured plane.
 // Click handling works identically in both modes via standard DOM events.
 //
+import * as pc from 'playcanvas';
+
 import { BlurredPlanarReflection } from 'engine/scripts/esm/blurred-planar-reflection.mjs';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
 import modelsMaterialsvariantsshoeGlbUrl from 'examples/assets/models/MaterialsVariantsShoe.glb?url';

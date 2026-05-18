@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import texturesParticlesBonusPngUrl from 'examples/assets/textures/particles-bonus.png?url';
 import texturesParticlesCoinsPngUrl from 'examples/assets/textures/particles-coins.png?url';

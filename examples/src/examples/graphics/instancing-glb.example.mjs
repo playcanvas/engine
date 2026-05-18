@@ -1,6 +1,7 @@
 // @config DESCRIPTION This example demonstrates the functionality of the EXT_mesh_gpu_instancing extension, which enables GPU instancing of meshes stored in a glTF file.
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';

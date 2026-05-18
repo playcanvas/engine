@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
 import templatesMonitorJsonUrl from 'examples/assets/templates/monitor.json?url';

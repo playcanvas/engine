@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import parsersObjModelJsUrl from 'engine/scripts/parsers/obj-model.js?url';
 import modelsMonkeyObjUrl from 'examples/assets/models/monkey.obj?url';

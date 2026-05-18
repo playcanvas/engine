@@ -1,10 +1,11 @@
 // @config NO_MINISTATS
 // @config DESCRIPTION Procedural infinite weather particles rendered as Gaussian splats over a LOD-streamed scene. Particles follow the camera using a deterministic 3D grid with hash-based positioning and animation.
+import * as pc from 'playcanvas';
+
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { GsplatWeather } from 'engine/scripts/esm/gsplat/gsplat-weather.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

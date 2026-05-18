@@ -1,7 +1,8 @@
 // @config DESCRIPTION Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import modelsVrGalleryGlbUrl from 'examples/assets/models/vr-gallery.glb?url';

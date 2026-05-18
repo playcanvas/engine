@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import modelsTorusGlbUrl from 'examples/assets/models/torus.glb?url';
 import wasmAmmoAmmoJsUrl from 'examples/assets/wasm/ammo/ammo.js?url';

@@ -1,7 +1,8 @@
 // @config DESCRIPTION A static GSplatContainer with custom data format, rendered as multiple instances. Per-instance color tints are animated via shader uniforms using setParameter.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

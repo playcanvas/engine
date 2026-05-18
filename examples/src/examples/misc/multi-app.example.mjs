@@ -2,8 +2,9 @@
 // @config NO_DEVICE_SELECTOR
 // @config WEBGPU_DISABLED
 // @config WEBGL_DISABLED
-import { data } from 'examples/observer';
 import * as pc from 'playcanvas';
+
+import { data } from 'examples/observer';
 
 import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
 import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';

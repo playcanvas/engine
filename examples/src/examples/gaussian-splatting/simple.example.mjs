@@ -1,7 +1,8 @@
 // @config DESCRIPTION Basic example showing a simple Gaussian Splat with orbit camera controls.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';

@@ -1,7 +1,8 @@
 // @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in a single call. WebGPU-only: this rendering relies on per-draw baseInstance (or equivalent) which WebGL2 lacks (possible with shader workaround, not implemented here).
 // @config WEBGL_DISABLED
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
 

@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import animationsPlaybotPlaybotRunJsonUrl from 'examples/assets/animations/playbot/playbot-run.json?url';
 import modelsPlaybotPlaybotJsonUrl from 'examples/assets/models/playbot/playbot.json?url';

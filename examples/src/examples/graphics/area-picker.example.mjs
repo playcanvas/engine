@@ -1,7 +1,8 @@
 // @config DESCRIPTION Click on objects to detect world space intersection. Objects within the colored rectangles are highlighted.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
 

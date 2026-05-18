@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import posteffectsPosteffectOutlineJsUrl from 'engine/scripts/posteffects/posteffect-outline.js?url';
 import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';

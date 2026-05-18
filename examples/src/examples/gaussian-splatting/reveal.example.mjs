@@ -1,10 +1,11 @@
 // @config DESCRIPTION This example demonstrates reveal effects for gaussian splats.
+import * as pc from 'playcanvas';
+
 import { GsplatRevealGridEruption } from 'engine/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 import { GsplatRevealRadial } from 'engine/scripts/esm/gsplat/reveal-radial.mjs';
 import { GsplatRevealRain } from 'engine/scripts/esm/gsplat/reveal-rain.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import splatsHotelCulptureCompressedPlyUrl from 'examples/assets/splats/hotel-culpture.compressed.ply?url';

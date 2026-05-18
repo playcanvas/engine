@@ -1,8 +1,9 @@
 // @config HIDDEN
 // @config DESCRIPTION Simulates stereo XR rendering of Gaussian Splats with two side-by-side viewports for left and right eyes.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import splatsHotelCulptureCompressedPlyUrl from 'examples/assets/splats/hotel-culpture.compressed.ply?url';

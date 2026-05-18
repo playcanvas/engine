@@ -1,7 +1,8 @@
 // @config DESCRIPTION This example shows how to customize the final compose pass by injecting a simple pixelation post-effect. Useful if no additional render passes are needed. Changes are applied globally to all CameraFrames.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';

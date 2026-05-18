@@ -1,9 +1,10 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div><div>Snap (Hold Shift), Non-Uniform (Hold Ctrl)</div></div>
+import * as pc from 'playcanvas';
+
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { Grid } from 'engine/scripts/esm/grid.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
 

@@ -1,7 +1,8 @@
 // @config DESCRIPTION Shows view-dependent color effects using spherical harmonics with Gaussian Splats.
+import * as pc from 'playcanvas';
+
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
 import splatsSkullCompressedPlyUrl from 'examples/assets/splats/skull.compressed.ply?url';

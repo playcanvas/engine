@@ -1,9 +1,10 @@
+import * as pc from 'playcanvas';
+
 import { Annotation, AnnotationManager } from 'engine/scripts/esm/annotations.mjs';
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
-import * as pc from 'playcanvas';
 
 import hdriShanghaiRiverside4kHdrUrl from 'examples/assets/hdri/shanghai-riverside-4k.hdr?url';
 import modelsJetFighterGlbUrl from 'examples/assets/models/jet-fighter.glb?url';

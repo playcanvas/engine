@@ -1,7 +1,8 @@
 // @config DESCRIPTION A compute shader reads from a render target texture, applies edge detection and highlights edges in red.
 // @config WEBGL_DISABLED
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
 import modelsChessBoardGlbUrl from 'examples/assets/models/chess-board.glb?url';

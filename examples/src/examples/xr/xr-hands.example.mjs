@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import uiCss from './ui.css?raw';
 import uiHtml from './ui.html?raw';

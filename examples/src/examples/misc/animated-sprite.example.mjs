@@ -1,6 +1,7 @@
 // @config DESCRIPTION Animated 2D sprite using SpriteComponent. Arrow keys walk, Space jumps, Z rolls, X attacks.
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/utils';
 
 import spritesCavemanPngUrl from 'examples/assets/sprites/caveman.png?url';
 import spritesPrehistoricTilesetPngUrl from 'examples/assets/sprites/prehistoric-tileset.png?url';
