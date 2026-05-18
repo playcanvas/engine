@@ -627,6 +627,10 @@ class AppBase extends EventHandler {
             this.loader.addHandler(handler.handlerType, handler);
         });
 
+        // default to retrying failed asset loads to make apps more resilient to transient network
+        // errors
+        this.loader.enableRetry(5);
+
         // Create and register all required component systems
         componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
@@ -796,7 +800,7 @@ class AppBase extends EventHandler {
 
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
-        // configure retrying assets
+        // configure retrying assets - overrides the default set in the constructor
         if (typeof props.maxAssetRetries === 'number' && props.maxAssetRetries > 0) {
             this.loader.enableRetry(props.maxAssetRetries);
         }
