@@ -342,13 +342,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (glslangUrl && twgslUrl) {
 
             // build a full URL from a relative or absolute path
+            const baseUrl = window.document?.baseURI ?? window.location.href;
             const buildUrl = (srcPath) => {
-                return new URL(srcPath, window.location.href).toString();
+                return new URL(srcPath, baseUrl).toString();
             };
+            const twgslScriptUrl = buildUrl(twgslUrl);
+            const twgslWasmUrl = buildUrl(twgslUrl.replace('.js', '.wasm'));
+            const glslangScriptUrl = buildUrl(glslangUrl);
 
             const results = await Promise.all([
-                import(`${buildUrl(twgslUrl)}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
-                import(`${buildUrl(glslangUrl)}`).then(module => module.default())
+                import(`${twgslScriptUrl}`).then(() => twgsl(twgslWasmUrl)),
+                import(`${glslangScriptUrl}`).then(module => module.default())
             ]);
 
             this.twgsl = results[0];
