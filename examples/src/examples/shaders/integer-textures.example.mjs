@@ -1,8 +1,12 @@
 // @config DESCRIPTION <ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>
-import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import renderOutputGlslFrag from './renderOutput.glsl.frag';
+import renderOutputWgslFrag from './renderOutput.wgsl.frag';
+import sandSimulationGlslFrag from './sandSimulation.glsl.frag';
+import sandSimulationWgslFrag from './sandSimulation.wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -128,8 +132,8 @@ const sandShader = pc.ShaderUtils.createShader(device, {
     uniqueName: 'SandShader',
     attributes: { aPosition: pc.SEMANTIC_POSITION },
     vertexChunk: 'quadVS',
-    fragmentGLSL: files['sandSimulation.glsl.frag'],
-    fragmentWGSL: files['sandSimulation.wgsl.frag'],
+    fragmentGLSL: sandSimulationGlslFrag,
+    fragmentWGSL: sandSimulationWgslFrag,
     // Note that we are changing the shader output type to 'uint'
     // This means we only have to return a single integer value from the shader,
     // whereas the default is to return a vec4. This option allows you to pass
@@ -144,8 +148,8 @@ const outputShader = pc.ShaderUtils.createShader(device, {
     uniqueName: 'RenderOutputShader',
     attributes: { aPosition: pc.SEMANTIC_POSITION },
     vertexChunk: 'quadVS',
-    fragmentGLSL: files['renderOutput.glsl.frag'],
-    fragmentWGSL: files['renderOutput.wgsl.frag']
+    fragmentGLSL: renderOutputGlslFrag,
+    fragmentWGSL: renderOutputWgslFrag
     // For the output shader, we don't need to specify the output type,
     // as we are returning a vec4 by default.
 });

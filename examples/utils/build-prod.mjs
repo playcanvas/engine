@@ -45,6 +45,19 @@ const ENGINE_OUTPUT = {
     dbg: 'playcanvas.dbg.mjs',
     prf: 'playcanvas.prf.mjs'
 };
+const TEXT_LOADERS = {
+    '.frag': 'text',
+    '.vert': 'text',
+    '.wgsl': 'text',
+    '.glsl': 'text',
+    '.html': 'text',
+    '.css': 'text',
+    '.txt': 'text'
+};
+const MODULE_LOADERS = {
+    ...TEXT_LOADERS,
+    '.json': 'json'
+};
 
 /**
  * @template T
@@ -107,6 +120,7 @@ const exampleOptions = (entryPoints, external) => ({
     outExtension: {
         '.js': '.mjs'
     },
+    loader: MODULE_LOADERS,
     external,
     plugins: [
         urlExternalPlugin()

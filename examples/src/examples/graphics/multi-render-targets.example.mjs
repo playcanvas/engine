@@ -1,6 +1,8 @@
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import outputGlslFrag from './output-glsl.frag';
+import outputWgslFrag from './output-wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -143,8 +145,8 @@ assetListLoader.load(() => {
         const meshInstances = render.meshInstances;
         for (let i = 0; i < meshInstances.length; i++) {
             const material = meshInstances[i].material;
-            material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('outputPS', files['output-glsl.frag']);
-            material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('outputPS', files['output-wgsl.frag']);
+            material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('outputPS', outputGlslFrag);
+            material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('outputPS', outputWgslFrag);
             material.shaderChunksVersion = '2.8';
         }
     });

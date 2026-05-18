@@ -1,7 +1,13 @@
-import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import groundGlslFrag from './ground.glsl.frag';
+import groundWgslFrag from './ground.wgsl.frag';
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -139,10 +145,10 @@ assetListLoader.load(() => {
     // Create a new material with the new shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexGLSL: files['shader.glsl.vert'],
-        fragmentGLSL: files['shader.glsl.frag'],
-        vertexWGSL: files['shader.wgsl.vert'],
-        fragmentWGSL: files['shader.wgsl.frag'],
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: shaderGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: shaderWgslFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0,
@@ -155,10 +161,10 @@ assetListLoader.load(() => {
     // Create a another material with the new shader
     const groundMaterial = new pc.ShaderMaterial({
         uniqueName: 'MyShaderGround',
-        vertexGLSL: files['shader.glsl.vert'],
-        fragmentGLSL: files['ground.glsl.frag'],
-        vertexWGSL: files['shader.wgsl.vert'],
-        fragmentWGSL: files['ground.wgsl.frag'],
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: groundGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: groundWgslFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0,

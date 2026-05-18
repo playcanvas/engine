@@ -1,4 +1,3 @@
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -6,6 +5,9 @@ import { XrControllers } from 'playcanvas/scripts/esm/xr-controllers.mjs';
 import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
 import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
 import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
+
+import uiCss from './ui.css';
+import uiHtml from './ui.html';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -23,11 +25,11 @@ await new Promise((resolve) => {
 // create UI
 // html
 const div = document.createElement('div');
-div.innerHTML = files['ui.html'];
+div.innerHTML = uiHtml;
 document.body.appendChild(div);
 // css
 const css = document.createElement('style');
-css.innerHTML = files['ui.css'];
+css.innerHTML = uiCss;
 document.head.appendChild(css);
 
 /**

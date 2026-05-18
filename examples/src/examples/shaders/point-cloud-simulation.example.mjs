@@ -1,6 +1,8 @@
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import shaderFrag from './shader.frag';
+import shaderVert from './shader.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -86,8 +88,8 @@ mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15));
 // Create a new material with a custom shader
 const material = new pc.ShaderMaterial({
     uniqueName: 'MyShader',
-    vertexGLSL: files['shader.vert'],
-    fragmentGLSL: files['shader.frag'],
+    vertexGLSL: shaderVert,
+    fragmentGLSL: shaderFrag,
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0

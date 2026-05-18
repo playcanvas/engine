@@ -1,7 +1,11 @@
 // @config WEBGL_DISABLED
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import shaderRenderingFragmentWgsl from './shader-rendering.fragment.wgsl';
+import shaderRenderingVertexWgsl from './shader-rendering.vertex.wgsl';
+import shaderSharedWgsl from './shader-shared.wgsl';
+import shaderSimulationWgsl from './shader-simulation.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -82,7 +86,7 @@ assetListLoader.load(() => {
         new pc.Shader(device, {
             name: 'SimulationShader',
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: files['shader-shared.wgsl'] + files['shader-simulation.wgsl'],
+            cshader: shaderSharedWgsl + shaderSimulationWgsl,
 
             // format of a uniform buffer used by the compute shader
             computeUniformBufferFormats: {
@@ -208,8 +212,8 @@ assetListLoader.load(() => {
     // material to render the particles using WGSL shader as GLSL does not have access to storage buffers
     const material = new pc.ShaderMaterial({
         uniqueName: 'ParticleRenderShader',
-        vertexWGSL: files['shader-shared.wgsl'] + files['shader-rendering.vertex.wgsl'],
-        fragmentWGSL: files['shader-shared.wgsl'] + files['shader-rendering.fragment.wgsl']
+        vertexWGSL: shaderSharedWgsl + shaderRenderingVertexWgsl,
+        fragmentWGSL: shaderSharedWgsl + shaderRenderingFragmentWgsl
     });
 
     // rendering shader needs the particle storage buffer to read the particle data

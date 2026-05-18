@@ -1,9 +1,11 @@
 // @config DESCRIPTION This example demonstrates indirect compute dispatch. A scan shader classifies tiles by detecting depth discontinuities (edges/silhouettes), then indirectly dispatches effect shaders to colorize edge (red) and smooth (blue) regions.
 // @config WEBGL_DISABLED
-import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import effectShaderWgsl from './effect-shader.wgsl';
+import scanShaderWgsl from './scan-shader.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -259,7 +261,7 @@ assetListLoader.load(() => {
     const scanShader = new pc.Shader(device, {
         name: 'ScanShader',
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['scan-shader.wgsl'],
+        cshader: scanShaderWgsl,
         cdefines: shaderDefines,
 
         computeUniformBufferFormats: {
@@ -294,7 +296,7 @@ assetListLoader.load(() => {
     const effectShader = new pc.Shader(device, {
         name: 'EffectShader',
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['effect-shader.wgsl'],
+        cshader: effectShaderWgsl,
         cdefines: shaderDefines,
 
         computeUniformBufferFormats: {

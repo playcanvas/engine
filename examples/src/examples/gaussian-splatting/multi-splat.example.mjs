@@ -1,8 +1,10 @@
 // @config DESCRIPTION Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
-import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -130,8 +132,8 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
 
-    const glslVs = files['shader.glsl.vert'];
-    const wgslVs = files['shader.wgsl.vert'];
+    const glslVs = shaderGlslVert;
+    const wgslVs = shaderWgslVert;
     const sceneMat = app.scene.gsplat.material;
 
     /**

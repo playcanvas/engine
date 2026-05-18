@@ -241,16 +241,15 @@ console.log(data.get('flash'));
 
 ### Additional files
 
-Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `examples/files` module (refer to the Example Modules below).
-
-If you wish to include a file which is a module (e.g. `module.mjs`), use the `localImport` function to include it in your project: 
+Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be imported from the example using their relative file name:
 
 ```js
-import { localImport } from 'examples/utils';
-
-// use just the file name without the example name
-const data = localImport('data.mjs');
+import shaderVert from './shader.vert';
+import shaderFrag from './shader.frag';
+import data from './data.json';
 ```
+
+Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions are imported as strings. JSON files are imported as parsed values. Local `.mjs` files are imported as standard JavaScript modules.
 
 
 ### Testing your example
@@ -265,9 +264,8 @@ By default, `npm run develop` serves the engine from `../src/index.js`. To test 
 
 The example script allows you to import examples only modules that interact with the environment such as the device selector and controls. These are listed below:
 
-- `examples/files` - The real-time file contents of all files used in the example.
 - `examples/observer` - The observer object `data`.
-- `examples/utils` - Contains utilities functions such as `localImport` and `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
+- `examples/utils` - Contains utility functions such as `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
 
 ## Deployment
 

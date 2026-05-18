@@ -1,7 +1,9 @@
 // @config WEBGPU_DISABLED
-import files from 'examples/files';
 import { deviceType, loadES5, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import shaderFrag from './shader.frag';
+import shaderVert from './shader.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -71,8 +73,8 @@ async function loadModel(url) {
     // create material using the shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag'],
+        vertexGLSL: shaderVert,
+        fragmentGLSL: shaderFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aColor: pc.SEMANTIC_COLOR

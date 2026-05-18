@@ -1,7 +1,8 @@
 // @config WEBGL_DISABLED
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import computeShaderWgsl from './compute-shader.wgsl';
 
 // Note: the example is based on this article:
 // https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html
@@ -94,7 +95,7 @@ assetListLoader.load(() => {
         new pc.Shader(device, {
             name: 'ComputeShader',
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: files['compute-shader.wgsl'],
+            cshader: computeShaderWgsl,
 
             // format of a bind group, providing resources for the compute shader
             computeBindGroupFormat: new pc.BindGroupFormat(device, [

@@ -1,8 +1,9 @@
 // @config DESCRIPTION A compute shader reads from a render target texture, applies edge detection and highlights edges in red.
 // @config WEBGL_DISABLED
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import computeShaderWgsl from './compute-shader.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -163,7 +164,7 @@ assetListLoader.load(() => {
         return new pc.Shader(device, {
             name: 'EdgeDetect-Shader',
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: files['compute-shader.wgsl'],
+            cshader: computeShaderWgsl,
 
             // Format of a bind group for the compute shader
             computeBindGroupFormat: new pc.BindGroupFormat(device, [

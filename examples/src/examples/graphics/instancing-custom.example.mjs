@@ -1,7 +1,9 @@
 // @config DESCRIPTION This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import transformInstancingGlslVert from './transform-instancing.glsl.vert';
+import transformInstancingWgslVert from './transform-instancing.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -97,8 +99,8 @@ assetListLoader.load(() => {
 
     // and a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
     material.shaderChunksVersion = '2.8';
-    material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('transformInstancingVS', files['transform-instancing.glsl.vert']);
-    material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('transformInstancingVS', files['transform-instancing.wgsl.vert']);
+    material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('transformInstancingVS', transformInstancingGlslVert);
+    material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('transformInstancingVS', transformInstancingWgslVert);
 
     material.update();
 

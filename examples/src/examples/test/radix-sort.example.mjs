@@ -1,10 +1,16 @@
 // @config DESCRIPTION Test example for FramePassRadixSort - GPU radix sort using mipmap binary search
 // @config HIDDEN
 // @config WEBGPU_BARE_DISABLED
-import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import sortedGlslFrag from './sorted.glsl.frag';
+import sortedWgslFrag from './sorted.wgsl.frag';
+import unsortedGlslFrag from './unsorted.glsl.frag';
+import unsortedWgslFrag from './unsorted.wgsl.frag';
+import vertGlsl from './vert.glsl';
+import vertWgsl from './vert.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -102,10 +108,10 @@ radixSort = new pc.FramePassRadixSort(device);
 // Create unsorted visualization material
 const unsortedMaterial = new pc.ShaderMaterial({
     uniqueName: 'UnsortedVizMaterial',
-    vertexGLSL: files['vert.glsl'],
-    fragmentGLSL: files['unsorted.glsl.frag'],
-    vertexWGSL: files['vert.wgsl'],
-    fragmentWGSL: files['unsorted.wgsl.frag'],
+    vertexGLSL: vertGlsl,
+    fragmentGLSL: unsortedGlslFrag,
+    vertexWGSL: vertWgsl,
+    fragmentWGSL: unsortedWgslFrag,
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
@@ -115,10 +121,10 @@ const unsortedMaterial = new pc.ShaderMaterial({
 // Create sorted visualization material
 const sortedMaterial = new pc.ShaderMaterial({
     uniqueName: 'SortedVizMaterial',
-    vertexGLSL: files['vert.glsl'],
-    fragmentGLSL: files['sorted.glsl.frag'],
-    vertexWGSL: files['vert.wgsl'],
-    fragmentWGSL: files['sorted.wgsl.frag'],
+    vertexGLSL: vertGlsl,
+    fragmentGLSL: sortedGlslFrag,
+    vertexWGSL: vertWgsl,
+    fragmentWGSL: sortedWgslFrag,
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0

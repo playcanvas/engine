@@ -1,10 +1,12 @@
 // @config DESCRIPTION Test example for ComputeRadixSort - GPU radix sort using 4-bit compute shaders
 // @config WEBGL_DISABLED
 // @config HIDDEN
-import files from 'examples/files';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import vertWgsl from './vert.wgsl';
+import wgslFrag from './wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -231,8 +233,8 @@ updateDeviceInfo();
 // Create unsorted visualization material (WGSL only for WebGPU)
 const unsortedMaterial = new pc.ShaderMaterial({
     uniqueName: 'UnsortedVizMaterialCompute',
-    vertexWGSL: files['vert.wgsl'],
-    fragmentWGSL: files['wgsl.frag'],
+    vertexWGSL: vertWgsl,
+    fragmentWGSL: wgslFrag,
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
@@ -243,8 +245,8 @@ const unsortedMaterial = new pc.ShaderMaterial({
 // Uses same shader as unsorted but with SORTED define
 const sortedMaterial = new pc.ShaderMaterial({
     uniqueName: 'SortedVizMaterialCompute',
-    vertexWGSL: files['vert.wgsl'],
-    fragmentWGSL: files['wgsl.frag'],
+    vertexWGSL: vertWgsl,
+    fragmentWGSL: wgslFrag,
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0

@@ -1,6 +1,9 @@
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import uiText from './text.txt';
+import uiCss from './ui.css';
+import uiHtml from './ui.html';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,11 +11,11 @@ window.focus();
 // create UI
 // html
 const div = document.createElement('div');
-div.innerHTML = files['ui.html'];
+div.innerHTML = uiHtml;
 document.body.appendChild(div);
 // css
 const css = document.createElement('style');
-css.innerHTML = files['ui.css'];
+css.innerHTML = uiCss;
 document.head.appendChild(css);
 
 /**
@@ -98,7 +101,7 @@ assetListLoader.load(() => {
 
     // resize scrollable area to match its content
     const entityText = monitor.findByName('Lorem');
-    entityText.element.text = files['text.txt'];
+    entityText.element.text = uiText;
     monitor.findByName('Content').element.height = entityText.element.height + 40;
 
     // fps counter

@@ -1,7 +1,8 @@
 // @config WEBGL_DISABLED
-import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import computeShaderWgsl from './compute-shader.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -114,7 +115,7 @@ assetListLoader.load(() => {
         new pc.Shader(device, {
             name: 'ComputeShader',
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: files['compute-shader.wgsl'],
+            cshader: computeShaderWgsl,
 
             // format of a uniform buffer used by the compute shader
             computeUniformBufferFormats: {

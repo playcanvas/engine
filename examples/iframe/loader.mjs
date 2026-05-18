@@ -1,7 +1,7 @@
-import files from 'examples/files';
 import { data, refresh } from 'examples/observer';
 import { deviceType as selectedDeviceType, updateDeviceType, fetchFile, importModule, clearImports, parseConfig, fire } from 'examples/utils';
 
+import files from './files.mjs';
 import MiniStats from './ministats.mjs';
 
 /** @import { AppBase } from 'playcanvas' */
