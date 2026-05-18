@@ -4,10 +4,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
-import modelsLowPolyTreeGlbUrl from 'examples/assets/models/low-poly-tree.glb?url';
-import texturesCloudsJpgUrl from 'examples/assets/textures/clouds.jpg?url';
-
 import * as shaderChunksGlsl from './shader-chunks.glsl.mjs';
 import * as shaderChunksWgsl from './shader-chunks.wgsl.mjs';
 
@@ -15,12 +11,12 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('tree', 'container', { url: modelsLowPolyTreeGlbUrl }),
-    clouds: new pc.Asset('clouds', 'texture', { url: texturesCloudsJpgUrl }),
+    tree: new pc.Asset('tree', 'container', { url: './assets/models/low-poly-tree.glb' }),
+    clouds: new pc.Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' }),
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: cubemapsMorningEnvAtlasPngUrl },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

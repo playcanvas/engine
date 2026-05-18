@@ -2,10 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import texturesHeartPngUrl from 'examples/assets/textures/heart.png?url';
-import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
-
 import shaderGlslFrag from './shader.glsl.frag?raw';
 import shaderGlslVert from './shader.glsl.vert?raw';
 import shaderWgslFrag from './shader.wgsl.frag?raw';
@@ -19,11 +15,11 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    color: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }, { srgb: true }),
-    decal: new pc.Asset('color', 'texture', { url: texturesHeartPngUrl }, { srgb: true })
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
+    decal: new pc.Asset('color', 'texture', { url: './assets/textures/heart.png' }, { srgb: true })
 };
 
 const gfxOptions = {

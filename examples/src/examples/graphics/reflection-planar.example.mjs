@@ -2,10 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import utilsPlanarRendererJsUrl from 'engine/scripts/utils/planar-renderer.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 import shaderGlslFrag from './shader.glsl.frag?raw';
 import shaderGlslVert from './shader.glsl.vert?raw';
 import shaderWgslFrag from './shader.wgsl.frag?raw';
@@ -18,11 +14,11 @@ const assets = {
     envatlas: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
-    script: new pc.Asset('script', 'script', { url: utilsPlanarRendererJsUrl })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    script: new pc.Asset('script', 'script', { url: './scripts/utils/planar-renderer.js' })
 };
 
 const gfxOptions = {

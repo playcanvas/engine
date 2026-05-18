@@ -2,26 +2,19 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import jsonAreaLightLutsJsonUrl from 'examples/assets/json/area-light-luts.json?url';
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
-import texturesSeasideRocks01GlossJpgUrl from 'examples/assets/textures/seaside-rocks01-gloss.jpg?url';
-import texturesSeasideRocks01NormalJpgUrl from 'examples/assets/textures/seaside-rocks01-normal.jpg?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }),
-    normal: new pc.Asset('normal', 'texture', { url: texturesSeasideRocks01NormalJpgUrl }),
-    gloss: new pc.Asset('gloss', 'texture', { url: texturesSeasideRocks01GlossJpgUrl }),
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
-    luts: new pc.Asset('luts', 'json', { url: jsonAreaLightLutsJsonUrl }),
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    luts: new pc.Asset('luts', 'json', { url: './assets/json/area-light-luts.json' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

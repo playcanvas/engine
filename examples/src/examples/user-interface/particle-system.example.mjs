@@ -2,15 +2,12 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
-import texturesSparkPngUrl from 'examples/assets/textures/spark.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: fontsCourierJsonUrl }),
-    spark: new pc.Asset('spark', 'texture', { url: texturesSparkPngUrl })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' }),
+    spark: new pc.Asset('spark', 'texture', { url: './assets/textures/spark.png' })
 };
 
 const gfxOptions = {

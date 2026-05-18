@@ -11,8 +11,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 
 // Enable layoutsubtree for HTML-in-Canvas support
@@ -24,7 +22,7 @@ const assets = {
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

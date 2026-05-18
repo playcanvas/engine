@@ -2,20 +2,16 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import animationsBitmojiWalkGlbUrl from 'examples/assets/animations/bitmoji/walk.glb?url';
-import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
-import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: animationsBitmojiWalkGlbUrl }),
+    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsTableMountainEnvAtlasPngUrl },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

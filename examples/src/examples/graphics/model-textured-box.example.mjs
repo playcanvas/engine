@@ -2,13 +2,11 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import texturesCloudsJpgUrl from 'examples/assets/textures/clouds.jpg?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    clouds: new pc.Asset('clouds', 'texture', { url: texturesCloudsJpgUrl })
+    clouds: new pc.Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' })
 };
 
 const gfxOptions = {

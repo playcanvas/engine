@@ -2,8 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-
 import transformInstancingVert from './transform-instancing.vert?raw';
 
 // @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in one call. WebGL2 lacks support for firstInstance for sub-draws, so instance data lives in a data texture and is fetched in the vertex shader via base[gl_DrawID] + gl_InstanceID — portable and fast workaround.
@@ -14,7 +12,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -202,7 +200,6 @@ assetListLoader.load(() => {
     cmd.add(1, idxCounts[1], ringCounts[1], firstIndex[1], 0, firstInstance[1]);
     cmd.add(2, idxCounts[2], ringCounts[2], firstIndex[2], 0, firstInstance[2]);
     cmd.update(3);
-
 
     // draw helper lines around each ring to visualize distribution
     const linesPositions = [];

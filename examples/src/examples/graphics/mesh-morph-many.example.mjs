@@ -2,9 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsMorphStressTestGlbUrl from 'examples/assets/models/morph-stress-test.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -12,10 +9,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    morph: new pc.Asset('glb', 'container', { url: modelsMorphStressTestGlbUrl })
+    morph: new pc.Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' })
 };
 
 const gfxOptions = {

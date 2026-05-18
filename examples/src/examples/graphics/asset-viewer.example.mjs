@@ -3,32 +3,23 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
-import modelsIridescentdishwitholivesGlbUrl from 'examples/assets/models/IridescentDishWithOlives.glb?url';
-import modelsMosquitoinamberGlbUrl from 'examples/assets/models/MosquitoInAmber.glb?url';
-import modelsSheenchairGlbUrl from 'examples/assets/models/SheenChair.glb?url';
-import modelsStainedglasslampGlbUrl from 'examples/assets/models/StainedGlassLamp.glb?url';
-import texturesCheckboardPngUrl from 'examples/assets/textures/checkboard.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    dish: new pc.Asset('dish', 'container', { url: modelsIridescentdishwitholivesGlbUrl }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: modelsMosquitoinamberGlbUrl }),
-    sheen: new pc.Asset('sheen', 'container', { url: modelsSheenchairGlbUrl }),
-    lamp: new pc.Asset('lamp', 'container', { url: modelsStainedglasslampGlbUrl }),
-    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl }),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: texturesCheckboardPngUrl })
+    dish: new pc.Asset('dish', 'container', { url: './assets/models/IridescentDishWithOlives.glb' }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
+    sheen: new pc.Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
+    lamp: new pc.Asset('lamp', 'container', { url: './assets/models/StainedGlassLamp.glb' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' })
 };
 
 const gfxOptions = {

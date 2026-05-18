@@ -5,23 +5,17 @@ import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
-import modelsTerrainGlbUrl from 'examples/assets/models/terrain.glb?url';
-import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';
-
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    terrain: new pc.Asset('terrain', 'container', { url: modelsTerrainGlbUrl }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: splatsBikerCompressedPlyUrl }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    terrain: new pc.Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsTableMountainEnvAtlasPngUrl },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

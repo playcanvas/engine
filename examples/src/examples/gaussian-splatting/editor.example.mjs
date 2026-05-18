@@ -4,10 +4,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import splatsApartmentSogUrl from 'examples/assets/splats/apartment.sog?url';
-import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';
-
 import { copyProcessor } from './copy-processor.mjs';
 import { deleteProcessor } from './delete-processor.mjs';
 import { selectionProcessor } from './selection-processor.mjs';
@@ -54,9 +50,9 @@ app.on('destroy', () => {
 data.set('boxSize', 0.67);
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    biker: new pc.Asset('biker', 'gsplat', { url: splatsBikerCompressedPlyUrl }),
-    apartment: new pc.Asset('apartment', 'gsplat', { url: splatsApartmentSogUrl })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    biker: new pc.Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    apartment: new pc.Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

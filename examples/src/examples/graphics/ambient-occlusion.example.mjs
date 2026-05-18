@@ -3,32 +3,24 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import posteffectsPosteffectSsaoJsUrl from 'engine/scripts/posteffects/posteffect-ssao.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsLaboratoryGlbUrl from 'examples/assets/models/laboratory.glb?url';
-import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
-import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
-import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: wasmDracoDracoWasmJsUrl,
-    wasmUrl: wasmDracoDracoWasmWasmUrl,
-    fallbackUrl: wasmDracoDracoJsUrl
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    laboratory: new pc.Asset('statue', 'container', { url: modelsLaboratoryGlbUrl }),
-    orbit: new pc.Asset('orbit', 'script', { url: cameraOrbitCameraJsUrl }),
-    ssao: new pc.Asset('ssao', 'script', { url: posteffectsPosteffectSsaoJsUrl }),
+    laboratory: new pc.Asset('statue', 'container', { url: './assets/models/laboratory.glb' }),
+    orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    ssao: new pc.Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

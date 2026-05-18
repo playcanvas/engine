@@ -4,11 +4,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
-import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
-import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
-
 import renderOutputGlslFrag from './renderOutput.glsl.frag?raw';
 import renderOutputWgslFrag from './renderOutput.wgsl.frag?raw';
 import sandSimulationGlslFrag from './sandSimulation.glsl.frag?raw';
@@ -38,16 +33,16 @@ const TEXTURE_WIDTH = TEXTURE_HEIGHT * TEXTURE_RATIO;
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: wasmDracoDracoWasmJsUrl,
-    wasmUrl: wasmDracoDracoWasmWasmUrl,
-    fallbackUrl: wasmDracoDracoJsUrl
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

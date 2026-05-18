@@ -6,9 +6,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
-import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
-
 import sortedGlslFrag from './sorted.glsl.frag?raw';
 import sortedWgslFrag from './sorted.wgsl.frag?raw';
 import unsortedGlslFrag from './unsorted.glsl.frag?raw';
@@ -21,8 +18,8 @@ window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: wasmGlslangGlslangJsUrl,
-    twgslUrl: wasmTwgslTwgslJsUrl
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

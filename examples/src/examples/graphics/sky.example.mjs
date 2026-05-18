@@ -3,27 +3,22 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import hdriEmptyRoomHdrUrl from 'examples/assets/hdri/empty-room.hdr?url';
-import hdriWideStreetHdrUrl from 'examples/assets/hdri/wide-street.hdr?url';
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
     hdri_street: new pc.Asset(
         'hdri',
         'texture',
-        { url: hdriWideStreetHdrUrl },
+        { url: './assets/hdri/wide-street.hdr' },
         { mipmaps: false }
     ),
     hdri_room: new pc.Asset(
         'hdri',
         'texture',
-        { url: hdriEmptyRoomHdrUrl },
+        { url: './assets/hdri/empty-room.hdr' },
         { mipmaps: false }
     )
 };

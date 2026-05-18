@@ -4,14 +4,12 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import buttonGreyButtonPngUrl from 'examples/assets/button/grey_button.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     grey_button: new pc.Asset('grey_button', 'texture', {
-        url: buttonGreyButtonPngUrl
+        url: './assets/button/grey_button.png'
     }, { srgb: true })
 };
 

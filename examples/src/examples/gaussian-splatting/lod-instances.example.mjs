@@ -5,9 +5,6 @@ import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import splatsPlaybotLodMetaJsonUrl from 'examples/assets/splats/playbot/lod-meta.json?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -64,11 +61,11 @@ const GRID_SIZE = 20; // N x N grid
 const GRID_SPACING = 2; // spacing between instances in world units
 
 const assets = {
-    playbot: new pc.Asset('gsplat', 'gsplat', { url: splatsPlaybotLodMetaJsonUrl }),
+    playbot: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/playbot/lod-meta.json' }),
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

@@ -6,8 +6,6 @@ import { GsplatRevealGridEruption } from 'engine/scripts/esm/gsplat/reveal-grid-
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -91,7 +89,7 @@ const assets = {
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: cubemapsTableMountainEnvAtlasPngUrl },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

@@ -4,9 +4,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import splatsSkullCompressedPlyUrl from 'examples/assets/splats/skull.compressed.ply?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -49,8 +46,8 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    skull: new pc.Asset('gsplat', 'gsplat', { url: splatsSkullCompressedPlyUrl }),
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
+    skull: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/skull.compressed.ply' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

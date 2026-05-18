@@ -4,10 +4,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
-import splatsPlaycanvasLogoMetaJsonUrl from 'examples/assets/splats/playcanvas-logo/meta.json?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -49,12 +45,12 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    logo: new pc.Asset('gsplat', 'gsplat', { url: splatsPlaycanvasLogoMetaJsonUrl }),
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    logo: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsMorningEnvAtlasPngUrl },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

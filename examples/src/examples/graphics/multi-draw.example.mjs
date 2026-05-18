@@ -4,10 +4,6 @@ import * as pc from 'playcanvas';
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { deviceType } from 'examples/utils';
 
-import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
-import texturesTerrainCanyonDiffuseJpgUrl from 'examples/assets/textures/terrain/Canyon-Diffuse.jpg?url';
-import texturesTerrainCanyonHeightJpgUrl from 'examples/assets/textures/terrain/Canyon-Height.jpg?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -15,25 +11,24 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsTableMountainEnvAtlasPngUrl },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
     height: new pc.Asset(
         'height',
         'texture',
-        { url: texturesTerrainCanyonHeightJpgUrl }
+        { url: './assets/textures/terrain/Canyon-Height.jpg' }
     ),
     diffuse: new pc.Asset(
         'diffuse',
         'texture',
-        { url: texturesTerrainCanyonDiffuseJpgUrl }
+        { url: './assets/textures/terrain/Canyon-Diffuse.jpg' }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
-
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);

@@ -5,9 +5,6 @@ import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
-import modelsSunglasseskhronosGlbUrl from 'examples/assets/models/SunglassesKhronos.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -15,10 +12,10 @@ const assets = {
     envatlas: new pc.Asset(
         'morning-env-atlas',
         'texture',
-        { url: cubemapsMorningEnvAtlasPngUrl },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    sunglasses: new pc.Asset('sunglasses', 'container', { url: modelsSunglasseskhronosGlbUrl })
+    sunglasses: new pc.Asset('sunglasses', 'container', { url: './assets/models/SunglassesKhronos.glb' })
 };
 
 const gfxOptions = {

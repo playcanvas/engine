@@ -3,24 +3,19 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import animationsBitmojiIdleGlbUrl from 'examples/assets/animations/bitmoji/idle.glb?url';
-import animationsBitmojiWinDanceGlbUrl from 'examples/assets/animations/bitmoji/win-dance.glb?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: animationsBitmojiIdleGlbUrl }),
+    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
     danceAnim: new pc.Asset('danceAnim', 'container', {
-        url: animationsBitmojiWinDanceGlbUrl
+        url: './assets/animations/bitmoji/win-dance.glb'
     }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

@@ -3,9 +3,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsIcosahedronGlbUrl from 'examples/assets/models/icosahedron.glb?url';
-
 import computeShaderWgsl from './compute-shader.wgsl?raw';
 
 // Note: the example is based on this article:
@@ -16,11 +13,11 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    solid: new pc.Asset('solid', 'container', { url: modelsIcosahedronGlbUrl }),
+    solid: new pc.Asset('solid', 'container', { url: './assets/models/icosahedron.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

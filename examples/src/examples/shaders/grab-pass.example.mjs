@@ -2,10 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import texturesNormalMapPngUrl from 'examples/assets/textures/normal-map.png?url';
-import texturesPcGrayPngUrl from 'examples/assets/textures/pc-gray.png?url';
-
 import shaderGlslFrag from './shader.glsl.frag?raw';
 import shaderGlslVert from './shader.glsl.vert?raw';
 import shaderWgslFrag from './shader.wgsl.frag?raw';
@@ -15,12 +11,12 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    normal: new pc.Asset('normal', 'texture', { url: texturesNormalMapPngUrl }),
-    roughness: new pc.Asset('roughness', 'texture', { url: texturesPcGrayPngUrl }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
+    roughness: new pc.Asset('roughness', 'texture', { url: './assets/textures/pc-gray.png' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

@@ -146,7 +146,7 @@ class ExampleLoader {
          */
         const unorderedFiles = {};
         await Promise.all(this._fileNames.map(async (name) => {
-            unorderedFiles[name] = await fetchFile(`./${this._name}.${name}${suffix}`);
+            unorderedFiles[name] = await fetchFile(`../iframe/${this._name}.${name}${suffix}`);
         }));
         this._clearFiles();
         for (const name of Object.keys(unorderedFiles).sort()) {
@@ -205,13 +205,11 @@ class ExampleLoader {
         } catch (e) {
             console.error(e);
             const locations = this._parseErrorLocations(e.stack);
-            window.top?.dispatchEvent(new CustomEvent('exampleError', {
-                detail: {
-                    name: e.constructor.name,
-                    message: e.message,
-                    locations
-                }
-            }));
+            fire('exampleError', {
+                name: e.constructor.name,
+                message: e.message,
+                locations
+            });
 
             this._allowRestart = true;
             return;
@@ -267,7 +265,7 @@ class ExampleLoader {
             console.warn('Dropping restart while still restarting');
             return;
         }
-        window.top?.dispatchEvent(new CustomEvent('exampleHotReload'));
+        fire('exampleHotReload');
         this.destroy();
         this.load();
     }

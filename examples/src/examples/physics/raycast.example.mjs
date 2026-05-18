@@ -2,25 +2,20 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
-import wasmAmmoAmmoJsUrl from 'examples/assets/wasm/ammo/ammo.js?url';
-import wasmAmmoAmmoWasmJsUrl from 'examples/assets/wasm/ammo/ammo.wasm.js?url';
-import wasmAmmoAmmoWasmWasmUrl from 'examples/assets/wasm/ammo/ammo.wasm.wasm?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: wasmAmmoAmmoWasmJsUrl,
-    wasmUrl: wasmAmmoAmmoWasmWasmUrl,
-    fallbackUrl: wasmAmmoAmmoJsUrl
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' })
 };
 
 const gfxOptions = {

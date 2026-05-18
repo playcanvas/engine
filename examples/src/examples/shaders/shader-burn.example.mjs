@@ -2,9 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-import texturesCloudsJpgUrl from 'examples/assets/textures/clouds.jpg?url';
-
 import shaderGlslFrag from './shader.glsl.frag?raw';
 import shaderGlslVert from './shader.glsl.vert?raw';
 import shaderWgslFrag from './shader.wgsl.frag?raw';
@@ -14,8 +11,8 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
-    clouds: new pc.Asset('clouds', 'texture', { url: texturesCloudsJpgUrl })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    clouds: new pc.Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' })
 };
 
 const gfxOptions = {

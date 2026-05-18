@@ -3,18 +3,15 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import spritesCavemanPngUrl from 'examples/assets/sprites/caveman.png?url';
-import spritesPrehistoricTilesetPngUrl from 'examples/assets/sprites/prehistoric-tileset.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     caveman: new pc.Asset('caveman', 'texture', {
-        url: spritesCavemanPngUrl
+        url: './assets/sprites/caveman.png'
     }, { srgb: true }),
     tileset: new pc.Asset('tileset', 'texture', {
-        url: spritesPrehistoricTilesetPngUrl
+        url: './assets/sprites/prehistoric-tileset.png'
     }, { srgb: true })
 };
 

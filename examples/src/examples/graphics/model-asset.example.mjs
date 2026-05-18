@@ -2,13 +2,11 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const gfxOptions = {

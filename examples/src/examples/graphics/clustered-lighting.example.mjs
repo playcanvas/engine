@@ -3,15 +3,12 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import texturesNormalMapPngUrl from 'examples/assets/textures/normal-map.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    normal: new pc.Asset('normal', 'texture', { url: texturesNormalMapPngUrl })
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' })
 };
 
 const gfxOptions = {

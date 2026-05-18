@@ -2,8 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 import shaderGlslFrag from './shader.glsl.frag?raw';
 import shaderGlslVert from './shader.glsl.vert?raw';
 import shaderWgslFrag from './shader.wgsl.frag?raw';
@@ -13,7 +11,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const gfxOptions = {

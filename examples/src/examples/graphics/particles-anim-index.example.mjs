@@ -2,14 +2,12 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import texturesParticlesNumbersPngUrl from 'examples/assets/textures/particles-numbers.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     particlesNumbers: new pc.Asset('particlesNumbers', 'texture', {
-        url: texturesParticlesNumbersPngUrl
+        url: './assets/textures/particles-numbers.png'
     }, { srgb: true })
 };
 

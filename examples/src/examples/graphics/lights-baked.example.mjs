@@ -3,13 +3,11 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {

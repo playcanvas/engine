@@ -5,9 +5,6 @@ import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-b
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import splatsHotelCulptureCompressedPlyUrl from 'examples/assets/splats/hotel-culpture.compressed.ply?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -50,8 +47,8 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new pc.Asset('gsplat', 'gsplat', { url: splatsHotelCulptureCompressedPlyUrl }),
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
+    hotel: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

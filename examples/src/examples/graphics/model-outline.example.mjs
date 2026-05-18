@@ -2,20 +2,16 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import posteffectsPosteffectOutlineJsUrl from 'engine/scripts/posteffects/posteffect-outline.js?url';
-import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
-import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    outline: new pc.Asset('outline', 'script', { url: posteffectsPosteffectOutlineJsUrl })
+    outline: new pc.Asset('outline', 'script', { url: './scripts/posteffects/posteffect-outline.js' })
 };
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: wasmGlslangGlslangJsUrl,
-    twgslUrl: wasmTwgslTwgslJsUrl
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);

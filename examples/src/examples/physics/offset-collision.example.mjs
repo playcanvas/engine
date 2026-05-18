@@ -2,32 +2,25 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import animationsBitmojiIdleGlbUrl from 'examples/assets/animations/bitmoji/idle.glb?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
-import wasmAmmoAmmoJsUrl from 'examples/assets/wasm/ammo/ammo.js?url';
-import wasmAmmoAmmoWasmJsUrl from 'examples/assets/wasm/ammo/ammo.wasm.js?url';
-import wasmAmmoAmmoWasmWasmUrl from 'examples/assets/wasm/ammo/ammo.wasm.wasm?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: wasmAmmoAmmoWasmJsUrl,
-    wasmUrl: wasmAmmoAmmoWasmWasmUrl,
-    fallbackUrl: wasmAmmoAmmoJsUrl
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: animationsBitmojiIdleGlbUrl }),
+    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

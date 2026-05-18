@@ -5,11 +5,6 @@
 // @config DESCRIPTION Benchmarks GSplat rendering across WebGL2 and WebGPU with different renderer modes and splat counts.
 import * as pc from 'playcanvas';
 
-import splatsBicycleSogUrl from 'examples/assets/splats/bicycle.sog?url';
-import splatsPlaycanvasLogoMetaJsonUrl from 'examples/assets/splats/playcanvas-logo/meta.json?url';
-import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
-import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
-
 const WARMUP_FRAMES = 10;
 const MEASURE_FRAMES = 60;
 
@@ -536,8 +531,8 @@ async function createDevice(canvas, deviceType) {
     if (deviceType === 'webgpu') {
         const device = new pc.WebgpuGraphicsDevice(canvas, opts);
         await device.initWebGpu(
-            wasmGlslangGlslangJsUrl,
-            wasmTwgslTwgslJsUrl
+            './assets/wasm/glslang/glslang.js',
+            './assets/wasm/twgsl/twgsl.js'
         );
         return device;
     }
@@ -741,10 +736,10 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     }
 
     const bicycleAsset = new pc.Asset('bicycle', 'gsplat', {
-        url: splatsBicycleSogUrl
+        url: './assets/splats/bicycle.sog'
     });
     const logoAsset = new pc.Asset('logo', 'gsplat', {
-        url: splatsPlaycanvasLogoMetaJsonUrl
+        url: './assets/splats/playcanvas-logo/meta.json'
     });
     const churchAsset = new pc.Asset('church', 'gsplat', {
         url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json'

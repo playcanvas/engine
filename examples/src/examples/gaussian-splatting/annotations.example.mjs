@@ -7,8 +7,6 @@ import { CameraFrame } from 'engine/scripts/esm/camera-frame.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import splatsBicycleSogUrl from 'examples/assets/splats/bicycle.sog?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -79,7 +77,7 @@ camera.script.create(CameraFrame, {
 app.root.addChild(camera);
 
 const assets = {
-    bicycle: new pc.Asset('gsplat', 'gsplat', { url: splatsBicycleSogUrl })
+    bicycle: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

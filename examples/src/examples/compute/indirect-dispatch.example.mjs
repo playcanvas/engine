@@ -5,10 +5,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import hdriWideStreetHdrUrl from 'examples/assets/hdri/wide-street.hdr?url';
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 import effectShaderWgsl from './effect-shader.wgsl?raw';
 import scanShaderWgsl from './scan-shader.wgsl?raw';
 
@@ -16,14 +12,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
     hdri: new pc.Asset(
         'hdri',
         'texture',
-        { url: hdriWideStreetHdrUrl },
+        { url: './assets/hdri/wide-street.hdr' },
         { mipmaps: false }
     ),
-    orbit: new pc.Asset('orbit', 'script', { url: cameraOrbitCameraJsUrl })
+    orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {

@@ -3,9 +3,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-
 import shaderRenderingFragmentWgsl from './shader-rendering.fragment.wgsl?raw';
 import shaderRenderingVertexWgsl from './shader-rendering.vertex.wgsl?raw';
 import shaderSharedWgsl from './shader-shared.wgsl?raw';
@@ -15,11 +12,11 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

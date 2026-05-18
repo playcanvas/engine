@@ -6,10 +6,6 @@ import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import hdriStPetersSquareHdrUrl from 'examples/assets/hdri/st-peters-square.hdr?url';
-import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -52,14 +48,14 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    biker: new pc.Asset('gsplat', 'gsplat', { url: splatsBikerCompressedPlyUrl }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
     hdri: new pc.Asset(
         'hdri',
         'texture',
-        { url: hdriStPetersSquareHdrUrl },
+        { url: './assets/hdri/st-peters-square.hdr' },
         { mipmaps: false }
     ),
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

@@ -2,17 +2,14 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import animationTweenJsUrl from 'engine/scripts/animation/tween.js?url';
-import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl }),
-    script: new pc.Asset('script', 'script', { url: animationTweenJsUrl })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    script: new pc.Asset('script', 'script', { url: './scripts/animation/tween.js' })
 };
 
 const gfxOptions = {

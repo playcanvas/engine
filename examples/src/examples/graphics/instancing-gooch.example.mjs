@@ -4,24 +4,19 @@ import * as pc from 'playcanvas';
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
 import { deviceType } from 'examples/utils';
 
-import animationsBitmojiWinDanceGlbUrl from 'examples/assets/animations/bitmoji/win-dance.glb?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
-import modelsLowPolyTreeGlbUrl from 'examples/assets/models/low-poly-tree.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('cube', 'container', { url: modelsLowPolyTreeGlbUrl }),
+    tree: new pc.Asset('cube', 'container', { url: './assets/models/low-poly-tree.glb' }),
 
-    bitmoji: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
-    danceAnim: new pc.Asset('walkAnim', 'container', { url: animationsBitmojiWinDanceGlbUrl }),
+    bitmoji: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    danceAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
 
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -159,7 +154,6 @@ assetListLoader.load(() => {
     bitmojiEntity.addComponent('anim', { activate: true });
     const walkTrack = assets.danceAnim.resource.animations[0].resource;
     bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
-
 
     // Set an update function on the app's update event
     let time = 0;

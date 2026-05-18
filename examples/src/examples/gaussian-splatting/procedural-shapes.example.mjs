@@ -9,10 +9,6 @@ import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-b
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import splatsBicycleSogUrl from 'examples/assets/splats/bicycle.sog?url';
-import texturesColorsWebpUrl from 'examples/assets/textures/colors.webp?url';
-import texturesGearPngUrl from 'examples/assets/textures/gear.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -72,9 +68,9 @@ camera.script.create(CameraControls, {
 app.root.addChild(camera);
 
 const assets = {
-    bicycle: new pc.Asset('gsplat', 'gsplat', { url: splatsBicycleSogUrl }),
-    groundTexture: new pc.Asset('ground', 'texture', { url: texturesColorsWebpUrl }),
-    gearTexture: new pc.Asset('gear', 'texture', { url: texturesGearPngUrl })
+    bicycle: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' }),
+    groundTexture: new pc.Asset('ground', 'texture', { url: './assets/textures/colors.webp' }),
+    gearTexture: new pc.Asset('gear', 'texture', { url: './assets/textures/gear.png' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

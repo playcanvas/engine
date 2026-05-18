@@ -3,22 +3,18 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsIcosahedronGlbUrl from 'examples/assets/models/icosahedron.glb?url';
-import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
-
 import computeShaderWgsl from './compute-shader.wgsl?raw';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    texture: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }),
-    solid: new pc.Asset('solid', 'container', { url: modelsIcosahedronGlbUrl }),
+    texture: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    solid: new pc.Asset('solid', 'container', { url: './assets/models/icosahedron.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

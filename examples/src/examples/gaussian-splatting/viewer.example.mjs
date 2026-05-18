@@ -3,9 +3,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import hdriWideStreetHdrUrl from 'examples/assets/hdri/wide-street.hdr?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -80,11 +77,11 @@ app.on('destroy', () => {
 
 // Load orbit camera script and HDRI
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     hdri: new pc.Asset(
         'hdri',
         'texture',
-        { url: hdriWideStreetHdrUrl },
+        { url: './assets/hdri/wide-street.hdr' },
         { mipmaps: false }
     )
 };

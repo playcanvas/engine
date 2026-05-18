@@ -2,9 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -12,10 +9,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' })
 };
 
 const gfxOptions = {

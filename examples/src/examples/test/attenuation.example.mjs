@@ -3,22 +3,18 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
-import modelsAttenuationtestGlbUrl from 'examples/assets/models/AttenuationTest.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsMorningEnvAtlasPngUrl },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: modelsAttenuationtestGlbUrl })
+    model: new pc.Asset('model', 'container', { url: './assets/models/AttenuationTest.glb' })
 };
 
 const gfxOptions = {

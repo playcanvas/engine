@@ -2,8 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import modelsGeometryCameraLightGlbUrl from 'examples/assets/models/geometry-camera-light.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -11,7 +9,7 @@ window.focus();
 // lights and cameras, and switches between the cameras every 2 seconds.
 
 const assets = {
-    scene: new pc.Asset('scene', 'container', { url: modelsGeometryCameraLightGlbUrl })
+    scene: new pc.Asset('scene', 'container', { url: './assets/models/geometry-camera-light.glb' })
 };
 
 const gfxOptions = {

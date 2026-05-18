@@ -2,20 +2,16 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsDispersionTestGlbUrl from 'examples/assets/models/dispersion-test.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    model: new pc.Asset('cube', 'container', { url: modelsDispersionTestGlbUrl }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    model: new pc.Asset('cube', 'container', { url: './assets/models/dispersion-test.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

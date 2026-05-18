@@ -3,8 +3,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import modelsLowPolyTreeGlbUrl from 'examples/assets/models/low-poly-tree.glb?url';
-
 import * as shaderChunksGlsl from './shader-chunks.glsl.mjs';
 import * as shaderChunksWgsl from './shader-chunks.wgsl.mjs';
 
@@ -12,7 +10,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('cube', 'container', { url: modelsLowPolyTreeGlbUrl })
+    tree: new pc.Asset('cube', 'container', { url: './assets/models/low-poly-tree.glb' })
 };
 
 const gfxOptions = {

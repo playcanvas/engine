@@ -2,8 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import modelsVrControllerGlbUrl from 'examples/assets/models/vr-controller.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -61,7 +59,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    glb: new pc.Asset('glb', 'container', { url: modelsVrControllerGlbUrl })
+    glb: new pc.Asset('glb', 'container', { url: './assets/models/vr-controller.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

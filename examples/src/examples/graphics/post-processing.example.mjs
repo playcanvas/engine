@@ -3,34 +3,25 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
-import modelsMosquitoinamberGlbUrl from 'examples/assets/models/MosquitoInAmber.glb?url';
-import modelsScifiPlatformGlbUrl from 'examples/assets/models/scifi-platform.glb?url';
-import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
-import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
-import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: wasmDracoDracoWasmJsUrl,
-    wasmUrl: wasmDracoDracoWasmWasmUrl,
-    fallbackUrl: wasmDracoDracoJsUrl
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    platform: new pc.Asset('statue', 'container', { url: modelsScifiPlatformGlbUrl }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: modelsMosquitoinamberGlbUrl }),
-    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    platform: new pc.Asset('statue', 'container', { url: './assets/models/scifi-platform.glb' }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

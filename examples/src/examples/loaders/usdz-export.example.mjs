@@ -3,10 +3,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsBenchWooden01GlbUrl from 'examples/assets/models/bench_wooden_01.glb?url';
-import texturesTransparentPngUrl from 'examples/assets/textures/transparent.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -16,7 +12,7 @@ const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
 div.innerHTML = `<div style="text-align: center;">
     <a id="ar-link" rel="ar" download="bench.usdz">
-        <img src="${texturesTransparentPngUrl}" id="button" width="200"/>
+        <img src="${'./assets/textures/transparent.png'}" id="button" width="200"/>
     </a>    
 </div>`;
 appInner.appendChild(div);
@@ -25,10 +21,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset('bench', 'container', { url: modelsBenchWooden01GlbUrl })
+    bench: new pc.Asset('bench', 'container', { url: './assets/models/bench_wooden_01.glb' })
 };
 
 const gfxOptions = {

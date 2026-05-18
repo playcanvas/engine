@@ -6,38 +6,29 @@ import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import hdriShanghaiRiverside4kHdrUrl from 'examples/assets/hdri/shanghai-riverside-4k.hdr?url';
-import modelsJetFighterGlbUrl from 'examples/assets/models/jet-fighter.glb?url';
-import wasmBasisBasisJsUrl from 'examples/assets/wasm/basis/basis.js?url';
-import wasmBasisBasisWasmJsUrl from 'examples/assets/wasm/basis/basis.wasm.js?url';
-import wasmBasisBasisWasmWasmUrl from 'examples/assets/wasm/basis/basis.wasm.wasm?url';
-import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
-import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
-import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // Set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: wasmDracoDracoWasmJsUrl,
-    wasmUrl: wasmDracoDracoWasmWasmUrl,
-    fallbackUrl: wasmDracoDracoJsUrl
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 // Initialize basis to allow loading of compressed textures
 pc.basisInitialize({
-    glueUrl: wasmBasisBasisWasmJsUrl,
-    wasmUrl: wasmBasisBasisWasmWasmUrl,
-    fallbackUrl: wasmBasisBasisJsUrl
+    glueUrl: './assets/wasm/basis/basis.wasm.js',
+    wasmUrl: './assets/wasm/basis/basis.wasm.wasm',
+    fallbackUrl: './assets/wasm/basis/basis.js'
 });
 
 const assets = {
-    jetFighter: new pc.Asset('jet-fighter', 'container', { url: modelsJetFighterGlbUrl }),
+    jetFighter: new pc.Asset('jet-fighter', 'container', { url: './assets/models/jet-fighter.glb' }),
     shanghai: new pc.Asset(
         'shanghai',
         'texture',
-        { url: hdriShanghaiRiverside4kHdrUrl },
+        { url: './assets/hdri/shanghai-riverside-4k.hdr' },
         { mipmaps: false }
     )
 };

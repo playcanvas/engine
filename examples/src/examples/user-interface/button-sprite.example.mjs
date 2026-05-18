@@ -2,16 +2,13 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import buttonRedButtonAtlasPngUrl from 'examples/assets/button/red_button_atlas.png?url';
-import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: fontsCourierJsonUrl }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' }),
     red_button_atlas: new pc.Asset('red_button_atlas', 'texture', {
-        url: buttonRedButtonAtlasPngUrl
+        url: './assets/button/red_button_atlas.png'
     }, { srgb: true })
 };
 
@@ -21,7 +18,6 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;

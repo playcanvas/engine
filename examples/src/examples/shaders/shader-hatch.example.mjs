@@ -4,47 +4,31 @@ import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import animationsBitmojiWinDanceGlbUrl from 'examples/assets/animations/bitmoji/win-dance.glb?url';
-import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
-import modelsChessBoardGlbUrl from 'examples/assets/models/chess-board.glb?url';
-import modelsMorphStressTestGlbUrl from 'examples/assets/models/morph-stress-test.glb?url';
-import texturesHatch0JpgUrl from 'examples/assets/textures/hatch-0.jpg?url';
-import texturesHatch1JpgUrl from 'examples/assets/textures/hatch-1.jpg?url';
-import texturesHatch2JpgUrl from 'examples/assets/textures/hatch-2.jpg?url';
-import texturesHatch3JpgUrl from 'examples/assets/textures/hatch-3.jpg?url';
-import texturesHatch4JpgUrl from 'examples/assets/textures/hatch-4.jpg?url';
-import texturesHatch5JpgUrl from 'examples/assets/textures/hatch-5.jpg?url';
-import wasmDracoDracoJsUrl from 'examples/assets/wasm/draco/draco.js?url';
-import wasmDracoDracoWasmJsUrl from 'examples/assets/wasm/draco/draco.wasm.js?url';
-import wasmDracoDracoWasmWasmUrl from 'examples/assets/wasm/draco/draco.wasm.wasm?url';
-
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: wasmDracoDracoWasmJsUrl,
-    wasmUrl: wasmDracoDracoWasmWasmUrl,
-    fallbackUrl: wasmDracoDracoJsUrl
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    board: new pc.Asset('board', 'container', { url: modelsChessBoardGlbUrl }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    board: new pc.Asset('board', 'container', { url: './assets/models/chess-board.glb' }),
 
-    bitmoji: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
-    danceAnim: new pc.Asset('walkAnim', 'container', { url: animationsBitmojiWinDanceGlbUrl }),
-    morph: new pc.Asset('glb', 'container', { url: modelsMorphStressTestGlbUrl }),
+    bitmoji: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    danceAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
+    morph: new pc.Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' }),
 
     // hatch textures, sorted from light to dark
-    hatch0: new pc.Asset('hatch0', 'texture', { url: texturesHatch0JpgUrl }, { srgb: true }),
-    hatch1: new pc.Asset('hatch1', 'texture', { url: texturesHatch1JpgUrl }, { srgb: true }),
-    hatch2: new pc.Asset('hatch2', 'texture', { url: texturesHatch2JpgUrl }, { srgb: true }),
-    hatch3: new pc.Asset('hatch3', 'texture', { url: texturesHatch3JpgUrl }, { srgb: true }),
-    hatch4: new pc.Asset('hatch4', 'texture', { url: texturesHatch4JpgUrl }, { srgb: true }),
-    hatch5: new pc.Asset('hatch5', 'texture', { url: texturesHatch5JpgUrl }, { srgb: true })
+    hatch0: new pc.Asset('hatch0', 'texture', { url: './assets/textures/hatch-0.jpg' }, { srgb: true }),
+    hatch1: new pc.Asset('hatch1', 'texture', { url: './assets/textures/hatch-1.jpg' }, { srgb: true }),
+    hatch2: new pc.Asset('hatch2', 'texture', { url: './assets/textures/hatch-2.jpg' }, { srgb: true }),
+    hatch3: new pc.Asset('hatch3', 'texture', { url: './assets/textures/hatch-3.jpg' }, { srgb: true }),
+    hatch4: new pc.Asset('hatch4', 'texture', { url: './assets/textures/hatch-4.jpg' }, { srgb: true }),
+    hatch5: new pc.Asset('hatch5', 'texture', { url: './assets/textures/hatch-5.jpg' }, { srgb: true })
 };
 
 const gfxOptions = {

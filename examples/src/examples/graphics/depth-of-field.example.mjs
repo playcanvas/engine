@@ -3,24 +3,18 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsApartmentGlbUrl from 'examples/assets/models/apartment.glb?url';
-import modelsCatGlbUrl from 'examples/assets/models/cat.glb?url';
-import modelsLoveGlbUrl from 'examples/assets/models/love.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    apartment: new pc.Asset('apartment', 'container', { url: modelsApartmentGlbUrl }),
-    love: new pc.Asset('love', 'container', { url: modelsLoveGlbUrl }),
-    cat: new pc.Asset('cat', 'container', { url: modelsCatGlbUrl }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    apartment: new pc.Asset('apartment', 'container', { url: './assets/models/apartment.glb' }),
+    love: new pc.Asset('love', 'container', { url: './assets/models/love.glb' }),
+    cat: new pc.Asset('cat', 'container', { url: './assets/models/cat.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

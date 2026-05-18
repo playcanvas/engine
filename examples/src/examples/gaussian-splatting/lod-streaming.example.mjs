@@ -7,8 +7,6 @@ import { GsplatRevealRadial } from 'engine/scripts/esm/gsplat/reveal-radial.mjs'
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cubemapsTableMountainEnvAtlasPngUrl from 'examples/assets/cubemaps/table-mountain-env-atlas.png?url';
-
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
 const hashQuery = (window.top?.location.hash || window.location.hash || '').split('?')[1] || '';
@@ -154,7 +152,7 @@ const assets = {
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: cubemapsTableMountainEnvAtlasPngUrl },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -553,7 +551,6 @@ assetListLoader.load(async () => {
         // log textures for one frame if requested
         pc.Tracing.set(pc.TRACEID_TEXTURES, logTexturesRequested);
         logTexturesRequested = false;
-
 
         pc.Tracing.set(pc.TRACEID_BUFFERS, logBuffersRequested);
         logBuffersRequested = false;

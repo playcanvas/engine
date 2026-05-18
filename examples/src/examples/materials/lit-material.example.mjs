@@ -3,28 +3,21 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
-import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
-import texturesSeasideRocks01GlossJpgUrl from 'examples/assets/textures/seaside-rocks01-gloss.jpg?url';
-import texturesSeasideRocks01NormalJpgUrl from 'examples/assets/textures/seaside-rocks01-normal.jpg?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl }),
-    color: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }),
-    normal: new pc.Asset('normal', 'texture', { url: texturesSeasideRocks01NormalJpgUrl }),
-    gloss: new pc.Asset('gloss', 'texture', { url: texturesSeasideRocks01GlossJpgUrl })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
 };
 
 const gfxOptions = {
@@ -33,7 +26,6 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;

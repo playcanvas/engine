@@ -150,13 +150,13 @@ export const getEnginePath = (nodeEnv = process.env.NODE_ENV ?? '') => {
 export const engineUrl = (type) => {
     switch (type) {
         case 'development':
-            return './ENGINE_PATH/index.js';
+            return '../iframe/ENGINE_PATH/index.js';
         case 'performance':
-            return './playcanvas.prf.mjs';
+            return '../iframe/playcanvas.prf.mjs';
         case 'debug':
-            return './playcanvas.dbg.mjs';
+            return '../iframe/playcanvas.dbg.mjs';
     }
-    return './playcanvas.mjs';
+    return '../iframe/playcanvas.mjs';
 };
 
 /**

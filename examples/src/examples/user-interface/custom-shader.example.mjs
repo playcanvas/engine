@@ -2,8 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import texturesPlaycanvasPngUrl from 'examples/assets/textures/playcanvas.png?url';
-
 import shaderGlslFrag from './shader.glsl.frag?raw';
 import shaderGlslVert from './shader.glsl.vert?raw';
 import shaderWgslFrag from './shader.wgsl.frag?raw';
@@ -13,7 +11,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvas: new pc.Asset('playcanvas', 'texture', { url: texturesPlaycanvasPngUrl }, { srgb: true })
+    playcanvas: new pc.Asset('playcanvas', 'texture', { url: './assets/textures/playcanvas.png' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -22,7 +20,6 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;

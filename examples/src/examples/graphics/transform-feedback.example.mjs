@@ -3,8 +3,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 import shaderCloudFrag from './shaderCloud.frag?raw';
 import shaderCloudVert from './shaderCloud.vert?raw';
 import shaderFeedbackVert from './shaderFeedback.vert?raw';
@@ -29,7 +27,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

@@ -2,9 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
-import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
-
 import shaderFrag from './shader.frag?raw';
 import shaderVert from './shader.vert?raw';
 
@@ -13,13 +10,12 @@ window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: wasmGlslangGlslangJsUrl,
-    twgslUrl: wasmTwgslTwgslJsUrl
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 // render to low resolution to make particles more visible on WebGPU, as it doesn't support point
 // size and those are very small otherwise. This is not a proper solution, and only a temporary

@@ -4,12 +4,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import modelsVrGalleryGlbUrl from 'examples/assets/models/vr-gallery.glb?url';
-import splatsBikerCompressedPlyUrl from 'examples/assets/splats/biker.compressed.ply?url';
-import splatsGuitarCompressedPlyUrl from 'examples/assets/splats/guitar.compressed.ply?url';
-import splatsSkullSogUrl from 'examples/assets/splats/skull.sog?url';
-
 import shaderGlslVert from './shader.glsl.vert?raw';
 import shaderWgslVert from './shader.wgsl.vert?raw';
 
@@ -54,11 +48,11 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: modelsVrGalleryGlbUrl }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: splatsGuitarCompressedPlyUrl }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: splatsBikerCompressedPlyUrl }),
-    skull: new pc.Asset('gsplat', 'gsplat', { url: splatsSkullSogUrl }),
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
+    gallery: new pc.Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' }),
+    guitar: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/guitar.compressed.ply' }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    skull: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/skull.sog' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

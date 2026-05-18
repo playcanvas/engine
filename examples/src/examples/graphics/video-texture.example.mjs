@@ -2,9 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import modelsTvGlbUrl from 'examples/assets/models/tv.glb?url';
-import videoSamplevideo1280x7201mbMp4Url from 'examples/assets/video/SampleVideo_1280x720_1mb.mp4?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -25,7 +22,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    tv: new pc.Asset('tv', 'container', { url: modelsTvGlbUrl })
+    tv: new pc.Asset('tv', 'container', { url: './assets/models/tv.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -96,7 +93,7 @@ assetListLoader.load(() => {
         'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
     );
 
-    video.src = videoSamplevideo1280x7201mbMp4Url;
+    video.src = './assets/video/SampleVideo_1280x720_1mb.mp4';
     document.body.append(video);
 
     video.addEventListener('canplaythrough', () => {

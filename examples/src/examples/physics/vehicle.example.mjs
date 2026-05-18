@@ -2,22 +2,13 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cameraTrackingCameraJsUrl from 'engine/scripts/camera/tracking-camera.js?url';
-import physicsActionPhysicsResetJsUrl from 'engine/scripts/physics/action-physics-reset.js?url';
-import physicsRenderPhysicsJsUrl from 'engine/scripts/physics/render-physics.js?url';
-import physicsVehicleJsUrl from 'engine/scripts/physics/vehicle.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import wasmAmmoAmmoJsUrl from 'examples/assets/wasm/ammo/ammo.js?url';
-import wasmAmmoAmmoWasmJsUrl from 'examples/assets/wasm/ammo/ammo.wasm.js?url';
-import wasmAmmoAmmoWasmWasmUrl from 'examples/assets/wasm/ammo/ammo.wasm.wasm?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: wasmAmmoAmmoWasmJsUrl,
-    wasmUrl: wasmAmmoAmmoWasmWasmUrl,
-    fallbackUrl: wasmAmmoAmmoJsUrl
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 await new Promise((resolve) => {
@@ -28,13 +19,13 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script1: new pc.Asset('script1', 'script', { url: cameraTrackingCameraJsUrl }),
-    script2: new pc.Asset('script2', 'script', { url: physicsRenderPhysicsJsUrl }),
-    script3: new pc.Asset('script3', 'script', { url: physicsActionPhysicsResetJsUrl }),
-    script4: new pc.Asset('script4', 'script', { url: physicsVehicleJsUrl })
+    script1: new pc.Asset('script1', 'script', { url: './scripts/camera/tracking-camera.js' }),
+    script2: new pc.Asset('script2', 'script', { url: './scripts/physics/render-physics.js' }),
+    script3: new pc.Asset('script3', 'script', { url: './scripts/physics/action-physics-reset.js' }),
+    script4: new pc.Asset('script4', 'script', { url: './scripts/physics/vehicle.js' })
 };
 
 const gfxOptions = {

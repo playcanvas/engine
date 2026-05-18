@@ -2,37 +2,29 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import texturesSeasideRocks01ColorBasisUrl from 'examples/assets/textures/seaside-rocks01-color.basis?url';
-import texturesSeasideRocks01GlossBasisUrl from 'examples/assets/textures/seaside-rocks01-gloss.basis?url';
-import texturesSeasideRocks01NormalBasisUrl from 'examples/assets/textures/seaside-rocks01-normal.basis?url';
-import wasmBasisBasisJsUrl from 'examples/assets/wasm/basis/basis.js?url';
-import wasmBasisBasisWasmJsUrl from 'examples/assets/wasm/basis/basis.wasm.js?url';
-import wasmBasisBasisWasmWasmUrl from 'examples/assets/wasm/basis/basis.wasm.wasm?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // initialize basis
 pc.basisInitialize({
-    glueUrl: wasmBasisBasisWasmJsUrl,
-    wasmUrl: wasmBasisBasisWasmWasmUrl,
-    fallbackUrl: wasmBasisBasisJsUrl
+    glueUrl: './assets/wasm/basis/basis.wasm.js',
+    wasmUrl: './assets/wasm/basis/basis.wasm.wasm',
+    fallbackUrl: './assets/wasm/basis/basis.js'
 });
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorBasisUrl }, { srgb: true }),
-    gloss: new pc.Asset('gloss', 'texture', { url: texturesSeasideRocks01GlossBasisUrl }),
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.basis' }, { srgb: true }),
+    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.basis' }),
     normal: new pc.Asset(
         'normal',
         'texture',
-        { url: texturesSeasideRocks01NormalBasisUrl },
+        { url: './assets/textures/seaside-rocks01-normal.basis' },
         { type: pc.TEXTURETYPE_SWIZZLEGGGR }
     ),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -43,7 +35,6 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;

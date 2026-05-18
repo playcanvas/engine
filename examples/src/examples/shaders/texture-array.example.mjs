@@ -3,12 +3,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import texturesAerialRocks02Diff1kJpgUrl from 'examples/assets/textures/aerial_rocks_02_diff_1k.jpg?url';
-import texturesCoastSandRocks02Diff1kJpgUrl from 'examples/assets/textures/coast_sand_rocks_02_diff_1k.jpg?url';
-import texturesRockBoulderCrackedDiff1kJpgUrl from 'examples/assets/textures/rock_boulder_cracked_diff_1k.jpg?url';
-import texturesRockyTrailDiff1kJpgUrl from 'examples/assets/textures/rocky_trail_diff_1k.jpg?url';
-
 import groundGlslFrag from './ground.glsl.frag?raw';
 import groundWgslFrag from './ground.wgsl.frag?raw';
 import shaderGlslFrag from './shader.glsl.frag?raw';
@@ -59,11 +53,11 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: texturesRockyTrailDiff1kJpgUrl }, { srgb: true }),
-    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: texturesRockBoulderCrackedDiff1kJpgUrl }, { srgb: true }),
-    coastSand: new pc.Asset('coastSand', 'texture', { url: texturesCoastSandRocks02Diff1kJpgUrl }, { srgb: true }),
-    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: texturesAerialRocks02Diff1kJpgUrl }, { srgb: true }),
-    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
+    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: './assets/textures/rocky_trail_diff_1k.jpg' }, { srgb: true }),
+    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: './assets/textures/rock_boulder_cracked_diff_1k.jpg' }, { srgb: true }),
+    coastSand: new pc.Asset('coastSand', 'texture', { url: './assets/textures/coast_sand_rocks_02_diff_1k.jpg' }, { srgb: true }),
+    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: './assets/textures/aerial_rocks_02_diff_1k.jpg' }, { srgb: true }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {

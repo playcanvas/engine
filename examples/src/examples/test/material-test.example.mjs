@@ -3,14 +3,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import texturesColorsWebpUrl from 'examples/assets/textures/colors.webp?url';
-import texturesHatch0JpgUrl from 'examples/assets/textures/hatch-0.jpg?url';
-import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
-import texturesSeasideRocks01GlossJpgUrl from 'examples/assets/textures/seaside-rocks01-gloss.jpg?url';
-import texturesSeasideRocks01HeightJpgUrl from 'examples/assets/textures/seaside-rocks01-height.jpg?url';
-import texturesSeasideRocks01NormalJpgUrl from 'examples/assets/textures/seaside-rocks01-normal.jpg?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -18,15 +10,15 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: texturesSeasideRocks01NormalJpgUrl }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }),
-    other: new pc.Asset('other', 'texture', { url: texturesSeasideRocks01HeightJpgUrl }),
-    gloss: new pc.Asset('other', 'texture', { url: texturesSeasideRocks01GlossJpgUrl }),
-    colors: new pc.Asset('other', 'texture', { url: texturesColorsWebpUrl }),
-    hatch: new pc.Asset('other', 'texture', { url: texturesHatch0JpgUrl })
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    other: new pc.Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-height.jpg' }),
+    gloss: new pc.Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    colors: new pc.Asset('other', 'texture', { url: './assets/textures/colors.webp' }),
+    hatch: new pc.Asset('other', 'texture', { url: './assets/textures/hatch-0.jpg' })
 };
 
 const gfxOptions = {

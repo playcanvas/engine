@@ -2,9 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
-import templatesMonitorJsonUrl from 'examples/assets/templates/monitor.json?url';
-
 import uiText from './text.txt?raw';
 import uiCss from './ui.css?raw';
 import uiHtml from './ui.html?raw';
@@ -30,8 +27,8 @@ const message = function (msg) {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: fontsCourierJsonUrl }),
-    monitor: new pc.Asset('monitor', 'template', { url: templatesMonitorJsonUrl })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' }),
+    monitor: new pc.Asset('monitor', 'template', { url: './assets/templates/monitor.json' })
 };
 
 assets.font.id = 42;

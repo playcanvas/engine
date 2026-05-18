@@ -2,18 +2,15 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import texturesParticlesBonusPngUrl from 'examples/assets/textures/particles-bonus.png?url';
-import texturesParticlesCoinsPngUrl from 'examples/assets/textures/particles-coins.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     particlesCoinsTexture: new pc.Asset('particlesCoinsTexture', 'texture', {
-        url: texturesParticlesCoinsPngUrl
+        url: './assets/textures/particles-coins.png'
     }, { srgb: true }),
     particlesBonusTexture: new pc.Asset('particlesBonusTexture', 'texture', {
-        url: texturesParticlesBonusPngUrl
+        url: './assets/textures/particles-bonus.png'
     }, { srgb: true })
 };
 

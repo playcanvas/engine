@@ -2,7 +2,8 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-        <link rel="stylesheet" href="./main.css" />
+        <base href="../static/" />
+        <link rel="stylesheet" href="../iframe/main.css" />
         <title>'@TITLE'</title>
     </head>
     <body>
@@ -11,21 +12,21 @@
                 <canvas id="application-canvas"></canvas>
             </div>
         </div>
-        <script src="./polyfill.js"></script>
+        <script src="../iframe/polyfill.js"></script>
         <script type="importmap">
             {
                 "imports": {
                     "playcanvas": '@ENGINE',
-                    "engine/scripts/": "../static/scripts/",
-                    "fflate": "../../modules/fflate/esm/browser.js",
-                    "examples/assets/": "../static/assets/",
-                    "examples/utils": "./utils.mjs",
-                    "examples/observer": "./observer.mjs"
+                    "engine/scripts/": "./scripts/",
+                    "fflate": "../modules/fflate/esm/browser.js",
+                    "examples/assets/": "./assets/",
+                    "examples/utils": "../iframe/utils.mjs",
+                    "examples/observer": "../iframe/observer.mjs"
                 }
             }
         </script>
         <script type="module">
-            import { ExampleLoader } from './loader.mjs';
+            import { ExampleLoader } from '../iframe/loader.mjs';
             const loader = new ExampleLoader();
 
             Object.defineProperty(window, 'ready', { get: () => loader.ready });

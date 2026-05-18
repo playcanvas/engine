@@ -3,21 +3,15 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
-import texturesSeasideRocks01DiffuseAlphaPngUrl from 'examples/assets/textures/seaside-rocks01-diffuse-alpha.png?url';
-import texturesSeasideRocks01RoughnessJpgUrl from 'examples/assets/textures/seaside-rocks01-roughness.jpg?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl }),
-    rocks: new pc.Asset('rocks', 'texture', { url: texturesSeasideRocks01DiffuseAlphaPngUrl }, { srgb: true }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    rocks: new pc.Asset('rocks', 'texture', { url: './assets/textures/seaside-rocks01-diffuse-alpha.png' }, { srgb: true }),
 
-
-    opacity: new pc.Asset('rocks', 'texture', { url: texturesSeasideRocks01RoughnessJpgUrl })
+    opacity: new pc.Asset('rocks', 'texture', { url: './assets/textures/seaside-rocks01-roughness.jpg' })
 
 };
 

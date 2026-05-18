@@ -4,26 +4,20 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraFlyCameraJsUrl from 'engine/scripts/camera/fly-camera.js?url';
-import cubemapsMorningEnvAtlasPngUrl from 'examples/assets/cubemaps/morning-env-atlas.png?url';
-import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
-import texturesSeasideRocks01HeightJpgUrl from 'examples/assets/textures/seaside-rocks01-height.jpg?url';
-import texturesSeasideRocks01NormalJpgUrl from 'examples/assets/textures/seaside-rocks01-normal.jpg?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    fly: new pc.Asset('fly', 'script', { url: cameraFlyCameraJsUrl }),
+    fly: new pc.Asset('fly', 'script', { url: './scripts/camera/fly-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsMorningEnvAtlasPngUrl },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: texturesSeasideRocks01NormalJpgUrl }),
-    height: new pc.Asset('height', 'texture', { url: texturesSeasideRocks01HeightJpgUrl }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: texturesSeasideRocks01ColorJpgUrl })
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    height: new pc.Asset('height', 'texture', { url: './assets/textures/seaside-rocks01-height.jpg' }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' })
 };
 
 const gfxOptions = {

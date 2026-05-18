@@ -2,8 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import texturesPlaycanvasPngUrl from 'examples/assets/textures/playcanvas.png?url';
-
 import shaderGlslFrag from './shader.glsl.frag?raw';
 import shaderGlslVert from './shader.glsl.vert?raw';
 import shaderWgslFrag from './shader.wgsl.frag?raw';
@@ -13,7 +11,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    diffuse: new pc.Asset('color', 'texture', { url: texturesPlaycanvasPngUrl })
+    diffuse: new pc.Asset('color', 'texture', { url: './assets/textures/playcanvas.png' })
 };
 
 const gfxOptions = {

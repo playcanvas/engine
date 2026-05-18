@@ -4,14 +4,12 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import texturesPlaycanvasGreyPngUrl from 'examples/assets/textures/playcanvas-grey.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', {
-        url: texturesPlaycanvasGreyPngUrl
+        url: './assets/textures/playcanvas-grey.png'
     })
 };
 const gfxOptions = {

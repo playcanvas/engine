@@ -2,9 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import utilsCubemapRendererJsUrl from 'engine/scripts/utils/cubemap-renderer.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -12,10 +9,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script: new pc.Asset('script', 'script', { url: utilsCubemapRendererJsUrl })
+    script: new pc.Asset('script', 'script', { url: './scripts/utils/cubemap-renderer.js' })
 };
 
 const gfxOptions = {

@@ -5,9 +5,6 @@ import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 const tmpVa = new pc.Vec2();
 
 const canvas = document.getElementById('application-canvas');
@@ -24,10 +21,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

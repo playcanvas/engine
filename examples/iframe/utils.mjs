@@ -1,34 +1,24 @@
 import files from './files.mjs';
 
-const href = window.top?.location.href ?? '';
-const params = getQueryParams(href);
-const url = new URL(href);
-const root = url.pathname.replace(/\/([^/]+\.html)?$/g, '');
+const params = getQueryParams(window.location.href);
 const MODULE_EXTENSION = /\.mjs$/;
 const TEXT_EXTENSION = /\.(?:frag|vert|wgsl|glsl|html|css|txt)$/;
 const JSON_EXTENSION = /\.json$/;
 const MODULE_TYPE = 'text/javascript';
 const RAW_QUERY = 'raw';
-const URL_QUERY = 'url';
 const RELATIVE_SPECIFIER = /^\.{1,2}\//;
-const ASSET_PREFIX = 'examples/assets/';
-const SCRIPT_PREFIX = 'engine/scripts/';
 const IMPORT_EXPORT_SPECIFIER = /(\b(?:from|import)[ \t\r\n]*)(['"])([^'"\r\n]+)\2/g;
-
-/**
- * @type {string}
- */
-export const rootPath = root.replace(/\/iframe/g, '');
 
 /**
  * @param {string} url - The URL specified.
  * @returns {Record<string, string>} - The object of query parameters
  */
 export function getQueryParams(url) {
-    return Object.fromEntries(url
-    .split('?').pop()
-    .split('#')[0]
-    .split('&').map(s => s.split('=')));
+    const parsed = new URL(url, document.baseURI);
+    const hash = parsed.hash.indexOf('?');
+    return Object.fromEntries(hash === -1 ?
+        parsed.searchParams :
+        new URLSearchParams(parsed.hash.slice(hash + 1)));
 }
 
 /**
@@ -90,24 +80,6 @@ const resolveModuleName = (name, specifier) => {
 };
 
 /**
- * @param {string} specifier - The module specifier.
- * @returns {string | null} The runtime URL.
- */
-const resolveStaticUrl = (specifier) => {
-    const { path, query } = parseModuleRequest(specifier);
-    if (query !== URL_QUERY) {
-        return null;
-    }
-    if (path.startsWith(ASSET_PREFIX)) {
-        return `${rootPath}/static/assets/${path.slice(ASSET_PREFIX.length)}`;
-    }
-    if (path.startsWith(SCRIPT_PREFIX)) {
-        return `${rootPath}/static/scripts/${path.slice(SCRIPT_PREFIX.length)}`;
-    }
-    return null;
-};
-
-/**
  * @param {string} name - The name of the current file.
  * @param {string} specifier - The module specifier.
  * @returns {string | null} The resolved module name.
@@ -116,7 +88,7 @@ const resolveImport = (name, specifier) => {
     if (RELATIVE_SPECIFIER.test(specifier)) {
         return resolveModuleName(name, specifier);
     }
-    return resolveStaticUrl(specifier) ? specifier : null;
+    return null;
 };
 
 /**
@@ -140,10 +112,6 @@ const createBlobModule = (name, source) => {
 function createModuleUrl(name, stack = []) {
     if (moduleUrls.has(name)) {
         return Promise.resolve(moduleUrls.get(name));
-    }
-    const staticUrl = resolveStaticUrl(name);
-    if (staticUrl) {
-        return Promise.resolve(createBlobModule(name, `export default ${JSON.stringify(staticUrl)};`));
     }
     const { path } = parseModuleRequest(name);
     if (files[path] === undefined) {

@@ -3,32 +3,23 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import jsonAreaLightLutsJsonUrl from 'examples/assets/json/area-light-luts.json?url';
-import modelsLightsGlbUrl from 'examples/assets/models/Lights.glb?url';
-import modelsSheenchairGlbUrl from 'examples/assets/models/SheenChair.glb?url';
-import texturesSeasideRocks01ColorJpgUrl from 'examples/assets/textures/seaside-rocks01-color.jpg?url';
-import texturesSeasideRocks01GlossJpgUrl from 'examples/assets/textures/seaside-rocks01-gloss.jpg?url';
-import texturesSeasideRocks01NormalJpgUrl from 'examples/assets/textures/seaside-rocks01-normal.jpg?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    lights: new pc.Asset('lights', 'container', { url: modelsLightsGlbUrl }),
-    sheen: new pc.Asset('sheen', 'container', { url: modelsSheenchairGlbUrl }),
-    color: new pc.Asset('color', 'texture', { url: texturesSeasideRocks01ColorJpgUrl }),
-    normal: new pc.Asset('normal', 'texture', { url: texturesSeasideRocks01NormalJpgUrl }),
-    gloss: new pc.Asset('gloss', 'texture', { url: texturesSeasideRocks01GlossJpgUrl }),
-    luts: new pc.Asset('luts', 'json', { url: jsonAreaLightLutsJsonUrl })
+    lights: new pc.Asset('lights', 'container', { url: './assets/models/Lights.glb' }),
+    sheen: new pc.Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    luts: new pc.Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
 };
 
 const gfxOptions = {

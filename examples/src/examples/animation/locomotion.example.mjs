@@ -3,24 +3,13 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import animationsBitmojiIdleGlbUrl from 'examples/assets/animations/bitmoji/idle.glb?url';
-import animationsBitmojiJumpFlipGlbUrl from 'examples/assets/animations/bitmoji/jump-flip.glb?url';
-import animationsBitmojiRunGlbUrl from 'examples/assets/animations/bitmoji/run.glb?url';
-import animationsBitmojiWalkGlbUrl from 'examples/assets/animations/bitmoji/walk.glb?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsBitmojiGlbUrl from 'examples/assets/models/bitmoji.glb?url';
-import texturesPlaycanvasGreyPngUrl from 'examples/assets/textures/playcanvas-grey.png?url';
-import wasmAmmoAmmoJsUrl from 'examples/assets/wasm/ammo/ammo.js?url';
-import wasmAmmoAmmoWasmJsUrl from 'examples/assets/wasm/ammo/ammo.wasm.js?url';
-import wasmAmmoAmmoWasmWasmUrl from 'examples/assets/wasm/ammo/ammo.wasm.wasm?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: wasmAmmoAmmoWasmJsUrl,
-    wasmUrl: wasmAmmoAmmoWasmWasmUrl,
-    fallbackUrl: wasmAmmoAmmoJsUrl
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
@@ -28,19 +17,19 @@ await new Promise((resolve) => {
 
 const assets = {
     playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', {
-        url: texturesPlaycanvasGreyPngUrl
+        url: './assets/textures/playcanvas-grey.png'
     }),
-    model: new pc.Asset('model', 'container', { url: modelsBitmojiGlbUrl }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: animationsBitmojiIdleGlbUrl }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: animationsBitmojiWalkGlbUrl }),
-    jogAnim: new pc.Asset('jogAnim', 'container', { url: animationsBitmojiRunGlbUrl }),
+    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
+    walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
+    jogAnim: new pc.Asset('jogAnim', 'container', { url: './assets/animations/bitmoji/run.glb' }),
     jumpAnim: new pc.Asset('jumpAnim', 'container', {
-        url: animationsBitmojiJumpFlipGlbUrl
+        url: './assets/animations/bitmoji/jump-flip.glb'
     }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };

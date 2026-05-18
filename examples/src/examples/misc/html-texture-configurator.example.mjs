@@ -15,10 +15,6 @@ import * as pc from 'playcanvas';
 import { BlurredPlanarReflection } from 'engine/scripts/esm/blurred-planar-reflection.mjs';
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsMaterialsvariantsshoeGlbUrl from 'examples/assets/models/MaterialsVariantsShoe.glb?url';
-import texturesBackgroundShoesPngUrl from 'examples/assets/textures/background_shoes.png?url';
-
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.
 // Copy this class into any PlayCanvas project that uses the HTML-in-Canvas
@@ -124,11 +120,11 @@ const assets = {
     envatlas: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    shoe: new pc.Asset('shoe', 'container', { url: modelsMaterialsvariantsshoeGlbUrl }),
-    background: new pc.Asset('background', 'texture', { url: texturesBackgroundShoesPngUrl }, { srgb: true })
+    shoe: new pc.Asset('shoe', 'container', { url: './assets/models/MaterialsVariantsShoe.glb' }),
+    background: new pc.Asset('background', 'texture', { url: './assets/textures/background_shoes.png' }, { srgb: true })
 };
 
 const gfxOptions = {

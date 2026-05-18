@@ -2,10 +2,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsPlaycanvasCubeGlbUrl from 'examples/assets/models/playcanvas-cube.glb?url';
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -13,11 +9,11 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
-    cube: new pc.Asset('cube', 'container', { url: modelsPlaycanvasCubeGlbUrl })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    cube: new pc.Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' })
 };
 
 const gfxOptions = {

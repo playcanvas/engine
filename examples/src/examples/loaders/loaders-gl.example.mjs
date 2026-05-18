@@ -3,10 +3,6 @@ import * as pc from 'playcanvas';
 
 import { deviceType, loadES5 } from 'examples/utils';
 
-import modelsParkPointsDrcUrl from 'examples/assets/models/park_points.drc?url';
-import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
-import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
-
 import shaderFrag from './shader.frag?raw';
 import shaderVert from './shader.vert?raw';
 
@@ -20,14 +16,13 @@ const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.
 // Note that many additional formats are supported by the library and can be used.
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: wasmGlslangGlslangJsUrl,
-    twgslUrl: wasmTwgslTwgslJsUrl
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 /** @type {pc.GraphicsDevice} */
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -107,7 +102,7 @@ camera.translate(-20, 15, 20);
 camera.lookAt(0, 7, 0);
 app.root.addChild(camera);
 // Load the draco model, don't wait for it.
-loadModel(modelsParkPointsDrcUrl);
+loadModel('./assets/models/park_points.drc');
 // update things each frame
 let time = 0;
 app.on('update', (dt) => {

@@ -2,15 +2,12 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
-import texturesCheckboardPngUrl from 'examples/assets/textures/checkboard.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    checkboard: new pc.Asset('checkboard', 'texture', { url: texturesCheckboardPngUrl }),
-    font: new pc.Asset('font', 'font', { url: fontsCourierJsonUrl })
+    checkboard: new pc.Asset('checkboard', 'texture', { url: './assets/textures/checkboard.png' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 const gfxOptions = {

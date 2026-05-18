@@ -3,10 +3,6 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import cubemapsHelipadEnvAtlasPngUrl from 'examples/assets/cubemaps/helipad-env-atlas.png?url';
-import modelsHouseGlbUrl from 'examples/assets/models/house.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -14,11 +10,11 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: cubemapsHelipadEnvAtlasPngUrl },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    house: new pc.Asset('house', 'container', { url: modelsHouseGlbUrl }),
-    script: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl })
+    house: new pc.Asset('house', 'container', { url: './assets/models/house.glb' }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {

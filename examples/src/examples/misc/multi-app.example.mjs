@@ -6,10 +6,6 @@ import * as pc from 'playcanvas';
 
 import { data } from 'examples/observer';
 
-import fontsCourierJsonUrl from 'examples/assets/fonts/courier.json?url';
-import wasmGlslangGlslangJsUrl from 'examples/assets/wasm/glslang/glslang.js?url';
-import wasmTwgslTwgslJsUrl from 'examples/assets/wasm/twgsl/twgsl.js?url';
-
 // Use custom createGraphicsDevice function to not automatically include fall backs
 /**
  * @param {HTMLCanvasElement} canvas - The canvas element.
@@ -20,7 +16,7 @@ async function createGraphicsDevice(canvas, deviceType) {
     let device;
     if (deviceType === 'webgpu') {
         device = new pc.WebgpuGraphicsDevice(canvas, {});
-        await device.initWebGpu(wasmGlslangGlslangJsUrl, wasmTwgslTwgslJsUrl);
+        await device.initWebGpu('./assets/wasm/glslang/glslang.js', './assets/wasm/twgsl/twgsl.js');
     } else if (deviceType === 'webgl2') {
         device = new pc.WebglGraphicsDevice(canvas);
     } else {
@@ -35,7 +31,7 @@ async function createGraphicsDevice(canvas, deviceType) {
  */
 async function createApp(deviceType) {
     const assets = {
-        font: new pc.Asset('font', 'font', { url: fontsCourierJsonUrl })
+        font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
     };
 
     const canvas = document.createElement('canvas');

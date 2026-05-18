@@ -4,20 +4,16 @@ import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import hdriStPetersSquareHdrUrl from 'examples/assets/hdri/st-peters-square.hdr?url';
-import modelsStatueGlbUrl from 'examples/assets/models/statue.glb?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    statue: new pc.Asset('statue', 'container', { url: modelsStatueGlbUrl }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
     hdri_street: new pc.Asset(
         'hdri',
         'texture',
-        { url: hdriStPetersSquareHdrUrl },
+        { url: './assets/hdri/st-peters-square.hdr' },
         { mipmaps: false }
     )
 };

@@ -3,15 +3,12 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import cameraOrbitCameraJsUrl from 'engine/scripts/camera/orbit-camera.js?url';
-import texturesSnowflakePngUrl from 'examples/assets/textures/snowflake.png?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: cameraOrbitCameraJsUrl }),
-    snowflake: new pc.Asset('snowflake', 'texture', { url: texturesSnowflakePngUrl }, { srgb: true })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    snowflake: new pc.Asset('snowflake', 'texture', { url: './assets/textures/snowflake.png' }, { srgb: true })
 };
 
 const gfxOptions = {

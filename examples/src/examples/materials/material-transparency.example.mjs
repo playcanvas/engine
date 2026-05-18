@@ -2,13 +2,11 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import fontsArialJsonUrl from 'examples/assets/fonts/arial.json?url';
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: fontsArialJsonUrl })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
