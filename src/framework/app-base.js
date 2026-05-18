@@ -629,7 +629,7 @@ class AppBase extends EventHandler {
 
         // default to retrying failed asset loads to make apps more resilient to transient network
         // errors
-        this.loader.enableRetry(5);
+        this.loader.enableRetry();
 
         // Create and register all required component systems
         componentSystems.forEach((componentSystem) => {

@@ -342,7 +342,7 @@ class ResourceLoader {
      * Defaults to 5.
      */
     enableRetry(maxRetries = 5) {
-        maxRetries = Math.max(0, maxRetries) || 0;
+        maxRetries = Math.max(0, Math.floor(maxRetries)) || 0;
 
         for (const key in this._handlers) {
             this._handlers[key].maxRetries = maxRetries;
