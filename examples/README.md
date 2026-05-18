@@ -247,12 +247,14 @@ Any other file you wish to include in your example can be added to the same fold
 import shaderVert from './shader.vert?raw';
 import shaderFrag from './shader.frag?raw';
 import data from './data.json';
-import statueUrl from 'examples/assets/models/statue.glb?url';
-import orbitCameraUrl from 'engine/scripts/camera/orbit-camera.js?url';
+
+const assets = {
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
+};
 ```
 
-Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions use `?raw` and are imported as strings. JSON files are imported as parsed values. Shared example assets use `examples/assets/...` with `?url`, engine scripts use `engine/scripts/...` with `?url`, and local `.mjs` files are imported as standard JavaScript modules.
-
+Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions use `?raw` and are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine script asset URLs use `./scripts/...`, and local `.mjs` files are imported as standard JavaScript modules.
 
 ### Testing your example
 Run `npm run develop` from the `Local examples browser development` section to serve the examples browser with Vite.
@@ -268,8 +270,8 @@ The example script allows you to import examples only modules that interact with
 
 - `examples/observer` - The observer object `data`.
 - `examples/utils` - Contains utility functions such as `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
-- `examples/assets/*` - Shared example assets. Use `?url` when a runtime URL string is needed.
-- `engine/scripts/*` - Shared engine scripts. Use `?url` when a runtime URL string is needed.
+- `examples/assets/*` - Shared example modules. Use `./assets/...` when a runtime asset URL string is needed.
+- `engine/scripts/*` - Shared engine script modules. Use `./scripts/...` when a runtime script URL string is needed.
 
 ## Deployment
 
