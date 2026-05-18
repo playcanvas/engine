@@ -5,7 +5,6 @@ const MODULE_EXTENSION = /\.mjs$/;
 const TEXT_EXTENSION = /\.(?:frag|vert|wgsl|glsl|html|css|txt)$/;
 const JSON_EXTENSION = /\.json$/;
 const MODULE_TYPE = 'text/javascript';
-const RAW_QUERY = 'raw';
 const RELATIVE_SPECIFIER = /^\.{1,2}\//;
 const IMPORT_EXPORT_SPECIFIER = /(\b(?:from|import)[ \t\r\n]*)(['"])([^'"\r\n]+)\2/g;
 
@@ -146,16 +145,13 @@ function createModuleUrl(name, stack = []) {
 async function createModuleUrlTask(name, stack) {
     const { path, query } = parseModuleRequest(name);
 
-    if (query === RAW_QUERY) {
-        if (!TEXT_EXTENSION.test(path)) {
-            throw new Error(`Invalid raw module: ${name}`);
-        }
-        const source = `export default ${JSON.stringify(files[path])};`;
-        return createBlobModule(name, source);
-    }
-
     if (query) {
         throw new Error(`Invalid module query: ${name}`);
+    }
+
+    if (TEXT_EXTENSION.test(path)) {
+        const source = `export default ${JSON.stringify(files[path])};`;
+        return createBlobModule(name, source);
     }
 
     if (JSON_EXTENSION.test(path)) {

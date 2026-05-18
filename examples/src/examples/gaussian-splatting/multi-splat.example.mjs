@@ -4,8 +4,8 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import shaderGlslVert from './shader.glsl.vert?raw';
-import shaderWgslVert from './shader.wgsl.vert?raw';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

@@ -3,7 +3,7 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import computeShaderWgsl from './compute-shader.wgsl?raw';
+import computeShaderWgsl from './compute-shader.wgsl';
 
 // Note: the example is based on this article:
 // https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html

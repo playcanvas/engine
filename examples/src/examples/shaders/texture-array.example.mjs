@@ -3,12 +3,12 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import groundGlslFrag from './ground.glsl.frag?raw';
-import groundWgslFrag from './ground.wgsl.frag?raw';
-import shaderGlslFrag from './shader.glsl.frag?raw';
-import shaderGlslVert from './shader.glsl.vert?raw';
-import shaderWgslFrag from './shader.wgsl.frag?raw';
-import shaderWgslVert from './shader.wgsl.vert?raw';
+import groundGlslFrag from './ground.glsl.frag';
+import groundWgslFrag from './ground.wgsl.frag';
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

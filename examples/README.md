@@ -244,8 +244,8 @@ console.log(data.get('flash'));
 Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be imported from the example using their relative file name:
 
 ```js
-import shaderVert from './shader.vert?raw';
-import shaderFrag from './shader.frag?raw';
+import shaderVert from './shader.vert';
+import shaderFrag from './shader.frag';
 import data from './data.json';
 
 const assets = {
@@ -254,7 +254,7 @@ const assets = {
 };
 ```
 
-Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions use `?raw` and are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine script asset URLs use `./scripts/...`, and local `.mjs` files are imported as standard JavaScript modules.
+Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine script asset URLs use `./scripts/...`, and local `.mjs` files are imported as standard JavaScript modules. When using these modules outside the examples browser, configure your bundler to load text extensions as strings.
 
 ### Testing your example
 Run `npm run dev` from the `Local examples browser development` section to serve the examples browser with Vite. Use `npm run develop` when automatic reloads should be disabled.

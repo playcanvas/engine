@@ -8,6 +8,41 @@ declare module '*.json' {
     export default data;
 }
 
+declare module '*.frag' {
+    const data: string;
+    export default data;
+}
+
+declare module '*.vert' {
+    const data: string;
+    export default data;
+}
+
+declare module '*.wgsl' {
+    const data: string;
+    export default data;
+}
+
+declare module '*.glsl' {
+    const data: string;
+    export default data;
+}
+
+declare module '*.html' {
+    const data: string;
+    export default data;
+}
+
+declare module '*.css' {
+    const data: string;
+    export default data;
+}
+
+declare module '*.txt' {
+    const data: string;
+    export default data;
+}
+
 declare global {
     interface Window {
         _scrolledToExample?: boolean;

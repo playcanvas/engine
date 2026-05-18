@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import computeShaderWgsl from './compute-shader.wgsl?raw';
+import computeShaderWgsl from './compute-shader.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

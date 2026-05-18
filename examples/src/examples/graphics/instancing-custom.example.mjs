@@ -3,8 +3,8 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import transformInstancingGlslVert from './transform-instancing.glsl.vert?raw';
-import transformInstancingWgslVert from './transform-instancing.wgsl.vert?raw';
+import transformInstancingGlslVert from './transform-instancing.glsl.vert';
+import transformInstancingWgslVert from './transform-instancing.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

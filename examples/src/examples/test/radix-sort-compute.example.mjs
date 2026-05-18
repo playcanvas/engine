@@ -6,8 +6,8 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import vertWgsl from './vert.wgsl?raw';
-import wgslFrag from './wgsl.frag?raw';
+import vertWgsl from './vert.wgsl';
+import wgslFrag from './wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

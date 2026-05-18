@@ -15,7 +15,7 @@ const importOrder = ['error', {
             position: 'after'
         },
         {
-            pattern: '{./,../}**/*[?]raw',
+            pattern: '{./,../}**/*.{frag,vert,wgsl,glsl,html,css,txt}',
             group: 'sibling',
             position: 'after'
         }

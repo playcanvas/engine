@@ -4,10 +4,10 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import renderOutputGlslFrag from './renderOutput.glsl.frag?raw';
-import renderOutputWgslFrag from './renderOutput.wgsl.frag?raw';
-import sandSimulationGlslFrag from './sandSimulation.glsl.frag?raw';
-import sandSimulationWgslFrag from './sandSimulation.wgsl.frag?raw';
+import renderOutputGlslFrag from './renderOutput.glsl.frag';
+import renderOutputWgslFrag from './renderOutput.wgsl.frag';
+import sandSimulationGlslFrag from './sandSimulation.glsl.frag';
+import sandSimulationWgslFrag from './sandSimulation.wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

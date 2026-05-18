@@ -5,8 +5,8 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import effectShaderWgsl from './effect-shader.wgsl?raw';
-import scanShaderWgsl from './scan-shader.wgsl?raw';
+import effectShaderWgsl from './effect-shader.wgsl';
+import scanShaderWgsl from './scan-shader.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

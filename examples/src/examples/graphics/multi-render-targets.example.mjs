@@ -2,8 +2,8 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import outputGlslFrag from './output-glsl.frag?raw';
-import outputWgslFrag from './output-wgsl.frag?raw';
+import outputGlslFrag from './output-glsl.frag';
+import outputWgslFrag from './output-wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

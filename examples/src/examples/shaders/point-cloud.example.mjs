@@ -2,8 +2,8 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import shaderFrag from './shader.frag?raw';
-import shaderVert from './shader.vert?raw';
+import shaderFrag from './shader.frag';
+import shaderVert from './shader.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

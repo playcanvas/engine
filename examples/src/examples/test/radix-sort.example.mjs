@@ -6,12 +6,12 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType } from 'examples/utils';
 
-import sortedGlslFrag from './sorted.glsl.frag?raw';
-import sortedWgslFrag from './sorted.wgsl.frag?raw';
-import unsortedGlslFrag from './unsorted.glsl.frag?raw';
-import unsortedWgslFrag from './unsorted.wgsl.frag?raw';
-import vertGlsl from './vert.glsl?raw';
-import vertWgsl from './vert.wgsl?raw';
+import sortedGlslFrag from './sorted.glsl.frag';
+import sortedWgslFrag from './sorted.wgsl.frag';
+import unsortedGlslFrag from './unsorted.glsl.frag';
+import unsortedWgslFrag from './unsorted.wgsl.frag';
+import vertGlsl from './vert.glsl';
+import vertWgsl from './vert.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

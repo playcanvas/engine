@@ -2,9 +2,9 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import uiText from './text.txt?raw';
-import uiCss from './ui.css?raw';
-import uiHtml from './ui.html?raw';
+import uiText from './text.txt';
+import uiCss from './ui.css';
+import uiHtml from './ui.html';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

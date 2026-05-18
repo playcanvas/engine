@@ -2,10 +2,10 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import shaderGlslFrag from './shader.glsl.frag?raw';
-import shaderGlslVert from './shader.glsl.vert?raw';
-import shaderWgslFrag from './shader.wgsl.frag?raw';
-import shaderWgslVert from './shader.wgsl.vert?raw';
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

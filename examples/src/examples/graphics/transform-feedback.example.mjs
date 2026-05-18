@@ -3,9 +3,9 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import shaderCloudFrag from './shaderCloud.frag?raw';
-import shaderCloudVert from './shaderCloud.vert?raw';
-import shaderFeedbackVert from './shaderFeedback.vert?raw';
+import shaderCloudFrag from './shaderCloud.frag';
+import shaderCloudVert from './shaderCloud.vert';
+import shaderFeedbackVert from './shaderFeedback.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

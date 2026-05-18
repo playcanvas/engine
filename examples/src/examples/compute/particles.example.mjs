@@ -3,10 +3,10 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/utils';
 
-import shaderRenderingFragmentWgsl from './shader-rendering.fragment.wgsl?raw';
-import shaderRenderingVertexWgsl from './shader-rendering.vertex.wgsl?raw';
-import shaderSharedWgsl from './shader-shared.wgsl?raw';
-import shaderSimulationWgsl from './shader-simulation.wgsl?raw';
+import shaderRenderingFragmentWgsl from './shader-rendering.fragment.wgsl';
+import shaderRenderingVertexWgsl from './shader-rendering.vertex.wgsl';
+import shaderSharedWgsl from './shader-shared.wgsl';
+import shaderSimulationWgsl from './shader-simulation.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
