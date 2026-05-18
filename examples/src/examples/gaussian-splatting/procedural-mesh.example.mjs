@@ -1,10 +1,9 @@
 // @config DESCRIPTION Procedural mesh converted to gaussian splats. Demonstrates converting a terrain scene with animated clouds to splat representation.
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { GsplatMesh } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/gsplat-mesh.mjs`);
-const { GsplatBoxShaderEffect } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/shader-effect-box.mjs`);
+import { GsplatMesh } from 'playcanvas/scripts/esm/gsplat/gsplat-mesh.mjs';
+import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

@@ -1,9 +1,8 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { BlurredPlanarReflection } = await fileImport(`${rootPath}/static/scripts/esm/blurred-planar-reflection.mjs`);
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

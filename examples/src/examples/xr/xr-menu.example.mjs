@@ -1,13 +1,11 @@
 import files from 'examples/files';
-import { deviceType, fileImport, rootPath } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-// Import scripts
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { XrSession } = await fileImport(`${rootPath}/static/scripts/esm/xr-session.mjs`);
-const { XrControllers } = await fileImport(`${rootPath}/static/scripts/esm/xr-controllers.mjs`);
-const { XrNavigation } = await fileImport(`${rootPath}/static/scripts/esm/xr-navigation.mjs`);
-const { XrMenu } = await fileImport(`${rootPath}/static/scripts/esm/xr-menu.mjs`);
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { XrControllers } from 'playcanvas/scripts/esm/xr-controllers.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

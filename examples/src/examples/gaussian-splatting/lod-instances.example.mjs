@@ -1,9 +1,8 @@
 // @config DESCRIPTION Demonstrates a grid of Gaussian Splat instances using the LOD system for stable performance, with a custom data stream storing IDs to colorize splats via a color lookup texture.
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

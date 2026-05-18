@@ -1,8 +1,8 @@
 // @config HIDDEN
+import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { createGoochMaterial } = await fileImport(`${rootPath}/static/assets/scripts/misc/gooch-material.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

@@ -1,8 +1,7 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
-import { deviceType, fileImport, rootPath } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { FirstPersonController } = await fileImport(`${rootPath}/static/scripts/esm/first-person-controller.mjs`);
+import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

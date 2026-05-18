@@ -1,9 +1,8 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>LMB / RMB </b>) Orbit</div><div>(<b>Hold Shift / MMB </b>) Pan</div><div>(<b>Wheel / Pinch</b>) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 const tmpVa = new pc.Vec2();
 

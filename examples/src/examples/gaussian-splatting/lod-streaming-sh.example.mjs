@@ -1,10 +1,9 @@
 // @config DESCRIPTION Demonstrates LOD streaming combined with spherical harmonics for view-dependent effects.
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { GsplatRevealGridEruption } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-grid-eruption.mjs`);
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

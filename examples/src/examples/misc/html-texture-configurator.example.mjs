@@ -10,10 +10,9 @@
 // as a fixed DOM overlay on top of the canvas instead of a 3D textured plane.
 // Click handling works identically in both modes via standard DOM events.
 //
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { BlurredPlanarReflection } = await fileImport(`${rootPath}/static/scripts/esm/blurred-planar-reflection.mjs`);
+import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
 
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.

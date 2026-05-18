@@ -1,8 +1,7 @@
 // @config HIDDEN
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { Rotator } = await fileImport(`${rootPath}/static/assets/scripts/misc/rotator.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

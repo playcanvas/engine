@@ -1,13 +1,12 @@
 // @config DESCRIPTION Procedural shapes rendered using gaussian splats. Demonstrates lines, text and image-based splats.
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { GsplatLines } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/gsplat-lines.mjs`);
-const { GsplatImage } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/gsplat-image.mjs`);
-const { GsplatText } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/gsplat-text.mjs`);
-const { GsplatBoxShaderEffect } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/shader-effect-box.mjs`);
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatImage } from 'playcanvas/scripts/esm/gsplat/gsplat-image.mjs';
+import { GsplatLines } from 'playcanvas/scripts/esm/gsplat/gsplat-lines.mjs';
+import { GsplatText } from 'playcanvas/scripts/esm/gsplat/gsplat-text.mjs';
+import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

@@ -1,11 +1,10 @@
 // @config NO_MINISTATS
 // @config DESCRIPTION Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90

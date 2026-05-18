@@ -1,9 +1,8 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move </div><div>(<b>Hold Shift</b>) Move Fast (<b>Hold Ctrl</b>) Move Slow</div><div>(<b>LMB / RMB </b>) Fly</div></div>
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 const tmpVa = new pc.Vec2();
 

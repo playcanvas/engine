@@ -1,9 +1,7 @@
+import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-// import the createHatchMaterial function from the hatch-material.mjs file
-const { createHatchMaterial } = await fileImport(`${rootPath}/static/assets/scripts/misc/hatch-material.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

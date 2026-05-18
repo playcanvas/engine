@@ -1,11 +1,10 @@
 // @config DESCRIPTION This example demonstrates gsplat flipbook animation using dynamically loaded splat sequence of ply files.
 // @config NO_MINISTATS
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { GsplatFlipbook } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/gsplat-flipbook.mjs`);
-const { ShadowCatcher } = await fileImport(`${rootPath}/static/scripts/esm/shadow-catcher.mjs`);
+import { GsplatFlipbook } from 'playcanvas/scripts/esm/gsplat/gsplat-flipbook.mjs';
+import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

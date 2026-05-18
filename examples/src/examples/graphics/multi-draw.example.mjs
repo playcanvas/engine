@@ -1,6 +1,7 @@
 // @config DESCRIPTION Terrain rendering using a single draw call built from a grid of displaced planes. Each patch is a sub-draw and can be culled (hidden) dynamically.
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -28,7 +29,6 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);

@@ -1,9 +1,7 @@
 // @config DESCRIPTION This example demonstrates how a custom shader can be used to render instanced geometry, but also skinned, morphed and static geometry. A simple Gooch shading shader is used.
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-// import the createGoochMaterial function from the gooch-material.mjs file
-const { createGoochMaterial } = await fileImport(`${rootPath}/static/assets/scripts/misc/gooch-material.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

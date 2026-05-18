@@ -1,13 +1,12 @@
 // @config HIDDEN
 // @config NO_MINISTATS
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
-const { XrSession } = await fileImport(`${rootPath}/static/scripts/esm/xr-session.mjs`);
-const { XrNavigation } = await fileImport(`${rootPath}/static/scripts/esm/xr-navigation.mjs`);
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
