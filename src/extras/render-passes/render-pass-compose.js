@@ -1,10 +1,11 @@
 import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
+import { Debug } from '../../core/debug.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 import { hashCode } from '../../core/hash.js';
-import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { FILTER_LINEAR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compose-chunks-glsl.js';
 import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
@@ -149,6 +150,20 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._colorLUT !== value) {
             this._colorLUT = value;
             this._shaderDirty = true;
+
+            // Validate the LUT texture settings. Stripped in release builds.
+            Debug.call(() => {
+                if (value) {
+                    const required = [];
+                    if (!value.srgb) required.push('srgb: true');
+                    if (value.mipmaps) required.push('mipmaps: false');
+                    if (value.minFilter !== FILTER_LINEAR) required.push('minFilter: FILTER_LINEAR');
+                    if (value.magFilter !== FILTER_LINEAR) required.push('magFilter: FILTER_LINEAR');
+                    if (required.length) {
+                        Debug.warnOnce(`CameraFrame.colorLUT: texture '${value.name ?? ''}' should be configured with: ${required.join('; ')}.`, value);
+                    }
+                }
+            });
         }
     }
 
