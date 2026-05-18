@@ -16,7 +16,16 @@ const assets = {
         { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    colorLut: new pc.Asset('colorLut', 'texture', { url: `${rootPath}/static/assets/cube-luts/lut-blue.png` })
+    colorLut: new pc.Asset(
+        'colorLut',
+        'texture',
+        { url: `${rootPath}/static/assets/cube-luts/lut-blue.png` },
+        {
+            srgb: true,
+            mipmaps: false,
+            minfilter: 'linear'
+        }
+    )
 };
 
 const gfxOptions = {

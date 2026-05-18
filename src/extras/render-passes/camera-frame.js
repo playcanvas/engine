@@ -109,7 +109,12 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  * 256×16 texture, and a 32×32×32 LUT uses a 1024×32 texture. The texture contains N horizontal
  * slices representing the blue channel, with each slice mapping red to the X-axis and green to
  * the Y-axis. Note that HALD LUTs (e.g. from ImageMagick) and Unity LUTs use different layouts
- * and are not compatible. Defaults to null.
+ * and are not compatible. The LUT texture must be loaded with `srgb: true` (LUTs are authored
+ * in sRGB display space — the Unreal / Photoshop workflow stores sRGB-encoded values indexed by
+ * sRGB-encoded coordinates), `mipmaps: false` (LUT is sampled at LOD 0 only), and
+ * `minFilter: FILTER_LINEAR` / `magFilter: FILTER_LINEAR` (bilinear filtering between LUT entries
+ * is required to avoid visible banding). The engine emits a debug-build warning if any of these
+ * are misconfigured. Defaults to null.
  * @property {number} intensity - The intensity of the color LUT effect. Defaults to 1.
  */
 
