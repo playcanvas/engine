@@ -259,7 +259,9 @@ class ResourceLoader {
     }
 
     _onFailure(key, err) {
-        console.error(err);
+        // include a string-form message so external error reporters (which often JSON.stringify the
+        // arguments) get useful context, while keeping the original Error available for dev tools
+        console.error(`Failed to load resource [${key}]: ${err?.message ?? err}`, err);
         if (this._requests[key]) {
             for (let i = 0; i < this._requests[key].length; i++) {
                 this._requests[key][i](err);
