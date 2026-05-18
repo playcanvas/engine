@@ -18,7 +18,6 @@ import { TextElement } from './text-element.js';
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { CanvasFont } from '../../../framework/font/canvas-font.js'
  * @import { Color } from '../../../core/math/color.js'
- * @import { ElementComponentData } from './data.js'
  * @import { ElementComponentSystem } from './system.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Font } from '../../../framework/font/font.js'
@@ -38,9 +37,9 @@ const matC = new Mat4();
 const matD = new Mat4();
 
 /**
- * ElementComponents are used to construct user interfaces. The {@link ElementComponent#type}
- * property can be configured in 3 main ways: as a text element, as an image element or as a group
- * element. If the ElementComponent has a {@link ScreenComponent} ancestor in the hierarchy, it
+ * ElementComponents are used to construct user interfaces. The {@link type} property can be
+ * configured in 3 main ways: as a text element, as an image element or as a group element. If
+ * the ElementComponent has a {@link ScreenComponent} ancestor in the hierarchy, it
  * will be transformed with respect to the coordinate system of the screen. If there is no
  * {@link ScreenComponent} ancestor, the ElementComponent will be transformed like any other
  * entity.
@@ -49,7 +48,7 @@ const matD = new Mat4();
  * ElementComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('element'); // This defaults to a 'group' element
  * ```
  *
@@ -322,24 +321,10 @@ class ElementComponent extends Component {
         this._addedModels = []; // store models that have been added to layer so we can re-add when layer is changed
 
         this._batchGroupId = -1;
-        // #if _DEBUG
-        this._batchGroup = null;
-        // #endif
-        //
 
         this._offsetReadAt = 0;
         this._maskOffset = 0.5;
         this._maskedBy = null; // the entity that is masking this element
-    }
-
-    // TODO: Remove this override in upgrading component
-    /**
-     * @type {ElementComponentData}
-     * @ignore
-     */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
     }
 
     /**
@@ -1434,7 +1419,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the horizontal and vertical alignment of the text. Values range from 0 to 1 where
-     * `[0, 0]` is the bottom left and `[1, 1]` is the top right.  Only works for
+     * `[0, 0]` is the bottom left and `[1, 1]` is the top right. Only works for
      * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {Vec2}

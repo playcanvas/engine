@@ -264,17 +264,12 @@ assetListLoader.load(() => {
 
         // display shadow texture (debug feature)
         if (app.graphicsDevice.isWebGPU) {
-            // @ts-ignore engine-tsd
-            app.drawTexture(
-                -0.7,
-                -0.7,
-                0.5,
-                0.5,
-                app.renderer.lightTextureAtlas.shadowAtlas.texture,
-                undefined,
-                undefined,
-                false
-            );
+            const texture = app.renderer.lightTextureAtlas.shadowAtlas?.texture;
+            // skip if texture is not ready (placeholder or destroyed)
+            if (texture?.device && texture.width > 1) {
+                // @ts-ignore engine-tsd
+                app.drawTexture(-0.7, -0.7, 0.5, 0.5, texture, undefined, undefined, false);
+            }
         }
     });
 });

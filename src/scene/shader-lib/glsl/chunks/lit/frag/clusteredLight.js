@@ -13,7 +13,7 @@ export default /* glsl */`
     #include "clusteredLightShadowsPS"
 #endif
 
-uniform highp sampler2D clusterWorldTexture;
+uniform highp usampler2D clusterWorldTexture;
 uniform highp sampler2D lightsTexture;
 
 #ifdef CLUSTER_SHADOWS
@@ -27,46 +27,35 @@ uniform highp sampler2D lightsTexture;
 
 uniform int clusterMaxCells;
 
-// 1.0 if clustered lighting can be skipped (0 lights in the clusters)
-uniform float clusterSkip;
+// number of lights in the cluster structure
+uniform int numClusteredLights;
+
+// width of the cluster texture
+uniform int clusterTextureWidth;
 
 uniform vec3 clusterCellsCountByBoundsSize;
-uniform vec3 clusterTextureSize;
 uniform vec3 clusterBoundsMin;
 uniform vec3 clusterBoundsDelta;
-uniform vec3 clusterCellsDot;
-uniform vec3 clusterCellsMax;
+uniform ivec3 clusterCellsDot;
+uniform ivec3 clusterCellsMax;
 uniform vec2 shadowAtlasParams;
 
-// structure storing light properties of a clustered light
-// it's sorted to have all vectors aligned to 4 floats to limit padding
+// structure storing light properties of a clustered light. Vectors and scalars are interleaved
+// so each vec3 packs with an adjacent 4-byte field into a 16-byte slot, minimising padding for
+// compilers that don't reorder struct members.
 struct ClusterLightData {
-
-    // 32bit of flags
-    uint flags;
-
-    // area light sizes / orientation
-    vec3 halfWidth;
-
-    bool isSpot;
-
-    // area light sizes / orientation
-    vec3 halfHeight;
-
-    // light index
-    int lightIndex;
 
     // world space position
     vec3 position;
 
-    // area light shape
-    uint shape;
+    // light index in the lights texture
+    int lightIndex;
 
     // world space direction (spot light only)
     vec3 direction;
 
-    // light follow mode
-    bool falloffModeLinear;
+    // area light shape
+    uint shape;
 
     // color
     vec3 color;
@@ -74,39 +63,42 @@ struct ClusterLightData {
     // 0.0 if the light doesn't cast shadows
     float shadowIntensity;
 
-    // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
-    vec3 omniAtlasViewport;
-
     // range of the light
     float range;
 
-    // channel mask - one of the channels has 1, the others are 0
-    vec4 cookieChannelMask;
-
-    // compressed biases, two haf-floats stored in a float
+    // compressed biases, two half-floats stored in a float
     float biasesData;
-
-    // blue color component and angle flags (as uint for efficient bit operations)
-    uint colorBFlagsData;
-
-    // shadow bias values
-    float shadowBias;
-    float shadowNormalBias;
-
-    // compressed angles, two haf-floats stored in a float
-    float anglesData;
-
-    // spot light inner and outer angle cosine
-    float innerConeAngleCos;
-    float outerConeAngleCos;
 
     // intensity of the cookie
     float cookieIntensity;
 
-    // light mask
-    //float mask;
+    // true for spot lights
+    bool isSpot;
+
+    // light follow mode
+    bool falloffModeLinear;
+
+    // light mask (mutually exclusive)
     bool isDynamic;
     bool isLightmapped;
+};
+
+// Spot light cone angles, decoded on demand only when the light is a spot light.
+struct ClusterLightSpotData {
+    float innerConeAngleCos;
+    float outerConeAngleCos;
+};
+
+// Area light dimensions and orientation, decoded on demand only for non-punctual lights.
+struct ClusterLightAreaData {
+    vec3 halfWidth;
+    vec3 halfHeight;
+};
+
+// Shadow bias parameters, decoded on demand only when the light casts shadows.
+struct ClusterLightShadowData {
+    float shadowBias;
+    float shadowNormalBias;
 };
 
 // Note: on some devices (tested on Pixel 3A XL), this matrix when stored inside the light struct has lower precision compared to
@@ -116,98 +108,109 @@ struct ClusterLightData {
 // shadow (spot light only) / cookie projection matrix
 mat4 lightProjectionMatrix;
 
-vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
-    return texelFetch(lightsTexture, ivec2(index, clusterLightData.lightIndex), 0);
+// NOTE: On some Samsung devices, these values can suffer precision / corruption issues when stored
+// as members of ClusterLightData. Keep them as module-scope temporaries instead. See issue #7800.
+uint clusterLightData_flags;             // 32bit of flags
+float clusterLightData_anglesData;       // compressed angles, two half-floats stored in a float
+uint clusterLightData_colorBFlagsData;   // blue color component and angle flags (as uint for efficient bit operations)
+
+vec4 sampleLightTextureF(int lightIndex, int index) {
+    return texelFetch(lightsTexture, ivec2(index, lightIndex), 0);
 }
 
-void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
+ClusterLightData decodeClusterLightCore(int lightIndex) {
+    ClusterLightData clusterLightData;
 
     // light index
-    clusterLightData.lightIndex = int(lightIndex);
+    clusterLightData.lightIndex = lightIndex;
 
     // sample data encoding half-float values into 32bit uints
-    vec4 halfData = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_COLOR_ANGLES_BIAS});
+    vec4 halfData = sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_COLOR_ANGLES_BIAS});
 
-    // store floats we decode later as needed
-    clusterLightData.anglesData = halfData.z;
+    // store values needed by later decode steps (anglesData / colorBFlagsData live outside the
+    // struct due to Samsung precision issues - see #7800)
+    clusterLightData_anglesData = halfData.z;
     clusterLightData.biasesData = halfData.w;
-    clusterLightData.colorBFlagsData = floatBitsToUint(halfData.y);
+    clusterLightData_colorBFlagsData = floatBitsToUint(halfData.y);
 
     // decompress color half-floats
     vec2 colorRG = unpackHalf2x16(floatBitsToUint(halfData.x));
-    vec2 colorB_flags = unpackHalf2x16(clusterLightData.colorBFlagsData);
+    vec2 colorB_flags = unpackHalf2x16(clusterLightData_colorBFlagsData);
     clusterLightData.color = vec3(colorRG, colorB_flags.x) * {LIGHT_COLOR_DIVIDER};
 
     // position and range, full floats
-    vec4 lightPosRange = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_POSITION_RANGE});
+    vec4 lightPosRange = sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_POSITION_RANGE});
     clusterLightData.position = lightPosRange.xyz;
     clusterLightData.range = lightPosRange.w;
 
     // spot direction & flags data
-    vec4 lightDir_Flags = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_DIRECTION_FLAGS});
+    vec4 lightDir_Flags = sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_DIRECTION_FLAGS});
 
     // spot light direction
     clusterLightData.direction = lightDir_Flags.xyz;
 
-    // 32bit flags
-    clusterLightData.flags = floatBitsToUint(lightDir_Flags.w);
-    clusterLightData.isSpot = (clusterLightData.flags & (1u << 30u)) != 0u;
-    clusterLightData.shape = (clusterLightData.flags >> 28u) & 0x3u;
-    clusterLightData.falloffModeLinear = (clusterLightData.flags & (1u << 27u)) == 0u;
-    clusterLightData.shadowIntensity = float((clusterLightData.flags >> 0u) & 0xFFu) / 255.0;
-    clusterLightData.cookieIntensity = float((clusterLightData.flags >> 8u) & 0xFFu) / 255.0;
-    clusterLightData.isDynamic = (clusterLightData.flags & (1u << 22u)) != 0u;
-    clusterLightData.isLightmapped = (clusterLightData.flags & (1u << 21u)) != 0u;
+    // 32bit flags (kept outside the struct, see #7800)
+    clusterLightData_flags = floatBitsToUint(lightDir_Flags.w);
+    clusterLightData.isSpot = (clusterLightData_flags & (1u << 30u)) != 0u;
+    clusterLightData.shape = (clusterLightData_flags >> 28u) & 0x3u;
+    clusterLightData.falloffModeLinear = (clusterLightData_flags & (1u << 27u)) == 0u;
+    clusterLightData.shadowIntensity = float((clusterLightData_flags >> 0u) & 0xFFu) / 255.0;
+    clusterLightData.cookieIntensity = float((clusterLightData_flags >> 8u) & 0xFFu) / 255.0;
+    clusterLightData.isDynamic = (clusterLightData_flags & (1u << 22u)) != 0u;
+    clusterLightData.isLightmapped = (clusterLightData_flags & (1u << 21u)) != 0u;
+
+    return clusterLightData;
 }
 
-void decodeClusterLightSpot(inout ClusterLightData clusterLightData) {
+ClusterLightSpotData decodeClusterLightSpot() {
     // decompress spot light angles
-    uint angleFlags = (clusterLightData.colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
+    uint angleFlags = (clusterLightData_colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
 
-    vec2 angleValues = unpackHalf2x16(floatBitsToUint(clusterLightData.anglesData));
+    vec2 angleValues = unpackHalf2x16(floatBitsToUint(clusterLightData_anglesData));
     float innerVal = angleValues.x;
     float outerVal = angleValues.y;
 
     // decode based on flags (branch-free)
     float innerIsVersine = float(angleFlags & 1u);          // bit 0: inner angle format
     float outerIsVersine = float((angleFlags >> 1u) & 1u);  // bit 1: outer angle format
-    clusterLightData.innerConeAngleCos = mix(innerVal, 1.0 - innerVal, innerIsVersine);
-    clusterLightData.outerConeAngleCos = mix(outerVal, 1.0 - outerVal, outerIsVersine);
+
+    return ClusterLightSpotData(
+        mix(innerVal, 1.0 - innerVal, innerIsVersine),
+        mix(outerVal, 1.0 - outerVal, outerIsVersine)
+    );
 }
 
-void decodeClusterLightOmniAtlasViewport(inout ClusterLightData clusterLightData) {
-    clusterLightData.omniAtlasViewport = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_0}).xyz;
+vec3 decodeClusterLightOmniAtlasViewport(int lightIndex) {
+    return sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_0}).xyz;
 }
 
-void decodeClusterLightAreaData(inout ClusterLightData clusterLightData) {
-    clusterLightData.halfWidth = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_AREA_DATA_WIDTH}).xyz;
-    clusterLightData.halfHeight = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_AREA_DATA_HEIGHT}).xyz;
+ClusterLightAreaData decodeClusterLightAreaData(int lightIndex) {
+    return ClusterLightAreaData(
+        sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_AREA_DATA_WIDTH}).xyz,
+        sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_AREA_DATA_HEIGHT}).xyz
+    );
 }
 
-void decodeClusterLightProjectionMatrixData(inout ClusterLightData clusterLightData) {
-    
+mat4 decodeClusterLightProjectionMatrixData(int lightIndex) {
     // shadow matrix
-    vec4 m0 = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_0});
-    vec4 m1 = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_1});
-    vec4 m2 = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_2});
-    vec4 m3 = sampleLightTextureF(clusterLightData, {CLUSTER_TEXTURE_PROJ_MAT_3});
-    lightProjectionMatrix = mat4(m0, m1, m2, m3);
+    vec4 m0 = sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_0});
+    vec4 m1 = sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_1});
+    vec4 m2 = sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_2});
+    vec4 m3 = sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_3});
+    return mat4(m0, m1, m2, m3);
 }
 
-void decodeClusterLightShadowData(inout ClusterLightData clusterLightData) {
-    
+ClusterLightShadowData decodeClusterLightShadowData(float biasesData) {
     // shadow biases
-    vec2 biases = unpackHalf2x16(floatBitsToUint(clusterLightData.biasesData));
-    clusterLightData.shadowBias = biases.x;
-    clusterLightData.shadowNormalBias = biases.y;
+    vec2 biases = unpackHalf2x16(floatBitsToUint(biasesData));
+    return ClusterLightShadowData(biases.x, biases.y);
 }
 
-void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
-
+vec4 decodeClusterLightCookieData() {
     // extract channel mask from flags
-    uint cookieFlags = (clusterLightData.flags >> 23u) & 0x0Fu;  // 4bits, each bit enables a channel
-    clusterLightData.cookieChannelMask = vec4(uvec4(cookieFlags) & uvec4(1u, 2u, 4u, 8u));
-    clusterLightData.cookieChannelMask = step(1.0, clusterLightData.cookieChannelMask);  // Normalize to 0.0 or 1.0
+    uint cookieFlags = (clusterLightData_flags >> 23u) & 0x0Fu;  // 4bits, each bit enables a channel
+    vec4 mask = vec4(uvec4(cookieFlags) & uvec4(1u, 2u, 4u, 8u));
+    return step(1.0, mask);  // Normalize to 0.0 or 1.0
 }
 
 void evaluateLight(
@@ -245,15 +248,15 @@ void evaluateLight(
     if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
 
         // area lights
-        decodeClusterLightAreaData(light);
+        ClusterLightAreaData areaData = decodeClusterLightAreaData(light.lightIndex);
 
         // handle light shape
         if (light.shape == {LIGHTSHAPE_RECT}) {
-            calcRectLightValues(light.position, light.halfWidth, light.halfHeight);
+            calcRectLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
         } else if (light.shape == {LIGHTSHAPE_DISK}) {
-            calcDiskLightValues(light.position, light.halfWidth, light.halfHeight);
+            calcDiskLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
         } else { // sphere
-            calcSphereLightValues(light.position, light.halfWidth, light.halfHeight);
+            calcSphereLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
         }
 
         falloffAttenuation = getFalloffWindow(light.range, lightDirW);
@@ -295,8 +298,8 @@ void evaluateLight(
 
         // spot light falloff
         if (light.isSpot) {
-            decodeClusterLightSpot(light);
-            falloffAttenuation *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos, lightDirNormW);
+            ClusterLightSpotData spotData = decodeClusterLightSpot();
+            falloffAttenuation *= getSpotEffect(light.direction, spotData.innerConeAngleCos, spotData.outerConeAngleCos, lightDirNormW);
         }
 
         #if defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
@@ -306,11 +309,13 @@ void evaluateLight(
             // shadow / cookie
             if (light.shadowIntensity > 0.0 || light.cookieIntensity > 0.0) {
 
+                vec3 omniAtlasViewport = vec3(0.0);
+
                 // shared shadow / cookie data depends on light type
                 if (light.isSpot) {
-                    decodeClusterLightProjectionMatrixData(light);
+                    lightProjectionMatrix = decodeClusterLightProjectionMatrixData(light.lightIndex);
                 } else {
-                    decodeClusterLightOmniAtlasViewport(light);
+                    omniAtlasViewport = decodeClusterLightOmniAtlasViewport(light.lightIndex);
                 }
 
                 float shadowTextureResolution = shadowAtlasParams.x;
@@ -320,12 +325,12 @@ void evaluateLight(
 
                 // cookie
                 if (light.cookieIntensity > 0.0) {
-                    decodeClusterLightCookieData(light);
+                    vec4 cookieChannelMask = decodeClusterLightCookieData();
 
                     if (light.isSpot) {
-                        cookieAttenuation = getCookie2DClustered(TEXTURE_PASS(cookieAtlasTexture), lightProjectionMatrix, vPositionW, light.cookieIntensity, light.cookieChannelMask);
+                        cookieAttenuation = getCookie2DClustered(TEXTURE_PASS(cookieAtlasTexture), lightProjectionMatrix, vPositionW, light.cookieIntensity, cookieChannelMask);
                     } else {
-                        cookieAttenuation = getCookieCubeClustered(TEXTURE_PASS(cookieAtlasTexture), lightDirW, light.cookieIntensity, light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
+                        cookieAttenuation = getCookieCubeClustered(TEXTURE_PASS(cookieAtlasTexture), lightDirW, light.cookieIntensity, cookieChannelMask, shadowTextureResolution, shadowEdgePixels, omniAtlasViewport);
                     }
                 }
 
@@ -335,9 +340,9 @@ void evaluateLight(
 
                 // shadow
                 if (light.shadowIntensity > 0.0) {
-                    decodeClusterLightShadowData(light);
+                    ClusterLightShadowData shadowData = decodeClusterLightShadowData(light.biasesData);
 
-                    vec4 shadowParams = vec4(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
+                    vec4 shadowParams = vec4(shadowTextureResolution, shadowData.shadowNormalBias, shadowData.shadowBias, 1.0 / light.range);
 
                     if (light.isSpot) {
 
@@ -361,11 +366,11 @@ void evaluateLight(
                         vec3 dir = normalOffsetPointShadow(shadowParams, light.position, lightDirW, lightDirNormW, geometricNormal);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dir);
+                            float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowOmniClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dir);
+                            float shadow = getShadowOmniClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowOmniClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dir);
+                            float shadow = getShadowOmniClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
                         #endif
                         falloffAttenuation *= mix(1.0, shadow, light.shadowIntensity);
                     }
@@ -492,7 +497,7 @@ void evaluateLight(
 }
 
 void evaluateClusterLight(
-    float lightIndex, 
+    int lightIndex, 
     vec3 worldNormal, 
     vec3 viewDir, 
     vec3 reflectionDir, 
@@ -513,8 +518,7 @@ void evaluateClusterLight(
 ) {
 
     // decode core light data from textures
-    ClusterLightData clusterLightData;
-    decodeClusterLightCore(clusterLightData, lightIndex);
+    ClusterLightData clusterLightData = decodeClusterLightCore(lightIndex);
 
     // evaluate light if it uses accepted light mask
     #ifdef CLUSTER_MESH_DYNAMIC_LIGHTS
@@ -566,34 +570,34 @@ void addClusteredLights(
     float iridescence_intensity
 ) {
 
-    // skip lights if no lights at all
-    if (clusterSkip > 0.5)
+    // skip if no lights (index 0 is reserved for 'no light')
+    if (numClusteredLights <= 1)
         return;
 
     // world space position to 3d integer cell cordinates in the cluster structure
-    vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
+    ivec3 cellCoords = ivec3(floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize));
 
     // no lighting when cell coordinate is out of range
-    if (!(any(lessThan(cellCoords, vec3(0.0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {
+    if (!(any(lessThan(cellCoords, ivec3(0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {
 
         // cell index (mapping from 3d cell coordinates to linear memory)
-        float cellIndex = dot(clusterCellsDot, cellCoords);
+        int cellIndex = cellCoords.x * clusterCellsDot.x + cellCoords.y * clusterCellsDot.y + cellCoords.z * clusterCellsDot.z;
 
         // convert cell index to uv coordinates
-        float clusterV = floor(cellIndex * clusterTextureSize.y);
-        float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
+        int clusterV = cellIndex / clusterTextureWidth;
+        int clusterU = cellIndex - clusterV * clusterTextureWidth;
 
         // loop over maximum number of light cells
         for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
             // using a single channel texture with data in red channel
-            float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+            uint lightIndex = texelFetch(clusterWorldTexture, ivec2(clusterU + lightCellIndex, clusterV), 0).x;
 
-            if (lightIndex <= 0.0)
+            if (lightIndex == 0u)
                 break;
 
             evaluateClusterLight(
-                lightIndex * 255.0, 
+                int(lightIndex), 
                 worldNormal, 
                 viewDir, 
                 reflectionDir,

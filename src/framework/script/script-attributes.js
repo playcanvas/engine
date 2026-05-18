@@ -239,7 +239,7 @@ class ScriptAttributes {
      * @param {string} name - Name of an attribute.
      * @param {object} args - Object with Arguments for an attribute.
      * @param {("boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve")} args.type - Type
-     * of an attribute value.  Can be:
+     * of an attribute value. Can be:
      *
      * - "asset"
      * - "boolean"

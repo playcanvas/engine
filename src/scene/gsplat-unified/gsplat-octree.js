@@ -3,7 +3,6 @@ import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { TRACEID_OCTREE_RESOURCES } from '../../core/constants.js';
-
 // Temporary array reused to avoid allocations during cooldown ticking
 const _toDelete = [];
 
@@ -18,6 +17,15 @@ class GSplatOctree {
      * @type {GSplatOctreeNode[]}
      */
     nodes;
+
+    /**
+     * Packed per-node axis-aligned bounds in octree local space for CPU hot paths (e.g. LOD).
+     * Length is {@link GSplatOctree.nodes}.length * 6. For node index `i`, base `b = i * 6`:
+     * `[minX, minY, minZ, maxX, maxY, maxZ]` matching {@link GSplatOctreeNode.bounds}.
+     *
+     * @type {Float32Array}
+     */
+    nodeBoundsMinMax;
 
     /**
      * @type {{ url: string, lodLevel: number }[]}
@@ -75,8 +83,6 @@ class GSplatOctree {
 
     /**
      * Reference count for environment usage.
-     *
-     * @type {number}
      */
     environmentRefCount = 0;
 
@@ -86,6 +92,18 @@ class GSplatOctree {
      * @type {GSplatAssetLoaderBase|null}
      */
     assetLoader = null;
+
+    /**
+     * Whether this octree has been destroyed.
+     */
+    destroyed = false;
+
+    /**
+     * Number of update ticks before unloading unused file resources. Set from GSplatParams.
+     *
+     * @private
+     */
+    cooldownTicks = 100;
 
     /**
      * @param {string} assetFileUrl - The file URL of the container asset.
@@ -148,10 +166,47 @@ class GSplatOctree {
 
             return new GSplatOctreeNode(lods, nodeData.bound);
         });
+
+        // precompute node bounds for CPU hot paths
+        const nodeCount = this.nodes.length;
+        const boundsFlat = new Float32Array(nodeCount * 6);
+        for (let i = 0; i < nodeCount; i++) {
+            const bounds = this.nodes[i].bounds;
+            const mn = bounds.getMin();
+            const mx = bounds.getMax();
+            const b = i * 6;
+            boundsFlat[b + 0] = mn.x;
+            boundsFlat[b + 1] = mn.y;
+            boundsFlat[b + 2] = mn.z;
+            boundsFlat[b + 3] = mx.x;
+            boundsFlat[b + 4] = mx.y;
+            boundsFlat[b + 5] = mx.z;
+        }
+        this.nodeBoundsMinMax = boundsFlat;
+    }
+
+    /**
+     * Destroys the octree and clears internal state. Does not force-unload resources as they may
+     * still be referenced by managers. Resources will be cleaned up when their reference counts
+     * reach zero through the normal cleanup mechanisms.
+     */
+    destroy() {
+        // Mark as destroyed so instances can detect forced cleanup
+        this.destroyed = true;
+
+        // Clear internal state
+        this.fileResources.clear();
+        this.cooldowns.clear();
+
+        // Destroy and clear references
+        this.assetLoader?.destroy();
+        this.assetLoader = null;
+        this.environmentResource = null;
     }
 
     /**
      * Trace out per-LOD counts of currently loaded file resources.
+     *
      * @private
      */
     _traceLodCounts() {
@@ -246,12 +301,19 @@ class GSplatOctree {
      */
     unloadResource(fileIndex) {
         Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
-        Debug.assert(this.assetLoader);
 
+        // If octree was destroyed, assetLoader is null - nothing to unload
+        if (!this.assetLoader) {
+            return;
+        }
+
+        const fullUrl = this.files[fileIndex].url;
+
+        // Always call unload - it handles loaded, loading, and queued resources
+        this.assetLoader.unload(fullUrl);
+
+        // Clean up loaded resource if present
         if (this.fileResources.has(fileIndex)) {
-
-            const fullUrl = this.files[fileIndex].url;
-            this.assetLoader?.unload(fullUrl);
             this.fileResources.delete(fileIndex);
 
             // trace updated LOD counts after change
@@ -261,8 +323,12 @@ class GSplatOctree {
 
     /**
      * Advances cooldowns for zero-ref files and unloads those whose timers expired.
+     *
+     * @param {number} cooldownTicks - Number of ticks for new cooldowns, synced from GSplatParams.
      */
-    updateCooldownTick() {
+    updateCooldownTick(cooldownTicks) {
+        this.cooldownTicks = cooldownTicks;
+
         if (this.cooldowns.size > 0) {
             this.cooldowns.forEach((remaining, fileIndex) => {
                 if (remaining <= 1) {
@@ -309,7 +375,7 @@ class GSplatOctree {
 
             // if the file finished loading and is no longer needed, schedule a cooldown
             if (this.fileRefCounts[fileIndex] === 0) {
-                this.cooldowns.set(fileIndex, this.assetLoader?.cooldownTicks ?? 0);
+                this.cooldowns.set(fileIndex, this.cooldownTicks);
             }
 
             // trace updated LOD counts after change
@@ -346,6 +412,11 @@ class GSplatOctree {
      * Ensures environment resource is loaded and available.
      */
     ensureEnvironmentResource() {
+        // If octree was destroyed, don't load anything
+        if (!this.assetLoader) {
+            return;
+        }
+
         // no environment configured
         if (!this.environmentUrl) {
             return;
@@ -356,10 +427,8 @@ class GSplatOctree {
             return;
         }
 
-        Debug.assert(this.assetLoader);
-
         // Check if the resource is now available from the asset loader
-        const res = this.assetLoader?.getResource(this.environmentUrl);
+        const res = this.assetLoader.getResource(this.environmentUrl);
         if (res) {
             this.environmentResource = res;
 
@@ -372,17 +441,20 @@ class GSplatOctree {
         }
 
         // Start/continue loading (asset loader handles duplicates internally)
-        this.assetLoader?.load(this.environmentUrl);
+        this.assetLoader.load(this.environmentUrl);
     }
 
     /**
      * Unloads environment resource if currently loaded.
      */
     unloadEnvironmentResource() {
-        Debug.assert(this.assetLoader);
+        // If octree was destroyed, assetLoader is null - nothing to unload
+        if (!this.assetLoader) {
+            return;
+        }
 
         if (this.environmentResource && this.environmentUrl) {
-            this.assetLoader?.unload(this.environmentUrl);
+            this.assetLoader.unload(this.environmentUrl);
             this.environmentResource = null;
         }
     }

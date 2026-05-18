@@ -15,6 +15,7 @@ import wgslFS from './shader-chunks/frag/webgpu-wgsl.js';
 import wgslVS from './shader-chunks/vert/webgpu-wgsl.js';
 import sharedGLSL from './shader-chunks/frag/shared.js';
 import sharedWGSL from './shader-chunks/frag/shared-wgsl.js';
+import halfTypes from './shader-chunks/frag/half-types.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -115,7 +116,8 @@ class ShaderDefinitionUtils {
 
         const getDefinesWgsl = (isVertex, options) => {
 
-            let attachmentsDefine = '';
+            // Enable directives must come before all global declarations
+            let code = ShaderDefinitionUtils.getWGSLEnables(device, isVertex ? 'vertex' : 'fragment');
 
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {
@@ -126,11 +128,11 @@ class ShaderDefinitionUtils {
                     const glslOutType = fragmentOutputTypes[i] ?? 'vec4';
                     const wgslOutType = primitiveGlslToWgslTypeMap.get(glslOutType);
                     Debug.assert(wgslOutType, `Unknown output type translation: ${glslOutType} -> ${wgslOutType}`);
-                    attachmentsDefine += `alias pcOutType${i} = ${wgslOutType};\n`;
+                    code += `alias pcOutType${i} = ${wgslOutType};\n`;
                 }
             }
 
-            return attachmentsDefine;
+            return code;
         };
 
         const name = options.name ?? 'Untitled';
@@ -145,17 +147,19 @@ class ShaderDefinitionUtils {
 
             vertCode = `
                 ${getDefinesWgsl(true, options)}
+                ${vertexDefinesCode}
+                ${halfTypes}
                 ${wgslVS}
                 ${sharedWGSL}
-                ${vertexDefinesCode}
                 ${options.vertexCode}
             `;
 
             fragCode = `
                 ${getDefinesWgsl(false, options)}
+                ${fragmentDefinesCode}
+                ${halfTypes}
                 ${wgslFS}
                 ${sharedWGSL}
-                ${fragmentDefinesCode}
                 ${options.fragmentCode}
             `;
 
@@ -201,10 +205,39 @@ class ShaderDefinitionUtils {
     }
 
     /**
+     * Generates WGSL `enable` / `requires` directives based on device capabilities. They must come
+     * before all global declarations in WGSL shaders.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {'vertex'|'fragment'|'compute'} shaderType - The type of shader.
+     * @returns {string} The WGSL enable directives code.
+     * @ignore
+     */
+    static getWGSLEnables(device, shaderType) {
+        let code = '';
+        if (device.supportsShaderF16) {
+            code += 'enable f16;\n';
+        }
+        if (shaderType === 'fragment' && device.supportsPrimitiveIndex) {
+            code += 'enable primitive_index;\n';
+        }
+        if (device.supportsSubgroups) {
+            code += 'enable subgroups;\n';
+        }
+        if (device.supportsSubgroupId) {
+            code += 'requires subgroup_id;\n';
+        }
+        if (shaderType === 'compute' && device.supportsLinearIndexing) {
+            code += 'requires linear_indexing;\n';
+        }
+        return code;
+    }
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Map<string, string>} [defines] - A map containing key-value pairs.
      * @returns {string} The shader code for the defines.
-     * @private
+     * @ignore
      */
     static getDefinesCode(device, defines) {
         let code = '';

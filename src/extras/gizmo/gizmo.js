@@ -138,7 +138,7 @@ class Gizmo extends EventHandler {
     static EVENT_NODESDETACH = 'nodes:detach';
 
     /**
-     * Fired when when the gizmo render has updated.
+     * Fired when the gizmo render has updated.
      *
      * @event
      * @example
@@ -152,7 +152,6 @@ class Gizmo extends EventHandler {
     /**
      * Internal version of the gizmo size. Defaults to 1.
      *
-     * @type {number}
      * @private
      */
     _size = 1;
@@ -160,7 +159,6 @@ class Gizmo extends EventHandler {
     /**
      * Internal version of the gizmo scale. Defaults to 1.
      *
-     * @type {number}
      * @protected
      */
     _scale = 1;
@@ -224,7 +222,6 @@ class Gizmo extends EventHandler {
     /**
      * Internal flag to track if a render update is required.
      *
-     * @type {boolean}
      * @protected
      */
     _renderUpdate = false;
@@ -252,8 +249,6 @@ class Gizmo extends EventHandler {
 
     /**
      * Flag to indicate whether to call `preventDefault` on pointer events.
-     *
-     * @type {boolean}
      */
     preventDefault = true;
 
@@ -535,9 +530,7 @@ class Gizmo extends EventHandler {
         this.fire(Gizmo.EVENT_POINTERUP, e.offsetX, e.offsetY, selection[0]);
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _updatePosition() {
         position.set(0, 0, 0);
         if (this._coordSpace === 'local') {
@@ -560,9 +553,7 @@ class Gizmo extends EventHandler {
         this._renderUpdate = true;
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _updateRotation() {
         rotation.set(0, 0, 0, 1);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
@@ -579,9 +570,7 @@ class Gizmo extends EventHandler {
         this._renderUpdate = true;
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _updateScale() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const gizmoPos = this.root.getLocalPosition();

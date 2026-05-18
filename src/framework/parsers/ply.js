@@ -589,6 +589,8 @@ class PlyParser {
      * @param {Asset} asset - Container asset.
      */
     async load(url, callback, asset) {
+        const gsplatCentersEnabledAtLoad = this.app.scene?.gsplatCentersEnabled !== false;
+
         try {
             // either use the fetch request passed in by the application or initiate it ourselves
             const response = await (asset.file?.contents ?? fetch(url.load));
@@ -620,9 +622,10 @@ class PlyParser {
                 }
 
                 // construct the resource
+                const prepareCenters = gsplatCentersEnabledAtLoad;
                 const resource = (data.isCompressed && !asset.data.decompress) ?
-                    new GSplatCompressedResource(this.app.graphicsDevice, data) :
-                    new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data);
+                    new GSplatCompressedResource(this.app.graphicsDevice, data, { prepareCenters }) :
+                    new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data, { prepareCenters });
 
                 callback(null, resource);
             }

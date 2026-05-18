@@ -50,9 +50,7 @@ class GamepadSource extends InputSource {
         });
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         const gamepads = navigator.getGamepads();
         for (let i = 0; i < gamepads.length; i++) {

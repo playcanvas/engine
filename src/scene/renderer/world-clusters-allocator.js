@@ -1,5 +1,6 @@
 import { DebugHelper } from '../../core/debug.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
+import { FramePassMultiView } from './frame-pass-multi-view.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -81,6 +82,55 @@ class WorldClustersAllocator {
         return this._empty;
     }
 
+    /**
+     * Assign clusters for one frame pass that owns {@link RenderPass#renderActions}.
+     * No-op when the pass has no render actions.
+     *
+     * @param {import('../../platform/graphics/frame-pass.js').FramePass} renderPass - Render pass
+     * (not a {@link FramePassMultiView} wrapper; those are unwrapped in {@link WorldClustersAllocator#assign}).
+     * @private
+     */
+    _assignClustersForPass(renderPass) {
+        const renderActions = renderPass.renderActions;
+        if (!renderActions) {
+            return;
+        }
+
+        const count = renderActions.length;
+        for (let i = 0; i < count; i++) {
+            const ra = renderActions[i];
+            ra.lightClusters = null;
+
+            // if the layer has lights used by clusters, and meshes
+            const layer = ra.layer;
+            if (layer.hasClusteredLights && layer.meshInstances.length) {
+
+                // use existing clusters if the lights on the layer are the same
+                const hash = layer.getLightIdHash();
+                const existingRenderAction = this._clusters.get(hash);
+                let clusters = existingRenderAction?.lightClusters;
+
+                // no match, needs new clusters
+                if (!clusters) {
+
+                    // use already allocated cluster from last frame, or create a new one
+                    clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
+                    DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
+
+                    this._allocated.push(clusters);
+                    this._clusters.set(hash, ra);
+                }
+
+                ra.lightClusters = clusters;
+            }
+
+            // no clustered lights, use the cluster with no lights
+            if (!ra.lightClusters) {
+                ra.lightClusters = this.empty;
+            }
+        }
+    }
+
     // assign light clusters to render actions that need it
     assign(renderPasses) {
 
@@ -89,48 +139,18 @@ class WorldClustersAllocator {
         this._allocated.length = 0;
         this._clusters.clear();
 
-        // update render actions in passes that use them
+        // FramePassMultiView children are not on the frame graph list (merge safety); still assign
+        // clusters to their render actions before those passes run.
         const passCount = renderPasses.length;
         for (let p = 0; p < passCount; p++) {
-
-            const renderPass = renderPasses[p];
-            const renderActions = renderPass.renderActions;
-            if (renderActions) {
-
-                // process all render actions
-                const count = renderActions.length;
-                for (let i = 0; i < count; i++) {
-                    const ra = renderActions[i];
-                    ra.lightClusters = null;
-
-                    // if the layer has lights used by clusters, and meshes
-                    const layer = ra.layer;
-                    if (layer.hasClusteredLights && layer.meshInstances.length) {
-
-                        // use existing clusters if the lights on the layer are the same
-                        const hash = layer.getLightIdHash();
-                        const existingRenderAction = this._clusters.get(hash);
-                        let clusters = existingRenderAction?.lightClusters;
-
-                        // no match, needs new clusters
-                        if (!clusters) {
-
-                            // use already allocated cluster from last frame, or create a new one
-                            clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
-                            DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
-
-                            this._allocated.push(clusters);
-                            this._clusters.set(hash, ra);
-                        }
-
-                        ra.lightClusters = clusters;
-                    }
-
-                    // no clustered lights, use the cluster with no lights
-                    if (!ra.lightClusters) {
-                        ra.lightClusters = this.empty;
-                    }
+            const pass = renderPasses[p];
+            if (pass instanceof FramePassMultiView) {
+                const children = pass.children;
+                for (let c = 0; c < children.length; c++) {
+                    this._assignClustersForPass(children[c]);
                 }
+            } else {
+                this._assignClustersForPass(pass);
             }
         }
 

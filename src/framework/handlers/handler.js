@@ -18,8 +18,6 @@
 class ResourceHandler {
     /**
      * Type of the resource the handler handles.
-     *
-     * @type {string}
      */
     handlerType = '';
 
@@ -63,11 +61,10 @@ class ResourceHandler {
     /**
      * Load a resource from a remote URL. The base implementation does nothing.
      *
-     * @param {string|object} url - Either the URL of the resource to load or a structure
-     * containing the load and original URL.
-     * @param {string} [url.load] - The URL to be used for loading the resource.
-     * @param {string} [url.original] - The original URL to be used for identifying the resource
-     * format. This is necessary when loading, for example from blob.
+     * @param {string | {load: string, original: string}} url - Either the URL of the resource to
+     * load or a structure containing the load URL (used for loading the resource) and the original
+     * URL (used for identifying the resource format; necessary when loading, for example, from
+     * a blob URL).
      * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
      * an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
@@ -81,7 +78,7 @@ class ResourceHandler {
      * into a format that can be used at runtime. The base implementation simply returns the data.
      *
      * @param {string} url - The URL of the resource to open.
-     * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
+     * @param {*} data - The raw resource data passed by callback from {@link load}.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */

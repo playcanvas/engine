@@ -5,7 +5,7 @@ export default /* wgsl */`
         fn applyFringing(color: vec3f, uv: vec2f) -> vec3f {
             // offset depends on the direction from the center
             let centerDistance = uv - 0.5;
-            let offset = uniform.fringingIntensity * pow(centerDistance, vec2f(2.0));
+            let offset = uniform.fringingIntensity * centerDistance * centerDistance;
 
             var colorOut = color;
             colorOut.r = textureSample(sceneTexture, sceneTextureSampler, uv - offset).r;

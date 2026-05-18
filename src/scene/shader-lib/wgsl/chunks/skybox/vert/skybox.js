@@ -8,6 +8,10 @@ export default /* wgsl */`
 
     varying vViewDir : vec3f;
 
+    #ifdef SKY_FISHEYE
+        varying vClipXYW : vec3f;
+    #endif
+
     #ifdef PREPASS_PASS
         // when skydome renders depth during prepass, generate linear depth
         varying vLinearDepth: f32;
@@ -40,8 +44,19 @@ export default /* wgsl */`
             view[3][0] = 0.0;
             view[3][1] = 0.0;
             view[3][2] = 0.0;
-            output.position = uniform.matrix_projectionSkybox * (view * input.aPosition);
             output.vViewDir = input.aPosition.xyz * uniform.cubeMapRotationMatrix;
+
+            #ifdef SKY_FISHEYE
+                // Bypass matrix_projectionSkybox which degenerates at extreme FOVs.
+                // Use a fixed ~90° perspective (p00=p11=1) so the box always covers the
+                // screen. The fragment shader recomputes view direction from screen
+                // coordinates, so only rasterization coverage matters here.
+                var viewPos : vec4f = view * input.aPosition;
+                output.position = vec4f(viewPos.xy, 0.0, -viewPos.z);
+                output.vClipXYW = vec3f(output.position.xy, output.position.w);
+            #else
+                output.position = uniform.matrix_projectionSkybox * (view * input.aPosition);
+            #endif
 
             #ifdef PREPASS_PASS
                 // for infinite skybox, use negative gl_Position.w to get positive linear depth

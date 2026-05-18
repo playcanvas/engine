@@ -39,10 +39,10 @@ class WebgpuQuerySet {
     }
 
     destroy() {
-        this.querySet?.destroy();
+        this.device.deferDestroy(this.querySet);
         this.querySet = null;
 
-        this.queryBuffer?.destroy();
+        this.device.deferDestroy(this.queryBuffer);
         this.queryBuffer = null;
 
         this.activeStagingBuffer = null;

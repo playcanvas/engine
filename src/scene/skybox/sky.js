@@ -1,5 +1,6 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { SKYTYPE_INFINITE } from '../constants.js';
+import { FisheyeProjection } from '../graphics/fisheye-projection.js';
 import { GraphNode } from '../graph-node.js';
 import { SkyMesh } from './sky-mesh.js';
 
@@ -24,7 +25,6 @@ class Sky {
     /**
      * The center of the sky.
      *
-     * @type {Vec3}
      * @private
      */
     _center = new Vec3(0, 1, 0);
@@ -37,11 +37,19 @@ class Sky {
      */
     skyMesh = null;
 
+    /** @private */
+    _depthWrite = false;
+
+    /** @private */
+    _fisheye = 0;
+
     /**
-     * @type {boolean}
+     * Lazily created on first non-zero fisheye set.
+     *
+     * @type {FisheyeProjection|null}
      * @private
      */
-    _depthWrite = false;
+    _fisheyeProj = null;
 
     /**
      * A graph node with a transform used to render the sky mesh. Adjust the position, rotation and
@@ -67,6 +75,13 @@ class Sky {
 
         this.centerArray = new Float32Array(3);
         this.projectedSkydomeCenterId = this.device.scope.resolve('projectedSkydomeCenter');
+
+        this._preRenderEvt = scene.on('prerender', this._onPreRender, this);
+    }
+
+    destroy() {
+        this._preRenderEvt.off();
+        this.resetSkyMesh();
     }
 
     applySettings(render) {
@@ -80,12 +95,13 @@ class Sky {
     }
 
     /**
-     * The type of the sky. One of the SKYTYPE_* constants. Defaults to {@link SKYTYPE_INFINITE}.
-     * Can be:
+     * Sets the type of the sky. Can be:
      *
      * - {@link SKYTYPE_INFINITE}
      * - {@link SKYTYPE_BOX}
      * - {@link SKYTYPE_DOME}
+     *
+     * Defaults to {@link SKYTYPE_INFINITE}.
      *
      * @type {string}
      */
@@ -97,13 +113,18 @@ class Sky {
         }
     }
 
+    /**
+     * Gets the type of the sky.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }
 
     /**
-     * The center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Typically only the y-coordinate
-     * is used, representing the tripod height. Defaults to (0, 1, 0).
+     * Sets the center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Typically only the
+     * y-coordinate is used, representing the tripod height. Defaults to (0, 1, 0).
      *
      * @type {Vec3}
      */
@@ -111,12 +132,17 @@ class Sky {
         this._center.copy(value);
     }
 
+    /**
+     * Gets the center of the sky.
+     *
+     * @type {Vec3}
+     */
     get center() {
         return this._center;
     }
 
     /**
-     * Whether depth writing is enabled for the sky. Defaults to false.
+     * Sets whether depth writing is enabled for the sky. Defaults to false.
      *
      * Writing a depth value for the skydome is supported when its type is not
      * {@link SKYTYPE_INFINITE}. When enabled, the depth is written during a prepass render pass and
@@ -137,12 +163,47 @@ class Sky {
     }
 
     /**
-     * Returns whether depth writing is enabled for the sky.
+     * Gets whether depth writing is enabled for the sky.
      *
      * @type {boolean}
      */
     get depthWrite() {
         return this._depthWrite;
+    }
+
+    /**
+     * Sets the fisheye projection strength for the sky. The value is in the range [0, 1]:
+     *
+     * - 0: Standard rectilinear (perspective) projection.
+     * - (0, 1]: Increasing barrel distortion, producing a wider field of view.
+     *
+     * Only supported with {@link SKYTYPE_INFINITE}. Has no effect on dome or box sky types,
+     * and has no effect with orthographic cameras. Defaults to 0.
+     *
+     * @type {number}
+     */
+    set fisheye(value) {
+        if (this._fisheye !== value) {
+            const wasEnabled = this._fisheye > 0;
+            this._fisheye = value;
+
+            const isEnabled = value > 0;
+            if (wasEnabled !== isEnabled) {
+                this._fisheyeProj ??= new FisheyeProjection();
+                if (this._type === SKYTYPE_INFINITE) {
+                    this._setFisheyeDefine(isEnabled);
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets the fisheye projection strength for the sky.
+     *
+     * @type {number}
+     */
+    get fisheye() {
+        return this._fisheye;
     }
 
     updateSkyMesh() {
@@ -151,6 +212,11 @@ class Sky {
             this.resetSkyMesh();
             this.skyMesh = new SkyMesh(this.device, this.scene, this.node, texture, this.type);
             this.skyMesh.depthWrite = this._depthWrite;
+
+            if (this._fisheye > 0 && this.type === SKYTYPE_INFINITE) {
+                this._setFisheyeDefine(true);
+            }
+
             this.scene.fire('set:skybox', texture);
         }
     }
@@ -174,6 +240,38 @@ class Sky {
             centerArray[1] = temp.y;
             centerArray[2] = temp.z;
             this.projectedSkydomeCenterId.setValue(centerArray);
+        }
+    }
+
+    /**
+     * @param {boolean} enabled - Whether to enable the SKY_FISHEYE define.
+     * @private
+     */
+    _setFisheyeDefine(enabled) {
+        if (this.skyMesh?.meshInstance) {
+            const material = this.skyMesh.meshInstance.material;
+            material.setDefine('SKY_FISHEYE', enabled);
+            material.update();
+        }
+    }
+
+    /**
+     * Per-camera prerender callback that updates fisheye uniforms for the active camera.
+     *
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} cameraComponent - The camera about to render.
+     * @private
+     */
+    _onPreRender(cameraComponent) {
+        if (this._fisheye > 0 && this._fisheyeProj && this.skyMesh?.meshInstance) {
+            const camera = cameraComponent.camera;
+            const proj = this._fisheyeProj;
+            proj.update(this._fisheye, camera.fov, camera.projectionMatrix);
+
+            const material = this.skyMesh.meshInstance.material;
+            material.setParameter('fisheye_k', proj.k);
+            material.setParameter('fisheye_invK', proj.invK);
+            material.setParameter('fisheye_projMat00', proj.projMat00);
+            material.setParameter('fisheye_projMat11', proj.projMat11);
         }
     }
 }

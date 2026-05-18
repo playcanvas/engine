@@ -11,6 +11,7 @@ uniform vec3 uDotTint;
 uniform vec3 uWaveTint;
 uniform float uOscillationIntensity;
 uniform float uEndRadius;
+uniform float uBandWidth;
 
 // Shared globals (initialized once per vertex)
 float g_dist;
@@ -30,14 +31,14 @@ float hash(vec3 p) {
     return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
 }
 
-void modifyCenter(inout vec3 center) {
+void modifySplatCenter(inout vec3 center) {
     initShared(center);
     
     // Early exit optimization
     if (g_dist > uEndRadius) return;
     
     // Only apply oscillation if lift wave hasn't fully passed
-    bool wavesActive = g_liftTime <= 0.0 || g_dist > g_liftWavePos - 1.5;
+    bool wavesActive = g_liftTime <= 0.0 || g_dist > g_liftWavePos - 1.5 * uBandWidth;
     if (wavesActive) {
         // Apply oscillation with per-splat phase offset
         float phase = hash(center) * 6.28318;
@@ -46,81 +47,83 @@ void modifyCenter(inout vec3 center) {
     
     // Apply lift effect near the wave edge
     float distToLiftWave = abs(g_dist - g_liftWavePos);
-    if (distToLiftWave < 1.0 && g_liftTime > 0.0) {
+    if (distToLiftWave < 1.0 * uBandWidth && g_liftTime > 0.0) {
         // Create a smooth lift curve (peaks at wave edge)
         // Lift is 0.9x the oscillation intensity (30% of original 3x)
-        float liftAmount = (1.0 - distToLiftWave) * sin(distToLiftWave * 3.14159);
+        float normalizedDist = distToLiftWave / uBandWidth;
+        float liftAmount = (1.0 - normalizedDist) * sin(normalizedDist * 3.14159);
         center.y += liftAmount * uOscillationIntensity * 0.9;
     }
 }
 
-void modifyCovariance(vec3 originalCenter, vec3 modifiedCenter, inout vec3 covA, inout vec3 covB) {
+void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {
     // Early exit for distant splats - hide them
     if (g_dist > uEndRadius) {
-        gsplatMakeRound(covA, covB, 0.0);
+        scale = vec3(0.0);
         return;
     }
     
-    // Determine scale and phase
-    float scale;
+    // Store original scale for shape preservation
+    vec3 origScale = scale;
+    float origSize = gsplatGetSizeFromScale(scale);
+    
+    // Determine scale factor and phase
+    float scaleFactor;
     bool isLiftWave = g_liftTime > 0.0 && g_liftWavePos > g_dist;
     
     if (isLiftWave) {
         // Lift wave: transition from dots to full size
-        scale = (g_liftWavePos >= g_dist + 2.0) ? 1.0 : mix(0.1, 1.0, (g_liftWavePos - g_dist) * 0.5);
+        scaleFactor = (g_liftWavePos >= g_dist + 2.0) ? 1.0 : mix(0.1, 1.0, (g_liftWavePos - g_dist) * 0.5);
     } else if (g_dist > g_dotWavePos + 1.0) {
         // Before dot wave: invisible
-        gsplatMakeRound(covA, covB, 0.0);
+        scale = vec3(0.0);
         return;
     } else if (g_dist > g_dotWavePos - 1.0) {
         // Dot wave front: scale from 0 to 0.1 with 2x peak at center
         float distToWave = abs(g_dist - g_dotWavePos);
-        scale = (distToWave < 0.5) 
+        scaleFactor = (distToWave < 0.5) 
             ? mix(0.1, 0.2, 1.0 - distToWave * 2.0)
             : mix(0.0, 0.1, smoothstep(g_dotWavePos + 1.0, g_dotWavePos - 1.0, g_dist));
     } else {
         // After dot wave, before lift: small dots
-        scale = 0.1;
+        scaleFactor = 0.1;
     }
     
-    // Apply scale to covariance
-    if (scale >= 1.0) {
+    // Apply scale
+    if (scaleFactor >= 1.0) {
         // Fully revealed: original shape and size (no-op)
         return;
     } else if (isLiftWave) {
-        // Lift wave: lerp from round dots to original shape
-        float t = (scale - 0.1) * 1.111111; // normalize [0.1, 1.0] to [0, 1]
-        float dotSize = scale * 0.05;
-        float originalSize = gsplatExtractSize(covA, covB);
-        float finalSize = mix(dotSize, originalSize, t);
+        // Lift wave: lerp from spherical dots to original shape
+        float t = (scaleFactor - 0.1) * 1.111111; // normalize [0.1, 1.0] to [0, 1]
+        float dotSize = scaleFactor * 0.05;
+        float finalSize = mix(dotSize, origSize, t);
         
-        // Lerp between round and scaled original
-        vec3 origCovA = covA * (scale * scale);
-        vec3 origCovB = covB * (scale * scale);
-        gsplatMakeRound(covA, covB, finalSize);
-        covA = mix(covA, origCovA, t);
-        covB = mix(covB, origCovB, t);
+        // Lerp between spherical (uniform) and scaled original
+        vec3 sphericalScale = vec3(finalSize);
+        vec3 scaledOrig = origScale * scaleFactor;
+        scale = mix(sphericalScale, scaledOrig, t);
     } else {
-        // Dot phase: round with absolute size, but don't make small splats larger
-        float originalSize = gsplatExtractSize(covA, covB);
-        gsplatMakeRound(covA, covB, min(scale * 0.05, originalSize));
+        // Dot phase: spherical with absolute size, but don't make small splats larger
+        float targetSize = min(scaleFactor * 0.05, origSize);
+        gsplatMakeSpherical(scale, targetSize);
     }
 }
 
-void modifyColor(vec3 center, inout vec4 color) {
+void modifySplatColor(vec3 center, inout vec4 color) {
     // Use shared globals
     if (g_dist > uEndRadius) return;
     
     // Lift wave tint takes priority (active during lift)
-    if (g_liftTime > 0.0 && g_dist >= g_liftWavePos - 1.5 && g_dist <= g_liftWavePos + 0.5) {
+    if (g_liftTime > 0.0 && g_dist >= g_liftWavePos - 1.5 * uBandWidth && g_dist <= g_liftWavePos + 0.5 * uBandWidth) {
         float distToLift = abs(g_dist - g_liftWavePos);
-        float liftIntensity = smoothstep(1.5, 0.0, distToLift);
+        float liftIntensity = smoothstep(1.5 * uBandWidth, 0.0, distToLift);
         color.rgb += uWaveTint * liftIntensity;
     }
     // Dot wave tint (active in dot phase, but not where lift wave is active)
-    else if (g_dist <= g_dotWavePos && (g_liftTime <= 0.0 || g_dist > g_liftWavePos + 0.5)) {
+    else if (g_dist <= g_dotWavePos && (g_liftTime <= 0.0 || g_dist > g_liftWavePos + 0.5 * uBandWidth)) {
         float distToDot = abs(g_dist - g_dotWavePos);
-        float dotIntensity = smoothstep(1.0, 0.0, distToDot);
+        float dotIntensity = smoothstep(1.0 * uBandWidth, 0.0, distToDot);
         color.rgb += uDotTint * dotIntensity;
     }
 }
@@ -136,6 +139,7 @@ uniform uDotTint: vec3f;
 uniform uWaveTint: vec3f;
 uniform uOscillationIntensity: f32;
 uniform uEndRadius: f32;
+uniform uBandWidth: f32;
 
 // Shared globals (initialized once per vertex)
 var<private> g_dist: f32;
@@ -155,7 +159,7 @@ fn hash(p: vec3f) -> f32 {
     return fract(sin(dot(p, vec3f(127.1, 311.7, 74.7))) * 43758.5453);
 }
 
-fn modifyCenter(center: ptr<function, vec3f>) {
+fn modifySplatCenter(center: ptr<function, vec3f>) {
     initShared(*center);
     
     // Early exit optimization
@@ -164,7 +168,7 @@ fn modifyCenter(center: ptr<function, vec3f>) {
     }
     
     // Only apply oscillation if lift wave hasn't fully passed
-    let wavesActive = g_liftTime <= 0.0 || g_dist > g_liftWavePos - 1.5;
+    let wavesActive = g_liftTime <= 0.0 || g_dist > g_liftWavePos - 1.5 * uniform.uBandWidth;
     if (wavesActive) {
         // Apply oscillation with per-splat phase offset
         let phase = hash(*center) * 6.28318;
@@ -173,85 +177,87 @@ fn modifyCenter(center: ptr<function, vec3f>) {
     
     // Apply lift effect near the wave edge
     let distToLiftWave = abs(g_dist - g_liftWavePos);
-    if (distToLiftWave < 1.0 && g_liftTime > 0.0) {
+    if (distToLiftWave < 1.0 * uniform.uBandWidth && g_liftTime > 0.0) {
         // Create a smooth lift curve (peaks at wave edge)
         // Lift is 0.9x the oscillation intensity (30% of original 3x)
-        let liftAmount = (1.0 - distToLiftWave) * sin(distToLiftWave * 3.14159);
+        let normalizedDist = distToLiftWave / uniform.uBandWidth;
+        let liftAmount = (1.0 - normalizedDist) * sin(normalizedDist * 3.14159);
         (*center).y += liftAmount * uniform.uOscillationIntensity * 0.9;
     }
 }
 
-fn modifyCovariance(originalCenter: vec3f, modifiedCenter: vec3f, covA: ptr<function, vec3f>, covB: ptr<function, vec3f>) {
+fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {
     // Early exit for distant splats - hide them
     if (g_dist > uniform.uEndRadius) {
-        gsplatMakeRound(covA, covB, 0.0);
+        *scale = vec3f(0.0);
         return;
     }
     
-    // Determine scale and phase
-    var scale: f32;
+    // Store original scale for shape preservation
+    let origScale = *scale;
+    let origSize = gsplatGetSizeFromScale(*scale);
+    
+    // Determine scale factor and phase
+    var scaleFactor: f32;
     let isLiftWave = g_liftTime > 0.0 && g_liftWavePos > g_dist;
     
     if (isLiftWave) {
         // Lift wave: transition from dots to full size
-        scale = select(mix(0.1, 1.0, (g_liftWavePos - g_dist) * 0.5), 1.0, g_liftWavePos >= g_dist + 2.0);
+        scaleFactor = select(mix(0.1, 1.0, (g_liftWavePos - g_dist) * 0.5), 1.0, g_liftWavePos >= g_dist + 2.0);
     } else if (g_dist > g_dotWavePos + 1.0) {
         // Before dot wave: invisible
-        gsplatMakeRound(covA, covB, 0.0);
+        *scale = vec3f(0.0);
         return;
     } else if (g_dist > g_dotWavePos - 1.0) {
         // Dot wave front: scale from 0 to 0.1 with 2x peak at center
         let distToWave = abs(g_dist - g_dotWavePos);
-        scale = select(
+        scaleFactor = select(
             mix(0.0, 0.1, smoothstep(g_dotWavePos + 1.0, g_dotWavePos - 1.0, g_dist)),
             mix(0.1, 0.2, 1.0 - distToWave * 2.0),
             distToWave < 0.5
         );
     } else {
         // After dot wave, before lift: small dots
-        scale = 0.1;
+        scaleFactor = 0.1;
     }
     
-    // Apply scale to covariance
-    if (scale >= 1.0) {
+    // Apply scale
+    if (scaleFactor >= 1.0) {
         // Fully revealed: original shape and size (no-op)
         return;
     } else if (isLiftWave) {
-        // Lift wave: lerp from round dots to original shape
-        let t = (scale - 0.1) * 1.111111; // normalize [0.1, 1.0] to [0, 1]
-        let dotSize = scale * 0.05;
-        let originalSize = gsplatExtractSize(*covA, *covB);
-        let finalSize = mix(dotSize, originalSize, t);
+        // Lift wave: lerp from spherical dots to original shape
+        let t = (scaleFactor - 0.1) * 1.111111; // normalize [0.1, 1.0] to [0, 1]
+        let dotSize = scaleFactor * 0.05;
+        let finalSize = mix(dotSize, origSize, t);
         
-        // Lerp between round and scaled original
-        let origCovA = *covA * (scale * scale);
-        let origCovB = *covB * (scale * scale);
-        gsplatMakeRound(covA, covB, finalSize);
-        *covA = mix(*covA, origCovA, t);
-        *covB = mix(*covB, origCovB, t);
+        // Lerp between spherical (uniform) and scaled original
+        let sphericalScale = vec3f(finalSize);
+        let scaledOrig = origScale * scaleFactor;
+        *scale = mix(sphericalScale, scaledOrig, t);
     } else {
-        // Dot phase: round with absolute size, but don't make small splats larger
-        let originalSize = gsplatExtractSize(*covA, *covB);
-        gsplatMakeRound(covA, covB, min(scale * 0.05, originalSize));
+        // Dot phase: spherical with absolute size, but don't make small splats larger
+        let targetSize = min(scaleFactor * 0.05, origSize);
+        gsplatMakeSpherical(scale, targetSize);
     }
 }
 
-fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
+fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
     // Use shared globals
     if (g_dist > uniform.uEndRadius) {
         return;
     }
     
     // Lift wave tint takes priority (active during lift)
-    if (g_liftTime > 0.0 && g_dist >= g_liftWavePos - 1.5 && g_dist <= g_liftWavePos + 0.5) {
+    if (g_liftTime > 0.0 && g_dist >= g_liftWavePos - 1.5 * uniform.uBandWidth && g_dist <= g_liftWavePos + 0.5 * uniform.uBandWidth) {
         let distToLift = abs(g_dist - g_liftWavePos);
-        let liftIntensity = smoothstep(1.5, 0.0, distToLift);
+        let liftIntensity = smoothstep(1.5 * uniform.uBandWidth, 0.0, distToLift);
         (*color) = vec4f((*color).rgb + uniform.uWaveTint * liftIntensity, (*color).a);
     }
     // Dot wave tint (active in dot phase, but not where lift wave is active)
-    else if (g_dist <= g_dotWavePos && (g_liftTime <= 0.0 || g_dist > g_liftWavePos + 0.5)) {
+    else if (g_dist <= g_dotWavePos && (g_liftTime <= 0.0 || g_dist > g_liftWavePos + 0.5 * uniform.uBandWidth)) {
         let distToDot = abs(g_dist - g_dotWavePos);
-        let dotIntensity = smoothstep(1.0, 0.0, distToDot);
+        let dotIntensity = smoothstep(1.0 * uniform.uBandWidth, 0.0, distToDot);
         (*color) = vec4f((*color).rgb + uniform.uDotTint * dotIntensity, (*color).a);
     }
 }
@@ -338,6 +344,14 @@ class GsplatRevealRadial extends GsplatShaderEffect {
      */
     endRadius = 25;
 
+    /**
+     * Width of the color bands for dot and lift waves
+     * @attribute
+     * @range [0, 5]
+     * @precision 0.01
+     */
+    bandWidth = 1.0;
+
     getShaderGLSL() {
         return shaderGLSL;
     }
@@ -377,6 +391,7 @@ class GsplatRevealRadial extends GsplatShaderEffect {
 
         this.setUniform('uOscillationIntensity', this.oscillationIntensity);
         this.setUniform('uEndRadius', this.endRadius);
+        this.setUniform('uBandWidth', this.bandWidth);
     }
 
     /**

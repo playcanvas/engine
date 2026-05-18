@@ -13,8 +13,11 @@ import { jsx, fragment } from '../jsx.mjs';
 import { iframePath } from '../paths.mjs';
 import { getOrientation } from '../utils.mjs';
 
-/** @typedef {import('../events.js').StateEvent} StateEvent */
-/** @typedef {import('../events.js').LoadingEvent} LoadingEvent */
+/**
+ * @import { Observer } from '@playcanvas/observer'
+ * @import { ComponentType, ReactElement } from 'react'
+ * @import { LoadingEvent, StateEvent } from '../events.js'
+ */
 
 /**
  * @template {Record<string, string>} [FILES=Record<string, string>]
@@ -22,18 +25,22 @@ import { getOrientation } from '../utils.mjs';
  * @property {Function} loadES5 - The async function to load ES5 files.
  * @property {HTMLCanvasElement} canvas - The canvas.
  * @property {string} deviceType - The device type.
- * @property {import('@playcanvas/observer').Observer} data - The data.
+ * @property {Observer} data - The data.
  * @property {FILES} files - The files.
  */
 
 /**
  * @typedef {object} ControlOptions
- * @property {import('@playcanvas/observer').Observer} observer - The PCUI observer.
- * @property {import('@playcanvas/pcui')} PCUI - The PCUI vanilla module.
- * @property {import('@playcanvas/pcui/react')} ReactPCUI - The PCUI React module.
- * @property {import('react')} React - The PCUI React module.
- * @property {import('../jsx.mjs').jsx} jsx - Shortcut for creating a React JSX Element.
- * @property {import('../jsx.mjs').fragment} fragment - Shortcut for creating a React JSX fragment.
+ * @property {Observer} observer - The PCUI observer.
+ * @property {typeof PCUI} PCUI - The PCUI vanilla module.
+ * @property {typeof ReactPCUI} ReactPCUI - The PCUI React module.
+ * @property {typeof React} React - The PCUI React module.
+ * @property {typeof jsx} jsx - Shortcut for creating a React JSX Element.
+ * @property {typeof fragment} fragment - Shortcut for creating a React JSX fragment.
+ */
+
+/**
+ * @typedef {ComponentType<ControlOptions>} Control
  */
 
 /**
@@ -46,10 +53,10 @@ import { getOrientation } from '../utils.mjs';
  * @property {'portrait' | 'landscape'} orientation - The orientation.
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
- * @property {Function | null} controls - Controls function from example.
- * @property {import('@playcanvas/observer').Observer | null} observer - The PCUI observer
+ * @property {Control | null} controls - Controls function from example.
+ * @property {Observer | null} observer - The PCUI observer
  * @property {boolean} showDeviceSelector - Show device selector.
- * @property {'code' | 'parameters'} show - Used in case of mobile view.
+ * @property {'code' | 'parameters' | 'description'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
  */
@@ -64,7 +71,7 @@ class Example extends TypedComponent {
         // @ts-ignore
         collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
         exampleLoaded: false,
-        controls: () => undefined,
+        controls: () => null,
         showDeviceSelector: true,
         show: 'code',
         files: { 'example.mjs': '// loading' },
@@ -86,7 +93,7 @@ class Example extends TypedComponent {
 
     /**
      * @param {string} src - The source string.
-     * @returns {Promise<Function>} - The controls jsx object.
+     * @returns {Promise<Control>} - The controls jsx object.
      */
     async _buildControls(src) {
         const blob = new Blob([src], { type: 'text/javascript' });
@@ -94,12 +101,14 @@ class Example extends TypedComponent {
             URL.revokeObjectURL(this._controlsUrl);
         }
         this._controlsUrl = URL.createObjectURL(blob);
+        /** @type {Control} */
         let controls;
         try {
-            const module = await import(this._controlsUrl);
+            // eslint-disable-next-line jsdoc/no-bad-blocks
+            const module = await import(/* @vite-ignore */ this._controlsUrl);
             controls = module.controls;
         } catch (e) {
-            controls = () => jsx('pre', null, e.message);
+            controls = () => jsx('pre', null, /** @type {any} */ (e).message);
         }
         return controls;
     }
@@ -196,8 +205,9 @@ class Example extends TypedComponent {
             return;
         }
 
-        /** @type {HTMLElement | null} */
-        const controlPanelHeader = controlPanel.querySelector('.pcui-panel-header');
+        const controlPanelHeader = /** @type {HTMLElement | null} */ (
+            /** @type {unknown} */ (controlPanel.querySelector('.pcui-panel-header'))
+        );
         if (!controlPanelHeader) {
             return;
         }
@@ -229,7 +239,7 @@ class Example extends TypedComponent {
     get iframePath() {
         const categoryKebab = this.props.match.params.category;
         const exampleNameKebab = this.props.match.params.example;
-        return `${iframePath}/${categoryKebab}_${exampleNameKebab}.html`;
+        return `${iframePath}${categoryKebab}_${exampleNameKebab}.html`;
     }
 
     renderDeviceSelector() {
@@ -274,7 +284,7 @@ class Example extends TypedComponent {
             Container,
             {
                 id: 'descriptionPanel',
-                class: orientation === 'portrait' ? 'mobile' : null
+                class: orientation === 'portrait' ? 'mobile' : undefined
             },
             jsx('span', {
                 dangerouslySetInnerHTML: {
@@ -309,7 +319,9 @@ class Example extends TypedComponent {
 
     renderPortrait() {
         const { collapsed, show, files, description } = this.state;
-        return fragment(
+        return jsx(
+            'div',
+            { style: { display: 'contents' } },
             jsx(
                 Panel,
                 {
@@ -335,19 +347,19 @@ class Example extends TypedComponent {
                         jsx(Button, {
                             text: 'CODE',
                             id: 'codeButton',
-                            class: show === 'code' ? 'selected' : null,
+                            class: show === 'code' ? 'selected' : undefined,
                             onClick: () => this.mergeState({ show: 'code' })
                         }),
                         jsx(Button, {
                             text: 'PARAMETERS',
-                            class: show === 'parameters' ? 'selected' : null,
+                            class: show === 'parameters' ? 'selected' : undefined,
                             id: 'paramButton',
                             onClick: () => this.mergeState({ show: 'parameters' })
                         }),
                         description ?
                             jsx(Button, {
                                 text: 'DESCRIPTION',
-                                class: show === 'description' ? 'selected' : null,
+                                class: show === 'description' ? 'selected' : undefined,
                                 id: 'descButton',
                                 onClick: () => this.mergeState({ show: 'description' })
                             }) :
@@ -370,7 +382,9 @@ class Example extends TypedComponent {
 
     renderLandscape() {
         const { collapsed } = this.state;
-        return fragment(
+        return jsx(
+            'div',
+            { style: { display: 'contents' } },
             jsx(
                 Panel,
                 {
@@ -382,7 +396,13 @@ class Example extends TypedComponent {
                     collapsed
                 },
                 this.renderDeviceSelector(),
-                this.renderControls()
+                jsx(
+                    Container,
+                    {
+                        id: 'controlPanel-scroll-region'
+                    },
+                    this.renderControls()
+                )
             ),
             this.renderDescription()
         );
@@ -409,7 +429,7 @@ class Example extends TypedComponent {
 
 /**
  * Wrapper component to provide router params to the class component.
- * @returns {JSX.Element} The Example component with router params.
+ * @returns {ReactElement} The Example component with router params.
  */
 function ExampleWithRouter() {
     const params = useParams();

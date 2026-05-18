@@ -90,6 +90,10 @@ class DualGestureSource extends InputSource {
     }
 
     /**
+     * Sets the layout of the dual gesture input source. The value is a hyphen-separated pair
+     * describing the left and right inputs respectively, where each side can be either
+     * `joystick` (a virtual joystick) or `touch` (a touch). Defaults to `joystick-touch`.
+     *
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      */
     set layout(value) {
@@ -105,6 +109,11 @@ class DualGestureSource extends InputSource {
         this._pointerData.clear();
     }
 
+    /**
+     * Gets the layout of the dual gesture input source.
+     *
+     * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
+     */
     get layout() {
         return this._layout;
     }
@@ -247,9 +256,7 @@ class DualGestureSource extends InputSource {
         super.detach();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         this.deltas.leftInput.append([this._leftJoystick.value.x, this._leftJoystick.value.y]);
         this.deltas.rightInput.append([this._rightJoystick.value.x, this._rightJoystick.value.y]);
@@ -257,9 +264,7 @@ class DualGestureSource extends InputSource {
         return super.read();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     destroy() {
         this._leftJoystick.up();
         this._rightJoystick.up();

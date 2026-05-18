@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js';
@@ -5,11 +6,17 @@ import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
 import { GSplatComponentData } from './data.js';
-import { GSplatAssetLoader } from './gsplat-asset-loader.js';
 import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
 import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
+
+// Register warning for removed customization chunk
+Debug.call(() => {
+    ShaderChunks.registerValidation('gsplatCustomizeVS', {
+        message: 'Shader chunk gsplatCustomizeVS has been removed. Use gsplatModifyVS instead.'
+    });
+});
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -25,11 +32,13 @@ const _schema = [
 // order matters here
 const _properties = [
     'unified',
-    'lodDistances',
+    'lodBaseDistance',
+    'lodMultiplier',
     'castShadows',
     'material',
     'highQualitySH',
     'asset',
+    'resource',
     'layers'
 ];
 
@@ -109,9 +118,7 @@ class GSplatComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
-        // loader for splat LOD assets, as asset system is not available on the scene level
-        const gsplatAssetLoader = new GSplatAssetLoader(app.assets);
-        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, gsplatAssetLoader, this);
+        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
 
         // register gsplat shader chunks
         ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);
@@ -162,9 +169,7 @@ class GSplatComponentSystem extends ComponentSystem {
         // clone component
         const component = this.addComponent(clone, data);
 
-        if (gSplatComponent.customAabb) {
-            component.customAabb = gSplatComponent.customAabb.clone();
-        }
+        component.customAabb = gSplatComponent.customAabb?.clone() ?? null;
 
         return component;
     }
@@ -189,7 +194,7 @@ class GSplatComponentSystem extends ComponentSystem {
      *     material.setParameter('myParam', value);
      * });
      */
-    getGSplatMaterial(camera, layer) {
+    getMaterial(camera, layer) {
         const director = this.app.renderer.gsplatDirector;
         if (!director) return null;
 
@@ -198,6 +203,11 @@ class GSplatComponentSystem extends ComponentSystem {
 
         const layerData = cameraData.layersMap.get(layer);
         return layerData?.gsplatManager?.material ?? null;
+    }
+
+    getGSplatMaterial(camera, layer) {
+        Debug.deprecated('GSplatComponentSystem#getGSplatMaterial is deprecated. Use GSplatComponentSystem#getMaterial instead.');
+        return this.getMaterial(camera, layer);
     }
 }
 

@@ -1,4 +1,5 @@
 // @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene.
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -70,7 +71,8 @@ assetListLoader.load(() => {
         const splat = new pc.Entity(`splat-${i}`);
         splat.addComponent('gsplat', {
             asset: assets.logo,
-            castShadows: false
+            castShadows: false,
+            unified: true
         });
 
         app.root.addChild(splat);
@@ -81,6 +83,20 @@ assetListLoader.load(() => {
         });
     }
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
+    // Enable gsplat ID for unified picking
+    app.scene.gsplat.enableIds = true;
+    app.scene.gsplat.alphaClip = 0.2;
+    app.scene.gsplat.minPixelSize = 1;
+
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
@@ -88,6 +104,11 @@ assetListLoader.load(() => {
         toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(-2, -0.5, 2);
+
+    data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
+        camera.camera.projection = value ? pc.PROJECTION_ORTHOGRAPHIC : pc.PROJECTION_PERSPECTIVE;
+        camera.camera.orthoHeight = 6;
+    });
 
     // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
@@ -101,7 +122,9 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
-    camera.setLocalPosition(200, 0, 0);
+
+    // Set camera position looking at origin
+    camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(10, 4, 10), pc.Vec3.ZERO);
 
     // Custom render passes set up with bloom
     const cameraFrame = new pc.CameraFrame(app, camera.camera);
@@ -170,9 +193,10 @@ assetListLoader.load(() => {
                 picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
 
                     if (meshInstances.length > 0) {
-                        const meshInstance = meshInstances[0];
-                        // find entity with matching mesh instance
-                        const entity = entities.find(e => e.entity.gsplat.instance.meshInstance === meshInstance);
+                        // Unified mode: picker returns the GSplatComponent directly
+                        const picked = meshInstances[0];
+                        const entity = entities.find(e => e.entity.gsplat === picked);
+
                         if (entity) {
                             // trigger the visual effect only if not already animating
                             if (entity.fade === 0) {
@@ -192,6 +216,7 @@ assetListLoader.load(() => {
                                 material: markerMaterial
                             });
                             markerSphere.setLocalScale(0.3, 0.3, 0.3);
+                            markerSphere.render.meshInstances[0].pick = false;
 
                             // parent it to the picked entity and convert world position to its local space
                             entity.entity.addChild(markerSphere);

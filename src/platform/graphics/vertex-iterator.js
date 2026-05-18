@@ -172,10 +172,10 @@ class VertexIteratorAccessor {
     }
 
     /**
-     * Get a attribute component at the iterator's current index.
+     * Get an attribute component at the iterator's current index.
      *
      * @param {number} offset - The component offset. Should be either 0, 1, 2, or 3.
-     * @returns {number} The value of a attribute component.
+     * @returns {number} The value of an attribute component.
      */
     get(offset) {
         return this.array[this.index + offset];

@@ -1,6 +1,8 @@
 *.DS_Store
+.cursor
 .idea/
 .vscode/
+.turbo
 build
 tree*.*.html
 coverage
@@ -14,3 +16,6 @@ stats.html
 .npmrc
 examples/.npmrc
 .prettierrc
+# Added by Snap Cursor Rules extension
+.cursor/rules/cursor-rules-debug.log
+.cursor/rules/remote

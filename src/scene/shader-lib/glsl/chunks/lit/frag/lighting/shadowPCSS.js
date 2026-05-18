@@ -2,9 +2,9 @@ export default /* glsl */`
 
 /**
  * PCSS is a shadow sampling method that provides contact hardening soft shadows, used for omni and spot lights.
- * Based on: 
+ * Based on:
  * - https://www.gamedev.net/tutorials/programming/graphics/effect-area-light-shadows-part-1-pcss-r4971/
- * - https://github.com/pboechat/PCSS 
+ * - https://github.com/pboechat/PCSS
  */
 
 #define PCSS_SAMPLE_COUNT 16

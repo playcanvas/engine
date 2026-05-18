@@ -1,7 +1,6 @@
 /**
  * Sampling kernels.
  *
- * @namespace
  * @category Math
  */
 class Kernel {
@@ -12,7 +11,11 @@ class Kernel {
      *
      * @param {number} numRings - The number of concentric rings to generate.
      * @param {number} numPoints - The number of points in the first ring.
-     * @returns {Array<number>} - An array where each point is represented by two numbers.
+     * @returns {number[]} An array where each point is represented by two consecutive numbers (x, y).
+     * @example
+     * // Generate a kernel with 3 rings and 8 points in the first ring
+     * const kernel = pc.Kernel.concentric(3, 8);
+     * // kernel is a flat array: [x0, y0, x1, y1, x2, y2, ...]
      */
     static concentric(numRings, numPoints) {
         const kernel = [];

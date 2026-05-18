@@ -157,7 +157,16 @@ assetListLoader.load(() => {
         }
     };
 
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+
     // Default to enabled
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('enabled', true);
     data.set('effect', 'hide');
 
@@ -277,16 +286,6 @@ assetListLoader.load(() => {
     camera.script?.create('orbitCameraInputMouse');
     camera.script?.create('orbitCameraInputTouch');
     app.root.addChild(camera);
-
-    // Setup bloom post-processing
-    if (camera.camera) {
-        const cameraFrame = new pc.CameraFrame(app, camera.camera);
-        cameraFrame.rendering.samples = 4;
-        cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
-        cameraFrame.bloom.intensity = 0.03;
-        cameraFrame.bloom.blurLevel = 6;
-        cameraFrame.update();
-    }
 
     // Auto-rotate camera when idle
     let autoRotateEnabled = true;

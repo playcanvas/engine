@@ -1,18 +1,66 @@
 import { math } from '../../../core/math/math.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE } from '../../../scene/constants.js';
+import { LAYERID_WORLD, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE } from '../../../scene/constants.js';
+import { Light, lightTypes } from '../../../scene/light.js';
 import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
-import { properties } from './data.js';
 
 /**
  * @import { Color } from '../../../core/math/color.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
- * @import { LightComponentData } from './data.js'
- * @import { Light } from '../../../scene/light.js'
+ * @import { LightComponentSystem } from './system.js'
+ * @import { Entity } from '../../entity.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
  */
+
+const _properties = [
+    'type',
+    'color',
+    'intensity',
+    'luminance',
+    'shape',
+    'affectSpecularity',
+    'castShadows',
+    'shadowDistance',
+    'shadowIntensity',
+    'shadowResolution',
+    'shadowBias',
+    'numCascades',
+    'cascadeBlend',
+    'bakeNumSamples',
+    'bakeArea',
+    'cascadeDistribution',
+    'normalOffsetBias',
+    'range',
+    'innerConeAngle',
+    'outerConeAngle',
+    'falloffMode',
+    'shadowType',
+    'vsmBlurSize',
+    'vsmBlurMode',
+    'vsmBias',
+    'cookieAsset',
+    'cookie',
+    'cookieIntensity',
+    'cookieFalloff',
+    'cookieChannel',
+    'cookieAngle',
+    'cookieScale',
+    'cookieOffset',
+    'shadowUpdateMode',
+    'mask',
+    'affectDynamic',
+    'affectLightmapped',
+    'bake',
+    'bakeDir',
+    'isStatic',
+    'layers',
+    'penumbraSize',
+    'penumbraFalloff',
+    'shadowSamples',
+    'shadowBlockerSamples'
+];
 
 /**
  * The LightComponent enables an {@link Entity} to light the scene. There are three types of light:
@@ -25,7 +73,7 @@ import { properties } from './data.js';
  * - `spot`: A local light that emits light similarly to an omni light but is bounded by a cone
  * centered on the owner entity's negative y-axis. Emulates flashlights, spotlights, etc.
  *
- * You should never need to use the LightComponent constructor directly. To add an LightComponent
+ * You should never need to use the LightComponent constructor directly. To add a LightComponent
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
@@ -51,7 +99,7 @@ import { properties } from './data.js';
  * - [Area Lights](https://playcanvas.github.io/#/graphics/area-lights)
  * - [Clustered Area Lights](https://playcanvas.github.io/#/graphics/clustered-area-lights)
  * - [Clustered Lighting](https://playcanvas.github.io/#/graphics/clustered-lighting)
- * - [Clustered Onmi Shadows](https://playcanvas.github.io/#/graphics/clustered-omni-shadows)
+ * - [Clustered Omni Shadows](https://playcanvas.github.io/#/graphics/clustered-omni-shadows)
  * - [Clustered Spot Shadows](https://playcanvas.github.io/#/graphics/clustered-spot-shadows)
  * - [Lights](https://playcanvas.github.io/#/graphics/lights)
  *
@@ -59,6 +107,12 @@ import { properties } from './data.js';
  * @category Graphics
  */
 class LightComponent extends Component {
+    /**
+     * @type {Light}
+     * @private
+     */
+    _light;
+
     /**
      * @type {EventHandle|null}
      * @private
@@ -77,81 +131,146 @@ class LightComponent extends Component {
      */
     _evtLayerRemoved = null;
 
-    /** @private */
+    /**
+     * @type {Asset|null}
+     * @private
+     */
     _cookieAsset = null;
 
-    /** @private */
+    /**
+     * @type {number|null}
+     * @private
+     */
     _cookieAssetId = null;
 
     /** @private */
     _cookieAssetAdd = false;
 
-    /** @private */
+    /**
+     * @type {Vec4|null}
+     * @private
+     */
     _cookieMatrix = null;
 
-    // TODO: Remove this override in upgrading component
     /**
-     * @type {LightComponentData}
-     * @ignore
+     * @type {number}
+     * @private
      */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
-    }
+    _shadowBias = 0.05;
 
     /**
-     * Sets the enabled state of the component.
+     * @type {number}
+     * @private
+     */
+    _cookieAngle = 0;
+
+    /**
+     * @type {Vec2|null}
+     * @private
+     */
+    _cookieScale = null;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _castShadows = false;
+
+    /**
+     * Mirrors the user-supplied value. {@link Light#affectSpecularity} silently ignores writes for
+     * non-directional lights, so storing it on the component is required to round-trip the user's
+     * intent and re-apply it when the type later becomes directional (via {@link refreshProperties}).
      *
      * @type {boolean}
+     * @private
      */
-    set enabled(arg) {
-        this._setValue('enabled', arg, function (newValue, oldValue) {
-            this.onSetEnabled(null, oldValue, newValue);
-        });
-    }
+    _affectSpecularity = true;
 
     /**
-     * Gets the enabled state of the component.
-     *
      * @type {boolean}
+     * @private
      */
-    get enabled() {
-        return this.data.enabled;
+    _affectDynamic = true;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _affectLightmapped = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _bake = false;
+
+    /**
+     * @type {number[]}
+     * @private
+     */
+    _layers = [LAYERID_WORLD];
+
+    /**
+     * Preserves the user-facing type string. Required because `'point'` and `'omni'` both map to
+     * the same underlying int on the {@link Light}, so reverse-mapping would normalise the user's
+     * input.
+     *
+     * @type {string}
+     * @private
+     */
+    _type = 'directional';
+
+    /**
+     * Create a new LightComponent instance.
+     *
+     * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
+    constructor(system, entity) {
+        super(system, entity);
+
+        this._light = new Light(system.app.graphicsDevice, system.app.scene.clusteredLightingEnabled);
+        this._light._node = entity;
+
+        // Light defaults to a sRGB color of (0.8, 0.8, 0.8); the LightComponent default is (1, 1, 1)
+        this._light.setColor(1, 1, 1);
     }
 
     /**
-     * @type {Light}
-     * @ignore
-     */
-    set light(arg) {
-        this._setValue('light', arg);
-    }
-
-    /**
+     * Gets the light component's underlying Light instance.
+     *
      * @type {Light}
      * @ignore
      */
     get light() {
-        return this.data.light;
+        return this._light;
     }
 
     /**
      * Sets the type of the light. Can be:
      *
-     * - "directional": A light that is infinitely far away and lights the entire scene from one
-     * direction.
-     * - "omni": An omni-directional light that illuminates in all directions from the light source.
-     * - "spot": An omni-directional light but is bounded by a cone.
+     * - `"directional"`: A global light that emits light in the direction of the negative y-axis
+     * of the owner entity.
+     * - `"omni"`: A local light that emits light in all directions from the owner entity's
+     * position.
+     * - `"spot"`: A local light that emits light similarly to an omni light but is bounded by a
+     * cone centered on the owner entity's negative y-axis.
      *
-     * Defaults to "directional".
+     * Defaults to `"directional"`.
      *
      * @type {string}
      */
-    set type(arg) {
-        this._setValue('type', arg, function (newValue, oldValue) {
-            this.system.changeType(this, oldValue, newValue);
-            this.refreshProperties();
-        });
+    set type(value) {
+        if (this._type === value) return;
+
+        // Remove from layers first so clustered-light bookkeeping uses the OLD type. Layer#removeLight
+        // gates _clusteredLightsSet.delete on `light.type !== DIRECTIONAL`, so changing the type
+        // before the removal would leak the entry (e.g. spot -> directional).
+        this.removeLightFromLayers();
+
+        this._type = value;
+        this._light.type = lightTypes[value];
+        this.refreshProperties();
     }
 
     /**
@@ -160,33 +279,26 @@ class LightComponent extends Component {
      * @type {string}
      */
     get type() {
-        return this.data.type;
+        return this._type;
     }
 
     /**
-     * Sets the color of the light. The alpha component of the color is ignored. Defaults to white
-     * (`[1, 1, 1]`).
+     * Sets the color of the light in sRGB space. The alpha component of the color is ignored.
+     * Defaults to white (`[1, 1, 1]`).
      *
-     * @type {Color};
+     * @type {Color}
      */
-    set color(arg) {
-        this._setValue(
-            'color',
-            arg,
-            function (newValue, oldValue) {
-                this.light.setColor(newValue);
-            },
-            true
-        );
+    set color(value) {
+        this._light.setColor(value);
     }
 
     /**
      * Gets the color of the light.
      *
-     * @type {Color};
+     * @type {Color}
      */
     get color() {
-        return this.data.color;
+        return this._light.getColor();
     }
 
     /**
@@ -194,10 +306,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set intensity(arg) {
-        this._setValue('intensity', arg, function (newValue, oldValue) {
-            this.light.intensity = newValue;
-        });
+    set intensity(value) {
+        this._light.intensity = value;
     }
 
     /**
@@ -206,7 +316,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get intensity() {
-        return this.data.intensity;
+        return this._light.intensity;
     }
 
     /**
@@ -214,10 +324,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set luminance(arg) {
-        this._setValue('luminance', arg, function (newValue, oldValue) {
-            this.light.luminance = newValue;
-        });
+    set luminance(value) {
+        this._light.luminance = value;
     }
 
     /**
@@ -226,7 +334,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get luminance() {
-        return this.data.luminance;
+        return this._light.luminance;
     }
 
     /**
@@ -237,14 +345,12 @@ class LightComponent extends Component {
      * - {@link LIGHTSHAPE_DISK}: Disk shape.
      * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
      *
-     * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
+     * Defaults to {@link LIGHTSHAPE_PUNCTUAL}.
      *
      * @type {number}
      */
-    set shape(arg) {
-        this._setValue('shape', arg, function (newValue, oldValue) {
-            this.light.shape = newValue;
-        });
+    set shape(value) {
+        this._light.shape = value;
     }
 
     /**
@@ -253,19 +359,21 @@ class LightComponent extends Component {
      * @type {number}
      */
     get shape() {
-        return this.data.shape;
+        return this._light.shape;
     }
 
     /**
-     * Sets whether material specularity will be affected by this light. Ignored for lights other
-     * than {@link LIGHTTYPE_DIRECTIONAL}. Defaults to true.
+     * Sets whether material specularity will be affected by this light. Only takes effect when
+     * {@link type} is `"directional"`; for other types the value is preserved on the component and
+     * applied if {@link type} later becomes `"directional"`. Defaults to true.
      *
      * @type {boolean}
      */
-    set affectSpecularity(arg) {
-        this._setValue('affectSpecularity', arg, function (newValue, oldValue) {
-            this.light.affectSpecularity = newValue;
-        });
+    set affectSpecularity(value) {
+        this._affectSpecularity = value;
+        // Light#affectSpecularity is a no-op for non-directional lights; the value is preserved on
+        // the component and re-applied via refreshProperties() if the type later becomes directional.
+        this._light.affectSpecularity = value;
     }
 
     /**
@@ -274,7 +382,7 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get affectSpecularity() {
-        return this.data.affectSpecularity;
+        return this._affectSpecularity;
     }
 
     /**
@@ -282,10 +390,9 @@ class LightComponent extends Component {
      *
      * @type {boolean}
      */
-    set castShadows(arg) {
-        this._setValue('castShadows', arg, function (newValue, oldValue) {
-            this.light.castShadows = newValue;
-        });
+    set castShadows(value) {
+        this._castShadows = value;
+        this._light.castShadows = value;
     }
 
     /**
@@ -294,7 +401,7 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get castShadows() {
-        return this.data.castShadows;
+        return this._castShadows;
     }
 
     /**
@@ -303,10 +410,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set shadowDistance(arg) {
-        this._setValue('shadowDistance', arg, function (newValue, oldValue) {
-            this.light.shadowDistance = newValue;
-        });
+    set shadowDistance(value) {
+        this._light.shadowDistance = value;
     }
 
     /**
@@ -315,7 +420,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get shadowDistance() {
-        return this.data.shadowDistance;
+        return this._light.shadowDistance;
     }
 
     /**
@@ -324,10 +429,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set shadowIntensity(arg) {
-        this._setValue('shadowIntensity', arg, function (newValue, oldValue) {
-            this.light.shadowIntensity = newValue;
-        });
+    set shadowIntensity(value) {
+        this._light.shadowIntensity = value;
     }
 
     /**
@@ -336,7 +439,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get shadowIntensity() {
-        return this.data.shadowIntensity;
+        return this._light.shadowIntensity;
     }
 
     /**
@@ -345,10 +448,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set shadowResolution(arg) {
-        this._setValue('shadowResolution', arg, function (newValue, oldValue) {
-            this.light.shadowResolution = newValue;
-        });
+    set shadowResolution(value) {
+        this._light.shadowResolution = value;
     }
 
     /**
@@ -357,7 +458,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get shadowResolution() {
-        return this.data.shadowResolution;
+        return this._light.shadowResolution;
     }
 
     /**
@@ -366,10 +467,9 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set shadowBias(arg) {
-        this._setValue('shadowBias', arg, function (newValue, oldValue) {
-            this.light.shadowBias = -0.01 * math.clamp(newValue, 0, 1);
-        });
+    set shadowBias(value) {
+        this._shadowBias = value;
+        this._light.shadowBias = -0.01 * math.clamp(value, 0, 1);
     }
 
     /**
@@ -378,7 +478,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get shadowBias() {
-        return this.data.shadowBias;
+        return this._shadowBias;
     }
 
     /**
@@ -387,10 +487,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set numCascades(arg) {
-        this._setValue('numCascades', arg, function (newValue, oldValue) {
-            this.light.numCascades = math.clamp(Math.floor(newValue), 1, 4);
-        });
+    set numCascades(value) {
+        this._light.numCascades = math.clamp(Math.floor(value), 1, 4);
     }
 
     /**
@@ -399,20 +497,18 @@ class LightComponent extends Component {
      * @type {number}
      */
     get numCascades() {
-        return this.data.numCascades;
+        return this._light.numCascades;
     }
 
     /**
      * Sets the blend factor for cascaded shadow maps, defining the fraction of each cascade level
-     * used for blending between adjacent cascades. The value should be between 0 and 1, with
-     * a default of 0, which disables blending between cascades.
+     * used for blending between adjacent cascades. The value should be between 0 and 1. Defaults
+     * to 0, which disables blending between cascades.
      *
      * @type {number}
      */
     set cascadeBlend(value) {
-        this._setValue('cascadeBlend', value, function (newValue, oldValue) {
-            this.light.cascadeBlend = math.clamp(newValue, 0, 1);
-        });
+        this._light.cascadeBlend = math.clamp(value, 0, 1);
     }
 
     /**
@@ -421,7 +517,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get cascadeBlend() {
-        return this.data.cascadeBlend;
+        return this._light.cascadeBlend;
     }
 
     /**
@@ -430,10 +526,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set bakeNumSamples(arg) {
-        this._setValue('bakeNumSamples', arg, function (newValue, oldValue) {
-            this.light.bakeNumSamples = math.clamp(Math.floor(newValue), 1, 255);
-        });
+    set bakeNumSamples(value) {
+        this._light.bakeNumSamples = math.clamp(Math.floor(value), 1, 255);
     }
 
     /**
@@ -442,43 +536,40 @@ class LightComponent extends Component {
      * @type {number}
      */
     get bakeNumSamples() {
-        return this.data.bakeNumSamples;
+        return this._light.bakeNumSamples;
     }
 
     /**
-     * Sets the penumbra angle in degrees, allowing for a soft shadow boundary. Defaults to 0.
-     * Requires `bake` to be set to true and the light type is {@link LIGHTTYPE_DIRECTIONAL}.
+     * Sets the angular size in degrees of the area used when baking soft shadow boundaries for the
+     * directional light into the lightmap. Range is 0 to 180. Requires {@link bake} to be set to
+     * true and {@link type} to be `"directional"`. Defaults to 0.
      *
      * @type {number}
      */
-    set bakeArea(arg) {
-        this._setValue('bakeArea', arg, function (newValue, oldValue) {
-            this.light.bakeArea = math.clamp(newValue, 0, 180);
-        });
+    set bakeArea(value) {
+        this._light.bakeArea = math.clamp(value, 0, 180);
     }
 
     /**
-     * Gets the penumbra angle in degrees.
+     * Gets the angular size in degrees of the area used when baking soft shadow boundaries for
+     * the directional light into the lightmap.
      *
      * @type {number}
      */
     get bakeArea() {
-        return this.data.bakeArea;
+        return this._light.bakeArea;
     }
 
     /**
      * Sets the distribution of subdivision of the camera frustum for individual shadow cascades.
-     * Only used if {@link LightComponent#numCascades} is larger than 1. Can be a value in range of
-     * 0 and 1. Value of 0 represents a linear distribution, value of 1 represents a logarithmic
-     * distribution. Defaults to 0.5. Larger value increases the resolution of the shadows in the
-     * near distance.
+     * Only used if {@link numCascades} is larger than 1. Can be a value in range of 0 and 1. Value
+     * of 0 represents a linear distribution, value of 1 represents a logarithmic distribution.
+     * Defaults to 0.5. Larger value increases the resolution of the shadows in the near distance.
      *
      * @type {number}
      */
-    set cascadeDistribution(arg) {
-        this._setValue('cascadeDistribution', arg, function (newValue, oldValue) {
-            this.light.cascadeDistribution = math.clamp(newValue, 0, 1);
-        });
+    set cascadeDistribution(value) {
+        this._light.cascadeDistribution = math.clamp(value, 0, 1);
     }
 
     /**
@@ -487,7 +578,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get cascadeDistribution() {
-        return this.data.cascadeDistribution;
+        return this._light.cascadeDistribution;
     }
 
     /**
@@ -495,10 +586,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set normalOffsetBias(arg) {
-        this._setValue('normalOffsetBias', arg, function (newValue, oldValue) {
-            this.light.normalOffsetBias = math.clamp(newValue, 0, 1);
-        });
+    set normalOffsetBias(value) {
+        this._light.normalOffsetBias = math.clamp(value, 0, 1);
     }
 
     /**
@@ -507,7 +596,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get normalOffsetBias() {
-        return this.data.normalOffsetBias;
+        return this._light.normalOffsetBias;
     }
 
     /**
@@ -515,10 +604,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set range(arg) {
-        this._setValue('range', arg, function (newValue, oldValue) {
-            this.light.attenuationEnd = newValue;
-        });
+    set range(value) {
+        this._light.attenuationEnd = value;
     }
 
     /**
@@ -527,49 +614,49 @@ class LightComponent extends Component {
      * @type {number}
      */
     get range() {
-        return this.data.range;
+        return this._light.attenuationEnd;
     }
 
     /**
-     * Sets the angle at which the spotlight cone starts to fade off. The angle is specified in
-     * degrees. Affects spot lights only. Defaults to 40.
+     * Sets the half-angle (measured in degrees from the light's direction axis to the cone edge)
+     * at which the spotlight cone starts to fade off. The full inner beam angle is twice this
+     * value. Affects spot lights only. Defaults to 40 (i.e. an 80-degree full inner beam).
      *
      * @type {number}
      */
-    set innerConeAngle(arg) {
-        this._setValue('innerConeAngle', arg, function (newValue, oldValue) {
-            this.light.innerConeAngle = newValue;
-        });
+    set innerConeAngle(value) {
+        this._light.innerConeAngle = value;
     }
 
     /**
-     * Gets the angle at which the spotlight cone starts to fade off.
+     * Gets the half-angle (measured in degrees from the light's direction axis to the cone edge)
+     * at which the spotlight cone starts to fade off.
      *
      * @type {number}
      */
     get innerConeAngle() {
-        return this.data.innerConeAngle;
+        return this._light.innerConeAngle;
     }
 
     /**
-     * Sets the angle at which the spotlight cone has faded to nothing. The angle is specified in
-     * degrees. Affects spot lights only. Defaults to 45.
+     * Sets the half-angle (measured in degrees from the light's direction axis to the cone edge)
+     * at which the spotlight cone has faded to nothing. The full outer beam angle is twice this
+     * value. Affects spot lights only. Defaults to 45 (i.e. a 90-degree full outer beam).
      *
      * @type {number}
      */
-    set outerConeAngle(arg) {
-        this._setValue('outerConeAngle', arg, function (newValue, oldValue) {
-            this.light.outerConeAngle = newValue;
-        });
+    set outerConeAngle(value) {
+        this._light.outerConeAngle = value;
     }
 
     /**
-     * Gets the angle at which the spotlight cone has faded to nothing.
+     * Gets the half-angle (measured in degrees from the light's direction axis to the cone edge)
+     * at which the spotlight cone has faded to nothing.
      *
      * @type {number}
      */
     get outerConeAngle() {
-        return this.data.outerConeAngle;
+        return this._light.outerConeAngle;
     }
 
     /**
@@ -583,10 +670,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set falloffMode(arg) {
-        this._setValue('falloffMode', arg, function (newValue, oldValue) {
-            this.light.falloffMode = newValue;
-        });
+    set falloffMode(value) {
+        this._light.falloffMode = value;
     }
 
     /**
@@ -595,7 +680,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get falloffMode() {
-        return this.data.falloffMode;
+        return this._light.falloffMode;
     }
 
     /**
@@ -611,12 +696,12 @@ class LightComponent extends Component {
      * - {@link SHADOW_VSM_32F}
      * - {@link SHADOW_PCSS_32F}
      *
+     * Defaults to {@link SHADOW_PCF3_32F}.
+     *
      * @type {number}
      */
-    set shadowType(arg) {
-        this._setValue('shadowType', arg, function (newValue, oldValue) {
-            this.light.shadowType = newValue;
-        });
+    set shadowType(value) {
+        this._light.shadowType = value;
     }
 
     /**
@@ -625,19 +710,18 @@ class LightComponent extends Component {
      * @type {number}
      */
     get shadowType() {
-        return this.data.shadowType;
+        return this._light.shadowType;
     }
 
     /**
-     * Sets the number of samples used for blurring a variance shadow map. Only uneven numbers
-     * work, even are incremented. Minimum value is 1, maximum is 25. Defaults to 11.
+     * Sets the number of samples used for blurring a variance shadow map. Only odd values are
+     * supported; even values are rounded up to the next odd value. Values should be between 1 and
+     * 25. Defaults to 11.
      *
      * @type {number}
      */
-    set vsmBlurSize(arg) {
-        this._setValue('vsmBlurSize', arg, function (newValue, oldValue) {
-            this.light.vsmBlurSize = newValue;
-        });
+    set vsmBlurSize(value) {
+        this._light.vsmBlurSize = value;
     }
 
     /**
@@ -646,7 +730,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get vsmBlurSize() {
-        return this.data.vsmBlurSize;
+        return this._light.vsmBlurSize;
     }
 
     /**
@@ -655,12 +739,12 @@ class LightComponent extends Component {
      * - {@link BLUR_BOX}: Box filter.
      * - {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
      *
+     * Defaults to {@link BLUR_GAUSSIAN}.
+     *
      * @type {number}
      */
-    set vsmBlurMode(arg) {
-        this._setValue('vsmBlurMode', arg, function (newValue, oldValue) {
-            this.light.vsmBlurMode = newValue;
-        });
+    set vsmBlurMode(value) {
+        this._light.vsmBlurMode = value;
     }
 
     /**
@@ -669,18 +753,17 @@ class LightComponent extends Component {
      * @type {number}
      */
     get vsmBlurMode() {
-        return this.data.vsmBlurMode;
+        return this._light.vsmBlurMode;
     }
 
     /**
-     * Sets the VSM bias value.
+     * Sets the bias used to fight shadow acne when rendering variance shadow maps. Range is 0 to
+     * 1. Defaults to 0.0025.
      *
      * @type {number}
      */
-    set vsmBias(arg) {
-        this._setValue('vsmBias', arg, function (newValue, oldValue) {
-            this.light.vsmBias = math.clamp(newValue, 0, 1);
-        });
+    set vsmBias(value) {
+        this._light.vsmBias = math.clamp(value, 0, 1);
     }
 
     /**
@@ -689,61 +772,59 @@ class LightComponent extends Component {
      * @type {number}
      */
     get vsmBias() {
-        return this.data.vsmBias;
+        return this._light.vsmBias;
     }
 
     /**
-     * Sets the texture asset to be used as the cookie for this light. Only spot and omni lights can
-     * have cookies. Defaults to null.
+     * Sets the id of the texture asset to be used as the cookie for this light. Only spot and
+     * omni lights can have cookies. Spot lights expect a 2D texture; omni lights expect a
+     * cubemap. Defaults to null.
      *
      * @type {number|null}
      */
-    set cookieAsset(arg) {
-        this._setValue('cookieAsset', arg, function (newValue, oldValue) {
-            if (
-                this._cookieAssetId &&
-                ((newValue instanceof Asset && newValue.id === this._cookieAssetId) || newValue === this._cookieAssetId)
-            ) {
-                return;
+    set cookieAsset(value) {
+        if (
+            this._cookieAssetId &&
+            ((value instanceof Asset && value.id === this._cookieAssetId) || value === this._cookieAssetId)
+        ) {
+            return;
+        }
+
+        this.onCookieAssetRemove();
+        this._cookieAssetId = null;
+
+        if (value instanceof Asset) {
+            this._cookieAssetId = value.id;
+            this.onCookieAssetAdd(value);
+        } else if (typeof value === 'number') {
+            this._cookieAssetId = value;
+            const asset = this.system.app.assets.get(value);
+            if (asset) {
+                this.onCookieAssetAdd(asset);
+            } else {
+                this._cookieAssetAdd = true;
+                this.system.app.assets.on(`add:${this._cookieAssetId}`, this.onCookieAssetAdd, this);
             }
-            this.onCookieAssetRemove();
-            this._cookieAssetId = null;
-            if (newValue instanceof Asset) {
-                this.data.cookieAsset = newValue.id;
-                this._cookieAssetId = newValue.id;
-                this.onCookieAssetAdd(newValue);
-            } else if (typeof newValue === 'number') {
-                this._cookieAssetId = newValue;
-                const asset = this.system.app.assets.get(newValue);
-                if (asset) {
-                    this.onCookieAssetAdd(asset);
-                } else {
-                    this._cookieAssetAdd = true;
-                    this.system.app.assets.on(`add:${this._cookieAssetId}`, this.onCookieAssetAdd, this);
-                }
-            }
-        });
+        }
     }
 
     /**
-     * Gets the texture asset to be used as the cookie for this light.
+     * Gets the id of the texture asset used as the cookie for this light, or null if none is set.
      *
      * @type {number|null}
      */
     get cookieAsset() {
-        return this.data.cookieAsset;
+        return this._cookieAssetId;
     }
 
     /**
      * Sets the texture to be used as the cookie for this light. Only spot and omni lights can have
-     * cookies. Defaults to null.
+     * cookies. Spot lights expect a 2D texture; omni lights expect a cubemap. Defaults to null.
      *
      * @type {Texture|null}
      */
-    set cookie(arg) {
-        this._setValue('cookie', arg, function (newValue, oldValue) {
-            this.light.cookie = newValue;
-        });
+    set cookie(value) {
+        this._light.cookie = value;
     }
 
     /**
@@ -752,7 +833,7 @@ class LightComponent extends Component {
      * @type {Texture|null}
      */
     get cookie() {
-        return this.data.cookie;
+        return this._light.cookie;
     }
 
     /**
@@ -760,10 +841,8 @@ class LightComponent extends Component {
      *
      * @type {number}
      */
-    set cookieIntensity(arg) {
-        this._setValue('cookieIntensity', arg, function (newValue, oldValue) {
-            this.light.cookieIntensity = math.clamp(newValue, 0, 1);
-        });
+    set cookieIntensity(value) {
+        this._light.cookieIntensity = math.clamp(value, 0, 1);
     }
 
     /**
@@ -772,20 +851,18 @@ class LightComponent extends Component {
      * @type {number}
      */
     get cookieIntensity() {
-        return this.data.cookieIntensity;
+        return this._light.cookieIntensity;
     }
 
     /**
      * Sets whether normal spotlight falloff is active when a cookie texture is set. When set to
      * false, a spotlight will work like a pure texture projector (only fading with distance).
-     * Default is false.
+     * Defaults to true.
      *
      * @type {boolean}
      */
-    set cookieFalloff(arg) {
-        this._setValue('cookieFalloff', arg, function (newValue, oldValue) {
-            this.light.cookieFalloff = newValue;
-        });
+    set cookieFalloff(value) {
+        this._light.cookieFalloff = value;
     }
 
     /**
@@ -794,18 +871,17 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get cookieFalloff() {
-        return this.data.cookieFalloff;
+        return this._light.cookieFalloff;
     }
 
     /**
-     * Sets the color channels of the cookie texture to use. Can be "r", "g", "b", "a", "rgb".
+     * Sets the color channels of the cookie texture to use. Can be `"r"`, `"g"`, `"b"`, `"a"` or
+     * `"rgb"`. Defaults to `"rgb"`.
      *
      * @type {string}
      */
-    set cookieChannel(arg) {
-        this._setValue('cookieChannel', arg, function (newValue, oldValue) {
-            this.light.cookieChannel = newValue;
-        });
+    set cookieChannel(value) {
+        this._light.cookieChannel = value;
     }
 
     /**
@@ -814,32 +890,32 @@ class LightComponent extends Component {
      * @type {string}
      */
     get cookieChannel() {
-        return this.data.cookieChannel;
+        return this._light.cookieChannel;
     }
 
     /**
-     * Sets the angle for spotlight cookie rotation (in degrees).
+     * Sets the angle for spotlight cookie rotation in degrees. Defaults to 0.
      *
      * @type {number}
      */
-    set cookieAngle(arg) {
-        this._setValue('cookieAngle', arg, function (newValue, oldValue) {
-            if (newValue !== 0 || this.cookieScale !== null) {
-                if (!this._cookieMatrix) this._cookieMatrix = new Vec4();
-                let scx = 1;
-                let scy = 1;
-                if (this.cookieScale) {
-                    scx = this.cookieScale.x;
-                    scy = this.cookieScale.y;
-                }
-                const c = Math.cos(newValue * math.DEG_TO_RAD);
-                const s = Math.sin(newValue * math.DEG_TO_RAD);
-                this._cookieMatrix.set(c / scx, -s / scx, s / scy, c / scy);
-                this.light.cookieTransform = this._cookieMatrix;
-            } else {
-                this.light.cookieTransform = null;
+    set cookieAngle(value) {
+        if (this._cookieAngle === value) return;
+        this._cookieAngle = value;
+        if (value !== 0 || this._cookieScale !== null) {
+            if (!this._cookieMatrix) this._cookieMatrix = new Vec4();
+            let scx = 1;
+            let scy = 1;
+            if (this._cookieScale) {
+                scx = this._cookieScale.x;
+                scy = this._cookieScale.y;
             }
-        });
+            const c = Math.cos(value * math.DEG_TO_RAD);
+            const s = Math.sin(value * math.DEG_TO_RAD);
+            this._cookieMatrix.set(c / scx, -s / scx, s / scy, c / scy);
+            this._light.cookieTransform = this._cookieMatrix;
+        } else {
+            this._light.cookieTransform = null;
+        }
     }
 
     /**
@@ -848,33 +924,27 @@ class LightComponent extends Component {
      * @type {number}
      */
     get cookieAngle() {
-        return this.data.cookieAngle;
+        return this._cookieAngle;
     }
 
     /**
-     * Sets the spotlight cookie scale.
+     * Sets the spotlight cookie scale. Set to null to use no scaling. Defaults to null.
      *
      * @type {Vec2|null}
      */
-    set cookieScale(arg) {
-        this._setValue(
-            'cookieScale',
-            arg,
-            function (newValue, oldValue) {
-                if (newValue !== null || this.cookieAngle !== 0) {
-                    if (!this._cookieMatrix) this._cookieMatrix = new Vec4();
-                    const scx = newValue.x;
-                    const scy = newValue.y;
-                    const c = Math.cos(this.cookieAngle * math.DEG_TO_RAD);
-                    const s = Math.sin(this.cookieAngle * math.DEG_TO_RAD);
-                    this._cookieMatrix.set(c / scx, -s / scx, s / scy, c / scy);
-                    this.light.cookieTransform = this._cookieMatrix;
-                } else {
-                    this.light.cookieTransform = null;
-                }
-            },
-            true
-        );
+    set cookieScale(value) {
+        this._cookieScale = value;
+        if (value !== null || this._cookieAngle !== 0) {
+            if (!this._cookieMatrix) this._cookieMatrix = new Vec4();
+            const scx = value ? value.x : 1;
+            const scy = value ? value.y : 1;
+            const c = Math.cos(this._cookieAngle * math.DEG_TO_RAD);
+            const s = Math.sin(this._cookieAngle * math.DEG_TO_RAD);
+            this._cookieMatrix.set(c / scx, -s / scx, s / scy, c / scy);
+            this._light.cookieTransform = this._cookieMatrix;
+        } else {
+            this._light.cookieTransform = null;
+        }
     }
 
     /**
@@ -883,23 +953,16 @@ class LightComponent extends Component {
      * @type {Vec2|null}
      */
     get cookieScale() {
-        return this.data.cookieScale;
+        return this._cookieScale;
     }
 
     /**
-     * Sets the spotlight cookie position offset.
+     * Sets the spotlight cookie position offset. Defaults to null.
      *
      * @type {Vec2|null}
      */
-    set cookieOffset(arg) {
-        this._setValue(
-            'cookieOffset',
-            arg,
-            function (newValue, oldValue) {
-                this.light.cookieOffset = newValue;
-            },
-            true
-        );
+    set cookieOffset(value) {
+        this._light.cookieOffset = value;
     }
 
     /**
@@ -908,49 +971,48 @@ class LightComponent extends Component {
      * @type {Vec2|null}
      */
     get cookieOffset() {
-        return this.data.cookieOffset;
+        return this._light.cookieOffset;
     }
 
     /**
-     * Sets the shadow update model. This tells the renderer how often shadows must be updated for
+     * Sets the shadow update mode. This tells the renderer how often shadows must be updated for
      * this light. Can be:
      *
      * - {@link SHADOWUPDATE_NONE}: Don't render shadows.
-     * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches
-     * to {@link SHADOWUPDATE_NONE}.
-     * - {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
+     * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to
+     * {@link SHADOWUPDATE_NONE}).
+     * - {@link SHADOWUPDATE_REALTIME}: Render shadows every frame.
+     *
+     * Defaults to {@link SHADOWUPDATE_REALTIME}.
      *
      * @type {number}
      */
-    set shadowUpdateMode(arg) {
-        this._setValue(
-            'shadowUpdateMode',
-            arg,
-            function (newValue, oldValue) {
-                this.light.shadowUpdateMode = newValue;
-            },
-            true
-        );
+    set shadowUpdateMode(value) {
+        this._light.shadowUpdateMode = value;
     }
 
     /**
-     * Gets the shadow update model.
+     * Gets the shadow update mode.
      *
      * @type {number}
      */
     get shadowUpdateMode() {
-        return this.data.shadowUpdateMode;
+        return this._light.shadowUpdateMode;
     }
 
     /**
-     * Sets the mask to determine which {@link MeshInstance}s are lit by this light. Defaults to 1.
+     * Sets the bitmask that determines which {@link MeshInstance}s are lit by this light. The
+     * value is composed from {@link MASK_AFFECT_DYNAMIC}, {@link MASK_AFFECT_LIGHTMAPPED} and
+     * {@link MASK_BAKE}. The {@link affectDynamic}, {@link affectLightmapped} and {@link bake}
+     * helpers write to the same underlying mask but maintain their own state and are not
+     * recomputed from `mask`, so writing `mask` directly will not update those helpers (and a
+     * subsequent write to a helper may overwrite bits set via `mask`). Defaults to
+     * {@link MASK_AFFECT_DYNAMIC}.
      *
      * @type {number}
      */
-    set mask(arg) {
-        this._setValue('mask', arg, function (newValue, oldValue) {
-            this.light.mask = newValue;
-        });
+    set mask(value) {
+        this._light.mask = value;
     }
 
     /**
@@ -959,23 +1021,24 @@ class LightComponent extends Component {
      * @type {number}
      */
     get mask() {
-        return this.data.mask;
+        return this._light.mask;
     }
 
     /**
-     * Sets whether the light will affect non-lightmapped objects.
+     * Sets whether the light will affect non-lightmapped objects. Toggles the
+     * {@link MASK_AFFECT_DYNAMIC} bit on {@link mask}. Defaults to true.
      *
      * @type {boolean}
      */
-    set affectDynamic(arg) {
-        this._setValue('affectDynamic', arg, function (newValue, oldValue) {
-            if (newValue) {
-                this.light.mask |= MASK_AFFECT_DYNAMIC;
-            } else {
-                this.light.mask &= ~MASK_AFFECT_DYNAMIC;
-            }
-            this.light.layersDirty();
-        });
+    set affectDynamic(value) {
+        if (this._affectDynamic === value) return;
+        this._affectDynamic = value;
+        if (value) {
+            this._light.mask |= MASK_AFFECT_DYNAMIC;
+        } else {
+            this._light.mask &= ~MASK_AFFECT_DYNAMIC;
+        }
+        this._light.layersDirty();
     }
 
     /**
@@ -984,24 +1047,26 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get affectDynamic() {
-        return this.data.affectDynamic;
+        return this._affectDynamic;
     }
 
     /**
-     * Sets whether the light will affect lightmapped objects.
+     * Sets whether the light will affect lightmapped objects. Toggles the
+     * {@link MASK_AFFECT_LIGHTMAPPED} bit on {@link mask}. Mutually exclusive with {@link bake} on
+     * the mask: enabling one clears the other's mask bit. Defaults to false.
      *
      * @type {boolean}
      */
-    set affectLightmapped(arg) {
-        this._setValue('affectLightmapped', arg, function (newValue, oldValue) {
-            if (newValue) {
-                this.light.mask |= MASK_AFFECT_LIGHTMAPPED;
-                if (this.bake) this.light.mask &= ~MASK_BAKE;
-            } else {
-                this.light.mask &= ~MASK_AFFECT_LIGHTMAPPED;
-                if (this.bake) this.light.mask |= MASK_BAKE;
-            }
-        });
+    set affectLightmapped(value) {
+        if (this._affectLightmapped === value) return;
+        this._affectLightmapped = value;
+        if (value) {
+            this._light.mask |= MASK_AFFECT_LIGHTMAPPED;
+            if (this._bake) this._light.mask &= ~MASK_BAKE;
+        } else {
+            this._light.mask &= ~MASK_AFFECT_LIGHTMAPPED;
+            if (this._bake) this._light.mask |= MASK_BAKE;
+        }
     }
 
     /**
@@ -1010,25 +1075,27 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get affectLightmapped() {
-        return this.data.affectLightmapped;
+        return this._affectLightmapped;
     }
 
     /**
-     * Sets whether the light will be rendered into lightmaps.
+     * Sets whether the light will be rendered into lightmaps. Toggles the {@link MASK_BAKE} bit
+     * on {@link mask}. Mutually exclusive with {@link affectLightmapped} on the mask: enabling one
+     * clears the other's mask bit. Defaults to false.
      *
      * @type {boolean}
      */
-    set bake(arg) {
-        this._setValue('bake', arg, function (newValue, oldValue) {
-            if (newValue) {
-                this.light.mask |= MASK_BAKE;
-                if (this.affectLightmapped) this.light.mask &= ~MASK_AFFECT_LIGHTMAPPED;
-            } else {
-                this.light.mask &= ~MASK_BAKE;
-                if (this.affectLightmapped) this.light.mask |= MASK_AFFECT_LIGHTMAPPED;
-            }
-            this.light.layersDirty();
-        });
+    set bake(value) {
+        if (this._bake === value) return;
+        this._bake = value;
+        if (value) {
+            this._light.mask |= MASK_BAKE;
+            if (this._affectLightmapped) this._light.mask &= ~MASK_AFFECT_LIGHTMAPPED;
+        } else {
+            this._light.mask &= ~MASK_BAKE;
+            if (this._affectLightmapped) this._light.mask |= MASK_AFFECT_LIGHTMAPPED;
+        }
+        this._light.layersDirty();
     }
 
     /**
@@ -1037,22 +1104,21 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get bake() {
-        return this.data.bake;
+        return this._bake;
     }
 
     /**
      * Sets whether the light's direction will contribute to directional lightmaps. The light must
-     * be enabled and `bake` set to true. Be aware, that directional lightmap is an approximation
-     * and can only hold single direction per pixel. Intersecting multiple lights with bakeDir=true
-     * may lead to incorrect look of specular/bump-mapping in the area of intersection. The error
-     * is not always visible though, and highly scene-dependent.
+     * be enabled and {@link bake} set to true. Be aware that the directional lightmap is an
+     * approximation and can only hold a single direction per pixel. Intersecting multiple lights
+     * with {@link bakeDir} set to true may lead to incorrect-looking specular/bump mapping in the
+     * area of intersection. The error is not always visible though, and is highly scene-dependent.
+     * Defaults to true.
      *
      * @type {boolean}
      */
-    set bakeDir(arg) {
-        this._setValue('bakeDir', arg, function (newValue, oldValue) {
-            this.light.bakeDir = newValue;
-        });
+    set bakeDir(value) {
+        this._light.bakeDir = value;
     }
 
     /**
@@ -1061,18 +1127,16 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get bakeDir() {
-        return this.data.bakeDir;
+        return this._light.bakeDir;
     }
 
     /**
-     * Sets whether the light ever moves. This is an optimization hint.
+     * Sets whether the light ever moves. This is an optimization hint. Defaults to false.
      *
      * @type {boolean}
      */
-    set isStatic(arg) {
-        this._setValue('isStatic', arg, function (newValue, oldValue) {
-            this.light.isStatic = newValue;
-        });
+    set isStatic(value) {
+        this._light.isStatic = value;
     }
 
     /**
@@ -1081,32 +1145,33 @@ class LightComponent extends Component {
      * @type {boolean}
      */
     get isStatic() {
-        return this.data.isStatic;
+        return this._light.isStatic;
     }
 
     /**
      * Sets the array of layer IDs ({@link Layer#id}) to which this light should belong. Don't
      * push/pop/splice or modify this array. If you want to change it, set a new one instead.
+     * Defaults to [{@link LAYERID_WORLD}].
      *
      * @type {number[]}
      */
-    set layers(arg) {
-        this._setValue('layers', arg, function (newValue, oldValue) {
-            for (let i = 0; i < oldValue.length; i++) {
-                const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
-                if (!layer) continue;
-                layer.removeLight(this);
-                this.light.removeLayer(layer);
+    set layers(value) {
+        const oldValue = this._layers;
+        for (let i = 0; i < oldValue.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+            if (!layer) continue;
+            layer.removeLight(this);
+            this._light.removeLayer(layer);
+        }
+        this._layers = value;
+        for (let i = 0; i < value.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(value[i]);
+            if (!layer) continue;
+            if (this.enabled && this.entity.enabled) {
+                layer.addLight(this);
+                this._light.addLayer(layer);
             }
-            for (let i = 0; i < newValue.length; i++) {
-                const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
-                if (!layer) continue;
-                if (this.enabled && this.entity.enabled) {
-                    layer.addLight(this);
-                    this.light.addLayer(layer);
-                }
-            }
-        });
+        }
     }
 
     /**
@@ -1115,36 +1180,37 @@ class LightComponent extends Component {
      * @type {number[]}
      */
     get layers() {
-        return this.data.layers;
+        return this._layers;
     }
 
     /**
-     * Sets an array of SHADOWUPDATE_ settings per shadow cascade. Set to undefined if not used.
+     * Sets an array of SHADOWUPDATE_ settings per shadow cascade. Set to null if not used.
+     * Defaults to null.
      *
-     * @type {number[] | null}
+     * @type {number[]|null}
      */
     set shadowUpdateOverrides(values) {
-        this.light.shadowUpdateOverrides = values;
+        this._light.shadowUpdateOverrides = values;
     }
 
     /**
      * Gets an array of SHADOWUPDATE_ settings per shadow cascade.
      *
-     * @type {number[] | null}
+     * @type {number[]|null}
      */
     get shadowUpdateOverrides() {
-        return this.light.shadowUpdateOverrides;
+        return this._light.shadowUpdateOverrides;
     }
 
     /**
      * Sets the number of shadow samples used for soft shadows when the shadow type is
-     * {@link SHADOW_PCSS_32F}. This value must be a positive whole number starting at 1. Higher
+     * {@link SHADOW_PCSS_32F}. This value should be a positive whole number starting at 1. Higher
      * values result in smoother shadows but can significantly decrease performance. Defaults to 16.
      *
      * @type {number}
      */
     set shadowSamples(value) {
-        this.light.shadowSamples = value;
+        this._light.shadowSamples = value;
     }
 
     /**
@@ -1153,23 +1219,23 @@ class LightComponent extends Component {
      * @type {number}
      */
     get shadowSamples() {
-        return this.light.shadowSamples;
+        return this._light.shadowSamples;
     }
 
     /**
      * Sets the number of blocker samples used for soft shadows when the shadow type is
      * {@link SHADOW_PCSS_32F}. These samples are used to estimate the distance between the shadow
-     * caster and the shadow receiver, which is then used for the estimation of contact hardening in
-     * the shadow. This value must be a positive whole number starting at 0. Higher values improve
+     * caster and the shadow receiver, which is then used for the estimation of contact hardening
+     * in the shadow. This value should be a non-negative whole number. Higher values improve
      * shadow quality by considering more occlusion points, but can decrease performance. When set
-     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 16. Note
-     * that this values can be lower than shadowSamples to optimize performance, often without large
-     * impact on quality.
+     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 16.
+     * Note that this value can be lower than shadowSamples to optimize performance, often without
+     * large impact on quality.
      *
      * @type {number}
      */
     set shadowBlockerSamples(value) {
-        this.light.shadowBlockerSamples = value;
+        this._light.shadowBlockerSamples = value;
     }
 
     /**
@@ -1178,7 +1244,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get shadowBlockerSamples() {
-        return this.light.shadowBlockerSamples;
+        return this._light.shadowBlockerSamples;
     }
 
     /**
@@ -1189,7 +1255,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     set penumbraSize(value) {
-        this.light.penumbraSize = value;
+        this._light.penumbraSize = value;
     }
 
     /**
@@ -1198,7 +1264,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     get penumbraSize() {
-        return this.light.penumbraSize;
+        return this._light.penumbraSize;
     }
 
     /**
@@ -1210,7 +1276,7 @@ class LightComponent extends Component {
      * @type {number}
      */
     set penumbraFalloff(value) {
-        this.light.penumbraFalloff = value;
+        this._light.penumbraFalloff = value;
     }
 
     /**
@@ -1219,34 +1285,25 @@ class LightComponent extends Component {
      * @type {number}
      */
     get penumbraFalloff() {
-        return this.light.penumbraFalloff;
-    }
-
-    /** @ignore */
-    _setValue(name, value, setFunc, skipEqualsCheck) {
-        const data = this.data;
-        const oldValue = data[name];
-        if (!skipEqualsCheck && oldValue === value) return;
-        data[name] = value;
-        if (setFunc) setFunc.call(this, value, oldValue);
+        return this._light.penumbraFalloff;
     }
 
     addLightToLayers() {
-        for (let i = 0; i < this.layers.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.addLight(this);
-                this.light.addLayer(layer);
+                this._light.addLayer(layer);
             }
         }
     }
 
     removeLightFromLayers() {
-        for (let i = 0; i < this.layers.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
             if (layer) {
                 layer.removeLight(this);
-                this.light.removeLayer(layer);
+                this._light.removeLayer(layer);
             }
         }
     }
@@ -1262,24 +1319,24 @@ class LightComponent extends Component {
     }
 
     onLayerAdded(layer) {
-        const index = this.layers.indexOf(layer.id);
+        const index = this._layers.indexOf(layer.id);
         if (index >= 0 && this.enabled && this.entity.enabled) {
             layer.addLight(this);
-            this.light.addLayer(layer);
+            this._light.addLayer(layer);
         }
     }
 
     onLayerRemoved(layer) {
-        const index = this.layers.indexOf(layer.id);
+        const index = this._layers.indexOf(layer.id);
         if (index >= 0) {
             layer.removeLight(this);
-            this.light.removeLayer(layer);
+            this._light.removeLayer(layer);
         }
     }
 
     refreshProperties() {
-        for (let i = 0; i < properties.length; i++) {
-            const name = properties[i];
+        for (let i = 0; i < _properties.length; i++) {
+            const name = _properties[i];
 
             /* eslint-disable no-self-assign */
             this[name] = this[name];
@@ -1310,7 +1367,7 @@ class LightComponent extends Component {
 
         this._cookieAsset = asset;
 
-        if (this.light.enabled) {
+        if (this._light.enabled) {
             this.onCookieAssetSet();
         }
 
@@ -1349,12 +1406,16 @@ class LightComponent extends Component {
         const scene = this.system.app.scene;
         const layers = scene.layers;
 
-        this.light.enabled = true;
+        this._light.enabled = true;
 
+        this._evtLayersChanged?.off();
         this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
 
         if (layers) {
+            this._evtLayerAdded?.off();
             this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+
+            this._evtLayerRemoved?.off();
             this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
@@ -1371,7 +1432,7 @@ class LightComponent extends Component {
         const scene = this.system.app.scene;
         const layers = scene.layers;
 
-        this.light.enabled = false;
+        this._light.enabled = false;
 
         this._evtLayersChanged?.off();
         this._evtLayersChanged = null;
@@ -1391,11 +1452,11 @@ class LightComponent extends Component {
         this.onDisable();
 
         // destroy light node
-        this.light.destroy();
+        this._light.destroy();
 
         // remove cookie asset events
         this.cookieAsset = null;
     }
 }
 
-export { LightComponent };
+export { _properties, LightComponent };

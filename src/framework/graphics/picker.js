@@ -1,8 +1,9 @@
 import { Color } from '../../core/math/color.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Layer } from '../../scene/layer.js';
+import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassPicker } from './render-pass-picker.js';
 import { math } from '../../core/math/math.js';
@@ -13,6 +14,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 /**
  * @import { AppBase } from '../app-base.js'
  * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { GSplatComponent } from '../components/gsplat/component.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { Scene } from '../../scene/scene.js'
  */
@@ -32,9 +34,9 @@ const _int32View = new Int32Array(_floatView.buffer);
  * values to compute world positions.
  *
  * **Main API methods:**
- * - {@link Picker#prepare} - Renders the pick buffer (call once per frame before picking)
- * - {@link Picker#getSelectionAsync} - Get mesh instances in a screen area
- * - {@link Picker#getWorldPointAsync} - Get world position at screen coordinates (requires depth)
+ * - {@link prepare} - Renders the pick buffer (call once per frame before picking)
+ * - {@link getSelectionAsync} - Get mesh instances in a screen area
+ * - {@link getWorldPointAsync} - Get world position at screen coordinates (requires depth)
  *
  * **Performance considerations:**
  * The picker resolution can be set lower than the screen resolution for better performance,
@@ -125,9 +127,9 @@ class Picker {
     renderTargetDepth = null;
 
     /**
-     * Mapping table from ids to meshInstances.
+     * Mapping table from ids to MeshInstances or GSplatComponents.
      *
-     * @type {Map<number, MeshInstance>}
+     * @type {Map<number, MeshInstance | GSplatComponent>}
      * @private
      */
     mapping = new Map();
@@ -135,7 +137,6 @@ class Picker {
     /**
      * When the device is destroyed, this allows us to ignore async results.
      *
-     * @type {boolean}
      * @private
      */
     deviceValid = true;
@@ -181,15 +182,16 @@ class Picker {
      * Return the list of mesh instances selected by the specified rectangle in the previously
      * prepared pick buffer. The rectangle using top-left coordinate system.
      *
-     * Note: This function is not supported on WebGPU. Use {@link Picker#getSelectionAsync} instead.
+     * Note: This function is not supported on WebGPU. Use {@link getSelectionAsync} instead.
      * Note: This function is blocks the main thread while reading pixels from GPU memory. It's
-     * recommended to use {@link Picker#getSelectionAsync} instead.
+     * recommended to use {@link getSelectionAsync} instead.
      *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle. Defaults to 1.
      * @param {number} [height] - The height of the rectangle. Defaults to 1.
-     * @returns {MeshInstance[]} An array of mesh instances that are in the selection.
+     * @returns {(MeshInstance | GSplatComponent)[]} An array of mesh instances or gsplat components
+     * that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * const selection = picker.getSelection(10, 20);
@@ -231,8 +233,8 @@ class Picker {
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle. Defaults to 1.
      * @param {number} [height] - The height of the rectangle. Defaults to 1.
-     * @returns {Promise<MeshInstance[]>} - Promise that resolves with an array of mesh instances
-     * that are in the selection.
+     * @returns {Promise<(MeshInstance | GSplatComponent)[]>} - Promise that resolves with an
+     * array of mesh instances or gsplat components that are in the selection.
      * @example
      * // Get the mesh instances at the rectangle with start at (10,20) and size of (5,5)
      * picker.getSelectionAsync(10, 20, 5, 5).then((meshInstances) => {
@@ -298,20 +300,26 @@ class Picker {
             return null;
         }
 
-        // capture the inverse view-projection matrix synchronously before awaiting
+        // capture camera state synchronously before awaiting
         const viewProjMat = new Mat4().mul2(camera.camera.projectionMatrix, camera.camera.viewMatrix);
         const invViewProj = viewProjMat.invert();
+        const near = camera.nearClip;
+        const far = camera.farClip;
+        const isOrtho = camera.projection === PROJECTION_ORTHOGRAPHIC;
 
-        const depth = await this.getPointDepthAsync(x, y);
-        if (depth === null) {
+        const linearDepth = await this.getPointDepthAsync(x, y);
+        if (linearDepth === null) {
             return null;
         }
+
+        // convert linear normalized depth [0,1] to NDC depth [0,1] for unprojection
+        const ndcDepth = isOrtho ? linearDepth : (far * linearDepth / (linearDepth * (far - near) + near));
 
         // unproject to world space using the captured matrix
         const deviceCoord = new Vec4(
             (x / this.width) * 2 - 1,
             (1 - y / this.height) * 2 - 1,
-            depth * 2 - 1,
+            ndcDepth * 2 - 1,
             1.0
         );
         invViewProj.transformVec4(deviceCoord, deviceCoord);
@@ -325,8 +333,9 @@ class Picker {
      *
      * @param {number} x - The x coordinate of the pixel to pick.
      * @param {number} y - The y coordinate of the pixel to pick.
-     * @returns {Promise<number|null>} Promise that resolves with the depth value of the picked point
-     * (in 0..1 range), or null if depth picking is not enabled or no object was picked.
+     * @returns {Promise<number|null>} Promise that resolves with the linear normalized depth value
+     * of the picked point (0 = near plane, 1 = far plane), or null if depth picking is not enabled
+     * or no object was picked.
      * @ignore
      */
     async getPointDepthAsync(x, y) {
@@ -337,7 +346,7 @@ class Picker {
         const pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
 
         // reconstruct uint bits from RGBA8
-        const intBits = (pixels[0] << 24) | (pixels[1] << 16) | (pixels[2] << 8) | pixels[3];
+        const intBits = ((pixels[0] << 24) | (pixels[1] << 16) | (pixels[2] << 8) | pixels[3]) >>> 0;
 
         // check for white (cleared) depth
         if (intBits === 0xFFFFFFFF) {
@@ -396,17 +405,7 @@ class Picker {
     }
 
     createTexture(name) {
-        return new Texture(this.device, {
-            format: PIXELFORMAT_RGBA8,
-            width: this.width,
-            height: this.height,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            name: name
-        });
+        return Texture.createDataTexture2D(this.device, name, this.width, this.height, PIXELFORMAT_RGBA8);
     }
 
     allocateRenderTarget() {
@@ -448,9 +447,9 @@ class Picker {
 
     /**
      * Primes the pick buffer with a rendering of the specified models from the point of view of
-     * the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can
+     * the supplied camera. Once the pick buffer has been prepared, {@link getSelection} can
      * be called multiple times on the same picker object. Therefore, if the models or camera do
-     * not change in any way, {@link Picker#prepare} does not need to be called again.
+     * not change in any way, {@link prepare} does not need to be called again.
      *
      * @param {CameraComponent} camera - The camera component used to render the scene.
      * @param {Scene} scene - The scene containing the pickable mesh instances.
@@ -486,7 +485,7 @@ class Picker {
      * Sets the resolution of the pick buffer. The pick buffer resolution does not need to match
      * the resolution of the corresponding frame buffer use for general rendering of the 3D scene.
      * However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers
+     * results returned by {@link getSelection}. On the other hand, smaller pick buffers
      * will yield greater performance, so there is a trade off.
      *
      * @param {number} width - The width of the pick buffer in pixels.

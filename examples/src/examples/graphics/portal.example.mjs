@@ -1,3 +1,4 @@
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
@@ -154,13 +155,27 @@ assetListLoader.load(() => {
     camera.setLocalEulerAngles(-27, 45, 0);
     app.root.addChild(camera);
 
-    // ------ Custom render passes set up ------
+    // ------ Camera frame (optional), stencil + MSAA — default off ------
 
-    const cameraFrame = new pc.CameraFrame(app, camera.camera);
-    cameraFrame.rendering.stencil = true;
-    cameraFrame.rendering.samples = 4;
-    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
-    cameraFrame.update();
+    /** @type {pc.CameraFrame|null} */
+    let cameraFrame = null;
+
+    data.set('cameraFrame', false);
+    data.on('cameraFrame:set', () => {
+        if (data.get('cameraFrame')) {
+            if (!cameraFrame) {
+                cameraFrame = new pc.CameraFrame(app, camera.camera);
+                cameraFrame.rendering.stencil = true;
+                cameraFrame.rendering.samples = 4;
+                cameraFrame.rendering.toneMapping = camera.camera.toneMapping;
+            }
+            cameraFrame.enabled = true;
+            cameraFrame.update();
+        } else if (cameraFrame) {
+            cameraFrame.destroy();
+            cameraFrame = null;
+        }
+    });
 
     // ------------------------------------------
 

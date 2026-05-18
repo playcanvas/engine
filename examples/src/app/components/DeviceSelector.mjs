@@ -3,18 +3,27 @@ import { Component } from 'react';
 
 import {
     DEVICETYPE_WEBGPU,
+    DEVICETYPE_WEBGPU_BARE,
     DEVICETYPE_WEBGL2,
     DEVICETYPE_NULL
 } from '../constants.mjs';
 import { jsx } from '../jsx.mjs';
 
+/** @import { DeviceEvent } from '../events.js' */
+
+/**
+ * @param {string} dt - The device type.
+ * @returns {boolean} True if the device type is WebGPU.
+ */
+const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
+
+/** @type {Record<string, string>} */
 const deviceTypeNames = {
     [DEVICETYPE_WEBGPU]: 'WebGPU',
+    [DEVICETYPE_WEBGPU_BARE]: 'WebGPU Bare',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
     [DEVICETYPE_NULL]: 'Null'
 };
-
-/** @typedef {import('../events.js').DeviceEvent} DeviceEvent */
 
 /**
  * @typedef {object} Props
@@ -23,15 +32,16 @@ const deviceTypeNames = {
 
 /**
  * @typedef {object} State
- * @property {any} fallbackOrder - The fallbackOrder.
- * @property {any} disabledOptions - The disabledOptions.
- * @property {string} activeDevice - The active device reported from the running example.
+ * @property {string[] | null} fallbackOrder - The fallbackOrder.
+ * @property {Record<string, string> | null} disabledOptions - The disabledOptions.
+ * @property {string | undefined} activeDevice - The active device reported from the running example.
  */
 
 /** @type {typeof Component<Props, State>} */
 const TypedComponent = Component;
 
 class DeviceSelector extends TypedComponent {
+    /** @type {State} */
     state = {
         fallbackOrder: null,
         disabledOptions: null,
@@ -72,24 +82,25 @@ class DeviceSelector extends TypedComponent {
     }
 
     /**
-     * @type {string}
+     * @param {string} value - The preferred graphics device.
      */
     set preferredGraphicsDevice(value) {
         localStorage.setItem('preferredGraphicsDevice', value);
-        // @ts-ignore
         window.preferredGraphicsDevice = value;
     }
 
+    /**
+     * @returns {string | undefined} The preferred graphics device.
+     */
     get preferredGraphicsDevice() {
-        // @ts-ignore
         return window.preferredGraphicsDevice;
     }
 
     /**
      * If our preferred device was e.g. WebGPU, but our active device is suddenly e.g. WebGL 2,
      * then we basically infer that WebGPU wasn't supported and mark it like that.
-     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} preferredDevice - The preferred device.
-     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} activeDevice - The active device reported from
+     * @param {string} preferredDevice - The preferred device.
+     * @param {string} activeDevice - The active device reported from
      * the example iframe.
      */
     setDisabledOptions(preferredDevice = DEVICETYPE_WEBGPU, activeDevice) {
@@ -99,10 +110,10 @@ class DeviceSelector extends TypedComponent {
                 [DEVICETYPE_WEBGL2]: 'WebGL 2 (not supported)'
             };
             this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
-        } else if (preferredDevice === DEVICETYPE_WEBGPU && activeDevice !== DEVICETYPE_WEBGPU) {
+        } else if (isWebGPU(preferredDevice) && !isWebGPU(activeDevice)) {
             const fallbackOrder = [DEVICETYPE_WEBGL2];
             const disabledOptions = {
-                [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)'
+                [preferredDevice]: `${deviceTypeNames[preferredDevice] || 'WebGPU'} (not supported)`
             };
             this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else {
@@ -118,27 +129,27 @@ class DeviceSelector extends TypedComponent {
      */
     updateMiniStats(value) {
         const disableMiniStats = value === DEVICETYPE_NULL;
-        const miniStatsEnabled = document.getElementById('showMiniStatsButton')?.ui.class.contains('selected');
+        const button = /** @type {any} */ (document.getElementById('showMiniStatsButton'));
+        const miniStatsEnabled = button?.ui.class.contains('selected');
         if (disableMiniStats && miniStatsEnabled) {
-            document.getElementById('showMiniStatsButton')?.ui.class.remove('selected');
+            button?.ui.class.remove('selected');
         }
     }
 
     /**
-     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} value - Is graphics device
-     * active
+     * @param {string} value - Is graphics device active.
      */
     onSetActiveGraphicsDevice(value) {
+        const preferredDevice = this.preferredGraphicsDevice ?? value;
         if (!this.preferredGraphicsDevice) {
-            this.preferredGraphicsDevice = value;
+            this.preferredGraphicsDevice = preferredDevice;
         }
-        this.setDisabledOptions(this.preferredGraphicsDevice, value);
+        this.setDisabledOptions(preferredDevice, value);
         this.updateMiniStats(value);
     }
 
     /**
-     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} value - The newly picked
-     * graphics device.
+     * @param {string} value - The newly picked graphics device.
      */
     onSetPreferredGraphicsDevice(value) {
         this.mergeState({ disabledOptions: null, activeDevice: value });
@@ -149,16 +160,20 @@ class DeviceSelector extends TypedComponent {
 
     render() {
         const { fallbackOrder, disabledOptions, activeDevice } = this.state;
+        const options = [
+            { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
+            ...(process.env.NODE_ENV === 'development' ? [
+                { t: deviceTypeNames[DEVICETYPE_WEBGPU_BARE], v: DEVICETYPE_WEBGPU_BARE }
+            ] : []),
+            { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
+            { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
+        ];
         return jsx(SelectInput, {
             id: 'deviceTypeSelectInput',
-            options: [
-                { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
-                { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
-                { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
-            ],
+            options,
             value: activeDevice,
-            fallbackOrder,
-            disabledOptions,
+            fallbackOrder: fallbackOrder ?? undefined,
+            disabledOptions: disabledOptions ?? undefined,
             onSelect: this.onSetPreferredGraphicsDevice.bind(this),
             prefix: 'Active Device: '
         });

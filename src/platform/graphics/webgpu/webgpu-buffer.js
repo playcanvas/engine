@@ -25,7 +25,9 @@ class WebgpuBuffer {
 
     destroy(device) {
         if (this.buffer) {
-            this.buffer.destroy();
+            // Defer destruction until after pending command buffers are submitted, since
+            // a recorded command buffer may still reference this buffer through a bind group.
+            device.deferDestroy(this.buffer);
             this.buffer = null;
         }
     }
@@ -35,6 +37,7 @@ class WebgpuBuffer {
     }
 
     loseContext() {
+        this.buffer = null;
     }
 
     allocate(device, size) {
@@ -43,6 +46,14 @@ class WebgpuBuffer {
             size,
             usage: this.usageFlags
         });
+
+        DebugHelper.setLabel(this.buffer,
+            this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
+                this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
+                    this.usageFlags & GPUBufferUsage.UNIFORM ? 'UniformBuffer' :
+                        this.usageFlags & GPUBufferUsage.STORAGE ? 'StorageBuffer' :
+                            ''
+        );
     }
 
     /**
@@ -63,15 +74,6 @@ class WebgpuBuffer {
 
             this.usageFlags |= GPUBufferUsage.COPY_DST;
             this.allocate(device, size);
-
-            DebugHelper.setLabel(this.buffer,
-                this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
-                    this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
-                        this.usageFlags & GPUBufferUsage.UNIFORM ? 'UniformBuffer' :
-                            this.usageFlags & GPUBufferUsage.STORAGE ? 'StorageBuffer' :
-                                ''
-            );
-
 
             // mappedAtCreation path - this could be used when the data is provided
 

@@ -7,8 +7,8 @@ import { Script } from './script.js';
  */
 
 /**
- * This is the legacy format for creating PlayCanvas script returned when calling `pc.createScript()`.
- * You should not use this inherit from this class directly.
+ * This is the legacy format for creating a PlayCanvas script returned when calling `pc.createScript()`.
+ * Do not inherit from this class directly.
  *
  * @deprecated Use {@link Script} instead.
  * @category Script
@@ -73,6 +73,7 @@ class ScriptType extends Script {
 
     /**
      * @param {boolean} [force] - Set to true to force initialization of the attributes.
+     * @ignore
      */
     __initializeAttributes(force) {
         if (!force && !this.__attributesRaw) {

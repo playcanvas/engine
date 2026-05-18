@@ -1,4 +1,3 @@
-// @config WEBGPU_DISABLED
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -39,11 +38,11 @@ const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new pc.AppOptions();
-createOptions.xr = pc.XrManager;
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(document.body);
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new pc.Mouse(canvas);
+createOptions.touch = new pc.TouchDevice(canvas);
+createOptions.keyboard = new pc.Keyboard(window);
+createOptions.xr = pc.XrManager;
 createOptions.elementInput = new pc.ElementInput(canvas);
 
 createOptions.componentSystems = [
@@ -75,9 +74,6 @@ app.on('destroy', () => {
     div.remove();
     css.remove();
 });
-
-// use device pixel ratio
-app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {

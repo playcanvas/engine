@@ -18,6 +18,10 @@ const random = {
      * Return a pseudo-random 2D point inside a unit circle with uniform distribution.
      *
      * @param {Vec2} point - The returned generated point.
+     * @example
+     * const point = new pc.Vec2();
+     * pc.random.circlePoint(point);
+     * // point now contains a random position inside a unit circle
      */
     circlePoint(point) {
         const r = Math.sqrt(Math.random());
@@ -33,6 +37,12 @@ const random = {
      * @param {Vec2} point - The returned generated point.
      * @param {number} index - Index of the point to generate, in the range from 0 to numPoints - 1.
      * @param {number} numPoints - The total number of points of the set.
+     * @example
+     * const point = new pc.Vec2();
+     * for (let i = 0; i < 100; i++) {
+     *     pc.random.circlePointDeterministic(point, i, 100);
+     *     // point contains the i-th evenly distributed point in the circle
+     * }
      */
     circlePointDeterministic(point, index, numPoints) {
         const theta = index * _goldenAngle;
@@ -56,6 +66,12 @@ const random = {
      * of 0 and 1. Defaults to 0.
      * @param {number} [end] - Part on the sphere along y axis to stop the points, in the range of
      * 0 and 1. Defaults to 1.
+     * @example
+     * const point = new pc.Vec3();
+     * for (let i = 0; i < 100; i++) {
+     *     pc.random.spherePointDeterministic(point, i, 100);
+     *     // point contains the i-th evenly distributed point on the sphere
+     * }
      */
     spherePointDeterministic(point, index, numPoints, start = 0, end = 1) {
 
@@ -82,6 +98,12 @@ const random = {
      *
      * @param {number} i - The index in the sequence to return.
      * @returns {number} The pseudo-random value.
+     * @example
+     * // Generate first 4 values of the sequence
+     * pc.random.radicalInverse(0); // returns 0
+     * pc.random.radicalInverse(1); // returns 0.5
+     * pc.random.radicalInverse(2); // returns 0.25
+     * pc.random.radicalInverse(3); // returns 0.75
      */
     radicalInverse(i) {
         let bits = ((i << 16) | (i >>> 16)) >>> 0;

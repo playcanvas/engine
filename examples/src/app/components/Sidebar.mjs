@@ -1,7 +1,7 @@
 import { Observer } from '@playcanvas/observer';
 import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 import { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import { exampleMetaData } from '../../../cache/metadata.mjs';
 import { MIN_DESKTOP_WIDTH, VERSION } from '../constants.mjs';
@@ -10,18 +10,20 @@ import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
 import { getOrientation } from '../utils.mjs';
 
-// eslint-disable-next-line jsdoc/require-property
+/** @import { ReactElement } from 'react' */
+
 /**
  * @typedef {object} Props
+ * @property {{ pathname: string, hash: string }} location - The router location.
  */
 
 /**
  * @typedef {object} State
  * @property {Record<string, Record<string, object>>} defaultCategories - The default categories.
  * @property {Record<string, Record<string, object>>|null} filteredCategories - The filtered categories.
- * @property {string} hash - The hash.
  * @property {Observer} observer - The observer.
  * @property {boolean} collapsed - Collapsed or not.
+ * @property {string} filterText - The current filter.
  * @property {string} orientation - Current orientation.
  */
 
@@ -37,7 +39,14 @@ function getDefaultExampleFiles() {
     /** @type {Record<string, { examples: Record<string, string> }>} */
     const categories = {};
     for (let i = 0; i < exampleMetaData.length; i++) {
-        const { categoryKebab, exampleNameKebab } = exampleMetaData[i];
+        const { categoryKebab, exampleNameKebab, hidden } = exampleMetaData[i];
+
+        // hidden examples are always built and reachable via URL, but are only listed in the
+        // sidebar during development (`npm run develop`), not in production builds (`npm run build`)
+        if (hidden && process.env.NODE_ENV !== 'development') {
+            continue;
+        }
+
         if (!categories[categoryKebab]) {
             categories[categoryKebab] = { examples: {} };
         }
@@ -52,7 +61,7 @@ class SideBar extends TypedComponent {
     state = {
         defaultCategories: getDefaultExampleFiles(),
         filteredCategories: null,
-        hash: location.hash,
+        filterText: '',
         observer: new Observer({ largeThumbnails: false }),
         // @ts-ignore
         collapsed: localStorage.getItem('sideBarCollapsed') === 'true' || window.top.innerWidth < MIN_DESKTOP_WIDTH,
@@ -75,8 +84,9 @@ class SideBar extends TypedComponent {
             return;
         }
 
-        /** @type {HTMLElement | null} */
-        const sideBarHeader = sideBar.querySelector('.pcui-panel-header');
+        const sideBarHeader = /** @type {HTMLElement | null} */ (
+            /** @type {unknown} */ (sideBar.querySelector('.pcui-panel-header'))
+        );
         if (!sideBarHeader) {
             return;
         }
@@ -99,14 +109,12 @@ class SideBar extends TypedComponent {
         if (!sideBar) {
             return;
         }
-        window.addEventListener('hashchange', () => {
-            this.mergeState({ hash: location.hash });
-        });
         this.state.observer.on('largeThumbnails:set', () => {
             let minTopNavItemDistance = Number.MAX_VALUE;
 
-            /** @type {NodeListOf<HTMLElement>} */
-            const navItems = document.querySelectorAll('.nav-item');
+            const navItems = /** @type {NodeListOf<HTMLElement>} */ (
+                /** @type {unknown} */ (document.querySelectorAll('.nav-item'))
+            );
             for (let i = 0; i < navItems.length; i++) {
                 const nav = navItems[i];
                 const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
@@ -152,6 +160,7 @@ class SideBar extends TypedComponent {
      * @param {string} filter - The filter string.
      */
     onChangeFilter(filter) {
+        this.mergeState({ filterText: filter });
         const { defaultCategories } = this.state;
         // Turn a filter like 'mes dec' (for mesh decals) into 'mes.*dec', because the examples
         // show "MESH DECALS" but internally it's just "MeshDecals".
@@ -189,6 +198,13 @@ class SideBar extends TypedComponent {
         this.mergeState({ filteredCategories: updatedCategories });
     }
 
+    clearFilter() {
+        const input = document.querySelector('.filter-input input');
+        if (input) {
+            /** @type {HTMLInputElement} */ (/** @type {unknown} */ (input)).value = '';
+        }
+        this.onChangeFilter('');
+    }
 
     /**
      * @param {import("react").MouseEvent<HTMLAnchorElement, MouseEvent>} e - The event.
@@ -207,7 +223,7 @@ class SideBar extends TypedComponent {
         if (Object.keys(categories).length === 0) {
             return jsx(Label, { text: 'No results' });
         }
-        const { hash } = this.state;
+        const { pathname } = this.props.location;
         return Object.keys(categories)
         .sort((a, b) => (a > b ? 1 : -1))
         .map((category) => {
@@ -229,8 +245,8 @@ class SideBar extends TypedComponent {
                     .sort((a, b) => (a > b ? 1 : -1))
                     .map((example) => {
                         const path = `/${category}/${example}`;
-                        const isSelected = new RegExp(`${path}$`).test(hash);
-                        const className = `nav-item ${isSelected ? 'selected' : null}`;
+                        const isSelected = pathname === path;
+                        const className = `nav-item ${isSelected ? 'selected' : ''}`;
                         return jsx(
                             Link,
                             {
@@ -273,7 +289,7 @@ class SideBar extends TypedComponent {
             collapsible: true,
             collapsed: false,
             id: 'sideBar',
-            class: ['small-thumbnails', collapsed ? 'collapsed' : null]
+            class: ['small-thumbnails', ...(collapsed ? ['collapsed'] : [])]
         };
         if (orientation === 'portrait') {
             panelOptions.class = ['small-thumbnails'];
@@ -283,12 +299,24 @@ class SideBar extends TypedComponent {
             Panel,
             // @ts-ignore
             panelOptions,
-            jsx(TextInput, {
-                class: 'filter-input',
-                keyChange: true,
-                placeholder: 'Filter...',
-                onChange: this.onChangeFilter.bind(this)
-            }),
+            jsx(
+                Container,
+                { class: ['filter-container', ...(this.state.filterText ? ['has-filter-text'] : [])] },
+                jsx(/** @type {any} */ (TextInput), {
+                    class: 'filter-input',
+                    keyChange: true,
+                    placeholder: 'Filter...',
+                    onChange: this.onChangeFilter.bind(this)
+                }),
+                this.state.filterText ? jsx(
+                    'div',
+                    {
+                        className: 'filter-clear',
+                        onClick: this.clearFilter.bind(this)
+                    },
+                    '\u2715'
+                ) : null
+            ),
             jsx(
                 LabelGroup,
                 { text: 'Large thumbnails:' },
@@ -303,4 +331,13 @@ class SideBar extends TypedComponent {
     }
 }
 
-export { SideBar };
+/**
+ * Wrapper component to provide router location to the class component.
+ * @returns {ReactElement} The SideBar component with router location.
+ */
+function SideBarWithRouter() {
+    const location = useLocation();
+    return jsx(SideBar, { location });
+}
+
+export { SideBarWithRouter as SideBar };

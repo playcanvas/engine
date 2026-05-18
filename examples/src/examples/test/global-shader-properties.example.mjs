@@ -123,6 +123,18 @@ assetListLoader.load(() => {
             litArgs_ao = 0.0;
             litArgs_opacity = 1.0;
         }`;
+    material.shaderChunkWGSL = `
+        #include "litShaderCorePS"
+        fn evaluateFrontend() {
+            litArgs_emission = vec3f(0.7, 0.4, 0);
+            litArgs_metalness = 0.5;
+            litArgs_specularity = vec3f(0.5, 0.5, 0.5);
+            litArgs_specularityFactor = 1.0;
+            litArgs_gloss = 0.5;
+            litArgs_ior = 0.1;
+            litArgs_ao = 0.0;
+            litArgs_opacity = 1.0;
+        }`;
     material.update();
 
     // create primitive

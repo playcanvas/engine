@@ -134,15 +134,12 @@ assetListLoader.load(() => {
     ground.setLocalPosition(0, 0, 0);
     app.root.addChild(ground);
 
-    let depthRendering = false;
     data.on('*:set', (/** @type {string} */ path, value) => {
 
-        // toggle the depth texture for the camera based on the soft parameter
+        // toggle the depth softening on the particle system and the depth texture on the camera
         const soft = data.get('data.soft');
-        if (depthRendering !== soft) {
-            cameraEntity.camera.requestSceneDepthMap(soft);
-            depthRendering = soft;
-        }
+        entity.particlesystem.depthSoftening = soft ? 0.08 : 0;
+        cameraEntity.camera.requestSceneDepthMap(soft);
     });
 
     // initial values

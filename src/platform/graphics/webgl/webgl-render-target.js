@@ -1,12 +1,16 @@
 import { Debug } from '../../../core/debug.js';
+import { platform } from '../../../core/platform.js';
 import { PIXELFORMAT_RGBA8 } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { DeviceCache } from '../device-cache.js';
 import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 
 /**
  * @import { RenderTarget } from '../render-target.js'
  * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
  */
+
+const _validatedFboConfigs = new DeviceCache();
 
 /**
  * A private class representing a pair of framebuffers, when MSAA is used.
@@ -372,6 +376,24 @@ class WebglRenderTarget {
      * @private
      */
     _checkFbo(device, target, type = '') {
+
+        // Build a key from attachment formats, depth/stencil config, samples, and FBO type.
+        // Dimensions are excluded as they don't affect framebuffer completeness.
+        const colorFormats = target._colorBuffers?.map(b => b?.format ?? -1).join(',') ?? '';
+        const depthInfo = target._depth ? (target._depthBuffer ? `dt${target._depthBuffer.format}` : (target._stencil ? 'ds' : 'd')) : '';
+        const key = `${type}:${colorFormats}:${depthInfo}:${target._samples}`;
+
+        // clear validated configs on context loss to re-validate after restore
+        const validated = _validatedFboConfigs.get(device, () => {
+            const set = new Set();
+            set.loseContext = () => set.clear();
+            return set;
+        });
+
+        if (validated.has(key)) {
+            return;
+        }
+
         const gl = device.gl;
         const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
         let errorCode;
@@ -388,6 +410,10 @@ class WebglRenderTarget {
             case gl.FRAMEBUFFER_UNSUPPORTED:
                 errorCode = 'FRAMEBUFFER_UNSUPPORTED';
                 break;
+        }
+
+        if (status === gl.FRAMEBUFFER_COMPLETE) {
+            validated.add(key);
         }
 
         Debug.assert(!errorCode, `Framebuffer creation failed with error code ${errorCode}, render target: ${target.name} ${type}`, target);
@@ -421,6 +447,12 @@ class WebglRenderTarget {
             gl.NEAREST);
     }
 
+    /**
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {RenderTarget} target - The render target.
+     * @param {boolean} color - Whether to resolve the color buffer.
+     * @param {boolean} depth - Whether to resolve the depth buffer.
+     */
     resolve(device, target, color, depth) {
         const gl = device.gl;
 
@@ -446,10 +478,29 @@ class WebglRenderTarget {
             }
 
         } else {
-            DebugGraphics.pushGpuMarker(device, 'RESOLVE');
-            this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target,
-                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0));
-            DebugGraphics.popGpuMarker(device);
+            // true when this render target resolves into the active XR session's framebuffer.
+            const isXrFramebuffer = !!device.defaultFramebuffer && this._glResolveFrameBuffer === device.defaultFramebuffer;
+
+            // On visionOS / Apple Vision Pro, blitFramebuffer into the opaque XR FBO produces
+            // incorrect results (content appears scaled to a small sub-region). Instead we resolve
+            // MSAA into an intermediate scratch texture first, then copy it into the XR FBO with
+            // a single fullscreen textured quad.
+            const xrColorQuad = color && isXrFramebuffer && platform.visionos;
+
+            if (xrColorQuad) {
+                DebugGraphics.pushGpuMarker(device, 'RESOLVE-XR-COLOR-QUAD');
+                device.resolveMsaaColorToXrFramebufferViaQuads(
+                    this._glFrameBuffer, this._glResolveFrameBuffer, target.width, target.height);
+                DebugGraphics.popGpuMarker(device);
+                color = false; // color is resolved; fall through to handle depth if needed
+            }
+
+            if (color || depth) {
+                DebugGraphics.pushGpuMarker(device, 'RESOLVE');
+                this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target,
+                    (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0));
+                DebugGraphics.popGpuMarker(device);
+            }
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);

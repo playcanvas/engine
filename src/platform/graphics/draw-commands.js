@@ -3,8 +3,8 @@ import { Debug } from '../../core/debug.js';
 /**
  * Container holding parameters for multi-draw commands.
  *
- * Obtain an instance via {@link MeshInstance#setMultiDraw} and populate it using
- * {@link DrawCommands#add} followed by {@link DrawCommands#update}.
+ * Obtain an instance via {@link MeshInstance#setMultiDraw} and populate it using {@link add}
+ * followed by {@link update}.
  *
  * @category Graphics
  */
@@ -28,7 +28,6 @@ class DrawCommands {
     /**
      * Maximum number of multi-draw calls the space is allocated for. Ignored for indirect draw commands.
      *
-     * @type {number}
      * @private
      */
     _maxCount = 0;
@@ -53,7 +52,6 @@ class DrawCommands {
     /**
      * Number of draw calls to perform.
      *
-     * @type {number}
      * @private
      */
     _count = 1;
@@ -70,10 +68,16 @@ class DrawCommands {
     /**
      * Slot index of the first indirect draw call. Ignored for multi-draw commands.
      *
-     * @type {number}
      * @ignore
      */
     slotIndex = 0;
+
+    /**
+     * Total number of primitives across all sub-draws (pre-calculated).
+     *
+     * @ignore
+     */
+    primitiveCount = 0;
 
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
@@ -86,9 +90,7 @@ class DrawCommands {
         this.impl = device.createDrawCommandImpl(this);
     }
 
-    /**
-     * @ignore
-     */
+    /** @ignore */
     destroy() {
         this.impl?.destroy?.();
         this.impl = null;
@@ -127,7 +129,7 @@ class DrawCommands {
      */
     update(count) {
         this._count = count;
-        this.impl.update?.(count);
+        this.primitiveCount = this.impl.update?.(count) ?? 0;
     }
 }
 

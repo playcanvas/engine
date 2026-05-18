@@ -250,8 +250,6 @@ class ElementMouseEvent extends ElementInputEvent {
 
         /**
          * The amount of the wheel movement.
-         *
-         * @type {number}
          */
         this.wheelDelta = 0;
 
@@ -320,7 +318,7 @@ class ElementTouchEvent extends ElementInputEvent {
  */
 class ElementSelectEvent extends ElementInputEvent {
     /**
-     * Create an instance of a ElementSelectEvent.
+     * Create an instance of an ElementSelectEvent.
      *
      * @param {XRInputSourceEvent} event - The XRInputSourceEvent that was originally raised.
      * @param {ElementComponent} element - The

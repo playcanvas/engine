@@ -7,74 +7,52 @@ function UnifiedSortWorker() {
     let centersData;
     let distances;
     let countBuffer;
+    let indexMap;
 
     // Sorting mode: false = forward vector (directional), true = radial distance (for cubemaps)
     let _radialSort = false;
 
-    // camera-relative bin-based precision optimization
+    // Flag to warn only once about sortKey overflow
+    let _warnedSortKeyOverflow = false;
+
+    // Camera-relative bin-based precision optimization.
+    // Arrays are size 33 (numBins + 1) to include a safety entry at index 32.
+    // This handles the edge case where floating point calculation (d >>> 0) produces
+    // bin index 32 instead of 31. The GPU compute shader avoids this by clamping,
+    // but the CPU path uses truncation which can overflow. The safety entry at [32]
+    // ensures valid array access without bounds checking in the hot loop.
     const numBins = 32;
-    const binBase = new Array(numBins).fill(0);
-    const binDivider = new Array(numBins).fill(0);
+    const binBase = new Float32Array(numBins + 1);
+    const binDivider = new Float32Array(numBins + 1);
 
-    // Weight tiers for camera-relative precision (distance from camera bin -> weight multiplier)
-    const weightTiers = [
-        { maxDistance: 0, weight: 40.0 },   // Camera bin
-        { maxDistance: 2, weight: 20.0 },   // Adjacent bins
-        { maxDistance: 5, weight: 8.0 },    // Nearby bins
-        { maxDistance: 10, weight: 3.0 },   // Medium distance
-        { maxDistance: Infinity, weight: 1.0 }  // Far bins
-    ];
+    // Shared bin weights utility (class is injected via stringification from main thread)
+    // eslint-disable-next-line no-undef
+    const binWeightsUtil = new GSplatSortBinWeights();
 
-    // Pre-calculate weight lookup table by distance from camera (constant)
-    const weightByDistance = new Array(numBins);
-    for (let dist = 0; dist < numBins; ++dist) {
-        let weight = 1.0;
-        for (let j = 0; j < weightTiers.length; ++j) {
-            if (dist <= weightTiers[j].maxDistance) {
-                weight = weightTiers[j].weight;
-                break;
-            }
+    /**
+     * Unpacks interleaved bin weights received from main thread into separate arrays.
+     * Called once per sort request (not per-splat).
+     *
+     * @param {Float32Array} binWeights - Interleaved [base0, div0, base1, div1, ...]
+     */
+    const unpackBinWeights = (binWeights) => {
+        for (let i = 0; i < numBins; i++) {
+            binBase[i] = binWeights[i * 2];
+            binDivider[i] = binWeights[i * 2 + 1];
         }
-        weightByDistance[dist] = weight;
-    }
-
-    const setupCameraRelativeBins = (cameraBin, bucketCount) => {
-        const totalBudget = bucketCount;
-        const bitsPerBin = [];
-
-        // Assign weights to bins based on pre-calculated distance lookup
-        for (let i = 0; i < numBins; ++i) {
-            const distFromCamera = Math.abs(i - cameraBin);
-            bitsPerBin[i] = weightByDistance[distFromCamera];
-        }
-
-        // Normalize to fit within budget
-        const totalWeight = bitsPerBin.reduce((a, b) => a + b, 0);
-        let accumulated = 0;
-
-        for (let i = 0; i < numBins; ++i) {
-            binDivider[i] = Math.max(1, Math.floor((bitsPerBin[i] / totalWeight) * totalBudget));
-            binBase[i] = accumulated;
-            accumulated += binDivider[i];
-        }
-
-        // Adjust last bin to fit exactly
-        if (accumulated > bucketCount) {
-            const excess = accumulated - bucketCount;
-            binDivider[numBins - 1] = Math.max(1, binDivider[numBins - 1] - excess);
-        }
-
-        // Add safety entry for edge case where bin >= numBins due to floating point
+        // Safety entry for edge case where bin >= numBins due to floating point
         binBase[numBins] = binBase[numBins - 1] + binDivider[numBins - 1];
         binDivider[numBins] = 0;
     };
 
-    // Common sort key evaluation logic
+    // Sort key evaluation iterates only active splats (padding is excluded).
+    // The indexMap (built on intervals) provides the work-buffer pixel mapping.
     const evaluateSortKeysCommon = (sortParams, minDist, range, distances, countBuffer, centersData, processSplatFn) => {
-        const { ids, lineStarts, padding, intervals, textureSize } = centersData;
+        const { ids, intervals } = centersData;
 
         // pre-calculate inverse bin range
         const invBinRange = numBins / range;
+        let compactIdx = 0;
 
         // loop over all the splat placements
         for (let paramIdx = 0; paramIdx < sortParams.length; paramIdx++) {
@@ -87,9 +65,6 @@ function UnifiedSortWorker() {
                 console.error('UnifiedSortWorker: No centers found for id', id);
             }
 
-            // start index in unified buffer
-            let targetIndex = lineStarts[paramIdx] * textureSize;
-
             // Use provided intervals or process all centers
             const intervalsArray = intervals[paramIdx].length > 0 ? intervals[paramIdx] : [0, centers.length / 3];
 
@@ -99,23 +74,15 @@ function UnifiedSortWorker() {
                 const intervalEnd = intervalsArray[i + 1] * 3;
 
                 // Process each center in this interval using the provided function
-                targetIndex = processSplatFn(centers, params, intervalStart, intervalEnd, targetIndex,
+                compactIdx = processSplatFn(centers, params, intervalStart, intervalEnd, compactIdx,
                     invBinRange, minDist, range, distances, countBuffer);
             }
-
-            // add padding, to make sure the whole buffer (including padding) is sorted
-            const pad = padding[paramIdx];
-            countBuffer[0] += pad;
-
-            // set distance values for padding positions to prevent garbage data
-            distances.fill(0, targetIndex, targetIndex + pad);
-            targetIndex += pad;
         }
     };
 
     const evaluateSortKeysLinear = (sortParams, minDist, range, distances, countBuffer, centersData) => {
         evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
-            (centers, params, intervalStart, intervalEnd, targetIndex, invBinRange, minDist, range, distances, countBuffer) => {
+            (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
                 // camera related params
                 const { transformedDirection, offset, scale } = params;
                 const dx = transformedDirection.x;
@@ -141,17 +108,17 @@ function UnifiedSortWorker() {
                     const bin = d >>> 0;
                     const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
 
-                    distances[targetIndex++] = sortKey;
+                    distances[compactIdx++] = sortKey;
                     countBuffer[sortKey]++;
                 }
 
-                return targetIndex;
+                return compactIdx;
             });
     };
 
     const evaluateSortKeysRadial = (sortParams, minDist, range, distances, countBuffer, centersData) => {
         evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
-            (centers, params, intervalStart, intervalEnd, targetIndex, invBinRange, minDist, range, distances, countBuffer) => {
+            (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
                 // camera related params
                 const { transformedPosition, scale } = params;
 
@@ -170,18 +137,18 @@ function UnifiedSortWorker() {
                     // World-space radial distance from camera
                     const dist = Math.sqrt(distSq) * scale;
 
-                    // Bin-based mapping (normalize by minDist for binning)
                     // Invert distance so far objects get small keys (rendered first, back-to-front)
                     const invertedDist = range - dist;
+                    // Bin-based mapping
                     const d = invertedDist * invBinRange;
                     const bin = d >>> 0;
                     const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
 
-                    distances[targetIndex++] = sortKey;
+                    distances[compactIdx++] = sortKey;
                     countBuffer[sortKey]++;
                 }
 
-                return targetIndex;
+                return compactIdx;
             });
     };
 
@@ -192,11 +159,19 @@ function UnifiedSortWorker() {
             countBuffer[i] += countBuffer[i - 1];
         }
 
-        // build output array
+        // fast check: after cumulative sum, last bucket = total valid splats
+        // If less than numVertices, some sortKeys were out of bounds (AABB issue)
+        const validCount = countBuffer[bucketCount - 1];
+        if (validCount !== numVertices && !_warnedSortKeyOverflow) {
+            _warnedSortKeyOverflow = true;
+            console.warn(`[SortWorker] ${numVertices - validCount} splats lost due to sortKey overflow. Check resource AABB bounds contain all the splats.`);
+        }
+
+        // build output array — map through indexMap to get work-buffer pixel indices
         for (let i = 0; i < numVertices; i++) {
             const distance = distances[i];
             const destIndex = --countBuffer[distance];
-            order[destIndex] = i;
+            order[destIndex] = indexMap[i];
         }
     };
 
@@ -279,13 +254,14 @@ function UnifiedSortWorker() {
     };
 
     const sort = (sortParams, order, centersData) => {
+        const sortStartTime = performance.now();
 
         // distance bounds from AABB projections per splat
         const { minDist, maxDist } = _radialSort ?
             computeEffectiveDistanceRangeRadial(sortParams) :
             computeEffectiveDistanceRangeLinear(sortParams);
 
-        const numVertices = centersData.totalUsedPixels;
+        const numVertices = centersData.totalActiveSplats;
 
         // calculate number of bits needed to store sorting result
         const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
@@ -305,19 +281,13 @@ function UnifiedSortWorker() {
 
         const range = maxDist - minDist;
 
-        // Set up camera-relative bin weighting for near-camera precision
-        let cameraBin;
-        if (_radialSort) {
-            // For radial sort with inverted distances, camera (dist=0) maps to the last bin
-            cameraBin = numBins - 1;
-        } else {
-            // For linear sort, calculate where camera falls in the projected distance range
-            const cameraOffsetFromRangeStart = 0 - minDist;
-            const cameraBinFloat = (cameraOffsetFromRangeStart / range) * numBins;
-            cameraBin = Math.max(0, Math.min(numBins - 1, Math.floor(cameraBinFloat)));
-        }
+        // Set up camera-relative bin weighting for near-camera precision (using shared utility)
+        // eslint-disable-next-line no-undef
+        const cameraBin = GSplatSortBinWeights.computeCameraBin(_radialSort, minDist, range);
 
-        setupCameraRelativeBins(cameraBin, bucketCount);
+        // Compute bin weights locally using shared utility
+        const binWeights = binWeightsUtil.compute(cameraBin, bucketCount);
+        unpackBinWeights(binWeights);
 
         if (_radialSort) {
             evaluateSortKeysRadial(sortParams, minDist, range, distances, countBuffer, centersData);
@@ -330,14 +300,45 @@ function UnifiedSortWorker() {
         const count = numVertices;
 
         // send results
+        const sortTime = performance.now() - sortStartTime;
         const transferList = [order.buffer];
         const response = {
             order: order.buffer,
             count,
-            version: centersData.version
+            version: centersData.version,
+            sortTime: sortTime
         };
 
         myself.postMessage(response, transferList);
+    };
+
+    /**
+     * Builds the indexMap that maps compact splat index to work-buffer pixel index.
+     * Called once when the intervals message arrives (world state change), not per-sort.
+     *
+     * @param {object} data - The intervals message data containing layout metadata.
+     */
+    const buildIndexMap = (data) => {
+        const { ids, pixelOffsets, intervals, totalActiveSplats } = data;
+
+        if (!indexMap || indexMap.length < totalActiveSplats) {
+            indexMap = new Uint32Array(totalActiveSplats);
+        }
+
+        let compactIdx = 0;
+        for (let paramIdx = 0; paramIdx < ids.length; paramIdx++) {
+            const centers = centersMap.get(ids[paramIdx]);
+            const offsets = pixelOffsets[paramIdx];
+            const intervalsArray = intervals[paramIdx].length > 0 ? intervals[paramIdx] : [0, centers.length / 3];
+
+            for (let i = 0; i < intervalsArray.length; i += 2) {
+                let workBufferIndex = offsets[i / 2];
+                const count = intervalsArray[i + 1] - intervalsArray[i];
+                for (let j = 0; j < count; j++) {
+                    indexMap[compactIdx++] = workBufferIndex++;
+                }
+            }
+        }
     };
 
     myself.addEventListener('message', (message) => {
@@ -368,6 +369,7 @@ function UnifiedSortWorker() {
             // intervals
             case 'intervals': {
                 centersData = msgData;
+                buildIndexMap(centersData);
                 break;
             }
         }

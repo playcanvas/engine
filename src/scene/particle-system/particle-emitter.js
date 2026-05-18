@@ -21,9 +21,7 @@ import {
     typedArrayIndexFormats,
     requiresManualGamma,
     PIXELFORMAT_SRGBA8,
-    SEMANTIC_POSITION,
-    SHADERLANGUAGE_WGSL,
-    SHADERLANGUAGE_GLSL
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
@@ -45,8 +43,6 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
 import { ParticleMaterial } from './particle-material.js';
-import { ShaderChunks } from '../shader-lib/shader-chunks.js';
-
 const particleVerts = [
     [-1, -1],
     [1, -1],
@@ -665,16 +661,12 @@ class ParticleEmitter {
         if (this.emitterShape === EMITTERSHAPE_BOX) defines.set('EMITTERSHAPE_BOX', '');
         const shaderUniqueId = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
 
-        const engineChunks = ShaderChunks.get(gd, gd.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
-        const includes = new Map(engineChunks);
-
         // shader options shared by all 3 shaders
         const shaderOptions = {
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
             fragmentChunk: 'particle_simulationPS',
-            fragmentDefines: defines,
-            fragmentIncludes: includes
+            fragmentDefines: defines
         };
 
         // shader 1

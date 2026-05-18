@@ -57,7 +57,7 @@ class Quat {
      * Creates a new Quat instance.
      *
      * @overload
-     * @param {number[]} arr - The array to set the vector values from.
+     * @param {number[]} arr - The array to set the quaternion values from.
      * @example
      * const q = new pc.Quat([1, 2, 3, 4]);
      */
@@ -435,7 +435,7 @@ class Quat {
      * Normalizes the specified quaternion.
      *
      * @param {Quat} [src] - The quaternion to normalize. If not set, the operation is done in place.
-     * @returns {Quat} The result of the normalization.
+     * @returns {Quat} Self for chaining.
      * @example
      * const v = new pc.Quat(0, 0, 0, 5);
      * v.normalize();
@@ -471,7 +471,7 @@ class Quat {
      * q.set(1, 0, 0, 0);
      *
      * // Outputs 1, 0, 0, 0
-     * console.log("The result of the vector set is: " + q.toString());
+     * console.log("The result of the quaternion set is: " + q.toString());
      */
     set(x, y, z, w) {
         this.x = x;

@@ -1,9 +1,11 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { UnifiedSortWorker } from './gsplat-unified-sort-worker.js';
+import { GSplatSortBinWeights } from './gsplat-sort-bin-weights.js';
 
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
+ * @import { Scene } from '../scene.js'
  */
 
 /** @type {Set<number>} */
@@ -36,10 +38,21 @@ class GSplatUnifiedSorter extends EventHandler {
     /** @type {boolean} */
     _destroyed = false;
 
-    constructor() {
-        super();
+    /** @type {Scene|null} */
+    scene = null;
 
-        const workerSource = `(${UnifiedSortWorker.toString()})()`;
+    /**
+     * @param {Scene} [scene] - The scene to fire sort timing events on.
+     */
+    constructor(scene) {
+        super();
+        this.scene = scene ?? null;
+
+        // Build worker source with GSplatSortBinWeights class injected via stringification.
+        const workerSource = `
+            const GSplatSortBinWeights = ${GSplatSortBinWeights.toString()};
+            (${UnifiedSortWorker.toString()})()
+        `;
 
         if (platform.environment === 'node') {
             this.worker = new Worker(workerSource, {
@@ -61,6 +74,12 @@ class GSplatUnifiedSorter extends EventHandler {
         }
 
         const msgData = message.data ?? message;
+
+        // Fire sortTime event directly on scene (before result might be dropped)
+        if (this.scene && msgData.sortTime !== undefined) {
+            this.scene.fire('gsplat:sorted', msgData.sortTime);
+        }
+
         const orderData = new Uint32Array(msgData.order);
 
         // decrement jobs in flight counter

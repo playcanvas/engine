@@ -1,20 +1,32 @@
 export default /* wgsl */`
 #include "gsplatHelpersVS"
-#include "gsplatCustomizeVS"
-
+#include "gsplatFormatVS"
 #include "gsplatStructsVS"
+#include "gsplatDeclarationsVS"
+#include "gsplatModifyVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatSourceFormatVS"
+#include "gsplatReadVS"
 #include "gsplatSourceVS"
 #include "gsplatCenterVS"
 #include "gsplatCornerVS"
 #include "gsplatOutputVS"
 
-// modify the gaussian corner so it excludes gaussian regions with alpha less than 1/255
-fn clipCorner(corner: ptr<function, SplatCorner>, alpha: f32) {
-    let clip: f32 = min(1.0, sqrt(-log(1.0 / (255.0 * alpha))) / 2.0);
-    corner.offset = corner.offset * clip;
+#if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+uniform alphaClip: f32;
+#else
+uniform alphaClipForward: f32;
+#endif
+
+// modify the gaussian corner; uses alphaClip (non-forward) or alphaClipForward (forward) to match frag
+fn clipCorner(corner: ptr<function, SplatCorner>, alpha: half) {
+    #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+        let alphaClipValue = half(uniform.alphaClip);
+    #else
+        let alphaClipValue = half(uniform.alphaClipForward);
+    #endif
+    let clip = min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5));
+    corner.offset = corner.offset * f32(clip);
     corner.uv = corner.uv * clip;
 }
 `;

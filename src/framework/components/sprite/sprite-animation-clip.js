@@ -88,6 +88,57 @@ class SpriteAnimationClip extends EventHandler {
     _evtSetMeshes = null;
 
     /**
+     * @type {SpriteComponent}
+     * @private
+     */
+    _component;
+
+    /** @private */
+    _frame = 0;
+
+    /**
+     * @type {Sprite|null}
+     * @private
+     */
+    _sprite = null;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _spriteAsset = null;
+
+    /** @private */
+    _playing = false;
+
+    /** @private */
+    _paused = false;
+
+    /** @private */
+    _time = 0;
+
+    /**
+     * The name of this animation clip.
+     *
+     * @type {string|undefined}
+     */
+    name;
+
+    /**
+     * Frames per second for this animation clip. A negative value plays the animation backwards.
+     *
+     * @type {number}
+     */
+    fps = 0;
+
+    /**
+     * Whether to loop the animation clip when it reaches the end.
+     *
+     * @type {boolean}
+     */
+    loop = false;
+
+    /**
      * Create a new SpriteAnimationClip instance.
      *
      * @param {SpriteComponent} component - The sprite component managing this clip.
@@ -102,19 +153,10 @@ class SpriteAnimationClip extends EventHandler {
 
         this._component = component;
 
-        this._frame = 0;
-        this._sprite = null;
-        this._spriteAsset = null;
-        this.spriteAsset = data.spriteAsset;
-
-        this.name = data.name;
         this.fps = data.fps || 0;
         this.loop = data.loop || false;
-
-        this._playing = false;
-        this._paused = false;
-
-        this._time = 0;
+        this.name = data.name;
+        this.spriteAsset = data.spriteAsset;
     }
 
     /**
@@ -209,7 +251,7 @@ class SpriteAnimationClip extends EventHandler {
                     mi.deleteParameter('texture_opacityMap');
                 }
 
-                this._component._hideModel();
+                this._component.removeFromLayers();
             } else {
                 // otherwise show sprite
 
@@ -222,7 +264,7 @@ class SpriteAnimationClip extends EventHandler {
                     }
 
                     if (this._component.enabled && this._component.entity.enabled) {
-                        this._component._showModel();
+                        this._component.addToLayers();
                     }
                 }
 

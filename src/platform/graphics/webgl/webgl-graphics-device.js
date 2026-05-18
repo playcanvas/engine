@@ -8,7 +8,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_R8, PIXELFORMAT_RG8, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -37,6 +37,8 @@ import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { WebglUploadStream } from './webgl-upload-stream.js';
+import { WebglXrBridge } from './webgl-xr-bridge.js';
+import { WebglXrMsaaCopy } from './webgl-xr-msaa-copy.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -49,6 +51,26 @@ import { getBuiltInTexture } from '../built-in-textures.js';
  * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
  */
+
+/**
+ * Returns the number of channels for 8-bit normalized formats that require RGBA readback.
+ * WebGL2's readPixels only guarantees RGBA/UNSIGNED_BYTE support, so these formats
+ * need to be read as RGBA and have their channels extracted.
+ *
+ * @param {number} format - The pixel format constant.
+ * @returns {number} Number of channels (1, 2, or 3), or 0 if format doesn't require RGBA readback.
+ * @ignore
+ */
+const getPixelFormatChannelsForRgbaReadback = (format) => {
+    switch (format) {
+        case PIXELFORMAT_R8:
+            return 1;
+        case PIXELFORMAT_RG8:
+            return 2;
+        default:
+            return 0;
+    }
+};
 
 const invalidateAttachments = [];
 
@@ -82,6 +104,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     _defaultFramebufferChanged = false;
+
+    /**
+     * Helper for resolving MSAA color into the XR framebuffer via a blit-to-scratch + fullscreen
+     * quad copy on visionOS. Created lazily; null on all other platforms.
+     *
+     * @type {import('./webgl-xr-msaa-copy.js').WebglXrMsaaCopy|null}
+     * @private
+     */
+    _xrMsaaCopy = null;
 
     /**
      * Creates a new WebglGraphicsDevice instance.
@@ -137,14 +168,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._contextLostHandler = (event) => {
             event.preventDefault();
             this.loseContext();
-            Debug.log('pc.GraphicsDevice: WebGL context lost.');
-            this.fire('devicelost');
         };
 
         this._contextRestoredHandler = () => {
-            Debug.log('pc.GraphicsDevice: WebGL context restored.');
             this.restoreContext();
-            this.fire('devicerestored');
         };
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
@@ -313,6 +340,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.BACK,
             gl.FRONT,
             gl.FRONT_AND_BACK
+        ];
+
+        this.glFrontFace = [
+            gl.CCW,
+            gl.CW
         ];
 
         this.glFilter = [
@@ -607,6 +639,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.clearVertexArrayObjectCache();
 
+        this._xrMsaaCopy?.destroy();
+        this._xrMsaaCopy = null;
+
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
         this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
@@ -679,7 +714,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     createTextureImpl(texture) {
+        this.textures.add(texture);
         return new WebglTexture(texture);
+    }
+
+    createXrBridgeImpl(xrBridge) {
+        return new WebglXrBridge(xrBridge);
     }
 
     createRenderTargetImpl(renderTarget) {
@@ -810,6 +850,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
+
+        // HTML-in-Canvas support (texElementImage2D)
+        this.supportsHtmlTextures = typeof gl.texElementImage2D === 'function';
     }
 
     /**
@@ -957,6 +1000,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unpackPremultiplyAlpha = false;
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
+        this.unpackAlignment = 1;
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     }
 
@@ -995,6 +1039,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const shader of this.shaders) {
             shader.loseContext();
         }
+
+        this.fire('devicelost');
     }
 
     /**
@@ -1013,6 +1059,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const shader of this.shaders) {
             shader.restoreContext();
         }
+
+        this.fire('devicerestored');
     }
 
     /**
@@ -1063,6 +1111,23 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
             this.activeFramebuffer = fb;
         }
+    }
+
+    /**
+     * Resolve multisampled color into the WebXR session framebuffer by first blitting MSAA into
+     * an internal scratch texture, then copying that texture into the XR FBO with a single
+     * fullscreen textured quad. Used on visionOS / Apple Vision Pro where direct
+     * `blitFramebuffer` into the XR opaque framebuffer does not produce correct results.
+     *
+     * @param {WebGLFramebuffer} msaaReadFbo - Multisampled source framebuffer.
+     * @param {WebGLFramebuffer} xrDrawFbo - XR base layer framebuffer.
+     * @param {number} width - Full SBS framebuffer width in pixels.
+     * @param {number} height - Framebuffer height in pixels.
+     * @ignore
+     */
+    resolveMsaaColorToXrFramebufferViaQuads(msaaReadFbo, xrDrawFbo, width, height) {
+        this._xrMsaaCopy ??= new WebglXrMsaaCopy(this);
+        this._xrMsaaCopy.copy(msaaReadFbo, xrDrawFbo, width, height);
     }
 
     /**
@@ -1428,6 +1493,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Sets the byte alignment for unpacking pixel data during texture uploads.
+     *
+     * @param {number} alignment - The alignment in bytes. Must be 1, 2, 4, or 8.
+     * @ignore
+     */
+    setUnpackAlignment(alignment) {
+        if (this.unpackAlignment !== alignment) {
+            this.unpackAlignment = alignment;
+            this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT, alignment);
+        }
+    }
+
+    /**
      * Activate the specified texture unit.
      *
      * @param {number} textureUnit - The texture unit to activate.
@@ -1748,11 +1826,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
 
                         if (samplerName === 'uSceneDepthMap') {
-                            Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                             samplerValue = getBuiltInTexture(this, 'white');
                         }
                         if (samplerName === 'uSceneColorMap') {
-                            Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                             samplerValue = getBuiltInTexture(this, 'pink');
                         }
 
@@ -1887,7 +1965,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 this._drawCallsPerFrame++;
 
                 // #if _PROFILER
-                this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                if (drawCommands) {
+                    // use pre-calculated primitive count from drawCommands
+                    this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                } else {
+                    // single draw
+                    this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                }
                 // #endif
             }
         }
@@ -2043,14 +2127,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the rectangle, in pixels.
      * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
      * data.
+     * @param {boolean} [forceRgba] - If true, forces RGBA/UNSIGNED_BYTE format for guaranteed
+     * WebGL support. Used for reading non-RGBA 8-bit normalized textures. Defaults to false.
      * @ignore
      */
-    async readPixelsAsync(x, y, w, h, pixels) {
+    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false) {
         const gl = this.gl;
 
-        const impl = this.renderTarget.colorBuffer?.impl;
-        const format = impl?._glFormat ?? gl.RGBA;
-        const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+        let format, pixelType;
+        if (forceRgba) {
+            format = gl.RGBA;
+            pixelType = gl.UNSIGNED_BYTE;
+        } else {
+            const impl = this.renderTarget.colorBuffer?.impl;
+            format = impl?._glFormat ?? gl.RGBA;
+            pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+        }
 
         // create temporary (gpu-side) buffer and copy data into it
         const buf = gl.createBuffer();
@@ -2074,24 +2166,45 @@ class WebglGraphicsDevice extends GraphicsDevice {
     readTextureAsync(texture, x, y, width, height, options) {
 
         const face = options.face ?? 0;
+        const mipLevel = options.mipLevel ?? 0;
 
         // create a temporary render target if needed
         const renderTarget = options.renderTarget ?? new RenderTarget({
             colorBuffer: texture,
             depth: false,
-            face: face
+            face: face,
+            mipLevel: mipLevel
         });
         Debug.assert(renderTarget.colorBuffer === texture);
 
-        const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
-        const data = options.data ?? new (getPixelFormatArrayType(texture._format))(buffer);
+        // Check if this format requires RGBA readback (WebGL only guarantees RGBA/UNSIGNED_BYTE)
+        const rgbaChannels = getPixelFormatChannelsForRgbaReadback(texture._format);
+        const needsRgbaReadback = rgbaChannels > 0;
+
+        // Use caller's buffer or allocate output buffer in the user's expected format
+        const ArrayType = getPixelFormatArrayType(texture._format);
+        const outputData = options.data ?? new ArrayType(
+            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT
+        );
+
+        // For formats requiring RGBA readback, allocate a larger RGBA buffer
+        const readBuffer = needsRgbaReadback ?
+            new Uint8Array(width * height * 4) :
+            outputData;
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
         this.setFramebuffer(renderTarget.impl._glFrameBuffer);
 
+        // flush commands to GPU immediately if requested
+        if (options.immediate) {
+            this.gl.flush();
+        }
+
         return new Promise((resolve, reject) => {
-            this.readPixelsAsync(x, y, width, height, data).then((data) => {
+            const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback);
+
+            readPromise.then((data) => {
 
                 // return if the device was destroyed
                 if (this._destroyed) return;
@@ -2100,7 +2213,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 if (!options.renderTarget) {
                     renderTarget.destroy();
                 }
-                resolve(data);
+
+                // Extract channels from RGBA data if needed
+                if (needsRgbaReadback) {
+                    const pixelCount = width * height;
+                    for (let i = 0; i < pixelCount; i++) {
+                        for (let c = 0; c < rgbaChannels; c++) {
+                            outputData[i * rgbaChannels + c] = data[i * 4 + c];
+                        }
+                    }
+                    resolve(outputData);
+                } else {
+                    resolve(data);
+                }
             }).catch(reject);
         });
     }
@@ -2427,6 +2552,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
             this.cullMode = cullMode;
+        }
+    }
+
+    setFrontFace(frontFace) {
+        if (this.frontFace !== frontFace) {
+            const mode = this.glFrontFace[frontFace];
+            this.gl.frontFace(mode);
+            this.frontFace = frontFace;
         }
     }
 

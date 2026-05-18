@@ -6,7 +6,7 @@ import wgslUpsamplePS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 /**
- * Render pass implementation of a up-sample filter.
+ * Render pass implementation of an up-sample filter.
  *
  * @category Graphics
  * @ignore

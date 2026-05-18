@@ -6,10 +6,6 @@ export default /* wgsl */`
     varying id: f32;
 #endif
 
-#ifdef PICK_PASS
-    #include "pickPS"
-#endif
-
 #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
     uniform alphaClip: f32;
 #endif
@@ -19,31 +15,43 @@ export default /* wgsl */`
     #include "floatAsUintPS"
 #endif
 
-const EXP4      = exp(-4.0);
-const INV_EXP4  = 1.0 / (1.0 - EXP4);
+#if !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
+    uniform alphaClipForward: f32;
+#endif
 
-fn normExp(x: f32) -> f32 {
-    return (exp(x * -4.0) - EXP4) * INV_EXP4;
+const EXP4: half = exp(half(-4.0));
+const INV_EXP4: half = half(1.0) / (half(1.0) - EXP4);
+
+fn normExp(x: half) -> half {
+    return (exp(x * half(-4.0)) - EXP4) * INV_EXP4;
 }
 
-varying gaussianUV: vec2f;
-varying gaussianColor: vec4f;
+varying gaussianUV: half2;
+varying gaussianColor: half4;
+
+#if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
+    varying @interpolate(flat) vPickId: u32;
+#endif
+
+#ifdef PICK_PASS
+    #include "pickPS"
+#endif
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
-    let A: f32 = dot(gaussianUV, gaussianUV);
-    if (A > 1.0) {
+    let A: half = dot(gaussianUV, gaussianUV);
+    if (A > half(1.0)) {
         discard;
         return output;
     }
 
     // evaluate alpha
-    var alpha = normExp(A) * gaussianColor.a;
+    var alpha: half = normExp(A) * gaussianColor.a;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
-        if (alpha < uniform.alphaClip) {
+        if (alpha < half(uniform.alphaClip)) {
             discard;
             return output;
         }
@@ -51,7 +59,13 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #ifdef PICK_PASS
 
-        output.color = getPickOutput();
+        #ifdef GSPLAT_UNIFIED_ID
+            // Use component ID from work buffer (passed via varying)
+            output.color = encodePickOutput(vPickId);
+        #else
+            // Use standard meshInstanceId path
+            output.color = getPickOutput();
+        #endif
         #ifdef DEPTH_PICK_PASS
             output.color1 = getPickDepth();
         #endif
@@ -66,16 +80,16 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #else
 
-        if (alpha < (1.0 / 255.0)) {
+        if (alpha < half(uniform.alphaClipForward)) {
             discard;
             return output;
         }
 
         #ifndef DITHER_NONE
-            opacityDither(&alpha, id * 0.013);
+            opacityDither(f32(alpha), id * 0.013);
         #endif
 
-        output.color = vec4f(input.gaussianColor.xyz * alpha, alpha);
+        output.color = vec4f(vec3f(gaussianColor.xyz * alpha), f32(alpha));
     #endif
 
     return output;

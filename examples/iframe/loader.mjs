@@ -1,8 +1,10 @@
 import files from 'examples/files';
 import { data, refresh } from 'examples/observer';
-import { updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
+import { deviceType as selectedDeviceType, updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
 
 import MiniStats from './ministats.mjs';
+
+/** @import { AppBase } from 'playcanvas' */
 
 class ExampleLoader {
     /**
@@ -12,7 +14,25 @@ class ExampleLoader {
     _config;
 
     /**
-     * @type {import('playcanvas').AppBase}
+     * @type {Record<string, any>}
+     * @private
+     */
+    _baseConfig = {};
+
+    /**
+     * @type {string[]}
+     * @private
+     */
+    _fileNames = [];
+
+    /**
+     * @type {string}
+     * @private
+     */
+    _name = '';
+
+    /**
+     * @type {AppBase}
      * @private
      */
     _app;
@@ -64,8 +84,15 @@ class ExampleLoader {
         fire('updateFiles', { observer: data, files });
 
         if (this._app) {
-            // Updates device UI
-            fire('updateActiveDevice', { deviceType: this._app?.graphicsDevice?.deviceType });
+            // Report the selected variant (e.g. 'webgpu:bare') back to the UI when the
+            // engine device type matches the expected family, otherwise report the actual
+            // engine device type to surface fallbacks.
+            const engineType = this._app?.graphicsDevice?.deviceType;
+            const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
+            const reportedType = (isWebGPU(selectedDeviceType) && engineType === 'webgpu') ?
+                selectedDeviceType :
+                engineType;
+            fire('updateActiveDevice', { deviceType: reportedType });
         }
 
         this._allowRestart = true;
@@ -95,33 +122,51 @@ class ExampleLoader {
         return locations;
     }
 
+    _clearFiles() {
+        for (const name of Object.keys(files)) {
+            delete files[name];
+        }
+    }
+
     /**
-     * @param {{ engineUrl: string, fileNames: string[] }} options - Options to start the loader
+     * @param {string} [stamp] - The cache-busting stamp.
      */
-    async start({ engineUrl, fileNames }) {
-        window.pc = await import(engineUrl);
-
-        // @ts-ignore
-        window.top.pc = window.pc;
-
+    async _fetchFiles(stamp = '') {
+        const suffix = stamp ? `?t=${stamp}` : '';
         // extracts example category and name from the URL
         const match = /([^/]+)\.html$/.exec(new URL(location.href).pathname);
         if (!match) {
             return;
         }
+        this._name = match[1];
 
         // loads each files
         /**
          * @type {Record<string, string>}
          */
         const unorderedFiles = {};
-        await Promise.all(fileNames.map(async (name) => {
-            unorderedFiles[name] = await fetchFile(`./${match[1]}.${name}`);
+        await Promise.all(this._fileNames.map(async (name) => {
+            unorderedFiles[name] = await fetchFile(`./${this._name}.${name}${suffix}`);
         }));
+        this._clearFiles();
         for (const name of Object.keys(unorderedFiles).sort()) {
             files[name] = unorderedFiles[name];
         }
+    }
 
+    /**
+     * @param {{ engineUrl: string, fileNames: string[], config?: Record<string, any> }} options - Options to start the loader
+     */
+    async start({ engineUrl, fileNames, config = {} }) {
+        this._baseConfig = config;
+        this._fileNames = fileNames;
+
+        window.pc = await import(engineUrl);
+
+        // @ts-ignore
+        window.top.pc = window.pc;
+
+        await this._fetchFiles();
 
         await this.load();
     }
@@ -133,7 +178,10 @@ class ExampleLoader {
         refresh();
 
         // parse config
-        this._config = parseConfig(files['example.mjs']);
+        this._config = {
+            ...this._baseConfig,
+            ...parseConfig(files['example.mjs'])
+        };
 
         // update device type
         updateDeviceType(this._config);
@@ -183,6 +231,25 @@ class ExampleLoader {
 
     sendRequestedFiles() {
         fire('requestedFiles', { files });
+    }
+
+    /**
+     * @param {{ stamp?: string, config?: Record<string, any>, files?: string[] }} [options] - Reload options.
+     */
+    async reloadFiles({ stamp = '', config = null, files: names = null } = {}) {
+        if (!this._allowRestart) {
+            console.warn('Dropping restart while still restarting');
+            return;
+        }
+        if (config) {
+            this._baseConfig = config;
+        }
+        if (names) {
+            this._fileNames = names;
+        }
+        await this._fetchFiles(stamp);
+        this.sendRequestedFiles();
+        this.hotReload();
     }
 
     /**

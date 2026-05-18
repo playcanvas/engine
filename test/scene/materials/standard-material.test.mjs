@@ -291,6 +291,7 @@ describe('StandardMaterial', function () {
         expect(material.useMetalness).to.equal(false);
         expect(material.useMetalnessSpecularColor).to.equal(false);
         expect(material.useSkybox).to.equal(true);
+        expect(material.vertexColorGamma).to.equal(false);
     }
 
     describe('#constructor()', function () {

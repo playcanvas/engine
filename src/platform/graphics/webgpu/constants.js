@@ -13,7 +13,9 @@ import {
     PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_SBGRA8,
     PIXELFORMAT_BC6F, PIXELFORMAT_BC6UF, PIXELFORMAT_BC7, PIXELFORMAT_BC7_SRGBA,
     PIXELFORMAT_ASTC_4x4_SRGB,
-    PIXELFORMAT_DEPTH16
+    PIXELFORMAT_DEPTH16,
+    PIXELFORMAT_RG32F,
+    PIXELFORMAT_RGB9E5, PIXELFORMAT_RG8S, PIXELFORMAT_RGBA8S, PIXELFORMAT_RGB10A2, PIXELFORMAT_RGB10A2U
 } from '../constants.js';
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
@@ -38,6 +40,7 @@ gpuTextureFormats[PIXELFORMAT_RG16F] = 'rg16float';
 gpuTextureFormats[PIXELFORMAT_RGB32F] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA32F] = 'rgba32float';
 gpuTextureFormats[PIXELFORMAT_R32F] = 'r32float';
+gpuTextureFormats[PIXELFORMAT_RG32F] = 'rg32float';
 gpuTextureFormats[PIXELFORMAT_DEPTH] = 'depth32float';
 gpuTextureFormats[PIXELFORMAT_DEPTH16] = 'depth16unorm';
 gpuTextureFormats[PIXELFORMAT_DEPTHSTENCIL] = 'depth24plus-stencil8';
@@ -77,6 +80,11 @@ gpuTextureFormats[PIXELFORMAT_RGBA32U] = 'rgba32uint';
 gpuTextureFormats[PIXELFORMAT_BC6F] = 'bc6h-rgb-float';
 gpuTextureFormats[PIXELFORMAT_BC6UF] = 'bc6h-rgb-ufloat';
 gpuTextureFormats[PIXELFORMAT_BC7] = 'bc7-rgba-unorm';
+gpuTextureFormats[PIXELFORMAT_RGB9E5] = 'rgb9e5ufloat';
+gpuTextureFormats[PIXELFORMAT_RG8S] = 'rg8snorm';
+gpuTextureFormats[PIXELFORMAT_RGBA8S] = 'rgba8snorm';
+gpuTextureFormats[PIXELFORMAT_RGB10A2] = 'rgb10a2unorm';
+gpuTextureFormats[PIXELFORMAT_RGB10A2U] = 'rgb10a2uint';
 
 // compressed sRGB formats ----
 gpuTextureFormats[PIXELFORMAT_DXT1_SRGB] = 'bc1-rgba-unorm-srgb';

@@ -13,8 +13,40 @@ import {
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
 /**
- * The AnimComponent allows an {@link Entity} to playback animations on models and entity
- * properties.
+ * The AnimComponent enables an {@link Entity} to play back animations on models and entity
+ * properties. Animations are driven by animation state graphs, which can be authored in the
+ * PlayCanvas Editor or constructed programmatically, and support blending between multiple
+ * layers and clips.
+ *
+ * You should never need to use the AnimComponent constructor directly. To add an AnimComponent
+ * to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('anim', {
+ *     activate: true,
+ *     speed: 1
+ * });
+ * ```
+ *
+ * Once the AnimComponent is added to the entity, you can access it via the {@link Entity#anim}
+ * property:
+ *
+ * ```javascript
+ * entity.anim.speed = 2; // Play animations at double speed
+ *
+ * console.log(entity.anim.speed); // Get the playback speed and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [1D Blend Trees](https://playcanvas.github.io/#/animation/blend-trees-1d)
+ * - [2D Cartesian Blend Trees](https://playcanvas.github.io/#/animation/blend-trees-2d-cartesian)
+ * - [2D Directional Blend Trees](https://playcanvas.github.io/#/animation/blend-trees-2d-directional)
+ * - [Animation Events](https://playcanvas.github.io/#/animation/events)
+ * - [Component Properties](https://playcanvas.github.io/#/animation/component-properties)
+ * - [Layer Masks](https://playcanvas.github.io/#/animation/layer-masks)
+ * - [Locomotion](https://playcanvas.github.io/#/animation/locomotion)
  *
  * @hideconstructor
  * @category Animation

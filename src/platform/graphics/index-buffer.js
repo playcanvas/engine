@@ -76,7 +76,7 @@ class IndexBuffer {
 
         this.adjustVramSizeTracking(graphicsDevice._vram, this.numBytes);
 
-        this.device.buffers.push(this);
+        this.device.buffers.add(this);
     }
 
     /**
@@ -86,10 +86,7 @@ class IndexBuffer {
 
         // stop tracking the index buffer
         const device = this.device;
-        const idx = device.buffers.indexOf(this);
-        if (idx !== -1) {
-            device.buffers.splice(idx, 1);
-        }
+        device.buffers.delete(this);
 
         if (this.device.indexBuffer === this) {
             this.device.indexBuffer = null;
@@ -113,6 +110,16 @@ class IndexBuffer {
      */
     loseContext() {
         this.impl.loseContext();
+    }
+
+    /**
+     * Called when the rendering context is restored. Recreates the GPU buffer and uploads from
+     * {@link IndexBuffer#lock|lock} storage.
+     *
+     * @ignore
+     */
+    restoreContext() {
+        this.unlock();
     }
 
     /**

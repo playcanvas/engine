@@ -33,6 +33,8 @@ const standardMaterialParameterTypes = {
     ..._textureParameter('diffuseDetail', true, false),
     diffuseDetailMode: 'string',
 
+    vertexColorGamma: 'boolean',
+
     specular: 'rgb',
     specularTint: 'boolean',
     ..._textureParameter('specular'),

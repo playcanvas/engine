@@ -1,31 +1,68 @@
 import { Debug } from '../core/debug.js';
+import { FramePassMultiView } from './renderer/frame-pass-multi-view.js';
 
 /**
+ * @import { FramePass } from '../platform/graphics/frame-pass.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderPass } from '../platform/graphics/render-pass.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { Texture } from '../platform/graphics/texture.js'
  */
 
 /**
- * A frame graph represents a single rendering frame as a sequence of render passes.
+ * A frame graph represents a single rendering frame as a sequence of frame passes.
  *
  * @ignore
  */
 class FrameGraph {
-    /** @type {RenderPass[]} */
+    /** @type {FramePass[]} */
     renderPasses = [];
 
     /**
      * Map used during frame graph compilation. It maps a render target to its previous occurrence.
      *
-     *  @type {Map<RenderTarget, RenderPass>}
+     * @type {Map<RenderTarget, RenderPass>}
      */
     renderTargetMap = new Map();
 
     /**
-     * Add a render pass to the frame.
+     * Active multi-view capture wrapper. When non-null, passes scheduled via
+     * {@link FrameGraph#addRenderPass} are appended as children of this wrapper instead of being
+     * pushed directly into {@link FrameGraph#renderPasses}. Set/cleared via
+     * {@link FrameGraph#beginMultiView} / {@link FrameGraph#endMultiView}.
      *
-     * @param {RenderPass} renderPass - The render pass to add.
+     * @type {FramePassMultiView|null}
+     */
+    multiview = null;
+
+    /**
+     * Open a multi-view capture scope. Subsequent passes added through
+     * {@link FrameGraph#addRenderPass} are captured as children of a single
+     * {@link FramePassMultiView} until {@link FrameGraph#endMultiView} is called.
+     *
+     * @param {GraphicsDevice} device - The graphics device used to construct the wrapper.
+     */
+    beginMultiView(device) {
+        Debug.assert(!this.multiview, 'FrameGraph.beginMultiView called while a scope is already open');
+        this.multiview = new FramePassMultiView(device);
+    }
+
+    /**
+     * Close the multi-view capture scope. Pushes the wrapper into the frame graph render passes
+     * unless it captured no children (in which case it is dropped).
+     */
+    endMultiView() {
+        const wrap = this.multiview;
+        this.multiview = null;
+        if (wrap?.children.length) {
+            this.renderPasses.push(wrap);
+        }
+    }
+
+    /**
+     * Add a frame pass to the frame.
+     *
+     * @param {FramePass} renderPass - The frame pass to add.
      */
     addRenderPass(renderPass) {
         Debug.assert(renderPass);
@@ -40,7 +77,11 @@ class FrameGraph {
         }
 
         if (renderPass.enabled) {
-            this.renderPasses.push(renderPass);
+            if (this.multiview) {
+                this.multiview.addChild(renderPass);
+            } else {
+                this.renderPasses.push(renderPass);
+            }
         }
 
         const afterPasses = renderPass.afterPasses;
@@ -57,11 +98,34 @@ class FrameGraph {
     }
 
     compile() {
+        this._compilePasses(this.renderPasses);
+
+        // apply the same pass-merging / cube-mipmap optimisations to each multi-view wrapper's
+        // children so within-eye sequences benefit from the same optimisations as top-level passes
+        for (let i = 0; i < this.renderPasses.length; i++) {
+            const pass = this.renderPasses[i];
+            if (pass instanceof FramePassMultiView) {
+                this._compilePasses(pass.children);
+            }
+        }
+    }
+
+    /**
+     * Run the frame-graph compile optimisations (store-on-no-clear, pass merging, cube mipmap
+     * skipping) over a flat list of passes.
+     *
+     * @param {FramePass[]} passes - Passes to optimise.
+     * @private
+     */
+    _compilePasses(passes) {
 
         const renderTargetMap = this.renderTargetMap;
-        const renderPasses = this.renderPasses;
-        for (let i = 0; i < renderPasses.length; i++) {
-            const renderPass = renderPasses[i];
+
+        for (let i = 0; i < passes.length; i++) {
+            const renderPass = passes[i];
+            renderPass._skipStart = false;
+            renderPass._skipEnd = false;
+
             const renderTarget = renderPass.renderTarget;
 
             // if using a target, or null which represents the default back-buffer
@@ -93,10 +157,10 @@ class FrameGraph {
         }
 
         // merge passes if possible
-        for (let i = 0; i < renderPasses.length - 1; i++) {
-            const firstPass = renderPasses[i];
+        for (let i = 0; i < passes.length - 1; i++) {
+            const firstPass = passes[i];
             const firstRT = firstPass.renderTarget;
-            const secondPass = renderPasses[i + 1];
+            const secondPass = passes[i + 1];
             const secondRT = secondPass.renderTarget;
 
             // if the render targets are different, we can't merge the passes
@@ -133,10 +197,10 @@ class FrameGraph {
         // mipmaps being generated after each face.
         /** @type {Texture} */
         let lastCubeTexture = null;
-        /** @type {RenderPass} */
+        /** @type {RenderPass|null} */
         let lastCubeRenderPass = null;
-        for (let i = 0; i < renderPasses.length; i++) {
-            const renderPass = renderPasses[i];
+        for (let i = 0; i < passes.length; i++) {
+            const renderPass = passes[i];
             const renderTarget = renderPass.renderTarget;
             const thisTexture = renderTarget?.colorBuffer;
 

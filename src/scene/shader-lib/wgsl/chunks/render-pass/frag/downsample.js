@@ -13,47 +13,47 @@ varying uv0: vec2f;
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
-    let e: vec3f = textureSample(sourceTexture, sourceTextureSampler, input.uv0).rgb;
+    let e: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, input.uv0).rgb);
 
     #ifdef BOXFILTER
-        var value: vec3f = e;
+        var value: half3 = e;
 
         #ifdef PREMULTIPLY
-            let premultiply: f32 = textureSample(premultiplyTexture, premultiplyTextureSampler, input.uv0).{PREMULTIPLY_SRC_CHANNEL};
-            value = value * vec3f(premultiply);
+            let premultiply: half = half(textureSample(premultiplyTexture, premultiplyTextureSampler, input.uv0).{PREMULTIPLY_SRC_CHANNEL});
+            value *= premultiply;
         #endif
     #else
 
         let x: f32 = uniform.sourceInvResolution.x;
         let y: f32 = uniform.sourceInvResolution.y;
 
-        let a: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - 2.0 * x, input.uv0.y + 2.0 * y)).rgb;
-        let b: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x,           input.uv0.y + 2.0 * y)).rgb;
-        let c: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + 2.0 * x, input.uv0.y + 2.0 * y)).rgb;
+        let a: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - 2.0 * x, input.uv0.y + 2.0 * y)).rgb);
+        let b: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x,           input.uv0.y + 2.0 * y)).rgb);
+        let c: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + 2.0 * x, input.uv0.y + 2.0 * y)).rgb);
 
-        let d: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - 2.0 * x, input.uv0.y)).rgb;
-        let f: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + 2.0 * x, input.uv0.y)).rgb;
+        let d: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - 2.0 * x, input.uv0.y)).rgb);
+        let f: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + 2.0 * x, input.uv0.y)).rgb);
 
-        let g: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - 2.0 * x, input.uv0.y - 2.0 * y)).rgb;
-        let h: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x,           input.uv0.y - 2.0 * y)).rgb;
-        let i: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + 2.0 * x, input.uv0.y - 2.0 * y)).rgb;
+        let g: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - 2.0 * x, input.uv0.y - 2.0 * y)).rgb);
+        let h: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x,           input.uv0.y - 2.0 * y)).rgb);
+        let i: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + 2.0 * x, input.uv0.y - 2.0 * y)).rgb);
 
-        let j: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - x, input.uv0.y + y)).rgb;
-        let k: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + x, input.uv0.y + y)).rgb;
-        let l: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - x, input.uv0.y - y)).rgb;
-        let m: vec3f = textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + x, input.uv0.y - y)).rgb;
+        let j: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - x, input.uv0.y + y)).rgb);
+        let k: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + x, input.uv0.y + y)).rgb);
+        let l: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x - x, input.uv0.y - y)).rgb);
+        let m: half3 = half3(textureSample(sourceTexture, sourceTextureSampler, vec2f(input.uv0.x + x, input.uv0.y - y)).rgb);
 
-        var value: vec3f = e * 0.125;
-        value = value + (a + c + g + i) * 0.03125;
-        value = value + (b + d + f + h) * 0.0625;
-        value = value + (j + k + l + m) * 0.125;
+        var value: half3 = e * half(0.125);
+        value += (a + c + g + i) * half(0.03125);
+        value += (b + d + f + h) * half(0.0625);
+        value += (j + k + l + m) * half(0.125);
     #endif
 
     #ifdef REMOVE_INVALID
-        value = max(value, vec3f(0.0));
+        value = max(value, half3(0.0));
     #endif
 
-    output.color = vec4f(value, 1.0);
+    output.color = vec4f(vec3f(value), 1.0);
     return output;
 }
 `;

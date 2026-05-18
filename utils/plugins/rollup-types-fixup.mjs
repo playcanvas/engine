@@ -198,6 +198,7 @@ const STANDARD_MAT_PROPS = [
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
+        guard: 'set alphaFade(arg: boolean);',
         transformer: (contents) => {
 
             // Find the jsdoc block description using eg "@property {Type} {name}"
@@ -230,6 +231,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 }, {
     path: `${TYPES_PATH}/framework/script/script-type.d.ts`,
     replacement: {
+        guard: 'initialize?(): void;',
         from: 'get enabled(): boolean;',
         to: `get enabled(): boolean;
     /**
@@ -261,22 +263,26 @@ import { Texture } from '../../platform/graphics/texture.js';
     }
 }];
 
+export function fixTypes(root = '.') {
+    REPLACEMENTS.forEach((item) => {
+        const { from, to, footer, guard, transformer } = item.replacement;
+        let contents = fs.readFileSync(path.resolve(root, item.path), 'utf-8');
+        if (!guard || !contents.includes(guard)) {
+            contents = transformer ? transformer(contents) : contents.replace(from, to);
+        }
+        if (footer && !contents.includes(footer.trim())) {
+            contents += footer;
+        }
+        fs.writeFileSync(path.resolve(root, item.path), contents, 'utf-8');
+        console.log(`${GREEN_OUT}type fixed ${BOLD_OUT}${item.path}${REGULAR_OUT}`);
+    });
+}
+
 export function typesFixup(root = '.') {
     return {
         name: 'types-fixup',
         buildStart() {
-            REPLACEMENTS.forEach((item) => {
-                const { from, to, footer, transformer } = item.replacement;
-                let contents = fs.readFileSync(path.resolve(root, item.path), 'utf-8');
-                if (transformer) {
-                    contents = transformer(contents);
-                } else {
-                    contents = contents.replace(from, to);
-                }
-                contents += footer ?? '';
-                fs.writeFileSync(path.resolve(root, item.path), contents, 'utf-8');
-                console.log(`${GREEN_OUT}type fixed ${BOLD_OUT}${item.path}${REGULAR_OUT}`);
-            });
+            fixTypes(root);
         }
     };
 }

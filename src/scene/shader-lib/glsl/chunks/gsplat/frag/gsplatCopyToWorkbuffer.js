@@ -3,127 +3,96 @@ export default /* glsl */`
 
 #define GSPLAT_CENTER_NOPROJ
 
+#include "gsplatHelpersVS"
+#include "gsplatFormatVS"
 #include "gsplatStructsVS"
+#include "gsplatDeclarationsVS"
 #include "gsplatCenterVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatSourceFormatVS"
-#include "packHalfPS"
+#include "gsplatReadVS"
+#include "gsplatWorkBufferOutputVS"
+#include "gsplatWriteVS"
+#include "gsplatModifyVS"
 
-uniform int uStartLine;      // Start row in destination texture
-uniform int uViewportWidth;  // Width of the destination viewport in pixels
-
-#ifdef GSPLAT_LOD
-    // LOD intervals texture
-    uniform usampler2D uIntervalsTexture;
-#endif
+// Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
+flat varying ivec4 vSubDraw;
 
 uniform vec3 uColorMultiply;
 
-// number of splats
-uniform int uActiveSplats;
+// pre-computed model matrix decomposition
+uniform vec3 model_scale;
+uniform vec4 model_rotation;  // (x,y,z,w) format
+
+#ifdef GSPLAT_ID
+    uniform uint uId;
+#endif
 
 void main(void) {
-    // local fragment coordinates (within the viewport)
-    ivec2 localFragCoords = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y) - uStartLine);
+    // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
+    int localRow = int(gl_FragCoord.y) - vSubDraw.w;
+    int localCol = int(gl_FragCoord.x) - vSubDraw.y;
+    uint originalIndex = uint(vSubDraw.x + localRow * vSubDraw.z + localCol);
 
-    // linear index of the splat
-    int targetIndex = localFragCoords.y * uViewportWidth + localFragCoords.x;
-    if (targetIndex >= uActiveSplats) {
+    // Initialize global splat for format read functions
+    setSplat(originalIndex);
 
-        // Out of bounds: write zeros
-        #ifdef GSPLAT_COLOR_UINT
-            pcFragColor0 = uvec4(0u);
-        #else
-            pcFragColor0 = vec4(0.0);
-        #endif
-        #ifndef GSPLAT_COLOR_ONLY
-            pcFragColor1 = uvec4(0u);
-            pcFragColor2 = uvec2(0u);
-        #endif
+    // read center in local space
+    vec3 modelCenter = getCenter();
 
-    } else {
+    // compute world-space center for storage
+    vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
+    SplatCenter center;
+    initCenter(modelCenter, center);
 
-        #ifdef GSPLAT_LOD
-            // Use intervals texture to remap target index to source index
-            int intervalsSize = int(textureSize(uIntervalsTexture, 0).x);
-            ivec2 intervalUV = ivec2(targetIndex % intervalsSize, targetIndex / intervalsSize);
-            uint originalIndex = texelFetch(uIntervalsTexture, intervalUV, 0).r;
-        #else
-            uint originalIndex = uint(targetIndex);
-        #endif
-        
-        // source texture size
-        #if defined(GSPLAT_SOGS_DATA) || defined(GSPLAT_COMPRESSED_DATA)
-            uint srcSize = uint(textureSize(packedTexture, 0).x);
-        #else
-            uint srcSize = uint(textureSize(splatColor, 0).x);
-        #endif
-        
-        // Create SplatSource used to sample splat data textures
-        SplatSource source;
-        source.id = uint(originalIndex);
-        source.uv = ivec2(source.id % srcSize, source.id / srcSize);
+    // Get source rotation and scale
+    // getRotation() returns (w,x,y,z) format, convert to (x,y,z,w) for quatMul
+    vec4 srcRotation = getRotation().yzwx;
+    vec3 srcScale = getScale();
 
-        // read center in local space
-        vec3 modelCenter = readCenter(source);
-
-        // compute world-space center for storage
-        vec3 worldCenter = (matrix_model * vec4(modelCenter, 1.0)).xyz;
-        SplatCenter center;
-        initCenter(modelCenter, center);
-
-        // read and transform covariance
-        vec3 covA, covB;
-        readCovariance(source, covA, covB);
-
-        mat3 C = mat3(
-            covA.x, covA.y, covA.z,
-            covA.y, covB.x, covB.y,
-            covA.z, covB.y, covB.z
-        );
-        mat3 linear = mat3(matrix_model);
-        mat3 Ct = linear * C * transpose(linear);
-        covA = Ct[0];
-        covB = vec3(Ct[1][1], Ct[1][2], Ct[2][2]);
-
-        // read color
-        vec4 color = readColor(source);
-
-        // evaluate spherical harmonics
-        #if SH_BANDS > 0
-            // calculate the model-space view direction
-            vec3 dir = normalize(center.view * mat3(center.modelView));
-
-            // read sh coefficients
-            vec3 sh[SH_COEFFS];
-            float scale;
-            readSHData(source, sh, scale);
-
-            // evaluate
-            color.xyz += evalSH(sh, dir) * scale;
-        #endif
-
-        color.xyz *= uColorMultiply;
-
-        // write out results
-        #ifdef GSPLAT_COLOR_UINT
-            // Pack RGBA as 4x half-float (16-bit) values for RGBA16U format
-            uint packed_rg = packHalf2x16(color.rg);
-            uint packed_ba = packHalf2x16(color.ba);
-            pcFragColor0 = uvec4(
-                packed_rg & 0xFFFFu,    // R as half
-                packed_rg >> 16u,       // G as half
-                packed_ba & 0xFFFFu,    // B as half
-                packed_ba >> 16u        // A as half
-            );
-        #else
-            pcFragColor0 = color;
-        #endif
-        #ifndef GSPLAT_COLOR_ONLY
-            pcFragColor1 = uvec4(floatBitsToUint(worldCenter.x), floatBitsToUint(worldCenter.y), floatBitsToUint(worldCenter.z), packHalf2x16Safe(vec2(covA.z, covB.z)));
-            pcFragColor2 = uvec2(packHalf2x16Safe(covA.xy), packHalf2x16Safe(covB.xy));
-        #endif
+    // Combine: world = model * source (both in x,y,z,w format)
+    vec4 worldRotation = quatMul(model_rotation, srcRotation);
+    // Ensure w is positive so sqrt() reconstruction works correctly
+    // (quaternions q and -q represent the same rotation)
+    if (worldRotation.w < 0.0) {
+        worldRotation = -worldRotation;
     }
+    vec3 worldScale = model_scale * srcScale;
+
+    // Apply custom center modification
+    vec3 originalCenter = worldCenter;
+    modifySplatCenter(worldCenter);
+
+    // Apply custom rotation/scale modification
+    modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
+
+    // read color
+    vec4 color = getColor();
+
+    // evaluate spherical harmonics
+    #if SH_BANDS > 0
+        // calculate the model-space view direction
+        vec3 dir = normalize(center.view * mat3(center.modelView));
+
+        // read sh coefficients
+        vec3 sh[SH_COEFFS];
+        float scale;
+        readSHData(sh, scale);
+
+        // evaluate
+        color.xyz += evalSH(sh, dir) * scale;
+    #endif
+
+    // Apply custom color modification
+    modifySplatColor(worldCenter, color);
+
+    color.xyz *= uColorMultiply;
+
+    // write color + transform using format-specific encoding
+    writeSplat(worldCenter, worldRotation, worldScale, color);
+
+    #ifdef GSPLAT_ID
+        writePcId(uvec4(uId, 0u, 0u, 0u));
+    #endif
 }
 `;

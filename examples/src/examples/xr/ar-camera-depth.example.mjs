@@ -1,4 +1,4 @@
-// @config WEBGPU_DISABLED
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -25,12 +25,36 @@ const message = function (msg) {
     el.textContent = msg;
 };
 
-const app = new pc.Application(canvas, {
-    mouse: new pc.Mouse(canvas),
-    touch: new pc.TouchDevice(canvas),
-    keyboard: new pc.Keyboard(window),
-    graphicsDeviceOptions: { alpha: true }
-});
+const gfxOptions = {
+    deviceTypes: [deviceType],
+    alpha: true
+};
+
+const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = window.devicePixelRatio;
+
+/** GLSL-only depth plane; keep disabled on WebGPU until WGSL shaders are added. */
+const depthPlaneGlOnly = device.isWebGPU;
+
+const createOptions = new pc.AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new pc.Mouse(canvas);
+createOptions.touch = new pc.TouchDevice(canvas);
+createOptions.keyboard = new pc.Keyboard(window);
+createOptions.xr = pc.XrManager;
+
+createOptions.componentSystems = [
+    pc.RenderComponentSystem,
+    pc.CameraComponentSystem,
+    pc.LightComponentSystem
+];
+createOptions.resourceHandlers = [
+    pc.TextureHandler,
+    pc.ContainerHandler
+];
+
+const app = new pc.AppBase(canvas);
+app.init(createOptions);
 
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -41,9 +65,6 @@ window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
-
-// use device pixel ratio
-app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
 app.start();
 
@@ -146,6 +167,10 @@ plane.setLocalEulerAngles(90, 0, 0);
 plane.enabled = false;
 camera.addChild(plane);
 
+const touchToStartMsg = depthPlaneGlOnly ?
+    'Touch screen to start AR session (depth texture preview is WebGL-only on WebGPU; check console for depthGpuOptimized / depthPixelFormat).' :
+    'Touch screen to start AR session';
+
 if (app.xr.supported) {
     const activate = function () {
         if (app.xr.isAvailable(pc.XRTYPE_AR)) {
@@ -205,7 +230,7 @@ if (app.xr.supported) {
             if (!app.xr.views.supportedDepth) {
                 message('AR Camera Depth is not supported');
             } else {
-                message('Touch screen to start AR session');
+                message(touchToStartMsg);
             }
         } else {
             message('Immersive AR is not available');
@@ -215,6 +240,11 @@ if (app.xr.supported) {
     app.on('update', () => {
         // if camera depth is available
         if (app.xr.views.availableDepth) {
+            if (depthPlaneGlOnly) {
+                plane.enabled = false;
+                return;
+            }
+
             if (!shaderUpdated && app.xr.active) {
                 shaderUpdated = true;
                 updateShader(app.xr.views.list.length > 1, app.xr.views.depthPixelFormat !== pc.PIXELFORMAT_LA8);
@@ -237,7 +267,7 @@ if (app.xr.supported) {
     } else if (!app.xr.views.supportedDepth) {
         message('AR Camera Depth is not supported');
     } else {
-        message('Touch screen to start AR session');
+        message(touchToStartMsg);
     }
 } else {
     message('WebXR is not supported');

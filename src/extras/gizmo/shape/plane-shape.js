@@ -16,9 +16,7 @@ const UPDATE_EPSILON = 1e-6;
  * @property {number} [gap] - The gap between the plane and the center
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class PlaneShape extends Shape {
     /**
      * The culling mode for the plane.
@@ -31,7 +29,6 @@ class PlaneShape extends Shape {
     /**
      * The size of the plane.
      *
-     * @type {number}
      * @private
      */
     _size = 0.16;
@@ -39,7 +36,6 @@ class PlaneShape extends Shape {
     /**
      * The gap between the plane and the center.
      *
-     * @type {number}
      * @private
      */
     _gap = 0;
@@ -47,7 +43,6 @@ class PlaneShape extends Shape {
     /**
      * The internal flipped state of the plane.
      *
-     * @type {Vec3}
      * @private
      */
     _flipped = new Vec3();

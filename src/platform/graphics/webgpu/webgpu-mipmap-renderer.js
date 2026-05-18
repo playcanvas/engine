@@ -18,6 +18,14 @@ class WebgpuMipmapRenderer {
     /** @type {WebgpuGraphicsDevice} */
     device;
 
+    /**
+     * Cache of render pipelines keyed by texture format.
+     *
+     * @type {Map<string, GPURenderPipeline>}
+     * @private
+     */
+    pipelineCache = new Map();
+
     constructor(device) {
         this.device = device;
 
@@ -65,6 +73,7 @@ class WebgpuMipmapRenderer {
     destroy() {
         this.shader.destroy();
         this.shader = null;
+        this.pipelineCache.clear();
     }
 
     /**
@@ -88,28 +97,34 @@ class WebgpuMipmapRenderer {
 
         const device = this.device;
         const wgpu = device.wgpu;
+        const format = textureDescr.format;
 
-        /** @type {WebgpuShader} */
-        const webgpuShader = this.shader.impl;
+        // Get or create cached pipeline for this texture format
+        let pipeline = this.pipelineCache.get(format);
+        if (!pipeline) {
+            /** @type {WebgpuShader} */
+            const webgpuShader = this.shader.impl;
 
-        const pipeline = wgpu.createRenderPipeline({
-            layout: 'auto',
-            vertex: {
-                module: webgpuShader.getVertexShaderModule(),
-                entryPoint: webgpuShader.vertexEntryPoint
-            },
-            fragment: {
-                module: webgpuShader.getFragmentShaderModule(),
-                entryPoint: webgpuShader.fragmentEntryPoint,
-                targets: [{
-                    format: textureDescr.format // use the same format as the texture
-                }]
-            },
-            primitive: {
-                topology: 'triangle-strip'
-            }
-        });
-        DebugHelper.setLabel(pipeline, 'RenderPipeline-MipmapRenderer');
+            pipeline = wgpu.createRenderPipeline({
+                layout: 'auto',
+                vertex: {
+                    module: webgpuShader.getVertexShaderModule(),
+                    entryPoint: webgpuShader.vertexEntryPoint
+                },
+                fragment: {
+                    module: webgpuShader.getFragmentShaderModule(),
+                    entryPoint: webgpuShader.fragmentEntryPoint,
+                    targets: [{
+                        format: format
+                    }]
+                },
+                primitive: {
+                    topology: 'triangle-strip'
+                }
+            });
+            DebugHelper.setLabel(pipeline, `RenderPipeline-MipmapRenderer-${format}`);
+            this.pipelineCache.set(format, pipeline);
+        }
 
         const texture = webgpuTexture.texture;
         const numFaces = texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1);

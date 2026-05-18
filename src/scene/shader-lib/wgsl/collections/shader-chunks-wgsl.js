@@ -39,6 +39,7 @@ import falloffInvSquaredPS from '../chunks/lit/frag/falloffInvSquared.js';
 import falloffLinearPS from '../chunks/lit/frag/falloffLinear.js';
 import floatAsUintPS from '../chunks/common/frag/float-as-uint.js';
 import fogPS from '../chunks/common/frag/fog.js';
+import fogMathPS from '../chunks/common/shared/fogMath.js';
 import fresnelSchlickPS from '../chunks/lit/frag/fresnelSchlick.js';
 import fullscreenQuadVS from '../chunks/common/vert/fullscreenQuad.js';
 import gammaPS from '../chunks/common/frag/gamma.js';
@@ -61,6 +62,7 @@ import lightingPS from '../chunks/lit/frag/lighting/lighting.js';
 import lightmapAddPS from '../chunks/lit/frag/lightmapAdd.js';
 import lightmapPS from '../chunks/standard/frag/lightmap.js';
 import lightSpecularAnisoGGXPS from '../chunks/lit/frag/lightSpecularAnisoGGX.js';
+import lightSpecularGGXPS from '../chunks/lit/frag/lightSpecularGGX.js';
 import lightSpecularBlinnPS from '../chunks/lit/frag/lightSpecularBlinn.js';
 import lightSheenPS from '../chunks/lit/frag/lightSheen.js';
 import linearizeDepthPS from '../chunks/common/frag/linearizeDepth.js';
@@ -89,7 +91,6 @@ import opacityPS from '../chunks/standard/frag/opacity.js';
 import opacityDitherPS from '../chunks/standard/frag/opacity-dither.js';
 import outputPS from '../chunks/lit/frag/output.js';
 import outputAlphaPS from '../chunks/lit/frag/outputAlpha.js';
-import packHalfPS from '../chunks/internal/frag/packHalf.js';
 import outputTex2DPS from '../chunks/common/frag/outputTex2D.js';
 import sheenPS from '../chunks/standard/frag/sheen.js';
 import sheenGlossPS from '../chunks/standard/frag/sheenGloss.js';
@@ -119,6 +120,7 @@ import skinBatchVS from '../chunks/common/vert/skinBatch.js';
 import skinVS from '../chunks/common/vert/skin.js';
 import skyboxPS from '../chunks/skybox/frag/skybox.js';
 import skyboxVS from '../chunks/skybox/vert/skybox.js';
+import sortIndirectArgsCS from '../chunks/common/comp/sort-indirect-args.js';
 import specularPS from '../chunks/standard/frag/specular.js';
 import sphericalPS from '../chunks/common/frag/spherical.js';
 import specularityFactorPS from '../chunks/standard/frag/specularityFactor.js';
@@ -199,6 +201,7 @@ const shaderChunksWGSL = {
     falloffLinearPS,
     floatAsUintPS,
     fogPS,
+    fogMathPS,
     fresnelSchlickPS,
     frontendCodePS: '',  // empty chunk, supplied by the shader generator
     frontendDeclPS: '',  // empty chunk, supplied by the shader generator
@@ -223,6 +226,7 @@ const shaderChunksWGSL = {
     lightmapAddPS,
     lightmapPS,
     lightSpecularAnisoGGXPS,
+    lightSpecularGGXPS,
     lightSpecularBlinnPS,
     lightSheenPS,
     linearizeDepthPS,
@@ -259,7 +263,6 @@ const shaderChunksWGSL = {
     opacityDitherPS,
     outputPS,
     outputAlphaPS,
-    packHalfPS,
     outputTex2DPS,
     sheenPS,
     sheenGlossPS,
@@ -289,6 +292,7 @@ const shaderChunksWGSL = {
     skinVS,
     skyboxPS,
     skyboxVS,
+    sortIndirectArgsCS,
     specularPS,
     sphericalPS,
     specularityFactorPS,

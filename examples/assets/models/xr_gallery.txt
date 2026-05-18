@@ -1,0 +1,8 @@
+Model Information:
+* title:	XR VR Gallery Space
+* source:	https://sketchfab.com/3d-models/xr-vr-gallery-space-873a1808080e47d2a804f3c991e33b4f
+* author:	Josh Johanson (https://sketchfab.com/johansome)
+
+Model License:
+* license type:	Creative Commons Attribution (CC BY 4.0)
+* license URL:	https://creativecommons.org/licenses/by/4.0/

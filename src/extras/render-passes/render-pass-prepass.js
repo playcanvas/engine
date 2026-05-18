@@ -1,6 +1,4 @@
 import {
-    FILTER_NEAREST,
-    ADDRESS_CLAMP_TO_EDGE,
     PIXELFORMAT_R32F,
     PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
@@ -53,6 +51,7 @@ class RenderPassPrepass extends RenderPass {
 
     destroy() {
         super.destroy();
+        this.camera.shaderParams.sceneDepthMapLinear = false;
         this.renderTarget?.destroy();
         this.renderTarget = null;
         this.linearDepthTexture?.destroy();
@@ -70,17 +69,7 @@ class RenderPassPrepass extends RenderPass {
         const { device } = this;
 
         this.linearDepthFormat = device.textureFloatRenderable ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
-        this.linearDepthTexture = new Texture(device, {
-            name: 'SceneLinearDepthTexture',
-            width: 1,
-            height: 1,
-            format: this.linearDepthFormat,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
+        this.linearDepthTexture = Texture.createDataTexture2D(device, 'SceneLinearDepthTexture', 1, 1, this.linearDepthFormat);
 
         const renderTarget = new RenderTarget({
             name: 'PrepassRT',

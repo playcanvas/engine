@@ -109,9 +109,9 @@ class ComponentSystem extends EventHandler {
     }
 
     /**
-     * Called during {@link ComponentSystem#addComponent} to initialize the component data in the
-     * store. This can be overridden by derived Component Systems and either called by the derived
-     * System or replaced entirely.
+     * Called during {@link addComponent} to initialize the component data in the store. This can
+     * be overridden by derived Component Systems and either called by the derived System or
+     * replaced entirely.
      *
      * @param {Component} component - The component being initialized.
      * @param {object} data - The data block used to initialize the component.

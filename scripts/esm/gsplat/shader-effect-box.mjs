@@ -11,7 +11,7 @@ uniform vec3 uDirection;
 bool g_insideAABB;
 uvec4 g_lutValue;
 
-void modifyCenter(inout vec3 center) {
+void modifySplatCenter(inout vec3 center) {
     // Check if splat is inside AABB
     g_insideAABB = all(greaterThanEqual(center, uAabbMin)) && all(lessThanEqual(center, uAabbMax));
     
@@ -39,26 +39,25 @@ void modifyCenter(inout vec3 center) {
     g_lutValue = texelFetch(uLUT, ivec2(texelX, 0), 0);
 }
 
-void modifyCovariance(vec3 originalCenter, vec3 modifiedCenter, inout vec3 covA, inout vec3 covB) {
+void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {
     if (!g_insideAABB) return;
     
     // Unpack scale from alpha channel (unpack 16-bit uint to half-float)
-    float scale = unpackHalf2x16(g_lutValue.a).x;
+    float lutScale = unpackHalf2x16(g_lutValue.a).x;
     
     // If scale is 0, make invisible
-    if (scale < 0.01) {
-        gsplatMakeRound(covA, covB, 0.0);
+    if (lutScale < 0.01) {
+        scale = vec3(0.0);
         return;
     }
     
-    // If scale is less than 1, progressively scale the covariance
-    if (scale < 1.0) {
-        covA *= scale;
-        covB *= scale;
+    // If scale is less than 1, progressively scale
+    if (lutScale < 1.0) {
+        scale *= lutScale;
     }
 }
 
-void modifyColor(vec3 center, inout vec4 color) {
+void modifySplatColor(vec3 center, inout vec4 color) {
     if (!g_insideAABB) return;
     
     // Unpack tint from RGB channels (unpack 16-bit uints to half-floats)
@@ -82,7 +81,7 @@ uniform uDirection: vec3f;
 var<private> g_insideAABB: bool;
 var<private> g_lutValue: vec4u;
 
-fn modifyCenter(center: ptr<function, vec3f>) {
+fn modifySplatCenter(center: ptr<function, vec3f>) {
     // Check if splat is inside AABB
     g_insideAABB = all((*center) >= uniform.uAabbMin) && all((*center) <= uniform.uAabbMax);
     
@@ -110,26 +109,25 @@ fn modifyCenter(center: ptr<function, vec3f>) {
     g_lutValue = textureLoad(uLUT, vec2i(texelX, 0), 0);
 }
 
-fn modifyCovariance(originalCenter: vec3f, modifiedCenter: vec3f, covA: ptr<function, vec3f>, covB: ptr<function, vec3f>) {
+fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {
     if (!g_insideAABB) { return; }
     
     // Unpack scale from alpha channel (unpack 16-bit uint to half-float)
-    let scale = unpack2x16float(g_lutValue.a).x;
+    let lutScale = unpack2x16float(g_lutValue.a).x;
     
     // If scale is 0, make invisible
-    if (scale < 0.01) {
-        gsplatMakeRound(covA, covB, 0.0);
+    if (lutScale < 0.01) {
+        *scale = vec3f(0.0);
         return;
     }
     
-    // If scale is less than 1, progressively scale the covariance
-    if (scale < 1.0) {
-        (*covA) = (*covA) * scale;
-        (*covB) = (*covB) * scale;
+    // If scale is less than 1, progressively scale
+    if (lutScale < 1.0) {
+        *scale = (*scale) * lutScale;
     }
 }
 
-fn modifyColor(center: vec3f, color: ptr<function, vec4f>) {
+fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
     if (!g_insideAABB) { return; }
     
     // Unpack tint from RGB channels (unpack 16-bit uints to half-floats)

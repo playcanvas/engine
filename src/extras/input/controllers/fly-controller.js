@@ -31,16 +31,12 @@ class FlyController extends InputController {
     /**
      * The rotation damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
      * full damping. Default is 0.98.
-     *
-     * @type {number}
      */
     rotateDamping = 0.98;
 
     /**
      * The movement damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
      * full damping. Default is 0.98.
-     *
-     * @type {number}
      */
     moveDamping = 0.98;
 

@@ -1,4 +1,4 @@
-// @config WEBGPU_DISABLED
+import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -17,11 +17,35 @@ const message = function (msg) {
     }
     el.textContent = msg;
 };
-const app = new pc.Application(canvas, {
-    mouse: new pc.Mouse(canvas),
-    touch: new pc.TouchDevice(canvas),
-    keyboard: new pc.Keyboard(window)
-});
+
+const gfxOptions = {
+    deviceTypes: [deviceType],
+    alpha: true
+};
+
+const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = window.devicePixelRatio;
+
+const createOptions = new pc.AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new pc.Mouse(canvas);
+createOptions.touch = new pc.TouchDevice(canvas);
+createOptions.keyboard = new pc.Keyboard(window);
+createOptions.xr = pc.XrManager;
+
+createOptions.componentSystems = [
+    pc.RenderComponentSystem,
+    pc.CameraComponentSystem,
+    pc.LightComponentSystem
+];
+createOptions.resourceHandlers = [
+    pc.TextureHandler,
+    pc.ContainerHandler
+];
+
+const app = new pc.AppBase(canvas);
+app.init(createOptions);
+
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -31,9 +55,6 @@ window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
-
-// use device pixel ratio
-app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
 app.start();
 
@@ -77,7 +98,7 @@ const controllers = [];
 // create controller box
 const createController = function (inputSource) {
     const entity = new pc.Entity();
-    entity.addComponent('model', {
+    entity.addComponent('render', {
         type: 'box'
     });
     entity.setLocalScale(0.05, 0.05, 0.05);
@@ -239,12 +260,12 @@ if (app.xr.supported) {
             // render controller
             if (inputSource.grip) {
                 // some controllers can be gripped
-                controllers[i].model.enabled = true;
-                controllers[i].setLocalPosition(inputSource.getLocalPosition);
-                controllers[i].setLocalRotation(inputSource.getLocalRotation);
+                controllers[i].render.enabled = true;
+                controllers[i].setLocalPosition(inputSource.getLocalPosition());
+                controllers[i].setLocalRotation(inputSource.getLocalRotation());
             } else {
                 // some controllers cannot be gripped
-                controllers[i].model.enabled = false;
+                controllers[i].render.enabled = false;
             }
         }
     });

@@ -19,10 +19,7 @@ let id = 0;
  * @category Graphics
  */
 class BindBaseFormat {
-    /**
-     * @type {number}
-     * @ignore
-     */
+    /** @ignore */
     slot = -1;
 
     /**
@@ -68,7 +65,6 @@ class BindStorageBufferFormat extends BindBaseFormat {
     /**
      * Format, extracted from vertex and fragment shader.
      *
-     * @type {string}
      * @ignore
      */
     format = '';

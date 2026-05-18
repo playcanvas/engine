@@ -69,6 +69,119 @@ class CulledInstances {
  * @category Graphics
  */
 class Layer {
+    // --- Identity ---
+
+    /**
+     * A unique ID of the layer. Layer IDs are stored inside {@link ModelComponent#layers},
+     * {@link RenderComponent#layers}, {@link CameraComponent#layers},
+     * {@link LightComponent#layers} and {@link ElementComponent#layers} instead of names.
+     * Can be used in {@link LayerComposition#getLayerById}.
+     *
+     * @type {number}
+     */
+    id;
+
+    /**
+     * Name of the layer. Can be used in {@link LayerComposition#getLayerByName}.
+     *
+     * @type {string}
+     */
+    name;
+
+    // --- Enabled state & ref counting ---
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _refCounter = 1;
+
+    // --- Sorting ---
+
+    /**
+     * Defines the method used for sorting opaque (that is, not semi-transparent) mesh
+     * instances before rendering. Can be:
+     *
+     * - {@link SORTMODE_NONE}
+     * - {@link SORTMODE_MANUAL}
+     * - {@link SORTMODE_MATERIALMESH}
+     * - {@link SORTMODE_BACK2FRONT}
+     * - {@link SORTMODE_FRONT2BACK}
+     *
+     * Defaults to {@link SORTMODE_MATERIALMESH}.
+     *
+     * @type {number}
+     */
+    opaqueSortMode = SORTMODE_MATERIALMESH;
+
+    /**
+     * Defines the method used for sorting semi-transparent mesh instances before rendering. Can be:
+     *
+     * - {@link SORTMODE_NONE}
+     * - {@link SORTMODE_MANUAL}
+     * - {@link SORTMODE_MATERIALMESH}
+     * - {@link SORTMODE_BACK2FRONT}
+     * - {@link SORTMODE_FRONT2BACK}
+     *
+     * Defaults to {@link SORTMODE_BACK2FRONT}.
+     *
+     * @type {number}
+     */
+    transparentSortMode = SORTMODE_BACK2FRONT;
+
+    /**
+     * @type {Function|null}
+     * @ignore
+     */
+    customSortCallback = null;
+
+    /**
+     * @type {Function|null}
+     * @ignore
+     */
+    customCalculateSortValues = null;
+
+    // --- Clear flags ---
+
+    /** @private */
+    _clearColorBuffer = false;
+
+    /** @private */
+    _clearDepthBuffer = false;
+
+    /** @private */
+    _clearStencilBuffer = false;
+
+    // --- Enable / disable callbacks ---
+
+    /**
+     * Custom function that is called after the layer has been enabled. This happens when:
+     *
+     * - The layer is created with {@link enabled} set to true (which is the default value).
+     * - {@link enabled} was changed from false to true
+     *
+     * @type {Function}
+     */
+    onEnable;
+
+    /**
+     * Custom function that is called after the layer has been disabled. This happens when:
+     *
+     * - {@link enabled} was changed from true to false
+     * - {@link decrementCounter} was called and set the counter to zero.
+     *
+     * @type {Function}
+     */
+    onDisable;
+
+    // --- Mesh instances & shadow casters ---
+
     /**
      * Mesh instances assigned to this layer.
      *
@@ -109,6 +222,8 @@ class Layer {
      */
     _visibleInstances = new WeakMap();
 
+    // --- Lights ---
+
     /**
      * All lights assigned to a layer.
      *
@@ -147,18 +262,30 @@ class Layer {
      * True if _splitLights needs to be updated, which means if lights were added or removed from
      * the layer, or their key changed.
      *
-     * @type {boolean}
      * @private
      */
     _splitLightsDirty = true;
 
+    /** @private */
+    _lightHash = 0;
+
+    /** @private */
+    _lightHashDirty = false;
+
+    /** @private */
+    _lightIdHash = 0;
+
+    /** @private */
+    _lightIdHashDirty = false;
+
     /**
      * True if the objects rendered on the layer require light cube (emitters with lighting do).
      *
-     * @type {boolean}
      * @ignore
      */
     requiresLightCube = false;
+
+    // --- Cameras ---
 
     /**
      * @type {CameraComponent[]}
@@ -172,6 +299,8 @@ class Layer {
      */
     camerasSet = new Set();
 
+    // --- GSplat ---
+
     /**
      * @type {GSplatPlacement[]}
      * @ignore
@@ -179,12 +308,31 @@ class Layer {
     gsplatPlacements = [];
 
     /**
+     * @type {Set<GSplatPlacement>}
+     * @ignore
+     */
+    gsplatPlacementsSet = new Set();
+
+    /**
+     * @type {GSplatPlacement[]}
+     * @ignore
+     */
+    gsplatShadowCasters = [];
+
+    /**
+     * @type {Set<GSplatPlacement>}
+     * @ignore
+     */
+    gsplatShadowCastersSet = new Set();
+
+    /**
      * True if the gsplatPlacements array was modified.
      *
-     * @type {boolean}
      * @ignore
      */
     gsplatPlacementsDirty = true;
+
+    // --- Composition / shader versioning ---
 
     /**
      * True if the composition is invalidated.
@@ -192,6 +340,24 @@ class Layer {
      * @ignore
      */
     _dirtyComposition = false;
+
+    /** @private */
+    _shaderVersion = -1;
+
+    // --- Profiler ---
+
+    // #if _PROFILER
+    skipRenderAfter = Number.MAX_VALUE;
+
+    _skipRenderCounter = 0;
+
+    _renderTime = 0;
+
+    _forwardDrawCalls = 0;
+
+    // deprecated, not useful on a layer anymore, could be moved to camera
+    _shadowDrawCalls = 0;
+    // #endif
 
     /**
      * Create a new Layer instance.
@@ -202,146 +368,30 @@ class Layer {
     constructor(options = {}) {
 
         if (options.id !== undefined) {
-            /**
-             * A unique ID of the layer. Layer IDs are stored inside {@link ModelComponent#layers},
-             * {@link RenderComponent#layers}, {@link CameraComponent#layers},
-             * {@link LightComponent#layers} and {@link ElementComponent#layers} instead of names.
-             * Can be used in {@link LayerComposition#getLayerById}.
-             *
-             * @type {number}
-             */
             this.id = options.id;
             layerCounter = Math.max(this.id + 1, layerCounter);
         } else {
             this.id = layerCounter++;
         }
 
-        /**
-         * Name of the layer. Can be used in {@link LayerComposition#getLayerByName}.
-         *
-         * @type {string}
-         */
         this.name = options.name;
 
-        /**
-         * @type {boolean}
-         * @private
-         */
         this._enabled = options.enabled ?? true;
-        /**
-         * @type {number}
-         * @private
-         */
         this._refCounter = this._enabled ? 1 : 0;
 
-        /**
-         * Defines the method used for sorting opaque (that is, not semi-transparent) mesh
-         * instances before rendering. Can be:
-         *
-         * - {@link SORTMODE_NONE}
-         * - {@link SORTMODE_MANUAL}
-         * - {@link SORTMODE_MATERIALMESH}
-         * - {@link SORTMODE_BACK2FRONT}
-         * - {@link SORTMODE_FRONT2BACK}
-         *
-         * Defaults to {@link SORTMODE_MATERIALMESH}.
-         *
-         * @type {number}
-         */
         this.opaqueSortMode = options.opaqueSortMode ?? SORTMODE_MATERIALMESH;
-
-        /**
-         * Defines the method used for sorting semi-transparent mesh instances before rendering. Can be:
-         *
-         * - {@link SORTMODE_NONE}
-         * - {@link SORTMODE_MANUAL}
-         * - {@link SORTMODE_MATERIALMESH}
-         * - {@link SORTMODE_BACK2FRONT}
-         * - {@link SORTMODE_FRONT2BACK}
-         *
-         * Defaults to {@link SORTMODE_BACK2FRONT}.
-         *
-         * @type {number}
-         */
         this.transparentSortMode = options.transparentSortMode ?? SORTMODE_BACK2FRONT;
 
-        if (options.renderTarget) {
-            this.renderTarget = options.renderTarget;
-        }
-
-        // clear flags
-        /**
-         * @type {boolean}
-         * @private
-         */
         this._clearColorBuffer = !!options.clearColorBuffer;
-
-        /**
-         * @type {boolean}
-         * @private
-         */
         this._clearDepthBuffer = !!options.clearDepthBuffer;
-
-        /**
-         * @type {boolean}
-         * @private
-         */
         this._clearStencilBuffer = !!options.clearStencilBuffer;
 
-        /**
-         * Custom function that is called after the layer has been enabled. This happens when:
-         *
-         * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
-         * - {@link Layer#enabled} was changed from false to true
-         *
-         * @type {Function}
-         */
         this.onEnable = options.onEnable;
-
-        /**
-         * Custom function that is called after the layer has been disabled. This happens when:
-         *
-         * - {@link Layer#enabled} was changed from true to false
-         * - {@link Layer#decrementCounter} was called and set the counter to zero.
-         *
-         * @type {Function}
-         */
         this.onDisable = options.onDisable;
 
         if (this._enabled && this.onEnable) {
             this.onEnable();
         }
-
-        /**
-         * @type {Function|null}
-         * @ignore
-         */
-        this.customSortCallback = null;
-
-        /**
-         * @type {Function|null}
-         * @ignore
-         */
-        this.customCalculateSortValues = null;
-
-        // light hash based on the light keys
-        this._lightHash = 0;
-        this._lightHashDirty = false;
-
-        // light hash based on light ids
-        this._lightIdHash = 0;
-        this._lightIdHashDirty = false;
-
-        // #if _PROFILER
-        this.skipRenderAfter = Number.MAX_VALUE;
-        this._skipRenderCounter = 0;
-
-        this._renderTime = 0;
-        this._forwardDrawCalls = 0;
-        this._shadowDrawCalls = 0;  // deprecated, not useful on a layer anymore, could be moved to camera
-        // #endif
-
-        this._shaderVersion = -1;
     }
 
     /**
@@ -494,8 +544,9 @@ class Layer {
      * @ignore
      */
     addGSplatPlacement(placement) {
-        if (!this.gsplatPlacements.includes(placement)) {
+        if (!this.gsplatPlacementsSet.has(placement)) {
             this.gsplatPlacements.push(placement);
+            this.gsplatPlacementsSet.add(placement);
             this.gsplatPlacementsDirty = true;
         }
     }
@@ -510,6 +561,36 @@ class Layer {
         const index = this.gsplatPlacements.indexOf(placement);
         if (index >= 0) {
             this.gsplatPlacements.splice(index, 1);
+            this.gsplatPlacementsSet.delete(placement);
+            this.gsplatPlacementsDirty = true;
+        }
+    }
+
+    /**
+     * Adds a gsplat placement to this layer as a shadow caster.
+     *
+     * @param {GSplatPlacement} placement - A placement of a gsplat.
+     * @ignore
+     */
+    addGSplatShadowCaster(placement) {
+        if (!this.gsplatShadowCastersSet.has(placement)) {
+            this.gsplatShadowCasters.push(placement);
+            this.gsplatShadowCastersSet.add(placement);
+            this.gsplatPlacementsDirty = true;
+        }
+    }
+
+    /**
+     * Removes a gsplat placement from the shadow casters of this layer.
+     *
+     * @param {GSplatPlacement} placement - A placement of a gsplat.
+     * @ignore
+     */
+    removeGSplatShadowCaster(placement) {
+        const index = this.gsplatShadowCasters.indexOf(placement);
+        if (index >= 0) {
+            this.gsplatShadowCasters.splice(index, 1);
+            this.gsplatShadowCastersSet.delete(placement);
             this.gsplatPlacementsDirty = true;
         }
     }

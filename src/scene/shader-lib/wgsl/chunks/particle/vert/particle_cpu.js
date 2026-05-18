@@ -59,7 +59,12 @@ fn rotateWithMatrix(quadXY: vec2f, pRotation: f32) -> RotateResult {
 
 
 fn billboard(InstanceCoords: vec3f, quadXY: vec2f) -> vec3f {
-    let pos = -uniform.matrix_viewInverse[0].xyz * quadXY.x + -uniform.matrix_viewInverse[1].xyz * quadXY.y;
+    var pos: vec3f;
+    #ifdef SCREEN_SPACE
+        pos = vec3f(-1.0, 0.0, 0.0) * quadXY.x + vec3f(0.0, -1.0, 0.0) * quadXY.y;
+    #else
+        pos = -uniform.matrix_viewInverse[0].xyz * quadXY.x + -uniform.matrix_viewInverse[1].xyz * quadXY.y;
+    #endif
     return pos;
 }
 

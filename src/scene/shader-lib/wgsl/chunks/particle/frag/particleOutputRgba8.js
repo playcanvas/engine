@@ -23,7 +23,7 @@ fn getOutput() -> vec4f {
 
     outVel = (outVel / uniform.maxVel) + vec3f(0.5); // TODO: mul
 
-    let maxNegLife = max(uniform.lifetime, (uniform.numParticles - 1.0) * (uniform.rate + uniform.rateDiv));
+    let maxNegLife = max(uniform.lifetime, uniform.numParticles * (uniform.rate + uniform.rateDiv));
     let maxPosLife = uniform.lifetime + 1.0;
     outLife = (outLife + maxNegLife) / (maxNegLife + maxPosLife);
 

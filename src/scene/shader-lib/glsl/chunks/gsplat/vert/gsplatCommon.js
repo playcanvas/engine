@@ -1,19 +1,31 @@
 export default /* glsl */`
 #include "gsplatHelpersVS"
-#include "gsplatCustomizeVS"
-
+#include "gsplatFormatVS"
 #include "gsplatStructsVS"
+#include "gsplatDeclarationsVS"
+#include "gsplatModifyVS"
 #include "gsplatEvalSHVS"
 #include "gsplatQuatToMat3VS"
-#include "gsplatSourceFormatVS"
+#include "gsplatReadVS"
 #include "gsplatSourceVS"
 #include "gsplatCenterVS"
 #include "gsplatCornerVS"
 #include "gsplatOutputVS"
 
-// modify the gaussian corner so it excludes gaussian regions with alpha less than 1/255
+#if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+uniform float alphaClip;
+#else
+uniform float alphaClipForward;
+#endif
+
+// modify the gaussian corner; uses alphaClip (non-forward) or alphaClipForward (forward) to match frag
 void clipCorner(inout SplatCorner corner, float alpha) {
-    float clip = min(1.0, sqrt(-log(1.0 / (255.0 * alpha))) / 2.0);
+    #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+        float alphaClipValue = alphaClip;
+    #else
+        float alphaClipValue = alphaClipForward;
+    #endif
+    float clip = min(1.0, sqrt(max(0.0, log(alpha / alphaClipValue))) * 0.5);
     corner.offset *= clip;
     corner.uv *= clip;
 }

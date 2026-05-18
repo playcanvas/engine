@@ -29,8 +29,8 @@ class ColorAttachment {
      */
     multisampledBuffer;
 
-    destroy() {
-        this.multisampledBuffer?.destroy();
+    destroy(device) {
+        device.deferDestroy(this.multisampledBuffer);
         this.multisampledBuffer = null;
     }
 }
@@ -58,8 +58,6 @@ class DepthAttachment {
 
     /**
      * True if the depthTexture is internally allocated / owned
-     *
-     * @type {boolean}
      */
     depthTextureInternal = false;
 
@@ -87,7 +85,7 @@ class DepthAttachment {
 
     destroy(device) {
         if (this.depthTextureInternal) {
-            this.depthTexture?.destroy();
+            device.deferDestroy(this.depthTexture);
             this.depthTexture = null;
         }
 
@@ -143,8 +141,6 @@ class WebgpuRenderTarget {
 
     /**
      * True if this is the backbuffer of the device.
-     *
-     * @type {boolean}
      */
     isBackbuffer = false;
 
@@ -167,7 +163,7 @@ class WebgpuRenderTarget {
         this.assignedColorTexture = null;
 
         this.colorAttachments.forEach((colorAttachment) => {
-            colorAttachment.destroy();
+            colorAttachment.destroy(device);
         });
         this.colorAttachments.length = 0;
 
@@ -192,17 +188,23 @@ class WebgpuRenderTarget {
      * Assign a color buffer. This allows the color buffer of the main framebuffer
      * to be swapped each frame to a buffer provided by the context.
      *
-     * @param {WebgpuGraphicsDevice} device - The WebGPU graphics device.
-     * @param {any} gpuTexture - The color buffer.
+     * @param {any} gpuTexture - // `GPUTexture`; using `any` to avoid exporting WebGPU types in published typings.
+     * @param {any} viewFormat - // `GPUTextureFormat`; using `any` to avoid exporting WebGPU types in published typings (may differ from texture storage for sRGB).
      */
-    assignColorTexture(device, gpuTexture) {
+    assignColorTexture(gpuTexture, viewFormat) {
 
         Debug.assert(gpuTexture);
         this.assignedColorTexture = gpuTexture;
 
-        // create view (optionally handles srgb conversion)
-        const view = gpuTexture.createView({ format: device.backBufferViewFormat });
-        DebugHelper.setLabel(view, 'Framebuffer.assignedColor');
+        const wgpuDevice = /** @type {WebgpuGraphicsDevice} */ (this.renderTarget.device);
+        const xrViewDesc = wgpuDevice?.xrColorTextureViewDescriptor;
+        // WebXR may supply a per-eye view descriptor (e.g. array layer); merge in our view format
+        // for sRGB / reinterpret when it matches the session color texture.
+        const xrSlice = xrViewDesc && gpuTexture === wgpuDevice.xrColorTexture;
+        const view = gpuTexture.createView(
+            xrSlice ? { ...xrViewDesc, format: viewFormat } : { format: viewFormat }
+        );
+        DebugHelper.setLabel(view, xrSlice ? 'Framebuffer.xrColorTextureView' : 'Framebuffer.contextColorTextureView');
 
         // use it as render buffer or resolve target
         const colorAttachment = this.renderPassDescriptor.colorAttachments[0];
@@ -214,7 +216,7 @@ class WebgpuRenderTarget {
         }
 
         // for main framebuffer, this is how the format is obtained
-        this.setColorAttachment(0, undefined, device.backBufferViewFormat);
+        this.setColorAttachment(0, undefined, viewFormat);
 
         this.updateKey();
     }
@@ -435,7 +437,12 @@ class WebgpuRenderTarget {
         // multi-sampled color buffer
         if (samples > 1) {
 
-            const format = this.isBackbuffer ? device.backBufferViewFormat : colorBuffer.impl.format;
+            // Main framebuffer: MSAA texture format must match the attachment view format used for
+            // resolve; WebgpuGraphicsDevice#frameStart sets that on this impl via setColorAttachment
+            // before the first init.
+            const format = this.isBackbuffer ?
+                (this.colorAttachments[index]?.format ?? device.backBufferViewFormat) :
+                colorBuffer.impl.format;
 
             /** @type {GPUTextureDescriptor} */
             const multisampledTextureDesc = {

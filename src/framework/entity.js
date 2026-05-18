@@ -275,7 +275,6 @@ class Entity extends GraphNode {
     /**
      * Used by component systems to speed up destruction.
      *
-     * @type {boolean}
      * @ignore
      */
     _destroying = false;
@@ -290,7 +289,6 @@ class Entity extends GraphNode {
      * Used to differentiate between the entities of a template root instance, which have it set to
      * true, and the cloned instance entities (set to false).
      *
-     * @type {boolean}
      * @ignore
      */
     _template = false;
