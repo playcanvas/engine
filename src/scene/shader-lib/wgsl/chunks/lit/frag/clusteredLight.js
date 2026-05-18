@@ -49,14 +49,6 @@ struct ClusterLightData {
     // 32bit of flags
     flags: u32,
 
-    // area light sizes / orientation
-    halfWidth: vec3f,
-
-    isSpot: bool,
-
-    // area light sizes / orientation
-    halfHeight: vec3f,
-
     // light index
     lightIndex: i32,
 
@@ -69,6 +61,9 @@ struct ClusterLightData {
     // world space direction (spot light only)
     direction: vec3f,
 
+    // true for spot lights
+    isSpot: bool,
+
     // light follow mode
     falloffModeLinear: bool,
 
@@ -78,14 +73,8 @@ struct ClusterLightData {
     // 0.0 if the light doesn't cast shadows
     shadowIntensity: f32,
 
-    // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
-    omniAtlasViewport: vec3f,
-
     // range of the light
     range: f32,
-
-    // channel mask - one of the channels has 1, the others are 0
-    cookieChannelMask: vec4f,
 
     // compressed biases, two haf-floats stored in a float
     biasesData: f32,
@@ -93,16 +82,8 @@ struct ClusterLightData {
     // blue color component and angle flags (as uint for efficient bit operations)
     colorBFlagsData: u32,
 
-    // shadow bias values
-    shadowBias: f32,
-    shadowNormalBias: f32,
-
     // compressed angles, two haf-floats stored in a float
     anglesData: f32,
-
-    // spot light inner and outer angle cosine
-    innerConeAngleCos: f32,
-    outerConeAngleCos: f32,
 
     // intensity of the cookie
     cookieIntensity: f32,
@@ -111,6 +92,21 @@ struct ClusterLightData {
     //float mask;
     isDynamic: bool,
     isLightmapped: bool
+}
+
+struct ClusterLightSpotData {
+    innerConeAngleCos: f32,
+    outerConeAngleCos: f32
+}
+
+struct ClusterLightAreaData {
+    halfWidth: vec3f,
+    halfHeight: vec3f
+}
+
+struct ClusterLightShadowData {
+    shadowBias: f32,
+    shadowNormalBias: f32
 }
 
 // Note: on some devices (tested on Pixel 3A XL), this matrix when stored inside the light struct has lower precision compared to
@@ -124,7 +120,8 @@ fn sampleLightTextureF(lightIndex: i32, index: i32) -> vec4f {
     return textureLoad(lightsTexture, vec2<i32>(index, lightIndex), 0);
 }
 
-fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lightIndex: i32) {
+fn decodeClusterLightCore(lightIndex: i32) -> ClusterLightData {
+    var clusterLightData: ClusterLightData;
 
     // light index
     clusterLightData.lightIndex = lightIndex;
@@ -163,9 +160,11 @@ fn decodeClusterLightCore(clusterLightData: ptr<function, ClusterLightData>, lig
     clusterLightData.cookieIntensity = f32((flags_uint >> 8u) & 0xFFu) / 255.0;
     clusterLightData.isDynamic = (flags_uint & (1u << 22u)) != 0u;
     clusterLightData.isLightmapped = (flags_uint & (1u << 21u)) != 0u;
+
+    return clusterLightData;
 }
 
-fn decodeClusterLightSpot(clusterLightData: ptr<function, ClusterLightData>) {
+fn decodeClusterLightSpot(clusterLightData: ClusterLightData) -> ClusterLightSpotData {
     // decompress spot light angles
     let angleFlags: u32 = (clusterLightData.colorBFlagsData >> 16u) & 0xFFFFu;  // Extract upper 16 bits as integer
 
@@ -176,20 +175,25 @@ fn decodeClusterLightSpot(clusterLightData: ptr<function, ClusterLightData>) {
     // decode based on flags (branch-free)
     let innerIsVersine: bool = (angleFlags & 1u) != 0u;      // bit 0: inner angle format
     let outerIsVersine: bool = ((angleFlags >> 1u) & 1u) != 0u;  // bit 1: outer angle format
-    clusterLightData.innerConeAngleCos = select(innerVal, 1.0 - innerVal, innerIsVersine);
-    clusterLightData.outerConeAngleCos = select(outerVal, 1.0 - outerVal, outerIsVersine);
+
+    return ClusterLightSpotData(
+        select(innerVal, 1.0 - innerVal, innerIsVersine),
+        select(outerVal, 1.0 - outerVal, outerIsVersine)
+    );
 }
 
-fn decodeClusterLightOmniAtlasViewport(clusterLightData: ptr<function, ClusterLightData>) {
-    clusterLightData.omniAtlasViewport = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_0}).xyz;
+fn decodeClusterLightOmniAtlasViewport(clusterLightData: ClusterLightData) -> vec3f {
+    return sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_0}).xyz;
 }
 
-fn decodeClusterLightAreaData(clusterLightData: ptr<function, ClusterLightData>) {
-    clusterLightData.halfWidth = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_AREA_DATA_WIDTH}).xyz;
-    clusterLightData.halfHeight = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_AREA_DATA_HEIGHT}).xyz;
+fn decodeClusterLightAreaData(clusterLightData: ClusterLightData) -> ClusterLightAreaData {
+    return ClusterLightAreaData(
+        sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_AREA_DATA_WIDTH}).xyz,
+        sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_AREA_DATA_HEIGHT}).xyz
+    );
 }
 
-fn decodeClusterLightProjectionMatrixData(clusterLightData: ptr<function, ClusterLightData>) {
+fn decodeClusterLightProjectionMatrixData(clusterLightData: ClusterLightData) {
     // shadow matrix
     let m0: vec4f = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_0});
     let m1: vec4f = sampleLightTextureF(clusterLightData.lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_1});
@@ -198,23 +202,22 @@ fn decodeClusterLightProjectionMatrixData(clusterLightData: ptr<function, Cluste
     lightProjectionMatrix = mat4x4f(m0, m1, m2, m3);
 }
 
-fn decodeClusterLightShadowData(clusterLightData: ptr<function, ClusterLightData>) {
+fn decodeClusterLightShadowData(clusterLightData: ClusterLightData) -> ClusterLightShadowData {
     // shadow biases
     let biases: vec2f = unpack2x16float(bitcast<u32>(clusterLightData.biasesData));
-    clusterLightData.shadowBias = biases.x;
-    clusterLightData.shadowNormalBias = biases.y;
+    return ClusterLightShadowData(biases.x, biases.y);
 }
 
-fn decodeClusterLightCookieData(clusterLightData: ptr<function, ClusterLightData>) {
+fn decodeClusterLightCookieData(clusterLightData: ClusterLightData) -> vec4f {
 
     // extract channel mask from flags
     let cookieFlags: u32 = (clusterLightData.flags >> 23u) & 0x0Fu;  // 4bits, each bit enables a channel
     let mask_uvec: vec4<u32> = vec4<u32>(cookieFlags) & vec4<u32>(1u, 2u, 4u, 8u);
-    clusterLightData.cookieChannelMask = step(vec4f(1.0), vec4f(mask_uvec)); // Normalize to 0.0 or 1.0
+    return step(vec4f(1.0), vec4f(mask_uvec)); // Normalize to 0.0 or 1.0
 }
 
 fn evaluateLight(
-    light: ptr<function, ClusterLightData>,
+    light: ClusterLightData,
     worldNormal: vec3f,
     viewDir: vec3f,
     reflectionDir: vec3f,
@@ -248,15 +251,15 @@ fn evaluateLight(
     if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
 
         // area lights
-        decodeClusterLightAreaData(light);
+        let areaData: ClusterLightAreaData = decodeClusterLightAreaData(light);
 
         // handle light shape
         if (light.shape == {LIGHTSHAPE_RECT}) {
-            calcRectLightValues(light.position, light.halfWidth, light.halfHeight);
+            calcRectLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
         } else if (light.shape == {LIGHTSHAPE_DISK}) {
-            calcDiskLightValues(light.position, light.halfWidth, light.halfHeight);
+            calcDiskLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
         } else { // sphere
-            calcSphereLightValues(light.position, light.halfWidth, light.halfHeight);
+            calcSphereLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
         }
 
         falloffAttenuation = getFalloffWindow(light.range, lightDirW);
@@ -299,8 +302,8 @@ fn evaluateLight(
 
         // spot light falloff
         if (light.isSpot) {
-            decodeClusterLightSpot(light);
-            falloffAttenuation = falloffAttenuation * getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos, lightDirNormW);
+            let spotData: ClusterLightSpotData = decodeClusterLightSpot(light);
+            falloffAttenuation = falloffAttenuation * getSpotEffect(light.direction, spotData.innerConeAngleCos, spotData.outerConeAngleCos, lightDirNormW);
         }
 
         #if defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
@@ -310,11 +313,13 @@ fn evaluateLight(
             // shadow / cookie
             if (light.shadowIntensity > 0.0 || light.cookieIntensity > 0.0) {
 
+                var omniAtlasViewport: vec3f = vec3f(0.0);
+
                 // shared shadow / cookie data depends on light type
                 if (light.isSpot) {
                     decodeClusterLightProjectionMatrixData(light);
                 } else {
-                    decodeClusterLightOmniAtlasViewport(light);
+                    omniAtlasViewport = decodeClusterLightOmniAtlasViewport(light);
                 }
 
                 let shadowTextureResolution: f32 = uniform.shadowAtlasParams.x;
@@ -324,14 +329,14 @@ fn evaluateLight(
 
                 // cookie
                 if (light.cookieIntensity > 0.0) {
-                    decodeClusterLightCookieData(light);
+                    let cookieChannelMask: vec4f = decodeClusterLightCookieData(light);
 
                     if (light.isSpot) {
                         // !!!!!!!!!!! TEXTURE_PASS likely needs sampler. Assuming cookieAtlasTextureSampler exists.
-                        cookieAttenuation = getCookie2DClustered(cookieAtlasTexture, cookieAtlasTextureSampler, lightProjectionMatrix, vPositionW, light.cookieIntensity, light.cookieChannelMask);
+                        cookieAttenuation = getCookie2DClustered(cookieAtlasTexture, cookieAtlasTextureSampler, lightProjectionMatrix, vPositionW, light.cookieIntensity, cookieChannelMask);
                     } else {
                         // !!!!!!!!!!! TEXTURE_PASS likely needs sampler. Assuming cookieAtlasTextureSampler exists.
-                        cookieAttenuation = getCookieCubeClustered(cookieAtlasTexture, cookieAtlasTextureSampler, lightDirW, light.cookieIntensity, light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
+                        cookieAttenuation = getCookieCubeClustered(cookieAtlasTexture, cookieAtlasTextureSampler, lightDirW, light.cookieIntensity, cookieChannelMask, shadowTextureResolution, shadowEdgePixels, omniAtlasViewport);
                     }
                 }
 
@@ -341,9 +346,9 @@ fn evaluateLight(
 
                 // shadow
                 if (light.shadowIntensity > 0.0) {
-                    decodeClusterLightShadowData(light);
+                    let shadowData: ClusterLightShadowData = decodeClusterLightShadowData(light);
 
-                    let shadowParams: vec4f = vec4f(shadowTextureResolution, light.shadowNormalBias, light.shadowBias, 1.0 / light.range);
+                    let shadowParams: vec4f = vec4f(shadowTextureResolution, shadowData.shadowNormalBias, shadowData.shadowBias, 1.0 / light.range);
 
                     if (light.isSpot) {
 
@@ -371,11 +376,11 @@ fn evaluateLight(
                         // !!!!!!!!!!! SHADOWMAP_PASS needs texture and sampler_comparison.
                         // !!!!!!!!!!! Shadow functions need update for WGSL textureSampleCompare etc. Assuming these are handled in includes.
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            let shadow: f32 = getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowAtlasTextureSampler, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dir);
+                            let shadow: f32 = getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowAtlasTextureSampler, shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            let shadow: f32 = getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowAtlasTextureSampler, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dir);
+                            let shadow: f32 = getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowAtlasTextureSampler, shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            let shadow: f32 = getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowAtlasTextureSampler, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dir);
+                            let shadow: f32 = getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowAtlasTextureSampler, shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
                         #endif
                         falloffAttenuation = falloffAttenuation * mix(1.0, shadow, light.shadowIntensity);
                     }
@@ -524,8 +529,7 @@ fn evaluateClusterLight(
 ) {
 
     // decode core light data from textures
-    var clusterLightData: ClusterLightData;
-    decodeClusterLightCore(&clusterLightData, lightIndex);
+    let clusterLightData: ClusterLightData = decodeClusterLightCore(lightIndex);
 
     // evaluate light if it uses accepted light mask
     #ifdef CLUSTER_MESH_DYNAMIC_LIGHTS
@@ -536,7 +540,7 @@ fn evaluateClusterLight(
 
     if (acceptLightMask) {
         evaluateLight(
-            &clusterLightData,
+            clusterLightData,
             worldNormal,
             viewDir,
             reflectionDir,

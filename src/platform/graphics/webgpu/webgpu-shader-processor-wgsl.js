@@ -338,7 +338,7 @@ class WebgpuShaderProcessorWGSL {
         const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true, device);
 
         // FS - convert a list of varyings to a shader block
-        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false, device);
+        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false, device, fragmentExtracted.src);
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
         // Note that as both vertex and fragment can declare the same uniform, we need to remove duplicates
@@ -701,10 +701,16 @@ class WebgpuShaderProcessorWGSL {
         return code;
     }
 
-    static processVaryings(varyingLines, varyingMap, isVertex, device) {
+    static processVaryings(varyingLines, varyingMap, isVertex, device, source = '') {
         let block = '';
         let blockPrivates = '';
         let blockCopy = '';
+        const needsPosition = !isVertex && source.includes('pcPosition');
+        const needsFrontFacing = !isVertex && source.includes('pcFrontFacing');
+        const needsPrimitiveIndex = !isVertex && source.includes('pcPrimitiveIndex');
+
+        // Requesting sample_index can force sample-rate shading on MSAA render targets.
+        const needsSampleIndex = !isVertex && source.includes('pcSampleIndex');
         varyingLines.forEach((line, index) => {
             const match = line.match(VARYING);
             Debug.assert(match, `Varying line is not valid: ${line}`);
@@ -740,36 +746,60 @@ class WebgpuShaderProcessorWGSL {
         if (isVertex) {
             block += '    @builtin(position) position : vec4f,\n';          // output position
         } else {
-            block += '    @builtin(position) position : vec4f,\n';          // interpolated fragment position
-            block += '    @builtin(front_facing) frontFacing : bool,\n';    // front-facing
-            block += '    @builtin(sample_index) sampleIndex : u32,\n';     // sample index for MSAA
-            if (device.supportsPrimitiveIndex) {
+            if (needsPosition) {
+                block += '    @builtin(position) position : vec4f,\n';      // interpolated fragment position
+            }
+            if (needsFrontFacing) {
+                block += '    @builtin(front_facing) frontFacing : bool,\n'; // front-facing
+            }
+            if (needsSampleIndex) {
+                block += '    @builtin(sample_index) sampleIndex : u32,\n'; // sample index for MSAA
+            }
+            if (device.supportsPrimitiveIndex && needsPrimitiveIndex) {
                 block += '    @builtin(primitive_index) primitiveIndex : u32,\n';  // primitive index
             }
         }
 
         // primitive index support
-        const primitiveIndexGlobals = device.supportsPrimitiveIndex ? `
+        const primitiveIndexGlobals = device.supportsPrimitiveIndex && needsPrimitiveIndex ? `
             var<private> pcPrimitiveIndex: u32;
         ` : '';
-        const primitiveIndexCopy = device.supportsPrimitiveIndex ? `
+        const primitiveIndexCopy = device.supportsPrimitiveIndex && needsPrimitiveIndex ? `
                 pcPrimitiveIndex = input.primitiveIndex;
+        ` : '';
+        const sampleIndexGlobal = needsSampleIndex ? `
+            var<private> pcSampleIndex: u32;
+        ` : '';
+        const sampleIndexCopy = needsSampleIndex ? `
+                pcSampleIndex = input.sampleIndex;
+        ` : '';
+        const positionGlobal = needsPosition ? `
+            var<private> pcPosition: vec4f;
+        ` : '';
+        const positionCopy = needsPosition ? `
+                pcPosition = input.position;
+        ` : '';
+        const frontFacingGlobal = needsFrontFacing ? `
+            var<private> pcFrontFacing: bool;
+        ` : '';
+        const frontFacingCopy = needsFrontFacing ? `
+                pcFrontFacing = input.frontFacing;
         ` : '';
 
         // global variables for build-in input into fragment shader
         const fragmentGlobals = isVertex ? '' : `
-            var<private> pcPosition: vec4f;
-            var<private> pcFrontFacing: bool;
-            var<private> pcSampleIndex: u32;
+            ${positionGlobal}
+            ${frontFacingGlobal}
+            ${sampleIndexGlobal}
             ${primitiveIndexGlobals}
             ${blockPrivates}
             
             // function to copy inputs (varyings) to private global variables
             fn _pcCopyInputs(input: FragmentInput) {
                 ${blockCopy}
-                pcPosition = input.position;
-                pcFrontFacing = input.frontFacing;
-                pcSampleIndex = input.sampleIndex;
+                ${positionCopy}
+                ${frontFacingCopy}
+                ${sampleIndexCopy}
                 ${primitiveIndexCopy}
             }
         `;
