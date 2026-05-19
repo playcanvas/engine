@@ -151,5 +151,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

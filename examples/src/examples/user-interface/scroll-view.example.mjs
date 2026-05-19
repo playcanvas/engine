@@ -236,5 +236,3 @@ assetListLoader.load(() => {
         viewportEntity: viewport
     });
 });
-
-export { app };

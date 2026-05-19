@@ -202,5 +202,3 @@ assetListLoader.load(() => {
         message('WebXR is not supported');
     }
 });
-
-export { app };

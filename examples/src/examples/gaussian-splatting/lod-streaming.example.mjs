@@ -560,5 +560,3 @@ assetListLoader.load(async () => {
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
     });
 });
-
-export { app };

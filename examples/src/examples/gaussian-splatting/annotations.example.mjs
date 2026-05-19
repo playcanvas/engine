@@ -197,5 +197,3 @@ assetListLoader.load(() => {
         bicycle.addChild(annotation);
     });
 });
-
-export { app };

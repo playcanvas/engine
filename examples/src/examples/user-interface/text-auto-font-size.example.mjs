@@ -107,5 +107,3 @@ assetListLoader.load(() => {
         autoFontSizeContainer.element.height = 60 + Math.sin(time * 0.5) * 50;
     });
 });
-
-export { app };

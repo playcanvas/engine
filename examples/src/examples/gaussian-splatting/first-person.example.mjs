@@ -200,5 +200,3 @@ app.on('update', () => {
     const bb = app.graphicsDevice.backBufferSize;
     data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 });
-
-export { app };

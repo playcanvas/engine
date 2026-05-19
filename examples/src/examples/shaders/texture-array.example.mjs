@@ -244,5 +244,3 @@ assetListLoader.load(() => {
         material.setParameter('uDiffuseMap', value ? mipmapTextureArray : textureArray);
     });
 });
-
-export { app };

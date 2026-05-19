@@ -206,5 +206,3 @@ if (app.xr.supported) {
 } else {
     message('WebXR is not supported');
 }
-
-export { app };

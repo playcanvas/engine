@@ -230,5 +230,3 @@ assetListLoader.load(() => {
         app.drawLines(linesPositions, linesColors);
     });
 });
-
-export { app };

@@ -197,5 +197,3 @@ assetListLoader.load(() => {
         app.drawLines(grayLinePositions, grayLineColors);
     });
 });
-
-export { app };

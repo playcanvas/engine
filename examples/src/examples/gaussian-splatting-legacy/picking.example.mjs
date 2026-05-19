@@ -217,5 +217,3 @@ assetListLoader.load(() => {
         handlePointer(touch.x, touch.y);
     });
 });
-
-export { app };

@@ -83,5 +83,3 @@ assetListLoader.load(() => {
     // create spine entity 2
     createSpineInstance(new pc.Vec3(2, 10, 0), new pc.Vec3(-0.5, 0.5, 0.5), 0.5);
 });
-
-export { app };

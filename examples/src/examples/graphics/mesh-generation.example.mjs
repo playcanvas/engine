@@ -222,5 +222,3 @@ assetListLoader.load(() => {
         updateMesh(mesh);
     });
 });
-
-export { app };

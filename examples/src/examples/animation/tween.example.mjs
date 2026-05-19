@@ -156,5 +156,3 @@ assetListLoader.load(() => {
         app.drawLines(points, colors);
     });
 });
-
-export { app };

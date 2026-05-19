@@ -125,5 +125,3 @@ assetListLoader.load(() => {
         localVelocityGraph2: localVelocityCurve2
     });
 });
-
-export { app };

@@ -321,5 +321,3 @@ assetListLoader.load(() => {
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
     });
 });
-
-export { app };

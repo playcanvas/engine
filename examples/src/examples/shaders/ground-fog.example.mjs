@@ -182,5 +182,3 @@ assetListLoader.load(() => {
         app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
     });
 });
-
-export { app };

@@ -131,5 +131,3 @@ assetListLoader.load(() => {
         material.update();
     });
 });
-
-export { app };

@@ -205,5 +205,3 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
 // Create joystick UI
 createJoystickUI('left');
 createJoystickUI('right');
-
-export { app };

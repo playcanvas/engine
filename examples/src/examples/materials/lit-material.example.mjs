@@ -199,5 +199,3 @@ assetListLoader.load(() => {
         material.setParameter('material_normalMapIntensity', (Math.sin(time) + 1.0) * 0.5);
     });
 });
-
-export { app };

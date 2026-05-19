@@ -225,5 +225,3 @@ assetListLoader.load(() => {
         light2.light.intensity = affectScene ? 1 : 0;
     });
 });
-
-export { app };

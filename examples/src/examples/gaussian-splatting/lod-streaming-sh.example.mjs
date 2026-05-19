@@ -218,5 +218,3 @@ assetListLoader.load(() => {
         data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
     });
 });
-
-export { app };

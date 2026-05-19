@@ -373,5 +373,3 @@ selector.fire('select', box, true);
 
 // focus canvas
 window.focus();
-
-export { app };

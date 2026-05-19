@@ -194,5 +194,3 @@ assetListLoader.load(() => {
         cameraRight.camera.orthoHeight = 90 + Math.sin(time * 0.3) * 60;
     });
 });
-
-export { app };

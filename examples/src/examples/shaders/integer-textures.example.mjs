@@ -343,5 +343,3 @@ assetListLoader.load(() => {
         pc.drawQuadWithShader(device, outputRenderTarget, outputShader);
     });
 });
-
-export { app };

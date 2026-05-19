@@ -172,11 +172,10 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const app = new pc.Application(canvas, {});
-
-export { app };
 ```
 
 This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
+The examples loader finds and destroys applications registered to canvases it owns, so the `app` does not need to be exported. Export a `destroy` function only when the example creates non-app resources such as timers, DOM overlays, or animation frames that need cleanup.
 
 Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `utils/example-source.mjs` file for the full list.
 

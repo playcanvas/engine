@@ -219,5 +219,3 @@ assetListLoader.load(() => {
     createText(assets.font, 'raycastFirst', 0.5, 3.75, 0, 0);
     createText(assets.font, 'raycastAll', 0.5, -0.25, 0, 0);
 });
-
-export { app };

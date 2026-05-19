@@ -113,5 +113,3 @@ assetListLoader.load(() => {
         outlineRenderer.frameUpdate(cameraEntity, immediateLayer, false);
     });
 });
-
-export { app };

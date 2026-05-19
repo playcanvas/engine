@@ -94,5 +94,3 @@ app.on('update', (dt) => {
         entity.rotate(0, 100 * dt, 0);
     }
 });
-
-export { app };

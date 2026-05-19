@@ -260,5 +260,3 @@ assetListLoader.load(() => {
         gamma: true
     });
 });
-
-export { app };

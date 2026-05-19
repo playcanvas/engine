@@ -172,5 +172,3 @@ assetListLoader.load(() => {
     button.button.pressedSpriteAsset = createSpriteAsset('2');
     button.button.inactiveSpriteAsset = createSpriteAsset('3');
 });
-
-export { app };

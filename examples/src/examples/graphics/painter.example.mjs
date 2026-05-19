@@ -207,5 +207,3 @@ app.on('update', (dt) => {
     // rotate the box in the world
     box.rotate(5 * dt, 10 * dt, 15 * dt);
 });
-
-export { app };

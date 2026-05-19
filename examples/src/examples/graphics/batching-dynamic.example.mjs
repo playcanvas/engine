@@ -133,5 +133,3 @@ app.on('update', (/** @type {number} */ dt) => {
     camera.setLocalPosition(70 * Math.sin(time), 0, 70 * Math.cos(time));
     camera.lookAt(pc.Vec3.ZERO);
 });
-
-export { app };

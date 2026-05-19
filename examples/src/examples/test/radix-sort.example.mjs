@@ -440,5 +440,3 @@ app.on('update', (/** @type {number} */ dt) => {
         sortedPlane.enabled = true;
     }
 });
-
-export { app };

@@ -171,5 +171,3 @@ assetListLoader.load(() => {
         sliced: true
     });
 });
-
-export { app };

@@ -215,5 +215,3 @@ assetListLoader.load(() => {
         pixelationIntensity: 0.5
     });
 });
-
-export { app };

@@ -213,5 +213,3 @@ assetListLoader.load(() => {
         cmd.update(write);
     });
 });
-
-export { app };

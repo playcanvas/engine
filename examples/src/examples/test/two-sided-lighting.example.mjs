@@ -113,5 +113,3 @@ app.on('update', (dt) => {
         0
     );
 });
-
-export { app };

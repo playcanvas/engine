@@ -182,5 +182,3 @@ assetListLoader.load(() => {
         tintPass.tint.lerp(pc.Color.YELLOW, pc.Color.CYAN, Math.sin(angle * 0.5) * 0.5 + 0.5);
     });
 });
-
-export { app };

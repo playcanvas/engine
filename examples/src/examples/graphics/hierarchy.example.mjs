@@ -139,5 +139,3 @@ app.on('update', (dt) => {
         entities[e].setLocalRotation(rot);
     }
 });
-
-export { app };

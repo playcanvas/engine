@@ -219,5 +219,3 @@ assetListLoader.load(() => {
         box.rotate(3 * dt, 5 * dt, 6 * dt);
     });
 });
-
-export { app };

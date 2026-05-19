@@ -168,5 +168,3 @@ assetListLoader.load(() => {
         skull.rotate(0, 80 * dt, 0);
     });
 });
-
-export { app };

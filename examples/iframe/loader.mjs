@@ -196,9 +196,9 @@ class ExampleLoader {
         try {
             // import local file
             const module = await importModule('example.mjs');
-            this._app = module.app;
+            this._app = module.app ?? window.pc?.AppBase.getApplication('application-canvas');
 
-            // additional destroy handler in case no app provided
+            // additional destroy handler for non-app resources
             if (typeof module.destroy === 'function') {
                 this.destroyHandlers.push(module.destroy);
             }
@@ -270,12 +270,25 @@ class ExampleLoader {
         this.load();
     }
 
+    _destroyApps() {
+        const canvases = document.querySelectorAll('#appInner canvas[id]');
+        for (const canvas of canvases) {
+            const app = window.pc?.AppBase.getApplication(canvas.id);
+            if (app?.graphicsDevice) {
+                app.destroy();
+            }
+            if (canvas.id !== 'application-canvas') {
+                canvas.remove();
+            }
+        }
+    }
+
     destroy() {
         MiniStats.destroy();
-        if (this._app && this._app.graphicsDevice) {
-            this._app.destroy();
-        }
-        this.destroyHandlers.forEach(destroy => destroy());
+        this._destroyApps();
+        const handlers = this.destroyHandlers;
+        this.destroyHandlers = [];
+        handlers.forEach(destroy => destroy());
         this.ready = false;
     }
 

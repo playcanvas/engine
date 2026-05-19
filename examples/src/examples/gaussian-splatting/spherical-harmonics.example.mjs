@@ -149,5 +149,3 @@ assetListLoader.load(() => {
     directionalLight.setEulerAngles(55, 90, 20);
     app.root.addChild(directionalLight);
 });
-
-export { app };

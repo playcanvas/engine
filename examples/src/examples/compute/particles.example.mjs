@@ -257,5 +257,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

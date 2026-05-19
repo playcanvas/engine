@@ -174,5 +174,3 @@ assetListLoader.load(() => {
         camera.lookAt(new pc.Vec3(0, 1, 0));
     });
 });
-
-export { app };

@@ -249,5 +249,3 @@ assetListLoader.load(() => {
     });
     app.root.addChild(shadowCatcher);
 });
-
-export { app };

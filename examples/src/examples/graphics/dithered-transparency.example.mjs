@@ -201,5 +201,3 @@ assetListLoader.load(() => {
         opacityShadowDither: pc.DITHER_BAYER8
     });
 });
-
-export { app };

@@ -96,5 +96,3 @@ assetListLoader.load(() => {
     }, 75);
     app.on('destroy', () => clearInterval(id));
 });
-
-export { app };

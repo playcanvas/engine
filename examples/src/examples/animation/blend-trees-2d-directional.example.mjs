@@ -205,5 +205,3 @@ assetListLoader.load(() => {
     app.root.addChild(modelEntity);
     app.start();
 });
-
-export { app };

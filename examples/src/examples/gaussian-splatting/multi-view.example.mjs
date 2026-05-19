@@ -160,5 +160,3 @@ assetListLoader.load(() => {
         cameraRight.lookAt(logoEntity2.getPosition());
     });
 });
-
-export { app };

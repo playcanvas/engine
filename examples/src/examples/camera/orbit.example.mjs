@@ -179,5 +179,3 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 
     cc[key] = value;
 });
-
-export { app };

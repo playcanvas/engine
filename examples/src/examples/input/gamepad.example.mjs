@@ -82,5 +82,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

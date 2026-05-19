@@ -177,21 +177,6 @@ for (const deviceType in apps) {
     });
 }
 
-// Make sure to remove all apps when the example is destroyed or hot reloaded
-const destroy = () => {
-    for (const deviceType in apps) {
-        let i = 0;
-        while (apps[deviceType].length) {
-            data.emit(`remove:${deviceType}`);
-            if (i++ > 1e3) {
-                break;
-            }
-        }
-    }
-};
-
 // Start with a webgl2 and webgpu app
 await addApp('webgl2');
 await addApp('webgpu');
-
-export { destroy };

@@ -431,5 +431,3 @@ assetListLoader.load(() => {
         camera.script.create('orbitCameraInputTouch');
     });
 });
-
-export { app };

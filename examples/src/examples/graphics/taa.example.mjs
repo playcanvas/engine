@@ -164,5 +164,3 @@ assetListLoader.load(() => {
         cubeEntity.rotate(50 * dt, 20 * dt, 30 * dt);
     });
 });
-
-export { app };

@@ -305,5 +305,3 @@ assetListLoader.load(() => {
         app.drawTexture(0, -0.7, 0.5, 0.4, textureAtlas);
     });
 });
-
-export { app };

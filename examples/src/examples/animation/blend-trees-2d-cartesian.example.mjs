@@ -204,5 +204,3 @@ assetListLoader.load(() => {
 
     app.start();
 });
-
-export { app };

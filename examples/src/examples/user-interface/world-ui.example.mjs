@@ -165,5 +165,3 @@ assetListLoader.load(() => {
         camera.camera.clearColor = new pc.Color(Math.random(), Math.random(), Math.random());
     });
 });
-
-export { app };

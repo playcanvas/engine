@@ -147,5 +147,3 @@ assetListLoader.load(() => {
     createText(assets.font, 'Blue-noise\nDither', NUM_SPHERES_X * 0.2, y);
     createText(assets.font, 'IGN-noise\nDither', NUM_SPHERES_X * 0.6, y);
 });
-
-export { app };

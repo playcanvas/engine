@@ -182,5 +182,3 @@ assetListLoader.load(() => {
         app.drawTexture(0.5, -0.5, 0.9, 0.9 * ratio, texture2, null, worldLayer);
     });
 });
-
-export { app };

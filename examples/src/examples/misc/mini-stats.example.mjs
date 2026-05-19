@@ -260,5 +260,3 @@ app.on('update', () => {
         }
     }
 });
-
-export { app };

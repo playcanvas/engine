@@ -263,5 +263,3 @@ assetListLoader.load(() => {
     data.on('extents.2:set', rebuild);
     data.on('density:set', rebuild);
 });
-
-export { app };

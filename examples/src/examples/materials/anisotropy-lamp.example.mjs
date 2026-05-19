@@ -92,5 +92,3 @@ assetListLoader.load(() => {
     camera.script.orbitCamera.distance = 0.3;
     camera.camera.requestSceneColorMap(true);
 });
-
-export { app };

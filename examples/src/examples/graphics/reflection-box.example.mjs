@@ -358,5 +358,3 @@ assetListLoader.load(() => {
         sphereMaterial.update();
     });
 });
-
-export { app };

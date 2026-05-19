@@ -349,5 +349,3 @@ assetListLoader.load(() => {
         picker.destroy();
     });
 });
-
-export { app };

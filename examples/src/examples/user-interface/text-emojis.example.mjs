@@ -167,5 +167,3 @@ assetListLoader.load(() => {
         group.addChild(child);
     }
 });
-
-export { app };

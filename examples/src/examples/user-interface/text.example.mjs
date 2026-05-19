@@ -132,5 +132,3 @@ assetListLoader.load(() => {
     });
     screen.addChild(textDropShadow);
 });
-
-export { app };

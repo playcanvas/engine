@@ -234,5 +234,3 @@ assetListLoader.load(() => {
         toon: false
     });
 });
-
-export { app };

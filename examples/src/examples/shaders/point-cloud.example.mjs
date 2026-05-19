@@ -93,5 +93,3 @@ assetListLoader.load(() => {
         entity.rotate(0, 15 * dt, 0);
     });
 });
-
-export { app };

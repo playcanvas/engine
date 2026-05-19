@@ -1786,5 +1786,3 @@ app.on('update', (/** @type {number} */ dt) => {
         sortedPlane.enabled = renderEnabled;
     }
 });
-
-export { app };

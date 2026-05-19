@@ -113,5 +113,3 @@ app.on('update', (dt) => {
         camera.lookAt(pc.Vec3.ZERO);
     }
 });
-
-export { app };

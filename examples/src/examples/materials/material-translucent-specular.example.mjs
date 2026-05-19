@@ -139,5 +139,3 @@ assetListLoader.load(() => {
     createText(assets.font, 'Spec Fade On', -NUM_SPHERES_X * 0.25, (NUM_SPHERES_Z + 1) * -0.5, 0, -0, 0);
     createText(assets.font, 'Spec Fade Off', NUM_SPHERES_X * 0.25, (NUM_SPHERES_Z + 1) * -0.5, 0, -0, 0);
 });
-
-export { app };

@@ -123,5 +123,3 @@ assetListLoader.load(() => {
     app.root.addChild(ground);
 
 });
-
-export { app };

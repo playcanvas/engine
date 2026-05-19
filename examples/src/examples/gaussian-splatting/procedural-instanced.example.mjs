@@ -261,5 +261,3 @@ app.on('update', (dt) => {
     // Use update() with centersUpdated=false since centers are static (pre-filled)
     container.update(Math.floor(t * maxSplats), false);
 });
-
-export { app };

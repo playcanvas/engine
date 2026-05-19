@@ -490,5 +490,3 @@ assetListLoader.load(() => {
         htmlSync?.update(camera.camera);
     });
 });
-
-export { app };

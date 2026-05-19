@@ -108,5 +108,3 @@ assetListLoader.load(() => {
         material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
     });
 });
-
-export { app };

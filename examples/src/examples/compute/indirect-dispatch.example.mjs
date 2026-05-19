@@ -395,5 +395,3 @@ assetListLoader.load(() => {
         app.drawTexture(0, -0.5 + gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, outputTexture);
     });
 });
-
-export { app };

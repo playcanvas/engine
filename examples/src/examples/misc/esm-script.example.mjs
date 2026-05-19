@@ -57,5 +57,3 @@ const light = new pc.Entity('light');
 light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(45, 0, 0);
-
-export { app };

@@ -90,5 +90,3 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 });
-
-export { app };

@@ -187,5 +187,3 @@ assetListLoader.load(() => {
         outlineCamera.setLocalRotation(camera.getLocalRotation());
     });
 });
-
-export { app };

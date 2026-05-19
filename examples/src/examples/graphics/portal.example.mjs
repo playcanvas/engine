@@ -241,5 +241,3 @@ assetListLoader.load(() => {
     bitmoji.setLocalScale(2.5, 2.5, 2.5);
     group.addChild(bitmoji);
 });
-
-export { app };

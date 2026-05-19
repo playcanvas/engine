@@ -126,5 +126,3 @@ assetListLoader.load(() => {
         child.addChild(childLabel);
     }
 });
-
-export { app };

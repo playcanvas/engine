@@ -112,5 +112,3 @@ app.on('update', (dt) => {
         blueBox.rotate(0, -10 * dt, 0);
     }
 });
-
-export { app };

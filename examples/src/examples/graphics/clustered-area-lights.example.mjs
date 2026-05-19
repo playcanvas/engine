@@ -259,5 +259,3 @@ assetListLoader.load(() => {
         groundMaterial.update();
     });
 });
-
-export { app };

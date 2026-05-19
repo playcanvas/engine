@@ -127,5 +127,3 @@ assetListLoader.load(() => {
         shape.setEulerAngles(angle, angle * 2, angle * 4);
     });
 });
-
-export { app };

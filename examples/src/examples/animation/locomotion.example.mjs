@@ -385,5 +385,3 @@ assetListLoader.load(() => {
     characterEntity.addComponent('script');
     characterEntity.script.create('Locomotion', {});
 });
-
-export { app };

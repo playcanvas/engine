@@ -218,5 +218,3 @@ assetListLoader.load(() => {
         frameNumber++;
     });
 });
-
-export { app };

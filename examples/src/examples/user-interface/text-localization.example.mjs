@@ -170,5 +170,3 @@ assetListLoader.load(() => {
     screen.addChild(createButton('es-ES', 75, -100));
     screen.addChild(createButton('pt-BR', 225, -100));
 });
-
-export { app };

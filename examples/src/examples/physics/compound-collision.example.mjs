@@ -414,5 +414,3 @@ app.on('update', (dt) => {
         });
     });
 });
-
-export { app };

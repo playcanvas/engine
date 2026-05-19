@@ -206,5 +206,3 @@ assetListLoader.load(() => {
         colorLutIntensity: 1.0
     });
 });
-
-export { app };

@@ -177,5 +177,3 @@ assetListLoader.load(() => {
         entity.particlesystem[propertyName] = value;
     });
 });
-
-export { app };

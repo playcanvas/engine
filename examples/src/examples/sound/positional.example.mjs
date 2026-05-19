@@ -149,5 +149,3 @@ assetListLoader.load(() => {
         entity.setLocalEulerAngles(0, angle + 90, 0);
     });
 });
-
-export { app };

@@ -282,5 +282,3 @@ assetListLoader.load(() => {
         app.drawTexture(0.7, -0.7, 0.5, 0.5, texture, null, excludedLayer);
     });
 });
-
-export { app };

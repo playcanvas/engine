@@ -96,5 +96,3 @@ assetListLoader.load(() => {
         box.setEulerAngles(angle * 2, angle * 4, angle * 8);
     });
 });
-
-export { app };

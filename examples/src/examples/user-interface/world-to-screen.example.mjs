@@ -229,5 +229,3 @@ assetListLoader.load(() => {
     createPlayer(2, 65, -18, 1);
     createPlayer(3, 0, 15, 2.5);
 });
-
-export { app };

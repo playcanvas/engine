@@ -360,5 +360,3 @@ assetListLoader.load(() => {
         mosquitoEntity.setLocalEulerAngles(0, angle * 30, 0);
     });
 });
-
-export { app };

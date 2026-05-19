@@ -295,5 +295,3 @@ assetListLoader.load(() => {
     // initial bake
     app.lightmapper.bake(null, bakeType);
 });
-
-export { app };

@@ -611,5 +611,3 @@ assetListLoader.load(() => {
         uiPanel.remove();
     });
 });
-
-export { app };

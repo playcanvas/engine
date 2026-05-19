@@ -131,5 +131,3 @@ assetListLoader.load(() => {
     });
     app.on('destroy', () => mouse.detach());
 });
-
-export { app };

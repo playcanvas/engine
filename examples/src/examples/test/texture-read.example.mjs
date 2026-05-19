@@ -258,5 +258,3 @@ app.on('destroy', () => {
 
 // Run tests after a short delay to ensure everything is initialized
 setTimeout(runTests, 100);
-
-export { app };

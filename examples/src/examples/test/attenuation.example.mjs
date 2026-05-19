@@ -93,5 +93,3 @@ assetListLoader.load(() => {
 
     app.scene.ambientLight = new pc.Color(0.9, 0.9, 0.9);
 });
-
-export { app };

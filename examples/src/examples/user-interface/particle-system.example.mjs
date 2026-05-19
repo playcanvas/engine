@@ -159,5 +159,3 @@ assetListLoader.load(() => {
         panel.setLocalPosition(300 * Math.sin(time), 300 * Math.cos(time), 0);
     });
 });
-
-export { app };

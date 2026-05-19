@@ -339,5 +339,3 @@ assetListLoader.load(() => {
         app.drawTexture(0, 0.4, 1, ratio, null, matComposite, worldLayer);
     });
 });
-
-export { app };

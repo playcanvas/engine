@@ -76,5 +76,3 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 camera.setLocalPosition(0, 0, 5);
-
-export { app };
