@@ -1,7 +1,7 @@
 // @config DESCRIPTION This example demonstrates anisotropy effects on the lamp model. The anisotropic highlights on the lamp's surface showcase the material's directional properties.
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

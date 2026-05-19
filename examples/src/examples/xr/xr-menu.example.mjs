@@ -5,7 +5,7 @@ import { XrControllers } from 'engine/scripts/esm/xr-controllers.mjs';
 import { XrMenu } from 'engine/scripts/esm/xr-menu.mjs';
 import { XrNavigation } from 'engine/scripts/esm/xr-navigation.mjs';
 import { XrSession } from 'engine/scripts/esm/xr-session.mjs';
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 import uiCss from './ui.css';
 import uiHtml from './ui.html';

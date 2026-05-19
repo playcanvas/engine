@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 import outputGlslFrag from './output-glsl.frag';
 import outputWgslFrag from './output-wgsl.frag';

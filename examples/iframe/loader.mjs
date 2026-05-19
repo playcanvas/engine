@@ -1,8 +1,7 @@
-import { data, refresh } from 'examples/observer';
-import { deviceType as selectedDeviceType, updateDeviceType, fetchFile, importModule, clearImports, parseConfig, fire } from 'examples/utils';
-
 import files from './files.mjs';
 import MiniStats from './ministats.mjs';
+import { fetchFile, importModule, clearImports, parseConfig, fire } from './runtime.mjs';
+import { data, deviceType as selectedDeviceType, refreshContext, updateDeviceType } from './state.mjs';
 
 /** @import { AppBase } from 'playcanvas' */
 
@@ -175,7 +174,7 @@ class ExampleLoader {
         this._allowRestart = false;
 
         // refresh observer instance
-        refresh();
+        refreshContext();
 
         // parse config
         this._config = {

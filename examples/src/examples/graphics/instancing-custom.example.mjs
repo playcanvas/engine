@@ -1,7 +1,7 @@
 // @config DESCRIPTION This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 import transformInstancingGlslVert from './transform-instancing.glsl.vert';
 import transformInstancingWgslVert from './transform-instancing.wgsl.vert';

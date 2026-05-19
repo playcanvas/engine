@@ -24,7 +24,6 @@ const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)
 /**
  * @template {Record<string, string>} [FILES=Record<string, string>]
  * @typedef {object} ExampleOptions
- * @property {Function} loadES5 - The async function to load ES5 files.
  * @property {HTMLCanvasElement} canvas - The canvas.
  * @property {string} deviceType - The device type.
  * @property {Observer} data - The data.

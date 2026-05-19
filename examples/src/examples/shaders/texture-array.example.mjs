@@ -1,7 +1,6 @@
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 import groundGlslFrag from './ground.glsl.frag';
 import groundWgslFrag from './ground.wgsl.frag';

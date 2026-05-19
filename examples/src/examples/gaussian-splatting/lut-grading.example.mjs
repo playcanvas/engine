@@ -9,8 +9,7 @@
 import * as pc from 'playcanvas';
 
 import { FirstPersonController } from 'engine/scripts/esm/first-person-controller.mjs';
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 // Color LUTs in examples/assets/cube-luts/ (256×16 Unreal-style horizontal strip).
 // Rows: [key, label]. Textures are lut-{key}.png except key 'none'.

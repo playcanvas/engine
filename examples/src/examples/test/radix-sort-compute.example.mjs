@@ -3,8 +3,7 @@
 // @config HIDDEN
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 import vertWgsl from './vert.wgsl';
 import wgslFrag from './wgsl.frag';

@@ -4,8 +4,7 @@ import * as pc from 'playcanvas';
 import { GsplatRevealGridEruption } from 'engine/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 import { GsplatRevealRadial } from 'engine/scripts/esm/gsplat/reveal-radial.mjs';
 import { GsplatRevealRain } from 'engine/scripts/esm/gsplat/reveal-rain.mjs';
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

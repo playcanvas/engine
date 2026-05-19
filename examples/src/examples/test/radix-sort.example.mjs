@@ -3,8 +3,7 @@
 // @config WEBGPU_BARE_DISABLED
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 import sortedGlslFrag from './sorted.glsl.frag';
 import sortedWgslFrag from './sorted.wgsl.frag';

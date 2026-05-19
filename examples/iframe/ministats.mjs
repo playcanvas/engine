@@ -1,4 +1,4 @@
-import { getQueryParams } from 'examples/utils';
+import { getQueryParams } from './runtime.mjs';
 
 /** @import { AppBase, MiniStats as PcMiniStats } from 'playcanvas' */
 

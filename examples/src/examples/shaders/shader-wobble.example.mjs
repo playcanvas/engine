@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 import shaderGlslFrag from './shader.glsl.frag';
 import shaderGlslVert from './shader.glsl.vert';

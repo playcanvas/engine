@@ -1,8 +1,7 @@
 // @config DESCRIPTION Click on objects to detect world space intersection. Objects within the colored rectangles are highlighted.
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

@@ -1,13 +1,23 @@
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
 
-import { deviceType, loadES5 } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 import shaderFrag from './shader.frag';
 import shaderVert from './shader.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
+
+const loadES5 = async (url) => {
+    const res = await fetch(url);
+    const txt = await res.text();
+    const module = {
+        exports: {}
+    };
+    // eslint-disable-next-line no-new-func
+    return (Function('module', 'exports', txt).call(module, module, module.exports), module).exports;
+};
 
 const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
 const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');

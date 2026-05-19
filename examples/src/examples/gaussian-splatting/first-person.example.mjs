@@ -9,8 +9,7 @@
 import * as pc from 'playcanvas';
 
 import { FirstPersonController } from 'engine/scripts/esm/first-person-controller.mjs';
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

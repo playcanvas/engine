@@ -4,7 +4,7 @@
 // @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
+import { data } from 'examples/context';
 
 // Use custom createGraphicsDevice function to not automatically include fall backs
 /**

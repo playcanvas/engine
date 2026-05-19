@@ -1,8 +1,7 @@
 // @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Right Mouse Button - paint | Left Mouse Button - orbit </span><br>3D painting on gaussian splats using GSplatProcessor.
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 // Shader options for GSplatProcessor - paints splats inside brush sphere
 const shaderOptions = {

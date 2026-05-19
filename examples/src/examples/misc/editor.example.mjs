@@ -3,8 +3,7 @@ import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { Grid } from 'engine/scripts/esm/grid.mjs';
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 import { GizmoHandler } from './gizmo-handler.mjs';
 import { Selector } from './selector.mjs';

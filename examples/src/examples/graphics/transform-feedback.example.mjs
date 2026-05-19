@@ -1,7 +1,7 @@
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 import shaderCloudFrag from './shaderCloud.frag';
 import shaderCloudVert from './shaderCloud.vert';

@@ -4,8 +4,7 @@ import * as pc from 'playcanvas';
 import { Annotation, AnnotationManager } from 'engine/scripts/esm/annotations.mjs';
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { CameraFrame } from 'engine/scripts/esm/camera-frame.mjs';
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

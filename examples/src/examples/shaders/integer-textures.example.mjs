@@ -1,8 +1,7 @@
 // @config DESCRIPTION <ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 import renderOutputGlslFrag from './renderOutput.glsl.frag';
 import renderOutputWgslFrag from './renderOutput.wgsl.frag';

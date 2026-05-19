@@ -2,7 +2,7 @@
 // @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 import computeShaderWgsl from './compute-shader.wgsl';
 

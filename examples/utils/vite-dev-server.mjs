@@ -80,14 +80,15 @@ const ROOT_FILES = {
     '/playcanvas.d.ts': '../build/playcanvas.d.ts'
 };
 const IFRAME_FILES = {
+    '/iframe/context.mjs': 'iframe/context.mjs',
     '/iframe/files.mjs': 'iframe/files.mjs',
     '/iframe/loader.mjs': 'iframe/loader.mjs',
     '/iframe/main.css': 'iframe/main.css',
     '/iframe/ministats.mjs': 'iframe/ministats.mjs',
-    '/iframe/observer.mjs': 'iframe/observer.mjs',
     '/iframe/polyfill.js': 'iframe/polyfill.js',
-    '/iframe/utils.mjs': 'iframe/utils.mjs',
     '/iframe/playcanvas-observer.mjs': 'node_modules/@playcanvas/observer/dist/index.mjs',
+    '/iframe/runtime.mjs': 'iframe/runtime.mjs',
+    '/iframe/state.mjs': 'iframe/state.mjs',
     '/iframe/playcanvas.d.ts': '../build/playcanvas.d.ts'
 };
 

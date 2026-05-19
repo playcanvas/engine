@@ -2,7 +2,7 @@
 // @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene using legacy (non-unified) mode.
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

@@ -1,6 +1,5 @@
 import files from './files.mjs';
 
-const params = getQueryParams(window.location.href);
 const MODULE_EXTENSION = /\.mjs$/;
 const TEXT_EXTENSION = /\.(?:frag|vert|wgsl|glsl|html|css|txt)$/;
 const JSON_EXTENSION = /\.json$/;
@@ -27,23 +26,6 @@ export function getQueryParams(url) {
 export async function fetchFile(url) {
     const res = await fetch(url);
     return res.text();
-}
-
-/**
- * @param {string} url - The URL to ES5 file.
- * @returns {Promise<Object>} - The module exports.
- *
- * @example
- * const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
- * const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
- */
-export async function loadES5(url) {
-    const txt = await fetchFile(url);
-    const module = {
-        exports: {}
-    };
-    // eslint-disable-next-line no-new-func
-    return (Function('module', 'exports', txt).call(module, module, module.exports), module).exports;
 }
 
 /**
@@ -235,43 +217,6 @@ export function parseConfig(script) {
         config[key] = /true|false/.test(val) ? val === 'true' : val ?? true;
     }
     return config;
-}
-
-const DEVICE_TYPES = ['webgpu', 'webgpu:bare', 'webgl2', 'null'];
-const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
-export let deviceType = 'webgl2';
-
-/**
- * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; }} config - The configuration object.
- */
-export function updateDeviceType(config) {
-    const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
-    deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
-
-    if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
-        console.warn('Overriding default device: ', params.deviceType);
-        deviceType = params.deviceType;
-        return;
-    }
-
-    if (config.WEBGL_DISABLED && config.WEBGPU_DISABLED) {
-        console.warn('Both WebGL 2.0 and WebGPU are disabled. Using Null device instead.');
-        deviceType = 'null';
-        return;
-    }
-    if (config.WEBGPU_DISABLED && isWebGPU(deviceType)) {
-        console.warn('WebGPU is disabled. Using WebGL 2.0 device instead.');
-        deviceType = 'webgl2';
-        return;
-    }
-    if (config.WEBGL_DISABLED && !isWebGPU(deviceType)) {
-        console.warn('WebGL 2.0 is disabled. Using WebGPU device instead.');
-        deviceType = 'webgpu';
-    }
-    if (config.WEBGPU_BARE_DISABLED && deviceType === 'webgpu:bare') {
-        console.warn('WebGPU Bare is disabled for this example. Using WebGPU instead.');
-        deviceType = 'webgpu';
-    }
 }
 
 /**

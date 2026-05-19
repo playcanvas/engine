@@ -1,8 +1,7 @@
 // @config DESCRIPTION <div style='color: white;'>This example demonstrates scrolling cloud shadows using a shader chunk override on StandardMaterial.</div>
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 import * as shaderChunksGlsl from './shader-chunks.glsl.mjs';
 import * as shaderChunksWgsl from './shader-chunks.wgsl.mjs';

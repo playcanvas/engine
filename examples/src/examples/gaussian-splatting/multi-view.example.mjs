@@ -1,8 +1,7 @@
 // @config DESCRIPTION Renders Gaussian Splats from multiple camera viewports simultaneously with different projection types.
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

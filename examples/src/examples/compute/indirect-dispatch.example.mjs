@@ -2,8 +2,7 @@
 // @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 import effectShaderWgsl from './effect-shader.wgsl';
 import scanShaderWgsl from './scan-shader.wgsl';

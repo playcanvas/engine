@@ -1,7 +1,6 @@
 {
     "name": "examples",
     "exports": {
-        "./observer": "./observer.mjs",
-        "./utils": "./utils.mjs"
+        "./context": "./context.mjs"
     }
 }

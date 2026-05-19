@@ -2,8 +2,7 @@ import * as pc from 'playcanvas';
 
 import { BlurredPlanarReflection } from 'engine/scripts/esm/blurred-planar-reflection.mjs';
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

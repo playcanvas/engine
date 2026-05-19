@@ -13,7 +13,7 @@
 import * as pc from 'playcanvas';
 
 import { BlurredPlanarReflection } from 'engine/scripts/esm/blurred-planar-reflection.mjs';
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.

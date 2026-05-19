@@ -1,7 +1,7 @@
 // @config DESCRIPTION This example demonstrates anisotropy strength. Visually, the model showcases the effect of anisotropic highlights based on material properties.
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

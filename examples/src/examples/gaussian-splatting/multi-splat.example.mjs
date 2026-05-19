@@ -1,8 +1,7 @@
 // @config DESCRIPTION Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 import shaderGlslVert from './shader.glsl.vert';
 import shaderWgslVert from './shader.wgsl.vert';

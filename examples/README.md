@@ -191,20 +191,15 @@ import * as pc from 'playcanvas';
 ...
 ```
 
-You can load external scripts into an example using the `loadES5` function as follows:
+External ESM packages can be imported directly:
 
 ```js
-import { loadES5 } from 'examples/utils';
-
-const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
-const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
+import confetti from 'https://esm.sh/canvas-confetti@1.6.0';
 ```
 
-However, depending on external URL's is maybe not what you want as it breaks your examples once your internet connection is gone - you can simply import modules directly as follows:
+However, depending on external URLs is maybe not what you want as it breaks your examples once your internet connection is gone. Where possible, add shared files to the examples tree and import them directly.
 
-```js
-import confetti from "https://esm.sh/canvas-confetti@1.6.0"
-```
+Legacy non-module scripts should define any loading helper they need inside the example.
 
 ### `<exampleName>.controls.mjs`
 
@@ -230,10 +225,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 
 The controls function takes a [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/) as its parameter and returns a set of PCUI components. Check this [link](https://playcanvas.github.io/pcui/examples/todo/) for an example of how to create and use PCUI.
 
-The data observer used in the `controls` function will be made available as an import `examples/observer` to use in the example file:
+The data observer used in the `controls` function will be made available as an import from `examples/context` to use in the example file:
 
 ```js
-import { data } from 'examples/observer';
+import { data } from 'examples/context';
 
 console.log(data.get('flash'));
 ```
@@ -265,10 +260,9 @@ By default, `npm run dev` and `npm run develop` serve the engine from `../src/in
 
 ## Example Modules
 
-The example script allows you to import examples only modules that interact with the environment such as the device selector and controls. These are listed below:
+The example script allows you to import examples-only modules that interact with the environment such as the device selector and controls. These are listed below:
 
-- `examples/observer` - The observer object `data`.
-- `examples/utils` - Contains utility functions such as `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
+- `examples/context` - The observer object `data` and selected graphics `deviceType`.
 - `examples/assets/*` - Shared example modules. Use `./assets/...` when a runtime asset URL string is needed.
 - `engine/scripts/*` - Shared engine script modules. Use `./scripts/...` when a runtime script URL string is needed.
 

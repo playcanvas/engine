@@ -1,7 +1,7 @@
 // @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
 
-import { deviceType } from 'examples/utils';
+import { deviceType } from 'examples/context';
 
 import shaderRenderingFragmentWgsl from './shader-rendering.fragment.wgsl';
 import shaderRenderingVertexWgsl from './shader-rendering.vertex.wgsl';

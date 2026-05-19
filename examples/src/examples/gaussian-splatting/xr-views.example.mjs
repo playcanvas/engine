@@ -2,8 +2,7 @@
 // @config DESCRIPTION Simulates stereo XR rendering of Gaussian Splats with two side-by-side viewports for left and right eyes.
 import * as pc from 'playcanvas';
 
-import { data } from 'examples/observer';
-import { deviceType } from 'examples/utils';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
