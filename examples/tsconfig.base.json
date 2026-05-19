@@ -8,7 +8,7 @@
         "noEmit": true,
         "paths": {
             "examples/context": ["./iframe/context.mjs"],
-            "engine/scripts/*": ["../scripts/*"],
+            "playcanvas/scripts/*": ["../scripts/*"],
             "examples/assets/*": ["./assets/*"]
         },
         "skipLibCheck": true,

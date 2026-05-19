@@ -7,8 +7,8 @@
 // </div>
 
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
-import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { data, deviceType } from 'examples/context';
 
 const tmpVa = new pc.Vec2();

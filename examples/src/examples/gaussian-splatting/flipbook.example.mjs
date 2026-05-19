@@ -6,9 +6,9 @@
 // @flag NO_MINISTATS
 
 import * as pc from 'playcanvas';
+import { GsplatFlipbook } from 'playcanvas/scripts/esm/gsplat/gsplat-flipbook.mjs';
+import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
-import { GsplatFlipbook } from 'engine/scripts/esm/gsplat/gsplat-flipbook.mjs';
-import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));

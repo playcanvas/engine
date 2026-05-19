@@ -14,8 +14,8 @@
 //   License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
+import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
 
-import { FirstPersonController } from 'engine/scripts/esm/first-person-controller.mjs';
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));

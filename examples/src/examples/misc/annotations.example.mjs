@@ -1,8 +1,8 @@
 import * as pc from 'playcanvas';
+import { Annotation, AnnotationManager } from 'playcanvas/scripts/esm/annotations.mjs';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
-import { Annotation, AnnotationManager } from 'engine/scripts/esm/annotations.mjs';
-import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
-import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));

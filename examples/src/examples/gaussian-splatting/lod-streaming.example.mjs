@@ -5,9 +5,9 @@
 // @flag NO_MINISTATS
 
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
-import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
-import { GsplatRevealRadial } from 'engine/scripts/esm/gsplat/reveal-radial.mjs';
 import { data, deviceType } from 'examples/context';
 
 // allow overriding scene url and orientation via hash query params, e.g.

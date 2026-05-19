@@ -4,9 +4,9 @@
 // clouds to splat representation.
 
 import * as pc from 'playcanvas';
+import { GsplatMesh } from 'playcanvas/scripts/esm/gsplat/gsplat-mesh.mjs';
+import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
-import { GsplatMesh } from 'engine/scripts/esm/gsplat/gsplat-mesh.mjs';
-import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-box.mjs';
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));

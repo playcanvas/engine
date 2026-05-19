@@ -8,9 +8,9 @@
 // </div>
 
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
 
-import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
-import { Grid } from 'engine/scripts/esm/grid.mjs';
 import { data, deviceType } from 'examples/context';
 
 import { GizmoHandler } from './gizmo-handler.mjs';

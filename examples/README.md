@@ -271,7 +271,7 @@ The example script allows you to import examples-only modules that interact with
 
 - `examples/context` - The observer object `data` and selected graphics `deviceType`.
 - `examples/assets/*` - Shared example modules. Use `./assets/...` when a runtime asset URL string is needed.
-- `engine/scripts/*` - Shared engine script modules. Use `./scripts/...` when a runtime script URL string is needed.
+- `playcanvas/scripts/*` - Shared engine script modules. Use `./scripts/...` when a runtime script URL string is needed.
 
 ## Deployment
 

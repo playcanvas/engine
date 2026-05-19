@@ -3,12 +3,12 @@
 // Procedural shapes rendered using gaussian splats. Demonstrates lines, text and image-based splats.
 
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatImage } from 'playcanvas/scripts/esm/gsplat/gsplat-image.mjs';
+import { GsplatLines } from 'playcanvas/scripts/esm/gsplat/gsplat-lines.mjs';
+import { GsplatText } from 'playcanvas/scripts/esm/gsplat/gsplat-text.mjs';
+import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
-import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
-import { GsplatImage } from 'engine/scripts/esm/gsplat/gsplat-image.mjs';
-import { GsplatLines } from 'engine/scripts/esm/gsplat/gsplat-lines.mjs';
-import { GsplatText } from 'engine/scripts/esm/gsplat/gsplat-text.mjs';
-import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-box.mjs';
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));

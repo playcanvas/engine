@@ -5,12 +5,17 @@ const importOrder = ['error', {
     groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'unknown'],
     pathGroups: [
         {
-            pattern: '{engine,examples}/**/!(*[?]url)',
+            pattern: 'playcanvas{,/scripts/**/!(*[?]url)}',
             group: 'external',
             position: 'after'
         },
         {
-            pattern: '{examples/assets,engine/scripts}/**/*[?]url',
+            pattern: 'examples/**/!(*[?]url)',
+            group: 'external',
+            position: 'after'
+        },
+        {
+            pattern: '{examples/assets,playcanvas/scripts}/**/*[?]url',
             group: 'external',
             position: 'after'
         },

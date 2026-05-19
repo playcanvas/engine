@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
+import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
-import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));

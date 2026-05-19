@@ -2,8 +2,8 @@
 // @flag HIDDEN
 
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
-import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
 import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));

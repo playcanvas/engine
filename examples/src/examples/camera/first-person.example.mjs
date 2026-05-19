@@ -7,8 +7,8 @@
 // </div>
 
 import * as pc from 'playcanvas';
+import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
 
-import { FirstPersonController } from 'engine/scripts/esm/first-person-controller.mjs';
 import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));

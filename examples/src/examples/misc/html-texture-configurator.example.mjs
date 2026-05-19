@@ -20,8 +20,8 @@
 // Click handling works identically in both modes via standard DOM events.
 //
 import * as pc from 'playcanvas';
+import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
 
-import { BlurredPlanarReflection } from 'engine/scripts/esm/blurred-planar-reflection.mjs';
 import { deviceType } from 'examples/context';
 
 // ---------------------------------------------------------------------------

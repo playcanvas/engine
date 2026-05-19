@@ -1,10 +1,10 @@
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { XrControllers } from 'playcanvas/scripts/esm/xr-controllers.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
 
-import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';
-import { XrControllers } from 'engine/scripts/esm/xr-controllers.mjs';
-import { XrMenu } from 'engine/scripts/esm/xr-menu.mjs';
-import { XrNavigation } from 'engine/scripts/esm/xr-navigation.mjs';
-import { XrSession } from 'engine/scripts/esm/xr-session.mjs';
 import { deviceType } from 'examples/context';
 
 import uiCss from './ui.css';
