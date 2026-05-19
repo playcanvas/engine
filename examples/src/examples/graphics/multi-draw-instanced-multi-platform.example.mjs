@@ -1,14 +1,14 @@
-import * as pc from 'playcanvas';
-
-import { deviceType } from 'examples/context';
-
-import transformInstancingVert from './transform-instancing.vert';
-
 // @config
 //
 // Multi-draw instanced rendering of multiple primitives in one call. WebGL2 lacks support for
 // firstInstance for sub-draws, so instance data lives in a data texture and is fetched in the vertex
 // shader via base[gl_DrawID] + gl_InstanceID — portable and fast workaround.
+
+import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import transformInstancingVert from './transform-instancing.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
