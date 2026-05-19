@@ -33,7 +33,7 @@ export default defineConfig({
         hmr: AUTO_RELOAD ? undefined : false,
         host: HOST,
         port: PORT,
-        // cloudflared quick tunnels (AVP / headset testing over HTTPS)
+        // cloudflared quick tunnels (device testing over HTTPS)
         allowedHosts: ['.trycloudflare.com'],
         fs: {
             allow: [
