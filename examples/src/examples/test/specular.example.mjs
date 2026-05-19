@@ -1,5 +1,11 @@
-// @config DESCRIPTION This example loads the Khronos SpecularTest grid to visually verify the glTF KHR_materials_specular extension. Rows 1/2, 3/4 and 5/6 should each look identical (factor-only vs. texture-only with matching factor), and the last sphere on row 7 should look like a mirror ball.
-// @config HIDDEN
+// @config
+//
+// This example loads the Khronos SpecularTest grid to visually verify the glTF KHR_materials_specular
+// extension. Rows 1/2, 3/4 and 5/6 should each look identical (factor-only vs. texture-only with
+// matching factor), and the last sphere on row 7 should look like a mirror ball.
+//
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

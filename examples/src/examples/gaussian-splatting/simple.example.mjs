@@ -1,4 +1,7 @@
-// @config DESCRIPTION Basic example showing a simple Gaussian Splat with orbit camera controls.
+// @config
+//
+// Basic example showing a simple Gaussian Splat with orbit camera controls.
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

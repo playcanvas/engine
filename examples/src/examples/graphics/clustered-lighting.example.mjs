@@ -1,4 +1,6 @@
-// @config ENGINE performance
+// @config
+// @flag ENGINE=performance
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

@@ -34,6 +34,39 @@ export async function fetchFile(url) {
 const blobUrls = [];
 const moduleUrls = new Map();
 const moduleUrlTasks = new Map();
+const configRegex = /^[ \t]*\/\/ @config[ \t]*(?:\r?\n[ \t]*\/\/[^\r\n]*)*(?:\r?\n|$)/gm;
+
+const parseValue = (val) => {
+    return val === undefined || val === 'true' ? true : val === 'false' ? false : val;
+};
+
+const splitFlag = (line) => {
+    const eq = line.indexOf('=');
+    return eq === -1 ? [line, undefined] : [line.slice(0, eq), line.slice(eq + 1).trim()];
+};
+
+const parseExampleConfig = (block, config) => {
+    const description = [];
+    const lines = block.split(/\r?\n/).slice(1);
+    for (let i = 0; i < lines.length; i++) {
+        const match = /^[ \t]*\/\/ ?(.*)$/.exec(lines[i]);
+        if (!match) {
+            continue;
+        }
+        const text = match[1];
+        const line = text.trim();
+        if (line.startsWith('@flag ')) {
+            const [name, val] = splitFlag(line.slice(6).trim());
+            config[name.trim()] = parseValue(val);
+        } else {
+            description.push(text);
+        }
+    }
+    const html = description.join('\n').trim();
+    if (html) {
+        config.DESCRIPTION = html;
+    }
+};
 
 /**
  * @param {string} name - The module name.
@@ -207,14 +240,11 @@ export function clearImports() {
  * @returns {Record<string, any>} - The parsed config.
  */
 export function parseConfig(script) {
-    const regex = /\/\/ @config (\S+)(?:[ \t]+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
-    while ((match = regex.exec(script)) !== null) {
-        const key = match[1].trim();
-        const val = match[2]?.trim();
-        config[key] = /true|false/.test(val) ? val === 'true' : val ?? true;
+    while ((match = configRegex.exec(script)) !== null) {
+        parseExampleConfig(match[0], config);
     }
     return config;
 }

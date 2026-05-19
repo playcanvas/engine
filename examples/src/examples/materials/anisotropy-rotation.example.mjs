@@ -1,4 +1,8 @@
-// @config DESCRIPTION This example demonstrates anisotropy rotation. Visually, the model showcases the effects of anisotropic highlights as the light interacts with the surface.
+// @config
+//
+// This example demonstrates anisotropy rotation. Visually, the model showcases the effects of
+// anisotropic highlights as the light interacts with the surface.
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

@@ -1,4 +1,8 @@
-// @config DESCRIPTION This example demonstrates how a custom shader can be used to render instanced geometry, but also skinned, morphed and static geometry. A simple Gooch shading shader is used.
+// @config
+//
+// This example demonstrates how a custom shader can be used to render instanced geometry, but also
+// skinned, morphed and static geometry. A simple Gooch shading shader is used.
+
 import * as pc from 'playcanvas';
 
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';

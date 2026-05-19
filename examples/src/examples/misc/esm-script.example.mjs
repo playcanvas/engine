@@ -1,4 +1,6 @@
-// @config HIDDEN
+// @config
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';

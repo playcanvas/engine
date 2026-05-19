@@ -1,5 +1,9 @@
-// @config HIDDEN
-// @config DESCRIPTION Demonstrates shadow catching with Gaussian Splats.
+// @config
+//
+// Demonstrates shadow catching with Gaussian Splats.
+//
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { ShadowCatcher } from 'engine/scripts/esm/shadow-catcher.mjs';

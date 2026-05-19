@@ -1,4 +1,7 @@
-// @config DESCRIPTION Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
+// @config
+//
+// Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

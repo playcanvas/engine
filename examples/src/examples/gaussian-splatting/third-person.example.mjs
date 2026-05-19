@@ -1,4 +1,14 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Shift</b>) Sprint</div><div>(<b>Space</b>) Jump</div><div>(<b>Q</b>) Dance</div><div>(<b>Mouse</b>) Orbit camera</div><div>(<b>Wheel</b>) Zoom</div></div>
+// @config
+//
+// <div style='text-align:center'>
+//     <div>(<b>WASD</b>) Move</div>
+//     <div>(<b>Shift</b>) Sprint</div>
+//     <div>(<b>Space</b>) Jump</div>
+//     <div>(<b>Q</b>) Dance</div>
+//     <div>(<b>Mouse</b>) Orbit camera</div>
+//     <div>(<b>Wheel</b>) Zoom</div>
+// </div>
+
 //
 // Scene attribution:
 //   Title:   Sunnyvale Heritage Park Museum

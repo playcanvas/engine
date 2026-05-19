@@ -1,4 +1,7 @@
-// @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene.
+// @config
+//
+// This example shows how to use the Picker to pick GSplat objects in the scene.
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

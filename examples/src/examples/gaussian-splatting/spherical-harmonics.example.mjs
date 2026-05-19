@@ -1,4 +1,7 @@
-// @config DESCRIPTION Shows view-dependent color effects using spherical harmonics with Gaussian Splats.
+// @config
+//
+// Shows view-dependent color effects using spherical harmonics with Gaussian Splats.
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

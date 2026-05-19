@@ -1,4 +1,6 @@
-// @config WEBGPU_DISABLED
+// @config
+// @flag WEBGPU_DISABLED
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

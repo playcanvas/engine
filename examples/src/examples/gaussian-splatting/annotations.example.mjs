@@ -1,4 +1,8 @@
-// @config DESCRIPTION Interactive 3D annotations on a gaussian splat model. Click hotspots to reveal product details with tooltips that follow the 3D positions.
+// @config
+//
+// Interactive 3D annotations on a gaussian splat model. Click hotspots to reveal product details with
+// tooltips that follow the 3D positions.
+
 import * as pc from 'playcanvas';
 
 import { Annotation, AnnotationManager } from 'engine/scripts/esm/annotations.mjs';

@@ -1,4 +1,7 @@
-// @config DESCRIPTION Shows a large world scene with LOD streaming and additional moving splats.
+// @config
+//
+// Shows a large world scene with LOD streaming and additional moving splats.
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

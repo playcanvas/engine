@@ -1,4 +1,9 @@
-// @config DESCRIPTION <div style='color: black;'>This example shows how to override shader chunks of StandardMaterial.</div>
+// @config
+//
+// <div style='color: black;'>
+//     This example shows how to override shader chunks of StandardMaterial.
+// </div>
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

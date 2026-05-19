@@ -1,6 +1,10 @@
-// @config DESCRIPTION Test example for ComputeRadixSort - GPU radix sort using 4-bit compute shaders
-// @config WEBGL_DISABLED
-// @config HIDDEN
+// @config
+//
+// Test example for ComputeRadixSort - GPU radix sort using 4-bit compute shaders
+//
+// @flag WEBGL_DISABLED
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

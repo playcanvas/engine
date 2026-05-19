@@ -1,4 +1,7 @@
-// @config DESCRIPTION This example demonstrates AABB-based cropping of gaussian splats with animated bounds.
+// @config
+//
+// This example demonstrates AABB-based cropping of gaussian splats with animated bounds.
+
 import * as pc from 'playcanvas';
 
 import { GsplatCropShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-crop.mjs';

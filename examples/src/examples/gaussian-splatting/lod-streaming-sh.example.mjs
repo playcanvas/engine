@@ -1,4 +1,7 @@
-// @config DESCRIPTION Demonstrates LOD streaming combined with spherical harmonics for view-dependent effects.
+// @config
+//
+// Demonstrates LOD streaming combined with spherical harmonics for view-dependent effects.
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

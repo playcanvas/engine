@@ -1,4 +1,7 @@
-// @config DESCRIPTION Procedural shapes rendered using gaussian splats. Demonstrates lines, text and image-based splats.
+// @config
+//
+// Procedural shapes rendered using gaussian splats. Demonstrates lines, text and image-based splats.
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

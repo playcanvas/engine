@@ -1,8 +1,12 @@
-// @config NO_MINISTATS
-// @config NO_DEVICE_SELECTOR
-// @config WEBGPU_DISABLED
-// @config WEBGL_DISABLED
-// @config DESCRIPTION Benchmarks GSplat rendering across WebGL2 and WebGPU with different renderer modes and splat counts.
+// @config
+//
+// Benchmarks GSplat rendering across WebGL2 and WebGPU with different renderer modes and splat counts.
+//
+// @flag NO_MINISTATS
+// @flag NO_DEVICE_SELECTOR
+// @flag WEBGPU_DISABLED
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
 
 const WARMUP_FRAMES = 10;

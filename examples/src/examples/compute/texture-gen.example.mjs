@@ -1,4 +1,6 @@
-// @config WEBGL_DISABLED
+// @config
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

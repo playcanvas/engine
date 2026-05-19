@@ -1,6 +1,10 @@
-// @config DESCRIPTION Test example for ComputeRadixSort.sortIndirect - validates indirect GPU radix sort
-// @config WEBGL_DISABLED
-// @config HIDDEN
+// @config
+//
+// Test example for ComputeRadixSort.sortIndirect - validates indirect GPU radix sort
+//
+// @flag WEBGL_DISABLED
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

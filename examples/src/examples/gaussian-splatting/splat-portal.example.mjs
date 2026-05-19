@@ -1,5 +1,10 @@
-// @config NO_MINISTATS
-// @config DESCRIPTION Two LOD-streamed Gaussian Splat scenes joined by a stencil-masked portal that swaps as you walk through it.
+// @config
+//
+// Two LOD-streamed Gaussian Splat scenes joined by a stencil-masked portal that swaps as you walk
+// through it.
+//
+// @flag NO_MINISTATS
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

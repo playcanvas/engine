@@ -1,5 +1,9 @@
-// @config NO_MINISTATS
-// @config DESCRIPTION Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
+// @config
+//
+// Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
+//
+// @flag NO_MINISTATS
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

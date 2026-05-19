@@ -1,4 +1,6 @@
-// @config HIDDEN
+// @config
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';

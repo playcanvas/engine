@@ -1,4 +1,8 @@
-// @config DESCRIPTION This example demonstrates anisotropy strength. Visually, the model showcases the effect of anisotropic highlights based on material properties.
+// @config
+//
+// This example demonstrates anisotropy strength. Visually, the model showcases the effect of
+// anisotropic highlights based on material properties.
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

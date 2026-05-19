@@ -1,4 +1,6 @@
-// @config HIDDEN true
+// @config
+// @flag HIDDEN
+
 // Temporary repro: TAA + transparent clear — RT alpha should stay 0 in empty regions when correct.
 // Dev sidebar: test / taa-alpha
 

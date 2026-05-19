@@ -180,13 +180,20 @@ The examples loader finds and destroys applications registered to canvases it ow
 Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `utils/example-source.mjs` file for the full list.
 
 ```js
-// @config DESCRIPTION This is a description
-// @config HIDDEN
-// @config ENGINE performance
-// @config NO_DEVICE_SELECTOR
-// @config NO_MINISTATS
-// @config WEBGPU_DISABLED
-// @config WEBGL_DISABLED
+// @config
+//
+// <div style='text-align:center'>
+//     <div>(<b>WASD</b>) Move</div>
+//     <div>(<b>Space</b>) Jump</div>
+//     <div>(<b>Mouse</b>) Look</div>
+// </div>
+//
+// @flag HIDDEN
+// @flag ENGINE=performance
+// @flag NO_DEVICE_SELECTOR
+// @flag NO_MINISTATS
+// @flag WEBGPU_DISABLED
+// @flag WEBGL_DISABLED
 import * as pc from 'playcanvas';
 ...
 ```

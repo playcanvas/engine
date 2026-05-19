@@ -1,5 +1,10 @@
-// @config DESCRIPTION This example shows a basic usage of indirect drawing, and the compute shader changes the number of instances that are rendered.
-// @config WEBGL_DISABLED
+// @config
+//
+// This example shows a basic usage of indirect drawing, and the compute shader changes the number of
+// instances that are rendered.
+//
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

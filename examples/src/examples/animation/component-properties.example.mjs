@@ -1,4 +1,8 @@
-// @config DESCRIPTION This example demonstrates how to use the Anim Component to animate the properties of other Components.
+// @config
+//
+// This example demonstrates how to use the Anim Component to animate the properties of other
+// Components.
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

@@ -1,4 +1,12 @@
-// @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse Button - orbit </span><br>GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
+// @config
+//
+// <span style="color:yellow">
+//     <b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse
+//     Button - orbit
+// </span>
+// <br>
+// GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

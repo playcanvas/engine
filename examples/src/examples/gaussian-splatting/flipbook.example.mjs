@@ -1,5 +1,10 @@
-// @config DESCRIPTION This example demonstrates gsplat flipbook animation using dynamically loaded splat sequence of ply files.
-// @config NO_MINISTATS
+// @config
+//
+// This example demonstrates gsplat flipbook animation using dynamically loaded splat sequence of ply
+// files.
+//
+// @flag NO_MINISTATS
+
 import * as pc from 'playcanvas';
 
 import { GsplatFlipbook } from 'engine/scripts/esm/gsplat/gsplat-flipbook.mjs';

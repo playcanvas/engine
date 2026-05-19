@@ -1,4 +1,6 @@
-// @config HIDDEN
+// @config
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

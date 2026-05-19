@@ -1,6 +1,10 @@
-// @config DESCRIPTION Test example for FramePassRadixSort - GPU radix sort using mipmap binary search
-// @config HIDDEN
-// @config WEBGPU_BARE_DISABLED
+// @config
+//
+// Test example for FramePassRadixSort - GPU radix sort using mipmap binary search
+//
+// @flag HIDDEN
+// @flag WEBGPU_BARE_DISABLED
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

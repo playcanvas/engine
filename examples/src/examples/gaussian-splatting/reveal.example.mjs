@@ -1,4 +1,7 @@
-// @config DESCRIPTION This example demonstrates reveal effects for gaussian splats.
+// @config
+//
+// This example demonstrates reveal effects for gaussian splats.
+
 import * as pc from 'playcanvas';
 
 import { GsplatRevealGridEruption } from 'engine/scripts/esm/gsplat/reveal-grid-eruption.mjs';

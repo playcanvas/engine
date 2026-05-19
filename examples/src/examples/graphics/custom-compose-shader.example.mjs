@@ -1,4 +1,9 @@
-// @config DESCRIPTION This example shows how to customize the final compose pass by injecting a simple pixelation post-effect. Useful if no additional render passes are needed. Changes are applied globally to all CameraFrames.
+// @config
+//
+// This example shows how to customize the final compose pass by injecting a simple pixelation
+// post-effect. Useful if no additional render passes are needed. Changes are applied globally to all
+// CameraFrames.
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

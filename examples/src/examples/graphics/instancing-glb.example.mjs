@@ -1,4 +1,8 @@
-// @config DESCRIPTION This example demonstrates the functionality of the EXT_mesh_gpu_instancing extension, which enables GPU instancing of meshes stored in a glTF file.
+// @config
+//
+// This example demonstrates the functionality of the EXT_mesh_gpu_instancing extension, which enables
+// GPU instancing of meshes stored in a glTF file.
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

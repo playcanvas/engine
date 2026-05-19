@@ -1,7 +1,9 @@
-// @config NO_MINISTATS
-// @config NO_DEVICE_SELECTOR
-// @config WEBGPU_DISABLED
-// @config WEBGL_DISABLED
+// @config
+// @flag NO_MINISTATS
+// @flag NO_DEVICE_SELECTOR
+// @flag WEBGPU_DISABLED
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
 
 import { data } from 'examples/context';

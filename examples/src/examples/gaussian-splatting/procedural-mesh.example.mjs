@@ -1,4 +1,8 @@
-// @config DESCRIPTION Procedural mesh converted to gaussian splats. Demonstrates converting a terrain scene with animated clouds to splat representation.
+// @config
+//
+// Procedural mesh converted to gaussian splats. Demonstrates converting a terrain scene with animated
+// clouds to splat representation.
+
 import * as pc from 'playcanvas';
 
 import { GsplatMesh } from 'engine/scripts/esm/gsplat/gsplat-mesh.mjs';

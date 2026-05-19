@@ -1,4 +1,7 @@
-// @config DESCRIPTION This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
+// @config
+//
+// This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

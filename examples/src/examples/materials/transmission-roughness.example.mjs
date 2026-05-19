@@ -1,4 +1,9 @@
-// @config DESCRIPTION This example demonstrates the interaction between roughness and IOR in transmissive materials. Higher IOR values cause more blurriness in transmission as roughness increases, while IOR=1.0 produces sharp transmission regardless of roughness.
+// @config
+//
+// This example demonstrates the interaction between roughness and IOR in transmissive materials.
+// Higher IOR values cause more blurriness in transmission as roughness increases, while IOR=1.0
+// produces sharp transmission regardless of roughness.
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

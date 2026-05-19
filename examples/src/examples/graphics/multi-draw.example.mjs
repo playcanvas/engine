@@ -1,4 +1,8 @@
-// @config DESCRIPTION Terrain rendering using a single draw call built from a grid of displaced planes. Each patch is a sub-draw and can be culled (hidden) dynamically.
+// @config
+//
+// Terrain rendering using a single draw call built from a grid of displaced planes. Each patch is a
+// sub-draw and can be culled (hidden) dynamically.
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

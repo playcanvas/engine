@@ -1,4 +1,8 @@
-// @config DESCRIPTION Demonstrates a grid of Gaussian Splat instances using the LOD system for stable performance, with a custom data stream storing IDs to colorize splats via a color lookup texture.
+// @config
+//
+// Demonstrates a grid of Gaussian Splat instances using the LOD system for stable performance, with a
+// custom data stream storing IDs to colorize splats via a color lookup texture.
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

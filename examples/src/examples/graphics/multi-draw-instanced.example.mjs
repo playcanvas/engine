@@ -1,5 +1,11 @@
-// @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in a single call. WebGPU-only: this rendering relies on per-draw baseInstance (or equivalent) which WebGL2 lacks (possible with shader workaround, not implemented here).
-// @config WEBGL_DISABLED
+// @config
+//
+// Multi-draw instanced rendering of multiple primitives in a single call. WebGPU-only: this rendering
+// relies on per-draw baseInstance (or equivalent) which WebGL2 lacks (possible with shader workaround,
+// not implemented here).
+//
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

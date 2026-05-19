@@ -1,5 +1,10 @@
-// @config HIDDEN
-// @config DESCRIPTION Simulates stereo XR rendering of Gaussian Splats with two side-by-side viewports for left and right eyes.
+// @config
+//
+// Simulates stereo XR rendering of Gaussian Splats with two side-by-side viewports for left and right
+// eyes.
+//
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

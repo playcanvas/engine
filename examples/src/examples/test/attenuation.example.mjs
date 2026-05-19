@@ -1,4 +1,6 @@
-// @config HIDDEN
+// @config
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

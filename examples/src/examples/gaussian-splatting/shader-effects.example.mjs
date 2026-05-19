@@ -1,4 +1,7 @@
-// @config DESCRIPTION This example demonstrates shader effects for gaussian splats.
+// @config
+//
+// This example demonstrates shader effects for gaussian splats.
+
 import * as pc from 'playcanvas';
 
 import { GsplatBoxShaderEffect } from 'engine/scripts/esm/gsplat/shader-effect-box.mjs';

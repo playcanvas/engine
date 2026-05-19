@@ -1,5 +1,7 @@
-// @config HIDDEN
-// @config WEBGPU_DISABLED
+// @config
+// @flag HIDDEN
+// @flag WEBGPU_DISABLED
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

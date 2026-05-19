@@ -1,4 +1,14 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move </div><div>(<b>Hold Shift</b>) Move Fast (<b>Hold Ctrl</b>) Move Slow</div><div>(<b>LMB / RMB </b>) Orbit / Fly</div><div>(<b>Hold Shift / MMB </b>) Pan</div><div>(<b>Wheel / Pinch</b>) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
+// @config
+//
+// <div style='text-align:center'>
+//     <div>(<b>WASDQE</b>) Move </div>
+//     <div>(<b>Hold Shift</b>) Move Fast (<b>Hold Ctrl</b>) Move Slow</div>
+//     <div>(<b>LMB / RMB </b>) Orbit / Fly</div>
+//     <div>(<b>Hold Shift / MMB </b>) Pan</div>
+//     <div>(<b>Wheel / Pinch</b>) Zoom</div>
+//     <div>(<b>F</b>) Focus (<b>R</b>) Reset</div>
+// </div>
+
 import * as pc from 'playcanvas';
 
 import { CameraControls } from 'engine/scripts/esm/camera-controls.mjs';

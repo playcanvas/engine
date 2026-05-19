@@ -1,6 +1,8 @@
-// @config ENGINE performance
-// @config NO_MINISTATS
-// @config WEBGPU_DISABLED
+// @config
+// @flag ENGINE=performance
+// @flag NO_MINISTATS
+// @flag WEBGPU_DISABLED
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

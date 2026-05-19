@@ -1,5 +1,9 @@
-// @config DESCRIPTION Test example for texture.read() - verifies read/write roundtrip for 8-bit texture formats
-// @config HIDDEN
+// @config
+//
+// Test example for texture.read() - verifies read/write roundtrip for 8-bit texture formats
+//
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

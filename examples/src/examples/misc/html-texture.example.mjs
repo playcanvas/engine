@@ -1,4 +1,12 @@
-// @config DESCRIPTION <div style="color:black">Renders live HTML content directly as a WebGL texture via the <b>HTML-in-Canvas</b> API (<code>texElementImage2D</code>).<br>Includes animated CSS gradients, text glow, and a pulsing circle — all driven by standard CSS.</div>
+// @config
+//
+// <div style="color:black">
+//     Renders live HTML content directly as a WebGL texture via the <b>HTML-in-Canvas</b> API
+//     (<code>texElementImage2D</code>).
+//     <br>
+//     Includes animated CSS gradients, text glow, and a pulsing circle — all driven by standard CSS.
+// </div>
+
 //
 // This example demonstrates the HTML-in-Canvas API: a styled HTML element with
 // CSS animations is appended to a canvas marked with the "layoutsubtree"

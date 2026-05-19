@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { isModuleWithExternalDependencies, parseConfig } from './example-source.mjs';
+import { isModuleWithExternalDependencies, parseConfig, stripConfig } from './example-source.mjs';
 
 /**
  * @import { ExampleConfig } from './example-source.mjs'
@@ -78,8 +78,6 @@ export const EXTERNAL_LOCAL = [
     'playcanvas'
 ];
 
-const CONFIG_COMMENT = /^[ \t]*\/\/ @config .*(?:\r?\n|$)/gm;
-
 /**
  * @returns {Promise<ExampleMetadata[]>} loaded metadata.
  */
@@ -129,9 +127,7 @@ export const copyTargets = (targets, parallel = true) => {
  * @returns {string} transformed source.
  */
 export const transformSource = (source) => {
-    return source
-    .replace(CONFIG_COMMENT, '')
-    .replace(/^(?:[ \t]*\r?\n)+/, '');
+    return stripConfig(source).replace(/^(?:[ \t]*\r?\n)+/, '');
 };
 
 /**

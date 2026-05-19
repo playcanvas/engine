@@ -1,4 +1,8 @@
-// @config DESCRIPTION Click on objects to detect world space intersection. Objects within the colored rectangles are highlighted.
+// @config
+//
+// Click on objects to detect world space intersection. Objects within the colored rectangles are
+// highlighted.
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

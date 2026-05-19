@@ -1,4 +1,11 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
+// @config
+//
+// <div style='text-align:center'>
+//     <div>(<b>WASD</b>) Move</div>
+//     <div>(<b>Space</b>) Jump</div>
+//     <div>(<b>Mouse</b>) Look</div>
+// </div>
+
 //
 // Scene attribution:
 //   Title:   Sunnyvale Heritage Park Museum
