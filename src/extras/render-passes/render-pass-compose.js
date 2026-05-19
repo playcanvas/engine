@@ -93,7 +93,16 @@ class RenderPassCompose extends RenderPassShaderQuad {
      */
     _colorLUT = null;
 
+    /**
+     * @type {Texture|null}
+     */
+    _colorLUT2 = null;
+
     colorLUTIntensity = 1;
+
+    colorLUT2Intensity = 1;
+
+    colorLUTBlend = 0;
 
     _key = '';
 
@@ -129,7 +138,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.sceneTextureInvResValue = new Float32Array(2);
         this.sharpnessId = scope.resolve('sharpness');
         this.colorLUTId = scope.resolve('colorLUT');
-        this.colorLUTParams = new Float32Array(4);
+        this.colorLUT2Id = scope.resolve('colorLUT2');
+        this.colorLUTParams = new Float32Array(3);
         this.colorLUTParamsId = scope.resolve('colorLUTParams');
         this.colorEnhanceParamsId = scope.resolve('colorEnhanceParams');
         this.colorEnhanceMidtonesId = scope.resolve('colorEnhanceMidtones');
@@ -150,25 +160,42 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._colorLUT !== value) {
             this._colorLUT = value;
             this._shaderDirty = true;
-
-            // Validate the LUT texture settings. Stripped in release builds.
-            Debug.call(() => {
-                if (value) {
-                    const required = [];
-                    if (!value.srgb) required.push('srgb: true');
-                    if (value.mipmaps) required.push('mipmaps: false');
-                    if (value.minFilter !== FILTER_LINEAR) required.push('minFilter: FILTER_LINEAR');
-                    if (value.magFilter !== FILTER_LINEAR) required.push('magFilter: FILTER_LINEAR');
-                    if (required.length) {
-                        Debug.warnOnce(`CameraFrame.colorLUT: texture '${value.name ?? ''}' should be configured with: ${required.join('; ')}.`, value);
-                    }
-                }
-            });
+            this._validateColorLUT(value, 'colorLUT');
         }
     }
 
     get colorLUT() {
         return this._colorLUT;
+    }
+
+    set colorLUT2(value) {
+        if (this._colorLUT2 !== value) {
+            this._colorLUT2 = value;
+            this._shaderDirty = true;
+            this._validateColorLUT(value, 'colorLUT2');
+        }
+    }
+
+    get colorLUT2() {
+        return this._colorLUT2;
+    }
+
+    // Validate that a LUT texture is configured as a 256x16 sRGB strip with no mipmaps and
+    // linear filtering. Stripped in release builds.
+    _validateColorLUT(value, slotName) {
+        Debug.call(() => {
+            if (value) {
+                const required = [];
+                if (value.width !== 256 || value.height !== 16) required.push('size: 256x16');
+                if (!value.srgb) required.push('srgb: true');
+                if (value.mipmaps) required.push('mipmaps: false');
+                if (value.minFilter !== FILTER_LINEAR) required.push('minFilter: FILTER_LINEAR');
+                if (value.magFilter !== FILTER_LINEAR) required.push('magFilter: FILTER_LINEAR');
+                if (required.length) {
+                    Debug.warnOnce(`CameraFrame.${slotName}: texture '${value.name ?? ''}' should be configured with: ${required.join('; ')}.`, value);
+                }
+            }
+        });
     }
 
     set bloomTexture(value) {
@@ -347,6 +374,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
                 `-${this.colorEnhanceEnabled ? 'colorenhance' : 'nocolorenhance'}` +
                 `-${this.colorLUT ? 'colorlut' : 'nocolorlut'}` +
+                `-${this.colorLUT2 ? 'colorlut2' : 'nocolorlut2'}` +
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
@@ -367,6 +395,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this.gradingEnabled) defines.set('GRADING', true);
                 if (this.colorEnhanceEnabled) defines.set('COLOR_ENHANCE', true);
                 if (this.colorLUT) defines.set('COLOR_LUT', true);
+                if (this.colorLUT && this.colorLUT2) defines.set('COLOR_LUT2', true);
                 if (this.vignetteEnabled) defines.set('VIGNETTE', true);
                 if (this.fringingEnabled) defines.set('FRINGING', true);
                 if (this.taaEnabled) defines.set('TAA', true);
@@ -421,12 +450,15 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         const lutTexture = this._colorLUT;
         if (lutTexture) {
-            this.colorLUTParams[0] = lutTexture.width;
-            this.colorLUTParams[1] = lutTexture.height;
-            this.colorLUTParams[2] = lutTexture.height - 1.0;
-            this.colorLUTParams[3] = this.colorLUTIntensity;
+            this.colorLUTParams[0] = this.colorLUTIntensity;
+            this.colorLUTParams[1] = this.colorLUT2Intensity;
+            this.colorLUTParams[2] = this.colorLUTBlend;
             this.colorLUTParamsId.setValue(this.colorLUTParams);
             this.colorLUTId.setValue(lutTexture);
+
+            if (this._colorLUT2) {
+                this.colorLUT2Id.setValue(this._colorLUT2);
+            }
         }
 
         if (this._vignetteEnabled) {
