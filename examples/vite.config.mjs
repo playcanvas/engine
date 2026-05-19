@@ -33,6 +33,8 @@ export default defineConfig({
         hmr: AUTO_RELOAD ? undefined : false,
         host: HOST,
         port: PORT,
+        // cloudflared quick tunnels (device testing over HTTPS)
+        allowedHosts: ['.trycloudflare.com'],
         fs: {
             allow: [
                 process.cwd(),
@@ -47,7 +49,8 @@ export default defineConfig({
     },
     preview: {
         host: HOST,
-        port: PORT
+        port: PORT,
+        allowedHosts: ['.trycloudflare.com']
     },
     define: {
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'development'),
