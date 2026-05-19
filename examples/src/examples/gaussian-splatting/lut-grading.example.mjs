@@ -6,9 +6,11 @@
 //   Source:  https://superspl.at/scene/d5d397aa
 //   License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { FirstPersonController } from 'engine/scripts/esm/first-person-controller.mjs';
+import { data } from 'examples/observer';
+import { deviceType } from 'examples/utils';
 
 // Color LUTs in examples/assets/cube-luts/ (256×16 Unreal-style horizontal strip).
 // Rows: [key, label]. Textures are lut-{key}.png except key 'none'.
@@ -40,22 +42,20 @@ data.set('lutSelectOptions', LUT_CATALOG.map(({ key, label }) => ({
     t: label
 })));
 
-const { FirstPersonController } = await fileImport(`${rootPath}/static/scripts/esm/first-person-controller.mjs`);
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 // the collision GLB uses Draco-compressed meshes, so the Draco decoder is required
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 await Promise.all([
@@ -122,7 +122,7 @@ const lutAssetOptions = {
     minfilter: 'linear'
 };
 
-const lutBaseUrl = `${rootPath}/static/assets/cube-luts`;
+const lutBaseUrl = './assets/cube-luts';
 
 /** @type {Record<string, pc.Asset>} */
 const lutAssets = {};
