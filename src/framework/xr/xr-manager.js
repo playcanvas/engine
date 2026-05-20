@@ -1,6 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
+import { warnInsecureContext } from '../../core/secure-context-warning.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
@@ -418,6 +419,7 @@ class XrManager extends EventHandler {
         }
 
         if (!this._available[type]) {
+            warnInsecureContext('WebXR');
             if (callback) callback(new Error('XR is not available'));
             return;
         }
