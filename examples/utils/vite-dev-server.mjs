@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -14,6 +15,7 @@ import {
     slash,
     transformSource
 } from './build-shared.mjs';
+import { createdLog, startLog } from './log.mjs';
 import { buildTypes } from '../../utils/types-build-target.mjs';
 
 /**
@@ -67,6 +69,8 @@ const ENGINE_PREFIX = '/iframe/ENGINE_PATH/';
 const IFRAME_PREFIX = '/iframe/';
 const TEXT = 'text/plain; charset=utf-8';
 const TYPES_DIR = '../build';
+const HASH_ALGORITHM = 'sha1';
+/** @type {StaticRoute[]} */
 const STATIC_ROUTES = [
     { url: '/static/assets/', root: 'assets' },
     { url: '/static/scripts/', root: '../scripts' },
@@ -124,20 +128,73 @@ const mime = (file) => {
 };
 
 /**
- * @param {HttpRequest} req - http request.
- * @returns {string} request pathname.
- */
-const pathname = (req) => {
-    return new URL(req.url ?? '/', 'http://localhost').pathname;
-};
-
-/**
  * @param {string} file - file path.
  * @param {string} root - root path.
  * @returns {boolean} true if file is inside root.
  */
 const isInside = (file, root) => {
     return file === root || file.startsWith(`${root}${path.sep}`);
+};
+
+/**
+ * @param {string} file - file path.
+ * @returns {Promise<string | null>} file hash.
+ */
+const hashFile = async (file) => {
+    const data = await fs.promises.readFile(file).then(value => value, () => null);
+    return data && createHash(HASH_ALGORITHM).update(data).digest('base64url');
+};
+
+/**
+ * @param {string} root - file or directory root.
+ * @returns {Promise<string[]>} file paths.
+ */
+const listFiles = async (root) => {
+    const abs = path.resolve(root);
+    const stat = await fs.promises.stat(abs).then(value => value, () => null);
+    if (!stat) {
+        return [];
+    }
+    if (stat.isFile()) {
+        return [abs];
+    }
+    if (!stat.isDirectory()) {
+        return [];
+    }
+
+    const entries = await fs.promises.readdir(abs, { withFileTypes: true }).then(value => value, () => []);
+    const files = await Promise.all(entries.map((entry) => {
+        const file = path.join(abs, entry.name);
+        if (entry.isDirectory()) {
+            return listFiles(file);
+        }
+        return entry.isFile() ? [file] : [];
+    }));
+    return files.flat();
+};
+
+/**
+ * @param {'add' | 'change' | 'unlink'} event - watcher event.
+ * @param {string} file - changed file.
+ * @param {Map<string, string>} hashes - file hashes.
+ * @returns {Promise<boolean>} true if content changed.
+ */
+const changed = async (event, file, hashes) => {
+    const abs = path.resolve(file);
+    if (event === 'unlink') {
+        hashes.delete(abs);
+        return true;
+    }
+
+    const hash = await hashFile(abs);
+    if (!hash) {
+        hashes.delete(abs);
+        return true;
+    }
+
+    const prev = hashes.get(abs);
+    hashes.set(abs, hash);
+    return event !== 'change' || prev !== hash;
 };
 
 /**
@@ -196,36 +253,6 @@ const notFound = (res) => {
 };
 
 /**
- * @param {string} url - request url.
- * @param {HttpResponse} res - http response.
- * @param {StaticRoute[]} routes - static routes.
- * @returns {Promise<boolean>} true if handled.
- */
-const serveRoutes = async (url, res, routes) => {
-    const route = routes.find(item => url.startsWith(item.url));
-    if (!route) {
-        return false;
-    }
-    const file = path.join(route.root, url.slice(route.url.length));
-    const found = await sendFile(res, file, route.root);
-    return found || notFound(res);
-};
-
-/**
- * @param {ViteServer} server - vite server.
- * @param {string} url - request url.
- * @returns {Promise<string>} transformed html.
- */
-const appHtml = async (server, url) => {
-    const html = await fs.promises.readFile('src/static/index.html', 'utf8');
-    const dev = html.replace(
-        /<script src="index\.js"><\/script>/,
-        '<script type="module" src="/src/app/index.mjs"></script>'
-    );
-    return server.transformIndexHtml(url, dev);
-};
-
-/**
  * @param {string} file - file path.
  * @returns {ExampleMetadata | null} matching example.
  */
@@ -250,26 +277,31 @@ const relative = file => slash(path.relative(process.cwd(), file));
 /**
  * @param {string} file - changed file.
  * @param {EnginePathInfo} engine - engine path info.
+ * @param {((kind: string, output: string) => void) | null} [logStart] - start log callback.
  * @returns {Promise<DevUpdate | null>} dev update.
  */
-const createUpdate = async (file, engine) => {
+const createUpdate = async (file, engine, logStart = null) => {
     const abs = path.resolve(file);
     const stamp = Date.now().toString(36);
     const item = exampleFromFile(abs);
     if (item) {
+        const example = `/${item.categoryKebab}/${item.exampleNameKebab}`;
+        logStart?.('example', example);
         return {
             kind: 'example',
             path: relative(abs),
-            example: `/${item.categoryKebab}/${item.exampleNameKebab}`,
+            example,
             stamp,
             config: await readExampleConfig(item),
             files: getFiles(item)
         };
     }
     if ((engine.unpacked && isInside(abs, engine.root)) || (!engine.unpacked && abs === engine.src)) {
+        const file = relative(abs);
+        logStart?.('engine', file);
         return {
             kind: 'engine',
-            path: relative(abs),
+            path: file,
             stamp
         };
     }
@@ -402,9 +434,14 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
         return false;
     }
 
-    const url = pathname(req);
+    const url = new URL(req.url ?? '/', 'http://localhost').pathname;
     if (url === '/' || url === '/index.html') {
-        sendText(res, await appHtml(server, req.url ?? '/'), 'text/html; charset=utf-8');
+        const html = await fs.promises.readFile('src/static/index.html', 'utf8');
+        const dev = html.replace(
+            /<script src="index\.js"><\/script>/,
+            '<script type="module" src="/src/app/index.mjs"></script>'
+        );
+        sendText(res, await server.transformIndexHtml(req.url ?? '/', dev), 'text/html; charset=utf-8');
         return true;
     }
 
@@ -416,8 +453,10 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
         const found = await sendFile(res, IFRAME_FILES[url]);
         return found || notFound(res);
     }
-    if (await serveRoutes(url, res, STATIC_ROUTES)) {
-        return true;
+    const route = STATIC_ROUTES.find(item => url.startsWith(item.url));
+    if (route) {
+        const found = await sendFile(res, path.join(route.root, url.slice(route.url.length)), route.root);
+        return found || notFound(res);
     }
     if (await serveEngine(url, res, engineInfo)) {
         return true;
@@ -470,48 +509,82 @@ export const examplesDevServer = ({ hmr = true } = {}) => {
                 path.resolve('assets'),
                 path.resolve('../scripts')
             ];
+            /** @type {Map<string, string>} */
+            const hashes = new Map();
 
             server.watcher.add(roots);
             const info = engineInfo ??= getEnginePathInfo(enginePath);
-            info.then((value) => {
-                server.watcher.add(value.unpacked ? value.root : value.src);
-            }, (err) => {
+            const engine = await info.then(value => value, (err) => {
                 server.config.logger.error(err.message);
+                return null;
             });
+            const seedRoots = [...roots];
+            if (engine) {
+                const root = engine.unpacked ? engine.root : engine.src;
+                server.watcher.add(root);
+                seedRoots.push(root);
+            }
+            const files = (await Promise.all(seedRoots.map(listFiles))).flat();
+            await Promise.all(files.map(async (file) => {
+                const hash = await hashFile(file);
+                if (hash) {
+                    hashes.set(file, hash);
+                }
+            }));
             types.run();
 
             /**
+             * @param {'add' | 'change' | 'unlink'} event - watcher event.
              * @param {string} file - changed file.
              * @returns {void} no return value.
              */
-            const update = (file) => {
-                const current = engineInfo ??= getEnginePathInfo(enginePath);
-                current.then((value) => {
-                    return createUpdate(file, value);
-                }).then((data) => {
-                    if (!data) {
-                        return;
+            const update = (event, file) => {
+                changed(event, file, hashes).then((dirty) => {
+                    if (!dirty) {
+                        return null;
                     }
-                    if (data.kind === 'engine') {
-                        engineStamp = data.stamp;
-                        types.schedule();
-                    }
-                    if (!hmr) {
-                        return;
-                    }
-                    server.ws.send({
-                        type: 'custom',
-                        event: UPDATE_EVENT,
-                        data
+
+                    let start = 0;
+                    const logStart = !hmr ? (kind, output) => {
+                        start = performance.now();
+                        startLog(kind, output);
+                    } : null;
+                    const current = engineInfo ??= getEnginePathInfo(enginePath);
+                    return current.then((value) => {
+                        return createUpdate(file, value, logStart);
+                    }).then((data) => {
+                        if (!data) {
+                            return;
+                        }
+                        if (data.kind === 'engine') {
+                            engineStamp = data.stamp;
+                            types.schedule();
+                        }
+                        if (!hmr) {
+                            switch (data.kind) {
+                                case 'example':
+                                    createdLog(data.example, performance.now() - start);
+                                    break;
+                                case 'engine':
+                                    createdLog(data.path, performance.now() - start);
+                                    break;
+                            }
+                            return;
+                        }
+                        server.ws.send({
+                            type: 'custom',
+                            event: UPDATE_EVENT,
+                            data
+                        });
                     });
                 }, (err) => {
                     server.config.logger.error(err.message);
                 });
             };
 
-            server.watcher.on('add', update);
-            server.watcher.on('change', update);
-            server.watcher.on('unlink', update);
+            server.watcher.on('add', file => update('add', file));
+            server.watcher.on('change', file => update('change', file));
+            server.watcher.on('unlink', file => update('unlink', file));
 
             server.middlewares.use((req, res, next) => {
                 const info = engineInfo ??= getEnginePathInfo(enginePath);
