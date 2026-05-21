@@ -1,10 +1,25 @@
-// @config WEBGPU_DISABLED
-import files from 'examples/files';
-import { deviceType, loadES5, rootPath } from 'examples/utils';
+// @config
+// @flag WEBGPU_DISABLED
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderFrag from './shader.frag';
+import shaderVert from './shader.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
+
+const loadES5 = async (url) => {
+    const res = await fetch(url);
+    const txt = await res.text();
+    const module = {
+        exports: {}
+    };
+    // eslint-disable-next-line no-new-func
+    return (Function('module', 'exports', txt).call(module, module, module.exports), module).exports;
+};
 
 const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
 const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
@@ -13,14 +28,13 @@ const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.
 // Note that many additional formats are supported by the library and can be used.
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 /** @type {pc.GraphicsDevice} */
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -71,8 +85,8 @@ async function loadModel(url) {
     // create material using the shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag'],
+        vertexGLSL: shaderVert,
+        fragmentGLSL: shaderFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aColor: pc.SEMANTIC_COLOR
@@ -100,7 +114,7 @@ camera.translate(-20, 15, 20);
 camera.lookAt(0, 7, 0);
 app.root.addChild(camera);
 // Load the draco model, don't wait for it.
-loadModel(`${rootPath}/static/assets/models/park_points.drc`);
+loadModel('./assets/models/park_points.drc');
 // update things each frame
 let time = 0;
 app.on('update', (dt) => {
@@ -111,5 +125,3 @@ app.on('update', (dt) => {
         camera.lookAt(pc.Vec3.ZERO);
     }
 });
-
-export { app };

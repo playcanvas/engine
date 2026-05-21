@@ -19,10 +19,11 @@ import { getOrientation } from '../utils.mjs';
  * @import { LoadingEvent, StateEvent } from '../events.js'
  */
 
+const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
+
 /**
  * @template {Record<string, string>} [FILES=Record<string, string>]
  * @typedef {object} ExampleOptions
- * @property {Function} loadES5 - The async function to load ES5 files.
  * @property {HTMLCanvasElement} canvas - The canvas.
  * @property {string} deviceType - The device type.
  * @property {Observer} data - The data.
@@ -96,7 +97,8 @@ class Example extends TypedComponent {
      * @returns {Promise<Control>} - The controls jsx object.
      */
     async _buildControls(src) {
-        const blob = new Blob([src], { type: 'text/javascript' });
+        const runtime = src.replace(PC_IMPORT, 'const pc = window.pc;\n');
+        const blob = new Blob([runtime], { type: 'text/javascript' });
         if (this._controlsUrl) {
             URL.revokeObjectURL(this._controlsUrl);
         }

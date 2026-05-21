@@ -1,16 +1,18 @@
-// @config HIDDEN
-// @config WEBGPU_DISABLED
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag HIDDEN
+// @flag WEBGPU_DISABLED
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 await new Promise((resolve) => {
@@ -18,16 +20,16 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
-    luts: new pc.Asset('luts', 'json', { url: `${rootPath}/static/assets/json/area-light-luts.json` }),
-    asset: new pc.Asset('asset', 'container', { url: `${rootPath}/static/assets/models/robot-arm.glb` })
+    cube: new pc.Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
+    luts: new pc.Asset('luts', 'json', { url: './assets/json/area-light-luts.json' }),
+    asset: new pc.Asset('asset', 'container', { url: './assets/models/robot-arm.glb' })
 };
 
 const gfxOptions = {
@@ -356,5 +358,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

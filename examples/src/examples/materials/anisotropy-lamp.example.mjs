@@ -1,19 +1,24 @@
-// @config DESCRIPTION This example demonstrates anisotropy effects on the lamp model. The anisotropic highlights on the lamp's surface showcase the material's directional properties.
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example demonstrates anisotropy effects on the lamp model. The anisotropic highlights on the
+// lamp's surface showcase the material's directional properties.
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/AnisotropyBarnLamp.glb` })
+    model: new pc.Asset('model', 'container', { url: './assets/models/AnisotropyBarnLamp.glb' })
 };
 
 const gfxOptions = {
@@ -91,5 +96,3 @@ assetListLoader.load(() => {
     camera.script.orbitCamera.distance = 0.3;
     camera.camera.requestSceneColorMap(true);
 });
-
-export { app };

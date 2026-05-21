@@ -15,19 +15,19 @@ npm install
 ```
 Now run the following command:
 ```
-npm run develop
+npm run dev
 ```
 Visit the url mentioned in your terminal to view the examples browser.
 
-To disable automatic browser and example reloads:
+To run without automatic browser and example reloads:
 ```
-npm run develop:no-reload
+npm run develop
 ```
 
 You can also run the examples browser with a specific version of the engine by running the following command:
 
 ```
-ENGINE_PATH=../build/playcanvas.mjs npm run develop
+ENGINE_PATH=../build/playcanvas.mjs npm run dev
 ```
 
 Where `../build/playcanvas.mjs` is the path to the ESM version of the engine.
@@ -35,7 +35,7 @@ Where `../build/playcanvas.mjs` is the path to the ESM version of the engine.
 Or directly from the source:
 
 ```
-ENGINE_PATH=../src/index.js npm run develop
+ENGINE_PATH=../src/index.js npm run dev
 ```
 
 ## HTTPS dev for mobile / XR device testing
@@ -172,40 +172,41 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const app = new pc.Application(canvas, {});
-
-export { app };
 ```
 
 This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
+The examples loader finds and destroys applications registered to canvases it owns, so the `app` does not need to be exported. Export a `destroy` function only when the example creates non-app resources such as timers, DOM overlays, or animation frames that need cleanup.
 
 Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `utils/example-source.mjs` file for the full list.
 
 ```js
-// @config DESCRIPTION This is a description
-// @config HIDDEN
-// @config ENGINE performance
-// @config NO_DEVICE_SELECTOR
-// @config NO_MINISTATS
-// @config WEBGPU_DISABLED
-// @config WEBGL_DISABLED
+// @config
+//
+// <div style='text-align:center'>
+//     <div>(<b>WASD</b>) Move</div>
+//     <div>(<b>Space</b>) Jump</div>
+//     <div>(<b>Mouse</b>) Look</div>
+// </div>
+//
+// @flag HIDDEN
+// @flag ENGINE=performance
+// @flag NO_DEVICE_SELECTOR
+// @flag NO_MINISTATS
+// @flag WEBGPU_DISABLED
+// @flag WEBGL_DISABLED
 import * as pc from 'playcanvas';
 ...
 ```
 
-You can load external scripts into an example using the `loadES5` function as follows:
+External ESM packages can be imported directly:
 
 ```js
-import { loadES5 } from 'examples/utils';
-
-const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
-const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
+import confetti from 'https://esm.sh/canvas-confetti@1.6.0';
 ```
 
-However, depending on external URL's is maybe not what you want as it breaks your examples once your internet connection is gone - you can simply import modules directly as follows:
+However, depending on external URLs is maybe not what you want as it breaks your examples once your internet connection is gone. Where possible, add shared files to the examples tree and import them directly.
 
-```js
-import confetti from "https://esm.sh/canvas-confetti@1.6.0"
-```
+Legacy non-module scripts should define any loading helper they need inside the example.
 
 ### `<exampleName>.controls.mjs`
 
@@ -231,43 +232,46 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 
 The controls function takes a [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/) as its parameter and returns a set of PCUI components. Check this [link](https://playcanvas.github.io/pcui/examples/todo/) for an example of how to create and use PCUI.
 
-The data observer used in the `controls` function will be made available as an import `examples/observer` to use in the example file:
+The data observer used in the `controls` function will be made available as an import from `examples/context` to use in the example file:
 
 ```js
-import { data } from 'examples/observer';
+import { data } from 'examples/context';
 
 console.log(data.get('flash'));
 ```
 
 ### Additional files
 
-Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `examples/files` module (refer to the Example Modules below).
-
-If you wish to include a file which is a module (e.g. `module.mjs`), use the `localImport` function to include it in your project: 
+Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be imported from the example using their relative file name:
 
 ```js
-import { localImport } from 'examples/utils';
+import shaderVert from './shader.vert';
+import shaderFrag from './shader.frag';
+import data from './data.json';
 
-// use just the file name without the example name
-const data = localImport('data.mjs');
+const assets = {
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
+};
 ```
 
+Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine script asset URLs use `./scripts/...`, and local `.mjs` files are imported as standard JavaScript modules. When using these modules outside the examples browser, configure your bundler to load text extensions as strings.
 
 ### Testing your example
-Run `npm run develop` from the `Local examples browser development` section to serve the examples browser with Vite.
+Run `npm run dev` from the `Local examples browser development` section to serve the examples browser with Vite. Use `npm run develop` when automatic reloads should be disabled.
 
 You can view an individual iframe directly, for example [http://localhost:5555/iframe/misc_hello-world.html]().
 
 ### Debug and performance engine development
-By default, `npm run develop` serves the engine from `../src/index.js`. To test against a built ESM engine instead, pass `ENGINE_PATH`, for example `ENGINE_PATH=../build/playcanvas.mjs npm run develop`.
+By default, `npm run dev` and `npm run develop` serve the engine from `../src/index.js`. To test against a built ESM engine instead, pass `ENGINE_PATH`, for example `ENGINE_PATH=../build/playcanvas.mjs npm run dev`.
 
 ## Example Modules
 
-The example script allows you to import examples only modules that interact with the environment such as the device selector and controls. These are listed below:
+The example script allows you to import examples-only modules that interact with the environment such as the device selector and controls. These are listed below:
 
-- `examples/files` - The real-time file contents of all files used in the example.
-- `examples/observer` - The observer object `data`.
-- `examples/utils` - Contains utilities functions such as `localImport` and `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
+- `examples/context` - The observer object `data` and selected graphics `deviceType`.
+- `examples/assets/*` - Shared example modules. Use `./assets/...` when a runtime asset URL string is needed.
+- `playcanvas/scripts/*` - Shared engine script modules. Use `./scripts/...` when a runtime script URL string is needed.
 
 ## Deployment
 

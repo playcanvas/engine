@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -132,5 +133,3 @@ app.on('update', (/** @type {number} */ dt) => {
     camera.setLocalPosition(70 * Math.sin(time), 0, 70 * Math.cos(time));
     camera.lookAt(pc.Vec3.ZERO);
 });
-
-export { app };

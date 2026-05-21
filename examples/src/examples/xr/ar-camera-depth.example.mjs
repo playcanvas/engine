@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -272,5 +273,3 @@ if (app.xr.supported) {
 } else {
     message('WebXR is not supported');
 }
-
-export { app };

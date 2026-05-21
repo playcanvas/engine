@@ -1,7 +1,14 @@
-// @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in a single call. WebGPU-only: this rendering relies on per-draw baseInstance (or equivalent) which WebGL2 lacks (possible with shader workaround, not implemented here).
-// @config WEBGL_DISABLED
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// Multi-draw instanced rendering of multiple primitives in a single call. WebGPU-only: this rendering
+// relies on per-draw baseInstance (or equivalent) which WebGL2 lacks (possible with shader workaround,
+// not implemented here).
+//
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,7 +17,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -184,5 +191,3 @@ assetListLoader.load(() => {
         app.drawLines(linesPositions, linesColors);
     });
 });
-
-export { app };

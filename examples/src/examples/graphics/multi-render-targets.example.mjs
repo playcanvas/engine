@@ -1,23 +1,26 @@
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import outputGlslFrag from './output-glsl.frag';
+import outputWgslFrag from './output-wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
+    board: new pc.Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -143,8 +146,8 @@ assetListLoader.load(() => {
         const meshInstances = render.meshInstances;
         for (let i = 0; i < meshInstances.length; i++) {
             const material = meshInstances[i].material;
-            material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('outputPS', files['output-glsl.frag']);
-            material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('outputPS', files['output-wgsl.frag']);
+            material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('outputPS', outputGlslFrag);
+            material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('outputPS', outputWgslFrag);
             material.shaderChunksVersion = '2.8';
         }
     });
@@ -179,5 +182,3 @@ assetListLoader.load(() => {
         app.drawTexture(0.5, -0.5, 0.9, 0.9 * ratio, texture2, null, worldLayer);
     });
 });
-
-export { app };

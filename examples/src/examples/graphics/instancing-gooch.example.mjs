@@ -1,23 +1,26 @@
-// @config DESCRIPTION This example demonstrates how a custom shader can be used to render instanced geometry, but also skinned, morphed and static geometry. A simple Gooch shading shader is used.
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+// @config
+//
+// This example demonstrates how a custom shader can be used to render instanced geometry, but also
+// skinned, morphed and static geometry. A simple Gooch shading shader is used.
+
 import * as pc from 'playcanvas';
 
-// import the createGoochMaterial function from the gooch-material.mjs file
-const { createGoochMaterial } = await fileImport(`${rootPath}/static/assets/scripts/misc/gooch-material.mjs`);
+import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/low-poly-tree.glb` }),
+    tree: new pc.Asset('cube', 'container', { url: './assets/models/low-poly-tree.glb' }),
 
-    bitmoji: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
-    danceAnim: new pc.Asset('walkAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb` }),
+    bitmoji: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    danceAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
 
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -156,7 +159,6 @@ assetListLoader.load(() => {
     const walkTrack = assets.danceAnim.resource.animations[0].resource;
     bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
-
     // Set an update function on the app's update event
     let time = 0;
     app.on('update', (dt) => {
@@ -176,5 +178,3 @@ assetListLoader.load(() => {
         camera.lookAt(new pc.Vec3(0, 1, 0));
     });
 });
-
-export { app };

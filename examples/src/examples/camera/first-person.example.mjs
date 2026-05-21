@@ -1,16 +1,23 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
-import { deviceType, fileImport, rootPath } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// <div style='text-align:center'>
+//     <div>(<b>WASD</b>) Move</div>
+//     <div>(<b>Space</b>) Jump</div>
+//     <div>(<b>Mouse</b>) Look</div>
+// </div>
 
-const { FirstPersonController } = await fileImport(`${rootPath}/static/scripts/esm/first-person-controller.mjs`);
+import * as pc from 'playcanvas';
+import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 await new Promise((resolve) => {
@@ -22,11 +29,11 @@ const gfxOptions = {
 };
 
 const assets = {
-    map: new pc.Asset('map', 'container', { url: `${rootPath}/static/assets/models/fps-map.glb` }),
+    map: new pc.Asset('map', 'container', { url: './assets/models/fps-map.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -205,5 +212,3 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
 // Create joystick UI
 createJoystickUI('left');
 createJoystickUI('right');
-
-export { app };

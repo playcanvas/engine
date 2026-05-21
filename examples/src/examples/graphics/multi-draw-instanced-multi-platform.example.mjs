@@ -1,8 +1,15 @@
-import files from 'examples/files';
-import { rootPath, deviceType } from 'examples/utils';
+// @config
+//
+// Multi-draw instanced rendering of multiple primitives in one call. WebGL2 lacks support for
+// firstInstance for sub-draws, so instance data lives in a data texture and is fetched in the vertex
+// shader via base[gl_DrawID] + gl_InstanceID — portable and fast workaround.
+
 import * as pc from 'playcanvas';
 
-// @config DESCRIPTION Multi-draw instanced rendering of multiple primitives in one call. WebGL2 lacks support for firstInstance for sub-draws, so instance data lives in a data texture and is fetched in the vertex shader via base[gl_DrawID] + gl_InstanceID — portable and fast workaround.
+import { deviceType } from 'examples/context';
+
+import transformInstancingVert from './transform-instancing.vert';
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -10,7 +17,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -157,7 +164,7 @@ assetListLoader.load(() => {
 
         // webgl2 not support instancing counter use vertex workaround
         // update shader transform instancing chunk
-        material.shaderChunks.glsl.set('transformInstancingVS', files['transform-instancing.vert']);
+        material.shaderChunks.glsl.set('transformInstancingVS', transformInstancingVert);
 
         // store matrices in texture
         const matricesDataTexture = new pc.Texture(app.graphicsDevice, {
@@ -199,7 +206,6 @@ assetListLoader.load(() => {
     cmd.add(2, idxCounts[2], ringCounts[2], firstIndex[2], 0, firstInstance[2]);
     cmd.update(3);
 
-
     // draw helper lines around each ring to visualize distribution
     const linesPositions = [];
     const linesColors = [];
@@ -229,5 +235,3 @@ assetListLoader.load(() => {
         app.drawLines(linesPositions, linesColors);
     });
 });
-
-export { app };

@@ -1,5 +1,6 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -26,7 +27,7 @@ const message = function (msg) {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
@@ -285,5 +286,3 @@ if (app.xr.supported) {
 } else {
     message('WebXR is not supported');
 }
-
-export { app };

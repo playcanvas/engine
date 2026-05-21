@@ -1,19 +1,24 @@
-// @config DESCRIPTION This example shows how to customize the final compose pass by injecting a simple pixelation post-effect. Useful if no additional render passes are needed. Changes are applied globally to all CameraFrames.
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example shows how to customize the final compose pass by injecting a simple pixelation
+// post-effect. Useful if no additional render passes are needed. Changes are applied globally to all
+// CameraFrames.
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    apartment: new pc.Asset('apartment', 'container', { url: `${rootPath}/static/assets/models/apartment.glb` }),
-    love: new pc.Asset('love', 'container', { url: `${rootPath}/static/assets/models/love.glb` }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    apartment: new pc.Asset('apartment', 'container', { url: './assets/models/apartment.glb' }),
+    love: new pc.Asset('love', 'container', { url: './assets/models/love.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -214,5 +219,3 @@ assetListLoader.load(() => {
         pixelationIntensity: 0.5
     });
 });
-
-export { app };

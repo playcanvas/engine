@@ -1,8 +1,7 @@
-import files from 'examples/files';
-import { data, refresh } from 'examples/observer';
-import { deviceType as selectedDeviceType, updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
-
+import files from './files.mjs';
 import MiniStats from './ministats.mjs';
+import { fetchFile, importModule, clearImports, parseConfig, fire } from './runtime.mjs';
+import { data, deviceType as selectedDeviceType, refreshContext, updateDeviceType } from './state.mjs';
 
 /** @import { AppBase } from 'playcanvas' */
 
@@ -146,7 +145,7 @@ class ExampleLoader {
          */
         const unorderedFiles = {};
         await Promise.all(this._fileNames.map(async (name) => {
-            unorderedFiles[name] = await fetchFile(`./${this._name}.${name}${suffix}`);
+            unorderedFiles[name] = await fetchFile(`../iframe/${this._name}.${name}${suffix}`);
         }));
         this._clearFiles();
         for (const name of Object.keys(unorderedFiles).sort()) {
@@ -175,7 +174,7 @@ class ExampleLoader {
         this._allowRestart = false;
 
         // refresh observer instance
-        refresh();
+        refreshContext();
 
         // parse config
         this._config = {
@@ -195,23 +194,21 @@ class ExampleLoader {
 
         try {
             // import local file
-            const module = await localImport('example.mjs');
-            this._app = module.app;
+            const module = await importModule('example.mjs');
+            this._app = module.app ?? window.pc?.AppBase.getApplication('application-canvas');
 
-            // additional destroy handler in case no app provided
+            // additional destroy handler for non-app resources
             if (typeof module.destroy === 'function') {
                 this.destroyHandlers.push(module.destroy);
             }
         } catch (e) {
             console.error(e);
             const locations = this._parseErrorLocations(e.stack);
-            window.top?.dispatchEvent(new CustomEvent('exampleError', {
-                detail: {
-                    name: e.constructor.name,
-                    message: e.message,
-                    locations
-                }
-            }));
+            fire('exampleError', {
+                name: e.constructor.name,
+                message: e.message,
+                locations
+            });
 
             this._allowRestart = true;
             return;
@@ -267,17 +264,30 @@ class ExampleLoader {
             console.warn('Dropping restart while still restarting');
             return;
         }
-        window.top?.dispatchEvent(new CustomEvent('exampleHotReload'));
+        fire('exampleHotReload');
         this.destroy();
         this.load();
     }
 
+    _destroyApps() {
+        const canvases = document.querySelectorAll('#appInner canvas[id]');
+        for (const canvas of canvases) {
+            const app = window.pc?.AppBase.getApplication(canvas.id);
+            if (app?.graphicsDevice) {
+                app.destroy();
+            }
+            if (canvas.id !== 'application-canvas') {
+                canvas.remove();
+            }
+        }
+    }
+
     destroy() {
         MiniStats.destroy();
-        if (this._app && this._app.graphicsDevice) {
-            this._app.destroy();
-        }
-        this.destroyHandlers.forEach(destroy => destroy());
+        this._destroyApps();
+        const handlers = this.destroyHandlers;
+        this.destroyHandlers = [];
+        handlers.forEach(destroy => destroy());
         this.ready = false;
     }
 

@@ -1,7 +1,13 @@
-// @config DESCRIPTION This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import transformInstancingGlslVert from './transform-instancing.glsl.vert';
+import transformInstancingWgslVert from './transform-instancing.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,7 +16,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -97,8 +103,8 @@ assetListLoader.load(() => {
 
     // and a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
     material.shaderChunksVersion = '2.8';
-    material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('transformInstancingVS', files['transform-instancing.glsl.vert']);
-    material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('transformInstancingVS', files['transform-instancing.wgsl.vert']);
+    material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('transformInstancingVS', transformInstancingGlslVert);
+    material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('transformInstancingVS', transformInstancingWgslVert);
 
     material.update();
 
@@ -143,5 +149,3 @@ assetListLoader.load(() => {
         camera.lookAt(pc.Vec3.ZERO);
     });
 });
-
-export { app };

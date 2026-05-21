@@ -1,5 +1,6 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -58,7 +59,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    glb: new pc.Asset('glb', 'container', { url: `${rootPath}/static/assets/models/vr-controller.glb` })
+    glb: new pc.Asset('glb', 'container', { url: './assets/models/vr-controller.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -194,5 +195,3 @@ assetListLoader.load(() => {
         message('WebXR is not supported');
     }
 });
-
-export { app };

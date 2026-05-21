@@ -1,22 +1,23 @@
-import files from 'examples/files';
-import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { XrControllers } from 'playcanvas/scripts/esm/xr-controllers.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
 
-// Import scripts
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { XrSession } = await fileImport(`${rootPath}/static/scripts/esm/xr-session.mjs`);
-const { XrControllers } = await fileImport(`${rootPath}/static/scripts/esm/xr-controllers.mjs`);
-const { XrNavigation } = await fileImport(`${rootPath}/static/scripts/esm/xr-navigation.mjs`);
-const { XrMenu } = await fileImport(`${rootPath}/static/scripts/esm/xr-menu.mjs`);
+import { deviceType } from 'examples/context';
+
+import uiCss from './ui.css';
+import uiHtml from './ui.html';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // Load Ammo.js physics engine
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
@@ -25,11 +26,11 @@ await new Promise((resolve) => {
 // create UI
 // html
 const div = document.createElement('div');
-div.innerHTML = files['ui.html'];
+div.innerHTML = uiHtml;
 document.body.appendChild(div);
 // css
 const css = document.createElement('style');
-css.innerHTML = files['ui.css'];
+css.innerHTML = uiCss;
 document.head.appendChild(css);
 
 /**
@@ -45,17 +46,17 @@ const message = (msg) => {
 
 // Assets
 const assets = {
-    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: `${rootPath}/static/assets/textures/blue-button.png` }),
-    click: new pc.Asset('click', 'audio', { url: `${rootPath}/static/assets/sounds/click.mp3` }),
-    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
+    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: './assets/textures/blue-button.png' }),
+    click: new pc.Asset('click', 'audio', { url: './assets/sounds/click.mp3' }),
+    cube: new pc.Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/roboto-extralight.json` }),
-    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/roboto-extralight.json' }),
+    gallery: new pc.Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' })
 };
 
 // Create graphics device
@@ -280,5 +281,3 @@ if (app.xr.supported) {
 } else {
     message('WebXR is not supported');
 }
-
-export { app };

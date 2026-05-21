@@ -1,4 +1,14 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Shift</b>) Sprint</div><div>(<b>Space</b>) Jump</div><div>(<b>Q</b>) Dance</div><div>(<b>Mouse</b>) Orbit camera</div><div>(<b>Wheel</b>) Zoom</div></div>
+// @config
+//
+// <div style='text-align:center'>
+//     <div>(<b>WASD</b>) Move</div>
+//     <div>(<b>Shift</b>) Sprint</div>
+//     <div>(<b>Space</b>) Jump</div>
+//     <div>(<b>Q</b>) Dance</div>
+//     <div>(<b>Mouse</b>) Orbit camera</div>
+//     <div>(<b>Wheel</b>) Zoom</div>
+// </div>
+
 //
 // Scene attribution:
 //   Title:   Sunnyvale Heritage Park Museum
@@ -6,27 +16,26 @@
 //   Source:  https://superspl.at/scene/d5d397aa
 //   License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
+import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
+import { ThirdPersonController } from 'playcanvas/scripts/esm/third-person-controller.mjs';
 
-const { ThirdPersonController } = await fileImport(`${rootPath}/static/scripts/esm/third-person-controller.mjs`);
-const { ShadowCatcher } = await fileImport(`${rootPath}/static/scripts/esm/shadow-catcher.mjs`);
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 // the collision GLB uses Draco-compressed meshes, so the Draco decoder is required
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 await Promise.all([
@@ -89,16 +98,16 @@ app.on('destroy', () => {
 const assets = {
     splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
     collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
-    character: new pc.Asset('character', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/idle.glb` }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/walk.glb` }),
-    jogAnim: new pc.Asset('jogAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/run.glb` }),
-    jumpAnim: new pc.Asset('jumpAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/jump-flip.glb` }),
-    danceAnim: new pc.Asset('danceAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb` }),
+    character: new pc.Asset('character', 'container', { url: './assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
+    walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
+    jogAnim: new pc.Asset('jogAnim', 'container', { url: './assets/animations/bitmoji/run.glb' }),
+    jumpAnim: new pc.Asset('jumpAnim', 'container', { url: './assets/animations/bitmoji/jump-flip.glb' }),
+    danceAnim: new pc.Asset('danceAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -428,5 +437,3 @@ app.on('update', () => {
     const bb = app.graphicsDevice.backBufferSize;
     data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 });
-
-export { app };

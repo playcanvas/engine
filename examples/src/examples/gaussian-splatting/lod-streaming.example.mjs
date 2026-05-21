@@ -1,11 +1,14 @@
-// @config NO_MINISTATS
-// @config DESCRIPTION Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
+//
+// @flag NO_MINISTATS
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
+import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+
+import { data, deviceType } from 'examples/context';
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
@@ -152,7 +155,7 @@ const assets = {
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -552,7 +555,6 @@ assetListLoader.load(async () => {
         pc.Tracing.set(pc.TRACEID_TEXTURES, logTexturesRequested);
         logTexturesRequested = false;
 
-
         pc.Tracing.set(pc.TRACEID_BUFFERS, logBuffersRequested);
         logBuffersRequested = false;
 
@@ -561,5 +563,3 @@ assetListLoader.load(async () => {
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
     });
 });
-
-export { app };

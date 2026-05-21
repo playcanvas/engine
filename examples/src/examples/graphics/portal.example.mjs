@@ -1,6 +1,6 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,12 +9,12 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    portal: new pc.Asset('portal', 'container', { url: `${rootPath}/static/assets/models/portal.glb` }),
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
-    bitmoji: new pc.Asset('bitmoji', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` })
+    portal: new pc.Asset('portal', 'container', { url: './assets/models/portal.glb' }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    bitmoji: new pc.Asset('bitmoji', 'container', { url: './assets/models/bitmoji.glb' })
 };
 
 const gfxOptions = {
@@ -23,7 +23,6 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -241,5 +240,3 @@ assetListLoader.load(() => {
     bitmoji.setLocalScale(2.5, 2.5, 2.5);
     group.addChild(bitmoji);
 });
-
-export { app };

@@ -1,8 +1,8 @@
-import { getQueryParams } from 'examples/utils';
+import { getQueryParams } from './runtime.mjs';
 
 /** @import { AppBase, MiniStats as PcMiniStats } from 'playcanvas' */
 
-const params = getQueryParams(window.top?.location.href ?? '');
+const params = getQueryParams(window.location.href);
 
 export default class MiniStats {
     /** @type {PcMiniStats | null} */

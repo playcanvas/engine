@@ -1,7 +1,14 @@
-// @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Right Mouse Button - paint | Left Mouse Button - orbit </span><br>3D painting on gaussian splats using GSplatProcessor.
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// <span style="color:yellow">
+//     <b>Controls:</b> Right Mouse Button - paint | Left Mouse Button - orbit
+// </span>
+// <br>
+// 3D painting on gaussian splats using GSplatProcessor.
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 // Shader options for GSplatProcessor - paints splats inside brush sphere
 const shaderOptions = {
@@ -129,9 +136,9 @@ data.set('paintIntensity', 0.5);
 data.set('brushSize', 0.15);
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    biker: new pc.Asset('biker', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    apartment: new pc.Asset('apartment', 'gsplat', { url: `${rootPath}/static/assets/splats/apartment.sog` })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    biker: new pc.Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    apartment: new pc.Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -348,5 +355,3 @@ assetListLoader.load(() => {
         picker.destroy();
     });
 });
-
-export { app };

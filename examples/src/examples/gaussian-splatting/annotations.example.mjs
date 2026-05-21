@@ -1,11 +1,14 @@
-// @config DESCRIPTION Interactive 3D annotations on a gaussian splat model. Click hotspots to reveal product details with tooltips that follow the 3D positions.
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// Interactive 3D annotations on a gaussian splat model. Click hotspots to reveal product details with
+// tooltips that follow the 3D positions.
 
-const { Annotation, AnnotationManager } = await fileImport(`${rootPath}/static/scripts/esm/annotations.mjs`);
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { CameraFrame } = await fileImport(`${rootPath}/static/scripts/esm/camera-frame.mjs`);
+import * as pc from 'playcanvas';
+import { Annotation, AnnotationManager } from 'playcanvas/scripts/esm/annotations.mjs';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { CameraFrame } from 'playcanvas/scripts/esm/camera-frame.mjs';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -77,7 +80,7 @@ camera.script.create(CameraFrame, {
 app.root.addChild(camera);
 
 const assets = {
-    bicycle: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/bicycle.sog` })
+    bicycle: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -197,5 +200,3 @@ assetListLoader.load(() => {
         bicycle.addChild(annotation);
     });
 });
-
-export { app };

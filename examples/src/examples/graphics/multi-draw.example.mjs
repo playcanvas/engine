@@ -1,6 +1,12 @@
-// @config DESCRIPTION Terrain rendering using a single draw call built from a grid of displaced planes. Each patch is a sub-draw and can be culled (hidden) dynamically.
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+// @config
+//
+// Terrain rendering using a single draw call built from a grid of displaced planes. Each patch is a
+// sub-draw and can be culled (hidden) dynamically.
+
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,26 +15,24 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
     height: new pc.Asset(
         'height',
         'texture',
-        { url: `${rootPath}/static/assets/textures/terrain/Canyon-Height.jpg` }
+        { url: './assets/textures/terrain/Canyon-Height.jpg' }
     ),
     diffuse: new pc.Asset(
         'diffuse',
         'texture',
-        { url: `${rootPath}/static/assets/textures/terrain/Canyon-Diffuse.jpg` }
+        { url: './assets/textures/terrain/Canyon-Diffuse.jpg' }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
-
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
@@ -213,5 +217,3 @@ assetListLoader.load(() => {
         cmd.update(write);
     });
 });
-
-export { app };

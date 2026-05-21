@@ -1,18 +1,24 @@
-// @config DESCRIPTION Test example for ComputeRadixSort - GPU radix sort using 4-bit compute shaders
-// @config WEBGL_DISABLED
-// @config HIDDEN
-import files from 'examples/files';
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// Test example for ComputeRadixSort - GPU radix sort using 4-bit compute shaders
+//
+// @flag WEBGL_DISABLED
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+import vertWgsl from './vert.wgsl';
+import wgslFrag from './wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -231,8 +237,8 @@ updateDeviceInfo();
 // Create unsorted visualization material (WGSL only for WebGPU)
 const unsortedMaterial = new pc.ShaderMaterial({
     uniqueName: 'UnsortedVizMaterialCompute',
-    vertexWGSL: files['vert.wgsl'],
-    fragmentWGSL: files['wgsl.frag'],
+    vertexWGSL: vertWgsl,
+    fragmentWGSL: wgslFrag,
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
@@ -243,8 +249,8 @@ const unsortedMaterial = new pc.ShaderMaterial({
 // Uses same shader as unsorted but with SORTED define
 const sortedMaterial = new pc.ShaderMaterial({
     uniqueName: 'SortedVizMaterialCompute',
-    vertexWGSL: files['vert.wgsl'],
-    fragmentWGSL: files['wgsl.frag'],
+    vertexWGSL: vertWgsl,
+    fragmentWGSL: wgslFrag,
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
@@ -1783,5 +1789,3 @@ app.on('update', (/** @type {number} */ dt) => {
         sortedPlane.enabled = renderEnabled;
     }
 });
-
-export { app };

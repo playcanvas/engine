@@ -1,12 +1,21 @@
-// @config DESCRIPTION <div style='color: black;'>This example shows how to override shader chunks of StandardMaterial.</div>
-import { deviceType, rootPath, localImport } from 'examples/utils';
+// @config
+//
+// <div style='color: black;'>
+//     This example shows how to override shader chunks of StandardMaterial.
+// </div>
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import * as shaderChunksGlsl from './shader-chunks.glsl.mjs';
+import * as shaderChunksWgsl from './shader-chunks.wgsl.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/low-poly-tree.glb` })
+    tree: new pc.Asset('cube', 'container', { url: './assets/models/low-poly-tree.glb' })
 };
 
 const gfxOptions = {
@@ -18,8 +27,7 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // Determine shader language and import the appropriate shader chunks
 const shaderLanguage = device.isWebGPU ? pc.SHADERLANGUAGE_WGSL : pc.SHADERLANGUAGE_GLSL;
-const shaderChunkFile = device.isWebGPU ? 'shader-chunks.wgsl.mjs' : 'shader-chunks.glsl.mjs';
-const shaderChunks = await localImport(shaderChunkFile);
+const shaderChunks = device.isWebGPU ? shaderChunksWgsl : shaderChunksGlsl;
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -148,5 +156,3 @@ assetListLoader.load(() => {
         camera.lookAt(pc.Vec3.ZERO);
     });
 });
-
-export { app };

@@ -1,20 +1,20 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const observer = data;
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    channels: new pc.Asset('channels', 'texture', { url: `${rootPath}/static/assets/textures/channels.png` }),
-    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    channels: new pc.Asset('channels', 'texture', { url: './assets/textures/channels.png' }),
+    heart: new pc.Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -343,5 +343,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

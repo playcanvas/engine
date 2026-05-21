@@ -1,16 +1,18 @@
-// @config HIDDEN true
+// @config
+// @flag HIDDEN
+
 // Temporary repro: TAA + transparent clear — RT alpha should stay 0 in empty regions when correct.
 // Dev sidebar: test / taa-alpha
 
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const vertGLSL = /* glsl */ `
@@ -338,5 +340,3 @@ assetListLoader.load(() => {
         app.drawTexture(0, 0.4, 1, ratio, null, matComposite, worldLayer);
     });
 });
-
-export { app };

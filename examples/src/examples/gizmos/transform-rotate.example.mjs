@@ -1,9 +1,8 @@
-import { data } from 'examples/observer';
-import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { Grid } = await fileImport(`${rootPath}/static/scripts/esm/grid.mjs`);
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -37,7 +36,7 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 /**
  * @param {pc.Asset[] | number[]} assetList - The asset list.
@@ -210,5 +209,3 @@ resize();
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
-
-export { app };

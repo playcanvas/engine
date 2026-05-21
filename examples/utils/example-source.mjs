@@ -4,6 +4,39 @@ const regexPatterns = [
     /^\s*export\s*\{.*\}\s*from\s*(?:\S.*|[\t\v\f \xa0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff])\s*;\s*$/gm,
     /^\s*import\s*(?:\S.*|[\t\v\f \xa0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff])\s*;\s*$/gm
 ];
+const configRegex = /^[ \t]*\/\/ @config[ \t]*(?:\r?\n[ \t]*\/\/[^\r\n]*)*(?:\r?\n|$)/gm;
+
+const parseValue = (val) => {
+    return val === undefined || val === 'true' ? true : val === 'false' ? false : val;
+};
+
+const splitFlag = (line) => {
+    const eq = line.indexOf('=');
+    return eq === -1 ? [line, undefined] : [line.slice(0, eq), line.slice(eq + 1).trim()];
+};
+
+const parseExampleConfig = (block, config) => {
+    const description = [];
+    const lines = block.split(/\r?\n/).slice(1);
+    for (let i = 0; i < lines.length; i++) {
+        const match = /^[ \t]*\/\/ ?(.*)$/.exec(lines[i]);
+        if (!match) {
+            continue;
+        }
+        const text = match[1];
+        const line = text.trim();
+        if (line.startsWith('@flag ')) {
+            const [name, val] = splitFlag(line.slice(6).trim());
+            config[name.trim()] = parseValue(val);
+        } else {
+            description.push(text);
+        }
+    }
+    const html = description.join('\n').trim();
+    if (html) {
+        config.DESCRIPTION = html;
+    }
+};
 
 /**
  * Checks if the provided content matches any of a set of patterns indicative of an ES Module with external dependencies.
@@ -24,6 +57,16 @@ export const isModuleWithExternalDependencies = (content) => {
 };
 
 /**
+ * Removes example config comments from source.
+ *
+ * @param {string} source - The source to transform.
+ * @returns {string} The source without config comments.
+ */
+export const stripConfig = (source) => {
+    return source.replace(configRegex, '');
+};
+
+/**
  * @typedef {object} ExampleConfig
  * @property {string} [DESCRIPTION] - The example description.
  * @property {boolean} [HIDDEN] - The example is hidden from the sidebar list in production builds (`npm run build`). It is still built and reachable via its URL. In development (`npm run develop`) it is still shown in the sidebar.
@@ -41,14 +84,11 @@ export const isModuleWithExternalDependencies = (content) => {
  * @returns {ExampleConfig} - The parsed config.
  */
 export const parseConfig = (script) => {
-    const regex = /\/\/ @config (\S+)(?:[ \t]+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
-    while ((match = regex.exec(script)) !== null) {
-        const key = match[1].trim();
-        const val = match[2]?.trim();
-        config[key] = /true|false/.test(val) ? val === 'true' : val ?? true;
+    while ((match = configRegex.exec(script)) !== null) {
+        parseExampleConfig(match[0], config);
     }
     return config;
 };

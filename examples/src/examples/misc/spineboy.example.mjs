@@ -1,15 +1,16 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    skeleton: new pc.Asset('skeleton', 'json', { url: `${rootPath}/static/assets//spine/spineboy-pro.json` }),
-    atlas: new pc.Asset('atlas', 'text', { url: `${rootPath}/static/assets//spine/spineboy-pro.atlas` }),
-    texture: new pc.Asset('spineboy-pro.png', 'texture', { url: `${rootPath}/static/assets//spine/spineboy-pro.png` }),
+    skeleton: new pc.Asset('skeleton', 'json', { url: './assets/spine/spineboy-pro.json' }),
+    atlas: new pc.Asset('atlas', 'text', { url: './assets/spine/spineboy-pro.atlas' }),
+    texture: new pc.Asset('spineboy-pro.png', 'texture', { url: './assets/spine/spineboy-pro.png' }),
     spinescript: new pc.Asset('spinescript', 'script', {
-        url: `${rootPath}/static/scripts/spine/playcanvas-spine.3.8.js`
+        url: './scripts/spine/playcanvas-spine.3.8.js'
     })
 };
 
@@ -82,5 +83,3 @@ assetListLoader.load(() => {
     // create spine entity 2
     createSpineInstance(new pc.Vec3(2, 10, 0), new pc.Vec3(-0.5, 0.5, 0.5), 0.5);
 });
-
-export { app };

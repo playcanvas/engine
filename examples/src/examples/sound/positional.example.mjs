@@ -1,5 +1,6 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -50,11 +51,11 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    model: new pc.Asset('model', 'model', { url: `${rootPath}/static/assets/models/playbot/playbot.json` }),
+    model: new pc.Asset('model', 'model', { url: './assets/models/playbot/playbot.json' }),
     runAnim: new pc.Asset('runAnim', 'animation', {
-        url: `${rootPath}/static/assets/animations/playbot/playbot-run.json`
+        url: './assets/animations/playbot/playbot-run.json'
     }),
-    gravel: new pc.Asset('gravel', 'audio', { url: `${rootPath}/static/assets/sounds/footsteps.mp3` })
+    gravel: new pc.Asset('gravel', 'audio', { url: './assets/sounds/footsteps.mp3' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -148,5 +149,3 @@ assetListLoader.load(() => {
         entity.setLocalEulerAngles(0, angle + 90, 0);
     });
 });
-
-export { app };

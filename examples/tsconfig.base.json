@@ -7,9 +7,9 @@
         "moduleResolution": "bundler",
         "noEmit": true,
         "paths": {
-            "examples/files": ["./iframe/files.mjs"],
-            "examples/observer": ["./iframe/observer.mjs"],
-            "examples/utils": ["./iframe/utils.mjs"]
+            "examples/context": ["./iframe/context.mjs"],
+            "playcanvas/scripts/*": ["../scripts/*"],
+            "examples/assets/*": ["./assets/*"]
         },
         "skipLibCheck": true,
         "target": "esnext",

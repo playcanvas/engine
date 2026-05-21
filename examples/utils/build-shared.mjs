@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { isModuleWithExternalDependencies, parseConfig } from './example-source.mjs';
+import { isModuleWithExternalDependencies, parseConfig, stripConfig } from './example-source.mjs';
 
 /**
  * @import { ExampleConfig } from './example-source.mjs'
@@ -66,7 +66,6 @@ export const STATIC_TARGETS = [
     { src: './iframe', dest: 'dist/iframe' },
     { src: './assets', dest: 'dist/static/assets/' },
     { src: './thumbnails', dest: 'dist/thumbnails/' },
-    { src: './src/lib', dest: 'dist/static/lib/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     {
         src: './node_modules/@playcanvas/observer/dist/index.mjs',
@@ -78,9 +77,6 @@ export const STATIC_TARGETS = [
 export const EXTERNAL_LOCAL = [
     'playcanvas'
 ];
-
-const CONFIG_COMMENT = /^[ \t]*\/\/ @config .*(?:\r?\n|$)/gm;
-const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
 
 /**
  * @returns {Promise<ExampleMetadata[]>} loaded metadata.
@@ -131,10 +127,7 @@ export const copyTargets = (targets, parallel = true) => {
  * @returns {string} transformed source.
  */
 export const transformSource = (source) => {
-    return source
-    .replace(CONFIG_COMMENT, '')
-    .replace(PC_IMPORT, '')
-    .replace(/^(?:[ \t]*\r?\n)+/, '');
+    return stripConfig(source).replace(/^(?:[ \t]*\r?\n)+/, '');
 };
 
 /**
@@ -153,13 +146,13 @@ export const getEnginePath = (nodeEnv = process.env.NODE_ENV ?? '') => {
 export const engineUrl = (type) => {
     switch (type) {
         case 'development':
-            return './ENGINE_PATH/index.js';
+            return '../iframe/ENGINE_PATH/index.js';
         case 'performance':
-            return './playcanvas.prf.mjs';
+            return '../iframe/playcanvas.prf.mjs';
         case 'debug':
-            return './playcanvas.dbg.mjs';
+            return '../iframe/playcanvas.dbg.mjs';
     }
-    return './playcanvas.mjs';
+    return '../iframe/playcanvas.mjs';
 };
 
 /**

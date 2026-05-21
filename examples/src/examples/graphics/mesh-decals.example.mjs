@@ -1,11 +1,12 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` })
+    heart: new pc.Asset('heart', 'texture', { url: './assets/textures/heart.png' })
 };
 
 const gfxOptions = {
@@ -267,5 +268,3 @@ assetListLoader.load(() => {
         camera.lookAt(pc.Vec3.ZERO);
     });
 });
-
-export { app };

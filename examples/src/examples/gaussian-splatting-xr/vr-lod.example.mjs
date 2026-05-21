@@ -1,13 +1,14 @@
-// @config HIDDEN
-// @config NO_MINISTATS
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+// @flag HIDDEN
+// @flag NO_MINISTATS
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
-const { XrSession } = await fileImport(`${rootPath}/static/scripts/esm/xr-session.mjs`);
-const { XrNavigation } = await fileImport(`${rootPath}/static/scripts/esm/xr-navigation.mjs`);
+import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -321,5 +322,3 @@ assetListLoader.load(() => {
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
     });
 });
-
-export { app };

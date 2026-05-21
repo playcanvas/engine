@@ -1,6 +1,6 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -76,11 +76,11 @@ app.on('destroy', () => {
 
 // Load orbit camera script and HDRI
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     hdri: new pc.Asset(
         'hdri',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/wide-street.hdr` },
+        { url: './assets/hdri/wide-street.hdr' },
         { mipmaps: false }
     )
 };
@@ -430,5 +430,3 @@ assetListLoader.load(() => {
         camera.script.create('orbitCameraInputTouch');
     });
 });
-
-export { app };

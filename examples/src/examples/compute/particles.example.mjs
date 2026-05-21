@@ -1,17 +1,24 @@
-// @config WEBGL_DISABLED
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderRenderingFragmentWgsl from './shader-rendering.fragment.wgsl';
+import shaderRenderingVertexWgsl from './shader-rendering.vertex.wgsl';
+import shaderSharedWgsl from './shader-shared.wgsl';
+import shaderSimulationWgsl from './shader-simulation.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -82,7 +89,7 @@ assetListLoader.load(() => {
         new pc.Shader(device, {
             name: 'SimulationShader',
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: files['shader-shared.wgsl'] + files['shader-simulation.wgsl'],
+            cshader: shaderSharedWgsl + shaderSimulationWgsl,
 
             // format of a uniform buffer used by the compute shader
             computeUniformBufferFormats: {
@@ -208,8 +215,8 @@ assetListLoader.load(() => {
     // material to render the particles using WGSL shader as GLSL does not have access to storage buffers
     const material = new pc.ShaderMaterial({
         uniqueName: 'ParticleRenderShader',
-        vertexWGSL: files['shader-shared.wgsl'] + files['shader-rendering.vertex.wgsl'],
-        fragmentWGSL: files['shader-shared.wgsl'] + files['shader-rendering.fragment.wgsl']
+        vertexWGSL: shaderSharedWgsl + shaderRenderingVertexWgsl,
+        fragmentWGSL: shaderSharedWgsl + shaderRenderingFragmentWgsl
     });
 
     // rendering shader needs the particle storage buffer to read the particle data
@@ -252,5 +259,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };
