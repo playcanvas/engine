@@ -467,6 +467,10 @@ class WebgpuTexture {
 
             texture._gpuSize = texture.gpuSize;
             texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
+
+            if (texture.releaseSourceAfterUpload) {
+                texture.releaseImageSources();
+            }
         }
     }
 

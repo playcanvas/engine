@@ -1016,6 +1016,10 @@ class GSplatOctreeInstance {
                 this.activePlacements.add(this.environmentPlacement);
                 this.dirtyModifiedPlacements = true;
                 this.dirtyPlacementSetChanged = true;
+
+                // Now that the placement exists, _onDeviceLost will tear down this resource,
+                // so its CPU-side ImageBitmap sources are no longer needed for re-upload.
+                envResource.releaseTextureSources?.();
             }
         }
 

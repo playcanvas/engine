@@ -373,6 +373,10 @@ class GSplatOctree {
         if (res) {
             this.fileResources.set(fileIndex, res);
 
+            // The octree fully re-creates these resources on device loss, so the CPU-side
+            // ImageBitmap sources retained on the textures are not needed for re-upload.
+            res.releaseTextureSources?.();
+
             // if the file finished loading and is no longer needed, schedule a cooldown
             if (this.fileRefCounts[fileIndex] === 0) {
                 this.cooldowns.set(fileIndex, this.cooldownTicks);

@@ -105,6 +105,9 @@ class Texture {
     /** @ignore */
     _gpuSize = 0;
 
+    /** @ignore */
+    releaseSourceAfterUpload = false;
+
     /** @protected */
     id = id++;
 
@@ -352,8 +355,54 @@ class Texture {
             // Update texture stats
             this.adjustVramSizeTracking(device._vram, -this._gpuSize);
 
+            // Free CPU-side decoded pixel data; the GPU has its own copy after upload.
+            this.releaseImageSources();
+
             this._levels = null;
             this.device = null;
+        }
+    }
+
+    /**
+     * Closes any ImageBitmaps held on `_levels` and nulls those entries. The GPU has its own
+     * copy after upload, so the decoded pixels in CPU memory can be released. Safe to call only
+     * when no subsequent re-upload from CPU source will be needed.
+     *
+     * @ignore
+     */
+    releaseImageSources() {
+        if (typeof ImageBitmap === 'undefined' || !this._levels) {
+            return;
+        }
+        for (let i = 0; i < this._levels.length; i++) {
+            const level = this._levels[i];
+            if (level instanceof ImageBitmap) {
+                level.close();
+                this._levels[i] = null;
+            } else if (Array.isArray(level)) {
+                for (let j = 0; j < level.length; j++) {
+                    if (level[j] instanceof ImageBitmap) {
+                        level[j].close();
+                        level[j] = null;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Marks this texture so its CPU-side ImageBitmap source is released after the next upload.
+     * The caller must guarantee that no re-upload from CPU source will be needed (e.g. the owner
+     * re-creates the texture on device loss). Used by the gsplat octree for streamed SOG textures.
+     *
+     * @ignore
+     */
+    setReleaseSourceAfterUpload() {
+        this.releaseSourceAfterUpload = true;
+
+        // If upload has already happened, release eagerly.
+        if (!this._needsUpload && !this._needsMipmapsUpload) {
+            this.releaseImageSources();
         }
     }
 
