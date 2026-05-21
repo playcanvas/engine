@@ -15,7 +15,9 @@ body {
 
 :root {
     --mobile-dock-height: 48px;
+    --mobile-gap: 8px;
     --mobile-panel-height: clamp(300px, 48svh, 440px);
+    --mobile-radius: 6px;
 }
 
 #app {
@@ -70,16 +72,16 @@ body {
     #sideBar {
         margin: 0;
         position: fixed;
-        left: 0;
-        right: 0;
-        bottom: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom));
+        left: var(--mobile-gap);
+        right: var(--mobile-gap);
+        bottom: calc(var(--mobile-dock-height) + var(--mobile-gap) + var(--mobile-gap) + env(safe-area-inset-bottom));
         z-index: 99999;
-        width: 100%;
+        width: auto;
         height: var(--mobile-panel-height);
         min-width: 0;
         max-width: none;
         max-height: none;
-        border-radius: 0;
+        border-radius: var(--mobile-radius);
     }
 
     #sideBar .panel-toggle {
@@ -126,18 +128,18 @@ body {
 @media only screen and (max-width: 600px) {
     #sideBar > .pcui-panel-content {
         height: calc(100% - 32px);
-        background-color: rgba(54, 67, 70, 1);
+        background-color: #283437;
         margin-top: 0px;
     }
     #sideBar {
-        background-color: rgba(54, 67, 70, 1);
+        background-color: #283437;
     }
     #sideBar > .pcui-panel-header {
-        border-radius: 0 !important;
+        border-radius: var(--mobile-radius) var(--mobile-radius) 0 0 !important;
     }
 
     #sideBar.pcui-collapsed > .pcui-panel-header {
-        border-radius: 0 !important;
+        border-radius: var(--mobile-radius) !important;
     }
 
     #sideBar-contents {
@@ -298,17 +300,19 @@ body {
 
 @media only screen and (max-width: 600px) {
     #canvas-container {
-        margin: 0px;
-        border-radius: 0px;
-        height: 100dvh;
+        margin: var(--mobile-gap);
+        border-radius: var(--mobile-radius);
+        height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap));
+        background-color: #171E20;
     }
 
     #canvas-container iframe {
-        height: calc(100dvh - var(--mobile-dock-height) - env(safe-area-inset-bottom));
+        border-radius: var(--mobile-radius);
+        height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
     }
 
     #canvas-container.mobile-panel-open iframe {
-        height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - env(safe-area-inset-bottom));
+        height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
     }
 }
 
@@ -382,16 +386,17 @@ body {
 
 /* @media only screen and (max-width: 600px) { */
 #controlPanel.mobile {
-    bottom: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom));
+    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap) + env(safe-area-inset-bottom));
     left: 0;
     right: 0;
-    width: 100%;
+    width: auto;
     top: inherit;
     display: flex;
     flex-direction: column;
-    background-color: rgba(54, 67, 70, 1);
+    background-color: rgba(54, 67, 70, 0.64);
+    backdrop-filter: blur(32px);
     min-height: 0;
-    border-radius: 0;
+    border-radius: var(--mobile-radius);
     overflow: visible;
 }
 
@@ -406,13 +411,14 @@ body {
     height: auto;
     min-height: 0;
     overflow: hidden;
+    border-radius: 0 0 var(--mobile-radius) var(--mobile-radius);
 }
 
 #controlPanel.mobile > .pcui-panel-header {
     flex: 0 0 32px;
     height: 32px !important;
     line-height: 32px !important;
-    border-radius: 0 !important;
+    border-radius: var(--mobile-radius) var(--mobile-radius) 0 0 !important;
 }
 
 #controlPanel.mobile.controls-sheet > .pcui-panel-content {
@@ -429,7 +435,7 @@ body {
 }
 
 #controlPanel.mobile > .pcui-panel-content > section {
-    border-radius: 6px;
+    border-radius: var(--mobile-radius);
 }
 /* } */
 
@@ -774,8 +780,10 @@ body {
 
 @media only screen and (max-width: 600px) {
     #menu {
-        top: 8px;
-        background-color: rgba(54, 67, 70, 1);
+        top: var(--mobile-gap);
+        margin-top: var(--mobile-gap);
+        margin-left: var(--mobile-gap);
+        background-color: rgba(54, 67, 70, 0.64);
     }
 
     #menu img {
@@ -838,13 +846,17 @@ body {
 
     .mobile-resize-handle {
         position: fixed;
-        left: 0;
-        right: 0;
-        bottom: calc(var(--mobile-dock-height) + var(--mobile-panel-height) + env(safe-area-inset-bottom) - 9px);
+        left: var(--mobile-gap);
+        right: var(--mobile-gap);
+        bottom: calc(var(--mobile-dock-height) + var(--mobile-panel-height) + var(--mobile-gap) + var(--mobile-gap) + env(safe-area-inset-bottom) - 9px);
         height: 18px;
         cursor: ns-resize;
         touch-action: none;
         z-index: 100001;
+    }
+
+    #mobileUi > .mobile-resize-handle {
+        bottom: calc(var(--mobile-dock-height) + var(--mobile-panel-height) + var(--mobile-gap) + env(safe-area-inset-bottom) - 9px);
     }
 
     .mobile-resize-handle::before {
@@ -865,14 +877,15 @@ body {
         justify-content: center;
         gap: clamp(28px, 10vw, 42px);
         position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom));
-        padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
+        left: var(--mobile-gap);
+        right: var(--mobile-gap);
+        bottom: calc(var(--mobile-gap) + env(safe-area-inset-bottom));
+        height: var(--mobile-dock-height);
+        padding: 4px 8px;
         box-sizing: border-box;
-        background-color: #20292b;
-        border-top: 1px solid #4a5a5f;
+        background-color: rgba(54, 67, 70, 0.64);
+        backdrop-filter: blur(32px);
+        border-radius: var(--mobile-radius);
         z-index: 100000;
     }
 
