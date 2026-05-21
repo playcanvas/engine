@@ -426,16 +426,15 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
     if (url.startsWith(IFRAME_PREFIX) && url.endsWith('.html')) {
         const name = url.slice(IFRAME_PREFIX.length, -'.html'.length);
         const item = getExample(name);
-        if (!item) {
-            return false;
+        if (item) {
+            const params = new URL(req.url ?? '/', 'http://localhost').searchParams;
+            sendText(res, await createExampleHtml(item, getFiles(item), {
+                nodeEnv: NODE_ENV,
+                enginePath: getEnginePath(NODE_ENV),
+                engineStamp: params.get('t') ?? engineStamp
+            }), 'text/html; charset=utf-8');
+            return true;
         }
-        const params = new URL(req.url ?? '/', 'http://localhost').searchParams;
-        sendText(res, await createExampleHtml(item, getFiles(item), {
-            nodeEnv: NODE_ENV,
-            enginePath: getEnginePath(NODE_ENV),
-            engineStamp: params.get('t') ?? engineStamp
-        }), 'text/html; charset=utf-8');
-        return true;
     }
 
     if (url.startsWith(IFRAME_PREFIX)) {
