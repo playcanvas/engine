@@ -355,11 +355,8 @@ class Texture {
             // Update texture stats
             this.adjustVramSizeTracking(device._vram, -this._gpuSize);
 
-            // Free CPU-side decoded pixel data if the owner has opted in via
-            // setReleaseSourceAfterUpload; only safe when the source is engine-owned.
-            if (this.releaseSourceAfterUpload) {
-                this.releaseImageSources();
-            }
+            // Free CPU-side decoded pixel data; the GPU has its own copy after upload.
+            this.releaseImageSources();
 
             this._levels = null;
             this.device = null;
@@ -369,14 +366,11 @@ class Texture {
     /**
      * Closes any ImageBitmaps held on `_levels` and nulls those entries. The GPU has its own
      * copy after upload, so the decoded pixels in CPU memory can be released. Safe to call only
-     * when no subsequent re-upload from CPU source will be needed and the source is owned by
-     * the engine (not shared with caller code or other textures). Clears the
-     * `releaseSourceAfterUpload` flag so future uploads keep their sources by default.
+     * when no subsequent re-upload from CPU source will be needed.
      *
      * @ignore
      */
     releaseImageSources() {
-        this.releaseSourceAfterUpload = false;
         if (typeof ImageBitmap === 'undefined' || !this._levels) {
             return;
         }
@@ -397,11 +391,9 @@ class Texture {
     }
 
     /**
-     * One-shot opt-in: marks this texture so its CPU-side ImageBitmap source is released after
-     * the next upload completes. The flag is cleared once the release runs, so callers must
-     * re-arm after assigning a new source. The caller must own the ImageBitmap and guarantee
-     * that no re-upload from CPU source will be needed (e.g. the owner re-creates the texture
-     * on device loss). Used by the gsplat octree for streamed SOG textures.
+     * Marks this texture so its CPU-side ImageBitmap source is released after the next upload.
+     * The caller must guarantee that no re-upload from CPU source will be needed (e.g. the owner
+     * re-creates the texture on device loss). Used by the gsplat octree for streamed SOG textures.
      *
      * @ignore
      */
