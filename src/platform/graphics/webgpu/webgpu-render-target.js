@@ -198,11 +198,13 @@ class WebgpuRenderTarget {
 
         const wgpuDevice = /** @type {WebgpuGraphicsDevice} */ (this.renderTarget.device);
         const xrViewDesc = wgpuDevice?.xrColorTextureViewDescriptor;
-        // WebXR may supply a per-eye view descriptor (e.g. array layer); merge in our view format
-        // for sRGB / reinterpret when it matches the session color texture.
         const xrSlice = xrViewDesc && gpuTexture === wgpuDevice.xrColorTexture;
+        // When the WebXR runtime supplies a per-eye view descriptor, pass it through as-is.
+        // The descriptor already carries the runtime's intended `format` (e.g. an sRGB view
+        // format over a linear texture) along with the per-eye slice selection — merging an
+        // override on top would discard the runtime's chosen format.
         const view = gpuTexture.createView(
-            xrSlice ? { ...xrViewDesc, format: viewFormat } : { format: viewFormat }
+            xrSlice ? xrViewDesc : { format: viewFormat }
         );
         DebugHelper.setLabel(view, xrSlice ? 'Framebuffer.xrColorTextureView' : 'Framebuffer.contextColorTextureView');
 
