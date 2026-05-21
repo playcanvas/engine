@@ -7,13 +7,23 @@ const BOLD = '\x1b[1m';
 const REGULAR = '\x1b[22m';
 const RESET = '\x1b[39m';
 const COLORS = process.env.FORCE_COLOR !== '0' && !process.env.NO_COLOR;
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
 
 /**
  * @param {number} value - millisecond value.
  * @returns {string} formatted duration.
  */
 export const ms = (value) => {
-    return value >= 1000 ? `${(value / 1000).toFixed(1)}s` : `${Math.round(value)}ms`;
+    if (value >= MINUTE) {
+        const minutes = Math.floor(value / MINUTE);
+        const seconds = Math.floor((value % MINUTE) / SECOND);
+        return seconds ? `${minutes}m ${seconds}s` : `${minutes}m`;
+    }
+    if (value >= SECOND) {
+        return `${Math.floor(value / 100) / 10}s`;
+    }
+    return `${value >= 1 ? Math.round(value) : Math.ceil(value)}ms`;
 };
 
 /**
