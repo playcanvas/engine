@@ -74,6 +74,24 @@ class GSplatSogResource extends GSplatResourceBase {
         this._populateParameters();
     }
 
+    /**
+     * Opts each of the owned source textures into releasing its CPU-side ImageBitmap after
+     * upload. Called by the gsplat octree, which re-creates these resources from scratch on
+     * device loss and therefore does not need the CPU source retained for re-upload.
+     *
+     * @ignore
+     */
+    releaseTextureSources() {
+        const d = /** @type {GSplatSogData} */ (this.gsplatData);
+        d.means_l?.setReleaseSourceAfterUpload();
+        d.means_u?.setReleaseSourceAfterUpload();
+        d.quats?.setReleaseSourceAfterUpload();
+        d.scales?.setReleaseSourceAfterUpload();
+        d.sh0?.setReleaseSourceAfterUpload();
+        d.sh_centroids?.setReleaseSourceAfterUpload();
+        d.sh_labels?.setReleaseSourceAfterUpload();
+    }
+
     /** @protected */
     _actualDestroy() {
         // Remove externally-owned textures without destroying them (they're owned by gsplatData)
