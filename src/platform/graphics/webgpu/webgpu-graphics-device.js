@@ -613,6 +613,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
         wrt.setColorAttachment(0, undefined, attachmentViewFormat);
 
+        // Track the backbuffer's dimensions to whatever texture we're rendering into
+        // this frame (canvas swapchain in normal use, XR projection-layer texture during XR).
+        rt._width = outColorBuffer.width;
+        rt._height = outColorBuffer.height;
+
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
@@ -1277,6 +1282,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
+            // When the backbuffer is bound to an XR projection-layer texture, do NOT call
+            // passEncoder.setViewport to avoid issues on Apple's visionOS. This should be ok in
+            // general, as we're not likely to do a multi-view rendering when XR is active.
+            if (this.xrColorTexture) {
+                return;
+            }
+
             if (!this.renderTarget.flipY) {
                 y = this.renderTarget.height - y - h;
             }
@@ -1295,6 +1307,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // so we can skip this if fullscreen
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
+
+            // When the backbuffer is bound to an XR projection-layer texture, do NOT call
+            // passEncoder.setScissorRect to avoid issues on Apple's visionOS. This should be ok in
+            // general, as we're not likely to do a multi-view rendering when XR is active.
+            if (this.xrColorTexture) {
+                return;
+            }
 
             if (!this.renderTarget.flipY) {
                 y = this.renderTarget.height - y - h;

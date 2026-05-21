@@ -97,11 +97,15 @@ class WebgpuXrBridge {
                 }
             }
 
+            // Prefer the view descriptor's format when present: WebXR runtimes may use it to
+            // declare a per-eye view-format (e.g. bgra8unorm-srgb over a bgra8unorm texture) so
+            // shader writes are gamma-encoded for the compositor. Falling back to the texture's
+            // own format would silently drop that reinterpretation.
             subImages.push({
                 colorTexture,
                 viewDescriptor,
                 viewport: sub.viewport,
-                viewFormat: colorTexture.format
+                viewFormat: viewDescriptor?.format ?? colorTexture.format
             });
         }
 
