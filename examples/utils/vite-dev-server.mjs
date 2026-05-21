@@ -309,9 +309,11 @@ const createUpdate = async (file, engine, logStart = null) => {
             isInside(abs, path.resolve('templates')) ||
             isInside(abs, path.resolve('assets')) ||
             isInside(abs, path.resolve('../scripts'))) {
+        const file = relative(abs);
+        logStart?.('iframe', file);
         return {
             kind: 'iframe',
-            path: relative(abs),
+            path: file,
             stamp
         };
     }
@@ -545,10 +547,10 @@ export const examplesDevServer = ({ hmr = true } = {}) => {
                     }
 
                     let start = 0;
-                    const logStart = !hmr ? (kind, output) => {
+                    const logStart = (kind, output) => {
                         start = performance.now();
                         startLog(kind, output);
-                    } : null;
+                    };
                     const current = engineInfo ??= getEnginePathInfo(enginePath);
                     return current.then((value) => {
                         return createUpdate(file, value, logStart);
@@ -560,15 +562,8 @@ export const examplesDevServer = ({ hmr = true } = {}) => {
                             engineStamp = data.stamp;
                             types.schedule();
                         }
+                        createdLog(data.kind === 'example' ? data.example : data.path, performance.now() - start);
                         if (!hmr) {
-                            switch (data.kind) {
-                                case 'example':
-                                    createdLog(data.example, performance.now() - start);
-                                    break;
-                                case 'engine':
-                                    createdLog(data.path, performance.now() - start);
-                                    break;
-                            }
                             return;
                         }
                         server.ws.send({
