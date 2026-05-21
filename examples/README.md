@@ -38,16 +38,20 @@ Or directly from the source:
 ENGINE_PATH=../src/index.js npm run dev
 ```
 
+The dev server binds to `0.0.0.0:5555` by default. Use `EXAMPLES_HOST` or
+`EXAMPLES_PORT` to override those values.
+
 ## HTTPS dev for mobile / XR device testing
 
-`npm run develop` serves the examples browser over plain HTTP on `localhost`,
+`npm run dev` serves the examples browser over plain HTTP on `localhost`,
 which is enough for everyday work — browsers treat `localhost` as a secure
 context, so WebGPU and WebXR features that require one still work.
 
 For testing on a phone, tablet, Quest, or Apple Vision Pro you need to reach
 the dev server over the LAN, and the device will require HTTPS for WebXR (and
-exposes WebGPU only in a secure context). This is what `npm run develop:https`
-is for. Certs are generated locally with [mkcert](https://github.com/FiloSottile/mkcert);
+exposes WebGPU only in a secure context). This is what `npm run dev:https` is
+for. Use `npm run develop:https` when automatic reloads should be disabled.
+Certs are generated locally with [mkcert](https://github.com/FiloSottile/mkcert);
 none are committed to the repo.
 
 ### One-time setup
@@ -68,13 +72,13 @@ none are committed to the repo.
    ```
    npm run cert
    ```
-   Output: `examples/.cert/dev-cert.pem` and `dev-key.pem`. The script prints
+   Output: `examples/.cert/cert.pem` and `key.pem`. The script prints
    the LAN URL to open.
 
 ### Day-to-day
 
 ```
-npm run develop:https
+npm run dev:https
 ```
 
 Opens on:
@@ -132,9 +136,6 @@ npm run cert -- 10.0.0.42 192.168.1.50
 These are added on top of the defaults (`localhost`, `127.0.0.1`, `::1`,
 `<hostname>.local`). Already-trusted devices stay trusted — the leaf cert is
 re-signed by the same root CA, no re-install needed.
-
-`EXAMPLES_CERT_HOSTS=<comma-separated>` is also accepted as a fallback if
-you'd rather set an env var.
 
 ### What's expensive vs cheap to lose
 

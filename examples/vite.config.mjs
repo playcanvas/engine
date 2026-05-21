@@ -1,34 +1,14 @@
-import fs from 'node:fs';
 import path from 'node:path';
 
 import { defineConfig } from 'vite';
 
 import { revision, version } from '../utils/rollup-version-revision.mjs';
+import { ALLOWED_HOSTS, devHttpsConfig } from './utils/certificates.mjs';
 import { examplesDevServer } from './utils/vite-dev-server.mjs';
 
 const HOST = process.env.EXAMPLES_HOST ?? '0.0.0.0';
 const PORT = Number(process.env.EXAMPLES_PORT ?? 5555);
 const AUTO_RELOAD = process.env.EXAMPLES_AUTO_RELOAD !== 'false';
-
-const CERT_DIR = path.resolve('.cert');
-const CERT_FILE = path.join(CERT_DIR, 'dev-cert.pem');
-const KEY_FILE = path.join(CERT_DIR, 'dev-key.pem');
-
-const httpsConfig = () => {
-    if (process.env.EXAMPLES_HTTPS !== '1') return undefined;
-    if (!fs.existsSync(CERT_FILE) || !fs.existsSync(KEY_FILE)) {
-        throw new Error(
-            `HTTPS dev requested but certs not found in ${CERT_DIR}. ` +
-            'Run "npm run cert" to generate them.'
-        );
-    }
-    return {
-        cert: fs.readFileSync(CERT_FILE),
-        key: fs.readFileSync(KEY_FILE)
-    };
-};
-
-const ALLOWED_HOSTS = ['localhost', '.local'];
 
 const examplesPreviewServer = () => ({
     name: 'playcanvas-examples-preview-server',
@@ -54,7 +34,7 @@ export default defineConfig({
         hmr: AUTO_RELOAD ? undefined : false,
         host: HOST,
         port: PORT,
-        https: httpsConfig(),
+        https: devHttpsConfig(),
         // LAN device testing — e.g. https://<hostname>.local:5555
         allowedHosts: ALLOWED_HOSTS,
         fs: {
@@ -72,7 +52,7 @@ export default defineConfig({
     preview: {
         host: HOST,
         port: PORT,
-        https: httpsConfig(),
+        https: devHttpsConfig(),
         allowedHosts: ALLOWED_HOSTS
     },
     define: {
