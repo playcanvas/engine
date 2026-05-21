@@ -243,9 +243,6 @@ assetListLoader.load(() => {
     // Paint state
     let isPainting = false;
 
-    // Track if picker needs re-preparation (after camera moves)
-    let pickerDirty = true;
-
     // Disable context menu for RMB
     app.mouse.disableContextMenu();
 
@@ -270,13 +267,13 @@ assetListLoader.load(() => {
     const picker = new pc.Picker(app, 1, 1, true);
     const worldLayer = app.scene.layers.getLayerByName('World');
 
-    // Prepare picker (re-prepare when camera moves)
-    const preparePicker = () => {
-        if (pickerDirty) {
-            picker.resize(canvas.clientWidth, canvas.clientHeight);
-            picker.prepare(camera.camera, app.scene, [worldLayer]);
-            pickerDirty = false;
-        }
+    // Prepare picker for a single pixel at the brush position. Scissoring to 1x1 keeps the
+    // pick render trivially small even when called every mousemove during a paint drag.
+    const preparePicker = (x, y) => {
+        picker.resize(canvas.clientWidth, canvas.clientHeight);
+        picker.prepare(camera.camera, app.scene, [worldLayer], {
+            x: x, y: y, width: 1, height: 1
+        });
     };
 
     // Pending paint requests - processed in update loop for consistent frame timing
@@ -310,8 +307,8 @@ assetListLoader.load(() => {
 
     // Request paint at a specific screen position - queues for processing in update loop
     const paintAt = (x, y) => {
-        // Prepare picker if needed (after camera moved)
-        preparePicker();
+        // Re-prepare each call so the 1x1 scissor follows the brush
+        preparePicker(x, y);
 
         // Get world position for the paint brush
         picker.getWorldPointAsync(x, y).then((worldPoint) => {
@@ -328,7 +325,6 @@ assetListLoader.load(() => {
     app.mouse.on(pc.EVENT_MOUSEDOWN, (e) => {
         if (e.button === pc.MOUSEBUTTON_RIGHT) {
             isPainting = true;
-            pickerDirty = true;
             orbitInput.enabled = false;
             orbitInput.panButtonDown = false; // Cancel pan that orbit-camera started
             paintAt(e.x, e.y);

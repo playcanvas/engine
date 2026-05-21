@@ -220,12 +220,6 @@ assetListLoader.load(() => {
         camera.setLocalPosition(40 * Math.sin(time), 0, 40 * Math.cos(time));
         camera.lookAt(pc.Vec3.ZERO);
 
-        // Make sure the picker is the right size, and prepare it, which renders meshes into its render target
-        if (picker) {
-            picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
-            picker.prepare(camera.camera, app.scene, pickerLayers);
-        }
-
         // areas we want to sample - two larger rectangles, one small square, and one pixel at a mouse position
         // assign them different highlight colors as well
         const areas = [
@@ -251,6 +245,39 @@ assetListLoader.load(() => {
                 color: pc.Color.RED
             }
         ];
+
+        // compute the union bounding rect of all query areas (in pick-buffer pixels) and use it
+        // as the picker scissor so the GPU only rasterizes fragments that will actually be read.
+        // include any pending click point so getWorldPointAsync can still read a valid pixel.
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (let a = 0; a < areas.length; a++) {
+            const ap = areas[a].pos;
+            const asz = areas[a].size;
+            minX = Math.min(minX, ap.x);
+            minY = Math.min(minY, ap.y);
+            maxX = Math.max(maxX, ap.x + asz.x);
+            maxY = Math.max(maxY, ap.y + asz.y);
+        }
+        if (pendingPickRequest) {
+            const cx = pendingPickRequest.x / pickerScale;
+            const cy = pendingPickRequest.y / pickerScale;
+            minX = Math.min(minX, cx);
+            minY = Math.min(minY, cy);
+            maxX = Math.max(maxX, cx + 1);
+            maxY = Math.max(maxY, cy + 1);
+        }
+        const scissor = {
+            x: minX * pickerScale,
+            y: minY * pickerScale,
+            width: (maxX - minX) * pickerScale,
+            height: (maxY - minY) * pickerScale
+        };
+
+        // Make sure the picker is the right size, and prepare it, which renders meshes into its render target
+        if (picker) {
+            picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
+            picker.prepare(camera.camera, app.scene, pickerLayers, scissor);
+        }
 
         // process all areas every frame
         const promises = [];

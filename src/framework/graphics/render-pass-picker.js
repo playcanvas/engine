@@ -10,6 +10,7 @@ import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { GSplatComponent } from '../components/gsplat/component.js'
+ * @import { Vec4 } from '../../core/math/vec4.js'
  */
 
 const tempMeshInstances = [];
@@ -43,6 +44,9 @@ class RenderPassPicker extends RenderPass {
     /** @type {boolean} */
     depth;
 
+    /** @type {Vec4|null} Optional scissor rect in render-target pixel coords, bottom-left origin. */
+    scissorRect = null;
+
     /** @type {number[]} */
     _qualifiedLayerIndices = [];
 
@@ -68,13 +72,17 @@ class RenderPassPicker extends RenderPass {
      * @param {Layer[]} layers - The layers to pick from.
      * @param {Map<number, MeshInstance | GSplatComponent>} mapping - Map to store ID to object mappings.
      * @param {boolean} depth - Whether to render depth information.
+     * @param {Vec4|null} [scissorRect] - Optional scissor rect in render-target pixel coords,
+     * bottom-left origin (x, y, w, h). If set, only fragments inside the rect are rasterized;
+     * outside the rect the cleared "no selection" value (white) remains.
      */
-    update(camera, scene, layers, mapping, depth) {
+    update(camera, scene, layers, mapping, depth, scissorRect = null) {
         this.camera = camera;
         this.scene = scene;
         this.layers = layers;
         this.mapping = mapping;
         this.depth = depth;
+        this.scissorRect = scissorRect;
 
         if (scene.clusteredLightingEnabled) {
             this.emptyWorldClusters = this.renderer.worldClustersAllocator.empty;
@@ -118,9 +126,17 @@ class RenderPassPicker extends RenderPass {
     execute() {
         const device = this.device;
 
-        const { renderer, camera, scene, mapping, renderTarget } = this;
+        const { renderer, camera, scene, mapping, renderTarget, scissorRect } = this;
         const srcLayers = scene.layers.layerList;
         const isTransparent = scene.layers.subLayerList;
+
+        // narrow rasterization to a sub-rect of the pick buffer.
+        // pass start has already cleared the full RT to white = "no selection",
+        // so fragments outside the scissor stay cleared.
+        // no need to restore — every render pass start resets viewport + scissor to full RT size.
+        if (scissorRect) {
+            device.setScissor(scissorRect.x, scissorRect.y, scissorRect.z, scissorRect.w);
+        }
 
         for (const i of this._qualifiedLayerIndices) {
             const srcLayer = srcLayers[i];

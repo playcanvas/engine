@@ -42,7 +42,8 @@ class Selector extends pc.EventHandler {
         this._camera = camera;
         this._scene = app.scene;
         const device = app.graphicsDevice;
-        this._picker = new pc.Picker(app, device.canvas.width, device.canvas.height);
+        // depth enabled so we can also recover the world point + surface normal at the click
+        this._picker = new pc.Picker(app, device.canvas.width, device.canvas.height, true);
         this._layers = layers;
 
         this._onPointerDown = this._onPointerDown.bind(this);
@@ -70,16 +71,30 @@ class Selector extends pc.EventHandler {
 
         const device = this._picker.device;
         this._picker.resize(device.canvas.clientWidth, device.canvas.clientHeight);
-        this._picker.prepare(this._camera, this._scene, this._layers);
 
-        const selection = await this._picker.getSelectionAsync(e.clientX - 1, e.clientY - 1, 2, 2);
+        // scissor the render to a 2x2 rect around the click so only those fragments rasterize
+        const px = e.clientX - 1;
+        const py = e.clientY - 1;
+        this._picker.prepare(this._camera, this._scene, this._layers, {
+            x: px, y: py, width: 2, height: 2
+        });
+
+        // run selection and normal queries in parallel — both read the same prepared pick buffer
+        const [selection, hit] = await Promise.all([
+            this._picker.getSelectionAsync(px, py, 2, 2),
+            this._picker.getWorldPointAndNormalAsync(px, py)
+        ]);
 
         if (!selection[0]) {
             this.fire('deselect');
             return;
         }
 
-        this.fire('select', selection[0].node, !e.ctrlKey && !e.metaKey);
+        const clear = !e.ctrlKey && !e.metaKey;
+        this.fire('select', selection[0].node, clear);
+        if (hit) {
+            this.fire('pick', hit.point, hit.normal, selection[0].node, clear);
+        }
     }
 
     bind() {
