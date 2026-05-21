@@ -3,39 +3,9 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, Button, LabelGroup, Panel, SelectInput, SliderInput, Label } = ReactPCUI;
-    const { useEffect, useState } = React;
-
-    /**
-     * XR enter/exit toggle for the control panel.
-     *
-     * @returns {import('react').ReactElement} The button element.
-     */
-    const XrToggleButton = () => {
-        const [xrActive, setXrActive] = useState(!!observer.get('xrActive'));
-        useEffect(() => {
-            const handler = () => setXrActive(!!observer.get('xrActive'));
-            const evt = observer.on('xrActive:set', handler);
-            return () => evt.unbind();
-        }, [observer]);
-        return jsx(Button, {
-            text: xrActive ? 'Exit VR' : 'Enter VR',
-            onClick: () => {
-                if (observer.get('xrActive')) {
-                    observer.emit('xr:exit');
-                } else {
-                    observer.emit('vr:enter');
-                }
-            }
-        });
-    };
+    const { BindingTwoWay, LabelGroup, Panel, SelectInput, SliderInput, Label } = ReactPCUI;
 
     return fragment(
-        jsx(
-            Panel,
-            { headerText: 'XR' },
-            jsx(XrToggleButton, null)
-        ),
         jsx(
             Panel,
             { headerText: 'Settings' },

@@ -408,16 +408,14 @@ class Renderer {
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
 
-        // viewport size
-        let viewportWidth = target ? target.width : this.device.width;
-        let viewportHeight = target ? target.height : this.device.height;
+        // viewport size. In stereo XR the XR session reports the per-eye viewport directly,
+        // which is correct for both side-by-side single-texture and multi-pass per-eye-view
+        // layouts — preferred over inferring from target.width.
+        const xrView = camera.xr?.session ? camera.xr.views.list[0] : null;
+        let viewportWidth = xrView ? xrView.viewport.z : (target ? target.width : this.device.width);
+        let viewportHeight = xrView ? xrView.viewport.w : (target ? target.height : this.device.height);
         viewportWidth *= camera.rect.z;
         viewportHeight *= camera.rect.w;
-
-        // adjust viewport for stereoscopic VR sessions
-        if (camera.xr?.session && camera.xr.views.list.length === 2) {
-            viewportWidth *= 0.5;
-        }
 
         this.viewportSize[0] = viewportWidth;
         this.viewportSize[1] = viewportHeight;

@@ -43,7 +43,7 @@ app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 const dpr = window.devicePixelRatio || 1;
-device.maxPixelRatio = Math.min(dpr, 2);
+device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -106,6 +106,43 @@ const setMessage = (msg) => {
         document.body.append(el);
     }
     el.textContent = msg;
+};
+
+/**
+ * Create a DOM Enter VR button inside the example iframe. WebXR requires transient user
+ * activation from the same document as the requestSession call, so the controls-panel button
+ * (which lives in the parent page) cannot start a session. This button lives next to the canvas.
+ *
+ * @param {() => void} onClick - Click handler that starts VR.
+ * @returns {HTMLButtonElement} The created button element.
+ */
+const createEnterVrButton = (onClick) => {
+    const btn = document.createElement('button');
+    btn.textContent = 'Enter VR';
+    Object.assign(btn.style, {
+        position: 'fixed',
+        top: '12px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: '10',
+        padding: '10px 20px',
+        font: '600 14px/1 sans-serif',
+        color: '#fff',
+        background: 'rgba(0, 0, 0, 0.7)',
+        border: '1px solid rgba(255, 255, 255, 0.4)',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        display: 'none'
+    });
+    btn.onmouseenter = () => {
+        btn.style.background = 'rgba(0, 0, 0, 0.85)';
+    };
+    btn.onmouseleave = () => {
+        btn.style.background = 'rgba(0, 0, 0, 0.7)';
+    };
+    btn.addEventListener('click', onClick);
+    document.body.append(btn);
+    return btn;
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -275,12 +312,14 @@ assetListLoader.load(() => {
         }
     };
 
-    data.on('vr:enter', tryStartVr);
-    data.on('xr:exit', () => {
-        app.fire('xr:end');
-    });
+    // DOM button in the iframe document so the click carries transient activation into the
+    // WebXR requestSession call. Hidden while VR is active.
+    const enterVrButton = createEnterVrButton(tryStartVr);
 
-    data.set('xrActive', false);
+    const updateEnterVrButton = () => {
+        const show = app.xr.supported && app.xr.isAvailable(pc.XRTYPE_VR) && !app.xr.active;
+        enterVrButton.style.display = show ? 'block' : 'none';
+    };
 
     if (app.xr.supported) {
         if (app.touch) {
@@ -294,23 +333,30 @@ assetListLoader.load(() => {
         }
 
         app.xr.on('start', () => {
-            data.set('xrActive', true);
             setCameraControlsForXr();
-            setMessage('VR active — left thumbstick: move, right: snap turn; tap to exit or use Exit VR in the XR panel');
+            updateEnterVrButton();
+            setMessage('VR active — left thumbstick: move, right: snap turn; tap to exit');
         });
         app.xr.on('end', () => {
-            data.set('xrActive', false);
-            setCameraControlsForXr();
-            setMessage('VR ended — use Enter VR in the XR panel to re-enter');
+            setMessage('VR ended — click Enter VR to re-enter');
+            // XrManager fires 'end' *before* clearing its internal session reference, so
+            // `app.xr.active` still reads true at this point. Defer state-dependent updates to
+            // the next microtask so they observe the cleared session.
+            Promise.resolve().then(() => {
+                setCameraControlsForXr();
+                updateEnterVrButton();
+            });
         });
         app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
-            setMessage(available ? 'Use Enter VR in the XR panel' : 'Immersive VR is unavailable');
+            updateEnterVrButton();
+            setMessage(available ? 'Click Enter VR to start' : 'Immersive VR is unavailable');
         });
 
+        updateEnterVrButton();
         if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
             setMessage('Immersive VR is not available');
         } else {
-            setMessage('Use Enter VR in the XR panel');
+            setMessage('Click Enter VR to start');
         }
     } else {
         setMessage('WebXR is not supported');
