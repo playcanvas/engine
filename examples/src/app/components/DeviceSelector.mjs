@@ -26,6 +26,12 @@ const deviceTypeNames = {
 };
 
 /**
+ * @param {string | null | undefined} value - Device type value.
+ * @returns {string | undefined} The valid device type.
+ */
+const validDeviceType = value => (value && deviceTypeNames[value] ? value : undefined);
+
+/**
  * @typedef {object} Props
  * @property {Function} onSelect - On select handler.
  */
@@ -45,7 +51,7 @@ class DeviceSelector extends TypedComponent {
     state = {
         fallbackOrder: null,
         disabledOptions: null,
-        activeDevice: this.preferredGraphicsDevice
+        activeDevice: this.activeGraphicsDevice
     };
 
     /**
@@ -66,6 +72,10 @@ class DeviceSelector extends TypedComponent {
 
     componentDidMount() {
         window.addEventListener('updateActiveDevice', this._handleUpdateDevice);
+        const activeDevice = validDeviceType(window.activeGraphicsDevice);
+        if (activeDevice) {
+            this.onSetActiveGraphicsDevice(activeDevice);
+        }
     }
 
     componentWillUnmount() {
@@ -93,7 +103,16 @@ class DeviceSelector extends TypedComponent {
      * @returns {string | undefined} The preferred graphics device.
      */
     get preferredGraphicsDevice() {
-        return window.preferredGraphicsDevice;
+        return validDeviceType(window.preferredGraphicsDevice) ??
+            validDeviceType(localStorage.getItem('preferredGraphicsDevice')) ??
+            DEVICETYPE_WEBGL2;
+    }
+
+    /**
+     * @returns {string | undefined} The active graphics device.
+     */
+    get activeGraphicsDevice() {
+        return validDeviceType(window.activeGraphicsDevice) ?? this.preferredGraphicsDevice;
     }
 
     /**

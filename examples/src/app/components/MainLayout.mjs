@@ -10,6 +10,26 @@ import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { getOrientation } from '../utils.mjs';
 
+const MOBILE_DOCK_HEIGHT = 48;
+const MOBILE_PANEL_MIN_HEIGHT = 220;
+const MOBILE_PANEL_DEFAULT_MIN_HEIGHT = 300;
+const MOBILE_PANEL_DEFAULT_MAX_HEIGHT = 440;
+const MOBILE_PANEL_DEFAULT_SCALE = 0.48;
+const MOBILE_CANVAS_MIN_HEIGHT = 160;
+
+function getMobilePanelHeight(height = window.innerHeight * MOBILE_PANEL_DEFAULT_SCALE) {
+    const max = Math.max(0, window.innerHeight - MOBILE_DOCK_HEIGHT - MOBILE_CANVAS_MIN_HEIGHT);
+    const min = Math.min(MOBILE_PANEL_MIN_HEIGHT, max);
+    return Math.min(max, Math.max(min, height));
+}
+
+function getDefaultMobilePanelHeight() {
+    return getMobilePanelHeight(Math.min(
+        MOBILE_PANEL_DEFAULT_MAX_HEIGHT,
+        Math.max(MOBILE_PANEL_DEFAULT_MIN_HEIGHT, window.innerHeight * MOBILE_PANEL_DEFAULT_SCALE)
+    ));
+}
+
 // eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} Props
@@ -18,6 +38,8 @@ import { getOrientation } from '../utils.mjs';
 /**
  * @typedef {object} State
  * @property {'portrait'|'landscape'} orientation - Current orientation.
+ * @property {null|'examples'|'code'|'controls'|'description'} mobilePanel - Active mobile panel.
+ * @property {number} mobilePanelHeight - Active mobile panel height.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -26,8 +48,13 @@ const TypedComponent = Component;
 class MainLayout extends TypedComponent {
     /** @type {State} */
     state = {
-        orientation: getOrientation()
+        orientation: getOrientation(),
+        mobilePanel: null,
+        mobilePanelHeight: getDefaultMobilePanelHeight()
     };
+
+    /** @type {{ y: number, height: number } | null} */
+    _mobilePanelDrag = null;
 
     /**
      * @param {Props} props - Component properties.
@@ -38,8 +65,67 @@ class MainLayout extends TypedComponent {
     }
 
     _onLayoutChange() {
-        this.setState({ ...this.state, orientation: getOrientation() });
+        const orientation = getOrientation();
+        this.setState(prevState => ({
+            orientation,
+            mobilePanel: orientation === 'portrait' ? prevState.mobilePanel : null,
+            mobilePanelHeight: getMobilePanelHeight(prevState.mobilePanelHeight)
+        }), this.resizeIframe);
     }
+
+    resizeIframe = () => {
+        requestAnimationFrame(() => iframe.window?.dispatchEvent(new Event('resize')));
+    };
+
+    /**
+     * @param {State['mobilePanel']} mobilePanel - Active mobile panel.
+     */
+    setMobilePanel = (mobilePanel) => {
+        this.setState(prevState => ({
+            mobilePanel: prevState.mobilePanel === mobilePanel ? null : mobilePanel
+        }), this.resizeIframe);
+    };
+
+    /**
+     * @param {number} height - Mobile panel height.
+     */
+    setMobilePanelHeight = (height) => {
+        this.setState({ mobilePanelHeight: getMobilePanelHeight(height) }, this.resizeIframe);
+    };
+
+    /**
+     * @param {PointerEvent} event - Pointer event.
+     */
+    onMobilePanelDrag = (event) => {
+        if (!this._mobilePanelDrag) {
+            return;
+        }
+        this.setMobilePanelHeight(this._mobilePanelDrag.height + this._mobilePanelDrag.y - event.clientY);
+    };
+
+    stopMobilePanelDrag = () => {
+        this._mobilePanelDrag = null;
+        document.body.classList.remove('mobile-panel-resizing');
+        window.removeEventListener('pointermove', this.onMobilePanelDrag);
+        window.removeEventListener('pointerup', this.stopMobilePanelDrag);
+        window.removeEventListener('pointercancel', this.stopMobilePanelDrag);
+    };
+
+    /**
+     * @param {import('react').PointerEvent<HTMLElement>} event - Pointer event.
+     */
+    startMobilePanelDrag = (event) => {
+        event.preventDefault();
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        this._mobilePanelDrag = {
+            y: event.clientY,
+            height: this.state.mobilePanelHeight
+        };
+        document.body.classList.add('mobile-panel-resizing');
+        window.addEventListener('pointermove', this.onMobilePanelDrag);
+        window.addEventListener('pointerup', this.stopMobilePanelDrag);
+        window.addEventListener('pointercancel', this.stopMobilePanelDrag);
+    };
 
     componentDidMount() {
         window.addEventListener('resize', this._onLayoutChange);
@@ -47,6 +133,7 @@ class MainLayout extends TypedComponent {
     }
 
     componentWillUnmount() {
+        this.stopMobilePanelDrag();
         window.removeEventListener('resize', this._onLayoutChange);
         window.removeEventListener('orientationchange', this._onLayoutChange);
     }
@@ -59,10 +146,13 @@ class MainLayout extends TypedComponent {
     };
 
     render() {
-        const { orientation } = this.state;
+        const { orientation, mobilePanel, mobilePanelHeight } = this.state;
         return jsx(
             'div',
-            { id: 'appInner' },
+            {
+                id: 'appInner',
+                style: { '--mobile-panel-height': `${mobilePanelHeight}px` }
+            },
             jsx(
                 HashRouter,
                 null,
@@ -78,18 +168,29 @@ class MainLayout extends TypedComponent {
                         element: jsx(
                             'div',
                             { id: 'appInner-router', style: { display: 'contents' } },
-                            jsx(SideBar, null),
+                            jsx(SideBar, {
+                                orientation,
+                                mobilePanel,
+                                setMobilePanel: this.setMobilePanel,
+                                onMobilePanelDragStart: this.startMobilePanelDrag
+                            }),
                             jsx(
                                 Container,
                                 { id: 'main-view-wrapper' },
                                 jsx(Menu, {
+                                    orientation,
                                     setShowMiniStats: this.updateShowMiniStats.bind(this)
                                 }),
                                 jsx(
                                     Container,
                                     { id: 'main-view' },
                                     orientation === 'landscape' && jsx(CodeEditorDesktop),
-                                    jsx(Example, null)
+                                    jsx(Example, {
+                                        orientation,
+                                        mobilePanel,
+                                        setMobilePanel: this.setMobilePanel,
+                                        onMobilePanelDragStart: this.startMobilePanelDrag
+                                    })
                                 )
                             )
                         )

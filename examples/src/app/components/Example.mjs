@@ -21,6 +21,14 @@ import { getOrientation } from '../utils.mjs';
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
 
+/** @type {Record<string, string>} */
+const MOBILE_PANEL_TITLES = {
+    examples: 'EXAMPLES',
+    code: 'SOURCE',
+    controls: 'CONTROLS',
+    description: 'DESCRIPTION'
+};
+
 /**
  * @template {Record<string, string>} [FILES=Record<string, string>]
  * @typedef {object} ExampleOptions
@@ -47,6 +55,10 @@ const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)
 /**
  * @typedef {object} Props
  * @property {{params: {category: string, example: string}}} match - The match object.
+ * @property {'portrait'|'landscape'} [orientation] - Current orientation.
+ * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
+ * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
+ * @property {(event: import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
 /**
@@ -57,7 +69,6 @@ const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)
  * @property {Control | null} controls - Controls function from example.
  * @property {Observer | null} observer - The PCUI observer
  * @property {boolean} showDeviceSelector - Show device selector.
- * @property {'code' | 'parameters' | 'description'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
  */
@@ -74,7 +85,6 @@ class Example extends TypedComponent {
         exampleLoaded: false,
         controls: () => null,
         showDeviceSelector: true,
-        show: 'code',
         files: { 'example.mjs': '// loading' },
         observer: null,
         description: ''
@@ -148,6 +158,9 @@ class Example extends TypedComponent {
     async _handleExampleLoad(event) {
         const { files, observer, description } = event.detail;
         const controlsSrc = files['controls.mjs'];
+        if (!description && this.props.mobilePanel === 'description') {
+            this.props.setMobilePanel?.(null);
+        }
         if (controlsSrc) {
             const controls = await this._buildControls(controlsSrc);
             this.mergeState({
@@ -200,13 +213,21 @@ class Example extends TypedComponent {
         this.setState(prevState => ({ ...prevState, ...state }));
     }
 
-    componentDidMount() {
-        // PCUI should just have a "onHeaderClick" but can't find anything
+    /** @type {HTMLElement | null} */
+    _controlPanel = null;
+
+    setupControlPanel() {
         const controlPanel = document.getElementById('controlPanel');
-        if (!controlPanel) {
+        if (!controlPanel || this._controlPanel === controlPanel) {
+            return;
+        }
+        this._controlPanel = controlPanel;
+
+        if (controlPanel.classList.contains('mobile')) {
             return;
         }
 
+        // PCUI should just have a "onHeaderClick" but can't find anything
         const controlPanelHeader = /** @type {HTMLElement | null} */ (
             /** @type {unknown} */ (controlPanel.querySelector('.pcui-panel-header'))
         );
@@ -214,8 +235,10 @@ class Example extends TypedComponent {
             return;
         }
         controlPanelHeader.onclick = () => this.toggleCollapse();
+    }
 
-        // Other events
+    componentDidMount() {
+        this.setupControlPanel();
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('requestedFiles', this._handleRequestedFiles);
         window.addEventListener('orientationchange', this._onLayoutChange);
@@ -223,6 +246,10 @@ class Example extends TypedComponent {
         window.addEventListener('exampleLoad', this._handleExampleLoad);
         window.addEventListener('updateFiles', this._handleUpdateFiles);
         iframe.fire('requestFiles');
+    }
+
+    componentDidUpdate() {
+        this.setupControlPanel();
     }
 
     componentWillUnmount() {
@@ -319,66 +346,127 @@ class Example extends TypedComponent {
         this.mergeState({ collapsed: !this.collapsed });
     }
 
-    renderPortrait() {
-        const { collapsed, show, files, description } = this.state;
-        return jsx(
-            'div',
-            { style: { display: 'contents' } },
-            jsx(
-                Panel,
+    renderMobilePanel() {
+        const { mobilePanel } = this.props;
+        const { files, description } = this.state;
+
+        if (mobilePanel === 'code') {
+            return jsx(CodeEditorMobile, {
+                key: 'code',
+                files,
+                category: this.props.match.params.category,
+                example: this.props.match.params.example
+            });
+        }
+
+        if (mobilePanel === 'description') {
+            return jsx(
+                Container,
                 {
-                    id: 'controlPanel',
-                    class: ['mobile'],
-                    resizable: 'top',
-                    headerText: 'CODE & CONTROLS',
-                    collapsible: true,
-                    collapsed
+                    key: 'description',
+                    id: 'mobileDescriptionPanel'
+                },
+                jsx('span', {
+                    dangerouslySetInnerHTML: {
+                        __html: description
+                    }
+                })
+            );
+        }
+
+        if (mobilePanel === 'controls') {
+            return jsx(
+                Container,
+                {
+                    key: 'controls',
+                    id: 'mobileControlsPanel'
                 },
                 this.renderDeviceSelector(),
                 jsx(
                     Container,
                     {
-                        id: 'controls-wrapper'
+                        id: 'controlPanel-scroll-region'
                     },
                     jsx(
                         Container,
                         {
-                            id: 'controlPanel-tabs',
-                            class: 'tabs-container'
+                            id: 'controlPanel-controls'
                         },
-                        jsx(Button, {
-                            text: 'CODE',
-                            id: 'codeButton',
-                            class: show === 'code' ? 'selected' : undefined,
-                            onClick: () => this.mergeState({ show: 'code' })
-                        }),
-                        jsx(Button, {
-                            text: 'PARAMETERS',
-                            class: show === 'parameters' ? 'selected' : undefined,
-                            id: 'paramButton',
-                            onClick: () => this.mergeState({ show: 'parameters' })
-                        }),
-                        description ?
-                            jsx(Button, {
-                                text: 'DESCRIPTION',
-                                class: show === 'description' ? 'selected' : undefined,
-                                id: 'descButton',
-                                onClick: () => this.mergeState({ show: 'description' })
-                            }) :
-                            null
-                    ),
-                    show === 'parameters' &&
-                        jsx(
-                            Container,
-                            {
-                                id: 'controlPanel-controls'
-                            },
-                            this.renderControls()
-                        ),
-                    show === 'code' && jsx(CodeEditorMobile, { files })
+                        this.renderControls()
+                    )
                 )
+            );
+        }
+    }
+
+    renderMobileDock() {
+        const { mobilePanel, setMobilePanel } = this.props;
+        const { description } = this.state;
+        return jsx(
+            Container,
+            {
+                id: 'mobileDock'
+            },
+            jsx(Button, {
+                key: 'examples',
+                text: 'Examples',
+                class: mobilePanel === 'examples' ?
+                    ['mobile-dock-button', 'mobile-dock-examples', 'selected'] :
+                    ['mobile-dock-button', 'mobile-dock-examples'],
+                onClick: () => setMobilePanel?.('examples')
+            }),
+            jsx(Button, {
+                key: 'code',
+                text: 'Source',
+                class: mobilePanel === 'code' ?
+                    ['mobile-dock-button', 'mobile-dock-code', 'selected'] :
+                    ['mobile-dock-button', 'mobile-dock-code'],
+                onClick: () => setMobilePanel?.('code')
+            }),
+            jsx(Button, {
+                key: 'controls',
+                text: 'Controls',
+                class: mobilePanel === 'controls' ?
+                    ['mobile-dock-button', 'mobile-dock-controls', 'selected'] :
+                    ['mobile-dock-button', 'mobile-dock-controls'],
+                onClick: () => setMobilePanel?.('controls')
+            }),
+            jsx(Button, {
+                key: 'description',
+                text: 'Info',
+                enabled: Boolean(description),
+                class: mobilePanel === 'description' ?
+                    ['mobile-dock-button', 'mobile-dock-description', 'selected'] :
+                    ['mobile-dock-button', 'mobile-dock-description'],
+                onClick: () => this.state.description && setMobilePanel?.('description')
+            })
+        );
+    }
+
+    renderMobile() {
+        const { mobilePanel } = this.props;
+        const activePanel = mobilePanel && mobilePanel !== 'examples' ? mobilePanel : null;
+        return jsx(
+            Container,
+            {
+                id: 'mobileUi'
+            },
+            activePanel && jsx('div', {
+                className: 'mobile-resize-handle',
+                onPointerDown: this.props.onMobilePanelDragStart
+            }),
+            activePanel && jsx(
+                Panel,
+                {
+                    key: activePanel,
+                    id: 'controlPanel',
+                    class: ['mobile', `${activePanel}-sheet`],
+                    headerText: MOBILE_PANEL_TITLES[activePanel],
+                    collapsible: false
+                },
+                this.renderMobilePanel()
             ),
-            this.renderDescription()
+            this.renderMobileDock()
         );
     }
 
@@ -412,11 +500,15 @@ class Example extends TypedComponent {
 
     render() {
         const { iframePath } = this;
-        const { orientation, exampleLoaded } = this.state;
+        const { exampleLoaded } = this.state;
+        const orientation = this.props.orientation ?? this.state.orientation;
+        const mobilePanel = orientation === 'portrait' ? this.props.mobilePanel : null;
+        const className = mobilePanel ? 'mobile-panel-open' : undefined;
         return jsx(
             Container,
             {
-                id: 'canvas-container'
+                id: 'canvas-container',
+                class: className
             },
             !exampleLoaded && jsx(Spinner, { size: 50 }),
             jsx('iframe', {
@@ -424,19 +516,19 @@ class Example extends TypedComponent {
                 key: iframePath,
                 src: iframePath
             }),
-            orientation === 'portrait' ? this.renderPortrait() : this.renderLandscape()
+            orientation === 'portrait' ? this.renderMobile() : this.renderLandscape()
         );
     }
 }
 
 /**
- * Wrapper component to provide router params to the class component.
+ * @param {Omit<Props, 'match'>} props - Component properties.
  * @returns {ReactElement} The Example component with router params.
  */
-function ExampleWithRouter() {
+function ExampleWithRouter(props) {
     const params = useParams();
     // @ts-ignore
-    return jsx(Example, { match: { params } });
+    return jsx(Example, { ...props, match: { params } });
 }
 
 export { ExampleWithRouter as Example };

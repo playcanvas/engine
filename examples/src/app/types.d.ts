@@ -46,6 +46,7 @@ declare module '*.txt' {
 declare global {
     interface Window {
         _scrolledToExample?: boolean;
+        activeGraphicsDevice?: string;
         editor?: editor.IStandaloneCodeEditor;
         monaco: typeof monaco;
         preferredGraphicsDevice?: string;

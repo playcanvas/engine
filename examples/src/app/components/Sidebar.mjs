@@ -15,6 +15,10 @@ import { getOrientation } from '../utils.mjs';
 /**
  * @typedef {object} Props
  * @property {{ pathname: string, hash: string }} location - The router location.
+ * @property {'portrait'|'landscape'} [orientation] - Current orientation.
+ * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
+ * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
+ * @property {(event: import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
 /**
@@ -68,6 +72,12 @@ class SideBar extends TypedComponent {
         orientation: getOrientation()
     };
 
+    /** @type {HTMLElement | null} */
+    _sideBar = null;
+
+    /** @type {string} */
+    _sideBarOrientation = '';
+
     /**
      * @param {Props} props - Component properties.
      */
@@ -75,32 +85,64 @@ class SideBar extends TypedComponent {
         super(props);
         this._onLayoutChange = this._onLayoutChange.bind(this);
         this._onClickExample = this._onClickExample.bind(this);
+        this._onLargeThumbnailsSet = this._onLargeThumbnailsSet.bind(this);
     }
 
-    componentDidMount() {
-        // PCUI should just have a "onHeaderClick" but can't find anything
+    setupSideBar() {
         const sideBar = document.getElementById('sideBar');
-        if (!sideBar) {
+        const orientation = this.props.orientation ?? this.state.orientation;
+        if (!sideBar || (this._sideBar === sideBar && this._sideBarOrientation === orientation)) {
             return;
         }
+        this._sideBar = sideBar;
+        this._sideBarOrientation = orientation;
 
+        // PCUI should just have a "onHeaderClick" but can't find anything
         const sideBarHeader = /** @type {HTMLElement | null} */ (
             /** @type {unknown} */ (sideBar.querySelector('.pcui-panel-header'))
         );
-        if (!sideBarHeader) {
-            return;
+        if (sideBarHeader) {
+            sideBarHeader.onclick = orientation === 'portrait' ? null : () => this.toggleCollapse();
         }
-        sideBarHeader.onclick = () => this.toggleCollapse();
         this.setupControlPanelToggleButton();
+    }
 
-        // setup events
+    componentDidMount() {
+        this.state.observer.on('largeThumbnails:set', this._onLargeThumbnailsSet);
+        this.setupSideBar();
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('orientationchange', this._onLayoutChange);
+    }
+
+    componentDidUpdate() {
+        this.setupSideBar();
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this._onLayoutChange);
         window.removeEventListener('orientationchange', this._onLayoutChange);
+    }
+
+    _onLargeThumbnailsSet() {
+        const sideBar = document.getElementById('sideBar');
+        if (!sideBar) {
+            return;
+        }
+        let minTopNavItemDistance = Number.MAX_VALUE;
+
+        const navItems = /** @type {NodeListOf<HTMLElement>} */ (
+            /** @type {unknown} */ (document.querySelectorAll('.nav-item'))
+        );
+        for (let i = 0; i < navItems.length; i++) {
+            const nav = navItems[i];
+            const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
+            if (navItemDistance < minTopNavItemDistance) {
+                minTopNavItemDistance = navItemDistance;
+                sideBar.classList.toggle('small-thumbnails');
+                nav.scrollIntoView();
+                break;
+            }
+        }
     }
 
     setupControlPanelToggleButton() {
@@ -109,23 +151,6 @@ class SideBar extends TypedComponent {
         if (!sideBar) {
             return;
         }
-        this.state.observer.on('largeThumbnails:set', () => {
-            let minTopNavItemDistance = Number.MAX_VALUE;
-
-            const navItems = /** @type {NodeListOf<HTMLElement>} */ (
-                /** @type {unknown} */ (document.querySelectorAll('.nav-item'))
-            );
-            for (let i = 0; i < navItems.length; i++) {
-                const nav = navItems[i];
-                const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
-                if (navItemDistance < minTopNavItemDistance) {
-                    minTopNavItemDistance = navItemDistance;
-                    sideBar.classList.toggle('small-thumbnails');
-                    nav.scrollIntoView();
-                    break;
-                }
-            }
-        });
         sideBar.classList.add('visible');
         // when first opening the examples browser via a specific example, scroll it into view
         // @ts-ignore
@@ -199,10 +224,6 @@ class SideBar extends TypedComponent {
     }
 
     clearFilter() {
-        const input = document.querySelector('.filter-input input');
-        if (input) {
-            /** @type {HTMLInputElement} */ (/** @type {unknown} */ (input)).value = '';
-        }
         this.onChangeFilter('');
     }
 
@@ -215,6 +236,9 @@ class SideBar extends TypedComponent {
             iframe.fire('hotReload');
         } else {
             iframe.fire('destroy');
+        }
+        if (this.props.orientation === 'portrait') {
+            this.props.setMobilePanel?.(null);
         }
     }
 
@@ -283,7 +307,8 @@ class SideBar extends TypedComponent {
     }
 
     render() {
-        const { observer, collapsed, orientation } = this.state;
+        const { observer, collapsed } = this.state;
+        const orientation = this.props.orientation ?? this.state.orientation;
         const panelOptions = {
             headerText: `EXAMPLES - v${VERSION}`,
             collapsible: true,
@@ -292,13 +317,22 @@ class SideBar extends TypedComponent {
             class: ['small-thumbnails', ...(collapsed ? ['collapsed'] : [])]
         };
         if (orientation === 'portrait') {
-            panelOptions.class = ['small-thumbnails'];
-            panelOptions.collapsed = collapsed;
+            if (this.props.mobilePanel !== 'examples') {
+                return null;
+            }
+            panelOptions.headerText = `EXAMPLES - v${VERSION}`;
+            panelOptions.class = ['mobile-sheet', 'small-thumbnails'];
+            panelOptions.collapsible = false;
+            panelOptions.collapsed = false;
         }
         return jsx(
             Panel,
             // @ts-ignore
             panelOptions,
+            orientation === 'portrait' && jsx('div', {
+                className: 'mobile-resize-handle',
+                onPointerDown: this.props.onMobilePanelDragStart
+            }),
             jsx(
                 Container,
                 { class: ['filter-container', ...(this.state.filterText ? ['has-filter-text'] : [])] },
@@ -306,6 +340,7 @@ class SideBar extends TypedComponent {
                     class: 'filter-input',
                     keyChange: true,
                     placeholder: 'Filter...',
+                    value: this.state.filterText,
                     onChange: this.onChangeFilter.bind(this)
                 }),
                 this.state.filterText ? jsx(
@@ -317,7 +352,7 @@ class SideBar extends TypedComponent {
                     '\u2715'
                 ) : null
             ),
-            jsx(
+            orientation !== 'portrait' && jsx(
                 LabelGroup,
                 { text: 'Large thumbnails:' },
                 jsx(BooleanInput, {
@@ -332,12 +367,12 @@ class SideBar extends TypedComponent {
 }
 
 /**
- * Wrapper component to provide router location to the class component.
+ * @param {Omit<Props, 'location'>} props - Component properties.
  * @returns {ReactElement} The SideBar component with router location.
  */
-function SideBarWithRouter() {
+function SideBarWithRouter(props) {
     const location = useLocation();
-    return jsx(SideBar, { location });
+    return jsx(SideBar, { ...props, location });
 }
 
 export { SideBarWithRouter as SideBar };
