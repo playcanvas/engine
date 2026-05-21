@@ -68,7 +68,6 @@ class ExampleLoader {
                 console.warn('No canvas found.');
                 return;
             }
-            this.setMiniStats(true);
         }
 
         if (!this._started) {
@@ -91,6 +90,7 @@ class ExampleLoader {
             const reportedType = (isWebGPU(selectedDeviceType) && engineType === 'webgpu') ?
                 selectedDeviceType :
                 engineType;
+            window.top.activeGraphicsDevice = reportedType;
             fire('updateActiveDevice', { deviceType: reportedType });
         }
 
@@ -254,9 +254,10 @@ class ExampleLoader {
      */
     setMiniStats(enabled = false) {
         if (this._config.NO_MINISTATS) {
+            fire('miniStats', { state: false });
             return;
         }
-        MiniStats.enable(this._app, enabled);
+        fire('miniStats', { state: MiniStats.enable(this._app, enabled) });
     }
 
     hotReload() {
