@@ -452,6 +452,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
 
+        // surface any uncaptured WebGPU errors
+        this.wgpu.addEventListener?.('uncapturederror', (ev) => {
+            const e = /** @type {any} */ (ev).error;
+            Debug.error(`WebGPU uncaptured ${e?.constructor?.name ?? 'Error'}: ${e?.message ?? e}`);
+        });
+
         this.initDeviceCaps();
 
         this.gpuContext = this.canvas.getContext('webgpu');
