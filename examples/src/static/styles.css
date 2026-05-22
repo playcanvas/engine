@@ -593,11 +593,6 @@ body {
     text-align: center;
 }
 
-#descriptionPanel.mobile {
-    bottom: 100px;
-    width: 90%;
-}
-
 #descriptionPanel a {
     color: #f2f2f2;
 }
@@ -620,6 +615,28 @@ body {
 #appInner.mobile #controlPanel.mobile > .pcui-panel-content,
 #appInner.mobile .code-editor-mobile-files {
     touch-action: pan-y;
+}
+
+.example-attributions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.example-attribution {
+    max-width: 100%;
+    margin: 0;
+    opacity: 0.82;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.example-attribution-title {
+    font-weight: 600;
 }
 
 #appInner.mobile #menu,
