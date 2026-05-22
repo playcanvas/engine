@@ -3,7 +3,7 @@ import path from 'node:path';
 import { defineConfig } from 'vite';
 
 import { revision, version } from '../utils/rollup-version-revision.mjs';
-import { ALLOWED_HOSTS, devHttpsConfig } from './utils/certificates.mjs';
+import { ALLOWED_HOSTS, httpsConfig } from './utils/certificates.mjs';
 import { examplesDevServer } from './utils/vite-dev-server.mjs';
 
 const HOST = process.env.EXAMPLES_HOST ?? '0.0.0.0';
@@ -34,7 +34,7 @@ export default defineConfig({
         hmr: AUTO_RELOAD ? undefined : false,
         host: HOST,
         port: PORT,
-        https: devHttpsConfig(),
+        https: httpsConfig(),
         // LAN device testing — e.g. https://<hostname>.local:5555
         allowedHosts: ALLOWED_HOSTS,
         fs: {
@@ -52,7 +52,7 @@ export default defineConfig({
     preview: {
         host: HOST,
         port: PORT,
-        https: devHttpsConfig(),
+        https: httpsConfig(),
         allowedHosts: ALLOWED_HOSTS
     },
     define: {

@@ -19,7 +19,7 @@ export const ALLOWED_HOSTS = ['localhost', '.local'];
 /**
  * @returns {{ cert: Buffer, key: Buffer } | undefined} vite https config.
  */
-export const devHttpsConfig = () => {
+export const httpsConfig = () => {
     if (process.env.EXAMPLES_HTTPS !== '1') {
         return undefined;
     }
