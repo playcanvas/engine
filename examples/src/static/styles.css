@@ -16,6 +16,7 @@ body {
 
 :root {
     --mobile-dock-height: 48px;
+    --mobile-dock-width: 48px;
     --mobile-gap: 8px;
     --mobile-handle-hit-height: 44px;
     --mobile-handle-hit-width: 96px;
@@ -357,6 +358,12 @@ body {
     height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
 }
 
+#appInner.mobile-landscape #canvas-container iframe,
+#appInner.mobile-landscape #exampleLoading {
+    width: calc(100vw - var(--mobile-dock-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap));
+    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap));
+}
+
 #appInner.mobile-portrait #canvas-container.mobile-panel-open iframe {
     height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
 }
@@ -367,8 +374,8 @@ body {
 
 #appInner.mobile-landscape #canvas-container.mobile-panel-open iframe,
 #appInner.mobile-landscape #canvas-container.mobile-panel-open #exampleLoading {
-    width: calc(100vw - var(--mobile-panel-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap));
-    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
+    width: calc(100vw - var(--mobile-panel-width) - var(--mobile-dock-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap));
+    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap));
 }
 
 @keyframes animation-spin {
@@ -463,6 +470,7 @@ body {
     width: var(--mobile-panel-width);
     min-width: 0;
     max-width: var(--mobile-panel-width);
+    max-height: none;
     height: auto;
     box-sizing: border-box;
     touch-action: none;
@@ -470,15 +478,15 @@ body {
 
 #appInner.mobile-landscape #controlPanel.mobile {
     top: 0;
-    right: 0;
-    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap) + env(safe-area-inset-bottom));
+    right: calc(var(--mobile-dock-width) + var(--mobile-gap));
+    bottom: 0;
     left: auto;
 }
 
 #appInner.mobile-landscape #sideBar.mobile-sheet {
     top: var(--mobile-gap);
-    right: var(--mobile-gap);
-    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap) + var(--mobile-gap) + env(safe-area-inset-bottom));
+    right: calc(var(--mobile-dock-width) + var(--mobile-gap) + var(--mobile-gap));
+    bottom: var(--mobile-gap);
     left: auto;
 }
 
@@ -1044,6 +1052,18 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
     border-radius: var(--mobile-radius);
     z-index: 100000;
     -webkit-tap-highlight-color: transparent;
+}
+
+#appInner.mobile-landscape #mobileDock {
+    left: auto;
+    right: var(--mobile-gap);
+    top: var(--mobile-gap);
+    bottom: var(--mobile-gap);
+    width: var(--mobile-dock-width);
+    height: auto;
+    flex-direction: column;
+    gap: clamp(16px, 5dvh, 28px);
+    padding: 8px 4px;
 }
 
 #appInner.mobile #mobileDock .mobile-dock-button {

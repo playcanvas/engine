@@ -11,6 +11,7 @@ import { jsx } from '../jsx.mjs';
 import { getLayout } from '../utils.mjs';
 
 const MOBILE_DOCK_HEIGHT = 48;
+const MOBILE_DOCK_WIDTH = 48;
 const MOBILE_GAP = 8;
 const MOBILE_PANEL_MIN_HEIGHT = 220;
 const MOBILE_PANEL_DEFAULT_MIN_HEIGHT = 300;
@@ -45,7 +46,7 @@ function getDefaultMobilePanelHeight() {
 }
 
 function getMobilePanelWidth(width = window.innerWidth * MOBILE_PANEL_DEFAULT_WIDTH_SCALE) {
-    const max = Math.max(0, window.innerWidth - MOBILE_CANVAS_MIN_WIDTH - MOBILE_GAP * 3);
+    const max = Math.max(0, window.innerWidth - MOBILE_CANVAS_MIN_WIDTH - MOBILE_DOCK_WIDTH - MOBILE_GAP * 4);
     const min = Math.min(MOBILE_PANEL_MIN_WIDTH, max);
     return Math.min(max, Math.max(min, width));
 }
