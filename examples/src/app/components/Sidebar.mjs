@@ -239,9 +239,6 @@ class SideBar extends TypedComponent {
         } else {
             iframe.fire('destroy');
         }
-        if (this.props.orientation === 'portrait') {
-            this.props.setMobilePanel?.(null);
-        }
     }
 
     renderContents() {
