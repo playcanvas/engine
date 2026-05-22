@@ -3,13 +3,14 @@ import { Color, Script, Vec2, Vec3 } from 'playcanvas';
 /** @import { XrInputSource } from 'playcanvas' */
 
 /**
- * Handles VR navigation with support for teleportation, smooth locomotion, and snap vertical movement.
- * All methods can be enabled simultaneously, allowing users to choose their preferred
- * navigation method on the fly.
+ * Handles VR navigation with support for teleportation, smooth locomotion, snap or smooth
+ * turning, and snap vertical movement. All methods can be enabled simultaneously, allowing
+ * users to choose their preferred navigation method on the fly.
  *
  * Teleportation: Point and teleport using trigger/pinch gestures
  * Smooth Locomotion: Use left thumbstick for XZ movement
- * Snap Turn: Use right thumbstick X-axis for snap turning
+ * Turning: Right thumbstick X-axis — snap turn (default) or continuous smooth turn, selected
+ *   via {@link XrNavigation#turnMode}
  * Snap Vertical: Use right thumbstick Y-axis to snap up/down (right grip for larger jumps)
  *
  * This script should be attached to a parent entity of the camera entity used for the XR
@@ -40,7 +41,19 @@ class XrNavigation extends Script {
     movementSpeed = 1.5;
 
     /**
-     * Angle in degrees for each snap turn.
+     * Selects the right-thumbstick turn behaviour. One of:
+     * - `'snap'`: discrete rotation of {@link XrNavigation#rotateSpeed} degrees per gesture
+     *   (default; existing behaviour).
+     * - `'smooth'`: continuous rotation at {@link XrNavigation#smoothTurnSpeed} degrees/second
+     *   while the thumbstick is past {@link XrNavigation#smoothTurnThreshold}.
+     * - `'none'`: thumbstick X is ignored.
+     * @attribute
+     * @enabledif {enableMove}
+     */
+    turnMode = 'snap';
+
+    /**
+     * Angle in degrees for each snap turn. Used when {@link XrNavigation#turnMode} is `'snap'`.
      * @attribute
      * @range [15, 180]
      * @enabledif {enableMove}
@@ -73,6 +86,24 @@ class XrNavigation extends Script {
      * @enabledif {enableMove}
      */
     rotateResetThreshold = 0.25;
+
+    /**
+     * Rotation speed in degrees per second when {@link XrNavigation#turnMode} is `'smooth'`.
+     * @attribute
+     * @range [30, 360]
+     * @enabledif {enableMove}
+     */
+    smoothTurnSpeed = 90;
+
+    /**
+     * Deadzone for the right-thumbstick X-axis when {@link XrNavigation#turnMode} is `'smooth'`.
+     * Below this magnitude the stick is treated as centred.
+     * @attribute
+     * @range [0, 0.5]
+     * @precision 0.01
+     * @enabledif {enableMove}
+     */
+    smoothTurnThreshold = 0.15;
 
     /**
      * Maximum distance for teleportation in meters.
@@ -366,8 +397,13 @@ class XrNavigation extends Script {
                     // Apply movement to camera parent (this entity)
                     this.entity.translate(this.tmpVec2A.x, 0, this.tmpVec2A.y);
                 }
-            } else if (inputSource.handedness === 'right') { // Right controller - snap turning
-                this.handleSnapTurning(inputSource);
+            } else if (inputSource.handedness === 'right') { // Right controller - turning
+                if (this.turnMode === 'smooth') {
+                    this.handleSmoothTurning(inputSource, dt);
+                } else if (this.turnMode === 'snap') {
+                    this.handleSnapTurning(inputSource);
+                }
+                // 'none' → thumbstick X is ignored
             }
         }
     }
@@ -395,6 +431,26 @@ class XrNavigation extends Script {
                 this.entity.translateLocal(this.tmpVec3A.mulScalar(-1));
             }
         }
+    }
+
+    /**
+     * Continuous turn at {@link XrNavigation#smoothTurnSpeed} degrees per second while the
+     * right thumbstick X-axis is held past {@link XrNavigation#smoothTurnThreshold}. Rotates
+     * around the camera's local position so the view pivots in place rather than orbiting
+     * the rig origin.
+     *
+     * @param {XrInputSource} inputSource - The right-hand input source.
+     * @param {number} dt - Frame delta time in seconds.
+     */
+    handleSmoothTurning(inputSource, dt) {
+        const turn = -inputSource.gamepad.axes[2];
+        if (Math.abs(turn) <= this.smoothTurnThreshold) return;
+        if (!this.cameraEntity) return;
+
+        this.tmpVec3A.copy(this.cameraEntity.getLocalPosition());
+        this.entity.translateLocal(this.tmpVec3A);
+        this.entity.rotateLocal(0, turn * this.smoothTurnSpeed * dt, 0);
+        this.entity.translateLocal(this.tmpVec3A.mulScalar(-1));
     }
 
     /**

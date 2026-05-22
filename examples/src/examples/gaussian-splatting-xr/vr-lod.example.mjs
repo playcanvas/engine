@@ -171,7 +171,7 @@ assetListLoader.load(() => {
     });
 
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('splatBudget', 1.5);
+    data.set('splatBudget', 1);
     data.set('data.stats.gsplats', '—');
     data.set('data.stats.resolution', '—');
 
@@ -217,7 +217,9 @@ assetListLoader.load(() => {
         properties: {
             enableTeleport: false,
             enableSnapVertical: false,
-            movementThreshold: 0
+            movementThreshold: 0,
+            turnMode: 'smooth',
+            smoothTurnSpeed: 90
         }
     });
 
@@ -306,7 +308,10 @@ assetListLoader.load(() => {
             return;
         }
         if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            app.fire('vr:start', pc.XRSPACE_LOCAL);
+            // local-floor: WebXR puts the local-space origin at the floor below the viewer at
+            // session start, so the camera (child of the rig) ends up at rig + ~1.6 m on Y.
+            // `local` would put the head at rig.y, sinking the viewpoint into the scene floor.
+            app.fire('vr:start', pc.XRSPACE_LOCALFLOOR);
         } else {
             setMessage('Immersive VR is not available');
         }
@@ -335,7 +340,7 @@ assetListLoader.load(() => {
         app.xr.on('start', () => {
             setCameraControlsForXr();
             updateEnterVrButton();
-            setMessage('VR active — left thumbstick: move, right: snap turn; tap to exit');
+            setMessage('VR active — left thumbstick: move, right: turn; tap to exit');
         });
         app.xr.on('end', () => {
             setMessage('VR ended — click Enter VR to re-enter');
