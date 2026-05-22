@@ -106,6 +106,7 @@ class Example extends TypedComponent {
         this._handleExampleHotReload = this._handleExampleHotReload.bind(this);
         this._handleExampleError = this._handleExampleError.bind(this);
         this._handleUpdateFiles = this._handleUpdateFiles.bind(this);
+        this._reloadIframe = this._reloadIframe.bind(this);
     }
 
     /**
@@ -201,6 +202,14 @@ class Example extends TypedComponent {
             loadedPath: '',
             loadError: null
         });
+    }
+
+    _reloadIframe() {
+        this.setState({
+            exampleLoaded: false,
+            loadedPath: '',
+            loadError: null
+        }, () => requestAnimationFrame(() => iframe.reload()));
     }
 
     /**
@@ -328,7 +337,7 @@ class Example extends TypedComponent {
         }
 
         return jsx(DeviceSelector, {
-            onSelect: () => iframe.reload() // reload the iframe after updating the device
+            onSelect: this._reloadIframe
         });
     }
 
