@@ -8,7 +8,7 @@ import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
-import { getOrientation } from '../utils.mjs';
+import { getLayout } from '../utils.mjs';
 
 const MOBILE_DOCK_HEIGHT = 48;
 const MOBILE_GAP = 8;
@@ -41,7 +41,7 @@ function getDefaultMobilePanelHeight() {
 
 /**
  * @typedef {object} State
- * @property {'portrait'|'landscape'} orientation - Current orientation.
+ * @property {'mobile'|'desktop'} layout - Current layout.
  * @property {null|'examples'|'code'|'controls'|'description'} mobilePanel - Active mobile panel.
  * @property {number} mobilePanelHeight - Active mobile panel height.
  */
@@ -52,7 +52,7 @@ const TypedComponent = Component;
 class MainLayout extends TypedComponent {
     /** @type {State} */
     state = {
-        orientation: getOrientation(),
+        layout: getLayout(),
         mobilePanel: null,
         mobilePanelHeight: getDefaultMobilePanelHeight()
     };
@@ -69,10 +69,10 @@ class MainLayout extends TypedComponent {
     }
 
     _onLayoutChange() {
-        const orientation = getOrientation();
+        const layout = getLayout();
         this.setState(prevState => ({
-            orientation,
-            mobilePanel: orientation === 'portrait' ? prevState.mobilePanel : null,
+            layout,
+            mobilePanel: layout === 'mobile' ? prevState.mobilePanel : null,
             mobilePanelHeight: getMobilePanelHeight(prevState.mobilePanelHeight)
         }), this.resizeIframe);
     }
@@ -165,11 +165,12 @@ class MainLayout extends TypedComponent {
     };
 
     render() {
-        const { orientation, mobilePanel, mobilePanelHeight } = this.state;
+        const { layout, mobilePanel, mobilePanelHeight } = this.state;
         return jsx(
             'div',
             {
                 id: 'appInner',
+                className: layout,
                 style: { '--mobile-panel-height': `${mobilePanelHeight}px` }
             },
             jsx(
@@ -188,7 +189,7 @@ class MainLayout extends TypedComponent {
                             'div',
                             { id: 'appInner-router', style: { display: 'contents' } },
                             jsx(SideBar, {
-                                orientation,
+                                layout,
                                 mobilePanel,
                                 setMobilePanel: this.setMobilePanel,
                                 onMobilePanelDragStart: this.startMobilePanelDrag
@@ -197,15 +198,15 @@ class MainLayout extends TypedComponent {
                                 Container,
                                 { id: 'main-view-wrapper' },
                                 jsx(Menu, {
-                                    orientation,
+                                    layout,
                                     setShowMiniStats: this.updateShowMiniStats.bind(this)
                                 }),
                                 jsx(
                                     Container,
                                     { id: 'main-view' },
-                                    orientation === 'landscape' && jsx(CodeEditorDesktop),
+                                    layout === 'desktop' && jsx(CodeEditorDesktop),
                                     jsx(Example, {
-                                        orientation,
+                                        layout,
                                         mobilePanel,
                                         setMobilePanel: this.setMobilePanel,
                                         onMobilePanelDragStart: this.startMobilePanelDrag

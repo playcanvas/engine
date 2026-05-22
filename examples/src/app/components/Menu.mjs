@@ -4,12 +4,12 @@ import { Component } from 'react';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { logo } from '../paths.mjs';
-import { getOrientation } from '../utils.mjs';
+import { getLayout } from '../utils.mjs';
 
 /**
  * @typedef {object} Props
  * @property {(value: boolean) => void} setShowMiniStats - The state set function .
- * @property {'portrait'|'landscape'} [orientation] - Current orientation.
+ * @property {'mobile'|'desktop'} [layout] - Current layout.
  */
 
 /**
@@ -23,7 +23,7 @@ const TypedComponent = Component;
 class Menu extends TypedComponent {
     /** @type {State} */
     state = {
-        showMiniStats: getOrientation() !== 'portrait'
+        showMiniStats: getLayout() === 'desktop'
     };
 
     mouseTimeout = null;

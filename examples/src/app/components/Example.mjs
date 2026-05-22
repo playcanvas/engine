@@ -7,11 +7,10 @@ import { useParams } from 'react-router-dom';
 import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
-import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx, fragment } from '../jsx.mjs';
 import { iframePath } from '../paths.mjs';
-import { getOrientation } from '../utils.mjs';
+import { getLayout } from '../utils.mjs';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -55,7 +54,7 @@ const MOBILE_PANEL_TITLES = {
 /**
  * @typedef {object} Props
  * @property {{params: {category: string, example: string}}} match - The match object.
- * @property {'portrait'|'landscape'} [orientation] - Current orientation.
+ * @property {'mobile'|'desktop'} [layout] - Current layout.
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
  * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
@@ -63,7 +62,7 @@ const MOBILE_PANEL_TITLES = {
 
 /**
  * @typedef {object} State
- * @property {'portrait' | 'landscape'} orientation - The orientation.
+ * @property {'mobile' | 'desktop'} layout - The layout.
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
  * @property {string} loadedPath - The loaded iframe path.
@@ -81,9 +80,8 @@ const TypedComponent = Component;
 class Example extends TypedComponent {
     /** @type {State} */
     state = {
-        orientation: getOrientation(),
-        // @ts-ignore
-        collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
+        layout: getLayout(),
+        collapsed: getLayout() === 'mobile',
         exampleLoaded: false,
         loadedPath: '',
         loadError: null,
@@ -141,10 +139,10 @@ class Example extends TypedComponent {
     }
 
     /**
-     * Called for resizing and changing orientation of device.
+     * Called for resizing and changing layout.
      */
     _onLayoutChange() {
-        this.mergeState({ orientation: getOrientation() });
+        this.mergeState({ layout: getLayout() });
     }
 
     /**
@@ -362,7 +360,8 @@ class Example extends TypedComponent {
     }
 
     renderDescription() {
-        const { exampleLoaded, description, orientation } = this.state;
+        const { exampleLoaded, description } = this.state;
+        const layout = this.props.layout ?? this.state.layout;
         const ready = exampleLoaded && iframe.ready;
         if (!ready) {
             return;
@@ -371,7 +370,7 @@ class Example extends TypedComponent {
             Container,
             {
                 id: 'descriptionPanel',
-                class: orientation === 'portrait' ? 'mobile' : undefined
+                class: layout === 'mobile' ? 'mobile' : undefined
             },
             jsx('span', {
                 dangerouslySetInnerHTML: {
@@ -524,7 +523,7 @@ class Example extends TypedComponent {
         );
     }
 
-    renderLandscape() {
+    renderDesktop() {
         const { collapsed } = this.state;
         return jsx(
             'div',
@@ -533,7 +532,7 @@ class Example extends TypedComponent {
                 Panel,
                 {
                     id: 'controlPanel',
-                    class: ['landscape'],
+                    class: ['desktop'],
                     resizable: 'top',
                     headerText: 'CONTROLS',
                     collapsible: true,
@@ -557,8 +556,8 @@ class Example extends TypedComponent {
         const { exampleLoaded, loadedPath, loadError } = this.state;
         const error = loadError?.path === iframePath ? loadError : null;
         const loading = !error && (!exampleLoaded || loadedPath !== iframePath);
-        const orientation = this.props.orientation ?? this.state.orientation;
-        const mobilePanel = orientation === 'portrait' ? this.props.mobilePanel : null;
+        const layout = this.props.layout ?? this.state.layout;
+        const mobilePanel = layout === 'mobile' ? this.props.mobilePanel : null;
         const className = mobilePanel ? 'mobile-panel-open' : undefined;
         return jsx(
             Container,
@@ -591,7 +590,7 @@ class Example extends TypedComponent {
                 key: iframePath,
                 src: iframePath
             }),
-            orientation === 'portrait' ? this.renderMobile() : this.renderLandscape()
+            layout === 'mobile' ? this.renderMobile() : this.renderDesktop()
         );
     }
 }
