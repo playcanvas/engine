@@ -15,10 +15,11 @@ import { getLayout } from '../utils.mjs';
 /**
  * @import { Observer } from '@playcanvas/observer'
  * @import { ComponentType, ReactElement } from 'react'
- * @import { ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
+ * @import { Attribution, ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
  */
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
+const URL_IN_TEXT_PATTERN = /(https?:\/\/[^\s)]+)/;
 
 /** @type {Record<string, string>} */
 const MOBILE_PANEL_TITLES = {
@@ -72,6 +73,7 @@ const MOBILE_PANEL_TITLES = {
  * @property {boolean} showDeviceSelector - Show device selector.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
+ * @property {Attribution[]} attributions - Attributions for the example.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -89,7 +91,8 @@ class Example extends TypedComponent {
         showDeviceSelector: true,
         files: { 'example.mjs': '// loading' },
         observer: null,
-        description: ''
+        description: '',
+        attributions: []
     };
 
     /**
@@ -155,7 +158,9 @@ class Example extends TypedComponent {
             loadedPath: '',
             loadError: null,
             controls: null,
-            showDeviceSelector: showDeviceSelector
+            showDeviceSelector: showDeviceSelector,
+            description: '',
+            attributions: []
         });
     }
 
@@ -164,9 +169,9 @@ class Example extends TypedComponent {
      */
     async _handleExampleLoad(event) {
         const path = this.iframePath;
-        const { files, observer, description } = event.detail;
+        const { files, observer, description, attributions = [] } = event.detail;
         const controlsSrc = files['controls.mjs'];
-        if (!description && this.props.mobilePanel === 'description') {
+        if (!description && !attributions.length && this.props.mobilePanel === 'description') {
             this.props.setMobilePanel?.(null);
         }
         if (controlsSrc) {
@@ -178,7 +183,8 @@ class Example extends TypedComponent {
                 controls,
                 observer,
                 files,
-                description
+                description,
+                attributions
             });
         } else {
             // When switching examples from one with controls to one without controls...
@@ -189,7 +195,8 @@ class Example extends TypedComponent {
                 controls: null,
                 observer: null,
                 files,
-                description
+                description,
+                attributions
             });
         }
     }
@@ -233,7 +240,7 @@ class Example extends TypedComponent {
      */
     async _handleUpdateFiles(event) {
         const path = this.iframePath;
-        const { files, observer } = event.detail;
+        const { files, observer, description, attributions = [] } = event.detail;
         const controlsSrc = files['controls.mjs'] ?? '';
         if (!files['controls.mjs']) {
             this.mergeState({
@@ -241,7 +248,9 @@ class Example extends TypedComponent {
                 loadedPath: path,
                 loadError: null,
                 controls: null,
-                observer: null
+                observer: null,
+                description,
+                attributions
             });
         }
         const controls = await this._buildControls(controlsSrc);
@@ -250,7 +259,9 @@ class Example extends TypedComponent {
             loadedPath: path,
             loadError: null,
             controls,
-            observer
+            observer,
+            description,
+            attributions
         });
         window.dispatchEvent(new CustomEvent('resetErrorBoundary'));
     }
@@ -361,24 +372,98 @@ class Example extends TypedComponent {
         );
     }
 
+    /**
+     * @param {string} href - link href.
+     * @param {string} text - link text.
+     * @returns {ReactElement} rendered link.
+     */
+    renderAttributionLink(href, text) {
+        return jsx('a', {
+            href,
+            target: '_blank',
+            rel: 'noopener'
+        }, text);
+    }
+
+    /**
+     * @param {string} source - source value.
+     * @returns {ReactElement | string} rendered source.
+     */
+    renderSourceLink(source) {
+        const match = URL_IN_TEXT_PATTERN.exec(source);
+        return match ? this.renderAttributionLink(match[1], 'Source') : source;
+    }
+
+    /**
+     * @param {string} license - license value.
+     * @returns {ReactElement | string} rendered license.
+     */
+    renderLicenseLink(license) {
+        const match = URL_IN_TEXT_PATTERN.exec(license);
+        if (!match) {
+            return license;
+        }
+
+        const label = license.slice(0, match.index).trim().replace(/\s*\($/, '').trim();
+        return this.renderAttributionLink(match[1], label || 'License');
+    }
+
+    /**
+     * @param {Attribution} attribution - attribution data.
+     * @param {number} index - attribution index.
+     * @returns {ReactElement} rendered attribution row.
+     */
+    renderAttribution(attribution, index) {
+        return jsx(
+            'p',
+            {
+                className: 'example-attribution',
+                key: index
+            },
+            jsx('span', { className: 'example-attribution-title' }, attribution.title),
+            ' by ',
+            jsx('span', { className: 'example-attribution-author' }, attribution.author),
+            ' \u00b7 ',
+            this.renderSourceLink(attribution.source),
+            ' \u00b7 ',
+            this.renderLicenseLink(attribution.license)
+        );
+    }
+
+    renderAttributions() {
+        const { attributions } = this.state;
+        if (!attributions.length) {
+            return null;
+        }
+
+        return jsx(
+            'div',
+            {
+                className: 'example-attributions'
+            },
+            attributions.map((attribution, index) => this.renderAttribution(attribution, index))
+        );
+    }
+
     renderDescription() {
-        const { exampleLoaded, description } = this.state;
-        const layout = this.props.layout ?? this.state.layout;
+        const { exampleLoaded, description, attributions } = this.state;
         const ready = exampleLoaded && iframe.ready;
-        if (!ready) {
+        if (!ready || (!description && !attributions.length)) {
             return;
         }
         return jsx(
             Container,
             {
-                id: 'descriptionPanel',
-                class: layout === 'mobile' ? 'mobile' : undefined
+                id: 'descriptionPanel'
             },
-            jsx('span', {
-                dangerouslySetInnerHTML: {
-                    __html: description
-                }
-            })
+            description ?
+                jsx('span', {
+                    dangerouslySetInnerHTML: {
+                        __html: description
+                    }
+                }) :
+                null,
+            this.renderAttributions()
         );
     }
 
@@ -425,11 +510,14 @@ class Example extends TypedComponent {
                     key: 'description',
                     id: 'mobileDescriptionPanel'
                 },
-                jsx('span', {
-                    dangerouslySetInnerHTML: {
-                        __html: description
-                    }
-                })
+                description ?
+                    jsx('span', {
+                        dangerouslySetInnerHTML: {
+                            __html: description
+                        }
+                    }) :
+                    null,
+                this.renderAttributions()
             );
         }
 
@@ -460,7 +548,8 @@ class Example extends TypedComponent {
 
     renderMobileDock() {
         const { mobilePanel, setMobilePanel } = this.props;
-        const { description } = this.state;
+        const { description, attributions } = this.state;
+        const hasDescription = description || attributions.length;
         return jsx(
             Container,
             {
@@ -493,11 +582,11 @@ class Example extends TypedComponent {
             jsx(Button, {
                 key: 'description',
                 text: 'Info',
-                enabled: Boolean(description),
+                enabled: Boolean(hasDescription),
                 class: mobilePanel === 'description' ?
                     ['mobile-dock-button', 'mobile-dock-description', 'selected'] :
                     ['mobile-dock-button', 'mobile-dock-description'],
-                onClick: () => this.state.description && setMobilePanel?.('description')
+                onClick: () => (this.state.description || this.state.attributions.length) && setMobilePanel?.('description')
             })
         );
     }

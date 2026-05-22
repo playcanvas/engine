@@ -5,13 +5,12 @@
 //     <div>(<b>Space</b>) Jump</div>
 //     <div>(<b>Mouse</b>) Look</div>
 // </div>
-
 //
-// Scene attribution:
-//   Title:   Sunnyvale Heritage Park Museum
-//   Author:  zeitgeistarchivescans
-//   Source:  https://superspl.at/scene/d5d397aa
-//   License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+// @attribution
+// title: Sunnyvale Heritage Park Museum
+// author: zeitgeistarchivescans
+// source: https://superspl.at/scene/d5d397aa
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';

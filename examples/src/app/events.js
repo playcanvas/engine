@@ -11,10 +11,17 @@
  */
 
 /**
+ * @typedef {object} Attribution
+ * @property {string} title - The attribution title.
+ * @property {string} author - The attribution author.
+ * @property {string} source - The attribution source.
+ * @property {string} license - The attribution license.
+ *
  * @typedef {object} StateEventDetail
  * @property {Observer} observer - The PCUI observer.
  * @property {Record<string, string>} files - The example files.
  * @property {string} description - The example description.
+ * @property {Attribution[]} attributions - The example attributions.
  *
  * @typedef {CustomEvent<StateEventDetail>} StateEvent
  */
