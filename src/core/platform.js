@@ -133,6 +133,7 @@ const platform = {
      * True if running on Apple Vision Pro (visionOS).
      *
      * @type {boolean}
+     * @ignore
      */
     visionos: visionos,
 
