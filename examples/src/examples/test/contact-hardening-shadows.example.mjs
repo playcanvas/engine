@@ -4,7 +4,7 @@
 
 import * as pc from 'playcanvas';
 
-import { data, deviceType } from 'examples/context';
+import { data, deviceType, host } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -297,9 +297,10 @@ assetListLoader.load(() => {
         }
     });
 
-    const areaLightElement = window.top.document.getElementById('area-light');
-    const pointLightElement = window.top.document.getElementById('point-light');
-    const directionalLightElement = window.top.document.getElementById('directional-light');
+    const doc = host()?.document;
+    const areaLightElement = doc?.getElementById('area-light');
+    const pointLightElement = doc?.getElementById('point-light');
+    const directionalLightElement = doc?.getElementById('directional-light');
 
     let resizeControlPanel = true;
     let time = 0;
@@ -350,7 +351,7 @@ assetListLoader.load(() => {
 
         // resize control panel to fit the content better
         if (resizeControlPanel) {
-            const panel = window.top.document.getElementById('controlPanel');
+            const panel = doc?.getElementById('controlPanel');
             if (panel) {
                 panel.style.width = '360px';
                 resizeControlPanel = false;

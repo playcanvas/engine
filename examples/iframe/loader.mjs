@@ -1,6 +1,6 @@
 import files from './files.mjs';
 import MiniStats from './ministats.mjs';
-import { fetchFile, importModule, clearImports, parseConfig, fire } from './runtime.mjs';
+import { fetchFile, importModule, clearImports, parseConfig, fire, host } from './runtime.mjs';
 import { data, deviceType as selectedDeviceType, refreshContext, updateDeviceType } from './state.mjs';
 import { blockZoom } from './zoom.mjs';
 
@@ -165,8 +165,10 @@ class ExampleLoader {
 
         window.pc = await import(engineUrl);
 
-        // @ts-ignore
-        window.top.pc = window.pc;
+        const win = host();
+        if (win) {
+            win.pc = window.pc;
+        }
 
         await this._fetchFiles();
 

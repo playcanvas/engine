@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 
-import { data, deviceType } from 'examples/context';
+import { data, deviceType, host } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -58,6 +58,8 @@ app.on('destroy', () => {
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
+    const doc = host()?.document;
+
     app.start();
 
     app.scene.skyboxMip = 1;
@@ -295,7 +297,7 @@ assetListLoader.load(() => {
 
         // resize control panel to fit the content better
         if (resizeControlPanel) {
-            const panel = window.top.document.getElementById('controlPanel');
+            const panel = doc?.getElementById('controlPanel');
             if (panel) {
                 panel.style.width = '360px';
                 resizeControlPanel = false;
