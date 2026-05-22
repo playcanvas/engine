@@ -16,7 +16,7 @@ import { getOrientation } from '../utils.mjs';
 /**
  * @import { Observer } from '@playcanvas/observer'
  * @import { ComponentType, ReactElement } from 'react'
- * @import { LoadingEvent, StateEvent } from '../events.js'
+ * @import { ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
  */
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
@@ -66,6 +66,8 @@ const MOBILE_PANEL_TITLES = {
  * @property {'portrait' | 'landscape'} orientation - The orientation.
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
+ * @property {string} loadedPath - The loaded iframe path.
+ * @property {{ path: string, message: string } | null} loadError - The current loading error.
  * @property {Control | null} controls - Controls function from example.
  * @property {Observer | null} observer - The PCUI observer
  * @property {boolean} showDeviceSelector - Show device selector.
@@ -83,6 +85,8 @@ class Example extends TypedComponent {
         // @ts-ignore
         collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
         exampleLoaded: false,
+        loadedPath: '',
+        loadError: null,
         controls: () => null,
         showDeviceSelector: true,
         files: { 'example.mjs': '// loading' },
@@ -99,6 +103,8 @@ class Example extends TypedComponent {
         this._handleRequestedFiles = this._handleRequestedFiles.bind(this);
         this._handleExampleLoading = this._handleExampleLoading.bind(this);
         this._handleExampleLoad = this._handleExampleLoad.bind(this);
+        this._handleExampleHotReload = this._handleExampleHotReload.bind(this);
+        this._handleExampleError = this._handleExampleError.bind(this);
         this._handleUpdateFiles = this._handleUpdateFiles.bind(this);
     }
 
@@ -147,6 +153,8 @@ class Example extends TypedComponent {
         const { showDeviceSelector } = event.detail;
         this.mergeState({
             exampleLoaded: false,
+            loadedPath: '',
+            loadError: null,
             controls: null,
             showDeviceSelector: showDeviceSelector
         });
@@ -156,6 +164,7 @@ class Example extends TypedComponent {
      * @param {StateEvent} event - The event.
      */
     async _handleExampleLoad(event) {
+        const path = this.iframePath;
         const { files, observer, description } = event.detail;
         const controlsSrc = files['controls.mjs'];
         if (!description && this.props.mobilePanel === 'description') {
@@ -165,6 +174,8 @@ class Example extends TypedComponent {
             const controls = await this._buildControls(controlsSrc);
             this.mergeState({
                 exampleLoaded: true,
+                loadedPath: path,
+                loadError: null,
                 controls,
                 observer,
                 files,
@@ -174,6 +185,8 @@ class Example extends TypedComponent {
             // When switching examples from one with controls to one without controls...
             this.mergeState({
                 exampleLoaded: true,
+                loadedPath: path,
+                loadError: null,
                 controls: null,
                 observer: null,
                 files,
@@ -182,15 +195,44 @@ class Example extends TypedComponent {
         }
     }
 
+    _handleExampleHotReload() {
+        this.mergeState({
+            exampleLoaded: false,
+            loadedPath: '',
+            loadError: null
+        });
+    }
+
+    /**
+     * @param {ExampleErrorEvent} event - The event.
+     */
+    _handleExampleError(event) {
+        const { exampleLoaded, loadedPath } = this.state;
+        if (exampleLoaded && loadedPath === this.iframePath) {
+            return;
+        }
+        const { name, message } = event.detail;
+        this.mergeState({
+            exampleLoaded: false,
+            loadError: {
+                path: this.iframePath,
+                message: `${name}: ${message}`
+            }
+        });
+    }
+
     /**
      * @param {StateEvent} event - The event.
      */
     async _handleUpdateFiles(event) {
+        const path = this.iframePath;
         const { files, observer } = event.detail;
         const controlsSrc = files['controls.mjs'] ?? '';
         if (!files['controls.mjs']) {
             this.mergeState({
                 exampleLoaded: true,
+                loadedPath: path,
+                loadError: null,
                 controls: null,
                 observer: null
             });
@@ -198,6 +240,8 @@ class Example extends TypedComponent {
         const controls = await this._buildControls(controlsSrc);
         this.mergeState({
             exampleLoaded: true,
+            loadedPath: path,
+            loadError: null,
             controls,
             observer
         });
@@ -245,6 +289,8 @@ class Example extends TypedComponent {
         window.addEventListener('orientationchange', this._onLayoutChange);
         window.addEventListener('exampleLoading', this._handleExampleLoading);
         window.addEventListener('exampleLoad', this._handleExampleLoad);
+        window.addEventListener('exampleHotReload', this._handleExampleHotReload);
+        window.addEventListener('exampleError', this._handleExampleError);
         window.addEventListener('updateFiles', this._handleUpdateFiles);
         iframe.fire('requestFiles');
     }
@@ -259,6 +305,8 @@ class Example extends TypedComponent {
         window.removeEventListener('orientationchange', this._onLayoutChange);
         window.removeEventListener('exampleLoading', this._handleExampleLoading);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
+        window.removeEventListener('exampleHotReload', this._handleExampleHotReload);
+        window.removeEventListener('exampleError', this._handleExampleError);
         window.removeEventListener('updateFiles', this._handleUpdateFiles);
     }
 
@@ -497,7 +545,9 @@ class Example extends TypedComponent {
 
     render() {
         const { iframePath } = this;
-        const { exampleLoaded } = this.state;
+        const { exampleLoaded, loadedPath, loadError } = this.state;
+        const error = loadError?.path === iframePath ? loadError : null;
+        const loading = !error && (!exampleLoaded || loadedPath !== iframePath);
         const orientation = this.props.orientation ?? this.state.orientation;
         const mobilePanel = orientation === 'portrait' ? this.props.mobilePanel : null;
         const className = mobilePanel ? 'mobile-panel-open' : undefined;
@@ -507,7 +557,26 @@ class Example extends TypedComponent {
                 id: 'canvas-container',
                 class: className
             },
-            !exampleLoaded && jsx(Spinner, { size: 50 }),
+            (loading || error) && jsx(
+                'div',
+                {
+                    id: 'exampleLoading',
+                    className: error ? 'error' : undefined
+                },
+                jsx(
+                    'div',
+                    {
+                        className: 'example-loading-content'
+                    },
+                    error ? fragment(
+                        jsx('div', { className: 'example-loading-title' }, 'Example failed to load'),
+                        jsx('div', { className: 'example-loading-message' }, error.message)
+                    ) : fragment(
+                        jsx(Spinner, { size: 34 }),
+                        jsx('div', { className: 'example-loading-title' }, 'LOADING')
+                    )
+                )
+            ),
             jsx('iframe', {
                 id: 'exampleIframe',
                 key: iframePath,
