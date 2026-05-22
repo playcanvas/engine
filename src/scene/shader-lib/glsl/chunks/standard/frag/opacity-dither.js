@@ -11,6 +11,12 @@ uniform vec4 blueNoiseJitter;
 #endif
 
 void opacityDither(float alpha, float id) {
+    if (alpha <= 0.0)
+        discard;
+
+    if (alpha >= 1.0)
+        return;
+
     #if STD_OPACITY_DITHER == BAYER8
 
         float noise = bayer8(floor(mod(gl_FragCoord.xy + blueNoiseJitter.xy + id, 8.0))) / 64.0;

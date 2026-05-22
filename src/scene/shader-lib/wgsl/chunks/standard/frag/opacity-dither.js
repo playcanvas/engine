@@ -12,6 +12,14 @@ uniform blueNoiseJitter: vec4f;
 #endif
 
 fn opacityDither(alpha: f32, id: f32) {
+    if (alpha <= 0.0) {
+        discard;
+    }
+
+    if (alpha >= 1.0) {
+        return;
+    }
+
     #if STD_OPACITY_DITHER == BAYER8
 
         var noise: f32 = bayer8(floor((pcPosition.xy + uniform.blueNoiseJitter.xy + id) % vec2f(8.0))) / 64.0;
