@@ -95,15 +95,16 @@ class SideBar extends TypedComponent {
         }
         this._sideBar = sideBar;
         this._sideBarLayout = layout;
+        const drag = this.props.onMobilePanelDragStart;
+        sideBar.onpointerdown = layout === 'mobile' && drag ? event => drag(event) : null;
 
         // PCUI should just have a "onHeaderClick" but can't find anything
         const sideBarHeader = /** @type {HTMLElement | null} */ (
             /** @type {unknown} */ (sideBar.querySelector('.pcui-panel-header'))
         );
         if (sideBarHeader) {
-            const drag = this.props.onMobilePanelDragStart;
             sideBarHeader.onclick = layout === 'mobile' ? null : () => this.toggleCollapse();
-            sideBarHeader.onpointerdown = layout === 'mobile' && drag ? event => drag(event) : null;
+            sideBarHeader.onpointerdown = null;
         }
         this.setupControlPanelToggleButton();
     }

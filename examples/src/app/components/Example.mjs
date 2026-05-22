@@ -280,11 +280,13 @@ class Example extends TypedComponent {
 
         if (controlPanel.classList.contains('mobile')) {
             const drag = this.props.onMobilePanelDragStart;
+            controlPanel.onpointerdown = drag ? event => drag(event) : null;
             controlPanelHeader.onclick = null;
-            controlPanelHeader.onpointerdown = drag ? event => drag(event) : null;
+            controlPanelHeader.onpointerdown = null;
             return;
         }
 
+        controlPanel.onpointerdown = null;
         controlPanelHeader.onpointerdown = null;
         controlPanelHeader.onclick = () => this.toggleCollapse();
     }

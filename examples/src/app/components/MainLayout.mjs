@@ -17,6 +17,16 @@ const MOBILE_PANEL_DEFAULT_MIN_HEIGHT = 300;
 const MOBILE_PANEL_DEFAULT_MAX_HEIGHT = 440;
 const MOBILE_PANEL_DEFAULT_SCALE = 0.48;
 const MOBILE_CANVAS_MIN_HEIGHT = 160;
+const MOBILE_PANEL_MIN_WIDTH = 280;
+const MOBILE_PANEL_DEFAULT_MIN_WIDTH = 320;
+const MOBILE_PANEL_DEFAULT_MAX_WIDTH = 420;
+const MOBILE_PANEL_DEFAULT_WIDTH_SCALE = 0.42;
+const MOBILE_CANVAS_MIN_WIDTH = 300;
+
+const getMobileOrientation = () => {
+    const win = window.top ?? window;
+    return win.innerWidth > win.innerHeight ? 'landscape' : 'portrait';
+};
 
 function getMobilePanelHeight(height = window.innerHeight * MOBILE_PANEL_DEFAULT_SCALE) {
     const max = Math.max(
@@ -34,6 +44,19 @@ function getDefaultMobilePanelHeight() {
     ));
 }
 
+function getMobilePanelWidth(width = window.innerWidth * MOBILE_PANEL_DEFAULT_WIDTH_SCALE) {
+    const max = Math.max(0, window.innerWidth - MOBILE_CANVAS_MIN_WIDTH - MOBILE_GAP * 3);
+    const min = Math.min(MOBILE_PANEL_MIN_WIDTH, max);
+    return Math.min(max, Math.max(min, width));
+}
+
+function getDefaultMobilePanelWidth() {
+    return getMobilePanelWidth(Math.min(
+        MOBILE_PANEL_DEFAULT_MAX_WIDTH,
+        Math.max(MOBILE_PANEL_DEFAULT_MIN_WIDTH, window.innerWidth * MOBILE_PANEL_DEFAULT_WIDTH_SCALE)
+    ));
+}
+
 // eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} Props
@@ -42,8 +65,10 @@ function getDefaultMobilePanelHeight() {
 /**
  * @typedef {object} State
  * @property {'mobile'|'desktop'} layout - Current layout.
+ * @property {'portrait'|'landscape'} mobileOrientation - Current mobile orientation.
  * @property {null|'examples'|'code'|'controls'|'description'} mobilePanel - Active mobile panel.
  * @property {number} mobilePanelHeight - Active mobile panel height.
+ * @property {number} mobilePanelWidth - Active mobile panel width.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -53,11 +78,13 @@ class MainLayout extends TypedComponent {
     /** @type {State} */
     state = {
         layout: getLayout(),
+        mobileOrientation: getMobileOrientation(),
         mobilePanel: null,
-        mobilePanelHeight: getDefaultMobilePanelHeight()
+        mobilePanelHeight: getDefaultMobilePanelHeight(),
+        mobilePanelWidth: getDefaultMobilePanelWidth()
     };
 
-    /** @type {{ y: number, height: number } | null} */
+    /** @type {{ axis: 'x'|'y', position: number, size: number } | null} */
     _mobilePanelDrag = null;
 
     /**
@@ -72,8 +99,10 @@ class MainLayout extends TypedComponent {
         const layout = getLayout();
         this.setState(prevState => ({
             layout,
+            mobileOrientation: getMobileOrientation(),
             mobilePanel: layout === 'mobile' ? prevState.mobilePanel : null,
-            mobilePanelHeight: getMobilePanelHeight(prevState.mobilePanelHeight)
+            mobilePanelHeight: getMobilePanelHeight(prevState.mobilePanelHeight),
+            mobilePanelWidth: getMobilePanelWidth(prevState.mobilePanelWidth)
         }), this.resizeIframe);
     }
 
@@ -98,18 +127,32 @@ class MainLayout extends TypedComponent {
     };
 
     /**
+     * @param {number} width - Mobile panel width.
+     */
+    setMobilePanelWidth = (width) => {
+        this.setState({ mobilePanelWidth: getMobilePanelWidth(width) }, this.resizeIframe);
+    };
+
+    /**
      * @param {PointerEvent} event - Pointer event.
      */
     onMobilePanelDrag = (event) => {
         if (!this._mobilePanelDrag) {
             return;
         }
-        this.setMobilePanelHeight(this._mobilePanelDrag.height + this._mobilePanelDrag.y - event.clientY);
+        const { axis, position, size } = this._mobilePanelDrag;
+        if (axis === 'x') {
+            this.setMobilePanelWidth(size + position - event.clientX);
+            return;
+        }
+        this.setMobilePanelHeight(size + position - event.clientY);
     };
 
     stopMobilePanelDrag = () => {
         this._mobilePanelDrag = null;
         document.body.classList.remove('mobile-panel-resizing');
+        document.body.classList.remove('mobile-panel-resizing-x');
+        document.body.classList.remove('mobile-panel-resizing-y');
         window.removeEventListener('pointermove', this.onMobilePanelDrag);
         window.removeEventListener('pointerup', this.stopMobilePanelDrag);
         window.removeEventListener('pointercancel', this.stopMobilePanelDrag);
@@ -126,21 +169,27 @@ class MainLayout extends TypedComponent {
 
         const rect = target.getBoundingClientRect();
         const style = getComputedStyle(target);
-        const width = parseFloat(style.getPropertyValue('--mobile-handle-hit-width')) || 96;
-        const height = parseFloat(style.getPropertyValue('--mobile-handle-hit-height')) || 44;
-        const x = event.clientX - rect.left - rect.width / 2;
+        const hitWidth = parseFloat(style.getPropertyValue('--mobile-handle-hit-width')) || 96;
+        const hitHeight = parseFloat(style.getPropertyValue('--mobile-handle-hit-height')) || 44;
+        const axis = this.state.mobileOrientation === 'landscape' ? 'x' : 'y';
+        const x = axis === 'x' ? event.clientX - rect.left : event.clientX - rect.left - rect.width / 2;
         const y = event.clientY - rect.top;
-        if (Math.abs(x) > width / 2 || Math.abs(y) > height / 2) {
+        const outside = axis === 'x' ?
+            Math.abs(x) > hitHeight / 2 :
+            Math.abs(x) > hitWidth / 2 || Math.abs(y) > hitHeight / 2;
+        if (outside) {
             return;
         }
 
         event.preventDefault();
         target.setPointerCapture?.(event.pointerId);
         this._mobilePanelDrag = {
-            y: event.clientY,
-            height: this.state.mobilePanelHeight
+            axis,
+            position: axis === 'x' ? event.clientX : event.clientY,
+            size: axis === 'x' ? this.state.mobilePanelWidth : this.state.mobilePanelHeight
         };
         document.body.classList.add('mobile-panel-resizing');
+        document.body.classList.add(`mobile-panel-resizing-${axis}`);
         window.addEventListener('pointermove', this.onMobilePanelDrag);
         window.addEventListener('pointerup', this.stopMobilePanelDrag);
         window.addEventListener('pointercancel', this.stopMobilePanelDrag);
@@ -165,13 +214,16 @@ class MainLayout extends TypedComponent {
     };
 
     render() {
-        const { layout, mobilePanel, mobilePanelHeight } = this.state;
+        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth } = this.state;
         return jsx(
             'div',
             {
                 id: 'appInner',
-                className: layout,
-                style: { '--mobile-panel-height': `${mobilePanelHeight}px` }
+                className: layout === 'mobile' ? `mobile mobile-${mobileOrientation}` : 'desktop',
+                style: {
+                    '--mobile-panel-height': `${mobilePanelHeight}px`,
+                    '--mobile-panel-width': `${mobilePanelWidth}px`
+                }
             },
             jsx(
                 HashRouter,
