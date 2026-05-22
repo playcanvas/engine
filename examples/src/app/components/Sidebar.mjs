@@ -4,18 +4,18 @@ import { Component } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import { exampleMetaData } from '../../../cache/metadata.mjs';
-import { MIN_DESKTOP_WIDTH, VERSION } from '../constants.mjs';
+import { VERSION } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
-import { getOrientation } from '../utils.mjs';
+import { getLayout } from '../utils.mjs';
 
 /** @import { ReactElement } from 'react' */
 
 /**
  * @typedef {object} Props
  * @property {{ pathname: string, hash: string }} location - The router location.
- * @property {'portrait'|'landscape'} [orientation] - Current orientation.
+ * @property {'mobile'|'desktop'} [layout] - Current layout.
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
  * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
@@ -28,7 +28,7 @@ import { getOrientation } from '../utils.mjs';
  * @property {Observer} observer - The observer.
  * @property {boolean} collapsed - Collapsed or not.
  * @property {string} filterText - The current filter.
- * @property {string} orientation - Current orientation.
+ * @property {'mobile'|'desktop'} layout - Current layout.
  */
 
 /**
@@ -67,16 +67,15 @@ class SideBar extends TypedComponent {
         filteredCategories: null,
         filterText: '',
         observer: new Observer({ largeThumbnails: false }),
-        // @ts-ignore
-        collapsed: localStorage.getItem('sideBarCollapsed') === 'true' || window.top.innerWidth < MIN_DESKTOP_WIDTH,
-        orientation: getOrientation()
+        collapsed: localStorage.getItem('sideBarCollapsed') === 'true' || getLayout() === 'mobile',
+        layout: getLayout()
     };
 
     /** @type {HTMLElement | null} */
     _sideBar = null;
 
     /** @type {string} */
-    _sideBarOrientation = '';
+    _sideBarLayout = '';
 
     /**
      * @param {Props} props - Component properties.
@@ -90,12 +89,12 @@ class SideBar extends TypedComponent {
 
     setupSideBar() {
         const sideBar = document.getElementById('sideBar');
-        const orientation = this.props.orientation ?? this.state.orientation;
-        if (!sideBar || (this._sideBar === sideBar && this._sideBarOrientation === orientation)) {
+        const layout = this.props.layout ?? this.state.layout;
+        if (!sideBar || (this._sideBar === sideBar && this._sideBarLayout === layout)) {
             return;
         }
         this._sideBar = sideBar;
-        this._sideBarOrientation = orientation;
+        this._sideBarLayout = layout;
 
         // PCUI should just have a "onHeaderClick" but can't find anything
         const sideBarHeader = /** @type {HTMLElement | null} */ (
@@ -103,8 +102,8 @@ class SideBar extends TypedComponent {
         );
         if (sideBarHeader) {
             const drag = this.props.onMobilePanelDragStart;
-            sideBarHeader.onclick = orientation === 'portrait' ? null : () => this.toggleCollapse();
-            sideBarHeader.onpointerdown = orientation === 'portrait' && drag ? event => drag(event) : null;
+            sideBarHeader.onclick = layout === 'mobile' ? null : () => this.toggleCollapse();
+            sideBarHeader.onpointerdown = layout === 'mobile' && drag ? event => drag(event) : null;
         }
         this.setupControlPanelToggleButton();
     }
@@ -180,7 +179,7 @@ class SideBar extends TypedComponent {
     }
 
     _onLayoutChange() {
-        this.mergeState({ orientation: getOrientation() });
+        this.mergeState({ layout: getLayout() });
     }
 
     /**
@@ -307,7 +306,7 @@ class SideBar extends TypedComponent {
 
     render() {
         const { observer, collapsed } = this.state;
-        const orientation = this.props.orientation ?? this.state.orientation;
+        const layout = this.props.layout ?? this.state.layout;
         const panelOptions = {
             headerText: `EXAMPLES - v${VERSION}`,
             collapsible: true,
@@ -315,7 +314,7 @@ class SideBar extends TypedComponent {
             id: 'sideBar',
             class: ['small-thumbnails', ...(collapsed ? ['collapsed'] : [])]
         };
-        if (orientation === 'portrait') {
+        if (layout === 'mobile') {
             if (this.props.mobilePanel !== 'examples') {
                 return null;
             }
@@ -347,7 +346,7 @@ class SideBar extends TypedComponent {
                     '\u2715'
                 ) : null
             ),
-            orientation !== 'portrait' && jsx(
+            layout !== 'mobile' && jsx(
                 LabelGroup,
                 { text: 'Large thumbnails:' },
                 jsx(BooleanInput, {
