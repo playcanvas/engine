@@ -252,13 +252,18 @@ export function parseConfig(script) {
 /**
  * @type {Window | null} - The same-origin top window, if available.
  */
-export const host = (() => {
+const host = (() => {
     try {
         return window.top && window.top.location.origin === window.location.origin ? window.top : null;
-    } catch (e) {
+    } catch {
         return null;
     }
 })();
+
+/**
+ * @type {Window} - The example-facing window.
+ */
+export const win = host ?? window;
 
 /**
  * @param {string} eventName - The name of the fired event.
