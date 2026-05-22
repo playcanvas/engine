@@ -17,6 +17,8 @@ body {
 :root {
     --mobile-dock-height: 48px;
     --mobile-gap: 8px;
+    --mobile-handle-hit-height: 44px;
+    --mobile-handle-hit-width: 96px;
     --mobile-panel-height: clamp(300px, 48svh, 440px);
     --mobile-radius: 6px;
 }
@@ -83,6 +85,7 @@ body {
         max-width: none;
         max-height: none;
         border-radius: var(--mobile-radius);
+        overflow: visible;
     }
 
     #sideBar .panel-toggle {
@@ -131,6 +134,8 @@ body {
         height: calc(100% - 32px);
         background-color: #283437;
         margin-top: 0px;
+        border-radius: 0 0 var(--mobile-radius) var(--mobile-radius);
+        overflow: hidden;
     }
     #sideBar {
         background-color: #283437;
@@ -523,7 +528,8 @@ body {
     #menu,
     #mobileDock,
     #mobileDock .mobile-dock-button,
-    .mobile-resize-handle {
+    #controlPanel.mobile > .pcui-panel-header,
+    #sideBar.mobile-sheet > .pcui-panel-header {
         touch-action: none;
     }
 
@@ -861,31 +867,45 @@ body {
         pointer-events: none;
     }
 
-    .mobile-resize-handle {
-        position: fixed;
-        left: var(--mobile-gap);
-        right: var(--mobile-gap);
-        bottom: calc(var(--mobile-dock-height) + var(--mobile-panel-height) + var(--mobile-gap) + var(--mobile-gap) + env(safe-area-inset-bottom) - 9px);
-        height: 18px;
+    #controlPanel.mobile > .pcui-panel-header,
+    #sideBar.mobile-sheet > .pcui-panel-header {
+        position: relative;
         cursor: ns-resize;
         touch-action: none;
-        z-index: 100001;
+        user-select: none;
+        overflow: visible;
     }
 
-    #mobileUi > .mobile-resize-handle {
-        bottom: calc(var(--mobile-dock-height) + var(--mobile-panel-height) + var(--mobile-gap) + env(safe-area-inset-bottom) - 1px);
-    }
-
-    .mobile-resize-handle::before {
+    #controlPanel.mobile > .pcui-panel-header::before,
+    #sideBar.mobile-sheet > .pcui-panel-header::before {
         content: '';
         position: absolute;
         left: 50%;
-        top: 7px;
+        top: 0;
+        width: var(--mobile-handle-hit-width);
+        height: var(--mobile-handle-hit-height);
+        background: transparent;
+        transform: translate(-50%, -50%);
+        pointer-events: auto;
+    }
+
+    #controlPanel.mobile > .pcui-panel-header::after,
+    #sideBar.mobile-sheet > .pcui-panel-header::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 0;
         width: 44px;
         height: 4px;
         border-radius: 999px;
         background-color: #8da0a5;
-        transform: translateX(-50%);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+
+    body.mobile-panel-resizing #controlPanel.mobile > .pcui-panel-header::after,
+    body.mobile-panel-resizing #sideBar.mobile-sheet > .pcui-panel-header::after {
+        background-color: #fff;
     }
 
     #mobileDock {
@@ -904,6 +924,7 @@ body {
         backdrop-filter: blur(32px);
         border-radius: var(--mobile-radius);
         z-index: 100000;
+        -webkit-tap-highlight-color: transparent;
     }
 
     #mobileDock .mobile-dock-button {
@@ -925,9 +946,11 @@ body {
         box-shadow: none !important;
         font-size: 0;
         outline: 0;
+        -webkit-tap-highlight-color: transparent;
         -webkit-appearance: none;
         appearance: none;
         overflow: hidden;
+        user-select: none;
     }
 
     #mobileDock .mobile-dock-button::before {
@@ -942,10 +965,12 @@ body {
 
     #mobileDock .mobile-dock-button:hover,
     #mobileDock .mobile-dock-button:focus,
+    #mobileDock .mobile-dock-button.pcui-focus,
     #mobileDock .mobile-dock-button:active {
         border: 0;
         color: #f2f2f2;
-        background: transparent;
+        background: transparent !important;
+        background-image: none !important;
         box-shadow: none !important;
         outline: 0;
     }
@@ -953,20 +978,24 @@ body {
     #mobileDock .mobile-dock-button.pcui-disabled,
     #mobileDock .mobile-dock-button.pcui-disabled:hover,
     #mobileDock .mobile-dock-button.pcui-disabled:focus,
+    #mobileDock .mobile-dock-button.pcui-disabled.pcui-focus,
     #mobileDock .mobile-dock-button.pcui-disabled:active {
         color: #b1b8ba;
         cursor: default;
-        background: transparent;
+        background: transparent !important;
+        background-image: none !important;
         box-shadow: none !important;
     }
 
     #mobileDock .mobile-dock-button.selected,
     #mobileDock .mobile-dock-button.selected:hover,
     #mobileDock .mobile-dock-button.selected:focus,
+    #mobileDock .mobile-dock-button.selected.pcui-focus,
     #mobileDock .mobile-dock-button.selected:active {
         border: 0;
         color: #F60 !important;
         background: transparent !important;
+        background-image: none !important;
     }
 
     #mobileDock .mobile-dock-button.selected::before {

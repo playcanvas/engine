@@ -18,7 +18,7 @@ import { getOrientation } from '../utils.mjs';
  * @property {'portrait'|'landscape'} [orientation] - Current orientation.
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
- * @property {(event: import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
+ * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
 /**
@@ -102,7 +102,9 @@ class SideBar extends TypedComponent {
             /** @type {unknown} */ (sideBar.querySelector('.pcui-panel-header'))
         );
         if (sideBarHeader) {
+            const drag = this.props.onMobilePanelDragStart;
             sideBarHeader.onclick = orientation === 'portrait' ? null : () => this.toggleCollapse();
+            sideBarHeader.onpointerdown = orientation === 'portrait' && drag ? event => drag(event) : null;
         }
         this.setupControlPanelToggleButton();
     }
@@ -329,10 +331,6 @@ class SideBar extends TypedComponent {
             Panel,
             // @ts-ignore
             panelOptions,
-            orientation === 'portrait' && jsx('div', {
-                className: 'mobile-resize-handle',
-                onPointerDown: this.props.onMobilePanelDragStart
-            }),
             jsx(
                 Container,
                 { class: ['filter-container', ...(this.state.filterText ? ['has-filter-text'] : [])] },
