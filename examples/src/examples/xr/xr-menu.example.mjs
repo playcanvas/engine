@@ -220,9 +220,9 @@ menuEntity.addComponent('script');
 menuEntity.script.create(XrMenu, {
     properties: {
         menuItems: [
-            { label: 'Spawn Cube', eventName: 'menu:spawnCube' },
-            { label: 'Reset', eventName: 'menu:reset' },
-            { label: 'Exit XR', eventName: 'xr:end' }
+            { label: 'SPAWN CUBE', eventName: 'menu:spawnCube' },
+            { label: 'RESET', eventName: 'menu:reset' },
+            { label: 'EXIT XR', eventName: 'xr:end' }
         ],
         clickSound: assets.click,
         fontAsset: assets.font,
