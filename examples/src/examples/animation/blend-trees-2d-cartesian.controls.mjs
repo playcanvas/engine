@@ -12,8 +12,17 @@ export const controls = ({ observer, React, jsx, fragment }) => {
         /** @type {React.RefObject<HTMLCanvasElement>} */
         refCanvas = createRef();
 
+        mouse = this.mouseEvent.bind(this);
+
+        draw = this.drawPosition.bind(this);
+
+        evt = null;
+
         mouseEvent(e) {
             const { position, width, canvas } = this;
+            if (!canvas || !width) {
+                return;
+            }
             if (e.targetTouches) {
                 const offset = canvas.getBoundingClientRect();
                 position
@@ -40,7 +49,8 @@ export const controls = ({ observer, React, jsx, fragment }) => {
 
         /** @type {number} */
         get width() {
-            return window.top.controlPanel.offsetWidth;
+            const panel = /** @type {HTMLElement | null} */ (this.canvas?.closest('#controlPanel') ?? null);
+            return panel?.offsetWidth ?? this.canvas?.parentElement?.offsetWidth ?? 0;
         }
 
         /** @type {number} */
@@ -50,13 +60,16 @@ export const controls = ({ observer, React, jsx, fragment }) => {
 
         drawPosition() {
             const { canvas, width, height } = this;
-            if (!canvas) {
+            if (!canvas || !width || !height) {
                 return;
             }
             const animPoints = observer.get('data.animPoints') || [];
             const pos = observer.get('data.pos') || { x: 0, y: 0 };
 
             const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return;
+            }
             const halfWidth = Math.floor(width / 2);
             const halfHeight = Math.floor(height / 2);
             ctx.clearRect(0, 0, width, height);
@@ -101,19 +114,36 @@ export const controls = ({ observer, React, jsx, fragment }) => {
         }
 
         componentDidMount() {
-            const { canvas } = this;
-            canvas.addEventListener('mousemove', this.mouseEvent.bind(this));
-            canvas.addEventListener('mousedown', this.mouseEvent.bind(this));
-            canvas.addEventListener('touchmove', this.mouseEvent.bind(this));
-            canvas.addEventListener('touchstart', this.mouseEvent.bind(this));
+            const { canvas, width, height } = this;
+            if (!canvas || !width || !height) {
+                return;
+            }
 
-            // @ts-ignore engine-tsd
-            const dim = `${window.top.controlPanel.offsetWidth}px`;
+            canvas.addEventListener('mousemove', this.mouse);
+            canvas.addEventListener('mousedown', this.mouse);
+            canvas.addEventListener('touchmove', this.mouse);
+            canvas.addEventListener('touchstart', this.mouse);
+
+            const dim = `${width}px`;
             canvas.setAttribute('style', `width: ${dim}; height: ${dim};`);
-            canvas.setAttribute('width', dim);
-            canvas.setAttribute('height', dim);
+            canvas.width = width;
+            canvas.height = height;
+            this.drawPosition();
 
-            observer.on('*:set', this.drawPosition.bind(this));
+            this.evt = observer.on('*:set', this.draw);
+        }
+
+        componentWillUnmount() {
+            const { canvas } = this;
+            if (canvas) {
+                canvas.removeEventListener('mousemove', this.mouse);
+                canvas.removeEventListener('mousedown', this.mouse);
+                canvas.removeEventListener('touchmove', this.mouse);
+                canvas.removeEventListener('touchstart', this.mouse);
+            }
+
+            this.evt?.unbind();
+            this.evt = null;
         }
 
         render() {
