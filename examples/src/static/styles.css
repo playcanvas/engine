@@ -856,7 +856,7 @@ body {
     }
 
     #mobileUi > .mobile-resize-handle {
-        bottom: calc(var(--mobile-dock-height) + var(--mobile-panel-height) + var(--mobile-gap) + env(safe-area-inset-bottom) - 9px);
+        bottom: calc(var(--mobile-dock-height) + var(--mobile-panel-height) + var(--mobile-gap) + env(safe-area-inset-bottom) - 1px);
     }
 
     .mobile-resize-handle::before {
