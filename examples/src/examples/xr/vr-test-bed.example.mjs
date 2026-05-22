@@ -142,69 +142,6 @@ assetListLoader.load(() => {
     app.root.addChild(menuEntity);
     const xrMenu = menuEntity.script.xrMenu;
 
-    // Wrap the script's click handler from outside so we can confirm the trigger pull actually
-    // reached `_onButtonClick` (and which button), without modifying the engine script. If a
-    // click is registered but the session still dies, we'll see this line in the log and know
-    // the failure happens during/after `_onButtonClick`. If we never see it, the trigger isn't
-    // making it past `_updateRayInteraction`.
-    const originalOnButtonClick = xrMenu._onButtonClick.bind(xrMenu);
-    xrMenu._onButtonClick = function (button) {
-        // @ts-ignore - menuData is a custom property on the entity
-        logBoth(`_onButtonClick: eventName=${button?.menuData?.eventName ?? '(none)'} label=${button?.menuData?.label ?? '(none)'}`);
-        try {
-            return originalOnButtonClick(button);
-        } catch (e) {
-            logErr('_onButtonClick threw', e);
-            throw e;
-        }
-    };
-
-    // ---- localStorage-backed logger -----------------------------------------------------
-    // The Quest browser tears down and reloads this page when a WebGPU XR session crashes,
-    // which wipes the live console before chrome://inspect can read it. We mirror every
-    // diagnostic line into localStorage so the *next* run can print the previous run's tail.
-    const LOG_KEY = 'vrTestBedLog';
-    const persistLog = (entry) => {
-        try {
-            const prev = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
-            prev.push({ t: Date.now(), ...entry });
-            localStorage.setItem(LOG_KEY, JSON.stringify(prev.slice(-200)));
-        } catch { /* localStorage may be full or disabled — ignore */ }
-    };
-    const logBoth = (msg) => {
-        console.log(msg);
-        persistLog({ kind: 'log', msg });
-    };
-    const logErr = (msg, err) => {
-        console.error(msg, err);
-        persistLog({ kind: 'error', msg, err: String(err?.message ?? err), stack: err?.stack });
-    };
-
-    // Dump the previous run's tail and clear for this run.
-    const prevEntries = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
-    if (prevEntries.length) {
-        console.group(`[vr-test-bed] previous-run log (${prevEntries.length} entries)`);
-        for (const e of prevEntries) {
-            console.log(new Date(e.t).toISOString(), e.kind, e.msg, e.err ?? '', e.stack ?? '');
-        }
-        console.groupEnd();
-    }
-    localStorage.setItem(LOG_KEY, '[]');
-
-    // Global capture nets — any unhandled throw, promise rejection, or WebGPU uncaptured
-    // device error gets persisted before the reload can wipe it.
-    window.addEventListener('error', (e) => {
-        persistLog({ kind: 'window.error', msg: e.message, src: e.filename, line: e.lineno, stack: e.error?.stack });
-    });
-    window.addEventListener('unhandledrejection', (e) => {
-        persistLog({ kind: 'unhandledrejection', msg: String(e.reason), stack: e.reason?.stack });
-    });
-    if (device.wgpu?.addEventListener) {
-        device.wgpu.addEventListener('uncapturederror', (e) => {
-            persistLog({ kind: 'wgpu.uncaptured', msg: String(e.error?.message ?? e.error), type: e.error?.constructor?.name });
-        });
-    }
-
     let fov = 0;
     let lastNonZeroFov = 1;     // value restored by the toggle when re-enabling foveation
     let fovSupported = true;
@@ -221,19 +158,10 @@ assetListLoader.load(() => {
     // button still flashes (click feedback) but the value visibly never moves off 0.00.
     const setFov = (newFov) => {
         const requested = pc.math.clamp(newFov, 0, 1);
-        const willApply = fovSupported ? requested : 0;
-        // Log BEFORE the assignment — that way we still see the call even if the runtime throws
-        // synchronously inside `app.xr.fixedFoveation = ...` (which would tear down the session).
-        logBoth(`setFov entry: requested=${requested.toFixed(2)} willApply=${willApply.toFixed(2)} supported=${fovSupported} xrActive=${app.xr.active}`);
-        fov = willApply;
+        fov = fovSupported ? requested : 0;
         if (fov > 0) lastNonZeroFov = fov;
         if (app.xr.active && fovSupported) {
-            try {
-                app.xr.fixedFoveation = fov;
-                logBoth(`setFov applied: fov=${fov.toFixed(2)} reported=${app.xr.fixedFoveation}`);
-            } catch (e) {
-                logErr('setFov: fixedFoveation assignment threw', e);
-            }
+            app.xr.fixedFoveation = fov;
         }
         refreshFovLabel();
     };
@@ -251,19 +179,10 @@ assetListLoader.load(() => {
         refreshFovLabel();
     });
 
-    // Per-handler tracing — confirms the event reached the app event bus even if setFov dies.
-    app.on('fov:inc', () => { logBoth('event: fov:inc'); setFov(fov + 0.1); });
-    app.on('fov:dec', () => { logBoth('event: fov:dec'); setFov(fov - 0.1); });
-    app.on('fov:toggle', () => { logBoth('event: fov:toggle'); setFov(fov > 0 ? 0 : lastNonZeroFov); });
-    app.on('xr:end', () => { logBoth('event: xr:end'); app.xr.end(); });
-
-    // Mirror XR lifecycle to the persisted log so we can correlate the death of a session with
-    // the most recent click.
-    app.xr.on('start', () => logBoth('xr.start'));
-    app.xr.on('end', () => logBoth('xr.end'));
-    app.xr.on('error', (err) => logErr('xr.error', err));
-
-    logBoth('vr-test-bed setup complete');
+    app.on('fov:inc', () => setFov(fov + 0.1));
+    app.on('fov:dec', () => setFov(fov - 0.1));
+    app.on('fov:toggle', () => setFov(fov > 0 ? 0 : lastNonZeroFov));
+    app.on('xr:end', () => app.xr.end());
 
     // Draw a debug aim ray from each tracked-pointer XR input source (controllers, hand pointers)
     // every frame so the user can see where they're pointing at the menu buttons. Interaction
