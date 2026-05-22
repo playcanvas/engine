@@ -1,6 +1,6 @@
 import files from './files.mjs';
 import MiniStats from './ministats.mjs';
-import { fetchFile, importModule, clearImports, parseConfig, fire } from './runtime.mjs';
+import { fetchFile, importModule, clearImports, parseConfig, fire, win } from './runtime.mjs';
 import { data, deviceType as selectedDeviceType, refreshContext, updateDeviceType } from './state.mjs';
 import { blockZoom } from './zoom.mjs';
 
@@ -91,7 +91,7 @@ class ExampleLoader {
             const reportedType = (isWebGPU(selectedDeviceType) && engineType === 'webgpu') ?
                 selectedDeviceType :
                 engineType;
-            window.top.activeGraphicsDevice = reportedType;
+            win.activeGraphicsDevice = reportedType;
             fire('updateActiveDevice', { deviceType: reportedType });
         }
 
@@ -166,7 +166,7 @@ class ExampleLoader {
         window.pc = await import(engineUrl);
 
         // @ts-ignore
-        window.top.pc = window.pc;
+        win.pc = window.pc;
 
         await this._fetchFiles();
 

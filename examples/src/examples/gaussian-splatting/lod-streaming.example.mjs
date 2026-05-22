@@ -8,11 +8,11 @@ import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
-import { data, deviceType } from 'examples/context';
+import { data, deviceType, win } from 'examples/context';
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
-const hashQuery = (window.top?.location.hash || window.location.hash || '').split('?')[1] || '';
+const hashQuery = (win.location.hash || window.location.hash || '').split('?')[1] || '';
 const hashParams = new URLSearchParams(hashQuery);
 const paramUrl = hashParams.get('url');
 const paramOrientation = hashParams.get('orientation');

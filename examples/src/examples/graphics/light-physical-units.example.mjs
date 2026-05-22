@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 
-import { data, deviceType } from 'examples/context';
+import { data, deviceType, win } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -295,7 +295,7 @@ assetListLoader.load(() => {
 
         // resize control panel to fit the content better
         if (resizeControlPanel) {
-            const panel = window.top.document.getElementById('controlPanel');
+            const panel = win.document.getElementById('controlPanel');
             if (panel) {
                 panel.style.width = '360px';
                 resizeControlPanel = false;
