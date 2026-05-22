@@ -1,23 +1,31 @@
 import { Button, Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 
+import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { logo } from '../paths.mjs';
+import { getLayout } from '../utils.mjs';
 
 /**
  * @typedef {object} Props
  * @property {(value: boolean) => void} setShowMiniStats - The state set function .
+ * @property {'mobile'|'desktop'} [layout] - Current layout.
  */
 
-// eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} State
+ * @property {boolean} showMiniStats - Show MiniStats state.
  */
 
 /** @type {typeof Component<Props, State>} */
 const TypedComponent = Component;
 
 class Menu extends TypedComponent {
+    /** @type {State} */
+    state = {
+        showMiniStats: getLayout() === 'desktop'
+    };
+
     mouseTimeout = null;
 
     /**
@@ -27,10 +35,20 @@ class Menu extends TypedComponent {
         super(props);
         this._handleKeyDown = this._handleKeyDown.bind(this);
         this._handleExampleLoad = this._handleExampleLoad.bind(this);
+        this._handleMiniStats = this._handleMiniStats.bind(this);
+        this.toggleMiniStats = this.toggleMiniStats.bind(this);
     }
 
     /** @type {EventListener | null} */
     clickFullscreenListener = null;
+
+    resizeIframe() {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                iframe.window?.dispatchEvent(new Event('resize'));
+            });
+        });
+    }
 
     toggleFullscreen() {
         const contentDocument = document.querySelector('iframe')?.contentDocument;
@@ -57,6 +75,7 @@ class Menu extends TypedComponent {
             };
             contentDocument.addEventListener('mousemove', this.clickFullscreenListener);
         }
+        this.resizeIframe();
     }
 
     componentDidMount() {
@@ -68,6 +87,7 @@ class Menu extends TypedComponent {
         }
         document.addEventListener('keydown', this._handleKeyDown);
         window.addEventListener('exampleLoad', this._handleExampleLoad);
+        window.addEventListener('miniStats', this._handleMiniStats);
     }
 
     componentWillUnmount() {
@@ -77,6 +97,7 @@ class Menu extends TypedComponent {
         }
         document.removeEventListener('keydown', this._handleKeyDown);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
+        window.removeEventListener('miniStats', this._handleMiniStats);
     }
 
     /**
@@ -93,15 +114,25 @@ class Menu extends TypedComponent {
     }
 
     _handleExampleLoad() {
-        const showMiniStatsBtn = document.getElementById('showMiniStatsButton');
-        if (!showMiniStatsBtn) {
-            return;
-        }
-        const selected = showMiniStatsBtn.classList.contains('selected');
-        this.props.setShowMiniStats(selected);
+        this.props.setShowMiniStats(this.state.showMiniStats);
+    }
+
+    toggleMiniStats() {
+        const value = !this.state.showMiniStats;
+        this.setState({ showMiniStats: value });
+        this.props.setShowMiniStats(value);
+    }
+
+    /**
+     * @param {Event} event - MiniStats state event.
+     */
+    _handleMiniStats(event) {
+        const customEvent = /** @type {CustomEvent<{ state: boolean }>} */ (event);
+        this.setState({ showMiniStats: !!customEvent.detail.state });
     }
 
     render() {
+        const { showMiniStats } = this.state;
         return jsx(
             Container,
             {
@@ -132,13 +163,9 @@ class Menu extends TypedComponent {
                 jsx(Button, {
                     icon: 'E149',
                     id: 'showMiniStatsButton',
-                    class: 'selected',
+                    class: showMiniStats ? 'selected' : undefined,
                     text: '',
-                    onClick: () => {
-                        document.getElementById('showMiniStatsButton')?.classList.toggle('selected');
-                        const selected = document.getElementById('showMiniStatsButton')?.classList.contains('selected');
-                        this.props.setShowMiniStats(!!selected);
-                    }
+                    onClick: this.toggleMiniStats
                 }),
                 jsx(Button, {
                     icon: 'E127',

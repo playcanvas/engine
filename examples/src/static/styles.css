@@ -5,12 +5,28 @@
 html, body, #app {
     width: 100%;
     height: 100%;
+    touch-action: none;
 }
 
 body {
     margin: 0;
     overflow: hidden;
     background-color: #171E20;
+}
+
+:root {
+    --mobile-dock-height: 48px;
+    --mobile-dock-width: 48px;
+    --mobile-gap: 8px;
+    --mobile-handle-hit-height: 44px;
+    --mobile-handle-hit-width: 96px;
+    --mobile-panel-height: clamp(300px, 48svh, 440px);
+    --mobile-panel-width: clamp(320px, 42vw, 420px);
+    --mobile-radius: 6px;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
 }
 
 #app {
@@ -40,10 +56,8 @@ body {
     min-width: 30%;
 }
 
-@media only screen and (max-width: 600px) {
-    #codePane {
-        display: none;
-    }
+#appInner.mobile #codePane {
+    display: none;
 }
 
 #codePane.multiple-files > .pcui-panel-content > section {
@@ -61,26 +75,28 @@ body {
     opacity: 1;
 }
 
-@media only screen and (max-width: 600px) {
-    #sideBar {
-        /* display: none; */
-        margin: 8px;
-        position: fixed;
-        z-index: 99999;
-        max-height: calc(100% - 70px);
-        min-width: calc(50% - 12px);
-        max-width: calc(50% - 12px);
-    }
-
-    #sideBar .panel-toggle {
-        display: none !important;
-    }
+#appInner.mobile #sideBar {
+    margin: 0;
+    position: fixed;
+    left: calc(var(--mobile-gap) + var(--safe-area-left));
+    right: calc(var(--mobile-gap) + var(--safe-area-right));
+    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap) + var(--mobile-gap) + var(--safe-area-bottom));
+    z-index: 99999;
+    width: auto;
+    height: var(--mobile-panel-height);
+    min-width: 0;
+    max-width: none;
+    max-height: none;
+    border-radius: var(--mobile-radius);
+    overflow: visible;
 }
 
-@media only screen and (min-width: 601px) {
-    #sideBar > .pcui-container > .pcui-panel-header::before {
-        display: none !important;
-    }
+#appInner.mobile #sideBar .panel-toggle {
+    display: none !important;
+}
+
+#appInner.desktop #sideBar > .pcui-container > .pcui-panel-header::before {
+    display: none !important;
 }
 
 #sideBar > .pcui-panel > .pcui-panel-content {
@@ -101,10 +117,8 @@ body {
     top: 8px !important;
 }
 
-@media only screen and (max-width: 600px) {
-    .sideBar-panel-toggle {
-        display: none;
-    }
+#appInner.mobile .sideBar-panel-toggle {
+    display: none;
 }
     
 
@@ -113,50 +127,49 @@ body {
         transform: rotateZ(90deg);
 }
 
-@media only screen and (max-width: 600px) {
-    #sideBar > .pcui-panel-content {
-        z-index: -1;
-        height: calc(100% - 48px);
-        background-color: rgba(54, 67, 70, 1);
-        margin-top: 0px;
-    }
-    #sideBar {
-        background-color: rgba(1,1,1,0);
-    }
-    #sideBar > .pcui-panel-header {
-        border-top-left-radius: 6px !important;
-        border-top-right-radius: 6px !important;
-    }
+#appInner.mobile #sideBar > .pcui-panel-content {
+    height: calc(100% - 32px);
+    background-color: #283437;
+    margin-top: 0px;
+    border-radius: 0 0 var(--mobile-radius) var(--mobile-radius);
+    overflow: hidden;
+}
 
-    #sideBar.pcui-collapsed > .pcui-panel-header {
-        border-radius: 6px !important;
-    }
+#appInner.mobile #sideBar {
+    background-color: #283437;
+}
 
-    #sideBar-contents {
-        height: calc(100% - 80px);
-        overflow-y: scroll;
-        margin-top: 0px;
-        position: absolute;
-        width: 100%;
-        max-height: 100%;
-    }
+#appInner.mobile #sideBar > .pcui-panel-header {
+    border-radius: var(--mobile-radius) var(--mobile-radius) 0 0 !important;
+}
 
-    #sideBar {
-        bottom: 0px;
-        min-height: calc(100% - 70px);
-    }
+#appInner.mobile #sideBar.pcui-collapsed > .pcui-panel-header {
+    border-radius: var(--mobile-radius) !important;
+}
 
-    #sideBar.pcui-collapsed {
-        min-height: 0;
-    }
+#appInner.mobile #sideBar-contents {
+    height: calc(100% - 56px);
+    overflow-y: scroll;
+    margin-top: 8px;
+    position: static;
+    width: 100%;
+    max-height: none;
+}
 
-    #sideBar.visible {
-        opacity: 1;
-    }
+#appInner.mobile #sideBar {
+    min-height: 0;
+}
 
-    #sideBar.pcui-collapsed > .pcui-panel-content {
-        display: none;
-    }
+#appInner.mobile #sideBar.pcui-collapsed {
+    min-height: 0;
+}
+
+#appInner.mobile #sideBar.visible {
+    opacity: 1;
+}
+
+#appInner.mobile #sideBar.pcui-collapsed > .pcui-panel-content {
+    display: none;
 }
 
 #sideBar .nav-item-text {
@@ -275,24 +288,98 @@ body {
     border-radius: 6px;
     overflow: hidden;
     flex-grow: 1;
+    position: relative;
 }
-@media only screen and (min-width: 601px) {
-    #canvas-container {
-        min-width: 445px;
-    }
+#appInner.desktop #canvas-container {
+    min-width: 445px;
 }
 
 #canvas-container iframe {
     width: 100%;
     height: 100%;
     border: none;
+    touch-action: none;
 }
 
-@media only screen and (max-width: 600px) {
-    #canvas-container {
-        margin: 0px;
-        border-radius: 0px;
-    }
+#exampleLoading {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 100%;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 24px;
+    background-color: rgba(16, 21, 22, 0.88);
+    color: #f2f2f2;
+    text-align: center;
+    pointer-events: none;
+}
+
+.example-loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: min(320px, 100%);
+}
+
+.example-loading-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 18px;
+}
+
+.example-loading-message {
+    max-width: 100%;
+    color: #c8d0d2;
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+}
+
+#exampleLoading.error .example-loading-title {
+    color: #ff6b6b;
+}
+
+#appInner.mobile #canvas-container {
+    margin: calc(var(--mobile-gap) + var(--safe-area-top)) calc(var(--mobile-gap) + var(--safe-area-right)) calc(var(--mobile-gap) + var(--safe-area-bottom)) calc(var(--mobile-gap) + var(--safe-area-left));
+    border-radius: var(--mobile-radius);
+    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
+    background-color: #171E20;
+}
+
+#appInner.mobile #canvas-container iframe {
+    border-radius: var(--mobile-radius);
+    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
+}
+
+#appInner.mobile #exampleLoading {
+    border-radius: var(--mobile-radius);
+    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
+}
+
+#appInner.mobile-landscape #canvas-container iframe,
+#appInner.mobile-landscape #exampleLoading {
+    width: calc(100vw - var(--mobile-dock-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-left) - var(--safe-area-right));
+    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
+}
+
+#appInner.mobile-portrait #canvas-container.mobile-panel-open iframe {
+    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
+}
+
+#appInner.mobile-portrait #canvas-container.mobile-panel-open #exampleLoading {
+    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
+}
+
+#appInner.mobile-landscape #canvas-container.mobile-panel-open iframe,
+#appInner.mobile-landscape #canvas-container.mobile-panel-open #exampleLoading {
+    width: calc(100vw - var(--mobile-panel-width) - var(--mobile-dock-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-left) - var(--safe-area-right));
+    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
 }
 
 @keyframes animation-spin {
@@ -357,38 +444,93 @@ body {
     max-height: calc(100% - 16px);
 }
 
-/* @media only screen and (min-width: 601px) { */
 #controlPanel.empty {
     display: none;
 }
-/* } */
 
-/* @media only screen and (max-width: 600px) { */
 #controlPanel.mobile {
-    bottom: 48px;
-    left: 8px;
-    width: calc(100% - 16px);
+    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap));
+    left: 0;
+    right: 0;
+    width: auto;
     top: inherit;
-    background-color: rgba(54, 67, 70, 1);
-    min-height: calc(100% - 116px);
-}
-
-#controlPanel.mobile:has(#controlPanel-controls):not(.pcui-collapsed){
-    min-height: 300px;
-}
-
-#controlPanel.mobile.pcui-collapsed {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(54, 67, 70, 0.64);
+    backdrop-filter: blur(32px);
     min-height: 0;
+    border-radius: var(--mobile-radius);
+    overflow: visible;
+}
+
+#controlPanel.mobile.controls-sheet,
+#controlPanel.mobile.code-sheet,
+#controlPanel.mobile.description-sheet {
+    height: var(--mobile-panel-height);
+}
+
+#appInner.mobile-landscape #controlPanel.mobile,
+#appInner.mobile-landscape #sideBar.mobile-sheet {
+    width: var(--mobile-panel-width);
+    min-width: 0;
+    max-width: var(--mobile-panel-width);
+    max-height: none;
+    height: auto;
+    box-sizing: border-box;
+    touch-action: none;
+}
+
+#appInner.mobile-landscape #controlPanel.mobile {
+    top: 0;
+    right: calc(var(--mobile-dock-width) + var(--mobile-gap));
+    bottom: 0;
+    left: auto;
+}
+
+#appInner.mobile-landscape #sideBar.mobile-sheet {
+    top: calc(var(--mobile-gap) + var(--safe-area-top));
+    right: calc(var(--mobile-dock-width) + var(--mobile-gap) + var(--mobile-gap) + var(--safe-area-right));
+    bottom: calc(var(--mobile-gap) + var(--safe-area-bottom));
+    left: auto;
+}
+
+#appInner.mobile-landscape #controlPanel.mobile.controls-sheet,
+#appInner.mobile-landscape #controlPanel.mobile.code-sheet,
+#appInner.mobile-landscape #controlPanel.mobile.description-sheet {
+    height: auto;
 }
 
 #controlPanel.mobile > .pcui-panel-content {
-    min-height: 100%;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 0 0 var(--mobile-radius) var(--mobile-radius);
 }
+
+#controlPanel.mobile > .pcui-panel-header {
+    flex: 0 0 32px;
+    height: 32px !important;
+    line-height: 32px !important;
+    border-radius: var(--mobile-radius) var(--mobile-radius) 0 0 !important;
+}
+
+#controlPanel.mobile.controls-sheet > .pcui-panel-content {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+#mobileControlsPanel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
 #controlPanel.mobile > .pcui-panel-content > section {
-    border-radius: 6px;
-    position: absolute !important;
+    border-radius: var(--mobile-radius);
 }
-/* } */
 
 #controlPanel.mobile .pcui-label-group .pcui-label {
     font-size: 14px;
@@ -415,14 +557,14 @@ body {
     background-color: #364346;
 }
 
-/* Landscape/desktop: scroll only the example controls, not the device selector, so PCUI
+/* Desktop: scroll only the example controls, not the device selector, so PCUI
    SelectInput dropdowns (position: absolute) are not clipped by overflow. */
-#controlPanel.landscape {
+#controlPanel.desktop {
     overflow: visible;
     max-height: min(calc(100% - 16px), calc(100vh - 48px));
 }
 
-#controlPanel.landscape > .pcui-panel-content {
+#controlPanel.desktop > .pcui-panel-content {
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -430,7 +572,7 @@ body {
     overflow: visible;
 }
 
-#controlPanel.landscape #deviceTypeSelectInput {
+#controlPanel.desktop #deviceTypeSelectInput {
     flex-shrink: 0;
 }
 
@@ -460,26 +602,89 @@ body {
     color: #f2f2f2;
 }
 
-@media only screen and (max-width: 600px) {
-    #controls-wrapper {
-        position: absolute;
-        width: 100%;
-        height: calc(100% - 48px);
-    }
+#appInner.mobile #sideBar-contents,
+#appInner.mobile #controlPanel-scroll-region,
+#appInner.mobile #controlPanel-controls,
+#appInner.mobile #controlPanel.mobile > .pcui-panel-content,
+#appInner.mobile .code-editor-mobile-files {
+    touch-action: pan-y;
+}
 
-    #controlPanel-controls {
-        height: calc(100% - 48px);
-        overflow: auto;
-    }
+#appInner.mobile #menu,
+#appInner.mobile #mobileDock,
+#appInner.mobile #mobileDock .mobile-dock-button,
+#appInner.mobile #controlPanel.mobile > .pcui-panel-header,
+#appInner.mobile #sideBar.mobile-sheet > .pcui-panel-header {
+    touch-action: none;
+}
 
-    .code-editor-mobile {
-        height: calc(100% - 48px);
-    }
+#appInner.mobile #controls-wrapper {
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 48px);
+}
+
+#appInner.mobile #controlPanel-controls {
+    min-height: 0;
+    overflow: auto;
+}
+
+#appInner.mobile #controlPanel.mobile.controls-sheet #controlPanel-scroll-region {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+#appInner.mobile #controlPanel.mobile.code-sheet > .pcui-panel-content,
+#appInner.mobile #controlPanel.mobile.description-sheet > .pcui-panel-content {
+    overflow: auto;
+}
+
+#appInner.mobile .code-editor-mobile {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#appInner.mobile .code-editor-mobile-files {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    overflow-y: auto;
+}
+
+#appInner.mobile .code-editor-mobile-files .pcui-button {
+    flex: 0 0 44px;
+    margin: 0;
+    padding: 0 12px;
+    width: 100%;
+    height: 44px;
+    border: 0;
+    border-bottom: 1px solid #4a5a5f;
+    border-radius: 0;
+    text-align: left;
+    font-family: inconsolatamedium, Monaco, Menlo, "Ubuntu Mono", Consolas, source-code-pro, monospace;
+    font-size: 12px;
+    background-color: transparent;
+}
+
+#appInner.mobile .code-editor-mobile-files .pcui-button:not(.pcui-disabled, .pcui-readonly):hover,
+#appInner.mobile .code-editor-mobile-files .pcui-button:not(.pcui-disabled, .pcui-readonly):focus,
+#appInner.mobile .code-editor-mobile-files .pcui-button:not(.pcui-disabled, .pcui-readonly):active {
+    background-color: transparent;
+    box-shadow: none;
 }
 
 #deviceTypeSelectInput {
+    flex: 0 0 32px;
+    height: 32px;
     margin: 8px;
     min-width: 200px;
+}
+
+#deviceTypeSelectInput > .pcui-select-input-container-value {
+    height: 32px;
 }
 
 #deviceTypeSelectInput > .pcui-select-input-container-value > .pcui-select-input-value {
@@ -670,24 +875,23 @@ body {
     width: 36px;
 }
 
-@media only screen and (max-width: 600px) {
-    #menu #play-button {
-        display: none;
-    }
-    #menu #language-button {
-        display: none;
-    }
+#appInner.mobile #menu #play-button {
+    display: none;
 }
 
-@media only screen and (max-width: 600px) {
-    #menu {
-        top: 8px;
-        background-color: rgba(54, 67, 70, 1);
-    }
+#appInner.mobile #menu #language-button {
+    display: none;
+}
 
-    #menu img {
-        min-width: 32px;
-    }
+#appInner.mobile #menu {
+    top: calc(var(--mobile-gap) + var(--safe-area-top));
+    margin-top: var(--mobile-gap);
+    margin-left: calc(var(--mobile-gap) + var(--safe-area-left));
+    background-color: rgba(54, 67, 70, 0.64);
+}
+
+#appInner.mobile #menu img {
+    min-width: 32px;
 }
 
 #menu-buttons {
@@ -714,15 +918,263 @@ body {
     font-size: 10px;
 }
 
-@media only screen and (min-width: 601px) {
-#menu #menu-embed-container {
+#appInner.desktop #menu #menu-embed-container {
     max-width: 272px;
-}
 }
 
 #menu #showMiniStatsButton.selected {
     color: white;
     background-color: #F60;
+}
+
+#mobileDock {
+    display: none;
+}
+
+#mobileUi {
+    display: contents;
+}
+
+body.mobile-panel-resizing {
+    user-select: none;
+}
+
+body.mobile-panel-resizing-x {
+    cursor: ew-resize;
+}
+
+body.mobile-panel-resizing-y {
+    cursor: ns-resize;
+}
+
+body.mobile-panel-resizing #exampleIframe {
+    pointer-events: none;
+}
+
+#appInner.mobile #controlPanel.mobile > .pcui-panel-header,
+#appInner.mobile #sideBar.mobile-sheet > .pcui-panel-header {
+    position: relative;
+    cursor: ns-resize;
+    touch-action: none;
+    user-select: none;
+    overflow: visible;
+}
+
+#appInner.mobile #controlPanel.mobile > .pcui-panel-header::before,
+#appInner.mobile #sideBar.mobile-sheet > .pcui-panel-header::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: var(--mobile-handle-hit-width);
+    height: var(--mobile-handle-hit-height);
+    background: transparent;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+}
+
+#appInner.mobile #controlPanel.mobile > .pcui-panel-header::after,
+#appInner.mobile #sideBar.mobile-sheet > .pcui-panel-header::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 44px;
+    height: 4px;
+    border-radius: 999px;
+    background-color: #8da0a5;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+body.mobile-panel-resizing #appInner.mobile #controlPanel.mobile > .pcui-panel-header::after,
+body.mobile-panel-resizing #appInner.mobile #sideBar.mobile-sheet > .pcui-panel-header::after {
+    background-color: #fff;
+}
+
+#appInner.mobile-landscape #controlPanel.mobile > .pcui-panel-header,
+#appInner.mobile-landscape #sideBar.mobile-sheet > .pcui-panel-header {
+    cursor: default;
+}
+
+#appInner.mobile-landscape #controlPanel.mobile > .pcui-panel-header::before,
+#appInner.mobile-landscape #sideBar.mobile-sheet > .pcui-panel-header::before,
+#appInner.mobile-landscape #controlPanel.mobile > .pcui-panel-header::after,
+#appInner.mobile-landscape #sideBar.mobile-sheet > .pcui-panel-header::after {
+    display: none;
+}
+
+#appInner.mobile-landscape #controlPanel.mobile::before,
+#appInner.mobile-landscape #sideBar.mobile-sheet::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--mobile-handle-hit-height);
+    height: 100%;
+    background: transparent;
+    transform: translateX(-50%);
+    cursor: ew-resize;
+    pointer-events: auto;
+    z-index: 2;
+}
+
+#appInner.mobile-landscape #controlPanel.mobile::after,
+#appInner.mobile-landscape #sideBar.mobile-sheet::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 4px;
+    height: 44px;
+    border-radius: 999px;
+    background-color: #8da0a5;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 3;
+}
+
+body.mobile-panel-resizing #appInner.mobile-landscape #controlPanel.mobile::after,
+body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::after {
+    background-color: #fff;
+}
+
+#appInner.mobile #mobileDock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(28px, 10vw, 42px);
+    position: fixed;
+    left: calc(var(--mobile-gap) + var(--safe-area-left));
+    right: calc(var(--mobile-gap) + var(--safe-area-right));
+    bottom: calc(var(--mobile-gap) + var(--safe-area-bottom));
+    height: var(--mobile-dock-height);
+    padding: 4px 8px;
+    box-sizing: border-box;
+    background-color: rgba(54, 67, 70, 0.64);
+    backdrop-filter: blur(32px);
+    border-radius: var(--mobile-radius);
+    z-index: 100000;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#appInner.mobile-landscape #mobileDock {
+    left: auto;
+    right: calc(var(--mobile-gap) + var(--safe-area-right));
+    top: calc(var(--mobile-gap) + var(--safe-area-top));
+    bottom: calc(var(--mobile-gap) + var(--safe-area-bottom));
+    width: var(--mobile-dock-width);
+    height: auto;
+    flex-direction: column;
+    gap: clamp(16px, 5dvh, 28px);
+    padding: 8px 4px;
+}
+
+#appInner.mobile #mobileDock .mobile-dock-button {
+    --mobile-dock-icon-size: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    color: #b1b8ba;
+    background: transparent;
+    box-shadow: none !important;
+    font-size: 0;
+    outline: 0;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    overflow: hidden;
+    user-select: none;
+}
+
+#appInner.mobile #mobileDock .mobile-dock-button::before {
+    content: '';
+    display: block;
+    width: var(--mobile-dock-icon-size);
+    height: var(--mobile-dock-icon-size);
+    background-color: currentColor;
+    mask: var(--mobile-dock-icon) center / var(--mobile-dock-icon-size) var(--mobile-dock-icon-size) no-repeat;
+    -webkit-mask: var(--mobile-dock-icon) center / var(--mobile-dock-icon-size) var(--mobile-dock-icon-size) no-repeat;
+}
+
+#appInner.mobile #mobileDock .mobile-dock-button:hover,
+#appInner.mobile #mobileDock .mobile-dock-button:focus,
+#appInner.mobile #mobileDock .mobile-dock-button.pcui-focus,
+#appInner.mobile #mobileDock .mobile-dock-button:active {
+    border: 0;
+    color: #f2f2f2;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    outline: 0;
+}
+
+#appInner.mobile #mobileDock .mobile-dock-button.pcui-disabled,
+#appInner.mobile #mobileDock .mobile-dock-button.pcui-disabled:hover,
+#appInner.mobile #mobileDock .mobile-dock-button.pcui-disabled:focus,
+#appInner.mobile #mobileDock .mobile-dock-button.pcui-disabled.pcui-focus,
+#appInner.mobile #mobileDock .mobile-dock-button.pcui-disabled:active {
+    color: #b1b8ba;
+    cursor: default;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+#appInner.mobile #mobileDock .mobile-dock-button.selected,
+#appInner.mobile #mobileDock .mobile-dock-button.selected:hover,
+#appInner.mobile #mobileDock .mobile-dock-button.selected:focus,
+#appInner.mobile #mobileDock .mobile-dock-button.selected.pcui-focus,
+#appInner.mobile #mobileDock .mobile-dock-button.selected:active {
+    border: 0;
+    color: #F60 !important;
+    background: transparent !important;
+    background-image: none !important;
+}
+
+#appInner.mobile #mobileDock .mobile-dock-button.selected::before {
+    background-color: #F60;
+}
+
+#appInner.mobile #mobileDock .mobile-dock-examples {
+    --mobile-dock-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z'/%3E%3C/svg%3E");
+}
+
+#appInner.mobile #mobileDock .mobile-dock-code {
+    --mobile-dock-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m16 18 6-6-6-6M8 6l-6 6 6 6'/%3E%3C/svg%3E");
+}
+
+#appInner.mobile #mobileDock .mobile-dock-controls {
+    --mobile-dock-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h8M16 7h4M4 17h4M12 17h8'/%3E%3Ccircle cx='14' cy='7' r='2' fill='black'/%3E%3Ccircle cx='10' cy='17' r='2' fill='black'/%3E%3C/svg%3E");
+}
+
+#appInner.mobile #mobileDock .mobile-dock-description {
+    --mobile-dock-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v6M12 7h.01'/%3E%3C/svg%3E");
+}
+
+#mobileDescriptionPanel {
+    box-sizing: border-box;
+    height: 100%;
+    padding: 12px;
+    color: #f2f2f2;
+    line-height: 1.45;
+}
+
+#controlPanel.mobile.description-sheet,
+#controlPanel.mobile.description-sheet > .pcui-panel-content,
+#mobileDescriptionPanel,
+#mobileDescriptionPanel *,
+#mobileDescriptionPanel a {
+    color: #f2f2f2;
 }
 
 .tabs-wrapper {
@@ -781,10 +1233,8 @@ body {
     color: white;
 }
 
-@media only screen and (min-width: 601px) {
-    #controlPanel-tabs {
-        display: none;
-    }
+#appInner.desktop #controlPanel-tabs {
+    display: none;
 }
 
 #appInner.fullscreen #canvas-container {
@@ -797,6 +1247,17 @@ body {
     margin: 0;
 }
 
+#appInner.fullscreen #canvas-container iframe {
+    width: 100%;
+    height: 100%;
+}
+
+#appInner.mobile.fullscreen #canvas-container iframe,
+#appInner.mobile.fullscreen #canvas-container #exampleLoading {
+    width: 100%;
+    height: 100%;
+}
+
 #appInner.fullscreen #menu {
     opacity: 0;
 }
@@ -804,10 +1265,8 @@ body {
     opacity: 1;
 }
 
-@media only screen and (min-width: 601px) {
-    #appInner.fullscreen #menu:hover {
-        opacity: 1;
-    }
+#appInner.desktop.fullscreen #menu:hover {
+    opacity: 1;
 }
 
 #appInner.fullscreen #menu {
@@ -816,6 +1275,10 @@ body {
 }
 
 #appInner.fullscreen #controlPanel, #appInner.fullscreen #sideBar {
+    display: none;
+}
+
+#appInner.fullscreen #mobileDock {
     display: none;
 }
 

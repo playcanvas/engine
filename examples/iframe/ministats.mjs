@@ -11,20 +11,21 @@ export default class MiniStats {
     /**
      * @param {AppBase} app - The app instance.
      * @param {any} state - The enabled state.
+     * @returns {boolean} The resolved MiniStats enabled state.
      */
     static enable(app, state) {
         if (params.miniStats === 'false') {
-            return;
+            return false;
         }
         if (typeof window.pc === 'undefined') {
-            return;
+            return false;
         }
         if (!app) {
-            return;
+            return false;
         }
         const deviceType = app?.graphicsDevice?.deviceType;
         if (deviceType === 'null') {
-            return;
+            return false;
         }
         if (state) {
             if (!MiniStats.instance) {
@@ -32,9 +33,10 @@ export default class MiniStats {
             }
         }
         if (!MiniStats.instance) {
-            return;
+            return false;
         }
         MiniStats.instance.enabled = state;
+        return MiniStats.instance.enabled;
     }
 
     static destroy() {

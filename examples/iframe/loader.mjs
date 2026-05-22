@@ -2,6 +2,7 @@ import files from './files.mjs';
 import MiniStats from './ministats.mjs';
 import { fetchFile, importModule, clearImports, parseConfig, fire } from './runtime.mjs';
 import { data, deviceType as selectedDeviceType, refreshContext, updateDeviceType } from './state.mjs';
+import { blockZoom } from './zoom.mjs';
 
 /** @import { AppBase } from 'playcanvas' */
 
@@ -68,7 +69,6 @@ class ExampleLoader {
                 console.warn('No canvas found.');
                 return;
             }
-            this.setMiniStats(true);
         }
 
         if (!this._started) {
@@ -91,6 +91,7 @@ class ExampleLoader {
             const reportedType = (isWebGPU(selectedDeviceType) && engineType === 'webgpu') ?
                 selectedDeviceType :
                 engineType;
+            window.top.activeGraphicsDevice = reportedType;
             fire('updateActiveDevice', { deviceType: reportedType });
         }
 
@@ -157,6 +158,8 @@ class ExampleLoader {
      * @param {{ engineUrl: string, fileNames: string[], config?: Record<string, any> }} options - Options to start the loader
      */
     async start({ engineUrl, fileNames, config = {} }) {
+        blockZoom();
+
         this._baseConfig = config;
         this._fileNames = fileNames;
 
@@ -254,9 +257,10 @@ class ExampleLoader {
      */
     setMiniStats(enabled = false) {
         if (this._config.NO_MINISTATS) {
+            fire('miniStats', { state: false });
             return;
         }
-        MiniStats.enable(this._app, enabled);
+        fire('miniStats', { state: MiniStats.enable(this._app, enabled) });
     }
 
     hotReload() {

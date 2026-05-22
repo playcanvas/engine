@@ -1,0 +1,37 @@
+{
+    "id": "./",
+    "name": "PlayCanvas Examples",
+    "short_name": "PlayCanvas Examples",
+    "description": "PlayCanvas Engine examples browser",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "any",
+    "theme_color": "#171E20",
+    "background_color": "#171E20",
+    "icons": [
+        {
+            "src": "./icons/playcanvas-180.png",
+            "sizes": "180x180",
+            "type": "image/png"
+        },
+        {
+            "src": "./icons/playcanvas-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icons/playcanvas-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icons/playcanvas-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
