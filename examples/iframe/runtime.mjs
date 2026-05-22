@@ -250,20 +250,20 @@ export function parseConfig(script) {
 }
 
 /**
- * @returns {Window | null} - The same-origin top window, if available.
+ * @type {Window | null} - The same-origin top window, if available.
  */
-export const host = () => {
+export const host = (() => {
     try {
         return window.top && window.top.location.origin === window.location.origin ? window.top : null;
     } catch (e) {
         return null;
     }
-};
+})();
 
 /**
  * @param {string} eventName - The name of the fired event.
  * @param {object} detail - The detail object.
  */
 export function fire(eventName, detail = {}) {
-    host()?.dispatchEvent(new CustomEvent(eventName, { detail }));
+    host?.dispatchEvent(new CustomEvent(eventName, { detail }));
 }

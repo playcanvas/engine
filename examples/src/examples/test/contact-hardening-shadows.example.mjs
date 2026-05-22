@@ -297,7 +297,7 @@ assetListLoader.load(() => {
         }
     });
 
-    const doc = host()?.document;
+    const doc = host?.document;
     const areaLightElement = doc?.getElementById('area-light');
     const pointLightElement = doc?.getElementById('point-light');
     const directionalLightElement = doc?.getElementById('directional-light');

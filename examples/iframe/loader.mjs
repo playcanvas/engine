@@ -165,9 +165,8 @@ class ExampleLoader {
 
         window.pc = await import(engineUrl);
 
-        const win = host();
-        if (win) {
-            win.pc = window.pc;
+        if (host) {
+            host.pc = window.pc;
         }
 
         await this._fetchFiles();

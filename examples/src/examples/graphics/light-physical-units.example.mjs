@@ -58,7 +58,7 @@ app.on('destroy', () => {
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
-    const doc = host()?.document;
+    const doc = host?.document;
 
     app.start();
 

@@ -12,7 +12,7 @@ import { data, deviceType, host } from 'examples/context';
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
-const hashQuery = (host()?.location.hash || window.location.hash || '').split('?')[1] || '';
+const hashQuery = (host?.location.hash || window.location.hash || '').split('?')[1] || '';
 const hashParams = new URLSearchParams(hashQuery);
 const paramUrl = hashParams.get('url');
 const paramOrientation = hashParams.get('orientation');
