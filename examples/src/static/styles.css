@@ -23,6 +23,10 @@ body {
     --mobile-panel-height: clamp(300px, 48svh, 440px);
     --mobile-panel-width: clamp(320px, 42vw, 420px);
     --mobile-radius: 6px;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
 }
 
 #app {
@@ -74,9 +78,9 @@ body {
 #appInner.mobile #sideBar {
     margin: 0;
     position: fixed;
-    left: var(--mobile-gap);
-    right: var(--mobile-gap);
-    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap) + var(--mobile-gap) + env(safe-area-inset-bottom));
+    left: calc(var(--mobile-gap) + var(--safe-area-left));
+    right: calc(var(--mobile-gap) + var(--safe-area-right));
+    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap) + var(--mobile-gap) + var(--safe-area-bottom));
     z-index: 99999;
     width: auto;
     height: var(--mobile-panel-height);
@@ -342,40 +346,40 @@ body {
 }
 
 #appInner.mobile #canvas-container {
-    margin: var(--mobile-gap);
+    margin: calc(var(--mobile-gap) + var(--safe-area-top)) calc(var(--mobile-gap) + var(--safe-area-right)) calc(var(--mobile-gap) + var(--safe-area-bottom)) calc(var(--mobile-gap) + var(--safe-area-left));
     border-radius: var(--mobile-radius);
-    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap));
+    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
     background-color: #171E20;
 }
 
 #appInner.mobile #canvas-container iframe {
     border-radius: var(--mobile-radius);
-    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
+    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
 }
 
 #appInner.mobile #exampleLoading {
     border-radius: var(--mobile-radius);
-    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
+    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
 }
 
 #appInner.mobile-landscape #canvas-container iframe,
 #appInner.mobile-landscape #exampleLoading {
-    width: calc(100vw - var(--mobile-dock-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap));
-    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap));
+    width: calc(100vw - var(--mobile-dock-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-left) - var(--safe-area-right));
+    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
 }
 
 #appInner.mobile-portrait #canvas-container.mobile-panel-open iframe {
-    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
+    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
 }
 
 #appInner.mobile-portrait #canvas-container.mobile-panel-open #exampleLoading {
-    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - env(safe-area-inset-bottom));
+    height: calc(100dvh - var(--mobile-dock-height) - var(--mobile-panel-height) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
 }
 
 #appInner.mobile-landscape #canvas-container.mobile-panel-open iframe,
 #appInner.mobile-landscape #canvas-container.mobile-panel-open #exampleLoading {
-    width: calc(100vw - var(--mobile-panel-width) - var(--mobile-dock-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap));
-    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap));
+    width: calc(100vw - var(--mobile-panel-width) - var(--mobile-dock-width) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-left) - var(--safe-area-right));
+    height: calc(100dvh - var(--mobile-gap) - var(--mobile-gap) - var(--safe-area-top) - var(--safe-area-bottom));
 }
 
 @keyframes animation-spin {
@@ -445,7 +449,7 @@ body {
 }
 
 #controlPanel.mobile {
-    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap) + env(safe-area-inset-bottom));
+    bottom: calc(var(--mobile-dock-height) + var(--mobile-gap));
     left: 0;
     right: 0;
     width: auto;
@@ -484,9 +488,9 @@ body {
 }
 
 #appInner.mobile-landscape #sideBar.mobile-sheet {
-    top: var(--mobile-gap);
-    right: calc(var(--mobile-dock-width) + var(--mobile-gap) + var(--mobile-gap));
-    bottom: var(--mobile-gap);
+    top: calc(var(--mobile-gap) + var(--safe-area-top));
+    right: calc(var(--mobile-dock-width) + var(--mobile-gap) + var(--mobile-gap) + var(--safe-area-right));
+    bottom: calc(var(--mobile-gap) + var(--safe-area-bottom));
     left: auto;
 }
 
@@ -880,9 +884,9 @@ body {
 }
 
 #appInner.mobile #menu {
-    top: var(--mobile-gap);
+    top: calc(var(--mobile-gap) + var(--safe-area-top));
     margin-top: var(--mobile-gap);
-    margin-left: var(--mobile-gap);
+    margin-left: calc(var(--mobile-gap) + var(--safe-area-left));
     background-color: rgba(54, 67, 70, 0.64);
 }
 
@@ -1041,9 +1045,9 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
     justify-content: center;
     gap: clamp(28px, 10vw, 42px);
     position: fixed;
-    left: var(--mobile-gap);
-    right: var(--mobile-gap);
-    bottom: calc(var(--mobile-gap) + env(safe-area-inset-bottom));
+    left: calc(var(--mobile-gap) + var(--safe-area-left));
+    right: calc(var(--mobile-gap) + var(--safe-area-right));
+    bottom: calc(var(--mobile-gap) + var(--safe-area-bottom));
     height: var(--mobile-dock-height);
     padding: 4px 8px;
     box-sizing: border-box;
@@ -1056,9 +1060,9 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
 
 #appInner.mobile-landscape #mobileDock {
     left: auto;
-    right: var(--mobile-gap);
-    top: var(--mobile-gap);
-    bottom: var(--mobile-gap);
+    right: calc(var(--mobile-gap) + var(--safe-area-right));
+    top: calc(var(--mobile-gap) + var(--safe-area-top));
+    bottom: calc(var(--mobile-gap) + var(--safe-area-bottom));
     width: var(--mobile-dock-width);
     height: auto;
     flex-direction: column;

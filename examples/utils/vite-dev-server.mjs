@@ -74,6 +74,7 @@ const HASH_ALGORITHM = 'sha1';
 const STATIC_ROUTES = [
     { url: '/static/assets/', root: 'assets' },
     { url: '/static/scripts/', root: '../scripts' },
+    { url: '/icons/', root: 'src/static/icons' },
     { url: '/thumbnails/', root: 'thumbnails' },
     { url: '/modules/monaco-editor/min/vs/', root: 'node_modules/monaco-editor/min/vs' },
     { url: '/modules/fflate/esm/', root: '../node_modules/fflate/esm' }
@@ -81,6 +82,7 @@ const STATIC_ROUTES = [
 const ROOT_FILES = {
     '/styles.css': 'src/static/styles.css',
     '/playcanvas-logo.png': 'src/static/playcanvas-logo.png',
+    '/manifest.webmanifest': 'src/static/manifest.webmanifest',
     '/playcanvas.d.ts': '../build/playcanvas.d.ts'
 };
 const IFRAME_FILES = {
@@ -115,6 +117,8 @@ const mime = (file) => {
             return 'text/javascript; charset=utf-8';
         case '.json':
             return 'application/json; charset=utf-8';
+        case '.webmanifest':
+            return 'application/manifest+json; charset=utf-8';
         case '.png':
             return 'image/png';
         case '.jpg':
