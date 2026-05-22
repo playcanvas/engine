@@ -58,7 +58,7 @@ const MOBILE_PANEL_TITLES = {
  * @property {'portrait'|'landscape'} [orientation] - Current orientation.
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
- * @property {(event: import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
+ * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
 /**
@@ -213,17 +213,9 @@ class Example extends TypedComponent {
         this.setState(prevState => ({ ...prevState, ...state }));
     }
 
-    /** @type {HTMLElement | null} */
-    _controlPanel = null;
-
     setupControlPanel() {
         const controlPanel = document.getElementById('controlPanel');
-        if (!controlPanel || this._controlPanel === controlPanel) {
-            return;
-        }
-        this._controlPanel = controlPanel;
-
-        if (controlPanel.classList.contains('mobile')) {
+        if (!controlPanel) {
             return;
         }
 
@@ -234,6 +226,15 @@ class Example extends TypedComponent {
         if (!controlPanelHeader) {
             return;
         }
+
+        if (controlPanel.classList.contains('mobile')) {
+            const drag = this.props.onMobilePanelDragStart;
+            controlPanelHeader.onclick = null;
+            controlPanelHeader.onpointerdown = drag ? event => drag(event) : null;
+            return;
+        }
+
+        controlPanelHeader.onpointerdown = null;
         controlPanelHeader.onclick = () => this.toggleCollapse();
     }
 
@@ -451,10 +452,6 @@ class Example extends TypedComponent {
             {
                 id: 'mobileUi'
             },
-            activePanel && jsx('div', {
-                className: 'mobile-resize-handle',
-                onPointerDown: this.props.onMobilePanelDragStart
-            }),
             activePanel && jsx(
                 Panel,
                 {

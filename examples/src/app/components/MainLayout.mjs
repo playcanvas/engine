@@ -116,11 +116,26 @@ class MainLayout extends TypedComponent {
     };
 
     /**
-     * @param {import('react').PointerEvent<HTMLElement>} event - Pointer event.
+     * @param {PointerEvent | import('react').PointerEvent<HTMLElement>} event - Pointer event.
      */
     startMobilePanelDrag = (event) => {
+        const target = /** @type {HTMLElement | null} */ (event.currentTarget);
+        if (!target) {
+            return;
+        }
+
+        const rect = target.getBoundingClientRect();
+        const style = getComputedStyle(target);
+        const width = parseFloat(style.getPropertyValue('--mobile-handle-hit-width')) || 96;
+        const height = parseFloat(style.getPropertyValue('--mobile-handle-hit-height')) || 44;
+        const x = event.clientX - rect.left - rect.width / 2;
+        const y = event.clientY - rect.top;
+        if (Math.abs(x) > width / 2 || Math.abs(y) > height / 2) {
+            return;
+        }
+
         event.preventDefault();
-        event.currentTarget.setPointerCapture?.(event.pointerId);
+        target.setPointerCapture?.(event.pointerId);
         this._mobilePanelDrag = {
             y: event.clientY,
             height: this.state.mobilePanelHeight
