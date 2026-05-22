@@ -93,6 +93,7 @@ const IFRAME_FILES = {
     '/iframe/playcanvas-observer.mjs': 'node_modules/@playcanvas/observer/dist/index.mjs',
     '/iframe/runtime.mjs': 'iframe/runtime.mjs',
     '/iframe/state.mjs': 'iframe/state.mjs',
+    '/iframe/zoom.mjs': 'iframe/zoom.mjs',
     '/iframe/playcanvas.d.ts': '../build/playcanvas.d.ts'
 };
 

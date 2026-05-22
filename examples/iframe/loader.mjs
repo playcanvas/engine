@@ -2,6 +2,7 @@ import files from './files.mjs';
 import MiniStats from './ministats.mjs';
 import { fetchFile, importModule, clearImports, parseConfig, fire } from './runtime.mjs';
 import { data, deviceType as selectedDeviceType, refreshContext, updateDeviceType } from './state.mjs';
+import { blockZoom } from './zoom.mjs';
 
 /** @import { AppBase } from 'playcanvas' */
 
@@ -157,6 +158,8 @@ class ExampleLoader {
      * @param {{ engineUrl: string, fileNames: string[], config?: Record<string, any> }} options - Options to start the loader
      */
     async start({ engineUrl, fileNames, config = {} }) {
+        blockZoom();
+
         this._baseConfig = config;
         this._fileNames = fileNames;
 

@@ -5,6 +5,7 @@
 html, body, #app {
     width: 100%;
     height: 100%;
+    touch-action: none;
 }
 
 body {
@@ -296,6 +297,7 @@ body {
     width: 100%;
     height: 100%;
     border: none;
+    touch-action: none;
 }
 
 @media only screen and (max-width: 600px) {
@@ -510,6 +512,21 @@ body {
 }
 
 @media only screen and (max-width: 600px) {
+    #sideBar-contents,
+    #controlPanel-scroll-region,
+    #controlPanel-controls,
+    #controlPanel.mobile > .pcui-panel-content,
+    .code-editor-mobile-files {
+        touch-action: pan-y;
+    }
+
+    #menu,
+    #mobileDock,
+    #mobileDock .mobile-dock-button,
+    .mobile-resize-handle {
+        touch-action: none;
+    }
+
     #controls-wrapper {
         position: absolute;
         width: 100%;
