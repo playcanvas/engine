@@ -7,7 +7,7 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [ユーザーマニュアル](https://developer.playcanvas.com/user-manual/engine/) | [APIリファレンス](https://api.playcanvas.com/engine/) | [例](https://playcanvas.github.io) | [ブログ](https://blog.playcanvas.com) | [フォーラム](https://forum.playcanvas.com) |
+| [ユーザーマニュアル](https://developer.playcanvas.com/user-manual/engine/) | [APIリファレンス](https://api.playcanvas.com/engine/) | [例](https://playcanvas.com/examples/) | [ブログ](https://blog.playcanvas.com) | [フォーラム](https://forum.playcanvas.com) |
 
 PlayCanvasは、WebGL2とWebGPU上に構築されたオープンソースのゲームエンジンです。あらゆるブラウザ、あらゆるデバイスで動作するインタラクティブな3Dアプリ、ゲーム、ビジュアライゼーションを作成できます。
 
