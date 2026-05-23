@@ -7,7 +7,7 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [사용자 매뉴얼](https://developer.playcanvas.com/user-manual/engine/) | [API 레퍼런스](https://api.playcanvas.com/engine/) | [예제](https://playcanvas.github.io) | [블로그](https://blog.playcanvas.com) | [포럼](https://forum.playcanvas.com) |
+| [사용자 매뉴얼](https://developer.playcanvas.com/user-manual/engine/) | [API 레퍼런스](https://api.playcanvas.com/engine/) | [예제](https://playcanvas.com/examples/) | [블로그](https://blog.playcanvas.com) | [포럼](https://forum.playcanvas.com) |
 
 PlayCanvas는 WebGL2와 WebGPU 기반의 오픈소스 게임 엔진입니다. 모든 브라우저, 모든 디바이스에서 실행되는 인터랙티브 3D 앱, 게임 및 시각화를 만들 수 있습니다.
 
