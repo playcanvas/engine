@@ -9,6 +9,7 @@ vec3 getFresnel(
         float iridescenceIntensity
 #endif
     ) {
+    // pow(x, 5) expanded into multiplies to avoid the log2/exp2 pair pow compiles to
     float x = 1.0 - saturate(cosTheta);
     float x2 = x * x;
     float fresnel = x2 * x2 * x;
@@ -26,6 +27,7 @@ vec3 getFresnel(
 }
 
 float getFresnelCC(float cosTheta) {
+    // pow(x, 5) expanded into multiplies to avoid the log2/exp2 pair pow compiles to
     float x = 1.0 - saturate(cosTheta);
     float x2 = x * x;
     float fresnel = x2 * x2 * x;

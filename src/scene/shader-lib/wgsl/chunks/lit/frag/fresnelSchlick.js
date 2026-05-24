@@ -9,6 +9,7 @@ fn getFresnel(
         iridescenceIntensity: f32
     #endif
 ) -> vec3f {
+    // pow(x, 5) expanded into multiplies to avoid the log2/exp2 pair pow compiles to
     let x: f32 = 1.0 - saturate(cosTheta);
     let x2: f32 = x * x;
     let fresnel: f32 = x2 * x2 * x;
@@ -26,6 +27,7 @@ fn getFresnel(
 }
 
 fn getFresnelCC(cosTheta: f32) -> f32 {
+    // pow(x, 5) expanded into multiplies to avoid the log2/exp2 pair pow compiles to
     let x: f32 = 1.0 - saturate(cosTheta);
     let x2: f32 = x * x;
     let fresnel: f32 = x2 * x2 * x;
