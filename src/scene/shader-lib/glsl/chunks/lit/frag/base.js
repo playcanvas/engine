@@ -4,7 +4,7 @@ uniform vec3 view_position;
 uniform vec3 light_globalAmbient;
 
 float square(float x) {
-    return x * x;
+    return x*x;
 }
 
 float saturate(float x) {
