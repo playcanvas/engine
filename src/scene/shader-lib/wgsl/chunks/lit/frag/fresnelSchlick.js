@@ -9,7 +9,9 @@ fn getFresnel(
         iridescenceIntensity: f32
     #endif
 ) -> vec3f {
-    let fresnel: f32 = pow(1.0 - saturate(cosTheta), 5.0);
+    let x: f32 = 1.0 - saturate(cosTheta);
+    let x2: f32 = x * x;
+    let fresnel: f32 = x2 * x2 * x;
     let glossSq: f32 = gloss * gloss;
 
     // Scale gloss contribution by specularity intensity to ensure F90 approaches 0 when F0 is 0
@@ -24,6 +26,8 @@ fn getFresnel(
 }
 
 fn getFresnelCC(cosTheta: f32) -> f32 {
-    let fresnel: f32 = pow(1.0 - saturate(cosTheta), 5.0);
+    let x: f32 = 1.0 - saturate(cosTheta);
+    let x2: f32 = x * x;
+    let fresnel: f32 = x2 * x2 * x;
     return 0.04 + (1.0 - 0.04) * fresnel;
 }`;
