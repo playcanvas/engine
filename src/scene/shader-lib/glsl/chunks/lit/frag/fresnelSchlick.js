@@ -9,10 +9,7 @@ vec3 getFresnel(
         float iridescenceIntensity
 #endif
     ) {
-    // pow(x, 5) expanded into multiplies to avoid the log2/exp2 pair pow compiles to
-    float x = 1.0 - saturate(cosTheta);
-    float x2 = x * x;
-    float fresnel = x2 * x2 * x;
+    float fresnel = pow5(1.0 - saturate(cosTheta));
     float glossSq = gloss * gloss;
 
     // Scale gloss contribution by specularity intensity to ensure F90 approaches 0 when F0 is 0
@@ -27,10 +24,7 @@ vec3 getFresnel(
 }
 
 float getFresnelCC(float cosTheta) {
-    // pow(x, 5) expanded into multiplies to avoid the log2/exp2 pair pow compiles to
-    float x = 1.0 - saturate(cosTheta);
-    float x2 = x * x;
-    float fresnel = x2 * x2 * x;
+    float fresnel = pow5(1.0 - saturate(cosTheta));
     return 0.04 + (1.0 - 0.04) * fresnel;
 }
 `;

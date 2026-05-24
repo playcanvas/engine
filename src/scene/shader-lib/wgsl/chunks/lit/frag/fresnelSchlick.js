@@ -9,10 +9,7 @@ fn getFresnel(
         iridescenceIntensity: f32
     #endif
 ) -> vec3f {
-    // pow(x, 5) expanded into multiplies to avoid the log2/exp2 pair pow compiles to
-    let x: f32 = 1.0 - saturate(cosTheta);
-    let x2: f32 = x * x;
-    let fresnel: f32 = x2 * x2 * x;
+    let fresnel: f32 = pow5(1.0 - saturate(cosTheta));
     let glossSq: f32 = gloss * gloss;
 
     // Scale gloss contribution by specularity intensity to ensure F90 approaches 0 when F0 is 0
@@ -27,9 +24,6 @@ fn getFresnel(
 }
 
 fn getFresnelCC(cosTheta: f32) -> f32 {
-    // pow(x, 5) expanded into multiplies to avoid the log2/exp2 pair pow compiles to
-    let x: f32 = 1.0 - saturate(cosTheta);
-    let x2: f32 = x * x;
-    let fresnel: f32 = x2 * x2 * x;
+    let fresnel: f32 = pow5(1.0 - saturate(cosTheta));
     return 0.04 + (1.0 - 0.04) * fresnel;
 }`;
