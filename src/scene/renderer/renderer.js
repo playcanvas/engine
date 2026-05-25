@@ -64,9 +64,9 @@ const _dynamicBindGroup = new DynamicBindGroup();
 
 // Reusable scratch passed to GraphicsDevice.clear so the per-frame call site
 // does not allocate a fresh options object + color array.
-const _clearColorScratch = [0, 0, 0, 1];
-const _clearOptionsScratch = {
-    color: _clearColorScratch,
+const _tempClearColor = [0, 0, 0, 1];
+const _tempClearOptions = {
+    color: _tempClearColor,
     depth: 1,
     stencil: 0,
     flags: 0
@@ -461,14 +461,14 @@ class Renderer {
             DebugGraphics.pushGpuMarker(device, 'CLEAR');
 
             const c = camera._clearColor;
-            _clearColorScratch[0] = c.r;
-            _clearColorScratch[1] = c.g;
-            _clearColorScratch[2] = c.b;
-            _clearColorScratch[3] = c.a;
-            _clearOptionsScratch.depth = camera._clearDepth;
-            _clearOptionsScratch.stencil = camera._clearStencil;
-            _clearOptionsScratch.flags = flags;
-            device.clear(_clearOptionsScratch);
+            _tempClearColor[0] = c.r;
+            _tempClearColor[1] = c.g;
+            _tempClearColor[2] = c.b;
+            _tempClearColor[3] = c.a;
+            _tempClearOptions.depth = camera._clearDepth;
+            _tempClearOptions.stencil = camera._clearStencil;
+            _tempClearOptions.flags = flags;
+            device.clear(_tempClearOptions);
 
             DebugGraphics.popGpuMarker(device);
         }
