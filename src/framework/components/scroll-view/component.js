@@ -71,6 +71,51 @@ class ScrollViewComponent extends Component {
     static EVENT_SETSCROLL = 'set:scroll';
 
     /**
+     * @type {boolean|undefined}
+     * @private
+     */
+    _horizontal;
+
+    /**
+     * @type {boolean|undefined}
+     * @private
+     */
+    _vertical;
+
+    /**
+     * @type {number|undefined}
+     * @private
+     */
+    _scrollMode;
+
+    /**
+     * @type {number|undefined}
+     * @private
+     */
+    _bounceAmount;
+
+    /**
+     * @type {number|undefined}
+     * @private
+     */
+    _friction;
+
+    /** @private */
+    _dragThreshold = 10;
+
+    /** @private */
+    _useMouseWheel = true;
+
+    /** @private */
+    _mouseWheelSensitivity = new Vec2(1, 1);
+
+    /** @private */
+    _horizontalScrollbarVisibility = 0;
+
+    /** @private */
+    _verticalScrollbarVisibility = 0;
+
+    /**
      * @type {Entity|null}
      * @private
      */
@@ -98,7 +143,19 @@ class ScrollViewComponent extends Component {
      * @type {EventHandle|null}
      * @private
      */
+    _evtElementAdd = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
     _evtElementRemove = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtViewportEntityElementAdd = null;
 
     /**
      * @type {EventHandle|null}
@@ -190,26 +247,8 @@ class ScrollViewComponent extends Component {
         this._disabledContentInput = false;
         this._disabledContentInputEntities = [];
 
-        this._toggleLifecycleListeners('on');
+        this._evtElementAdd = this.entity.on('element:add', this._onElementComponentAdd, this);
         this._toggleElementListeners('on');
-    }
-
-    /**
-     * Sets the enabled state of the component.
-     *
-     * @type {boolean}
-     */
-    set enabled(arg) {
-        this._setValue('enabled', arg);
-    }
-
-    /**
-     * Gets the enabled state of the component.
-     *
-     * @type {boolean}
-     */
-    get enabled() {
-        return this.data.enabled;
     }
 
     /**
@@ -218,7 +257,12 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     set horizontal(arg) {
-        this._setValue('horizontal', arg);
+        if (this._horizontal === arg) {
+            return;
+        }
+
+        this._horizontal = arg;
+        this._syncScrollbarEnabledState(ORIENTATION_HORIZONTAL);
     }
 
     /**
@@ -227,7 +271,7 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     get horizontal() {
-        return this.data.horizontal;
+        return this._horizontal;
     }
 
     /**
@@ -236,7 +280,12 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     set vertical(arg) {
-        this._setValue('vertical', arg);
+        if (this._vertical === arg) {
+            return;
+        }
+
+        this._vertical = arg;
+        this._syncScrollbarEnabledState(ORIENTATION_VERTICAL);
     }
 
     /**
@@ -245,7 +294,7 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     get vertical() {
-        return this.data.vertical;
+        return this._vertical;
     }
 
     /**
@@ -259,7 +308,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set scrollMode(arg) {
-        this._setValue('scrollMode', arg);
+        this._scrollMode = arg;
     }
 
     /**
@@ -268,7 +317,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get scrollMode() {
-        return this.data.scrollMode;
+        return this._scrollMode;
     }
 
     /**
@@ -277,7 +326,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set bounceAmount(arg) {
-        this._setValue('bounceAmount', arg);
+        this._bounceAmount = arg;
     }
 
     /**
@@ -286,7 +335,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get bounceAmount() {
-        return this.data.bounceAmount;
+        return this._bounceAmount;
     }
 
     /**
@@ -298,7 +347,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set friction(arg) {
-        this._setValue('friction', arg);
+        this._friction = arg;
     }
 
     /**
@@ -307,15 +356,15 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get friction() {
-        return this.data.friction;
+        return this._friction;
     }
 
     set dragThreshold(arg) {
-        this._setValue('dragThreshold', arg);
+        this._dragThreshold = arg;
     }
 
     get dragThreshold() {
-        return this.data.dragThreshold;
+        return this._dragThreshold;
     }
 
     /**
@@ -324,7 +373,7 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     set useMouseWheel(arg) {
-        this._setValue('useMouseWheel', arg);
+        this._useMouseWheel = arg;
     }
 
     /**
@@ -333,7 +382,7 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     get useMouseWheel() {
-        return this.data.useMouseWheel;
+        return this._useMouseWheel;
     }
 
     /**
@@ -345,7 +394,15 @@ class ScrollViewComponent extends Component {
      * @type {Vec2}
      */
     set mouseWheelSensitivity(arg) {
-        this._setValue('mouseWheelSensitivity', arg);
+        if (arg instanceof Vec2) {
+            // Clone so callers can pass shared singletons (e.g. Vec2.ONE) and so subsequent
+            // mutations to their Vec2 don't leak into the component's state.
+            this._mouseWheelSensitivity = arg.clone();
+        } else if (Array.isArray(arg)) {
+            this._mouseWheelSensitivity = new Vec2(arg[0], arg[1]);
+        } else {
+            this._mouseWheelSensitivity = arg;
+        }
     }
 
     /**
@@ -354,7 +411,7 @@ class ScrollViewComponent extends Component {
      * @type {Vec2}
      */
     get mouseWheelSensitivity() {
-        return this.data.mouseWheelSensitivity;
+        return this._mouseWheelSensitivity;
     }
 
     /**
@@ -364,7 +421,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set horizontalScrollbarVisibility(arg) {
-        this._setValue('horizontalScrollbarVisibility', arg);
+        this._horizontalScrollbarVisibility = arg;
     }
 
     /**
@@ -374,7 +431,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get horizontalScrollbarVisibility() {
-        return this.data.horizontalScrollbarVisibility;
+        return this._horizontalScrollbarVisibility;
     }
 
     /**
@@ -384,7 +441,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set verticalScrollbarVisibility(arg) {
-        this._setValue('verticalScrollbarVisibility', arg);
+        this._verticalScrollbarVisibility = arg;
     }
 
     /**
@@ -394,7 +451,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get verticalScrollbarVisibility() {
-        return this.data.verticalScrollbarVisibility;
+        return this._verticalScrollbarVisibility;
     }
 
     /**
@@ -427,12 +484,6 @@ class ScrollViewComponent extends Component {
 
         if (this._viewportEntity) {
             this._viewportEntitySubscribe();
-        }
-
-        if (this._viewportEntity) {
-            this.data.viewportEntity = this._viewportEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.viewportEntity = arg;
         }
     }
 
@@ -475,12 +526,6 @@ class ScrollViewComponent extends Component {
 
         if (this._contentEntity) {
             this._contentEntitySubscribe();
-        }
-
-        if (this._contentEntity) {
-            this.data.contentEntity = this._contentEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.contentEntity = arg;
         }
     }
 
@@ -526,12 +571,6 @@ class ScrollViewComponent extends Component {
         if (this._horizontalScrollbarEntity) {
             this._horizontalScrollbarEntitySubscribe();
         }
-
-        if (this._horizontalScrollbarEntity) {
-            this.data.horizontalScrollbarEntity = this._horizontalScrollbarEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.horizontalScrollbarEntity = arg;
-        }
     }
 
     /**
@@ -576,12 +615,6 @@ class ScrollViewComponent extends Component {
         if (this._verticalScrollbarEntity) {
             this._verticalScrollbarEntitySubscribe();
         }
-
-        if (this._verticalScrollbarEntity) {
-            this.data.verticalScrollbarEntity = this._verticalScrollbarEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.verticalScrollbarEntity = arg;
-        }
     }
 
     /**
@@ -609,25 +642,6 @@ class ScrollViewComponent extends Component {
      */
     get scroll() {
         return this._scroll;
-    }
-
-    /** @ignore */
-    _setValue(name, value) {
-        const data = this.data;
-        const oldValue = data[name];
-        data[name] = value;
-        this.fire('set', name, oldValue, value);
-    }
-
-    /**
-     * @param {string} onOrOff - 'on' or 'off'.
-     * @private
-     */
-    _toggleLifecycleListeners(onOrOff) {
-        this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
-        this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
-
-        this.entity[onOrOff]('element:add', this._onElementComponentAdd, this);
     }
 
     /**
@@ -858,14 +872,6 @@ class ScrollViewComponent extends Component {
 
         this._evtVerticalScrollbarValue?.off();
         this._evtVerticalScrollbarValue = null;
-    }
-
-    _onSetHorizontalScrollingEnabled() {
-        this._syncScrollbarEnabledState(ORIENTATION_HORIZONTAL);
-    }
-
-    _onSetVerticalScrollingEnabled() {
-        this._syncScrollbarEnabledState(ORIENTATION_VERTICAL);
     }
 
     _onSetScroll(x, y, resetVelocity) {
@@ -1316,7 +1322,8 @@ class ScrollViewComponent extends Component {
     }
 
     onRemove() {
-        this._toggleLifecycleListeners('off');
+        this._evtElementAdd?.off();
+        this._evtElementAdd = null;
         this._toggleElementListeners('off');
         this._destroyDragHelper();
     }
