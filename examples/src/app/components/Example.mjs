@@ -7,6 +7,8 @@ import { useParams } from 'react-router-dom';
 import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
+import { SelectInput as OverlaySelectInput } from './OverlaySelectInput.mjs';
+import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx, fragment } from '../jsx.mjs';
 import { iframePath } from '../paths.mjs';
@@ -19,6 +21,10 @@ import { getLayout } from '../utils.mjs';
  */
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
+const CONTROLS_REACT_PCUI = /** @satisfies {typeof ReactPCUI} */ ({
+    ...ReactPCUI,
+    SelectInput: OverlaySelectInput
+});
 
 /** @type {Record<string, string>} */
 const MOBILE_PANEL_TITLES = {
@@ -92,6 +98,9 @@ class Example extends TypedComponent {
         description: ''
     };
 
+    /** @type {HTMLElement | null} */
+    _controlPanelScrollRegion = null;
+
     /**
      * @param {Props} props - Component properties.
      */
@@ -104,6 +113,7 @@ class Example extends TypedComponent {
         this._handleExampleHotReload = this._handleExampleHotReload.bind(this);
         this._handleExampleError = this._handleExampleError.bind(this);
         this._handleUpdateFiles = this._handleUpdateFiles.bind(this);
+        this._handleControlPanelScroll = this._handleControlPanelScroll.bind(this);
         this._reloadIframe = this._reloadIframe.bind(this);
     }
 
@@ -264,10 +274,23 @@ class Example extends TypedComponent {
         this.setState(prevState => ({ ...prevState, ...state }));
     }
 
+    _handleControlPanelScroll() {
+        window.dispatchEvent(new Event(CLOSE_SELECTS_EVENT));
+    }
+
     setupControlPanel() {
         const controlPanel = document.getElementById('controlPanel');
         if (!controlPanel) {
+            this._controlPanelScrollRegion?.removeEventListener('scroll', this._handleControlPanelScroll);
+            this._controlPanelScrollRegion = null;
             return;
+        }
+
+        const scrollRegion = document.getElementById('controlPanel-scroll-region');
+        if (this._controlPanelScrollRegion !== scrollRegion) {
+            this._controlPanelScrollRegion?.removeEventListener('scroll', this._handleControlPanelScroll);
+            this._controlPanelScrollRegion = scrollRegion;
+            this._controlPanelScrollRegion?.addEventListener('scroll', this._handleControlPanelScroll, { passive: true });
         }
 
         // PCUI should just have a "onHeaderClick" but can't find anything
@@ -304,11 +327,23 @@ class Example extends TypedComponent {
         iframe.fire('requestFiles');
     }
 
-    componentDidUpdate() {
+    /**
+     * @param {Props} prevProps - Previous component properties.
+     */
+    componentDidUpdate(prevProps) {
+        const prevParams = prevProps.match.params;
+        const params = this.props.match.params;
+        if (prevParams.category !== params.category || prevParams.example !== params.example) {
+            window.dispatchEvent(new Event(CLOSE_SELECTS_EVENT));
+        }
+
         this.setupControlPanel();
     }
 
     componentWillUnmount() {
+        window.dispatchEvent(new Event(CLOSE_SELECTS_EVENT));
+        this._controlPanelScrollRegion?.removeEventListener('scroll', this._handleControlPanelScroll);
+        this._controlPanelScrollRegion = null;
         window.removeEventListener('resize', this._onLayoutChange);
         window.removeEventListener('requestedFiles', this._handleRequestedFiles);
         window.removeEventListener('orientationchange', this._onLayoutChange);
@@ -353,7 +388,7 @@ class Example extends TypedComponent {
             jsx(controls, {
                 observer,
                 PCUI,
-                ReactPCUI,
+                ReactPCUI: CONTROLS_REACT_PCUI,
                 React,
                 jsx,
                 fragment
