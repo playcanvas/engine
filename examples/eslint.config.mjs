@@ -3,7 +3,24 @@ import globals from 'globals';
 
 const configLine = /^[ \t]*\/\/ @config[ \t]*$/;
 const commentLine = /^[ \t]*\/\/[^\r\n]*$/;
+const commentText = /^[ \t]*\/\/ ?(.*)$/;
 const emptyLine = /^[ \t]*$/;
+const booleanFlags = new Set([
+    'HIDDEN',
+    'NO_DEVICE_SELECTOR',
+    'NO_MINISTATS',
+    'WEBGPU_DISABLED',
+    'WEBGPU_BARE_DISABLED',
+    'WEBGL_DISABLED'
+]);
+const engineTypes = new Set(['development', 'performance', 'debug']);
+const attributionFields = ['title', 'author', 'source', 'license'];
+const attributionFieldSet = new Set(attributionFields);
+
+const splitFlag = (line) => {
+    const eq = line.indexOf('=');
+    return eq === -1 ? [line, undefined] : [line.slice(0, eq), line.slice(eq + 1).trim()];
+};
 
 const configBlockAtTop = {
     meta: {
@@ -66,6 +83,155 @@ const configBlockAtTop = {
     }
 };
 
+const configBlockShape = {
+    meta: {
+        type: 'problem',
+        docs: {
+            description: 'validate example config block contents'
+        },
+        messages: {
+            duplicateAttributionField: 'Duplicate @attribution field "{{name}}".',
+            duplicateFlag: 'Duplicate @flag "{{name}}".',
+            emptyAttributionField: '@attribution field "{{name}}" must not be empty.',
+            invalidAttributionLine: 'Invalid @attribution line: expected "name: value".',
+            invalidFlagValue: 'Invalid value "{{value}}" for @flag "{{name}}".',
+            malformedFlag: 'Malformed @flag line.',
+            missingAttributionFields: 'Incomplete @attribution: missing {{fields}}.',
+            missingFlagValue: '@flag "{{name}}" requires a value.',
+            unknownAttributionField: 'Invalid @attribution field "{{name}}".',
+            unknownFlag: 'Unknown @flag "{{name}}".'
+        }
+    },
+
+    create(context) {
+        return {
+            Program(node) {
+                const lines = context.sourceCode.lines;
+                const flags = new Set();
+
+                const report = (line, messageId, data) => {
+                    context.report({
+                        node,
+                        loc: {
+                            line: line + 1,
+                            column: 0
+                        },
+                        messageId,
+                        data
+                    });
+                };
+
+                const reportMissing = (attribution, line) => {
+                    if (!attribution) {
+                        return;
+                    }
+
+                    const missing = attributionFields.filter(field => !attribution.fields[field]);
+                    if (missing.length) {
+                        report(line, 'missingAttributionFields', { fields: missing.join(', ') });
+                    }
+                };
+
+                const validateFlag = (line, text) => {
+                    const body = text.slice(6).trim();
+                    if (!body) {
+                        report(line, 'malformedFlag');
+                        return;
+                    }
+
+                    const [raw, value] = splitFlag(body);
+                    const name = raw.trim();
+                    if (!name || /\s/.test(name)) {
+                        report(line, 'malformedFlag');
+                        return;
+                    }
+
+                    if (name === 'ENGINE') {
+                        if (flags.has(name)) {
+                            report(line, 'duplicateFlag', { name });
+                        } else {
+                            flags.add(name);
+                        }
+
+                        if (!value) {
+                            report(line, 'missingFlagValue', { name });
+                        } else if (!engineTypes.has(value)) {
+                            report(line, 'invalidFlagValue', { name, value });
+                        }
+                        return;
+                    }
+
+                    if (!booleanFlags.has(name)) {
+                        report(line, 'unknownFlag', { name });
+                        return;
+                    }
+
+                    if (flags.has(name)) {
+                        report(line, 'duplicateFlag', { name });
+                    } else {
+                        flags.add(name);
+                    }
+
+                    if (value !== undefined && value !== 'true' && value !== 'false') {
+                        report(line, 'invalidFlagValue', { name, value });
+                    }
+                };
+
+                const validateAttribution = (line, attribution, text) => {
+                    if (!text) {
+                        return attribution;
+                    }
+
+                    const idx = text.indexOf(':');
+                    if (idx === -1) {
+                        report(line, 'invalidAttributionLine');
+                        return attribution;
+                    }
+
+                    const name = text.slice(0, idx).trim();
+                    const value = text.slice(idx + 1).trim();
+                    if (!attributionFieldSet.has(name)) {
+                        report(line, 'unknownAttributionField', { name });
+                        return attribution;
+                    }
+                    if (attribution.fields[name] !== undefined) {
+                        report(line, 'duplicateAttributionField', { name });
+                        return attribution;
+                    }
+                    if (!value) {
+                        report(line, 'emptyAttributionField', { name });
+                    }
+
+                    attribution.fields[name] = value;
+                    return attributionFields.every(field => attribution.fields[field]) ? null : attribution;
+                };
+
+                for (let i = 0; i < lines.length; i++) {
+                    if (!configLine.test(lines[i])) {
+                        continue;
+                    }
+
+                    let attribution = null;
+                    let end = i;
+                    for (let j = i + 1; j < lines.length && commentLine.test(lines[j]); j++) {
+                        end = j;
+                        const text = commentText.exec(lines[j])[1].trim();
+                        if (text === '@attribution') {
+                            reportMissing(attribution, j);
+                            attribution = { fields: {} };
+                        } else if (attribution) {
+                            attribution = validateAttribution(j, attribution, text);
+                        } else if (text === '@flag' || text.startsWith('@flag ')) {
+                            validateFlag(j, text);
+                        }
+                    }
+                    reportMissing(attribution, end);
+                }
+            }
+        };
+    }
+};
+
 const importOrder = ['error', {
     groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'unknown'],
     pathGroups: [
@@ -117,12 +283,14 @@ export default [
         plugins: {
             examples: {
                 rules: {
-                    'config-block-at-top': configBlockAtTop
+                    'config-block-at-top': configBlockAtTop,
+                    'config-block-shape': configBlockShape
                 }
             }
         },
         rules: {
-            'examples/config-block-at-top': 'error'
+            'examples/config-block-at-top': 'error',
+            'examples/config-block-shape': 'error'
         }
     },
     {

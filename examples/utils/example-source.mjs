@@ -128,6 +128,7 @@ export const stripConfig = (source) => {
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.
  * @property {boolean} [NO_MINISTATS] - No ministats.
  * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.
+ * @property {boolean} [WEBGPU_BARE_DISABLED] - If webgpu bare is disabled.
  * @property {boolean} [WEBGL_DISABLED] - If webgl is disabled.
  */
 
