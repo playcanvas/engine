@@ -1,6 +1,6 @@
-import { SelectInput } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 
+import { SelectInput } from './OverlaySelectInput.mjs';
 import {
     DEVICETYPE_WEBGPU,
     DEVICETYPE_WEBGPU_BARE,

@@ -602,6 +602,18 @@ body {
     color: #f2f2f2;
 }
 
+.pcui-container.pcui-select-input-list.pcui-select-input-list-overlay {
+    position: fixed;
+    z-index: 10000;
+}
+
+.pcui-container.pcui-select-input-list.pcui-select-input-list-overlay > *:hover,
+.pcui-container.pcui-select-input-list.pcui-select-input-list-overlay > .pcui-select-input-label-highlighted {
+    color: #fff;
+    background-color: #20292b;
+    cursor: pointer;
+}
+
 #appInner.mobile #sideBar-contents,
 #appInner.mobile #controlPanel-scroll-region,
 #appInner.mobile #controlPanel-controls,
