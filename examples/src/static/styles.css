@@ -732,14 +732,10 @@ body {
 
 .example-keybind {
     display: grid;
-    grid-template-columns: 100px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 6px;
     align-items: center;
     min-height: 24px;
-}
-
-#appInner.mobile .example-keybind {
-    grid-template-columns: 94px minmax(0, 1fr);
 }
 
 .example-keybind-inputs {
