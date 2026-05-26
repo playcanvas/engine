@@ -1,4 +1,3 @@
-import { SelectInput as PCUISelectInput } from '@playcanvas/pcui';
 import { SelectInput as ReactSelectInput } from '@playcanvas/pcui/react';
 
 import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
@@ -6,11 +5,9 @@ import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
 const CLASS_OVERLAY = 'pcui-select-input-list-overlay';
 const VIEWPORT_PADDING = 8;
 
-/**
- * @import { SelectInputArgs } from '@playcanvas/pcui'
- */
+/** @typedef {ConstructorParameters<typeof ReactSelectInput.ctor>[0]} OverlaySelectInputArgs */
 
-class OverlaySelectInputElement extends PCUISelectInput {
+class OverlaySelectInputElement extends ReactSelectInput.ctor {
     /**
      * @type {Node | null}
      */
@@ -22,7 +19,7 @@ class OverlaySelectInputElement extends PCUISelectInput {
     _overlayNext = null;
 
     /**
-     * @param {Readonly<SelectInputArgs>} [args] - The constructor arguments.
+     * @param {OverlaySelectInputArgs} [args] - The constructor arguments.
      */
     constructor(args) {
         super(args);
@@ -154,14 +151,12 @@ class OverlaySelectInputElement extends PCUISelectInput {
     }
 }
 
-const OverlaySelectInput = /** @type {typeof ReactSelectInput} */ (class extends ReactSelectInput {
-    componentWillUnmount() {
-        /** @type {{ destroy?: () => void } | undefined} */ (this.element)?.destroy?.();
-    }
-});
+class OverlaySelectInput extends ReactSelectInput {
+    static ctor = OverlaySelectInputElement;
 
-OverlaySelectInput.ctor = /** @type {typeof ReactSelectInput.ctor} */ (
-    /** @type {unknown} */ (OverlaySelectInputElement)
-);
+    componentWillUnmount() {
+        this.element?.destroy();
+    }
+}
 
 export { OverlaySelectInput as SelectInput };
