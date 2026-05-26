@@ -159,13 +159,12 @@ assetListLoader.load(() => {
     applyCustomShader(false);
     data.set('shader', false);
 
-    const uTime = app.graphicsDevice.scope.resolve('uTime');
-
     let currentTime = 0;
     app.on('update', (dt) => {
         currentTime += dt;
 
-        uTime.setValue(currentTime);
+        sceneMat.setParameter('uTime', currentTime);
+        sceneMat.update();
 
         skull.rotate(0, 80 * dt, 0);
     });

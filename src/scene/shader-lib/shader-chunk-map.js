@@ -151,7 +151,14 @@ class ShaderChunkMap extends Map {
      * @ignore
      */
     copy(source) {
-        this.clear();
+        // delete entries not present in source
+        for (const key of this.keys()) {
+            if (!source.has(key)) {
+                this.delete(key);
+            }
+        }
+
+        // add or update entries from source (set() only marks dirty when the value actually changes)
         for (const [key, value] of source) {
             this.set(key, value);
         }

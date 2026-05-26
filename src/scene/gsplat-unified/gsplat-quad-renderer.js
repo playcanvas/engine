@@ -40,6 +40,9 @@ class GSplatQuadRenderer extends GSplatRenderer {
     /** @private */
     _lastFisheyeEnabled = false;
 
+    /** @private */
+    _lastSourceChunksKey = '';
+
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GraphNode} node - The graph node.
@@ -370,18 +373,22 @@ class GSplatQuadRenderer extends GSplatRenderer {
      * @private
      */
     copyMaterialSettings(sourceMaterial) {
-        // Clear user defines (preserve internal defines)
+        // Sync defines via setDefine so _definesDirty tracks real changes. Only delete keys the
+        // source no longer has (and that aren't internal). Deleting all user defines and re-adding
+        // them every frame would force _definesDirty true forever and trigger clearVariants on
+        // every frame.
         const keysToDelete = [];
         this._material.defines.forEach((value, key) => {
-            if (!this._internalDefines.has(key)) {
+            if (!this._internalDefines.has(key) && !sourceMaterial.defines.has(key)) {
                 keysToDelete.push(key);
             }
         });
-        keysToDelete.forEach(key => this._material.defines.delete(key));
+        keysToDelete.forEach(key => this._material.setDefine(key, undefined));
 
-        // Copy defines from source material
+        // Add/update defines from the source. setDefine is conditional — it only flips
+        // _definesDirty when the value actually changed, so unchanged entries stay cheap.
         sourceMaterial.defines.forEach((value, key) => {
-            this._material.defines.set(key, value);
+            this._material.setDefine(key, value);
         });
 
         // Copy parameters
@@ -392,13 +399,17 @@ class GSplatQuadRenderer extends GSplatRenderer {
             }
         }
 
-        // Copy shader chunks if they exist
+        // Copy shader chunks only when they actually changed on the source (chunks.key is a
+        // stable content hash). Otherwise the round-trip (copy → delete internal format chunks
+        // → re-inject) would mark chunks dirty every frame and force a per-frame clearVariants.
         if (sourceMaterial.hasShaderChunks) {
-            this._material.shaderChunks.copy(sourceMaterial.shaderChunks);
+            const sourceChunksKey = sourceMaterial.shaderChunks.key;
+            if (sourceChunksKey !== this._lastSourceChunksKey) {
+                this._material.shaderChunks.copy(sourceMaterial.shaderChunks);
+                this._injectFormatChunks();
+                this._lastSourceChunksKey = sourceChunksKey;
+            }
         }
-
-        // Re-inject format chunks that may have been overwritten by copy
-        this._injectFormatChunks();
 
         this._material.update();
     }
