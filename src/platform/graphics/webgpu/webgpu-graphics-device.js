@@ -1318,13 +1318,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
-            // When the backbuffer is bound to an XR projection-layer texture, do NOT call
-            // passEncoder.setScissorRect to avoid issues on Apple's visionOS. This should be ok in
-            // general, as we're not likely to do a multi-view rendering when XR is active.
-            if (this.xrColorTexture) {
-                return;
-            }
-
             if (!this.renderTarget.flipY) {
                 y = this.renderTarget.height - y - h;
             }
