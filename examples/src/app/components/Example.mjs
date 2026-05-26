@@ -71,6 +71,7 @@ const MOBILE_PANEL_TITLES = {
  * @typedef {object} State
  * @property {'mobile' | 'desktop'} layout - The layout.
  * @property {boolean} collapsed - Collapsed or not.
+ * @property {boolean} attributionCollapsed - attribution panel collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
  * @property {string} loadedPath - The loaded iframe path.
  * @property {{ path: string, message: string } | null} loadError - The current loading error.
@@ -90,6 +91,7 @@ class Example extends TypedComponent {
     state = {
         layout: getLayout(),
         collapsed: getLayout() === 'mobile',
+        attributionCollapsed: false,
         exampleLoaded: false,
         loadedPath: '',
         loadError: null,
@@ -325,8 +327,25 @@ class Example extends TypedComponent {
         controlPanelHeader.onclick = () => this.toggleCollapse();
     }
 
+    setupAttributionPanel() {
+        const panel = document.getElementById('attributionPanel');
+        if (!panel) {
+            return;
+        }
+
+        const header = /** @type {HTMLElement | null} */ (
+            /** @type {unknown} */ (panel.querySelector('.pcui-panel-header'))
+        );
+        if (!header) {
+            return;
+        }
+
+        header.onclick = () => this.toggleAttributionCollapse();
+    }
+
     componentDidMount() {
         this.setupControlPanel();
+        this.setupAttributionPanel();
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('requestedFiles', this._handleRequestedFiles);
         window.addEventListener('orientationchange', this._onLayoutChange);
@@ -349,6 +368,7 @@ class Example extends TypedComponent {
         }
 
         this.setupControlPanel();
+        this.setupAttributionPanel();
     }
 
     componentWillUnmount() {
@@ -481,9 +501,9 @@ class Example extends TypedComponent {
     }
 
     renderDescription() {
-        const { exampleLoaded, description, attributions } = this.state;
+        const { exampleLoaded, description } = this.state;
         const ready = exampleLoaded && iframe.ready;
-        if (!ready || (!description && !attributions.length)) {
+        if (!ready || !description) {
             return;
         }
         return jsx(
@@ -497,8 +517,33 @@ class Example extends TypedComponent {
                         __html: description
                     }
                 }) :
-                null,
-            this.renderAttributions()
+                null
+        );
+    }
+
+    renderAttributionPanel() {
+        const { exampleLoaded, attributions } = this.state;
+        const ready = exampleLoaded && iframe.ready;
+        if (!ready || !attributions.length) {
+            return null;
+        }
+
+        return jsx(
+            Panel,
+            {
+                id: 'attributionPanel',
+                class: ['desktop'],
+                headerText: 'ATTRIBUTION',
+                collapsible: true,
+                collapsed: this.state.attributionCollapsed
+            },
+            jsx(
+                Container,
+                {
+                    id: 'attributionPanel-scroll-region'
+                },
+                this.renderAttributions()
+            )
         );
     }
 
@@ -521,8 +566,21 @@ class Example extends TypedComponent {
         return collapsed;
     }
 
+    get attributionCollapsed() {
+        const panel = document.getElementById('attributionPanel');
+        if (!panel) {
+            return false;
+        }
+        const collapsed = panel.classList.contains('pcui-collapsed');
+        return collapsed;
+    }
+
     toggleCollapse() {
         this.mergeState({ collapsed: !this.collapsed });
+    }
+
+    toggleAttributionCollapse() {
+        this.mergeState({ attributionCollapsed: !this.attributionCollapsed });
     }
 
     renderMobilePanel() {
@@ -655,23 +713,30 @@ class Example extends TypedComponent {
             'div',
             { style: { display: 'contents' } },
             jsx(
-                Panel,
+                'div',
                 {
-                    id: 'controlPanel',
-                    class: ['desktop'],
-                    resizable: 'top',
-                    headerText: 'CONTROLS',
-                    collapsible: true,
-                    collapsed
+                    id: 'desktopPanelStack'
                 },
-                this.renderDeviceSelector(),
                 jsx(
-                    Container,
+                    Panel,
                     {
-                        id: 'controlPanel-scroll-region'
+                        id: 'controlPanel',
+                        class: ['desktop'],
+                        resizable: 'top',
+                        headerText: 'CONTROLS',
+                        collapsible: true,
+                        collapsed
                     },
-                    this.renderControls()
-                )
+                    this.renderDeviceSelector(),
+                    jsx(
+                        Container,
+                        {
+                            id: 'controlPanel-scroll-region'
+                        },
+                        this.renderControls()
+                    )
+                ),
+                this.renderAttributionPanel()
             ),
             this.renderDescription()
         );
