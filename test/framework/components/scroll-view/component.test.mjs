@@ -89,6 +89,26 @@ describe('ScrollViewComponent', function () {
             expect(e.scrollview.verticalScrollbarEntity).to.equal(null);
         });
 
+        it('preserves class-field defaults when data contains explicit undefined values', function () {
+            // The legacy initializer normalized dragThreshold / useMouseWheel /
+            // mouseWheelSensitivity when they were `=== undefined`, so callers shipping
+            // `{ dragThreshold: undefined }` still got the default 10. The refactored
+            // loop must do the same so an explicit undefined in the data argument does
+            // not clobber the class-field defaults.
+            const e = new Entity();
+            e.addComponent('scrollview', {
+                dragThreshold: undefined,
+                useMouseWheel: undefined,
+                mouseWheelSensitivity: undefined
+            });
+
+            expect(e.scrollview.dragThreshold).to.equal(10);
+            expect(e.scrollview.useMouseWheel).to.equal(true);
+            expect(e.scrollview.mouseWheelSensitivity).to.be.an.instanceof(Vec2);
+            expect(e.scrollview.mouseWheelSensitivity.x).to.equal(1);
+            expect(e.scrollview.mouseWheelSensitivity.y).to.equal(1);
+        });
+
         it('round-trips every property passed via the data argument', function () {
             const { e, viewport, content, hScrollbar, vScrollbar } = buildScrollViewEntity();
             const sensitivity = new Vec2(2, 3);

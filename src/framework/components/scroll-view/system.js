@@ -60,7 +60,12 @@ class ScrollViewComponentSystem extends ComponentSystem {
     initializeComponentData(component, data, properties) {
         for (let i = 0; i < _properties.length; i++) {
             const property = _properties[i];
-            if (data.hasOwnProperty(property)) {
+            // Skip explicit `undefined` so the component's class-field defaults survive.
+            // The old initializer normalized dragThreshold / useMouseWheel /
+            // mouseWheelSensitivity when they were `=== undefined`; a `hasOwnProperty`
+            // guard alone would clobber those defaults with `undefined` if a caller
+            // shipped `{ dragThreshold: undefined }`.
+            if (data[property] !== undefined) {
                 component[property] = data[property];
             }
         }
