@@ -112,7 +112,7 @@ export default /* glsl */`
             #endif
 
             #if STD_OPACITY_DITHER != NONE
-                opacityDither(dAlpha, 0.0);
+                opacityDither(dAlpha * material_alphaDitherScale, 0.0);
             #endif
 
             litArgs_opacity = dAlpha;

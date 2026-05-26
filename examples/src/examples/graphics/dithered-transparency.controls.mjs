@@ -23,6 +23,17 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Alpha Dither' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.alphaDither' },
+                    min: 0.0,
+                    max: 1,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Dither Color' },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),

@@ -1,3 +1,12 @@
+// @config
+//
+// <div style="color:black">
+//     Independent strengths for alpha blending and opacity dithering. Both tables have alpha
+//     blending and dither enabled. Left: <code>alphaDither</code> untouched — opacity drives both
+//     blend and dither (legacy behavior). Right: <code>alphaDither</code> driven by its slider —
+//     opacity drives only blend; <b>Alpha Dither</b> drives only dither.
+// </div>
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
@@ -99,22 +108,39 @@ assetListLoader.load(() => {
     }
 
     // create a ground plane
-    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(30, 1, 30), new pc.Color(0.8, 0.8, 0.8));
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(60, 1, 30), new pc.Color(0.8, 0.8, 0.8));
 
-    // create an instance of the table
-    const tableEntity = assets.table.resource.instantiateRenderEntity();
-    tableEntity.setLocalScale(3, 3, 3);
-    app.root.addChild(tableEntity);
+    /**
+     * Instantiate the glass table, collect its alpha-blended materials. Each blended material is
+     * cloned so the two tables can be configured independently.
+     *
+     * @param {pc.Vec3} position - The world-space position to place the table at.
+     * @returns {pc.StandardMaterial[]} The alpha-blended materials of the instantiated table.
+     */
+    const spawnTable = (position) => {
+        const entity = assets.table.resource.instantiateRenderEntity();
+        entity.setLocalScale(3, 3, 3);
+        entity.setLocalPosition(position);
+        app.root.addChild(entity);
 
-    // get all materials that have blending enabled
-    const materials = [];
-    tableEntity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((meshInstance) => {
-            if (meshInstance.material.blendType !== pc.BLEND_NONE) {
-                materials.push(meshInstance.material);
-            }
+        const materials = [];
+        entity.findComponents('render').forEach((render) => {
+            render.meshInstances.forEach((meshInstance) => {
+                if (meshInstance.material.blendType !== pc.BLEND_NONE) {
+                    meshInstance.material = meshInstance.material.clone();
+                    materials.push(meshInstance.material);
+                }
+            });
         });
-    });
+        return materials;
+    };
+
+    // LEFT — BC demo: alphaDither stays untouched (implicit) so opacity drives both blend
+    // strength and dither density, exactly like the legacy engine
+    const leftMaterials = spawnTable(new pc.Vec3(-7, 0, 0));
+
+    // RIGHT — new feature: alphaDither set explicitly from the slider, decoupled from opacity
+    const rightMaterials = spawnTable(new pc.Vec3(7, 0, 0));
 
     // Create an Entity with a directional light, casting soft VSM shadow
     const light = new pc.Entity();
@@ -137,8 +163,8 @@ assetListLoader.load(() => {
     cameraEntity.addComponent('camera', {
         fov: 70
     });
-    cameraEntity.translate(-14, 12, 12);
-    cameraEntity.lookAt(1, 4, 0);
+    cameraEntity.translate(-14, 12, 20);
+    cameraEntity.lookAt(0, 4, 0);
     app.root.addChild(cameraEntity);
 
     // add orbit camera script with a mouse and a touch support
@@ -146,8 +172,7 @@ assetListLoader.load(() => {
     cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            focusEntity: tableEntity,
-            distanceMax: 30,
+            distanceMax: 40,
             frameOnStart: false
         }
     });
@@ -170,32 +195,33 @@ assetListLoader.load(() => {
 
     // ------
 
+    // alphaDither is routed to the right table only — leaving the left's _alphaDither at its
+    // null default, so its dither uses the legacy fallback to opacity. Everything else is applied
+    // to both tables so the only difference between them is alphaDither's null vs explicit state.
+    const rightOnly = new Set(['alphaDither']);
+
     // handle UI changes
     data.on('*:set', (/** @type {string} */ path, value) => {
         const propertyName = path.split('.')[1];
+        const targets = rightOnly.has(propertyName) ?
+            rightMaterials :
+            [...leftMaterials, ...rightMaterials];
 
-        materials.forEach((material) => {
-            // apply the value to the material
+        targets.forEach((material) => {
             material[propertyName] = value;
-
-            if (propertyName === 'opacityDither') {
-                // turn on / off blending depending on the dithering of the color
-                material.blendType = value === pc.DITHER_NONE ? pc.BLEND_NORMAL : pc.BLEND_NONE;
-
-                // turn on / off depth write depending on the dithering of the color
-                material.depthWrite = value !== pc.DITHER_NONE;
-            }
-
             material.update();
         });
 
         applySettings();
     });
 
-    // initial values
+    // initial values — alphaDither starts at 0.5 to match opacity, so on load the right table's
+    // dither matches the left's (both look identical). Drag Opacity and only the left's dither
+    // density follows; drag Alpha Dither and only the right's does.
     data.set('data', {
         taa: false,
         opacity: 0.5,
+        alphaDither: 0.5,
         opacityDither: pc.DITHER_BAYER8,
         opacityShadowDither: pc.DITHER_BAYER8
     });
