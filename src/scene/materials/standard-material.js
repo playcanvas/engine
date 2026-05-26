@@ -791,12 +791,13 @@ class StandardMaterial extends Material {
 
         this._setParameter('material_opacity', this.opacity);
 
-        if (this.opacityDither !== DITHER_NONE || this.opacityShadowDither !== DITHER_NONE) {
-            // dither shader does dAlpha * scale; this.alphaDither getter falls back to opacity
-            // when the user hasn't opted in, giving scale = 1 and bit-identical legacy behavior
-            const scale = this._opacity > 0 ? this.alphaDither / this._opacity : 1;
-            this._setParameter('material_alphaDitherScale', scale);
-        }
+        // dither shader does dAlpha * scale; this.alphaDither getter falls back to opacity when
+        // the user hasn't opted in, giving scale = 1 and bit-identical legacy behavior. Set the
+        // uniform unconditionally so any shader compiled with dither enabled (including via
+        // onUpdateShader overrides that bypass opacityDither / opacityShadowDither) sees a safe
+        // value rather than an uninitialized one
+        const ditherScale = this._opacity > 0 ? this.alphaDither / this._opacity : 1;
+        this._setParameter('material_alphaDitherScale', ditherScale);
 
         if (this.opacityFadesSpecular === false) {
             this._setParameter('material_alphaFade', this.alphaFade);
