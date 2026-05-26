@@ -397,6 +397,16 @@ const _tempColor = new Color();
  * Defaults to {@link DITHER_NONE}.
  * @property {number} alphaFade Used to fade out materials when {@link opacityFadesSpecular} is
  * set to false.
+ * @property {number} alphaDither The alpha value used by the opacity dither path, in the range
+ * [0, 1]. Independent of {@link opacity}, which keeps driving alpha blending. Lets a material be
+ * alpha-blended and dithered at the same time with different strengths — useful for fading
+ * objects out via dither while preserving their alpha-blended look (e.g. fading glass as the
+ * camera approaches). Has no effect unless {@link opacityDither} (or
+ * {@link opacityShadowDither}) is set to a dither mode. Set to `1.0` to disable dither at runtime
+ * without changing the dither mode, or `0.0` to fully discard via dither. For backwards
+ * compatibility, a material that has never had this property assigned uses {@link opacity} as
+ * the dither alpha, matching the historical behavior where the dither pass shares the blend
+ * alpha.
  * @property {Texture|null} normalMap The main (primary) normal map of the material (default is
  * null). The texture must contains normalized, tangent space normals.
  * @property {number} normalMapUv Main (primary) normal map UV channel.
@@ -622,6 +632,11 @@ class StandardMaterial extends Material {
             this[k] = source[k];
         });
 
+        // alphaDither uses a null sentinel for "implicit, mirror opacity"; the prop-loop above
+        // goes through the getter which materializes null into a number, so copy the raw field
+        // directly to preserve the implicit state across clone
+        this._alphaDither = source._alphaDither;
+
         // clone user attributes
         this.userAttributes = new Map(source.userAttributes);
 
@@ -775,6 +790,14 @@ class StandardMaterial extends Material {
         }
 
         this._setParameter('material_opacity', this.opacity);
+
+        // dither shader does dAlpha * scale; this.alphaDither getter falls back to opacity when
+        // the user hasn't opted in, giving scale = 1 and bit-identical legacy behavior. Set the
+        // uniform unconditionally so any shader compiled with dither enabled (including via
+        // onUpdateShader overrides that bypass opacityDither / opacityShadowDither) sees a safe
+        // value rather than an uninitialized one
+        const ditherScale = this._opacity > 0 ? this.alphaDither / this._opacity : 1;
+        this._setParameter('material_alphaDitherScale', ditherScale);
 
         if (this.opacityFadesSpecular === false) {
             this._setParameter('material_alphaFade', this.alphaFade);
@@ -1130,6 +1153,20 @@ function _defineMaterialProps() {
     });
     _defineFloat('opacity', 1);
     _defineFloat('alphaFade', 1);
+
+    // alphaDither is the alpha used by the dither path, independent of opacity (the blend alpha).
+    // Defaults to null: the getter then falls back to opacity, matching the historical behavior
+    // where dither and blend share the same alpha value. Setter stores the raw value, so passing
+    // null resets to the default fall-through.
+    defineProp({
+        name: 'alphaDither',
+        defaultValue: null,
+        dirtyShaderFunc: () => false,
+        getterFunc: function () {
+            return this._alphaDither ?? this._opacity;
+        }
+    });
+
     _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
     _defineFloat('bumpiness', 1);
     _defineFloat('normalDetailMapBumpiness', 1);
