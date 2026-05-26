@@ -62,6 +62,16 @@ const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
 const _dynamicBindGroup = new DynamicBindGroup();
 
+// Reusable scratch passed to GraphicsDevice.clear so the per-frame call site
+// does not allocate a fresh options object + color array.
+const _tempClearColor = [0, 0, 0, 1];
+const _tempClearOptions = {
+    color: _tempClearColor,
+    depth: 1,
+    stencil: 0,
+    flags: 0
+};
+
 // helton sequence of 2d offsets for jittering
 const _haltonSequence = [
     new Vec2(0.5, 0.333333),
@@ -450,12 +460,15 @@ class Renderer {
             const device = this.device;
             DebugGraphics.pushGpuMarker(device, 'CLEAR');
 
-            device.clear({
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                stencil: camera._clearStencil,
-                flags: flags
-            });
+            const c = camera._clearColor;
+            _tempClearColor[0] = c.r;
+            _tempClearColor[1] = c.g;
+            _tempClearColor[2] = c.b;
+            _tempClearColor[3] = c.a;
+            _tempClearOptions.depth = camera._clearDepth;
+            _tempClearOptions.stencil = camera._clearStencil;
+            _tempClearOptions.flags = flags;
+            device.clear(_tempClearOptions);
 
             DebugGraphics.popGpuMarker(device);
         }
