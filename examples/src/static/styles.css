@@ -451,12 +451,17 @@ body {
     position: absolute;
     top: 8px;
     right: 8px;
+    bottom: 8px;
     z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: 8px;
     width: 280px;
-    max-height: calc(100% - 16px);
+    max-height: none;
+}
+
+#appInner.desktop #desktopPanelStack #infoPanel {
+    margin-top: auto;
 }
 
 #appInner.desktop #desktopPanelStack #controlPanel,
