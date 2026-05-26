@@ -726,11 +726,7 @@ class Example extends TypedComponent {
                 class: mobilePanel === 'description' ?
                     ['mobile-dock-button', 'mobile-dock-description', 'selected'] :
                     ['mobile-dock-button', 'mobile-dock-description'],
-                onClick: () => {
-                    if (hasInfo) {
-                        setMobilePanel?.('description');
-                    }
-                }
+                onClick: () => setMobilePanel?.('description')
             })
         );
     }
