@@ -1,6 +1,6 @@
 // @config
 //
-// <div style="color:black">
+// <div>
 //     3D product configurator with an HTML UI panel rendered as a WebGL texture via
 //     <b>HTML-in-Canvas</b> API. Uses <code>getElementTransform</code> for interactive hit testing —
 //     clicks and hovers on the 3D panel are handled by the browser's native DOM event system.

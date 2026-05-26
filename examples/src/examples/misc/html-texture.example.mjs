@@ -1,6 +1,6 @@
 // @config
 //
-// <div style="color:black">
+// <div>
 //     Renders live HTML content directly as a WebGL texture via the <b>HTML-in-Canvas</b> API
 //     (<code>texElementImage2D</code>).
 //     <br>

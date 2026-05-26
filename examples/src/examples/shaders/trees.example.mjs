@@ -1,6 +1,6 @@
 // @config
 //
-// <div style='color: black;'>
+// <div>
 //     This example shows how to override shader chunks of StandardMaterial.
 // </div>
 
