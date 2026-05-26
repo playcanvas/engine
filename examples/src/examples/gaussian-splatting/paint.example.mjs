@@ -1,10 +1,10 @@
 // @config
 //
-// <span style="color:yellow">
-//     <b>Controls:</b> Right Mouse Button - paint | Left Mouse Button - orbit
-// </span>
-// <br>
 // 3D painting on gaussian splats using GSplatProcessor.
+//
+// @keybinds
+// RMB: Paint
+// LMB: Orbit
 
 import * as pc from 'playcanvas';
 

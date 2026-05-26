@@ -1,15 +1,14 @@
 // @config
 //
-// <div style='text-align:center'>
-//     <div>(<b>WASD</b>) Move</div>
-//     <div>(<b>Shift</b>) Sprint</div>
-//     <div>(<b>Space</b>) Jump</div>
-//     <div>(<b>Q</b>) Dance</div>
-//     <div>(<b>Mouse</b>) Orbit camera</div>
-//     <div>(<b>Wheel</b>) Zoom</div>
-// </div>
+// @keybinds
+// WASD: Move
+// Shift: Sprint
+// Space: Jump
+// Q: Dance
+// Mouse: Orbit camera
+// Wheel: Zoom
 //
-// @attribution
+// @credit
 // title: Sunnyvale Heritage Park Museum
 // author: zeitgeistarchivescans
 // source: https://superspl.at/scene/d5d397aa

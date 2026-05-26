@@ -79,7 +79,8 @@ class ExampleLoader {
                 observer: data,
                 files,
                 description: this._config.DESCRIPTION || '',
-                attributions: this._config.ATTRIBUTIONS || []
+                keybinds: this._config.KEYBINDS || [],
+                credits: this._config.CREDITS || []
             });
         }
         this._started = true;
@@ -89,7 +90,8 @@ class ExampleLoader {
             observer: data,
             files,
             description: this._config.DESCRIPTION || '',
-            attributions: this._config.ATTRIBUTIONS || []
+            keybinds: this._config.KEYBINDS || [],
+            credits: this._config.CREDITS || []
         });
 
         if (this._app) {

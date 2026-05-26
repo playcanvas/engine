@@ -1,10 +1,9 @@
 // @config
 //
-// <div style='text-align:center'>
-//     <div>(<b>WASD</b>) Move</div>
-//     <div>(<b>Space</b>) Jump</div>
-//     <div>(<b>Mouse</b>) Look</div>
-// </div>
+// @keybinds
+// WASD: Move
+// Space: Jump
+// Mouse: Look
 
 import * as pc from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';

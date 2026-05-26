@@ -11,17 +11,22 @@
  */
 
 /**
- * @typedef {object} Attribution
- * @property {string} title - The attribution title.
- * @property {string} author - The attribution author.
- * @property {string} source - The attribution source.
- * @property {string} license - The attribution license.
+ * @typedef {object} Credit
+ * @property {string} title - The credit title.
+ * @property {string} author - The credit author.
+ * @property {string} source - The credit source.
+ * @property {string} license - The credit license.
+ *
+ * @typedef {object} Keybind
+ * @property {string[]} inputs - The keybind inputs.
+ * @property {string} action - The keybind action.
  *
  * @typedef {object} StateEventDetail
  * @property {Observer} observer - The PCUI observer.
  * @property {Record<string, string>} files - The example files.
  * @property {string} description - The example description.
- * @property {Attribution[]} attributions - The example attributions.
+ * @property {Keybind[]} keybinds - The example keybinds.
+ * @property {Credit[]} credits - The example credits.
  *
  * @typedef {CustomEvent<StateEventDetail>} StateEvent
  */

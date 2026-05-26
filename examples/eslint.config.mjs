@@ -14,8 +14,9 @@ const booleanFlags = new Set([
     'WEBGL_DISABLED'
 ]);
 const engineTypes = new Set(['development', 'performance', 'debug']);
-const attributionFields = ['title', 'author', 'source', 'license'];
-const attributionFieldSet = new Set(attributionFields);
+const KEYBIND_INPUT_SEPARATOR = /\s+\/\s+/;
+const creditFields = ['title', 'author', 'source', 'license'];
+const creditFieldSet = new Set(creditFields);
 
 const splitFlag = (line) => {
     const eq = line.indexOf('=');
@@ -90,15 +91,16 @@ const configBlockShape = {
             description: 'validate example config block contents'
         },
         messages: {
-            duplicateAttributionField: 'Duplicate @attribution field "{{name}}".',
+            duplicateCreditField: 'Duplicate @credit field "{{name}}".',
             duplicateFlag: 'Duplicate @flag "{{name}}".',
-            emptyAttributionField: '@attribution field "{{name}}" must not be empty.',
-            invalidAttributionLine: 'Invalid @attribution line: expected "name: value".',
+            emptyCreditField: '@credit field "{{name}}" must not be empty.',
+            invalidCreditLine: 'Invalid @credit line: expected "name: value".',
             invalidFlagValue: 'Invalid value "{{value}}" for @flag "{{name}}".',
+            invalidKeybindLine: 'Invalid @keybinds line: expected "input: action".',
             malformedFlag: 'Malformed @flag line.',
-            missingAttributionFields: 'Incomplete @attribution: missing {{fields}}.',
+            missingCreditFields: 'Incomplete @credit: missing {{fields}}.',
             missingFlagValue: '@flag "{{name}}" requires a value.',
-            unknownAttributionField: 'Invalid @attribution field "{{name}}".',
+            unknownCreditField: 'Invalid @credit field "{{name}}".',
             unknownFlag: 'Unknown @flag "{{name}}".'
         }
     },
@@ -121,15 +123,16 @@ const configBlockShape = {
                     });
                 };
 
-                const reportMissing = (attribution, line) => {
-                    if (!attribution) {
-                        return;
+                const reportMissing = (credit, line) => {
+                    if (!credit) {
+                        return null;
                     }
 
-                    const missing = attributionFields.filter(field => !attribution.fields[field]);
+                    const missing = creditFields.filter(field => !credit.fields[field]);
                     if (missing.length) {
-                        report(line, 'missingAttributionFields', { fields: missing.join(', ') });
+                        report(line, 'missingCreditFields', { fields: missing.join(', ') });
                     }
+                    return null;
                 };
 
                 const validateFlag = (line, text) => {
@@ -177,33 +180,43 @@ const configBlockShape = {
                     }
                 };
 
-                const validateAttribution = (line, attribution, text) => {
+                const validateCredit = (line, credit, text) => {
                     if (!text) {
-                        return attribution;
+                        return credit;
                     }
 
                     const idx = text.indexOf(':');
                     if (idx === -1) {
-                        report(line, 'invalidAttributionLine');
-                        return attribution;
+                        report(line, 'invalidCreditLine');
+                        return credit;
                     }
 
                     const name = text.slice(0, idx).trim();
                     const value = text.slice(idx + 1).trim();
-                    if (!attributionFieldSet.has(name)) {
-                        report(line, 'unknownAttributionField', { name });
-                        return attribution;
+                    if (!creditFieldSet.has(name)) {
+                        report(line, 'unknownCreditField', { name });
+                        return credit;
                     }
-                    if (attribution.fields[name] !== undefined) {
-                        report(line, 'duplicateAttributionField', { name });
-                        return attribution;
+                    if (credit.fields[name] !== undefined) {
+                        report(line, 'duplicateCreditField', { name });
+                        return credit;
                     }
                     if (!value) {
-                        report(line, 'emptyAttributionField', { name });
+                        report(line, 'emptyCreditField', { name });
                     }
 
-                    attribution.fields[name] = value;
-                    return attributionFields.every(field => attribution.fields[field]) ? null : attribution;
+                    credit.fields[name] = value;
+                    return creditFields.every(field => credit.fields[field]) ? null : credit;
+                };
+
+                const validateKeybind = (line, text) => {
+                    const idx = text.indexOf(':');
+                    const input = idx === -1 ? '' : text.slice(0, idx).trim();
+                    const action = idx === -1 ? '' : text.slice(idx + 1).trim();
+                    const inputs = input ? input.split(KEYBIND_INPUT_SEPARATOR) : [];
+                    if (idx === -1 || !inputs.length || !action || inputs.some(value => !value)) {
+                        report(line, 'invalidKeybindLine');
+                    }
                 };
 
                 for (let i = 0; i < lines.length; i++) {
@@ -211,21 +224,39 @@ const configBlockShape = {
                         continue;
                     }
 
-                    let attribution = null;
+                    let credit = null;
+                    let keybinds = false;
                     let end = i;
                     for (let j = i + 1; j < lines.length && commentLine.test(lines[j]); j++) {
                         end = j;
                         const text = commentText.exec(lines[j])[1].trim();
-                        if (text === '@attribution') {
-                            reportMissing(attribution, j);
-                            attribution = { fields: {} };
-                        } else if (attribution) {
-                            attribution = validateAttribution(j, attribution, text);
+                        if (!text && keybinds) {
+                            keybinds = false;
+                            continue;
+                        }
+                        if (text === '@keybinds') {
+                            credit = reportMissing(credit, j);
+                            keybinds = true;
+                        } else if (text === '@credit') {
+                            credit = reportMissing(credit, j);
+                            keybinds = false;
+                            credit = { fields: {} };
                         } else if (text === '@flag' || text.startsWith('@flag ')) {
+                            credit = reportMissing(credit, j);
+                            keybinds = false;
                             validateFlag(j, text);
+                        } else if (keybinds) {
+                            if (text.startsWith('@')) {
+                                keybinds = false;
+                                continue;
+                            }
+
+                            validateKeybind(j, text);
+                        } else if (credit) {
+                            credit = validateCredit(j, credit, text);
                         }
                     }
-                    reportMissing(attribution, end);
+                    reportMissing(credit, end);
                 }
             }
         };

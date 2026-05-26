@@ -1,11 +1,11 @@
 // @config
 //
-// <span style="color:yellow">
-//     <b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse
-//     Button - orbit
-// </span>
-// <br>
 // GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
+//
+// @keybinds
+// Select button: Show selection box
+// Gizmo: Move selection box
+// LMB: Orbit
 
 import * as pc from 'playcanvas';
 

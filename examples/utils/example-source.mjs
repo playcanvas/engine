@@ -5,8 +5,9 @@ const regexPatterns = [
     /^\s*import\s*(?:\S.*|[\t\v\f \xa0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff])\s*;\s*$/gm
 ];
 const configRegex = /^[ \t]*\/\/ @config[ \t]*(?:\r?\n[ \t]*\/\/[^\r\n]*)*(?:\r?\n|$)/gm;
-const ATTRIBUTION_FIELDS = ['title', 'author', 'source', 'license'];
-const ATTRIBUTION_FIELD_SET = new Set(ATTRIBUTION_FIELDS);
+const KEYBIND_INPUT_SEPARATOR = /\s+\/\s+/;
+const CREDIT_FIELDS = ['title', 'author', 'source', 'license'];
+const CREDIT_FIELD_SET = new Set(CREDIT_FIELDS);
 
 const parseValue = (val) => {
     return val === undefined || val === 'true' ? true : val === 'false' ? false : val;
@@ -19,17 +20,18 @@ const splitFlag = (line) => {
 
 const parseExampleConfig = (block, config) => {
     const description = [];
-    let attribution = null;
+    let credit = null;
+    let keybinds = false;
 
-    const completeAttribution = () => {
-        const missing = ATTRIBUTION_FIELDS.filter(field => !attribution[field]);
+    const completeCredit = () => {
+        const missing = CREDIT_FIELDS.filter(field => !credit[field]);
         if (missing.length) {
-            throw new Error(`Incomplete @attribution: missing ${missing.join(', ')}`);
+            throw new Error(`Incomplete @credit: missing ${missing.join(', ')}`);
         }
 
-        config.ATTRIBUTIONS ??= [];
-        config.ATTRIBUTIONS.push(attribution);
-        attribution = null;
+        config.CREDITS ??= [];
+        config.CREDITS.push(credit);
+        credit = null;
     };
 
     const lines = block.split(/\r?\n/).slice(1);
@@ -40,49 +42,83 @@ const parseExampleConfig = (block, config) => {
         }
         const text = match[1];
         const line = text.trim();
-        if (line === '@attribution') {
-            if (attribution) {
-                completeAttribution();
+        if (!line && keybinds) {
+            keybinds = false;
+            continue;
+        }
+        if (line === '@keybinds') {
+            if (credit) {
+                completeCredit();
             }
-            attribution = {};
-        } else if (attribution) {
+            keybinds = true;
+        } else if (line === '@credit') {
+            if (credit) {
+                completeCredit();
+            }
+            keybinds = false;
+            credit = {};
+        } else if (line.startsWith('@flag ')) {
+            if (credit) {
+                completeCredit();
+            }
+            keybinds = false;
+            const [name, val] = splitFlag(line.slice(6).trim());
+            config[name.trim()] = parseValue(val);
+        } else if (keybinds) {
+            if (line.startsWith('@')) {
+                keybinds = false;
+                description.push(text);
+                continue;
+            }
+
+            const idx = line.indexOf(':');
+            const input = idx === -1 ? '' : line.slice(0, idx).trim();
+            const action = idx === -1 ? '' : line.slice(idx + 1).trim();
+            const inputs = input ? input.split(KEYBIND_INPUT_SEPARATOR) : [];
+            if (idx === -1 || !inputs.length || !action || inputs.some(value => !value)) {
+                throw new Error(`Invalid @keybinds line: ${line}`);
+            }
+
+            config.KEYBINDS ??= [];
+            config.KEYBINDS.push({
+                inputs,
+                action
+            });
+        } else if (credit) {
             if (!line) {
                 continue;
             }
 
             const idx = line.indexOf(':');
             if (idx === -1) {
-                throw new Error(`Invalid @attribution line: ${line}`);
+                throw new Error(`Invalid @credit line: ${line}`);
             }
 
             const name = line.slice(0, idx).trim();
-            if (!ATTRIBUTION_FIELD_SET.has(name)) {
-                throw new Error(`Invalid @attribution field: ${name}`);
+            if (!CREDIT_FIELD_SET.has(name)) {
+                throw new Error(`Invalid @credit field: ${name}`);
             }
-            if (attribution[name] !== undefined) {
-                throw new Error(`Duplicate @attribution field: ${name}`);
+            if (credit[name] !== undefined) {
+                throw new Error(`Duplicate @credit field: ${name}`);
             }
 
-            attribution[name] = line.slice(idx + 1).trim();
+            credit[name] = line.slice(idx + 1).trim();
             let complete = true;
-            for (let j = 0; j < ATTRIBUTION_FIELDS.length; j++) {
-                if (!attribution[ATTRIBUTION_FIELDS[j]]) {
+            for (let j = 0; j < CREDIT_FIELDS.length; j++) {
+                if (!credit[CREDIT_FIELDS[j]]) {
                     complete = false;
                     break;
                 }
             }
             if (complete) {
-                completeAttribution();
+                completeCredit();
             }
-        } else if (line.startsWith('@flag ')) {
-            const [name, val] = splitFlag(line.slice(6).trim());
-            config[name.trim()] = parseValue(val);
         } else {
             description.push(text);
         }
     }
-    if (attribution) {
-        completeAttribution();
+    if (credit) {
+        completeCredit();
     }
 
     const html = description.join('\n').trim();
@@ -122,7 +158,8 @@ export const stripConfig = (source) => {
 /**
  * @typedef {object} ExampleConfig
  * @property {string} [DESCRIPTION] - The example description.
- * @property {{ title: string, author: string, source: string, license: string }[]} [ATTRIBUTIONS] - Scene attributions.
+ * @property {{ inputs: string[], action: string }[]} [KEYBINDS] - The example keybinds.
+ * @property {{ title: string, author: string, source: string, license: string }[]} [CREDITS] - Scene credits.
  * @property {boolean} [HIDDEN] - The example is hidden from the sidebar list in production builds (`npm run build`). It is still built and reachable via its URL. In development (`npm run develop`) it is still shown in the sidebar.
  * @property {'development' | 'performance' | 'debug'} [ENGINE] - The engine type.
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.

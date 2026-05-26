@@ -1,11 +1,11 @@
 // @config
 //
-// <div style='text-align:center'>
-//     <div>(<b>LMB / RMB </b>) Orbit</div>
-//     <div>(<b>Hold Shift / MMB </b>) Pan</div>
-//     <div>(<b>Wheel / Pinch</b>) Zoom</div>
-//     <div>(<b>F</b>) Focus (<b>R</b>) Reset</div>
-// </div>
+// @keybinds
+// LMB / RMB: Orbit
+// Hold Shift / MMB: Pan
+// Wheel / Pinch: Zoom
+// F: Focus
+// R: Reset
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

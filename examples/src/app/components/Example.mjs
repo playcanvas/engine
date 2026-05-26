@@ -17,7 +17,7 @@ import { getLayout } from '../utils.mjs';
 /**
  * @import { Observer } from '@playcanvas/observer'
  * @import { ComponentType, ReactElement } from 'react'
- * @import { Attribution, ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
+ * @import { Credit, Keybind, ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
  */
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
@@ -80,7 +80,8 @@ const MOBILE_PANEL_TITLES = {
  * @property {boolean} showDeviceSelector - Show device selector.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
- * @property {Attribution[]} attributions - Attributions for the example.
+ * @property {Keybind[]} keybinds - Keybinds for the example.
+ * @property {Credit[]} credits - Credits for the example.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -100,7 +101,8 @@ class Example extends TypedComponent {
         files: { 'example.mjs': '// loading' },
         observer: null,
         description: '',
-        attributions: []
+        keybinds: [],
+        credits: []
     };
 
     /** @type {HTMLElement | null} */
@@ -172,7 +174,8 @@ class Example extends TypedComponent {
             controls: null,
             showDeviceSelector: showDeviceSelector,
             description: '',
-            attributions: []
+            keybinds: [],
+            credits: []
         });
     }
 
@@ -181,9 +184,9 @@ class Example extends TypedComponent {
      */
     async _handleExampleLoad(event) {
         const path = this.iframePath;
-        const { files, observer, description, attributions = [] } = event.detail;
+        const { files, observer, description, keybinds = [], credits = [] } = event.detail;
         const controlsSrc = files['controls.mjs'];
-        if (!description && !attributions.length && this.props.mobilePanel === 'description') {
+        if (!description && !keybinds.length && !credits.length && this.props.mobilePanel === 'description') {
             this.props.setMobilePanel?.(null);
         }
         if (controlsSrc) {
@@ -196,7 +199,8 @@ class Example extends TypedComponent {
                 observer,
                 files,
                 description,
-                attributions
+                keybinds,
+                credits
             });
         } else {
             // When switching examples from one with controls to one without controls...
@@ -208,7 +212,8 @@ class Example extends TypedComponent {
                 observer: null,
                 files,
                 description,
-                attributions
+                keybinds,
+                credits
             });
         }
     }
@@ -252,7 +257,7 @@ class Example extends TypedComponent {
      */
     async _handleUpdateFiles(event) {
         const path = this.iframePath;
-        const { files, observer, description, attributions = [] } = event.detail;
+        const { files, observer, description, keybinds = [], credits = [] } = event.detail;
         const controlsSrc = files['controls.mjs'] ?? '';
         if (!files['controls.mjs']) {
             this.mergeState({
@@ -262,7 +267,8 @@ class Example extends TypedComponent {
                 controls: null,
                 observer: null,
                 description,
-                attributions
+                keybinds,
+                credits
             });
         }
         const controls = await this._buildControls(controlsSrc);
@@ -273,7 +279,8 @@ class Example extends TypedComponent {
             controls,
             observer,
             description,
-            attributions
+            keybinds,
+            credits
         });
         window.dispatchEvent(new CustomEvent('resetErrorBoundary'));
     }
@@ -432,7 +439,7 @@ class Example extends TypedComponent {
      * @param {ReactElement | string} content - link content.
      * @returns {ReactElement} rendered link.
      */
-    renderAttributionLink(href, content) {
+    renderCreditLink(href, content) {
         return jsx('a', {
             href,
             target: '_blank',
@@ -451,38 +458,38 @@ class Example extends TypedComponent {
         }
 
         const label = license.slice(0, match.index).trim().replace(/\s*\($/, '').trim();
-        return this.renderAttributionLink(match[1], label || 'License');
+        return this.renderCreditLink(match[1], label || 'License');
     }
 
     /**
-     * @param {Attribution} attribution - attribution data.
-     * @param {number} index - attribution index.
-     * @returns {ReactElement} rendered attribution row.
+     * @param {Credit} credit - credit data.
+     * @param {number} index - credit index.
+     * @returns {ReactElement} rendered credit row.
      */
-    renderAttribution(attribution, index) {
-        const source = URL_IN_TEXT_PATTERN.exec(attribution.source);
-        const credit = fragment(
-            jsx('span', { className: 'example-attribution-title' }, attribution.title),
+    renderCredit(credit, index) {
+        const source = URL_IN_TEXT_PATTERN.exec(credit.source);
+        const label = fragment(
+            jsx('span', { className: 'example-credit-title' }, credit.title),
             ' by ',
-            jsx('span', { className: 'example-attribution-author' }, attribution.author)
+            jsx('span', { className: 'example-credit-author' }, credit.author)
         );
         return jsx(
             'p',
             {
-                className: 'example-attribution',
+                className: 'example-credit',
                 key: index
             },
-            source ? this.renderAttributionLink(source[1], credit) : credit,
+            source ? this.renderCreditLink(source[1], label) : label,
             source ? null : ' \u00b7 ',
-            source ? null : attribution.source,
+            source ? null : credit.source,
             ' \u00b7 ',
-            this.renderLicenseLink(attribution.license)
+            this.renderLicenseLink(credit.license)
         );
     }
 
-    renderAttributions() {
-        const { attributions } = this.state;
-        if (!attributions.length) {
+    renderCredits() {
+        const { credits } = this.state;
+        if (!credits.length) {
             return null;
         }
 
@@ -490,14 +497,62 @@ class Example extends TypedComponent {
             Panel,
             {
                 class: ['example-info-subpanel'],
-                headerText: 'Attribution'
+                headerText: 'Credits'
             },
             jsx(
                 Container,
                 {
-                    class: ['example-attributions']
+                    class: ['example-credits']
                 },
-                attributions.map((attribution, index) => this.renderAttribution(attribution, index))
+                credits.map((credit, index) => this.renderCredit(credit, index))
+            )
+        );
+    }
+
+    renderKeybinds() {
+        const { keybinds } = this.state;
+        if (!keybinds.length) {
+            return null;
+        }
+
+        return jsx(
+            Panel,
+            {
+                class: ['example-info-subpanel'],
+                headerText: 'Keybinds'
+            },
+            jsx(
+                Container,
+                {
+                    class: ['example-keybinds']
+                },
+                keybinds.map((keybind, index) => jsx(
+                    'div',
+                    {
+                        className: 'example-keybind',
+                        key: index
+                    },
+                    jsx(
+                        'div',
+                        {
+                            className: 'example-keybind-inputs'
+                        },
+                        keybind.inputs.map((input, inputIndex) => jsx(
+                            'kbd',
+                            {
+                                key: inputIndex
+                            },
+                            input
+                        ))
+                    ),
+                    jsx(
+                        'div',
+                        {
+                            className: 'example-keybind-action'
+                        },
+                        keybind.action
+                    )
+                ))
             )
         );
     }
@@ -522,14 +577,15 @@ class Example extends TypedComponent {
                     }
                 }) :
                 null,
-            this.renderAttributions()
+            this.renderKeybinds(),
+            this.renderCredits()
         );
     }
 
     renderInfoPanel() {
-        const { exampleLoaded, description, attributions } = this.state;
+        const { exampleLoaded, description, keybinds, credits } = this.state;
         const ready = exampleLoaded && iframe.ready;
-        if (!ready || (!description && !attributions.length)) {
+        if (!ready || (!description && !keybinds.length && !credits.length)) {
             return null;
         }
 
@@ -632,8 +688,8 @@ class Example extends TypedComponent {
 
     renderMobileDock() {
         const { mobilePanel, setMobilePanel } = this.props;
-        const { description, attributions } = this.state;
-        const hasInfo = description || attributions.length;
+        const { description, keybinds, credits } = this.state;
+        const hasInfo = description || keybinds.length || credits.length;
         return jsx(
             Container,
             {

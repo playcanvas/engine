@@ -1,13 +1,13 @@
 // @config
 //
-// <div style='text-align:center'>
-//     <div>(<b>WASD</b>) Move</div>
-//     <div>(<b>Space</b>) Jump</div>
-//     <div>(<b>Mouse</b>) Look</div>
-//     <div>Pick two LUTs and use Blend to crossfade between them, or enable Animate.</div>
-// </div>
+// Pick two LUTs and use Blend to crossfade between them, or enable Animate.
 //
-// @attribution
+// @keybinds
+// WASD: Move
+// Space: Jump
+// Mouse: Look
+//
+// @credit
 // title: Sunnyvale Heritage Park Museum
 // author: zeitgeistarchivescans
 // source: https://superspl.at/scene/d5d397aa
