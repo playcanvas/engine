@@ -688,6 +688,7 @@ class Material {
     updateUniforms(device, scene) {
         if (this._dirtyShader) {
             this.clearVariants();
+            this._dirtyShader = false;
         }
     }
 
