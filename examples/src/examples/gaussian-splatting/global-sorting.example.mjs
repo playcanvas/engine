@@ -67,9 +67,7 @@ assetListLoader.load(() => {
         }
     });
 
-    // default unified mode
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('unified', true);
 
     // instantiate garage gsplat
     const hotel = new pc.Entity('garage');
@@ -129,13 +127,4 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
-
-    // toggle unified rendering for all gsplats via controls
-    data.on('unified:set', () => {
-        const unified = !!data.get('unified');
-        const comps = /** @type {pc.GSplatComponent[]} */ (app.root.findComponents('gsplat'));
-        comps.forEach((comp) => {
-            comp.unified = unified;
-        });
-    });
 });
