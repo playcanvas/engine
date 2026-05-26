@@ -156,6 +156,19 @@ describe('ScrollViewComponent', function () {
             expect(e.scrollview.mouseWheelSensitivity.y).to.equal(3);
         });
 
+        it('accepts a typed array (any indexable value) the same as a plain array', function () {
+            // The old schema-driven `type: 'vec2'` conversion in ComponentSystem.convertValue
+            // accepted any indexable input - including typed arrays. The setter must preserve
+            // that contract; otherwise scenes/templates that ship a Float32Array would store
+            // the raw buffer and later code that reads `.x`/`.y` would NaN out.
+            const e = new Entity();
+            e.addComponent('scrollview', { mouseWheelSensitivity: new Float32Array([2, 3]) });
+
+            expect(e.scrollview.mouseWheelSensitivity).to.be.an.instanceof(Vec2);
+            expect(e.scrollview.mouseWheelSensitivity.x).to.equal(2);
+            expect(e.scrollview.mouseWheelSensitivity.y).to.equal(3);
+        });
+
     });
 
     describe('#horizontal', function () {
@@ -451,6 +464,36 @@ describe('ScrollViewComponent', function () {
 
             expect(scrollbar1.hasEvent('scrollbar:add')).to.equal(false);
             expect(scrollbar2.hasEvent('scrollbar:add')).to.equal(true);
+        });
+
+    });
+
+    describe('removeComponent', function () {
+
+        it('tears down every listener it registered on referenced entities', function () {
+            const { e, viewport, content, hScrollbar, vScrollbar } = buildScrollViewEntity();
+            e.addComponent('scrollview', {
+                viewportEntity: viewport,
+                contentEntity: content,
+                horizontalScrollbarEntity: hScrollbar,
+                verticalScrollbarEntity: vScrollbar
+            });
+            app.root.addChild(e);
+
+            // sanity: the component has wired itself into each referenced entity
+            expect(viewport.hasEvent('element:add')).to.equal(true);
+            expect(content.hasEvent('element:add')).to.equal(true);
+            expect(hScrollbar.hasEvent('scrollbar:add')).to.equal(true);
+            expect(vScrollbar.hasEvent('scrollbar:add')).to.equal(true);
+
+            e.removeComponent('scrollview');
+
+            // every listener registered on a referenced entity must be gone, otherwise
+            // the entities would keep callbacks pointing at a removed component
+            expect(viewport.hasEvent('element:add')).to.equal(false);
+            expect(content.hasEvent('element:add')).to.equal(false);
+            expect(hScrollbar.hasEvent('scrollbar:add')).to.equal(false);
+            expect(vScrollbar.hasEvent('scrollbar:add')).to.equal(false);
         });
 
     });

@@ -394,14 +394,18 @@ class ScrollViewComponent extends Component {
      * @type {Vec2}
      */
     set mouseWheelSensitivity(arg) {
-        if (arg instanceof Vec2) {
-            // Clone so callers can pass shared singletons (e.g. Vec2.ONE) and so subsequent
-            // mutations to their Vec2 don't leak into the component's state.
-            this._mouseWheelSensitivity = arg.clone();
-        } else if (Array.isArray(arg)) {
-            this._mouseWheelSensitivity = new Vec2(arg[0], arg[1]);
-        } else {
+        // Mirror the old schema-driven `type: 'vec2'` conversion in
+        // ComponentSystem.convertValue: pass null/undefined/0/'' through untouched,
+        // clone a Vec2 input (so callers can pass shared singletons like Vec2.ONE
+        // without mutations leaking into component state), and treat anything else
+        // as indexable to support `[x, y]` arrays and typed arrays from JSON-loaded
+        // scenes.
+        if (!arg) {
             this._mouseWheelSensitivity = arg;
+        } else if (arg instanceof Vec2) {
+            this._mouseWheelSensitivity = arg.clone();
+        } else {
+            this._mouseWheelSensitivity = new Vec2(arg[0], arg[1]);
         }
     }
 
@@ -1324,6 +1328,22 @@ class ScrollViewComponent extends Component {
     onRemove() {
         this._evtElementAdd?.off();
         this._evtElementAdd = null;
+
+        // `_evtElementRemove` is a `once('beforeremove', ...)` handle registered on
+        // `this.entity.element`. If the scrollview is removed while the element survives,
+        // the once handler would dangle on the element and keep this component referenced.
+        this._evtElementRemove?.off();
+        this._evtElementRemove = null;
+
+        // Setting each entity ref to null routes through the existing setter and triggers
+        // the matching `_*EntityUnsubscribe`, so any listeners we registered on those
+        // referenced entities (viewport/content/scrollbar `element:add`, `scrollbar:add`,
+        // element resize, scrollbar `set:value`, etc.) are torn down here.
+        this.viewportEntity = null;
+        this.contentEntity = null;
+        this.horizontalScrollbarEntity = null;
+        this.verticalScrollbarEntity = null;
+
         this._toggleElementListeners('off');
         this._destroyDragHelper();
     }
