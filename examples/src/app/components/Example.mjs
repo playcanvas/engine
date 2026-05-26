@@ -429,24 +429,15 @@ class Example extends TypedComponent {
 
     /**
      * @param {string} href - link href.
-     * @param {string} text - link text.
+     * @param {ReactElement | string} content - link content.
      * @returns {ReactElement} rendered link.
      */
-    renderAttributionLink(href, text) {
+    renderAttributionLink(href, content) {
         return jsx('a', {
             href,
             target: '_blank',
             rel: 'noopener'
-        }, text);
-    }
-
-    /**
-     * @param {string} source - source value.
-     * @returns {ReactElement | string} rendered source.
-     */
-    renderSourceLink(source) {
-        const match = URL_IN_TEXT_PATTERN.exec(source);
-        return match ? this.renderAttributionLink(match[1], 'Source') : source;
+        }, content);
     }
 
     /**
@@ -469,17 +460,21 @@ class Example extends TypedComponent {
      * @returns {ReactElement} rendered attribution row.
      */
     renderAttribution(attribution, index) {
+        const source = URL_IN_TEXT_PATTERN.exec(attribution.source);
+        const credit = fragment(
+            jsx('span', { className: 'example-attribution-title' }, attribution.title),
+            ' by ',
+            jsx('span', { className: 'example-attribution-author' }, attribution.author)
+        );
         return jsx(
             'p',
             {
                 className: 'example-attribution',
                 key: index
             },
-            jsx('span', { className: 'example-attribution-title' }, attribution.title),
-            ' by ',
-            jsx('span', { className: 'example-attribution-author' }, attribution.author),
-            ' \u00b7 ',
-            this.renderSourceLink(attribution.source),
+            source ? this.renderAttributionLink(source[1], credit) : credit,
+            source ? null : ' \u00b7 ',
+            source ? null : attribution.source,
             ' \u00b7 ',
             this.renderLicenseLink(attribution.license)
         );

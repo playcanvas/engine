@@ -701,6 +701,14 @@ body {
     font-weight: 600;
 }
 
+#mobileDescriptionPanel .example-attributions {
+    align-items: stretch;
+}
+
+#mobileDescriptionPanel .example-attribution {
+    text-align: left;
+}
+
 #attributionPanel .example-attributions {
     align-items: stretch;
     margin-top: 0;
