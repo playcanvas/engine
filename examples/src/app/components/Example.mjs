@@ -32,7 +32,7 @@ const MOBILE_PANEL_TITLES = {
     examples: 'EXAMPLES',
     code: 'SOURCE',
     controls: 'CONTROLS',
-    description: 'DESCRIPTION'
+    description: 'INFO'
 };
 
 /**
@@ -71,7 +71,7 @@ const MOBILE_PANEL_TITLES = {
  * @typedef {object} State
  * @property {'mobile' | 'desktop'} layout - The layout.
  * @property {boolean} collapsed - Collapsed or not.
- * @property {boolean} attributionCollapsed - attribution panel collapsed or not.
+ * @property {boolean} infoCollapsed - Info panel collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
  * @property {string} loadedPath - The loaded iframe path.
  * @property {{ path: string, message: string } | null} loadError - The current loading error.
@@ -91,7 +91,7 @@ class Example extends TypedComponent {
     state = {
         layout: getLayout(),
         collapsed: getLayout() === 'mobile',
-        attributionCollapsed: false,
+        infoCollapsed: false,
         exampleLoaded: false,
         loadedPath: '',
         loadError: null,
@@ -327,8 +327,8 @@ class Example extends TypedComponent {
         controlPanelHeader.onclick = () => this.toggleCollapse();
     }
 
-    setupAttributionPanel() {
-        const panel = document.getElementById('attributionPanel');
+    setupInfoPanel() {
+        const panel = document.getElementById('infoPanel');
         if (!panel) {
             return;
         }
@@ -340,12 +340,12 @@ class Example extends TypedComponent {
             return;
         }
 
-        header.onclick = () => this.toggleAttributionCollapse();
+        header.onclick = () => this.toggleInfoCollapse();
     }
 
     componentDidMount() {
         this.setupControlPanel();
-        this.setupAttributionPanel();
+        this.setupInfoPanel();
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('requestedFiles', this._handleRequestedFiles);
         window.addEventListener('orientationchange', this._onLayoutChange);
@@ -368,7 +368,7 @@ class Example extends TypedComponent {
         }
 
         this.setupControlPanel();
-        this.setupAttributionPanel();
+        this.setupInfoPanel();
     }
 
     componentWillUnmount() {
@@ -487,57 +487,67 @@ class Example extends TypedComponent {
         }
 
         return jsx(
-            'div',
+            Panel,
             {
-                className: 'example-attributions'
+                class: ['example-info-subpanel'],
+                headerText: 'Attribution'
             },
-            attributions.map((attribution, index) => this.renderAttribution(attribution, index))
+            jsx(
+                Container,
+                {
+                    class: ['example-attributions']
+                },
+                attributions.map((attribution, index) => this.renderAttribution(attribution, index))
+            )
         );
     }
 
-    renderDescription() {
-        const { exampleLoaded, description } = this.state;
-        const ready = exampleLoaded && iframe.ready;
-        if (!ready || !description) {
-            return;
-        }
+    /**
+     * @param {string} id - The info content id.
+     * @returns {ReactElement} rendered info content.
+     */
+    renderInfoContent(id) {
+        const { description } = this.state;
         return jsx(
             Container,
             {
-                id: 'descriptionPanel'
+                id,
+                class: ['example-info-content']
             },
             description ?
-                jsx('span', {
+                jsx('div', {
+                    className: 'example-info-description',
                     dangerouslySetInnerHTML: {
                         __html: description
                     }
                 }) :
-                null
+                null,
+            this.renderAttributions()
         );
     }
 
-    renderAttributionPanel() {
-        const { exampleLoaded, attributions } = this.state;
+    renderInfoPanel() {
+        const { exampleLoaded, description, attributions } = this.state;
         const ready = exampleLoaded && iframe.ready;
-        if (!ready || !attributions.length) {
+        if (!ready || (!description && !attributions.length)) {
             return null;
         }
 
         return jsx(
             Panel,
             {
-                id: 'attributionPanel',
+                id: 'infoPanel',
                 class: ['desktop'],
-                headerText: 'ATTRIBUTION',
+                headerText: 'INFO',
                 collapsible: true,
-                collapsed: this.state.attributionCollapsed
+                collapsed: this.state.infoCollapsed
             },
             jsx(
                 Container,
                 {
-                    id: 'attributionPanel-scroll-region'
+                    id: 'infoPanel-scroll-region'
                 },
-                this.renderAttributions()
+                this.renderInfoContent('infoPanel-content')
             )
         );
     }
@@ -561,8 +571,8 @@ class Example extends TypedComponent {
         return collapsed;
     }
 
-    get attributionCollapsed() {
-        const panel = document.getElementById('attributionPanel');
+    get infoCollapsed() {
+        const panel = document.getElementById('infoPanel');
         if (!panel) {
             return false;
         }
@@ -574,13 +584,13 @@ class Example extends TypedComponent {
         this.mergeState({ collapsed: !this.collapsed });
     }
 
-    toggleAttributionCollapse() {
-        this.mergeState({ attributionCollapsed: !this.attributionCollapsed });
+    toggleInfoCollapse() {
+        this.mergeState({ infoCollapsed: !this.infoCollapsed });
     }
 
     renderMobilePanel() {
         const { mobilePanel } = this.props;
-        const { files, description } = this.state;
+        const { files } = this.state;
 
         if (mobilePanel === 'code') {
             return jsx(CodeEditorMobile, {
@@ -592,21 +602,7 @@ class Example extends TypedComponent {
         }
 
         if (mobilePanel === 'description') {
-            return jsx(
-                Container,
-                {
-                    key: 'description',
-                    id: 'mobileDescriptionPanel'
-                },
-                description ?
-                    jsx('span', {
-                        dangerouslySetInnerHTML: {
-                            __html: description
-                        }
-                    }) :
-                    null,
-                this.renderAttributions()
-            );
+            return this.renderInfoContent('mobileInfoPanel');
         }
 
         if (mobilePanel === 'controls') {
@@ -637,7 +633,7 @@ class Example extends TypedComponent {
     renderMobileDock() {
         const { mobilePanel, setMobilePanel } = this.props;
         const { description, attributions } = this.state;
-        const hasDescription = description || attributions.length;
+        const hasInfo = description || attributions.length;
         return jsx(
             Container,
             {
@@ -670,11 +666,15 @@ class Example extends TypedComponent {
             jsx(Button, {
                 key: 'description',
                 text: 'Info',
-                enabled: Boolean(hasDescription),
+                enabled: Boolean(hasInfo),
                 class: mobilePanel === 'description' ?
                     ['mobile-dock-button', 'mobile-dock-description', 'selected'] :
                     ['mobile-dock-button', 'mobile-dock-description'],
-                onClick: () => (this.state.description || this.state.attributions.length) && setMobilePanel?.('description')
+                onClick: () => {
+                    if (hasInfo) {
+                        setMobilePanel?.('description');
+                    }
+                }
             })
         );
     }
@@ -731,9 +731,8 @@ class Example extends TypedComponent {
                         this.renderControls()
                     )
                 ),
-                this.renderAttributionPanel()
-            ),
-            this.renderDescription()
+                this.renderInfoPanel()
+            )
         );
     }
 

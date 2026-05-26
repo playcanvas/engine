@@ -431,7 +431,7 @@ body {
 }
 
 #controlPanel,
-#attributionPanel {
+#infoPanel {
     --desktop-panel-radius: 6px;
 
     position: absolute;
@@ -460,7 +460,7 @@ body {
 }
 
 #appInner.desktop #desktopPanelStack #controlPanel,
-#appInner.desktop #desktopPanelStack #attributionPanel {
+#appInner.desktop #desktopPanelStack #infoPanel {
     position: relative;
     top: auto;
     right: auto;
@@ -470,27 +470,27 @@ body {
 }
 
 #appInner.desktop #desktopPanelStack #controlPanel > .pcui-panel-header,
-#appInner.desktop #desktopPanelStack #attributionPanel > .pcui-panel-header {
+#appInner.desktop #desktopPanelStack #infoPanel > .pcui-panel-header {
     border-radius: var(--desktop-panel-radius) var(--desktop-panel-radius) 0 0;
 }
 
 #appInner.desktop #desktopPanelStack #controlPanel > .pcui-panel-content,
-#appInner.desktop #desktopPanelStack #attributionPanel > .pcui-panel-content {
+#appInner.desktop #desktopPanelStack #infoPanel > .pcui-panel-content {
     border-radius: 0 0 var(--desktop-panel-radius) var(--desktop-panel-radius);
 }
 
 #appInner.desktop #desktopPanelStack #controlPanel-scroll-region,
-#appInner.desktop #desktopPanelStack #attributionPanel-scroll-region {
+#appInner.desktop #desktopPanelStack #infoPanel-scroll-region {
     border-radius: 0 0 var(--desktop-panel-radius) var(--desktop-panel-radius);
 }
 
 #appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed,
-#appInner.desktop #desktopPanelStack #attributionPanel.pcui-collapsed {
+#appInner.desktop #desktopPanelStack #infoPanel.pcui-collapsed {
     overflow: hidden;
 }
 
 #appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed > .pcui-panel-header,
-#appInner.desktop #desktopPanelStack #attributionPanel.pcui-collapsed > .pcui-panel-header {
+#appInner.desktop #desktopPanelStack #infoPanel.pcui-collapsed > .pcui-panel-header {
     border-radius: var(--desktop-panel-radius);
 }
 
@@ -604,7 +604,7 @@ body {
 }
 
 #controlPanel > .pcui-panel-content,
-#attributionPanel > .pcui-panel-content {
+#infoPanel > .pcui-panel-content {
     background-color: #364346;
 }
 
@@ -633,9 +633,8 @@ body {
     overflow-y: auto;
 }
 
-#attributionPanel-scroll-region {
-    max-height: 180px;
-    padding: 8px;
+#infoPanel-scroll-region {
+    max-height: min(260px, 35vh);
     overflow-y: auto;
 }
 
@@ -666,13 +665,28 @@ body {
     cursor: pointer;
 }
 
+.example-info-content {
+    box-sizing: border-box;
+    color: #f2f2f2;
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.example-info-content a,
 .example-attribution a {
     color: #f2f2f2;
+}
+
+.example-info-description {
+    max-width: 100%;
+    padding: 12px;
 }
 
 #appInner.mobile #sideBar-contents,
 #appInner.mobile #controlPanel-scroll-region,
 #appInner.mobile #controlPanel-controls,
+#appInner.mobile #mobileInfoPanel,
 #appInner.mobile #controlPanel.mobile > .pcui-panel-content,
 #appInner.mobile .code-editor-mobile-files {
     touch-action: pan-y;
@@ -681,11 +695,19 @@ body {
 .example-attributions {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     gap: 4px;
-    margin-top: 8px;
+    margin-top: 0;
     font-size: 12px;
     line-height: 1.35;
+}
+
+.example-info-description + .example-info-subpanel {
+    margin-top: 12px;
+}
+
+.example-info-subpanel > .pcui-panel-content {
+    padding: 12px;
 }
 
 .example-attribution {
@@ -694,28 +716,11 @@ body {
     margin: 0;
     opacity: 0.82;
     overflow-wrap: anywhere;
-    text-align: center;
+    text-align: left;
 }
 
 .example-attribution-title {
     font-weight: 600;
-}
-
-#mobileDescriptionPanel .example-attributions {
-    align-items: stretch;
-}
-
-#mobileDescriptionPanel .example-attribution {
-    text-align: left;
-}
-
-#attributionPanel .example-attributions {
-    align-items: stretch;
-    margin-top: 0;
-}
-
-#attributionPanel .example-attribution {
-    text-align: left;
 }
 
 #appInner.mobile #menu,
@@ -1269,19 +1274,16 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
     --mobile-dock-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v6M12 7h.01'/%3E%3C/svg%3E");
 }
 
-#mobileDescriptionPanel {
+#mobileInfoPanel {
     box-sizing: border-box;
     height: 100%;
-    padding: 12px;
-    color: #f2f2f2;
-    line-height: 1.45;
 }
 
 #controlPanel.mobile.description-sheet,
 #controlPanel.mobile.description-sheet > .pcui-panel-content,
-#mobileDescriptionPanel,
-#mobileDescriptionPanel *,
-#mobileDescriptionPanel a {
+#mobileInfoPanel,
+#mobileInfoPanel *,
+#mobileInfoPanel a {
     color: #f2f2f2;
 }
 
