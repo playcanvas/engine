@@ -21,10 +21,10 @@ import { getLayout } from '../utils.mjs';
  */
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
-const CONTROLS_REACT_PCUI = /** @type {typeof ReactPCUI} */ (/** @type {unknown} */ ({
+const CONTROLS_REACT_PCUI = /** @satisfies {typeof ReactPCUI} */ ({
     ...ReactPCUI,
     SelectInput: OverlaySelectInput
-}));
+});
 
 /** @type {Record<string, string>} */
 const MOBILE_PANEL_TITLES = {
