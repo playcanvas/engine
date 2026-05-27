@@ -655,7 +655,7 @@ body {
     transform: translateX(-50%);
     z-index: 9998;
     box-sizing: border-box;
-    max-width: min(50%, 640px);
+    max-width: 475px;
     padding: 8px 16px;
     background-color: rgba(54, 67, 70, 0.64);
     backdrop-filter: blur(32px);
@@ -670,6 +670,10 @@ body {
     user-select: none;
 }
 
+/* When the canvas itself is too narrow for a centered overlay between the
+   top-left menu and the top-right controls panel, drop the description
+   below the menu/controls row and left-align it. Reserve 320px on the right
+   so it stays clear of the panel stack column. */
 .example-info-description {
     padding: 12px;
     white-space: pre-line;
