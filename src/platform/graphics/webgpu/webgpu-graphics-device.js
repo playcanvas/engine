@@ -251,7 +251,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
         this.featureLevel = options.featureLevel;
-        this.forceImageBitmapWriteTexture = options.forceImageBitmapWriteTexture ?? false;
+
+        // Sticky flag set the first time GPUQueue.copyExternalImageToTexture
+        // throws for an ImageBitmap source — see WebgpuTexture.uploadExternalImage.
+        this._imageBitmapUploadFallback = false;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }

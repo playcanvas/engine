@@ -486,25 +486,17 @@ class WebgpuTexture {
 
         Debug.assert(mipLevel < this.desc.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`, this);
 
-        // Some environments (notably headless Chrome on Linux) fail the
-        // renderer→GPU SharedImage transport behind copyExternalImageToTexture
-        // for ImageBitmap sources. When the device opts in, route ImageBitmap
-        // uploads through writeTexture via a 2D-canvas readback. Only safe for
-        // 4-byte-per-pixel formats (RGBA8/SRGBA8), which is what the engine's
-        // image parsers produce; fall through for any other format.
-        if (device.forceImageBitmapWriteTexture &&
-            typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) {
-            const formatInfo = pixelFormatInfo.get(this.texture.format);
-            if (formatInfo?.size === 4) {
-                const w = image.width;
-                const h = image.height;
-                const off = new OffscreenCanvas(w, h);
-                const ctx = off.getContext('2d');
-                ctx.drawImage(image, 0, 0);
-                const pixels = ctx.getImageData(0, 0, w, h).data;
-                this.uploadTypedArrayData(device, new Uint8Array(pixels.buffer), mipLevel, index);
-                return;
-            }
+        const isImageBitmap = typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap;
+        // ImageData is always 4 bytes/pixel; the writeTexture fallback below is
+        // only safe when the destination format matches that layout.
+        const fallbackAvailable = isImageBitmap && pixelFormatInfo.get(this.texture.format)?.size === 4;
+
+        // If a previous upload on this device already tripped the broken-environment
+        // path (see catch below), keep all subsequent ImageBitmap uploads on the
+        // writeTexture path instead of throwing every time.
+        if (fallbackAvailable && device._imageBitmapUploadFallback) {
+            this._uploadImageBitmapAsTypedArray(device, image, mipLevel, index);
+            return;
         }
 
         const src = {
@@ -534,7 +526,32 @@ class WebgpuTexture {
         dummyUse(image instanceof HTMLCanvasElement && image.getContext('2d'));
 
         Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
-        device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
+
+        try {
+            device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
+        } catch (err) {
+            // Some environments (notably headless Chrome on Linux) throw here
+            // because the renderer→GPU SharedImage transport for ImageBitmap
+            // sources is broken. Set a sticky device flag so future ImageBitmap
+            // uploads skip the failing call, and retry this one via writeTexture.
+            if (fallbackAvailable) {
+                Debug.warnOnce(`WebGPU: copyExternalImageToTexture failed (${err.message}); falling back to writeTexture for ImageBitmap uploads on this device.`);
+                device._imageBitmapUploadFallback = true;
+                this._uploadImageBitmapAsTypedArray(device, image, mipLevel, index);
+                return;
+            }
+            throw err;
+        }
+    }
+
+    _uploadImageBitmapAsTypedArray(device, image, mipLevel, index) {
+        const w = image.width;
+        const h = image.height;
+        const off = new OffscreenCanvas(w, h);
+        const ctx = off.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        const pixels = ctx.getImageData(0, 0, w, h).data;
+        this.uploadTypedArrayData(device, new Uint8Array(pixels.buffer), mipLevel, index);
     }
 
     uploadTypedArrayData(device, data, mipLevel, index) {

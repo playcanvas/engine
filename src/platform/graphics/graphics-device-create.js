@@ -45,11 +45,6 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * - 'low-power': Prioritizes power saving over rendering performance.
  *
  * Defaults to 'default'.
- * @param {boolean} [options.forceImageBitmapWriteTexture] - WebGPU only. When true, uploads from
- * `ImageBitmap` sources are routed through `GPUQueue.writeTexture` via a 2D-canvas readback
- * instead of `GPUQueue.copyExternalImageToTexture`. Works around environments where Chrome's
- * renderer→GPU SharedImage transport fails for external image copies — notably headless Chrome
- * on Linux. Slower than the native path. Defaults to false.
  * @returns {Promise} - Promise object representing the created graphics device.
  * @category Graphics
  */
