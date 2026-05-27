@@ -53,7 +53,7 @@ fn main() {
 
     // Sort dispatch args at sortSlotBase (no keygen slot — sort keys come from the
     // projector pass directly).
-    writeSortIndirectArgs(&indirectDispatchArgs, uniforms.sortSlotBase, count, uniforms.sortIndirectInfo);
+    writeSortIndirectArgs(uniforms.sortSlotBase, count, uniforms.sortIndirectInfo);
 }
 `;
 
