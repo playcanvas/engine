@@ -236,6 +236,9 @@ class ShaderDefinitionUtils {
         if (device.supportsPointerCompositeAccess) {
             code += 'requires pointer_composite_access;\n';
         }
+        if (device.supportsPacked4x8IntegerDotProduct) {
+            code += 'requires packed_4x8_integer_dot_product;\n';
+        }
         return code;
     }
 
