@@ -324,6 +324,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsSubgroupUniformity = wgslFeatures?.has('subgroup_uniformity');
         this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
         this.supportsLinearIndexing = wgslFeatures?.has('linear_indexing');
+        this.supportsUnrestrictedPointerParameters = wgslFeatures?.has('unrestricted_pointer_parameters');
 
         this.initCapsDefines();
     }
@@ -413,11 +414,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsSubgroups = requireFeature('subgroups');
         this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMaxSize ?? 0) : 0;
         this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
+        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
+            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
         Debug.log(
             `WEBGPU${this.gpuAdapter?.info ?
                 ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
                 ''
-            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`
+            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
         );
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
