@@ -233,6 +233,9 @@ class ShaderDefinitionUtils {
         if (device.supportsUnrestrictedPointerParameters) {
             code += 'requires unrestricted_pointer_parameters;\n';
         }
+        if (device.supportsPointerCompositeAccess) {
+            code += 'requires pointer_composite_access;\n';
+        }
         return code;
     }
 

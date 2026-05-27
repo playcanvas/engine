@@ -325,6 +325,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
         this.supportsLinearIndexing = wgslFeatures?.has('linear_indexing');
         this.supportsUnrestrictedPointerParameters = wgslFeatures?.has('unrestricted_pointer_parameters');
+        this.supportsPointerCompositeAccess = wgslFeatures?.has('pointer_composite_access');
 
         this.initCapsDefines();
     }
