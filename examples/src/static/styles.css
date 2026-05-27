@@ -455,6 +455,7 @@ body {
     z-index: 9999;
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
     gap: 8px;
     width: 280px;
     max-height: none;
@@ -492,11 +493,19 @@ body {
 #appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed,
 #appInner.desktop #desktopPanelStack #infoPanel.pcui-collapsed {
     overflow: hidden;
+    width: auto;
+    min-width: 0;
+}
+
+#appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed > .pcui-panel-content,
+#appInner.desktop #desktopPanelStack #infoPanel.pcui-collapsed > .pcui-panel-content {
+    display: none;
 }
 
 #appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed > .pcui-panel-header,
 #appInner.desktop #desktopPanelStack #infoPanel.pcui-collapsed > .pcui-panel-header {
     border-radius: var(--desktop-panel-radius);
+    padding-right: 12px;
 }
 
 #controlPanel.empty {
