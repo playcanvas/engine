@@ -327,6 +327,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsUnrestrictedPointerParameters = wgslFeatures?.has('unrestricted_pointer_parameters');
         this.supportsPointerCompositeAccess = wgslFeatures?.has('pointer_composite_access');
         this.supportsPacked4x8IntegerDotProduct = wgslFeatures?.has('packed_4x8_integer_dot_product');
+        this.supportsTextureAndSamplerLet = wgslFeatures?.has('texture_and_sampler_let');
 
         this.initCapsDefines();
     }

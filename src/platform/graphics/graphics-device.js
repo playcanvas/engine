@@ -324,6 +324,19 @@ class GraphicsDevice extends EventHandler {
     supportsPacked4x8IntegerDotProduct = false;
 
     /**
+     * True if the device supports the WGSL `texture_and_sampler_let` language feature, which
+     * allows assigning texture and sampler variables to `let` bindings within a WGSL shader
+     * (preparation for bindless-style indirection patterns). The
+     * `requires texture_and_sampler_let;` directive is automatically injected into WGSL
+     * shaders when this feature is available, and the shader define
+     * `CAPS_TEXTURE_AND_SAMPLER_LET` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureAndSamplerLet = false;
+
+    /**
      * True if the device supports the WGSL `unrestricted_pointer_parameters` language feature,
      * which allows passing pointers in the `storage`, `uniform`, and `workgroup` address spaces
      * as function arguments. The `requires unrestricted_pointer_parameters;` directive is
@@ -727,6 +740,7 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsUnrestrictedPointerParameters) capsDefines.set('CAPS_UNRESTRICTED_POINTER_PARAMETERS', '');
         if (this.supportsPointerCompositeAccess) capsDefines.set('CAPS_POINTER_COMPOSITE_ACCESS', '');
         if (this.supportsPacked4x8IntegerDotProduct) capsDefines.set('CAPS_PACKED_4X8_INTEGER_DOT_PRODUCT', '');
+        if (this.supportsTextureAndSamplerLet) capsDefines.set('CAPS_TEXTURE_AND_SAMPLER_LET', '');
         if (this.supportsStorageTextureRead) capsDefines.set('CAPS_STORAGE_TEXTURE_READ', '');
 
         // Platform defines
