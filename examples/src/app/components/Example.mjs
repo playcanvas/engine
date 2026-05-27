@@ -26,6 +26,60 @@ const CONTROLS_REACT_PCUI = /** @satisfies {typeof ReactPCUI} */ ({
     SelectInput: OverlaySelectInput
 });
 const URL_IN_TEXT_PATTERN = /(https?:\/\/[^\s)]+)/;
+const INLINE_MD_PATTERN = /\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|`([^`\n]+)`|\[([^\]\n]+)\]\(([^)\n]+)\)|\{([a-z]+):([^}\n]+)\}/g;
+const SAFE_URL_PATTERN = /^(?:https?:|mailto:)/i;
+const COLOR_NAMES = new Set(['accent', 'warn', 'success', 'info', 'muted']);
+
+/**
+ * Renders a plain-text description with a markdown-lite inline subset:
+ * `**bold**`, `*italic*`, `` `code` ``, `[text](url)`, and `{color:text}`.
+ * Output is a React node array, never an HTML string, so the text content
+ * is always auto-escaped by React. Link URLs are restricted to http(s) and
+ * mailto. Color names are restricted to a fixed whitelist mapped to CSS
+ * classes; unknown names are passed through as literal text.
+ *
+ * @param {string} text - The source text.
+ * @returns {(string | ReactElement)[]} The rendered nodes.
+ */
+const renderInlineMarkdown = (text) => {
+    const nodes = [];
+    let lastIndex = 0;
+    let key = 0;
+    INLINE_MD_PATTERN.lastIndex = 0;
+    let match;
+    while ((match = INLINE_MD_PATTERN.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            nodes.push(text.slice(lastIndex, match.index));
+        }
+        if (match[1] !== undefined) {
+            nodes.push(jsx('strong', { key: key++ }, match[1]));
+        } else if (match[2] !== undefined) {
+            nodes.push(jsx('em', { key: key++ }, match[2]));
+        } else if (match[3] !== undefined) {
+            nodes.push(jsx('code', { key: key++ }, match[3]));
+        } else if (match[4] !== undefined) {
+            const href = SAFE_URL_PATTERN.test(match[5]) ? match[5] : '#';
+            nodes.push(jsx('a', {
+                key: key++,
+                href,
+                target: '_blank',
+                rel: 'noopener'
+            }, match[4]));
+        } else if (COLOR_NAMES.has(match[6])) {
+            nodes.push(jsx('span', {
+                key: key++,
+                className: `example-color-${match[6]}`
+            }, match[7]));
+        } else {
+            nodes.push(match[0]);
+        }
+        lastIndex = INLINE_MD_PATTERN.lastIndex;
+    }
+    if (lastIndex < text.length) {
+        nodes.push(text.slice(lastIndex));
+    }
+    return nodes;
+};
 
 /** @type {Record<string, string>} */
 const MOBILE_PANEL_TITLES = {
@@ -559,9 +613,10 @@ class Example extends TypedComponent {
 
     /**
      * @param {string} id - The info content id.
+     * @param {boolean} [includeDescription] - Whether to include the description block.
      * @returns {ReactElement} rendered info content.
      */
-    renderInfoContent(id) {
+    renderInfoContent(id, includeDescription = false) {
         const { description } = this.state;
         return jsx(
             Container,
@@ -569,23 +624,39 @@ class Example extends TypedComponent {
                 id,
                 class: ['example-info-content']
             },
-            description ?
-                jsx('div', {
-                    className: 'example-info-description',
-                    dangerouslySetInnerHTML: {
-                        __html: description
-                    }
-                }) :
+            includeDescription && description ?
+                jsx(
+                    'div',
+                    {
+                        className: 'example-description-body example-info-description'
+                    },
+                    renderInlineMarkdown(description)
+                ) :
                 null,
             this.renderKeybinds(),
             this.renderCredits()
         );
     }
 
+    renderDescription() {
+        const { exampleLoaded, description } = this.state;
+        if (!exampleLoaded || !description || !iframe.ready) {
+            return null;
+        }
+        return jsx(
+            'div',
+            {
+                id: 'exampleDescription',
+                className: 'example-description-body'
+            },
+            renderInlineMarkdown(description)
+        );
+    }
+
     renderInfoPanel() {
-        const { exampleLoaded, description, keybinds, credits } = this.state;
+        const { exampleLoaded, keybinds, credits } = this.state;
         const ready = exampleLoaded && iframe.ready;
-        if (!ready || (!description && !keybinds.length && !credits.length)) {
+        if (!ready || (!keybinds.length && !credits.length)) {
             return null;
         }
 
@@ -658,7 +729,7 @@ class Example extends TypedComponent {
         }
 
         if (mobilePanel === 'description') {
-            return this.renderInfoContent('mobileInfoPanel');
+            return this.renderInfoContent('mobileInfoPanel', true);
         }
 
         if (mobilePanel === 'controls') {
@@ -827,6 +898,7 @@ class Example extends TypedComponent {
                 key: iframePath,
                 src: iframePath
             }),
+            layout !== 'mobile' && this.renderDescription(),
             layout === 'mobile' ? this.renderMobile() : this.renderDesktop()
         );
     }

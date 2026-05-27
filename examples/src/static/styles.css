@@ -643,19 +643,90 @@ body {
     overflow-y: auto;
 }
 
-#descriptionPanel {
-    /* center on the bottom of the page */
+#exampleDescription {
     position: absolute;
+    top: 8px;
     left: 50%;
-    bottom: 8px;
     transform: translateX(-50%);
+    z-index: 9998;
+    box-sizing: border-box;
+    max-width: min(50%, 640px);
+    padding: 8px 16px;
+    background-color: rgba(54, 67, 70, 0.64);
+    backdrop-filter: blur(32px);
+    border-radius: 6px;
     color: #f2f2f2;
-    width: 50%;
+    font-size: 13px;
+    line-height: 1.45;
     text-align: center;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+    user-select: none;
 }
 
-#descriptionPanel a {
+.example-info-description {
+    padding: 12px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.example-info-description + .example-info-subpanel {
+    margin-top: 12px;
+}
+
+.example-description-body strong {
+    font-weight: 700;
+}
+
+.example-description-body em {
+    font-style: italic;
+}
+
+.example-description-body code {
+    font-family: inconsolatamedium, Monaco, Menlo, "Ubuntu Mono", Consolas, source-code-pro, monospace;
+    font-size: 0.92em;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.example-description-body a {
     color: #f2f2f2;
+    pointer-events: auto;
+}
+
+.example-description-body .example-color-accent,
+.example-description-body .example-color-warn,
+.example-description-body .example-color-success,
+.example-description-body .example-color-info,
+.example-description-body .example-color-muted {
+    font-weight: 700;
+}
+
+.example-description-body .example-color-accent,
+#mobileInfoPanel .example-color-accent {
+    color: #ffb380;
+}
+
+.example-description-body .example-color-warn,
+#mobileInfoPanel .example-color-warn {
+    color: #ffd966;
+}
+
+.example-description-body .example-color-success,
+#mobileInfoPanel .example-color-success {
+    color: #95e095;
+}
+
+.example-description-body .example-color-info,
+#mobileInfoPanel .example-color-info {
+    color: #a8d0f0;
+}
+
+.example-description-body .example-color-muted,
+#mobileInfoPanel .example-color-muted {
+    color: #c5cdd0;
 }
 
 .pcui-container.pcui-select-input-list.pcui-select-input-list-overlay {
@@ -686,11 +757,6 @@ body {
     color: #f2f2f2;
 }
 
-.example-info-description {
-    max-width: 100%;
-    padding: 12px;
-}
-
 #appInner.mobile #sideBar-contents,
 #appInner.mobile #controlPanel-scroll-region,
 #appInner.mobile #controlPanel-controls,
@@ -708,10 +774,6 @@ body {
     margin-top: 0;
     font-size: 12px;
     line-height: 1.35;
-}
-
-.example-info-description + .example-info-subpanel {
-    margin-top: 12px;
 }
 
 .example-info-subpanel + .example-info-subpanel {

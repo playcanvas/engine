@@ -151,9 +151,9 @@ const parseExampleConfig = (block, config) => {
         completeCredit();
     }
 
-    const html = description.join('\n').trim();
-    if (html) {
-        config.DESCRIPTION = html;
+    const text = description.join('\n').trim();
+    if (text) {
+        config.DESCRIPTION = text;
     }
 };
 

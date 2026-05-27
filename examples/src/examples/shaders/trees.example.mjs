@@ -1,8 +1,6 @@
 // @config
 //
-// <div>
-//     This example shows how to override shader chunks of StandardMaterial.
-// </div>
+// This example shows how to override shader chunks of {accent:StandardMaterial}.
 
 import * as pc from 'playcanvas';
 
