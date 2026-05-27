@@ -8,6 +8,7 @@ import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { SelectInput as OverlaySelectInput } from './OverlaySelectInput.mjs';
+import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from '../../../utils/inline-markdown.mjs';
 import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx, fragment } from '../jsx.mjs';
@@ -26,9 +27,6 @@ const CONTROLS_REACT_PCUI = /** @satisfies {typeof ReactPCUI} */ ({
     SelectInput: OverlaySelectInput
 });
 const URL_IN_TEXT_PATTERN = /(https?:\/\/[^\s)]+)/;
-const INLINE_MD_PATTERN = /\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|`([^`\n]+)`|\[([^\]\n]+)\]\(([^)\n]+)\)|\{([a-z]+):([^}\n]+)\}/g;
-const SAFE_URL_PATTERN = /^(?:https?:|mailto:)/i;
-const COLOR_NAMES = new Set(['accent', 'warn', 'success', 'info', 'muted']);
 
 /**
  * Renders a plain-text description with a markdown-lite inline subset:

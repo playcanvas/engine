@@ -1,10 +1,15 @@
 import playcanvasConfig from '@playcanvas/eslint-config';
 import globals from 'globals';
 
+import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from './utils/inline-markdown.mjs';
+
 const configLine = /^[ \t]*\/\/ @config[ \t]*$/;
 const commentLine = /^[ \t]*\/\/[^\r\n]*$/;
 const commentText = /^[ \t]*\/\/ ?(.*)$/;
 const emptyLine = /^[ \t]*$/;
+// only flag delimiters that almost never appear in prose — `**` and backticks.
+// brackets/parens/braces appear too often in legitimate text to lint reliably.
+const STRAY_DELIM_PATTERN = /\*\*|`/;
 const booleanFlags = new Set([
     'HIDDEN',
     'NO_DEVICE_SELECTOR',
@@ -100,8 +105,11 @@ const configBlockShape = {
             malformedFlag: 'Malformed @flag line.',
             missingCreditFields: 'Incomplete @credit: missing {{fields}}.',
             missingFlagValue: '@flag "{{name}}" requires a value.',
+            unclosedMarkdown: 'Unclosed markdown delimiter in description (`**` or backtick).',
+            unknownColor: 'Unknown color "{{name}}" in description. Use one of: accent, warn, success, info, muted.',
             unknownCreditField: 'Invalid @credit field "{{name}}".',
-            unknownFlag: 'Unknown @flag "{{name}}".'
+            unknownFlag: 'Unknown @flag "{{name}}".',
+            unsafeLink: 'Unsafe link URL "{{url}}" in description. Only http(s): and mailto: are allowed.'
         }
     },
 
@@ -219,6 +227,30 @@ const configBlockShape = {
                     }
                 };
 
+                const validateDescription = (line, text) => {
+                    if (!text) {
+                        return;
+                    }
+                    INLINE_MD_PATTERN.lastIndex = 0;
+                    let residue = '';
+                    let lastIndex = 0;
+                    let match;
+                    while ((match = INLINE_MD_PATTERN.exec(text)) !== null) {
+                        residue += text.slice(lastIndex, match.index);
+                        if (match[4] !== undefined && !SAFE_URL_PATTERN.test(match[5])) {
+                            report(line, 'unsafeLink', { url: match[5] });
+                        }
+                        if (match[6] !== undefined && !COLOR_NAMES.has(match[6])) {
+                            report(line, 'unknownColor', { name: match[6] });
+                        }
+                        lastIndex = INLINE_MD_PATTERN.lastIndex;
+                    }
+                    residue += text.slice(lastIndex);
+                    if (STRAY_DELIM_PATTERN.test(residue)) {
+                        report(line, 'unclosedMarkdown');
+                    }
+                };
+
                 for (let i = 0; i < lines.length; i++) {
                     if (!configLine.test(lines[i])) {
                         continue;
@@ -254,6 +286,8 @@ const configBlockShape = {
                             validateKeybind(j, text);
                         } else if (credit) {
                             credit = validateCredit(j, credit, text);
+                        } else {
+                            validateDescription(j, text);
                         }
                     }
                     reportMissing(credit, end);
