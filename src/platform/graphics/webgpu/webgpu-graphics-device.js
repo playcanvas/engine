@@ -326,6 +326,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsLinearIndexing = wgslFeatures?.has('linear_indexing');
         this.supportsUnrestrictedPointerParameters = wgslFeatures?.has('unrestricted_pointer_parameters');
         this.supportsPointerCompositeAccess = wgslFeatures?.has('pointer_composite_access');
+        this.supportsPacked4x8IntegerDotProduct = wgslFeatures?.has('packed_4x8_integer_dot_product');
 
         this.initCapsDefines();
     }

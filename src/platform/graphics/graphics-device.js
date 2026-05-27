@@ -309,6 +309,21 @@ class GraphicsDevice extends EventHandler {
     supportsPointerCompositeAccess = false;
 
     /**
+     * True if the device supports the WGSL `packed_4x8_integer_dot_product` language feature,
+     * which exposes the DP4a-family built-in functions for 8-bit packed integer dot products:
+     * `dot4U8Packed`, `dot4I8Packed`, and the `pack4x{I,U}8`, `pack4x{I,U}8Clamp`,
+     * `unpack4x{I,U}8` helpers. Useful for accelerating quantized inference and similar
+     * integer-heavy compute workloads. The `requires packed_4x8_integer_dot_product;`
+     * directive is automatically injected into WGSL shaders when this feature is available,
+     * and the shader define `CAPS_PACKED_4X8_INTEGER_DOT_PRODUCT` is set for conditional
+     * compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPacked4x8IntegerDotProduct = false;
+
+    /**
      * True if the device supports the WGSL `unrestricted_pointer_parameters` language feature,
      * which allows passing pointers in the `storage`, `uniform`, and `workgroup` address spaces
      * as function arguments. The `requires unrestricted_pointer_parameters;` directive is
@@ -711,6 +726,7 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
         if (this.supportsUnrestrictedPointerParameters) capsDefines.set('CAPS_UNRESTRICTED_POINTER_PARAMETERS', '');
         if (this.supportsPointerCompositeAccess) capsDefines.set('CAPS_POINTER_COMPOSITE_ACCESS', '');
+        if (this.supportsPacked4x8IntegerDotProduct) capsDefines.set('CAPS_PACKED_4X8_INTEGER_DOT_PRODUCT', '');
         if (this.supportsStorageTextureRead) capsDefines.set('CAPS_STORAGE_TEXTURE_READ', '');
 
         // Platform defines
