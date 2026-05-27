@@ -1,11 +1,6 @@
 // @config
 //
-// @keybinds
-// LMB / RMB: Orbit
-// Hold Shift / MMB: Pan
-// Wheel / Pinch: Zoom
-// F: Focus
-// R: Reset
+// `LMB` / `RMB` Orbit · Hold `Shift` / `MMB` Pan · `Wheel` / `Pinch` Zoom · `F` Focus · `R` Reset
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

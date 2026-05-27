@@ -18,7 +18,7 @@ import { getLayout } from '../utils.mjs';
 /**
  * @import { Observer } from '@playcanvas/observer'
  * @import { ComponentType, ReactElement } from 'react'
- * @import { Credit, Keybind, ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
+ * @import { Credit, ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
  */
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
@@ -132,7 +132,6 @@ const MOBILE_PANEL_TITLES = {
  * @property {boolean} showDeviceSelector - Show device selector.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
- * @property {Keybind[]} keybinds - Keybinds for the example.
  * @property {Credit[]} credits - Credits for the example.
  */
 
@@ -153,7 +152,6 @@ class Example extends TypedComponent {
         files: { 'example.mjs': '// loading' },
         observer: null,
         description: '',
-        keybinds: [],
         credits: []
     };
 
@@ -226,7 +224,6 @@ class Example extends TypedComponent {
             controls: null,
             showDeviceSelector: showDeviceSelector,
             description: '',
-            keybinds: [],
             credits: []
         });
     }
@@ -236,9 +233,9 @@ class Example extends TypedComponent {
      */
     async _handleExampleLoad(event) {
         const path = this.iframePath;
-        const { files, observer, description, keybinds = [], credits = [] } = event.detail;
+        const { files, observer, description, credits = [] } = event.detail;
         const controlsSrc = files['controls.mjs'];
-        if (!description && !keybinds.length && !credits.length && this.props.mobilePanel === 'description') {
+        if (!description && !credits.length && this.props.mobilePanel === 'description') {
             this.props.setMobilePanel?.(null);
         }
         if (controlsSrc) {
@@ -251,7 +248,6 @@ class Example extends TypedComponent {
                 observer,
                 files,
                 description,
-                keybinds,
                 credits
             });
         } else {
@@ -264,7 +260,6 @@ class Example extends TypedComponent {
                 observer: null,
                 files,
                 description,
-                keybinds,
                 credits
             });
         }
@@ -309,7 +304,7 @@ class Example extends TypedComponent {
      */
     async _handleUpdateFiles(event) {
         const path = this.iframePath;
-        const { files, observer, description, keybinds = [], credits = [] } = event.detail;
+        const { files, observer, description, credits = [] } = event.detail;
         const controlsSrc = files['controls.mjs'] ?? '';
         if (!files['controls.mjs']) {
             this.mergeState({
@@ -319,7 +314,6 @@ class Example extends TypedComponent {
                 controls: null,
                 observer: null,
                 description,
-                keybinds,
                 credits
             });
         }
@@ -331,7 +325,6 @@ class Example extends TypedComponent {
             controls,
             observer,
             description,
-            keybinds,
             credits
         });
         window.dispatchEvent(new CustomEvent('resetErrorBoundary'));
@@ -561,54 +554,6 @@ class Example extends TypedComponent {
         );
     }
 
-    renderKeybinds() {
-        const { keybinds } = this.state;
-        if (!keybinds.length) {
-            return null;
-        }
-
-        return jsx(
-            Panel,
-            {
-                class: ['example-info-subpanel'],
-                headerText: 'Keybinds'
-            },
-            jsx(
-                Container,
-                {
-                    class: ['example-keybinds']
-                },
-                keybinds.map((keybind, index) => jsx(
-                    'div',
-                    {
-                        className: 'example-keybind',
-                        key: index
-                    },
-                    jsx(
-                        'div',
-                        {
-                            className: 'example-keybind-inputs'
-                        },
-                        keybind.inputs.map((input, inputIndex) => jsx(
-                            'kbd',
-                            {
-                                key: inputIndex
-                            },
-                            input
-                        ))
-                    ),
-                    jsx(
-                        'div',
-                        {
-                            className: 'example-keybind-action'
-                        },
-                        keybind.action
-                    )
-                ))
-            )
-        );
-    }
-
     /**
      * @param {string} id - The info content id.
      * @param {boolean} [includeDescription] - Whether to include the description block.
@@ -631,7 +576,6 @@ class Example extends TypedComponent {
                     renderInlineMarkdown(description)
                 ) :
                 null,
-            this.renderKeybinds(),
             this.renderCredits()
         );
     }
@@ -652,9 +596,9 @@ class Example extends TypedComponent {
     }
 
     renderInfoPanel() {
-        const { exampleLoaded, keybinds, credits } = this.state;
+        const { exampleLoaded, credits } = this.state;
         const ready = exampleLoaded && iframe.ready;
-        if (!ready || (!keybinds.length && !credits.length)) {
+        if (!ready || !credits.length) {
             return null;
         }
 
@@ -757,8 +701,8 @@ class Example extends TypedComponent {
 
     renderMobileDock() {
         const { mobilePanel, setMobilePanel } = this.props;
-        const { description, keybinds, credits } = this.state;
-        const hasInfo = description || keybinds.length || credits.length;
+        const { description, credits } = this.state;
+        const hasInfo = description || credits.length;
         return jsx(
             Container,
             {

@@ -1,9 +1,6 @@
 // @config
 //
-// @keybinds
-// Click: Add sand
-// Shift-click: Remove sand
-// Space: Reset
+// `Click` Add sand · `Shift-click` Remove sand · `Space` Reset
 
 import * as pc from 'playcanvas';
 

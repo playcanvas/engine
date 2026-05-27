@@ -2,9 +2,7 @@
 //
 // 3D painting on gaussian splats using GSplatProcessor.
 //
-// @keybinds
-// RMB: Paint
-// LMB: Orbit
+// `RMB` Paint · `LMB` Orbit
 
 import * as pc from 'playcanvas';
 

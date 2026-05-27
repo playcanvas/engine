@@ -795,52 +795,6 @@ body {
     padding: 6px;
 }
 
-.example-keybinds {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    font-size: 12px;
-    line-height: 24px;
-}
-
-.example-keybind {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 6px;
-    align-items: center;
-    min-height: 24px;
-}
-
-.example-keybind-inputs {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 3px;
-    min-width: 0;
-}
-
-.example-keybind-inputs kbd {
-    display: inline-flex;
-    align-items: center;
-    min-height: 20px;
-    box-sizing: border-box;
-    padding: 0 6px;
-    border: 1px solid #6d7476;
-    border-radius: 3px;
-    background: #20292b;
-    color: #f2f2f2;
-    font-family: monospace;
-    font-size: 12px;
-    line-height: 18px;
-    white-space: nowrap;
-}
-
-.example-keybind-action {
-    min-width: 0;
-    color: #b1b8ba;
-    overflow-wrap: anywhere;
-}
-
 .example-credit {
     color: #b1b8ba;
     max-width: 100%;

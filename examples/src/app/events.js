@@ -17,15 +17,10 @@
  * @property {string} source - The credit source.
  * @property {string} license - The credit license.
  *
- * @typedef {object} Keybind
- * @property {string[]} inputs - The keybind inputs.
- * @property {string} action - The keybind action.
- *
  * @typedef {object} StateEventDetail
  * @property {Observer} observer - The PCUI observer.
  * @property {Record<string, string>} files - The example files.
  * @property {string} description - The example description.
- * @property {Keybind[]} keybinds - The example keybinds.
  * @property {Credit[]} credits - The example credits.
  *
  * @typedef {CustomEvent<StateEventDetail>} StateEvent

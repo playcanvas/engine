@@ -1,12 +1,6 @@
 // @config
 //
-// @keybinds
-// WASD: Move
-// Shift: Sprint
-// Space: Jump
-// Q: Dance
-// Mouse: Orbit camera
-// Wheel: Zoom
+// `WASD` Move · `Shift` Sprint · `Space` Jump · `Q` Dance · `Mouse` Orbit camera · `Wheel` Zoom
 //
 // @credit
 // title: Sunnyvale Heritage Park Museum

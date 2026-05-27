@@ -79,7 +79,6 @@ class ExampleLoader {
                 observer: data,
                 files,
                 description: this._config.DESCRIPTION || '',
-                keybinds: this._config.KEYBINDS || [],
                 credits: this._config.CREDITS || []
             });
         }
@@ -90,7 +89,6 @@ class ExampleLoader {
             observer: data,
             files,
             description: this._config.DESCRIPTION || '',
-            keybinds: this._config.KEYBINDS || [],
             credits: this._config.CREDITS || []
         });
 

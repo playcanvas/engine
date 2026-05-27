@@ -1,9 +1,6 @@
 // @config
 //
-// @keybinds
-// WASD: Move
-// Space: Jump
-// Mouse: Look
+// `WASD` Move · `Space` Jump · `Mouse` Look
 //
 // @credit
 // title: Sunnyvale Heritage Park Museum

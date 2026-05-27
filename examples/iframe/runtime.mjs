@@ -35,7 +35,6 @@ const blobUrls = [];
 const moduleUrls = new Map();
 const moduleUrlTasks = new Map();
 const configRegex = /^[ \t]*\/\/ @config[ \t]*(?:\r?\n[ \t]*\/\/[^\r\n]*)*(?:\r?\n|$)/gm;
-const KEYBIND_INPUT_SEPARATOR = /\s+\/\s+/;
 const CREDIT_FIELDS = ['title', 'author', 'source', 'license'];
 const CREDIT_FIELD_SET = new Set(CREDIT_FIELDS);
 
@@ -51,7 +50,6 @@ const splitFlag = (line) => {
 const parseExampleConfig = (block, config) => {
     const description = [];
     let credit = null;
-    let keybinds = false;
 
     const completeCredit = () => {
         const missing = CREDIT_FIELDS.filter(field => !credit[field]);
@@ -72,48 +70,17 @@ const parseExampleConfig = (block, config) => {
         }
         const text = match[1];
         const line = text.trim();
-        if (!line && keybinds) {
-            keybinds = false;
-            continue;
-        }
-        if (line === '@keybinds') {
+        if (line === '@credit') {
             if (credit) {
                 completeCredit();
             }
-            keybinds = true;
-        } else if (line === '@credit') {
-            if (credit) {
-                completeCredit();
-            }
-            keybinds = false;
             credit = {};
         } else if (line.startsWith('@flag ')) {
             if (credit) {
                 completeCredit();
             }
-            keybinds = false;
             const [name, val] = splitFlag(line.slice(6).trim());
             config[name.trim()] = parseValue(val);
-        } else if (keybinds) {
-            if (line.startsWith('@')) {
-                keybinds = false;
-                description.push(text);
-                continue;
-            }
-
-            const idx = line.indexOf(':');
-            const input = idx === -1 ? '' : line.slice(0, idx).trim();
-            const action = idx === -1 ? '' : line.slice(idx + 1).trim();
-            const inputs = input ? input.split(KEYBIND_INPUT_SEPARATOR) : [];
-            if (idx === -1 || !inputs.length || !action || inputs.some(value => !value)) {
-                throw new Error(`Invalid @keybinds line: ${line}`);
-            }
-
-            config.KEYBINDS ??= [];
-            config.KEYBINDS.push({
-                inputs,
-                action
-            });
         } else if (credit) {
             if (!line) {
                 continue;

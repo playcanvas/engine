@@ -1,14 +1,6 @@
 // @config
 //
-// @keybinds
-// 1: Translate
-// 2: Rotate
-// 3: Scale
-// X: Toggle world/local
-// P: Perspective
-// O: Orthographic
-// Hold Shift: Snap
-// Hold Ctrl: Non-uniform scale
+// `1` Translate · `2` Rotate · `3` Scale · `X` Toggle world/local · `P` Perspective · `O` Orthographic · Hold `Shift` Snap · Hold `Ctrl` Non-uniform scale
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

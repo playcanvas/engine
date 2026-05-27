@@ -1,14 +1,6 @@
 // @config
 //
-// @keybinds
-// WASDQE: Move
-// Hold Shift: Move fast
-// Hold Ctrl: Move slow
-// LMB / RMB: Orbit / fly
-// Hold Shift / MMB: Pan
-// Wheel / Pinch: Zoom
-// F: Focus
-// R: Reset
+// `WASDQE` Move · Hold `Shift` Move fast · Hold `Ctrl` Move slow · `LMB` / `RMB` Orbit / fly · Hold `Shift` / `MMB` Pan · `Wheel` / `Pinch` Zoom · `F` Focus · `R` Reset
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

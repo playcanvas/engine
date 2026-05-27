@@ -19,7 +19,6 @@ const booleanFlags = new Set([
     'WEBGL_DISABLED'
 ]);
 const engineTypes = new Set(['development', 'performance', 'debug']);
-const KEYBIND_INPUT_SEPARATOR = /\s+\/\s+/;
 const creditFields = ['title', 'author', 'source', 'license'];
 const creditFieldSet = new Set(creditFields);
 
@@ -101,7 +100,6 @@ const configBlockShape = {
             emptyCreditField: '@credit field "{{name}}" must not be empty.',
             invalidCreditLine: 'Invalid @credit line: expected "name: value".',
             invalidFlagValue: 'Invalid value "{{value}}" for @flag "{{name}}".',
-            invalidKeybindLine: 'Invalid @keybinds line: expected "input: action".',
             malformedFlag: 'Malformed @flag line.',
             missingCreditFields: 'Incomplete @credit: missing {{fields}}.',
             missingFlagValue: '@flag "{{name}}" requires a value.',
@@ -217,16 +215,6 @@ const configBlockShape = {
                     return creditFields.every(field => credit.fields[field]) ? null : credit;
                 };
 
-                const validateKeybind = (line, text) => {
-                    const idx = text.indexOf(':');
-                    const input = idx === -1 ? '' : text.slice(0, idx).trim();
-                    const action = idx === -1 ? '' : text.slice(idx + 1).trim();
-                    const inputs = input ? input.split(KEYBIND_INPUT_SEPARATOR) : [];
-                    if (idx === -1 || !inputs.length || !action || inputs.some(value => !value)) {
-                        report(line, 'invalidKeybindLine');
-                    }
-                };
-
                 const validateDescription = (line, text) => {
                     if (!text) {
                         return;
@@ -257,33 +245,16 @@ const configBlockShape = {
                     }
 
                     let credit = null;
-                    let keybinds = false;
                     let end = i;
                     for (let j = i + 1; j < lines.length && commentLine.test(lines[j]); j++) {
                         end = j;
                         const text = commentText.exec(lines[j])[1].trim();
-                        if (!text && keybinds) {
-                            keybinds = false;
-                            continue;
-                        }
-                        if (text === '@keybinds') {
+                        if (text === '@credit') {
                             credit = reportMissing(credit, j);
-                            keybinds = true;
-                        } else if (text === '@credit') {
-                            credit = reportMissing(credit, j);
-                            keybinds = false;
                             credit = { fields: {} };
                         } else if (text === '@flag' || text.startsWith('@flag ')) {
                             credit = reportMissing(credit, j);
-                            keybinds = false;
                             validateFlag(j, text);
-                        } else if (keybinds) {
-                            if (text.startsWith('@')) {
-                                keybinds = false;
-                                continue;
-                            }
-
-                            validateKeybind(j, text);
                         } else if (credit) {
                             credit = validateCredit(j, credit, text);
                         } else {

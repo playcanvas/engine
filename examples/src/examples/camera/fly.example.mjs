@@ -1,10 +1,6 @@
 // @config
 //
-// @keybinds
-// WASDQE: Move
-// Hold Shift: Move fast
-// Hold Ctrl: Move slow
-// LMB / RMB: Fly
+// `WASDQE` Move · Hold `Shift` Move fast · Hold `Ctrl` Move slow · `LMB` / `RMB` Fly
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

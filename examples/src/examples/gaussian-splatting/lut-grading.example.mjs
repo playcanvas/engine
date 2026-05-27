@@ -2,10 +2,7 @@
 //
 // Pick two LUTs and use Blend to crossfade between them, or enable Animate.
 //
-// @keybinds
-// WASD: Move
-// Space: Jump
-// Mouse: Look
+// `WASD` Move · `Space` Jump · `Mouse` Look
 //
 // @credit
 // title: Sunnyvale Heritage Park Museum

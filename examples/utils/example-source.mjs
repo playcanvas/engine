@@ -5,7 +5,6 @@ const regexPatterns = [
     /^\s*import\s*(?:\S.*|[\t\v\f \xa0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff])\s*;\s*$/gm
 ];
 const configRegex = /^[ \t]*\/\/ @config[ \t]*(?:\r?\n[ \t]*\/\/[^\r\n]*)*(?:\r?\n|$)/gm;
-const KEYBIND_INPUT_SEPARATOR = /\s+\/\s+/;
 const CREDIT_FIELDS = ['title', 'author', 'source', 'license'];
 const CREDIT_FIELD_SET = new Set(CREDIT_FIELDS);
 
@@ -21,7 +20,6 @@ const splitFlag = (line) => {
 const parseExampleConfig = (block, config) => {
     const description = [];
     let credit = null;
-    let keybinds = false;
 
     const completeCredit = () => {
         const missing = CREDIT_FIELDS.filter(field => !credit[field]);
@@ -42,48 +40,17 @@ const parseExampleConfig = (block, config) => {
         }
         const text = match[1];
         const line = text.trim();
-        if (!line && keybinds) {
-            keybinds = false;
-            continue;
-        }
-        if (line === '@keybinds') {
+        if (line === '@credit') {
             if (credit) {
                 completeCredit();
             }
-            keybinds = true;
-        } else if (line === '@credit') {
-            if (credit) {
-                completeCredit();
-            }
-            keybinds = false;
             credit = {};
         } else if (line.startsWith('@flag ')) {
             if (credit) {
                 completeCredit();
             }
-            keybinds = false;
             const [name, val] = splitFlag(line.slice(6).trim());
             config[name.trim()] = parseValue(val);
-        } else if (keybinds) {
-            if (line.startsWith('@')) {
-                keybinds = false;
-                description.push(text);
-                continue;
-            }
-
-            const idx = line.indexOf(':');
-            const input = idx === -1 ? '' : line.slice(0, idx).trim();
-            const action = idx === -1 ? '' : line.slice(idx + 1).trim();
-            const inputs = input ? input.split(KEYBIND_INPUT_SEPARATOR) : [];
-            if (idx === -1 || !inputs.length || !action || inputs.some(value => !value)) {
-                throw new Error(`Invalid @keybinds line: ${line}`);
-            }
-
-            config.KEYBINDS ??= [];
-            config.KEYBINDS.push({
-                inputs,
-                action
-            });
         } else if (credit) {
             if (!line) {
                 continue;
@@ -158,7 +125,6 @@ export const stripConfig = (source) => {
 /**
  * @typedef {object} ExampleConfig
  * @property {string} [DESCRIPTION] - The example description.
- * @property {{ inputs: string[], action: string }[]} [KEYBINDS] - The example keybinds.
  * @property {{ title: string, author: string, source: string, license: string }[]} [CREDITS] - Scene credits.
  * @property {boolean} [HIDDEN] - The example is hidden from the sidebar list in production builds (`npm run build`). It is still built and reachable via its URL. In development (`npm run develop`) it is still shown in the sidebar.
  * @property {'development' | 'performance' | 'debug'} [ENGINE] - The engine type.
