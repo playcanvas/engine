@@ -4,6 +4,7 @@ import { math } from '../../../core/math/math.js';
 import {
     pixelFormatInfo, isCompressedPixelFormat, getPixelFormatArrayType,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_DEPTHSTENCIL,
     SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
@@ -487,9 +488,11 @@ class WebgpuTexture {
         Debug.assert(mipLevel < this.desc.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`, this);
 
         const isImageBitmap = typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap;
-        // ImageData is always 4 bytes/pixel; the writeTexture fallback below is
-        // only safe when the destination format matches that layout.
-        const fallbackAvailable = isImageBitmap && pixelFormatInfo.get(this.texture.format)?.size === 4;
+        // ImageData from a 2D canvas is RGBA8 byte order, so the writeTexture
+        // fallback below is only correct for matching destination formats. The
+        // engine's image parsers produce exactly these two formats.
+        const fmt = this.texture.format;
+        const fallbackAvailable = isImageBitmap && (fmt === PIXELFORMAT_RGBA8 || fmt === PIXELFORMAT_SRGBA8);
 
         // If a previous upload on this device already tripped the broken-environment
         // path (see catch below), keep all subsequent ImageBitmap uploads on the
@@ -551,6 +554,18 @@ class WebgpuTexture {
         const ctx = off.getContext('2d');
         ctx.drawImage(image, 0, 0);
         const pixels = ctx.getImageData(0, 0, w, h).data;
+        // getImageData returns straight (non-premultiplied) RGBA; the native
+        // copyExternalImageToTexture path premultiplies when the destination
+        // texture asks for it. Match that behaviour here so alpha-blended
+        // content renders identically whether the fallback engaged or not.
+        if (this.texture._premultiplyAlpha) {
+            for (let i = 0; i < pixels.length; i += 4) {
+                const a = pixels[i + 3];
+                pixels[i] = (pixels[i] * a + 127) / 255 | 0;
+                pixels[i + 1] = (pixels[i + 1] * a + 127) / 255 | 0;
+                pixels[i + 2] = (pixels[i + 2] * a + 127) / 255 | 0;
+            }
+        }
         this.uploadTypedArrayData(device, new Uint8Array(pixels.buffer), mipLevel, index);
     }
 
