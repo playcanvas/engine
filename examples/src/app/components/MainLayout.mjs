@@ -84,7 +84,7 @@ class MainLayout extends TypedComponent {
         mobilePanel: null,
         mobilePanelHeight: getDefaultMobilePanelHeight(),
         mobilePanelWidth: getDefaultMobilePanelWidth(),
-        showCredits: true
+        showCredits: localStorage.getItem('showCredits') !== 'false'
     };
 
     /** @type {{ axis: 'x'|'y', position: number, size: number } | null} */
@@ -220,6 +220,7 @@ class MainLayout extends TypedComponent {
      * @param {boolean} value - Show credits state.
      */
     setShowCredits = (value) => {
+        localStorage.setItem('showCredits', `${value}`);
         this.setState({ showCredits: value });
     };
 
