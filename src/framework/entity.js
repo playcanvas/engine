@@ -473,10 +473,10 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Get the GUID value for this Entity.
+     * Get the GUID value for this Entity. The GUID is generated lazily on first access if one has
+     * not been assigned.
      *
      * @returns {string} The GUID of the Entity.
-     * @ignore
      */
     getGuid() {
         // if the guid hasn't been set yet then set it now before returning it
