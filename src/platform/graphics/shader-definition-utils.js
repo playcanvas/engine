@@ -239,6 +239,9 @@ class ShaderDefinitionUtils {
         if (device.supportsPacked4x8IntegerDotProduct) {
             code += 'requires packed_4x8_integer_dot_product;\n';
         }
+        if (device.supportsTextureAndSamplerLet) {
+            code += 'requires texture_and_sampler_let;\n';
+        }
         return code;
     }
 
