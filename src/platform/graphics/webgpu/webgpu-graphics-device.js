@@ -251,6 +251,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
         this.featureLevel = options.featureLevel;
+        this.forceImageBitmapWriteTexture = options.forceImageBitmapWriteTexture ?? false;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }

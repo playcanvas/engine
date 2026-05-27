@@ -486,6 +486,27 @@ class WebgpuTexture {
 
         Debug.assert(mipLevel < this.desc.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`, this);
 
+        // Some environments (notably headless Chrome on Linux) fail the
+        // renderer→GPU SharedImage transport behind copyExternalImageToTexture
+        // for ImageBitmap sources. When the device opts in, route ImageBitmap
+        // uploads through writeTexture via a 2D-canvas readback. Only safe for
+        // 4-byte-per-pixel formats (RGBA8/SRGBA8), which is what the engine's
+        // image parsers produce; fall through for any other format.
+        if (device.forceImageBitmapWriteTexture &&
+            typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) {
+            const formatInfo = pixelFormatInfo.get(this.texture.format);
+            if (formatInfo?.size === 4) {
+                const w = image.width;
+                const h = image.height;
+                const off = new OffscreenCanvas(w, h);
+                const ctx = off.getContext('2d');
+                ctx.drawImage(image, 0, 0);
+                const pixels = ctx.getImageData(0, 0, w, h).data;
+                this.uploadTypedArrayData(device, new Uint8Array(pixels.buffer), mipLevel, index);
+                return;
+            }
+        }
+
         const src = {
             source: image,
             origin: [0, 0],
