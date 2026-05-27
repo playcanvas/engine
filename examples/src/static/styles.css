@@ -439,8 +439,7 @@ body {
     top: 8px;
     width: 280px;
     z-index: 9999;
-    background-color: rgba(54, 67, 70, 0.64);
-    backdrop-filter: blur(32px);
+    background-color: rgba(54, 67, 70, 0.85);
     border-radius: var(--desktop-panel-radius);
     transition: opacity 500ms;
     opacity: 1;
@@ -516,8 +515,7 @@ body {
     top: inherit;
     display: flex;
     flex-direction: column;
-    background-color: rgba(54, 67, 70, 0.64);
-    backdrop-filter: blur(32px);
+    background-color: rgba(54, 67, 70, 0.85);
     min-height: 0;
     border-radius: var(--mobile-radius);
     overflow: visible;
@@ -657,8 +655,7 @@ body {
     box-sizing: border-box;
     max-width: 475px;
     padding: 8px 16px;
-    background-color: rgba(54, 67, 70, 0.64);
-    backdrop-filter: blur(32px);
+    background-color: rgba(54, 67, 70, 0.85);
     border-radius: 6px;
     color: #f2f2f2;
     font-size: 13px;
@@ -1298,8 +1295,7 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
     height: var(--mobile-dock-height);
     padding: 4px 8px;
     box-sizing: border-box;
-    background-color: rgba(54, 67, 70, 0.64);
-    backdrop-filter: blur(32px);
+    background-color: rgba(54, 67, 70, 0.85);
     border-radius: var(--mobile-radius);
     z-index: 100000;
     -webkit-tap-highlight-color: transparent;
