@@ -289,6 +289,7 @@ body {
     overflow: hidden;
     flex-grow: 1;
     position: relative;
+    container-type: inline-size;
 }
 #appInner.desktop #canvas-container {
     min-width: 445px;
@@ -644,7 +645,10 @@ body {
     transform: translateX(-50%);
     z-index: 9998;
     box-sizing: border-box;
-    max-width: 475px;
+    /* Centered description shrinks within [300, 475]px as the canvas
+       narrows, keeping clear of the controls panel (288px + 8px gap each
+       side = 592px total reserved). */
+    max-width: max(300px, min(475px, calc(100cqi - 592px)));
     padding: 8px 16px;
     background-color: rgba(54, 67, 70, 0.85);
     border-radius: 6px;
@@ -656,6 +660,19 @@ body {
     overflow-wrap: anywhere;
     pointer-events: none;
     user-select: none;
+}
+
+/* Once even the 300px minimum can't fit centered between menu and controls
+   (canvas < 892px), drop the description below the menu row and left-align
+   it. Width is now clamped against just the controls column (304px). */
+@container (max-width: 891px) {
+    #exampleDescription {
+        top: 64px;
+        left: 8px;
+        transform: none;
+        text-align: left;
+        max-width: min(475px, calc(100cqi - 304px));
+    }
 }
 
 #exampleCredits {
