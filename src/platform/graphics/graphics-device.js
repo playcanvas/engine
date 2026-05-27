@@ -296,6 +296,18 @@ class GraphicsDevice extends EventHandler {
     supportsLinearIndexing = false;
 
     /**
+     * True if the device supports the WGSL `unrestricted_pointer_parameters` language feature,
+     * which allows passing pointers in the `storage`, `uniform`, and `workgroup` address spaces
+     * as function arguments. The `requires unrestricted_pointer_parameters;` directive is
+     * automatically injected into WGSL shaders when this feature is available, and the shader
+     * define `CAPS_UNRESTRICTED_POINTER_PARAMETERS` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsUnrestrictedPointerParameters = false;
+
+    /**
      * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either
      * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
      * implementation did not expose the value.
@@ -684,6 +696,7 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
         if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
         if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
+        if (this.supportsUnrestrictedPointerParameters) capsDefines.set('CAPS_UNRESTRICTED_POINTER_PARAMETERS', '');
         if (this.supportsStorageTextureRead) capsDefines.set('CAPS_STORAGE_TEXTURE_READ', '');
 
         // Platform defines

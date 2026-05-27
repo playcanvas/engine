@@ -230,6 +230,9 @@ class ShaderDefinitionUtils {
         if (shaderType === 'compute' && device.supportsLinearIndexing) {
             code += 'requires linear_indexing;\n';
         }
+        if (device.supportsUnrestrictedPointerParameters) {
+            code += 'requires unrestricted_pointer_parameters;\n';
+        }
         return code;
     }
 
