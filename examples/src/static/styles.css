@@ -461,10 +461,6 @@ body {
     max-height: none;
 }
 
-#appInner.desktop #desktopPanelStack #infoPanel {
-    margin-top: auto;
-}
-
 #appInner.desktop #desktopPanelStack #controlPanel,
 #appInner.desktop #desktopPanelStack #infoPanel {
     position: relative;
