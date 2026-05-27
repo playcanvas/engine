@@ -296,6 +296,19 @@ class GraphicsDevice extends EventHandler {
     supportsLinearIndexing = false;
 
     /**
+     * True if the device supports the WGSL `pointer_composite_access` language feature, which
+     * provides syntactic sugar for dereferencing pointers to composite types: `p.field` and
+     * `p[i]` may be written instead of `(*p).field` and `(*p)[i]`. The
+     * `requires pointer_composite_access;` directive is automatically injected into WGSL
+     * shaders when this feature is available, and the shader define
+     * `CAPS_POINTER_COMPOSITE_ACCESS` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPointerCompositeAccess = false;
+
+    /**
      * True if the device supports the WGSL `unrestricted_pointer_parameters` language feature,
      * which allows passing pointers in the `storage`, `uniform`, and `workgroup` address spaces
      * as function arguments. The `requires unrestricted_pointer_parameters;` directive is
@@ -697,6 +710,7 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
         if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
         if (this.supportsUnrestrictedPointerParameters) capsDefines.set('CAPS_UNRESTRICTED_POINTER_PARAMETERS', '');
+        if (this.supportsPointerCompositeAccess) capsDefines.set('CAPS_POINTER_COMPOSITE_ACCESS', '');
         if (this.supportsStorageTextureRead) capsDefines.set('CAPS_STORAGE_TEXTURE_READ', '');
 
         // Platform defines
