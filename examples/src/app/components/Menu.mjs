@@ -10,11 +10,14 @@ import { getLayout } from '../utils.mjs';
  * @typedef {object} Props
  * @property {(value: boolean) => void} setShowMiniStats - The state set function .
  * @property {'mobile'|'desktop'} [layout] - Current layout.
+ * @property {boolean} showCredits - Whether the desktop credits overlay is visible.
+ * @property {(value: boolean) => void} setShowCredits - Set credits overlay visibility.
  */
 
 /**
  * @typedef {object} State
  * @property {boolean} showMiniStats - Show MiniStats state.
+ * @property {boolean} hasCredits - Whether the loaded example has any credits.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -23,7 +26,8 @@ const TypedComponent = Component;
 class Menu extends TypedComponent {
     /** @type {State} */
     state = {
-        showMiniStats: getLayout() === 'desktop'
+        showMiniStats: getLayout() === 'desktop',
+        hasCredits: false
     };
 
     mouseTimeout = null;
@@ -37,6 +41,11 @@ class Menu extends TypedComponent {
         this._handleExampleLoad = this._handleExampleLoad.bind(this);
         this._handleMiniStats = this._handleMiniStats.bind(this);
         this.toggleMiniStats = this.toggleMiniStats.bind(this);
+        this.toggleCredits = this.toggleCredits.bind(this);
+    }
+
+    toggleCredits() {
+        this.props.setShowCredits(!this.props.showCredits);
     }
 
     /** @type {EventListener | null} */
@@ -113,8 +122,13 @@ class Menu extends TypedComponent {
         }
     }
 
-    _handleExampleLoad() {
+    /**
+     * @param {Event} event - exampleLoad event.
+     */
+    _handleExampleLoad(event) {
         this.props.setShowMiniStats(this.state.showMiniStats);
+        const detail = /** @type {CustomEvent<{ credits?: unknown[] }>} */ (event).detail;
+        this.setState({ hasCredits: (detail?.credits?.length ?? 0) > 0 });
     }
 
     toggleMiniStats() {
@@ -132,7 +146,8 @@ class Menu extends TypedComponent {
     }
 
     render() {
-        const { showMiniStats } = this.state;
+        const { showMiniStats, hasCredits } = this.state;
+        const { layout, showCredits } = this.props;
         return jsx(
             Container,
             {
@@ -166,6 +181,12 @@ class Menu extends TypedComponent {
                     class: showMiniStats ? 'selected' : undefined,
                     text: '',
                     onClick: this.toggleMiniStats
+                }),
+                hasCredits && layout === 'desktop' && jsx(Button, {
+                    id: 'showCreditsButton',
+                    class: showCredits ? 'selected' : undefined,
+                    text: '',
+                    onClick: this.toggleCredits
                 }),
                 jsx(Button, {
                     icon: 'E127',

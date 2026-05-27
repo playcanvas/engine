@@ -430,8 +430,7 @@ body {
     opacity: 50%;
 }
 
-#controlPanel,
-#infoPanel {
+#controlPanel {
     --desktop-panel-radius: 6px;
 
     position: absolute;
@@ -458,10 +457,14 @@ body {
     gap: 8px;
     width: 280px;
     max-height: none;
+    pointer-events: none;
 }
 
-#appInner.desktop #desktopPanelStack #controlPanel,
-#appInner.desktop #desktopPanelStack #infoPanel {
+#desktopPanelStack > * {
+    pointer-events: auto;
+}
+
+#appInner.desktop #desktopPanelStack #controlPanel {
     position: relative;
     top: auto;
     right: auto;
@@ -470,35 +473,29 @@ body {
     max-height: none;
 }
 
-#appInner.desktop #desktopPanelStack #controlPanel > .pcui-panel-header,
-#appInner.desktop #desktopPanelStack #infoPanel > .pcui-panel-header {
+#appInner.desktop #desktopPanelStack #controlPanel > .pcui-panel-header {
     border-radius: var(--desktop-panel-radius) var(--desktop-panel-radius) 0 0;
 }
 
-#appInner.desktop #desktopPanelStack #controlPanel > .pcui-panel-content,
-#appInner.desktop #desktopPanelStack #infoPanel > .pcui-panel-content {
+#appInner.desktop #desktopPanelStack #controlPanel > .pcui-panel-content {
     border-radius: 0 0 var(--desktop-panel-radius) var(--desktop-panel-radius);
 }
 
-#appInner.desktop #desktopPanelStack #controlPanel-scroll-region,
-#appInner.desktop #desktopPanelStack #infoPanel-scroll-region {
+#appInner.desktop #desktopPanelStack #controlPanel-scroll-region {
     border-radius: 0 0 var(--desktop-panel-radius) var(--desktop-panel-radius);
 }
 
-#appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed,
-#appInner.desktop #desktopPanelStack #infoPanel.pcui-collapsed {
+#appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed {
     overflow: hidden;
     width: auto;
     min-width: 0;
 }
 
-#appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed > .pcui-panel-content,
-#appInner.desktop #desktopPanelStack #infoPanel.pcui-collapsed > .pcui-panel-content {
+#appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed > .pcui-panel-content {
     display: none;
 }
 
-#appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed > .pcui-panel-header,
-#appInner.desktop #desktopPanelStack #infoPanel.pcui-collapsed > .pcui-panel-header {
+#appInner.desktop #desktopPanelStack #controlPanel.pcui-collapsed > .pcui-panel-header {
     border-radius: var(--desktop-panel-radius);
     padding-right: 12px;
 }
@@ -611,8 +608,7 @@ body {
     min-width: 46px;
 }
 
-#controlPanel > .pcui-panel-content,
-#infoPanel > .pcui-panel-content {
+#controlPanel > .pcui-panel-content {
     background-color: #364346;
 }
 
@@ -641,11 +637,6 @@ body {
     overflow-y: auto;
 }
 
-#infoPanel-scroll-region {
-    max-height: min(260px, 35vh);
-    overflow-y: auto;
-}
-
 #exampleDescription {
     position: absolute;
     top: 8px;
@@ -665,6 +656,33 @@ body {
     overflow-wrap: anywhere;
     pointer-events: none;
     user-select: none;
+}
+
+#exampleCredits {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 9998;
+    box-sizing: border-box;
+    max-width: 475px;
+    padding: 8px 16px;
+    background-color: rgba(54, 67, 70, 0.85);
+    border-radius: 6px;
+    color: #f2f2f2;
+    font-size: 13px;
+    line-height: 1.45;
+    text-align: right;
+    pointer-events: none;
+    user-select: none;
+}
+
+#exampleCredits a {
+    color: #f2f2f2;
+    pointer-events: auto;
+}
+
+#exampleCredits .example-credit {
+    margin: 0;
 }
 
 /* When the canvas itself is too narrow for a centered overlay between the
@@ -1120,9 +1138,26 @@ body {
     max-width: 272px;
 }
 
-#menu #showMiniStatsButton.selected {
+#menu #showMiniStatsButton.selected,
+#menu #showCreditsButton.selected {
     color: white;
     background-color: #F60;
+}
+
+#menu #showCreditsButton {
+    --credits-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 1.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17Z'/%3E%3Cpath d='M12.5 7a5 5 0 1 0 0 10c1.7 0 3.2-.8 4-2.2l-1.7-1c-.5.9-1.4 1.4-2.3 1.4a3 3 0 1 1 0-6c.9 0 1.8.5 2.3 1.4l1.7-1A5 5 0 0 0 12.5 7z'/%3E%3C/svg%3E");
+}
+
+#menu #showCreditsButton::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    background-color: currentColor;
+    -webkit-mask: var(--credits-icon) no-repeat center / contain;
+    mask: var(--credits-icon) no-repeat center / contain;
 }
 
 #mobileDock {

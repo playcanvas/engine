@@ -116,6 +116,7 @@ const MOBILE_PANEL_TITLES = {
  * @property {'mobile'|'desktop'} [layout] - Current layout.
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
+ * @property {boolean} [showCredits] - Whether the desktop credits overlay is visible.
  * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
@@ -123,7 +124,6 @@ const MOBILE_PANEL_TITLES = {
  * @typedef {object} State
  * @property {'mobile' | 'desktop'} layout - The layout.
  * @property {boolean} collapsed - Collapsed or not.
- * @property {boolean} infoCollapsed - Info panel collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
  * @property {string} loadedPath - The loaded iframe path.
  * @property {{ path: string, message: string } | null} loadError - The current loading error.
@@ -143,7 +143,6 @@ class Example extends TypedComponent {
     state = {
         layout: getLayout(),
         collapsed: getLayout() === 'mobile',
-        infoCollapsed: false,
         exampleLoaded: false,
         loadedPath: '',
         loadError: null,
@@ -379,25 +378,8 @@ class Example extends TypedComponent {
         controlPanelHeader.onclick = () => this.toggleCollapse();
     }
 
-    setupInfoPanel() {
-        const panel = document.getElementById('infoPanel');
-        if (!panel) {
-            return;
-        }
-
-        const header = /** @type {HTMLElement | null} */ (
-            /** @type {unknown} */ (panel.querySelector('.pcui-panel-header'))
-        );
-        if (!header) {
-            return;
-        }
-
-        header.onclick = () => this.toggleInfoCollapse();
-    }
-
     componentDidMount() {
         this.setupControlPanel();
-        this.setupInfoPanel();
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('requestedFiles', this._handleRequestedFiles);
         window.addEventListener('orientationchange', this._onLayoutChange);
@@ -420,7 +402,6 @@ class Example extends TypedComponent {
         }
 
         this.setupControlPanel();
-        this.setupInfoPanel();
     }
 
     componentWillUnmount() {
@@ -595,29 +576,16 @@ class Example extends TypedComponent {
         );
     }
 
-    renderInfoPanel() {
+    renderCreditsOverlay() {
         const { exampleLoaded, credits } = this.state;
-        const ready = exampleLoaded && iframe.ready;
-        if (!ready || !credits.length) {
+        const { showCredits, layout } = this.props;
+        if (layout !== 'desktop' || !showCredits || !exampleLoaded || !iframe.ready || !credits.length) {
             return null;
         }
-
         return jsx(
-            Panel,
-            {
-                id: 'infoPanel',
-                class: ['desktop'],
-                headerText: 'INFO',
-                collapsible: true,
-                collapsed: this.state.infoCollapsed
-            },
-            jsx(
-                Container,
-                {
-                    id: 'infoPanel-scroll-region'
-                },
-                this.renderInfoContent('infoPanel-content')
-            )
+            'div',
+            { id: 'exampleCredits' },
+            credits.map((credit, index) => this.renderCredit(credit, index))
         );
     }
 
@@ -640,21 +608,8 @@ class Example extends TypedComponent {
         return collapsed;
     }
 
-    get infoCollapsed() {
-        const panel = document.getElementById('infoPanel');
-        if (!panel) {
-            return false;
-        }
-        const collapsed = panel.classList.contains('pcui-collapsed');
-        return collapsed;
-    }
-
     toggleCollapse() {
         this.mergeState({ collapsed: !this.collapsed });
-    }
-
-    toggleInfoCollapse() {
-        this.mergeState({ infoCollapsed: !this.infoCollapsed });
     }
 
     renderMobilePanel() {
@@ -795,8 +750,7 @@ class Example extends TypedComponent {
                         },
                         this.renderControls()
                     )
-                ),
-                this.renderInfoPanel()
+                )
             )
         );
     }
@@ -841,6 +795,7 @@ class Example extends TypedComponent {
                 src: iframePath
             }),
             layout !== 'mobile' && this.renderDescription(),
+            layout !== 'mobile' && this.renderCreditsOverlay(),
             layout === 'mobile' ? this.renderMobile() : this.renderDesktop()
         );
     }
