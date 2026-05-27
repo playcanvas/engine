@@ -1085,13 +1085,14 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // event before the camera is culling
-            scene?.fire(EVENT_PRECULL, camera);
-
             // update camera and frustum
             const renderTarget = camera.renderTarget;
             camera.frameUpdate(renderTarget);
             this.updateCameraFrustum(camera.camera);
+
+            // event before the camera is culling, fired after the frustum has been updated so
+            // listeners can rely on the current camera state
+            scene?.fire(EVENT_PRECULL, camera);
 
             // for all of its enabled layers
             const layerIds = camera.layers;
