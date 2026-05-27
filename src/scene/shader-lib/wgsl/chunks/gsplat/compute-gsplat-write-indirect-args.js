@@ -75,7 +75,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // Sort dispatch slots — delegated to the sorter-agnostic helper so this
     // shader doesn't need to know how many slots or what granularity the
     // active radix sort backend uses.
-    writeSortIndirectArgs(&indirectDispatchArgs, keygenSlot + 1u, count, uniforms.sortIndirectInfo);
+    writeSortIndirectArgs(keygenSlot + 1u, count, uniforms.sortIndirectInfo);
 
     // Write sortElementCount for sort shaders (= visibleCount)
     sortElementCountBuf[0] = count;
