@@ -70,6 +70,7 @@ function getDefaultMobilePanelWidth() {
  * @property {null|'examples'|'code'|'controls'|'description'} mobilePanel - Active mobile panel.
  * @property {number} mobilePanelHeight - Active mobile panel height.
  * @property {number} mobilePanelWidth - Active mobile panel width.
+ * @property {boolean} showCredits - Whether the desktop credits overlay is visible.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -82,7 +83,8 @@ class MainLayout extends TypedComponent {
         mobileOrientation: getMobileOrientation(),
         mobilePanel: null,
         mobilePanelHeight: getDefaultMobilePanelHeight(),
-        mobilePanelWidth: getDefaultMobilePanelWidth()
+        mobilePanelWidth: getDefaultMobilePanelWidth(),
+        showCredits: localStorage.getItem('showCredits') !== 'false'
     };
 
     /** @type {{ axis: 'x'|'y', position: number, size: number } | null} */
@@ -214,8 +216,16 @@ class MainLayout extends TypedComponent {
         iframe.fire('stats', { state: value });
     };
 
+    /**
+     * @param {boolean} value - Show credits state.
+     */
+    setShowCredits = (value) => {
+        localStorage.setItem('showCredits', `${value}`);
+        this.setState({ showCredits: value });
+    };
+
     render() {
-        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth } = this.state;
+        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth, showCredits } = this.state;
         return jsx(
             'div',
             {
@@ -252,7 +262,9 @@ class MainLayout extends TypedComponent {
                                 { id: 'main-view-wrapper' },
                                 jsx(Menu, {
                                     layout,
-                                    setShowMiniStats: this.updateShowMiniStats.bind(this)
+                                    setShowMiniStats: this.updateShowMiniStats.bind(this),
+                                    showCredits,
+                                    setShowCredits: this.setShowCredits
                                 }),
                                 jsx(
                                     Container,
@@ -262,6 +274,7 @@ class MainLayout extends TypedComponent {
                                         layout,
                                         mobilePanel,
                                         setMobilePanel: this.setMobilePanel,
+                                        showCredits,
                                         onMobilePanelDragStart: this.startMobilePanelDrag
                                     })
                                 )

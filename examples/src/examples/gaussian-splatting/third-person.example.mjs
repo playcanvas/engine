@@ -1,20 +1,12 @@
 // @config
 //
-// <div style='text-align:center'>
-//     <div>(<b>WASD</b>) Move</div>
-//     <div>(<b>Shift</b>) Sprint</div>
-//     <div>(<b>Space</b>) Jump</div>
-//     <div>(<b>Q</b>) Dance</div>
-//     <div>(<b>Mouse</b>) Orbit camera</div>
-//     <div>(<b>Wheel</b>) Zoom</div>
-// </div>
-
+// `WASD` Move · `Shift` Sprint · `Space` Jump · `Q` Dance · `Mouse` Orbit camera · `Wheel` Zoom
 //
-// Scene attribution:
-//   Title:   Sunnyvale Heritage Park Museum
-//   Author:  zeitgeistarchivescans
-//   Source:  https://superspl.at/scene/d5d397aa
-//   License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+// @credit
+// title: Sunnyvale Heritage Park Museum
+// author: zeitgeistarchivescans
+// source: https://superspl.at/scene/d5d397aa
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';

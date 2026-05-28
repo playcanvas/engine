@@ -75,12 +75,22 @@ class ExampleLoader {
             // Sets code editor component files
             // Sets example component files (for controls + description)
             // Sets mini stats enabled state based on UI
-            fire('exampleLoad', { observer: data, files, description: this._config.DESCRIPTION || '' });
+            fire('exampleLoad', {
+                observer: data,
+                files,
+                description: this._config.DESCRIPTION || '',
+                credits: this._config.CREDITS || []
+            });
         }
         this._started = true;
 
         // Updates controls UI
-        fire('updateFiles', { observer: data, files });
+        fire('updateFiles', {
+            observer: data,
+            files,
+            description: this._config.DESCRIPTION || '',
+            credits: this._config.CREDITS || []
+        });
 
         if (this._app) {
             // Report the selected variant (e.g. 'webgpu:bare') back to the UI when the

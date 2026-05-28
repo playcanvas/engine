@@ -1,12 +1,10 @@
 // @config
 //
-// <div style="color:black">
-//     3D product configurator with an HTML UI panel rendered as a WebGL texture via
-//     <b>HTML-in-Canvas</b> API. Uses <code>getElementTransform</code> for interactive hit testing —
-//     clicks and hovers on the 3D panel are handled by the browser's native DOM event system.
-//     <br>
-//     <b>Click</b> to switch shoe material variants.
-// </div>
+// 3D product configurator with an HTML UI panel rendered as a WebGL texture via
+// the {accent:HTML-in-Canvas} API. Uses {accent:getElementTransform} for
+// interactive hit testing — clicks and hovers on the 3D panel are handled by
+// the browser's native DOM event system. {accent:Click} to switch shoe
+// material variants.
 
 //
 // This example demonstrates a 3D product configurator where an interactive HTML

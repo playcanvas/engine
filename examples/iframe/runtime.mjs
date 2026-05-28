@@ -35,6 +35,8 @@ const blobUrls = [];
 const moduleUrls = new Map();
 const moduleUrlTasks = new Map();
 const configRegex = /^[ \t]*\/\/ @config[ \t]*(?:\r?\n[ \t]*\/\/[^\r\n]*)*(?:\r?\n|$)/gm;
+const CREDIT_FIELDS = ['title', 'author', 'source', 'license'];
+const CREDIT_FIELD_SET = new Set(CREDIT_FIELDS);
 
 const parseValue = (val) => {
     return val === undefined || val === 'true' ? true : val === 'false' ? false : val;
@@ -47,6 +49,19 @@ const splitFlag = (line) => {
 
 const parseExampleConfig = (block, config) => {
     const description = [];
+    let credit = null;
+
+    const completeCredit = () => {
+        const missing = CREDIT_FIELDS.filter(field => !credit[field]);
+        if (missing.length) {
+            throw new Error(`Incomplete @credit: missing ${missing.join(', ')}`);
+        }
+
+        config.CREDITS ??= [];
+        config.CREDITS.push(credit);
+        credit = null;
+    };
+
     const lines = block.split(/\r?\n/).slice(1);
     for (let i = 0; i < lines.length; i++) {
         const match = /^[ \t]*\/\/ ?(.*)$/.exec(lines[i]);
@@ -55,16 +70,57 @@ const parseExampleConfig = (block, config) => {
         }
         const text = match[1];
         const line = text.trim();
-        if (line.startsWith('@flag ')) {
+        if (line === '@credit') {
+            if (credit) {
+                completeCredit();
+            }
+            credit = {};
+        } else if (line.startsWith('@flag ')) {
+            if (credit) {
+                completeCredit();
+            }
             const [name, val] = splitFlag(line.slice(6).trim());
             config[name.trim()] = parseValue(val);
+        } else if (credit) {
+            if (!line) {
+                continue;
+            }
+
+            const idx = line.indexOf(':');
+            if (idx === -1) {
+                throw new Error(`Invalid @credit line: ${line}`);
+            }
+
+            const name = line.slice(0, idx).trim();
+            if (!CREDIT_FIELD_SET.has(name)) {
+                throw new Error(`Invalid @credit field: ${name}`);
+            }
+            if (credit[name] !== undefined) {
+                throw new Error(`Duplicate @credit field: ${name}`);
+            }
+
+            credit[name] = line.slice(idx + 1).trim();
+            let complete = true;
+            for (let j = 0; j < CREDIT_FIELDS.length; j++) {
+                if (!credit[CREDIT_FIELDS[j]]) {
+                    complete = false;
+                    break;
+                }
+            }
+            if (complete) {
+                completeCredit();
+            }
         } else {
             description.push(text);
         }
     }
-    const html = description.join('\n').trim();
-    if (html) {
-        config.DESCRIPTION = html;
+    if (credit) {
+        completeCredit();
+    }
+
+    const text = description.join('\n').trim();
+    if (text) {
+        config.DESCRIPTION = text;
     }
 };
 

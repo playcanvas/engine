@@ -1,10 +1,6 @@
 // @config
 //
-// <ul>
-//     <li>Click to add sand
-//     <li>Shift-click to remove sand
-//     <li>Press space to reset.
-// </ul>
+// `Click` Add sand · `Shift-click` Remove sand · `Space` Reset
 
 import * as pc from 'playcanvas';
 

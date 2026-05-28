@@ -1,11 +1,6 @@
 // @config
 //
-// <div style='text-align:center'>
-//     <div>Translate (1), Rotate (2), Scale (3)</div>
-//     <div>World/Local (X)</div>
-//     <div>Perspective (P), Orthographic (O)</div>
-//     <div>Snap (Hold Shift), Non-Uniform (Hold Ctrl)</div>
-// </div>
+// `1` Translate · `2` Rotate · `3` Scale · `X` Toggle world/local · `P` Perspective · `O` Orthographic · Hold `Shift` Snap · Hold `Ctrl` Non-uniform scale
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

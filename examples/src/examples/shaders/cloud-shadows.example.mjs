@@ -1,9 +1,7 @@
 // @config
 //
-// <div style='color: white;'>
-//     This example demonstrates scrolling cloud shadows using a shader chunk override on
-//     StandardMaterial.
-// </div>
+// This example demonstrates scrolling cloud shadows using a shader chunk
+// override on {accent:StandardMaterial}.
 
 import * as pc from 'playcanvas';
 

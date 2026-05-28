@@ -11,10 +11,17 @@
  */
 
 /**
+ * @typedef {object} Credit
+ * @property {string} title - The credit title.
+ * @property {string} author - The credit author.
+ * @property {string} source - The credit source.
+ * @property {string} license - The credit license.
+ *
  * @typedef {object} StateEventDetail
  * @property {Observer} observer - The PCUI observer.
  * @property {Record<string, string>} files - The example files.
  * @property {string} description - The example description.
+ * @property {Credit[]} credits - The example credits.
  *
  * @typedef {CustomEvent<StateEventDetail>} StateEvent
  */

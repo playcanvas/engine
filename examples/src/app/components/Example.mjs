@@ -8,6 +8,7 @@ import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { SelectInput as OverlaySelectInput } from './OverlaySelectInput.mjs';
+import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from '../../../utils/inline-markdown.mjs';
 import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx, fragment } from '../jsx.mjs';
@@ -17,7 +18,7 @@ import { getLayout } from '../utils.mjs';
 /**
  * @import { Observer } from '@playcanvas/observer'
  * @import { ComponentType, ReactElement } from 'react'
- * @import { ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
+ * @import { Credit, ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
  */
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
@@ -25,13 +26,65 @@ const CONTROLS_REACT_PCUI = /** @satisfies {typeof ReactPCUI} */ ({
     ...ReactPCUI,
     SelectInput: OverlaySelectInput
 });
+const URL_IN_TEXT_PATTERN = /(https?:\/\/[^\s)]+)/;
+
+/**
+ * Renders a plain-text description with a markdown-lite inline subset:
+ * `**bold**`, `*italic*`, `` `code` ``, `[text](url)`, and `{color:text}`.
+ * Output is a React node array, never an HTML string, so the text content
+ * is always auto-escaped by React. Link URLs are restricted to http(s) and
+ * mailto. Color names are restricted to a fixed whitelist mapped to CSS
+ * classes; unknown names are passed through as literal text.
+ *
+ * @param {string} text - The source text.
+ * @returns {(string | ReactElement)[]} The rendered nodes.
+ */
+const renderInlineMarkdown = (text) => {
+    const nodes = [];
+    let lastIndex = 0;
+    let key = 0;
+    INLINE_MD_PATTERN.lastIndex = 0;
+    let match;
+    while ((match = INLINE_MD_PATTERN.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            nodes.push(text.slice(lastIndex, match.index));
+        }
+        if (match[1] !== undefined) {
+            nodes.push(jsx('strong', { key: key++ }, match[1]));
+        } else if (match[2] !== undefined) {
+            nodes.push(jsx('em', { key: key++ }, match[2]));
+        } else if (match[3] !== undefined) {
+            nodes.push(jsx('code', { key: key++ }, match[3]));
+        } else if (match[4] !== undefined) {
+            const href = SAFE_URL_PATTERN.test(match[5]) ? match[5] : '#';
+            nodes.push(jsx('a', {
+                key: key++,
+                href,
+                target: '_blank',
+                rel: 'noopener'
+            }, match[4]));
+        } else if (COLOR_NAMES.has(match[6])) {
+            nodes.push(jsx('span', {
+                key: key++,
+                className: `example-color-${match[6]}`
+            }, match[7]));
+        } else {
+            nodes.push(match[0]);
+        }
+        lastIndex = INLINE_MD_PATTERN.lastIndex;
+    }
+    if (lastIndex < text.length) {
+        nodes.push(text.slice(lastIndex));
+    }
+    return nodes;
+};
 
 /** @type {Record<string, string>} */
 const MOBILE_PANEL_TITLES = {
     examples: 'EXAMPLES',
     code: 'SOURCE',
     controls: 'CONTROLS',
-    description: 'DESCRIPTION'
+    description: 'INFO'
 };
 
 /**
@@ -63,6 +116,7 @@ const MOBILE_PANEL_TITLES = {
  * @property {'mobile'|'desktop'} [layout] - Current layout.
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
+ * @property {boolean} [showCredits] - Whether the desktop credits overlay is visible.
  * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
@@ -78,6 +132,7 @@ const MOBILE_PANEL_TITLES = {
  * @property {boolean} showDeviceSelector - Show device selector.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
+ * @property {Credit[]} credits - Credits for the example.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -95,7 +150,8 @@ class Example extends TypedComponent {
         showDeviceSelector: true,
         files: { 'example.mjs': '// loading' },
         observer: null,
-        description: ''
+        description: '',
+        credits: []
     };
 
     /** @type {HTMLElement | null} */
@@ -165,7 +221,9 @@ class Example extends TypedComponent {
             loadedPath: '',
             loadError: null,
             controls: null,
-            showDeviceSelector: showDeviceSelector
+            showDeviceSelector: showDeviceSelector,
+            description: '',
+            credits: []
         });
     }
 
@@ -174,9 +232,9 @@ class Example extends TypedComponent {
      */
     async _handleExampleLoad(event) {
         const path = this.iframePath;
-        const { files, observer, description } = event.detail;
+        const { files, observer, description, credits = [] } = event.detail;
         const controlsSrc = files['controls.mjs'];
-        if (!description && this.props.mobilePanel === 'description') {
+        if (!description && !credits.length && this.props.mobilePanel === 'description') {
             this.props.setMobilePanel?.(null);
         }
         if (controlsSrc) {
@@ -188,7 +246,8 @@ class Example extends TypedComponent {
                 controls,
                 observer,
                 files,
-                description
+                description,
+                credits
             });
         } else {
             // When switching examples from one with controls to one without controls...
@@ -199,7 +258,8 @@ class Example extends TypedComponent {
                 controls: null,
                 observer: null,
                 files,
-                description
+                description,
+                credits
             });
         }
     }
@@ -243,7 +303,7 @@ class Example extends TypedComponent {
      */
     async _handleUpdateFiles(event) {
         const path = this.iframePath;
-        const { files, observer } = event.detail;
+        const { files, observer, description, credits = [] } = event.detail;
         const controlsSrc = files['controls.mjs'] ?? '';
         if (!files['controls.mjs']) {
             this.mergeState({
@@ -251,7 +311,9 @@ class Example extends TypedComponent {
                 loadedPath: path,
                 loadError: null,
                 controls: null,
-                observer: null
+                observer: null,
+                description,
+                credits
             });
         }
         const controls = await this._buildControls(controlsSrc);
@@ -260,7 +322,9 @@ class Example extends TypedComponent {
             loadedPath: path,
             loadError: null,
             controls,
-            observer
+            observer,
+            description,
+            credits
         });
         window.dispatchEvent(new CustomEvent('resetErrorBoundary'));
     }
@@ -396,24 +460,132 @@ class Example extends TypedComponent {
         );
     }
 
-    renderDescription() {
-        const { exampleLoaded, description } = this.state;
-        const layout = this.props.layout ?? this.state.layout;
-        const ready = exampleLoaded && iframe.ready;
-        if (!ready) {
-            return;
+    /**
+     * @param {string} href - link href.
+     * @param {ReactElement | string} content - link content.
+     * @returns {ReactElement} rendered link.
+     */
+    renderCreditLink(href, content) {
+        return jsx('a', {
+            href,
+            target: '_blank',
+            rel: 'noopener'
+        }, content);
+    }
+
+    /**
+     * @param {string} license - license value.
+     * @returns {ReactElement | string} rendered license.
+     */
+    renderLicenseLink(license) {
+        const match = URL_IN_TEXT_PATTERN.exec(license);
+        if (!match) {
+            return license;
         }
+
+        const label = license.slice(0, match.index).trim().replace(/\s*\($/, '').trim();
+        return this.renderCreditLink(match[1], label || 'License');
+    }
+
+    /**
+     * @param {Credit} credit - credit data.
+     * @param {number} index - credit index.
+     * @returns {ReactElement} rendered credit row.
+     */
+    renderCredit(credit, index) {
+        const source = URL_IN_TEXT_PATTERN.exec(credit.source);
+        const label = fragment(
+            jsx('span', { className: 'example-credit-title' }, credit.title),
+            ' by ',
+            jsx('span', { className: 'example-credit-author' }, credit.author)
+        );
+        return jsx(
+            'p',
+            {
+                className: 'example-credit',
+                key: index
+            },
+            source ? this.renderCreditLink(source[1], label) : label,
+            source ? null : ' \u00b7 ',
+            source ? null : credit.source,
+            ' \u00b7 ',
+            this.renderLicenseLink(credit.license)
+        );
+    }
+
+    renderCredits() {
+        const { credits } = this.state;
+        if (!credits.length) {
+            return null;
+        }
+
+        return jsx(
+            Panel,
+            {
+                class: ['example-info-subpanel'],
+                headerText: 'Credits'
+            },
+            jsx(
+                Container,
+                {
+                    class: ['example-credits']
+                },
+                credits.map((credit, index) => this.renderCredit(credit, index))
+            )
+        );
+    }
+
+    /**
+     * @param {string} id - The info content id.
+     * @param {boolean} [includeDescription] - Whether to include the description block.
+     * @returns {ReactElement} rendered info content.
+     */
+    renderInfoContent(id, includeDescription = false) {
+        const { description } = this.state;
         return jsx(
             Container,
             {
-                id: 'descriptionPanel',
-                class: layout === 'mobile' ? 'mobile' : undefined
+                id,
+                class: ['example-info-content']
             },
-            jsx('span', {
-                dangerouslySetInnerHTML: {
-                    __html: description
-                }
-            })
+            includeDescription && description ?
+                jsx(
+                    'div',
+                    {
+                        className: 'example-description-body example-info-description'
+                    },
+                    renderInlineMarkdown(description)
+                ) :
+                null,
+            this.renderCredits()
+        );
+    }
+
+    renderDescription() {
+        const { exampleLoaded, description } = this.state;
+        if (!exampleLoaded || !description || !iframe.ready) {
+            return null;
+        }
+        return jsx(
+            'div',
+            {
+                id: 'exampleDescription',
+                className: 'example-description-body'
+            },
+            renderInlineMarkdown(description)
+        );
+    }
+
+    renderCreditsOverlay() {
+        const { exampleLoaded, credits } = this.state;
+        const { showCredits, layout } = this.props;
+        if (layout !== 'desktop' || !showCredits || !exampleLoaded || !iframe.ready || !credits.length) {
+            return null;
+        }
+        return jsx(
+            'div',
+            { id: 'exampleCredits' },
+            credits.map((credit, index) => this.renderCredit(credit, index))
         );
     }
 
@@ -442,7 +614,7 @@ class Example extends TypedComponent {
 
     renderMobilePanel() {
         const { mobilePanel } = this.props;
-        const { files, description } = this.state;
+        const { files } = this.state;
 
         if (mobilePanel === 'code') {
             return jsx(CodeEditorMobile, {
@@ -454,18 +626,7 @@ class Example extends TypedComponent {
         }
 
         if (mobilePanel === 'description') {
-            return jsx(
-                Container,
-                {
-                    key: 'description',
-                    id: 'mobileDescriptionPanel'
-                },
-                jsx('span', {
-                    dangerouslySetInnerHTML: {
-                        __html: description
-                    }
-                })
-            );
+            return this.renderInfoContent('mobileInfoPanel', true);
         }
 
         if (mobilePanel === 'controls') {
@@ -495,7 +656,8 @@ class Example extends TypedComponent {
 
     renderMobileDock() {
         const { mobilePanel, setMobilePanel } = this.props;
-        const { description } = this.state;
+        const { description, credits } = this.state;
+        const hasInfo = description || credits.length;
         return jsx(
             Container,
             {
@@ -528,11 +690,11 @@ class Example extends TypedComponent {
             jsx(Button, {
                 key: 'description',
                 text: 'Info',
-                enabled: Boolean(description),
+                enabled: Boolean(hasInfo),
                 class: mobilePanel === 'description' ?
                     ['mobile-dock-button', 'mobile-dock-description', 'selected'] :
                     ['mobile-dock-button', 'mobile-dock-description'],
-                onClick: () => this.state.description && setMobilePanel?.('description')
+                onClick: () => setMobilePanel?.('description')
             })
         );
     }
@@ -566,25 +728,30 @@ class Example extends TypedComponent {
             'div',
             { style: { display: 'contents' } },
             jsx(
-                Panel,
+                'div',
                 {
-                    id: 'controlPanel',
-                    class: ['desktop'],
-                    resizable: 'top',
-                    headerText: 'CONTROLS',
-                    collapsible: true,
-                    collapsed
+                    id: 'desktopPanelStack'
                 },
-                this.renderDeviceSelector(),
                 jsx(
-                    Container,
+                    Panel,
                     {
-                        id: 'controlPanel-scroll-region'
+                        id: 'controlPanel',
+                        class: ['desktop'],
+                        resizable: 'top',
+                        headerText: 'CONTROLS',
+                        collapsible: true,
+                        collapsed
                     },
-                    this.renderControls()
+                    this.renderDeviceSelector(),
+                    jsx(
+                        Container,
+                        {
+                            id: 'controlPanel-scroll-region'
+                        },
+                        this.renderControls()
+                    )
                 )
-            ),
-            this.renderDescription()
+            )
         );
     }
 
@@ -627,6 +794,8 @@ class Example extends TypedComponent {
                 key: iframePath,
                 src: iframePath
             }),
+            layout !== 'mobile' && this.renderDescription(),
+            layout !== 'mobile' && this.renderCreditsOverlay(),
             layout === 'mobile' ? this.renderMobile() : this.renderDesktop()
         );
     }

@@ -183,11 +183,16 @@ Examples can also contain comments which allow you to define the default configu
 ```js
 // @config
 //
-// <div style='text-align:center'>
-//     <div>(<b>WASD</b>) Move</div>
-//     <div>(<b>Space</b>) Jump</div>
-//     <div>(<b>Mouse</b>) Look</div>
-// </div>
+// @keybinds
+// WASD: Move
+// Space: Jump
+// Mouse: Look
+//
+// @credit
+// title: Example Asset
+// author: Artist Name
+// source: https://example.com/asset
+// license: CC BY 4.0
 //
 // @flag HIDDEN
 // @flag ENGINE=performance

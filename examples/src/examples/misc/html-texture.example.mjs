@@ -1,11 +1,8 @@
 // @config
 //
-// <div style="color:black">
-//     Renders live HTML content directly as a WebGL texture via the <b>HTML-in-Canvas</b> API
-//     (<code>texElementImage2D</code>).
-//     <br>
-//     Includes animated CSS gradients, text glow, and a pulsing circle — all driven by standard CSS.
-// </div>
+// Renders live HTML content directly as a WebGL texture via the
+// {accent:HTML-in-Canvas} API ({accent:texElementImage2D}). Includes animated
+// CSS gradients, text glow, and a pulsing circle — all driven by standard CSS.
 
 //
 // This example demonstrates the HTML-in-Canvas API: a styled HTML element with
