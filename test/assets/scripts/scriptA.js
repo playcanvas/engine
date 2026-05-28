@@ -1,7 +1,7 @@
 const ScriptA = pc.createScript('scriptA');
 
 ScriptA.prototype.initialize = function () {
-    const guid = this.entity.getGuid();
+    const guid = this.entity.guid;
     window.initializeCalls.push(`${guid} initialize scriptA`);
     this.entity.script.on('enable', () => {
         window.initializeCalls.push(`${guid} enable scriptComponent scriptA`);
@@ -22,18 +22,18 @@ ScriptA.prototype.initialize = function () {
         window.initializeCalls.push(`${guid} state ${enabled} scriptA`);
     });
     this.on('destroy', function () {
-        window.initializeCalls.push(`${this.entity.getGuid()} destroy scriptA`);
+        window.initializeCalls.push(`${this.entity.guid} destroy scriptA`);
     });
 };
 
 ScriptA.prototype.postInitialize = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} postInitialize scriptA`);
+    window.initializeCalls.push(`${this.entity.guid} postInitialize scriptA`);
 };
 
 ScriptA.prototype.update = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} update scriptA`);
+    window.initializeCalls.push(`${this.entity.guid} update scriptA`);
 };
 
 ScriptA.prototype.postUpdate = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} postUpdate scriptA`);
+    window.initializeCalls.push(`${this.entity.guid} postUpdate scriptA`);
 };

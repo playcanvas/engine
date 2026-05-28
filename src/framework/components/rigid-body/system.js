@@ -746,7 +746,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     _storeCollision(entity, other) {
         let isNewCollision = false;
-        const guid = entity.getGuid();
+        const guid = entity.guid;
 
         this.collisions[guid] = this.collisions[guid] || { others: [], entity: entity };
 

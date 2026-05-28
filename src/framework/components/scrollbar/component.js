@@ -361,7 +361,7 @@ class ScrollbarComponent extends Component {
 
     resolveDuplicatedEntityReferenceProperties(oldScrollbar, duplicatedIdsMap) {
         if (oldScrollbar.handleEntity) {
-            this.handleEntity = duplicatedIdsMap[oldScrollbar.handleEntity.getGuid()];
+            this.handleEntity = duplicatedIdsMap[oldScrollbar.handleEntity.guid];
         }
     }
 }

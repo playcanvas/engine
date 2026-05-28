@@ -473,28 +473,48 @@ class Entity extends GraphNode {
     }
 
     /**
+     * Sets the GUID for this Entity. Note that it is unlikely that you should need to change the
+     * GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
+     *
+     * @type {string}
+     * @ignore
+     */
+    set guid(value) {
+        // remove current guid from entityIndex
+        const index = this._app._entityIndex;
+        if (this._guid) {
+            delete index[this._guid];
+        }
+
+        // add new guid to entityIndex
+        this._guid = value;
+        index[this._guid] = this;
+    }
+
+    /**
      * Gets the GUID for this Entity.
      *
      * @type {string}
      */
     get guid() {
-        return this.getGuid();
-    }
-
-    /**
-     * Get the GUID value for this Entity. The GUID is generated lazily on first access if one has
-     * not been assigned.
-     *
-     * @returns {string} The GUID of the Entity.
-     * @ignore
-     */
-    getGuid() {
         // if the guid hasn't been set yet then set it now before returning it
         if (!this._guid) {
-            this.setGuid(guid.create());
+            this.guid = guid.create();
         }
 
         return this._guid;
+    }
+
+    /**
+     * Get the GUID value for this Entity.
+     *
+     * @returns {string} The GUID of the Entity.
+     * @ignore
+     * @deprecated Use {@link Entity#guid} instead.
+     */
+    getGuid() {
+        Debug.deprecated('Entity#getGuid is deprecated. Use Entity#guid instead.');
+        return this.guid;
     }
 
     /**
@@ -503,17 +523,11 @@ class Entity extends GraphNode {
      *
      * @param {string} guid - The GUID to assign to the Entity.
      * @ignore
+     * @deprecated Use {@link Entity#guid} instead.
      */
     setGuid(guid) {
-        // remove current guid from entityIndex
-        const index = this._app._entityIndex;
-        if (this._guid) {
-            delete index[this._guid];
-        }
-
-        // add new guid to entityIndex
-        this._guid = guid;
-        index[this._guid] = this;
+        Debug.deprecated('Entity#setGuid is deprecated. Use Entity#guid instead.');
+        this.guid = guid;
     }
 
     /**
@@ -652,7 +666,7 @@ class Entity extends GraphNode {
     clone() {
         const duplicatedIdsMap = {};
         const clone = this._cloneRecursively(duplicatedIdsMap);
-        duplicatedIdsMap[this.getGuid()] = clone;
+        duplicatedIdsMap[this.guid] = clone;
 
         resolveDuplicatedEntityReferenceProperties(this, this, clone, duplicatedIdsMap);
 
@@ -699,7 +713,7 @@ class Entity extends GraphNode {
             if (oldChild instanceof Entity) {
                 const newChild = oldChild._cloneRecursively(duplicatedIdsMap);
                 clone.addChild(newChild);
-                duplicatedIdsMap[oldChild.getGuid()] = newChild;
+                duplicatedIdsMap[oldChild.guid] = newChild;
             }
         }
 
@@ -740,7 +754,7 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
                 const entityIsWithinOldSubtree = !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
 
                 if (entityIsWithinOldSubtree) {
-                    const newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId].getGuid();
+                    const newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId].guid;
 
                     if (newEntityReferenceId) {
                         newEntity.c[componentName][propertyName] = newEntityReferenceId;

@@ -192,7 +192,7 @@ class CollisionSystemImpl {
 
     // Called when the collision is cloned to another entity
     clone(entity, clone) {
-        const src = this.system.store[entity.getGuid()];
+        const src = this.system.store[entity.guid];
 
         const data = {
             enabled: src.data.enabled,

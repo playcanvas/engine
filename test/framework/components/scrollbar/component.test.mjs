@@ -208,7 +208,7 @@ describe('ScrollbarComponent', function () {
         it('accepts a GUID string and resolves via app.getEntityFromIndex', function () {
             const handle = new Entity();
             handle.addComponent('element', { type: ELEMENTTYPE_IMAGE });
-            const handleGuid = handle.getGuid();
+            const handleGuid = handle.guid;
 
             const e = new Entity();
             e.addComponent('scrollbar');
@@ -328,7 +328,7 @@ describe('ScrollbarComponent', function () {
             target.addComponent('element', { type: ELEMENTTYPE_IMAGE });
             target.addComponent('scrollbar');
 
-            const map = { [handle.getGuid()]: replacement };
+            const map = { [handle.guid]: replacement };
             target.scrollbar.resolveDuplicatedEntityReferenceProperties(source.scrollbar, map);
 
             expect(target.scrollbar.handleEntity).to.equal(replacement);

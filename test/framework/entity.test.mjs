@@ -241,7 +241,7 @@ describe('Entity', function () {
 
             const clone = entity.clone();
             expect(clone).to.be.an.instanceof(Entity);
-            expect(clone.getGuid()).to.not.equal(entity.getGuid());
+            expect(clone.guid).to.not.equal(entity.guid);
             expect(clone.name).to.equal('Test');
             for (const name in components) {
                 expect(clone[name]).to.be.an.instanceof(components[name]);
@@ -268,7 +268,7 @@ describe('Entity', function () {
 
             const clone = root.clone();
             expect(clone).to.be.an.instanceof(Entity);
-            expect(clone.getGuid()).to.not.equal(root.getGuid());
+            expect(clone.guid).to.not.equal(root.guid);
             expect(clone.name).to.equal('Test');
             for (const name in components) {
                 expect(clone[name]).to.be.an.instanceof(components[name]);
@@ -276,7 +276,7 @@ describe('Entity', function () {
             expect(clone.children.length).to.equal(root.children.length);
 
             const cloneChild = clone.findByName('Child');
-            expect(cloneChild.getGuid()).to.not.equal(child.getGuid());
+            expect(cloneChild.guid).to.not.equal(child.guid);
             for (const name in components) {
                 expect(cloneChild[name]).to.be.an.instanceof(components[name]);
             }
@@ -332,33 +332,33 @@ describe('Entity', function () {
             expect(subtree1.a_a_b.sound).to.not.equal(subtree2.a_a_b.sound);
 
             // Ensure new guids were created
-            expect(subtree1.a.getGuid()).to.not.equal(subtree2.a.getGuid());
-            expect(subtree1.a_a.getGuid()).to.not.equal(subtree2.a_a.getGuid());
-            expect(subtree1.a_b.getGuid()).to.not.equal(subtree2.a_b.getGuid());
-            expect(subtree1.a_a_a.getGuid()).to.not.equal(subtree2.a_a_a.getGuid());
-            expect(subtree1.a_a_b.getGuid()).to.not.equal(subtree2.a_a_b.getGuid());
+            expect(subtree1.a.guid).to.not.equal(subtree2.a.guid);
+            expect(subtree1.a_a.guid).to.not.equal(subtree2.a_a.guid);
+            expect(subtree1.a_b.guid).to.not.equal(subtree2.a_b.guid);
+            expect(subtree1.a_a_a.guid).to.not.equal(subtree2.a_a_a.guid);
+            expect(subtree1.a_a_b.guid).to.not.equal(subtree2.a_a_b.guid);
         });
 
         it('resolves entity property references that refer to entities within the duplicated subtree', function () {
             const subtree1 = createSubtree();
-            subtree1.a.addComponent('dummy', { myEntity1: subtree1.a_a.getGuid(), myEntity2: subtree1.a_a_b.getGuid() });
-            subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a.getGuid(), myEntity2: subtree1.a_b.getGuid() });
+            subtree1.a.addComponent('dummy', { myEntity1: subtree1.a_a.guid, myEntity2: subtree1.a_a_b.guid });
+            subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a.guid, myEntity2: subtree1.a_b.guid });
 
             const subtree2 = cloneSubtree(subtree1);
-            expect(subtree2.a.dummy.myEntity1).to.equal(subtree2.a_a.getGuid());
-            expect(subtree2.a.dummy.myEntity2).to.equal(subtree2.a_a_b.getGuid());
-            expect(subtree2.a_a_a.dummy.myEntity1).to.equal(subtree2.a.getGuid());
-            expect(subtree2.a_a_a.dummy.myEntity2).to.equal(subtree2.a_b.getGuid());
+            expect(subtree2.a.dummy.myEntity1).to.equal(subtree2.a_a.guid);
+            expect(subtree2.a.dummy.myEntity2).to.equal(subtree2.a_a_b.guid);
+            expect(subtree2.a_a_a.dummy.myEntity1).to.equal(subtree2.a.guid);
+            expect(subtree2.a_a_a.dummy.myEntity2).to.equal(subtree2.a_b.guid);
         });
 
         it('resolves entity property references that refer to the cloned entity itself', function () {
             const subtree1 = createSubtree();
-            subtree1.a.addComponent('dummy', { myEntity1: subtree1.a.getGuid() });
-            subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a_a_a.getGuid() });
+            subtree1.a.addComponent('dummy', { myEntity1: subtree1.a.guid });
+            subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a_a_a.guid });
 
             const subtree2 = cloneSubtree(subtree1);
-            expect(subtree2.a.dummy.myEntity1).to.equal(subtree2.a.getGuid());
-            expect(subtree2.a_a_a.dummy.myEntity1).to.equal(subtree2.a_a_a.getGuid());
+            expect(subtree2.a.dummy.myEntity1).to.equal(subtree2.a.guid);
+            expect(subtree2.a_a_a.dummy.myEntity1).to.equal(subtree2.a_a_a.guid);
         });
 
         it('does not attempt to resolve entity property references that refer to entities outside of the duplicated subtree', function () {
@@ -369,11 +369,11 @@ describe('Entity', function () {
             root.addChild(subtree1.a);
             root.addChild(sibling);
 
-            subtree1.a.addComponent('dummy', { myEntity1: root.getGuid(), myEntity2: sibling.getGuid() });
+            subtree1.a.addComponent('dummy', { myEntity1: root.guid, myEntity2: sibling.guid });
 
             const subtree2 = cloneSubtree(subtree1);
-            expect(subtree2.a.dummy.myEntity1).to.equal(root.getGuid());
-            expect(subtree2.a.dummy.myEntity2).to.equal(sibling.getGuid());
+            expect(subtree2.a.dummy.myEntity1).to.equal(root.guid);
+            expect(subtree2.a.dummy.myEntity2).to.equal(sibling.guid);
         });
 
         it('ignores null and undefined entity property references', function () {
@@ -395,41 +395,41 @@ describe('Entity', function () {
             subtree1.a.addComponent('script');
             subtree1.a.script.create('test', {
                 attributes: {
-                    entityAttr: subtree1.a_a.getGuid(),
-                    entityArrayAttr: [subtree1.a_a.getGuid()]
+                    entityAttr: subtree1.a_a.guid,
+                    entityArrayAttr: [subtree1.a_a.guid]
                 }
             });
-            expect(subtree1.a.script.test.entityAttr.getGuid()).to.equal(subtree1.a_a.getGuid());
+            expect(subtree1.a.script.test.entityAttr.guid).to.equal(subtree1.a_a.guid);
             expect(subtree1.a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree1.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree1.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a_a.getGuid());
+            expect(subtree1.a.script.test.entityArrayAttr[0].guid).to.equal(subtree1.a_a.guid);
 
             subtree1.a_a.addComponent('script');
             subtree1.a_a.script.create('test', {
                 attributes: {
-                    entityAttr: subtree1.a.getGuid(),
-                    entityArrayAttr: [subtree1.a.getGuid(), subtree1.a_a_a.getGuid()]
+                    entityAttr: subtree1.a.guid,
+                    entityArrayAttr: [subtree1.a.guid, subtree1.a_a_a.guid]
                 }
             });
 
-            expect(subtree1.a_a.script.test.entityAttr.getGuid()).to.equal(subtree1.a.getGuid());
+            expect(subtree1.a_a.script.test.entityAttr.guid).to.equal(subtree1.a.guid);
             expect(subtree1.a_a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree1.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree1.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
+            expect(subtree1.a_a.script.test.entityArrayAttr[0].guid).to.equal(subtree1.a.guid);
+            expect(subtree1.a_a.script.test.entityArrayAttr[1].guid).to.equal(subtree1.a_a_a.guid);
 
             const subtree2 = cloneSubtree(subtree1);
             app.root.addChild(subtree2.a);
-            expect(subtree2.a.script.test.entityAttr.getGuid()).to.equal(subtree2.a_a.getGuid());
+            expect(subtree2.a.script.test.entityAttr.guid).to.equal(subtree2.a_a.guid);
             expect(subtree2.a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree2.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree2.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree2.a_a.getGuid());
+            expect(subtree2.a.script.test.entityArrayAttr[0].guid).to.equal(subtree2.a_a.guid);
 
-            expect(subtree2.a_a.script.test.entityAttr.getGuid()).to.equal(subtree2.a.getGuid());
+            expect(subtree2.a_a.script.test.entityAttr.guid).to.equal(subtree2.a.guid);
             expect(subtree2.a_a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree2.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree2.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree2.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree2.a_a_a.getGuid());
+            expect(subtree2.a_a.script.test.entityArrayAttr[0].guid).to.equal(subtree2.a.guid);
+            expect(subtree2.a_a.script.test.entityArrayAttr[1].guid).to.equal(subtree2.a_a_a.guid);
         });
 
         it('resolves entity script attributes that refer to entities within the duplicated subtree after preloading has finished', function () {
@@ -444,42 +444,42 @@ describe('Entity', function () {
             subtree1.a.addComponent('script');
             subtree1.a.script.create('test', {
                 attributes: {
-                    entityAttr: subtree1.a_a.getGuid(),
-                    entityArrayAttr: [subtree1.a_a.getGuid()]
+                    entityAttr: subtree1.a_a.guid,
+                    entityArrayAttr: [subtree1.a_a.guid]
                 }
             });
-            expect(subtree1.a.script.test.entityAttr.getGuid()).to.equal(subtree1.a_a.getGuid());
+            expect(subtree1.a.script.test.entityAttr.guid).to.equal(subtree1.a_a.guid);
             expect(subtree1.a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree1.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree1.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a_a.getGuid());
+            expect(subtree1.a.script.test.entityArrayAttr[0].guid).to.equal(subtree1.a_a.guid);
 
             subtree1.a_a.addComponent('script');
             subtree1.a_a.script.create('test', {
                 attributes: {
-                    entityAttr: subtree1.a.getGuid(),
-                    entityArrayAttr: [subtree1.a.getGuid(), subtree1.a_a_a.getGuid()]
+                    entityAttr: subtree1.a.guid,
+                    entityArrayAttr: [subtree1.a.guid, subtree1.a_a_a.guid]
                 }
             });
 
-            expect(subtree1.a_a.script.test.entityAttr.getGuid()).to.equal(subtree1.a.getGuid());
+            expect(subtree1.a_a.script.test.entityAttr.guid).to.equal(subtree1.a.guid);
             expect(subtree1.a_a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree1.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree1.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
+            expect(subtree1.a_a.script.test.entityArrayAttr[0].guid).to.equal(subtree1.a.guid);
+            expect(subtree1.a_a.script.test.entityArrayAttr[1].guid).to.equal(subtree1.a_a_a.guid);
 
 
             const subtree2 = cloneSubtree(subtree1);
             app.root.addChild(subtree2.a);
-            expect(subtree2.a.script.test.entityAttr.getGuid()).to.equal(subtree2.a_a.getGuid());
+            expect(subtree2.a.script.test.entityAttr.guid).to.equal(subtree2.a_a.guid);
             expect(subtree2.a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree2.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree2.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree2.a_a.getGuid());
+            expect(subtree2.a.script.test.entityArrayAttr[0].guid).to.equal(subtree2.a_a.guid);
 
-            expect(subtree2.a_a.script.test.entityAttr.getGuid()).to.equal(subtree2.a.getGuid());
+            expect(subtree2.a_a.script.test.entityAttr.guid).to.equal(subtree2.a.guid);
             expect(subtree2.a_a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree2.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree2.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree2.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree2.a_a_a.getGuid());
+            expect(subtree2.a_a.script.test.entityArrayAttr[0].guid).to.equal(subtree2.a.guid);
+            expect(subtree2.a_a.script.test.entityArrayAttr[1].guid).to.equal(subtree2.a_a_a.guid);
         });
 
         it('does not attempt to resolve entity script attributes that refer to entities outside of the duplicated subtree', function () {
@@ -493,24 +493,24 @@ describe('Entity', function () {
             subtree1.a_a.addComponent('script');
             subtree1.a_a.script.create('test', {
                 attributes: {
-                    entityAttr: app.root.getGuid(),
-                    entityArrayAttr: [subtree1.a.getGuid(), app.root.getGuid()]
+                    entityAttr: app.root.guid,
+                    entityArrayAttr: [subtree1.a.guid, app.root.guid]
                 }
             });
 
-            expect(subtree1.a_a.script.test.entityAttr.getGuid()).to.equal(app.root.getGuid());
+            expect(subtree1.a_a.script.test.entityAttr.guid).to.equal(app.root.guid);
             expect(subtree1.a_a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree1.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree1.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(app.root.getGuid());
+            expect(subtree1.a_a.script.test.entityArrayAttr[0].guid).to.equal(subtree1.a.guid);
+            expect(subtree1.a_a.script.test.entityArrayAttr[1].guid).to.equal(app.root.guid);
 
             const subtree2 = cloneSubtree(subtree1);
             app.root.addChild(subtree2.a);
-            expect(subtree2.a_a.script.test.entityAttr.getGuid()).to.equal(app.root.getGuid());
+            expect(subtree2.a_a.script.test.entityAttr.guid).to.equal(app.root.guid);
             expect(subtree2.a_a.script.test.entityArrayAttr).to.be.an('array');
             expect(subtree2.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree2.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree2.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(app.root.getGuid());
+            expect(subtree2.a_a.script.test.entityArrayAttr[0].guid).to.equal(subtree2.a.guid);
+            expect(subtree2.a_a.script.test.entityArrayAttr[1].guid).to.equal(app.root.guid);
         });
 
         it('ensures that an instance of a subclass keeps its class prototype', function () {
@@ -541,14 +541,14 @@ describe('Entity', function () {
 
         it('returns same entity', function () {
             const e = new Entity();
-            expect(e.findByGuid(e.getGuid())).to.equal(e);
+            expect(e.findByGuid(e.guid)).to.equal(e);
         });
 
         it('returns direct child entity', function () {
             const e = new Entity();
             const c = new Entity();
             e.addChild(c);
-            expect(e.findByGuid(c.getGuid())).to.equal(c);
+            expect(e.findByGuid(c.guid)).to.equal(c);
         });
 
         it('returns child of child entity', function () {
@@ -557,14 +557,14 @@ describe('Entity', function () {
             const c2 = new Entity();
             e.addChild(c);
             c.addChild(c2);
-            expect(e.findByGuid(c2.getGuid())).to.equal(c2);
+            expect(e.findByGuid(c2.guid)).to.equal(c2);
         });
 
         it('does not return parent', function () {
             const e = new Entity();
             const c = new Entity();
             e.addChild(c);
-            expect(c.findByGuid(e.getGuid())).to.equal(null);
+            expect(c.findByGuid(e.guid)).to.equal(null);
         });
 
         it('does not return destroyed entity', function () {
@@ -572,7 +572,7 @@ describe('Entity', function () {
             const c = new Entity();
             e.addChild(c);
             c.destroy();
-            expect(e.findByGuid(c.getGuid())).to.equal(null);
+            expect(e.findByGuid(c.guid)).to.equal(null);
         });
 
         it('does not return entity that was removed from hierarchy', function () {
@@ -580,7 +580,7 @@ describe('Entity', function () {
             const c = new Entity();
             e.addChild(c);
             e.removeChild(c);
-            expect(e.findByGuid(c.getGuid())).to.equal(null);
+            expect(e.findByGuid(c.guid)).to.equal(null);
         });
 
         it('does not return entity that does not exist', function () {

@@ -296,7 +296,7 @@ describe('ScrollViewComponent', function () {
         it('accepts a GUID string and resolves via app.getEntityFromIndex', function () {
             const viewport = new Entity();
             viewport.addComponent('element', { type: ELEMENTTYPE_GROUP });
-            const guid = viewport.getGuid();
+            const guid = viewport.guid;
 
             const e = new Entity();
             e.addComponent('scrollview');
@@ -353,7 +353,7 @@ describe('ScrollViewComponent', function () {
         it('accepts a GUID string and resolves via app.getEntityFromIndex', function () {
             const content = new Entity();
             content.addComponent('element', { type: ELEMENTTYPE_IMAGE });
-            const guid = content.getGuid();
+            const guid = content.guid;
 
             const e = new Entity();
             e.addComponent('scrollview');
@@ -408,7 +408,7 @@ describe('ScrollViewComponent', function () {
 
         it('accepts a GUID string and resolves via app.getEntityFromIndex', function () {
             const { hScrollbar } = buildScrollViewEntity();
-            const guid = hScrollbar.getGuid();
+            const guid = hScrollbar.guid;
 
             const e = new Entity();
             e.addComponent('scrollview');
@@ -607,10 +607,10 @@ describe('ScrollViewComponent', function () {
             target.addComponent('scrollview');
 
             const map = {
-                [viewport.getGuid()]: newViewport,
-                [content.getGuid()]: newContent,
-                [hScrollbar.getGuid()]: newHScrollbar,
-                [vScrollbar.getGuid()]: newVScrollbar
+                [viewport.guid]: newViewport,
+                [content.guid]: newContent,
+                [hScrollbar.guid]: newHScrollbar,
+                [vScrollbar.guid]: newVScrollbar
             };
 
             target.scrollview.resolveDuplicatedEntityReferenceProperties(source.scrollview, map);
