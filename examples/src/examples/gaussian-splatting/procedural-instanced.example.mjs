@@ -190,8 +190,7 @@ for (let gx = 0; gx < 2; gx++) {
         for (let gz = 0; gz < 2; gz++) {
             const child = new pc.Entity(`splat_${gx}_${gy}_${gz}`);
             child.addComponent('gsplat', {
-                resource: container,
-                unified: true
+                resource: container
             });
             child.setLocalPosition(
                 (gx - 0.5) * spacing,

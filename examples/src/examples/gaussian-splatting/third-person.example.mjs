@@ -195,8 +195,7 @@ app.root.addChild(sceneRoot);
 
 const splat = new pc.Entity('sunnyvale-gsplat');
 splat.addComponent('gsplat', {
-    asset: assets.splat,
-    unified: true
+    asset: assets.splat
 });
 sceneRoot.addChild(splat);
 

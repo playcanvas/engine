@@ -760,21 +760,21 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     });
 
     const bicycle = new pc.Entity('bicycle');
-    bicycle.addComponent('gsplat', { asset: bicycleAsset, unified: true });
+    bicycle.addComponent('gsplat', { asset: bicycleAsset });
     bicycle.setLocalPosition(11.2, 0, -3.5);
     bicycle.setLocalEulerAngles(0, 90, 180);
     bicycle.setLocalScale(2, 2, 2);
     app.root.addChild(bicycle);
 
     const logo = new pc.Entity('logo');
-    logo.addComponent('gsplat', { asset: logoAsset, unified: true });
+    logo.addComponent('gsplat', { asset: logoAsset });
     logo.setLocalPosition(8, 0, 2.6);
     logo.setLocalEulerAngles(180, 0, 0);
     logo.setLocalScale(2, 2, 2);
     app.root.addChild(logo);
 
     const church = new pc.Entity('church');
-    church.addComponent('gsplat', { asset: churchAsset, unified: true });
+    church.addComponent('gsplat', { asset: churchAsset });
     church.setLocalEulerAngles(-90, 0, 0);
     app.root.addChild(church);
 

@@ -231,7 +231,7 @@ assetListLoader.load(() => {
     // Creates an editable gsplat entity with splatVisible and splatSelection streams
     const createEditableSplat = (name, asset, position, rotation, scale) => {
         const entity = new pc.Entity(name);
-        const gsplatComponent = entity.addComponent('gsplat', { asset, unified: true });
+        const gsplatComponent = entity.addComponent('gsplat', { asset });
         entity.setLocalPosition(...position);
         entity.setLocalEulerAngles(...rotation);
         entity.setLocalScale(...scale);
@@ -354,8 +354,7 @@ assetListLoader.load(() => {
         const name = `clone${cloneCounter}`;
         const entity = new pc.Entity(name);
         const gsplatComponent = entity.addComponent('gsplat', {
-            resource: container,
-            unified: true
+            resource: container
         });
         entity.setLocalPosition(aabbCenter.x + 0.1, aabbCenter.y, aabbCenter.z + 0.1);
         app.root.addChild(entity);
