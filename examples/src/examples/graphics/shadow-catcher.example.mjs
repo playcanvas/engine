@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: St Peter's Square Night
+// author: Poly Haven
+// source: https://polyhaven.com/a/st_peters_square_night
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 

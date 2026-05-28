@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: bench_wooden_01
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/bench-wooden-01-1400c9340d5049589deb43601462ac55
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

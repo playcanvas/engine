@@ -1,3 +1,23 @@
+// @config
+//
+// @credit
+// title: Chess Board
+// author: Idmental
+// source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: MorphStressTest
+// author: Ed Mackey
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/MorphStressTest/README.md
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Cross-hatching textures
+// author: Jaume Sanchez (spite)
+// source: https://github.com/spite/cross-hatching
+// license: MIT
+
 import * as pc from 'playcanvas';
 
 import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';

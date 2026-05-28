@@ -5,6 +5,12 @@
 // matching factor), and the last sphere on row 7 should look like a mirror ball.
 //
 // @flag HIDDEN
+//
+// @credit
+// title: Specular Test
+// author: Ed Mackey / Analytical Graphics, Inc.
+// source: https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/SpecularTest
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

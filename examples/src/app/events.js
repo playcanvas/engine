@@ -14,8 +14,8 @@
  * @typedef {object} Credit
  * @property {string} title - The credit title.
  * @property {string} author - The credit author.
- * @property {string} source - The credit source.
- * @property {string} license - The credit license.
+ * @property {string} [source] - The credit source (optional).
+ * @property {string} [license] - The credit license (optional).
  *
  * @typedef {object} StateEventDetail
  * @property {Observer} observer - The PCUI observer.

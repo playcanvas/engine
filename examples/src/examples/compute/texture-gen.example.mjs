@@ -1,5 +1,11 @@
 // @config
 // @flag WEBGL_DISABLED
+//
+// @credit
+// title: UXR Icosahedron
+// author: enealefons
+// source: https://sketchfab.com/3d-models/uxr-icosahedron-66c69bd0538a455197aebe81ae3a4961
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

@@ -1,6 +1,11 @@
 // @config
 //
 // Procedural shapes rendered using gaussian splats. Demonstrates lines, text and image-based splats.
+//
+// @credit
+// title: Bicycle
+// author: Stéphane Agullo
+// source: https://www.stephane-agullo.fr/
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

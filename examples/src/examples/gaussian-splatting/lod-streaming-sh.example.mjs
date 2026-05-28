@@ -1,6 +1,11 @@
 // @config
 //
 // Demonstrates LOD streaming combined with spherical harmonics for view-dependent effects.
+//
+// @credit
+// title: Skatepark
+// author: Christoph Schindelar
+// source: https://superspl.at/user?id=schindelar3d
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: Mitsubishi F-2 - Fighter Jet - Free
+// author: bohmerang
+// source: https://sketchfab.com/3d-models/mitsubishi-f-2-fighter-jet-free-d3d7244554974f499b106e6c11fe3aaf
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 import { Annotation, AnnotationManager } from 'playcanvas/scripts/esm/annotations.mjs';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

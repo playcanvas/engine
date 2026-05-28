@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: House 03 PBR
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/house-03-pbr-c56521b89188460a99235dec8bcd0ed3
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

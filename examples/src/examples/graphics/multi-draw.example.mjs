@@ -2,6 +2,12 @@
 //
 // Terrain rendering using a single draw call built from a grid of displaced planes. Each patch is a
 // sub-draw and can be culled (hidden) dynamically.
+//
+// @credit
+// title: Canyon and River Height Map
+// author: Motion Forge Pictures
+// source: https://www.motionforgepictures.com/height-maps/
+// license: CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: MorphStressTest
+// author: Ed Mackey
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/MorphStressTest/README.md
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

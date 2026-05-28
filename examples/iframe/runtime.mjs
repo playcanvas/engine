@@ -36,6 +36,7 @@ const moduleUrls = new Map();
 const moduleUrlTasks = new Map();
 const configRegex = /^[ \t]*\/\/ @config[ \t]*(?:\r?\n[ \t]*\/\/[^\r\n]*)*(?:\r?\n|$)/gm;
 const CREDIT_FIELDS = ['title', 'author', 'source', 'license'];
+const REQUIRED_CREDIT_FIELDS = ['title', 'author'];
 const CREDIT_FIELD_SET = new Set(CREDIT_FIELDS);
 
 const parseValue = (val) => {
@@ -52,7 +53,7 @@ const parseExampleConfig = (block, config) => {
     let credit = null;
 
     const completeCredit = () => {
-        const missing = CREDIT_FIELDS.filter(field => !credit[field]);
+        const missing = REQUIRED_CREDIT_FIELDS.filter(field => !credit[field]);
         if (missing.length) {
             throw new Error(`Incomplete @credit: missing ${missing.join(', ')}`);
         }
@@ -118,7 +119,21 @@ const parseExampleConfig = (block, config) => {
         completeCredit();
     }
 
-    const text = description.join('\n').trim();
+    const paragraphs = [];
+    let current = [];
+    for (const line of description) {
+        const trimmed = line.trim();
+        if (trimmed) {
+            current.push(trimmed);
+        } else if (current.length) {
+            paragraphs.push(current.join(' '));
+            current = [];
+        }
+    }
+    if (current.length) {
+        paragraphs.push(current.join(' '));
+    }
+    const text = paragraphs.join('\n').trim();
     if (text) {
         config.DESCRIPTION = text;
     }

@@ -1,3 +1,17 @@
+// @config
+//
+// @credit
+// title: Real-time Refraction Demo: Mosquito in Amber
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/real-time-refraction-demo-mosquito-in-amber-37233d6ed84844fea1ebe88069ea58d1
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Scifi Platform Stage Scene (Baked)
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/scifi-platform-stage-scene-baked-64adb59a716d43e5a8705ff6fe86c0ce
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

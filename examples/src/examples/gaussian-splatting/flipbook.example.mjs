@@ -4,6 +4,16 @@
 // files.
 //
 // @flag NO_MINISTATS
+//
+// @credit
+// title: Mirror's Edge Apartment - Interior Scene
+// author: Aurélien Martel
+// source: https://sketchfab.com/3d-models/mirrors-edge-apartment-interior-scene-9804e9f2fe284070b081c96ceaf8af96
+// license: CC BY-NC 4.0 (https://creativecommons.org/licenses/by-nc/4.0/)
+//
+// @credit
+// title: Basketball Player
+// author: azad_geniusxr
 
 import * as pc from 'playcanvas';
 import { GsplatFlipbook } from 'playcanvas/scripts/esm/gsplat/gsplat-flipbook.mjs';
