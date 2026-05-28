@@ -77,7 +77,8 @@ assetListLoader.load(() => {
         const splat = new pc.Entity(`splat-${i}`);
         splat.addComponent('gsplat', {
             asset: assets.logo,
-            castShadows: false
+            castShadows: false,
+            unified: false
         });
 
         app.root.addChild(splat);
