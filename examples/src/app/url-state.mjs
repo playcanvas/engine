@@ -1,6 +1,10 @@
+import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
+
 const WRITE_DELAY = 100;
 const STATE_PARAM = 's';
 const DEVICE_TYPES = new Set(['webgpu', 'webgpu:bare', 'webgl2', 'null']);
+const STATE_KEY_SHORT = /** @type {const} */ ({ device: 'd', ui: 'u', controls: 'c' });
+const STATE_KEY_LONG = /** @type {Record<string, string>} */ ({ d: 'device', u: 'ui', c: 'controls' });
 
 /** @typedef {Record<string, any>} StateRecord */
 /** @typedef {string | number | boolean | null | any[] | { [key: string]: any }} JsonValue */
@@ -130,19 +134,52 @@ const sanitizeControlValue = (value, path = '') => {
     return undefined;
 };
 
+/**
+ * @param {Uint8Array} bytes - Bytes to encode.
+ * @returns {string} URL-safe base64 (no padding).
+ */
+const bytesToB64Url = (bytes) => {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/[=]+$/, '');
+};
+
+/**
+ * @param {string} s - URL-safe base64 string.
+ * @returns {Uint8Array} Decoded bytes.
+ */
+const b64UrlToBytes = (s) => {
+    const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+};
+
 const initial = hashParts();
 const initialRaw = initial.params.get(STATE_PARAM);
 
 /**
- * @param {string | null} raw - Raw base64-encoded state.
+ * Payload: deflate(JSON), base64url. Top-level keys are shortened to single
+ * letters (device→d, ui→u, controls→c) to shave a few bytes before deflate.
+ *
+ * @param {string | null} raw - Encoded state from URL.
  * @returns {AppState} Decoded app state (empty if missing or malformed).
  */
 const decodeState = (raw) => {
     if (!raw) return {};
-    const [decodeErr, json] = tryCatch(() => atob(raw));
-    if (decodeErr) return {};
-    const [parseErr, value] = tryCatch(() => JSON.parse(json));
-    return parseErr || !isRecord(value) ? {} : /** @type {AppState} */ (value);
+    const [err, value] = tryCatch(() => {
+        const json = strFromU8(inflateSync(b64UrlToBytes(raw)));
+        const parsed = JSON.parse(json);
+        if (!isRecord(parsed)) return null;
+        /** @type {AppState} */
+        const out = {};
+        for (const key of Object.keys(parsed)) {
+            const long = STATE_KEY_LONG[key] ?? key;
+            out[/** @type {keyof AppState} */ (long)] = parsed[key];
+        }
+        return out;
+    });
+    return err || !value ? {} : value;
 };
 
 /** @type {AppState} */
@@ -152,12 +189,13 @@ let currentPath = initial.path;
 let timer = null;
 
 const encodeState = () => {
-    const trimmed = /** @type {AppState} */ ({});
-    if (pendingState.device) trimmed.device = pendingState.device;
-    if (pendingState.ui && Object.keys(pendingState.ui).length) trimmed.ui = pendingState.ui;
-    if (pendingState.controls && Object.keys(pendingState.controls).length) trimmed.controls = pendingState.controls;
+    /** @type {Record<string, any>} */
+    const trimmed = {};
+    if (pendingState.device) trimmed[STATE_KEY_SHORT.device] = pendingState.device;
+    if (pendingState.ui && Object.keys(pendingState.ui).length) trimmed[STATE_KEY_SHORT.ui] = pendingState.ui;
+    if (pendingState.controls && Object.keys(pendingState.controls).length) trimmed[STATE_KEY_SHORT.controls] = pendingState.controls;
     if (!Object.keys(trimmed).length) return '';
-    const [err, encoded] = tryCatch(() => btoa(JSON.stringify(trimmed)));
+    const [err, encoded] = tryCatch(() => bytesToB64Url(deflateSync(strToU8(JSON.stringify(trimmed)))));
     return err ? '' : encoded;
 };
 
