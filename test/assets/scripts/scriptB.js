@@ -1,7 +1,7 @@
 const ScriptB = pc.createScript('scriptB');
 
 ScriptB.prototype.initialize = function () {
-    const guid = this.entity.getGuid();
+    const guid = this.entity.guid;
     window.initializeCalls.push(`${guid} initialize scriptB`);
     this.entity.script.on('enable', () => {
         window.initializeCalls.push(`${guid} enable scriptB`);
@@ -13,18 +13,18 @@ ScriptB.prototype.initialize = function () {
         window.initializeCalls.push(`${guid} state ${enabled} scriptB`);
     });
     this.on('destroy', function () {
-        window.initializeCalls.push(`${this.entity.getGuid()} destroy scriptB`);
+        window.initializeCalls.push(`${this.entity.guid} destroy scriptB`);
     });
 };
 
 ScriptB.prototype.postInitialize = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} postInitialize scriptB`);
+    window.initializeCalls.push(`${this.entity.guid} postInitialize scriptB`);
 };
 
 ScriptB.prototype.update = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} update scriptB`);
+    window.initializeCalls.push(`${this.entity.guid} update scriptB`);
 };
 
 ScriptB.prototype.postUpdate = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} postUpdate scriptB`);
+    window.initializeCalls.push(`${this.entity.guid} postUpdate scriptB`);
 };

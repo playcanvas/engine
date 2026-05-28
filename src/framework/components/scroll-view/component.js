@@ -470,7 +470,7 @@ class ScrollViewComponent extends Component {
         }
 
         const isString = typeof arg === 'string';
-        if (this._viewportEntity && isString && this._viewportEntity.getGuid() === arg) {
+        if (this._viewportEntity && isString && this._viewportEntity.guid === arg) {
             return;
         }
 
@@ -512,7 +512,7 @@ class ScrollViewComponent extends Component {
         }
 
         const isString = typeof arg === 'string';
-        if (this._contentEntity && isString && this._contentEntity.getGuid() === arg) {
+        if (this._contentEntity && isString && this._contentEntity.guid === arg) {
             return;
         }
 
@@ -554,7 +554,7 @@ class ScrollViewComponent extends Component {
         }
 
         const isString = typeof arg === 'string';
-        if (this._horizontalScrollbarEntity && isString && this._horizontalScrollbarEntity.getGuid() === arg) {
+        if (this._horizontalScrollbarEntity && isString && this._horizontalScrollbarEntity.guid === arg) {
             return;
         }
 
@@ -598,7 +598,7 @@ class ScrollViewComponent extends Component {
         }
 
         const isString = typeof arg === 'string';
-        if (this._verticalScrollbarEntity && isString && this._verticalScrollbarEntity.getGuid() === arg) {
+        if (this._verticalScrollbarEntity && isString && this._verticalScrollbarEntity.guid === arg) {
             return;
         }
 
@@ -1350,16 +1350,16 @@ class ScrollViewComponent extends Component {
 
     resolveDuplicatedEntityReferenceProperties(oldScrollView, duplicatedIdsMap) {
         if (oldScrollView.viewportEntity) {
-            this.viewportEntity = duplicatedIdsMap[oldScrollView.viewportEntity.getGuid()];
+            this.viewportEntity = duplicatedIdsMap[oldScrollView.viewportEntity.guid];
         }
         if (oldScrollView.contentEntity) {
-            this.contentEntity = duplicatedIdsMap[oldScrollView.contentEntity.getGuid()];
+            this.contentEntity = duplicatedIdsMap[oldScrollView.contentEntity.guid];
         }
         if (oldScrollView.horizontalScrollbarEntity) {
-            this.horizontalScrollbarEntity = duplicatedIdsMap[oldScrollView.horizontalScrollbarEntity.getGuid()];
+            this.horizontalScrollbarEntity = duplicatedIdsMap[oldScrollView.horizontalScrollbarEntity.guid];
         }
         if (oldScrollView.verticalScrollbarEntity) {
-            this.verticalScrollbarEntity = duplicatedIdsMap[oldScrollView.verticalScrollbarEntity.getGuid()];
+            this.verticalScrollbarEntity = duplicatedIdsMap[oldScrollView.verticalScrollbarEntity.guid];
         }
     }
 }

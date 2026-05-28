@@ -401,7 +401,7 @@ class ButtonComponent extends Component {
     set imageEntity(arg) {
         if (this._imageEntity !== arg) {
             const isString = typeof arg === 'string';
-            if (this._imageEntity && isString && this._imageEntity.getGuid() === arg) {
+            if (this._imageEntity && isString && this._imageEntity.guid === arg) {
                 return;
             }
 
@@ -422,7 +422,7 @@ class ButtonComponent extends Component {
             }
 
             if (this._imageEntity) {
-                this.data.imageEntity = this._imageEntity.getGuid();
+                this.data.imageEntity = this._imageEntity.guid;
             } else if (isString && arg) {
                 this.data.imageEntity = arg;
             }
@@ -1185,7 +1185,7 @@ class ButtonComponent extends Component {
 
     resolveDuplicatedEntityReferenceProperties(oldButton, duplicatedIdsMap) {
         if (oldButton.imageEntity) {
-            this.imageEntity = duplicatedIdsMap[oldButton.imageEntity.getGuid()];
+            this.imageEntity = duplicatedIdsMap[oldButton.imageEntity.guid];
         }
     }
 }

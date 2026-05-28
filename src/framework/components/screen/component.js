@@ -107,7 +107,7 @@ class ScreenComponent extends Component {
      * the next update loop.
      */
     syncDrawOrder() {
-        this.system.queueDrawOrderSync(this.entity.getGuid(), this._processDrawOrderSync, this);
+        this.system.queueDrawOrderSync(this.entity.guid, this._processDrawOrderSync, this);
     }
 
     _recurseDrawOrderSync(e, i) {
