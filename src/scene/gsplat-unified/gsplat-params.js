@@ -28,7 +28,7 @@ import wgslPackedWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/conta
  */
 
 /**
- * Parameters for GSplat unified system.
+ * Parameters for the GSplat system.
  *
  * @category Graphics
  */
@@ -767,7 +767,7 @@ class GSplatParams {
 
     /**
      * Work buffer data format. Controls the precision and bandwidth of the intermediate work buffer
-     * used during unified GSplat rendering. Can be set to {@link GSPLATDATA_COMPACT} (20 bytes/splat)
+     * used during GSplat rendering. Can be set to {@link GSPLATDATA_COMPACT} (20 bytes/splat)
      * or {@link GSPLATDATA_LARGE} (32 bytes/splat). Defaults to {@link GSPLATDATA_COMPACT}.
      *
      * @type {string}
@@ -806,9 +806,9 @@ class GSplatParams {
 
     /**
      * A material template that can be customized by the user. Any defines, parameters, or shader
-     * chunks set on this material will be automatically applied to all GSplat components rendered
-     * in unified mode. After making changes, call {@link Material#update} to for the changes to be applied
-     * on the next frame.
+     * chunks set on this material will be automatically applied to all GSplat components. After
+     * making changes, call {@link Material#update} to for the changes to be applied on the next
+     * frame.
      *
      * @type {ShaderMaterial}
      * @example
@@ -822,7 +822,7 @@ class GSplatParams {
 
     /**
      * Format descriptor for work buffer streams. Describes the textures used by the work buffer
-     * for intermediate storage during unified rendering. Users can add extra streams via
+     * for intermediate storage during rendering. Users can add extra streams via
      * {@link GSplatFormat#addExtraStreams} for custom per-splat data.
      *
      * @type {GSplatFormat}

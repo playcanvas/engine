@@ -124,8 +124,7 @@ assetListLoader.load(() => {
     // Create player flipbook
     const player = new pc.Entity('Player');
     player.addComponent('gsplat', {
-        castShadows: true,
-        unified: true
+        castShadows: true
     });
     player.addComponent('script');
     const flipbook = player.script.create(GsplatFlipbook);

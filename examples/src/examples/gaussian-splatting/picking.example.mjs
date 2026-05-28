@@ -74,8 +74,7 @@ assetListLoader.load(() => {
         const splat = new pc.Entity(`splat-${i}`);
         splat.addComponent('gsplat', {
             asset: assets.logo,
-            castShadows: false,
-            unified: true
+            castShadows: false
         });
 
         app.root.addChild(splat);
@@ -95,7 +94,7 @@ assetListLoader.load(() => {
     });
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
-    // Enable gsplat ID for unified picking
+    // Enable gsplat ID for picking
     app.scene.gsplat.enableIds = true;
     app.scene.gsplat.alphaClip = 0.2;
     app.scene.gsplat.minPixelSize = 1;

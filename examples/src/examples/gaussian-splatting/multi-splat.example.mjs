@@ -95,8 +95,7 @@ assetListLoader.load(() => {
 
     const guitar = new pc.Entity('guitar');
     guitar.addComponent('gsplat', {
-        asset: assets.guitar,
-        unified: true
+        asset: assets.guitar
     });
     guitar.setLocalPosition(0, 0.8, 0);
     guitar.setLocalEulerAngles(0, 0, 180);
@@ -106,8 +105,7 @@ assetListLoader.load(() => {
     const createSplatInstance = (name, asset, px, py, pz, scale) => {
         const entity = new pc.Entity(name);
         entity.addComponent('gsplat', {
-            asset,
-            unified: true
+            asset
         });
         entity.setLocalPosition(px, py, pz);
         entity.setLocalEulerAngles(180, 90, 0);
@@ -124,7 +122,6 @@ assetListLoader.load(() => {
 
     app.root.addChild(camera);
 
-    // Orbit around a fixed pivot (not focusEntity — unified gsplats have no meshInstance for AABB).
     camera.addComponent('script');
     const orbitCam = /** @type {any} */ (camera.script.create('orbitCamera', {
         attributes: {

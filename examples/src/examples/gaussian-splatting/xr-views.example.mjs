@@ -62,8 +62,7 @@ assetListLoader.load(() => {
     // Create hotel gsplat
     const hotel = new pc.Entity('hotel');
     hotel.addComponent('gsplat', {
-        asset: assets.hotel,
-        unified: true
+        asset: assets.hotel
     });
     hotel.setLocalEulerAngles(180, 0, 0);
     app.root.addChild(hotel);

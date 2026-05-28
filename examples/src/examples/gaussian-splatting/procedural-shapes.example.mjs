@@ -87,8 +87,7 @@ assetListLoader.load(() => {
     // Create the bicycle gsplat
     const bicycle = new pc.Entity('Bicycle');
     bicycle.addComponent('gsplat', {
-        asset: assets.bicycle,
-        unified: true
+        asset: assets.bicycle
     });
     bicycle.setLocalEulerAngles(0, 0, 180);
     app.root.addChild(bicycle);
