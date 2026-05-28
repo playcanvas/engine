@@ -468,8 +468,7 @@ assetListLoader.load(async () => {
 
         gsplatEntity = new pc.Entity(config.name || 'gsplat'); // eslint-disable-line require-atomic-updates
         gsplatEntity.addComponent('gsplat', {
-            asset: asset,
-            unified: true
+            asset: asset
         });
         gsplatEntity.setLocalPosition(0, 0, 0);
         gsplatEntity.setLocalEulerAngles(data.get('orientation'), 0, 0);

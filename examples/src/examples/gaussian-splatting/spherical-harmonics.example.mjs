@@ -69,22 +69,20 @@ assetListLoader.load(() => {
     const skull = new pc.Entity();
     skull.addComponent('gsplat', {
         asset: assets.skull,
-        castShadows: true,
-        unified: true
+        castShadows: true
     });
     skull.setLocalPosition(-1.5, 0.05, 0);
     skull.setLocalEulerAngles(180, 90, 0);
     skull.setLocalScale(0.7, 0.7, 0.7);
     app.root.addChild(skull);
 
-    // Orbit pivot at splat (unified gsplats have no mesh AABB for focusEntity framing).
     const ORBIT_PIVOT = new pc.Vec3().copy(skull.getPosition());
     ORBIT_PIVOT.y += 0.2;
     const ORBIT_DISTANCE = 4;
     const ORBIT_INITIAL_YAW = 32;
     const ORBIT_INITIAL_PITCH = -10;
 
-    // alpha clip for unified splats (shadows / cutout); scene-level for unified path
+    // scene-level alpha clip for splats (shadows / cutout)
     app.scene.gsplat.alphaClip = 0.1;
 
     // Create an Entity with a camera component

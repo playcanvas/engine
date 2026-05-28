@@ -109,8 +109,7 @@ assetListLoader.load(() => {
     const biker = new pc.Entity('biker');
     biker.addComponent('gsplat', {
         asset: assets.biker,
-        castShadows: true,
-        unified: true
+        castShadows: true
     });
     biker.setLocalPosition(-1.5, 0.05, 0);
     biker.setLocalEulerAngles(180, 90, 0);
@@ -121,8 +120,7 @@ assetListLoader.load(() => {
     const biker2 = new pc.Entity('biker2');
     biker2.addComponent('gsplat', {
         asset: assets.biker,
-        castShadows: true,
-        unified: true
+        castShadows: true
     });
     biker2.setLocalPosition(0.5, 0.05, 0);
     biker2.setLocalEulerAngles(180, 0, 0);

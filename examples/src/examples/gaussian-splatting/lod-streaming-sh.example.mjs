@@ -139,8 +139,7 @@ assetListLoader.load(() => {
 
     const entity = new pc.Entity(config.name || 'gsplat');
     entity.addComponent('gsplat', {
-        asset: assets.church,
-        unified: true
+        asset: assets.church
     });
     entity.setLocalPosition(0, 0, 0);
     const [rotX, rotY, rotZ] = /** @type {[number, number, number]} */ (config.eulerAngles || [-90, 0, 0]);

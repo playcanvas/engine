@@ -95,8 +95,7 @@ assetListLoader.load(() => {
     // Load the gsplat scene
     const gsplatEntity = new pc.Entity('Roman-Parish');
     gsplatEntity.addComponent('gsplat', {
-        asset: assets.scene,
-        unified: true
+        asset: assets.scene
     });
     gsplatEntity.setLocalEulerAngles(270, 0, 0);
     app.root.addChild(gsplatEntity);

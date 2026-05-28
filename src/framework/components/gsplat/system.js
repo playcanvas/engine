@@ -49,10 +49,9 @@ const _properties = [
  */
 class GSplatComponentSystem extends ComponentSystem {
     /**
-     * Fired when a GSplat material is created for a camera and layer combination. In unified
-     * mode, materials are created during the first frame update when the GSplat is rendered.
-     * The handler is passed the {@link ShaderMaterial}, the {@link CameraComponent}, and
-     * the {@link Layer}.
+     * Fired when a GSplat material is created for a camera and layer combination. Materials are
+     * created during the first frame update when the GSplat is rendered. The handler is passed
+     * the {@link ShaderMaterial}, the {@link CameraComponent}, and the {@link Layer}.
      *
      * This event is useful for setting up custom material chunks and parameters before the
      * first render.
@@ -68,7 +67,7 @@ class GSplatComponentSystem extends ComponentSystem {
     static EVENT_MATERIALCREATED = 'material:created';
 
     /**
-     * Fired every frame for each camera and layer combination rendering GSplats in unified mode.
+     * Fired every frame for each camera and layer combination rendering GSplats.
      * The handler is passed the {@link CameraComponent}, the {@link Layer}, a boolean indicating
      * if the current frame has up-to-date sorting, and a number indicating how many resources are
      * loading.
@@ -179,11 +178,11 @@ class GSplatComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Gets the GSplat material used by unified GSplat rendering for the given camera and layer.
+     * Gets the GSplat material for the given camera and layer.
      *
-     * Returns null if the material hasn't been created yet. In unified mode, materials are created
-     * during the first frame update when the GSplat is rendered. To be notified immediately when
-     * materials are created, listen to the 'material:created' event on GSplatComponentSystem:
+     * Returns null if the material hasn't been created yet. Materials are created during the first
+     * frame update when the GSplat is rendered. To be notified immediately when materials are
+     * created, listen to the 'material:created' event on GSplatComponentSystem:
      *
      * @param {Camera} camera - The camera instance.
      * @param {Layer} layer - The layer instance.

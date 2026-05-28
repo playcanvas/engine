@@ -49,21 +49,6 @@ const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unifi
  * console.log(entity.gsplat.customAabb);
  * ```
  *
- * ## Unified Rendering
- *
- * The {@link unified} property enables unified rendering mode, which provides advanced features
- * for Gaussian Splats:
- *
- * - **Global Sorting**: Multiple splat components are sorted together in a single unified sort,
- *   eliminating visibility artifacts and popping effects when splat components overlap.
- * - **LOD Streaming**: Dynamically loads and renders appropriate levels of detail based on camera
- *   distance, enabling efficient rendering of massive splat scenes.
- *
- * ```javascript
- * // Enable unified rendering for advanced features
- * entity.gsplat.unified = true;
- * ```
- *
  * Relevant Engine API examples:
  *
  * - [Simple Splat Loading](https://playcanvas.github.io/#/gaussian-splatting/simple)
@@ -305,15 +290,6 @@ class GSplatComponent extends Component {
         return this._instance;
     }
 
-    /**
-     * Sets the material used to render the gsplat.
-     *
-     * **Note:** This setter is only available in legacy (deprecated) non-unified mode. In unified
-     * mode, multiple gsplat components share a single material per camera/layer combination — use
-     * {@link GSplatComponentSystem#getMaterial} instead.
-     *
-     * @param {ShaderMaterial} value - The material instance.
-     */
     set material(value) {
         if (this.unified) {
             Debug.warn(`GSplatComponent#material setter is only available in legacy non-unified mode; in unified mode use app.systems.gsplat.getMaterial(camera, layer). ${UNIFIED_LEGACY_HINT}`);
@@ -326,16 +302,6 @@ class GSplatComponent extends Component {
         }
     }
 
-    /**
-     * Gets the material used to render the gsplat.
-     *
-     * **Note:** This getter returns `null` in unified mode (the default). In unified mode, materials
-     * are organized per camera/layer combination rather than per component — use
-     * {@link GSplatComponentSystem#getMaterial} instead. Per-component materials are only available
-     * in legacy (deprecated) non-unified mode.
-     *
-     * @type {ShaderMaterial|null}
-     */
     get material() {
         if (this.unified) {
             Debug.warnOnce(`GSplatComponent#material getter returns null in unified mode; use app.systems.gsplat.getMaterial(camera, layer) instead. ${UNIFIED_LEGACY_HINT}`);
@@ -344,19 +310,6 @@ class GSplatComponent extends Component {
         return this._instance?.material ?? this._materialTmp ?? null;
     }
 
-    /**
-     * Sets whether to use the high quality or the approximate (but fast) spherical-harmonic calculation when rendering SOG data.
-     *
-     * The low quality approximation evaluates the scene's spherical harmonic contributions
-     * along the camera's Z-axis instead of using each gaussian's view vector. This results
-     * in gaussians being accurate at the center of the screen and becoming less accurate
-     * as they appear further from the center. This is a good trade-off for performance
-     * when rendering large SOG datasets, especially on mobile devices.
-     *
-     * Defaults to false.
-     *
-     * @type {boolean}
-     */
     set highQualitySH(value) {
         if (value !== this._highQualitySH) {
             this._highQualitySH = value;
@@ -364,11 +317,6 @@ class GSplatComponent extends Component {
         }
     }
 
-    /**
-     * Gets whether the high quality (true) or the fast approximate (false) spherical-harmonic calculation is used when rendering SOG data.
-     *
-     * @type {boolean}
-     */
     get highQualitySH() {
         return this._highQualitySH;
     }
@@ -569,10 +517,10 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets the work buffer update mode. Only applicable in unified rendering mode.
+     * Sets the work buffer update mode.
      *
-     * In unified mode, splat data is rendered to a work buffer only when needed (e.g., when
-     * transforms change). Can be:
+     * Splat data is rendered to a work buffer only when needed (e.g., when transforms change).
+     * Can be:
      * - {@link WORKBUFFER_UPDATE_AUTO}: Update only when needed (default).
      * - {@link WORKBUFFER_UPDATE_ONCE}: Force update this frame, then switch to AUTO.
      * - {@link WORKBUFFER_UPDATE_ALWAYS}: Update every frame.
@@ -582,8 +530,8 @@ class GSplatComponent extends Component {
      *
      * Note: {@link WORKBUFFER_UPDATE_ALWAYS} has a performance impact as it re-renders
      * all splat data to the work buffer every frame. Where possible, consider using shader
-     * customization on the unified gsplat material (`app.scene.gsplat.material`) which is
-     * applied during final rendering without re-rendering the work buffer.
+     * customization on the gsplat material (`app.scene.gsplat.material`) which is applied
+     * during final rendering without re-rendering the work buffer.
      *
      * @type {number}
      */
@@ -604,8 +552,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets custom shader code for modifying splats when written to the work buffer. Only
-     * applicable in unified rendering mode.
+     * Sets custom shader code for modifying splats when written to the work buffer.
      *
      * Must provide all three functions:
      * - `modifySplatCenter`: Modify the splat center position
@@ -920,7 +867,7 @@ class GSplatComponent extends Component {
 
     /**
      * Sets a shader parameter for this gsplat instance. Parameters set here are applied
-     * during unified rendering.
+     * during rendering.
      *
      * @param {string} name - The name of the parameter (uniform name in shader).
      * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the parameter.
@@ -953,10 +900,10 @@ class GSplatComponent extends Component {
 
     /**
      * Gets an instance texture by name. Instance textures are per-component textures defined
-     * in the resource's format with `storage: GSPLAT_STREAM_INSTANCE`. Only available in unified mode.
+     * in the resource's format with `storage: GSPLAT_STREAM_INSTANCE`.
      *
      * @param {string} name - The name of the texture.
-     * @returns {Texture|null} The texture, or null if not found or not in unified mode.
+     * @returns {Texture|null} The texture, or null if not found.
      * @example
      * // Add an instance stream to the resource format
      * resource.format.addExtraStreams([

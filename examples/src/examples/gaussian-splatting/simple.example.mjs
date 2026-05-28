@@ -79,15 +79,13 @@ assetListLoader.load(() => {
     const biker = new pc.Entity();
     biker.addComponent('gsplat', {
         asset: assets.biker,
-        castShadows: true,
-        unified: true
+        castShadows: true
     });
     biker.setLocalPosition(-1.5, 0.05, 0);
     biker.setLocalEulerAngles(180, 90, 0);
     biker.setLocalScale(0.7, 0.7, 0.7);
     app.root.addChild(biker);
 
-    // Orbit pivot at splat (unified gsplats have no mesh AABB for focusEntity framing).
     const ORBIT_PIVOT = new pc.Vec3().copy(biker.getPosition());
     ORBIT_PIVOT.y += 1;
     const ORBIT_DISTANCE = 4;
