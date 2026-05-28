@@ -31,6 +31,57 @@ import { getLayout } from '../utils.mjs';
 
 const SETTLE_WINDOW_MS = 2000;
 
+/**
+ * Walk a nested controls object, writing each leaf to a flat dot-path map.
+ * Arrays are treated as leaf values, not records.
+ *
+ * @param {any} value - Source value.
+ * @param {string} prefix - Current dot-path.
+ * @param {Record<string, any>} out - Flat map being built.
+ */
+const flattenLeaves = (value, prefix, out) => {
+    if (isRecord(value)) {
+        for (const key of Object.keys(value)) {
+            flattenLeaves(value[key], prefix ? `${prefix}.${key}` : key, out);
+        }
+        return;
+    }
+    if (prefix) {
+        out[prefix] = value;
+    }
+};
+
+/**
+ * Recursive leaf-level diff. Walks both objects in parallel and emits any leaf
+ * where current differs from baseline as a flat dot-path entry in `out`.
+ *
+ * @param {any} baseline - Baseline value at this path.
+ * @param {any} current - Current value at this path.
+ * @param {string} prefix - Current dot-path.
+ * @param {Record<string, any>} out - Diff being built.
+ */
+const diffLeaves = (baseline, current, prefix, out) => {
+    if (isRecord(current) && isRecord(baseline)) {
+        for (const key of Object.keys(current)) {
+            diffLeaves(baseline[key], current[key], prefix ? `${prefix}.${key}` : key, out);
+        }
+        return;
+    }
+    if (isRecord(current)) {
+        for (const key of Object.keys(current)) {
+            diffLeaves(undefined, current[key], prefix ? `${prefix}.${key}` : key, out);
+        }
+        return;
+    }
+    if (!prefix || valuesEqual(baseline, current)) {
+        return;
+    }
+    const safe = sanitizeControlValue(current, prefix);
+    if (safe !== undefined) {
+        out[prefix] = safe;
+    }
+};
+
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
 const CONTROLS_REACT_PCUI = /** @satisfies {typeof ReactPCUI} */ ({
     ...ReactPCUI,
@@ -183,7 +234,8 @@ class Example extends TypedComponent {
     /** @type {Record<string, any>} */
     _loadControls = {};
 
-    _settleEnd = 0;
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    _settleTimer = null;
 
     _applying = 0;
 
@@ -201,6 +253,7 @@ class Example extends TypedComponent {
         this._handleUpdateFiles = this._handleUpdateFiles.bind(this);
         this._handleControlPanelScroll = this._handleControlPanelScroll.bind(this);
         this._handleControlSet = this._handleControlSet.bind(this);
+        this._captureBaseline = this._captureBaseline.bind(this);
         this._reloadIframe = this._reloadIframe.bind(this);
     }
 
@@ -663,15 +716,21 @@ class Example extends TypedComponent {
 
     /**
      * Apply URL-provided control overrides to the observer and arm the settle window.
+     * Baseline is captured once at the end of the window so async-init `data.set` calls
+     * don't pollute it.
      *
      * @param {Observer} observer - Example observer.
      */
     applyControlState(observer) {
-        const controls = readState().controls;
-        this._loadControls = isRecord(controls) ? /** @type {Record<string, any>} */ (controls) : {};
-        const baselineSnapshot = sanitizeControlValue(observer.json());
-        this._baseline = isRecord(baselineSnapshot) ? /** @type {Record<string, any>} */ (baselineSnapshot) : {};
-        this._settleEnd = Date.now() + SETTLE_WINDOW_MS;
+        /** @type {Record<string, any>} */
+        const flat = {};
+        flattenLeaves(readState().controls, '', flat);
+        this._loadControls = flat;
+        this._baseline = {};
+        if (this._settleTimer) {
+            clearTimeout(this._settleTimer);
+        }
+        this._settleTimer = setTimeout(this._captureBaseline, SETTLE_WINDOW_MS);
         this._applying++;
         for (const path of Object.keys(this._loadControls)) {
             if (observer.has(path)) {
@@ -679,6 +738,16 @@ class Example extends TypedComponent {
             }
         }
         this._applying--;
+    }
+
+    _captureBaseline() {
+        this._settleTimer = null;
+        const { observer } = this.state;
+        if (!observer) {
+            return;
+        }
+        const snap = sanitizeControlValue(observer.json());
+        this._baseline = isRecord(snap) ? /** @type {Record<string, any>} */ (snap) : {};
     }
 
     /**
@@ -690,7 +759,10 @@ class Example extends TypedComponent {
         if (!observer) {
             this._baseline = {};
             this._loadControls = {};
-            this._settleEnd = 0;
+            if (this._settleTimer) {
+                clearTimeout(this._settleTimer);
+                this._settleTimer = null;
+            }
         }
         if (observer) {
             this._observerHandle = observer.on('*:set', this._handleControlSet);
@@ -698,16 +770,14 @@ class Example extends TypedComponent {
     }
 
     /**
-     * Within the settle window (~2s after example load), observer mutations are
-     * treated as the example finishing its async init — they update the local
-     * baseline rather than writing the URL. URL-provided overrides take priority
-     * over init's value during this window. After the window, any mutation is a
-     * user change and gets diffed into pendingState.controls.
+     * Within the settle window the example is still doing async init; observer
+     * mutations during that window are ignored except when they would clobber a
+     * URL-provided override (parent set or exact path). After the window closes,
+     * mutations are diffed against the captured baseline and written to the URL.
      *
      * @param {string} path - Observer path.
-     * @param {any} value - New value.
      */
-    _handleControlSet(path, value) {
+    _handleControlSet(path) {
         if (isVolatileControlPath(path) || this._applying > 0) {
             return;
         }
@@ -715,16 +785,16 @@ class Example extends TypedComponent {
         if (!observer) {
             return;
         }
-        if (Date.now() < this._settleEnd) {
-            if (path in this._loadControls && !valuesEqual(value, this._loadControls[path])) {
-                this._applying++;
-                observer.set(path, this._loadControls[path]);
-                this._applying--;
-                return;
-            }
-            const safe = sanitizeControlValue(value, path);
-            if (safe !== undefined) {
-                this._baseline[path] = safe;
+        if (this._settleTimer !== null) {
+            for (const urlPath of Object.keys(this._loadControls)) {
+                const touched = urlPath === path ||
+                    urlPath.startsWith(`${path}.`) ||
+                    path.startsWith(`${urlPath}.`);
+                if (touched && !valuesEqual(observer.get(urlPath), this._loadControls[urlPath])) {
+                    this._applying++;
+                    observer.set(urlPath, this._loadControls[urlPath]);
+                    this._applying--;
+                }
             }
             return;
         }
@@ -736,14 +806,9 @@ class Example extends TypedComponent {
      */
     _writeControlsDiff(observer) {
         const current = sanitizeControlValue(observer.json());
-        const safeCurrent = /** @type {Record<string, any>} */ (isRecord(current) ? current : {});
         /** @type {Record<string, any>} */
         const diff = {};
-        for (const path of Object.keys(safeCurrent)) {
-            if (!valuesEqual(safeCurrent[path], this._baseline[path])) {
-                diff[path] = safeCurrent[path];
-            }
-        }
+        diffLeaves(this._baseline, isRecord(current) ? current : {}, '', diff);
         patchState({ controls: diff });
     }
 
