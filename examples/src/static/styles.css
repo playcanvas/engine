@@ -1522,7 +1522,9 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
 
 #appInner.fullscreen #controlPanel,
 #appInner.fullscreen #desktopPanelStack,
-#appInner.fullscreen #sideBar {
+#appInner.fullscreen #sideBar,
+#appInner.fullscreen #exampleCredits,
+#appInner.fullscreen #showCreditsButton {
     display: none;
 }
 
