@@ -119,7 +119,6 @@ assetListLoader.load(() => {
     camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            focusEntity: guitar,
             distanceMax: 3.2,
             frameOnStart: false
         }
@@ -127,4 +126,9 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
+
+    // orbit around the statue's world-space centre
+    const orbitPivot = new pc.Vec3();
+    hotel.getWorldTransform().transformPoint(new pc.Vec3(0, 0.2, 0), orbitPivot);
+    camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(3, 1, 0.5), orbitPivot);
 });
