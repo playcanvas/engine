@@ -1,6 +1,5 @@
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 
-const WRITE_DELAY = 100;
 const STATE_PARAM = 's';
 const DEVICE_TYPES = new Set(['webgpu', 'webgpu:bare', 'webgl2', 'null']);
 const STATE_KEY_SHORT = /** @type {const} */ ({ device: 'd', ui: 'u', controls: 'c' });
@@ -183,10 +182,8 @@ const decodeState = (raw) => {
 };
 
 /** @type {AppState} */
-let pendingState = decodeState(initialRaw);
+const pendingState = decodeState(initialRaw);
 let currentPath = initial.path;
-/** @type {ReturnType<typeof setTimeout> | null} */
-let timer = null;
 
 const encodeState = () => {
     /** @type {Record<string, any>} */
@@ -199,56 +196,37 @@ const encodeState = () => {
     return err ? '' : encoded;
 };
 
-const flush = () => {
-    timer = null;
-    const { path } = hashParts();
-    currentPath = path;
-    const encoded = encodeState();
-    const url = new URL(window.location.href);
-    url.hash = encoded ? `${path}?${STATE_PARAM}=${encoded}` : path;
-    if (url.href !== window.location.href) {
-        window.history.replaceState(window.history.state, '', url);
-    }
-};
-
-const queueWrite = () => {
-    if (timer) {
-        clearTimeout(timer);
-    }
-    timer = setTimeout(flush, WRITE_DELAY);
-};
-
 /**
- * Re-read the current URL hash. Used after react-router navigation strips our `?s=` —
- * if the path changed, drop any pending controls (they were for the previous example).
- *
- * @returns {AppState} Current pending state.
+ * On example change (react-router pushState), drop the controls slice — it was
+ * scoped to the previous example. Keep ui + device because those are global.
  */
-const syncFromCurrentHash = () => {
-    const { path, params } = hashParts();
+const syncPath = () => {
+    const { path } = hashParts();
     if (path !== currentPath) {
         currentPath = path;
-        const raw = params.get(STATE_PARAM);
-        pendingState = decodeState(raw);
+        pendingState.controls = {};
     }
-    return pendingState;
 };
 
 export const getHashPath = () => hashParts().path;
 
 /**
- * @returns {AppState} Current app state from the URL.
+ * @returns {AppState} Current in-memory app state.
  */
-export const readState = () => syncFromCurrentHash();
+export const readState = () => {
+    syncPath();
+    return pendingState;
+};
 
 /**
- * Shallow-merge a state slice and queue a write. Nested `ui` and `controls` are
- * merged key-by-key so independent components don't trample each other.
+ * Shallow-merge a state slice into the in-memory state. Does NOT write the URL —
+ * the URL only gets built on demand by `buildShareUrl()`. Components call this
+ * as they always have so the share button has fresh data when clicked.
  *
  * @param {AppState} patch - State patch.
  */
 export const patchState = (patch) => {
-    syncFromCurrentHash();
+    syncPath();
     if (patch.device !== undefined) {
         pendingState.device = patch.device;
     }
@@ -258,7 +236,29 @@ export const patchState = (patch) => {
     if (patch.controls !== undefined) {
         pendingState.controls = patch.controls;
     }
-    queueWrite();
+};
+
+/**
+ * Build a full shareable URL for the current example reflecting the current
+ * in-memory state. Targets `/share/<category>_<example>/?s=...` so the
+ * crawler-friendly share page provides social-unfurl meta tags; that page
+ * uses history.replaceState to swap to the canonical `#/<path>?s=...` URL
+ * before the SPA boots, so the recipient lands on the normal examples
+ * browser. Falls back to the canonical hash URL on the index route.
+ *
+ * @returns {string} Shareable URL.
+ */
+export const buildShareUrl = () => {
+    const { path } = hashParts();
+    const encoded = encodeState();
+    const origin = window.location.origin;
+    const trimmed = path.replace(/^\//, '');
+    if (!trimmed) {
+        return encoded ? `${origin}/#/?${STATE_PARAM}=${encoded}` : `${origin}/`;
+    }
+    const slug = trimmed.replace(/\//g, '_');
+    const base = `${origin}/share/${slug}/`;
+    return encoded ? `${base}?${STATE_PARAM}=${encoded}` : base;
 };
 
 /**

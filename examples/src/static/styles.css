@@ -1156,7 +1156,8 @@ body {
 }
 
 #menu #showMiniStatsButton.selected,
-#menu #showCreditsButton.selected {
+#menu #showCreditsButton.selected,
+#menu #shareButton.selected {
     color: white;
     background-color: #F60;
 }

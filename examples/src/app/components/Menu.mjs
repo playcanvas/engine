@@ -4,8 +4,20 @@ import { Component } from 'react';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { logo } from '../paths.mjs';
-import { getHashPath, patchState, readState } from '../url-state.mjs';
+import { buildShareUrl, patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
+
+/**
+ * @param {() => Promise<any>} task - Async task to execute.
+ * @returns {Promise<[any, any]>} Error and result tuple.
+ */
+const tryCatchAsync = async (task) => {
+    try {
+        return [null, await task()];
+    } catch (err) {
+        return [err, null];
+    }
+};
 
 /**
  * @typedef {object} Props
@@ -20,6 +32,7 @@ import { getLayout } from '../utils.mjs';
  * @property {boolean} showMiniStats - Show MiniStats state.
  * @property {boolean} fullscreen - Fullscreen state.
  * @property {boolean} hasCredits - Whether the loaded example has any credits.
+ * @property {boolean} shareCopied - True briefly after the share URL is copied to clipboard.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -32,9 +45,13 @@ class Menu extends TypedComponent {
         return {
             showMiniStats: typeof ui.miniStats === 'boolean' ? ui.miniStats : getLayout() === 'desktop',
             fullscreen: typeof ui.fullscreen === 'boolean' ? ui.fullscreen : false,
-            hasCredits: false
+            hasCredits: false,
+            shareCopied: false
         };
     })();
+
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    _shareCopiedTimer = null;
 
     mouseTimeout = null;
 
@@ -48,6 +65,7 @@ class Menu extends TypedComponent {
         this._handleMiniStats = this._handleMiniStats.bind(this);
         this.toggleMiniStats = this.toggleMiniStats.bind(this);
         this.toggleCredits = this.toggleCredits.bind(this);
+        this.copyShareUrl = this.copyShareUrl.bind(this);
     }
 
     toggleCredits() {
@@ -134,6 +152,27 @@ class Menu extends TypedComponent {
         document.removeEventListener('keydown', this._handleKeyDown);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
         window.removeEventListener('miniStats', this._handleMiniStats);
+        if (this._shareCopiedTimer) {
+            clearTimeout(this._shareCopiedTimer);
+            this._shareCopiedTimer = null;
+        }
+    }
+
+    async copyShareUrl() {
+        const url = buildShareUrl();
+        const [err] = await tryCatchAsync(() => navigator.clipboard.writeText(url));
+        if (err) {
+            console.error('Failed to copy share URL', err);
+            return;
+        }
+        this.setState({ shareCopied: true });
+        if (this._shareCopiedTimer) {
+            clearTimeout(this._shareCopiedTimer);
+        }
+        this._shareCopiedTimer = setTimeout(() => {
+            this._shareCopiedTimer = null;
+            this.setState({ shareCopied: false });
+        }, 1500);
     }
 
     /**
@@ -176,7 +215,7 @@ class Menu extends TypedComponent {
     }
 
     render() {
-        const { showMiniStats, hasCredits } = this.state;
+        const { showMiniStats, hasCredits, shareCopied } = this.state;
         const { layout, showCredits } = this.props;
         return jsx(
             Container,
@@ -195,16 +234,31 @@ class Menu extends TypedComponent {
                         window.open('https://github.com/playcanvas/engine');
                     }
                 }),
-                jsx(Button, {
-                    icon: 'E256',
-                    text: '',
-                    onClick: () => {
-                        const url = new URL(location.href);
-                        const link = `${url.origin}/share/${getHashPath().slice(1).replace(/\//g, '_')}`;
-                        const tweetText = encodeURI(`Check out this @playcanvas engine example! ${link}`);
-                        window.open(`https://twitter.com/intent/tweet?text=${tweetText}`);
-                    }
-                }),
+                jsx('button', {
+                    type: 'button',
+                    id: 'shareButton',
+                    className: `pcui-button${shareCopied ? ' selected' : ''}`,
+                    onClick: this.copyShareUrl,
+                    'aria-label': 'Copy share link',
+                    style: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }
+                }, jsx('svg', {
+                    viewBox: '0 0 24 24',
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    strokeWidth: 2,
+                    strokeLinecap: 'round',
+                    strokeLinejoin: 'round',
+                    width: 20,
+                    height: 20
+                }, ...(shareCopied ? [
+                    jsx('polyline', { key: 'check', points: '20 6 9 17 4 12' })
+                ] : [
+                    jsx('circle', { key: 'c1', cx: 18, cy: 5, r: 3 }),
+                    jsx('circle', { key: 'c2', cx: 6, cy: 12, r: 3 }),
+                    jsx('circle', { key: 'c3', cx: 18, cy: 19, r: 3 }),
+                    jsx('line', { key: 'l1', x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+                    jsx('line', { key: 'l2', x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
+                ]))),
                 jsx(Button, {
                     icon: 'E149',
                     id: 'showMiniStatsButton',

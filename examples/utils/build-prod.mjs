@@ -22,7 +22,7 @@ import {
     transformSource,
     writeExampleHtml,
     writeShareHtml
-} from './build-shared.mjs';
+} from './build-examples.mjs';
 import { createdLog, failedLog, startLog } from './log.mjs';
 import { buildTarget } from '../../utils/esbuild-build-target.mjs';
 import { revision, version } from '../../utils/rollup-version-revision.mjs';
@@ -31,7 +31,7 @@ import { buildTypes } from '../../utils/types-build-target.mjs';
 /**
  * @import { BuildOptions as EsbuildOptions, Plugin as EsbuildPlugin } from 'esbuild'
  * @import { InlineConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
- * @import { CopyTarget } from './build-shared.mjs'
+ * @import { CopyTarget } from './build-examples.mjs'
  */
 
 /**
@@ -128,7 +128,7 @@ const exampleOptions = (entryPoints, external) => ({
  * @returns {Promise<void>} completion promise.
  */
 const buildExampleJs = async () => {
-    const { local } = getExampleTargets(NODE_ENV);
+    const { local } = getExampleTargets();
     if (Object.keys(local).length) {
         await timed('src/examples modules', `${IFRAME_DIR} modules`, () => esbuild.build(exampleOptions(local, EXTERNAL_LOCAL)));
     }
@@ -138,7 +138,7 @@ const buildExampleJs = async () => {
  * @returns {Promise<void>} completion promise.
  */
 const buildExampleSupport = async () => {
-    const { sources, assets, html, share } = getExampleTargets(NODE_ENV);
+    const { sources, assets, html, share } = getExampleTargets();
     const tasks = [
         timed('src/examples sources', `${IFRAME_DIR} source files`, () => writeSources(sources)),
         timed('src/examples assets', `${IFRAME_DIR} assets`, () => copyTargets(assets)),
@@ -146,9 +146,9 @@ const buildExampleSupport = async () => {
             nodeEnv: NODE_ENV,
             enginePath: ENGINE_PATH
         })))),
-        NODE_ENV === 'production' ? timed('templates/share.html', 'dist/share pages', () => Promise.all(share.map(writeShareHtml))) : null
+        timed('templates/share.html', 'dist/share pages', () => Promise.all(share.map(writeShareHtml)))
     ];
-    await Promise.all(tasks.filter(Boolean));
+    await Promise.all(tasks);
 };
 
 /**
