@@ -1,5 +1,6 @@
 import { BUFFERUSAGE_COPY_DST, BUFFERUSAGE_INDIRECT } from '../constants.js';
 import { StorageBuffer } from '../storage-buffer.js';
+import { DebugHelper } from '../../../core/debug.js';
 
 /**
  * @import { GraphicsDevice } from '../graphics-device.js'
@@ -45,6 +46,7 @@ class WebgpuDrawCommands {
         this.gpuIndirect = new Uint32Array(5 * maxCount);
         this.gpuIndirectSigned = new Int32Array(this.gpuIndirect.buffer);
         this.storage = new StorageBuffer(this.device, this.gpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+        DebugHelper.setName(this.storage, 'WebgpuDrawCommands.indirectStorage');
     }
 
     /**

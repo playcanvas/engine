@@ -1,20 +1,26 @@
-// @config DESCRIPTION This example demonstrates the clear coat material. Visually, the Coated column should contain highlights from both the Base and Boating layers.
-// @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example demonstrates the clear coat material. Visually, the Coated column should contain
+// highlights from both the Base and Boating layers.
+//
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/PrimitiveModeNormalsTest.glb` })
+    model: new pc.Asset('model', 'container', { url: './assets/models/PrimitiveModeNormalsTest.glb' })
 };
 
 const gfxOptions = {
@@ -91,5 +97,3 @@ assetListLoader.load(() => {
     directionalLight.setEulerAngles(45, 180, 0);
     app.root.addChild(directionalLight);
 });
-
-export { app };

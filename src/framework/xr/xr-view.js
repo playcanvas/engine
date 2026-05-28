@@ -3,7 +3,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
  * @import { XrManager } from './xr-manager.js'
@@ -330,10 +330,8 @@ class XrView extends EventHandler {
             this._xrCamera = this._xrView.camera;
         }
 
-        const layer = frame.session.renderState.baseLayer;
-
         // viewport
-        const viewport = layer.getViewport(this._xrView);
+        const viewport = this._manager.xrBridge.getViewport(frame, this._xrView);
         this._viewport.x = viewport.x;
         this._viewport.y = viewport.y;
         this._viewport.z = viewport.width;
@@ -354,57 +352,7 @@ class XrView extends EventHandler {
             return;
         }
 
-        const binding = this._manager.webglBinding;
-        if (!binding) {
-            return;
-        }
-
-        const texture = binding.getCameraImage(this._xrCamera);
-        if (!texture) {
-            return;
-        }
-
-        const device = this._manager.app.graphicsDevice;
-        const gl = device.gl;
-
-        if (!this._frameBufferSource) {
-            // create frame buffer to read from
-            this._frameBufferSource = gl.createFramebuffer();
-
-            // create frame buffer to write to
-            this._frameBuffer = gl.createFramebuffer();
-        } else {
-            const attachmentBaseConstant = gl.COLOR_ATTACHMENT0;
-            const width = this._xrCamera.width;
-            const height = this._xrCamera.height;
-
-            // set frame buffer to read from
-            device.setFramebuffer(this._frameBufferSource);
-            gl.framebufferTexture2D(
-                gl.FRAMEBUFFER,
-                attachmentBaseConstant,
-                gl.TEXTURE_2D,
-                texture,
-                0
-            );
-
-            // set frame buffer to write to
-            device.setFramebuffer(this._frameBuffer);
-            gl.framebufferTexture2D(
-                gl.FRAMEBUFFER,
-                attachmentBaseConstant,
-                gl.TEXTURE_2D,
-                this._textureColor.impl._glTexture,
-                0
-            );
-
-            // bind buffers
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
-
-            // copy buffers with flip Y
-            gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
-        }
+        this._manager.xrBridge?.syncCameraColorTexture(this._xrCamera, this._textureColor);
     }
 
     /**
@@ -418,7 +366,7 @@ class XrView extends EventHandler {
 
         const gpu = this._manager.views.depthGpuOptimized;
 
-        const infoSource = gpu ? this._manager.webglBinding : frame;
+        const infoSource = gpu ? this._manager.graphicsBinding : frame;
         if (!infoSource) {
             this._depthInfo = null;
             return;
@@ -458,33 +406,11 @@ class XrView extends EventHandler {
         // update texture
         if (this._depthInfo) {
             if (gpu) {
-                // gpu
-                if (this._depthInfo.texture) {
-                    const gl = this._manager.app.graphicsDevice.gl;
-
-                    this._textureDepth.impl._glTexture = this._depthInfo.texture;
-
-                    if (this._depthInfo.textureType === 'texture-array') {
-                        this._textureDepth.impl._glTarget = gl.TEXTURE_2D_ARRAY;
-                    } else {
-                        this._textureDepth.impl._glTarget = gl.TEXTURE_2D;
-                    }
-
-                    switch (this._manager.views.depthPixelFormat) {
-                        case PIXELFORMAT_R32F:
-                            this._textureDepth.impl._glInternalFormat = gl.R32F;
-                            this._textureDepth.impl._glPixelType = gl.FLOAT;
-                            this._textureDepth.impl._glFormat = gl.RED;
-                            break;
-                        case PIXELFORMAT_DEPTH:
-                            this._textureDepth.impl._glInternalFormat = gl.DEPTH_COMPONENT16;
-                            this._textureDepth.impl._glPixelType = gl.UNSIGNED_SHORT;
-                            this._textureDepth.impl._glFormat = gl.DEPTH_COMPONENT;
-                            break;
-                    }
-
-                    this._textureDepth.impl._glCreated = true;
-                }
+                this._manager.xrBridge?.syncCameraDepthTexture(
+                    this._depthInfo,
+                    this._textureDepth,
+                    this._manager.views.depthPixelFormat ?? PIXELFORMAT_R32F
+                );
             } else {
                 // cpu
                 this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);
@@ -521,8 +447,6 @@ class XrView extends EventHandler {
     }
 
     _onDeviceLost() {
-        this._frameBufferSource = null;
-        this._frameBuffer = null;
         this._depthInfo = null;
     }
 
@@ -562,16 +486,6 @@ class XrView extends EventHandler {
         if (this._textureDepth) {
             this._textureDepth.destroy();
             this._textureDepth = null;
-        }
-
-        if (this._frameBufferSource) {
-            const gl = this._manager.app.graphicsDevice.gl;
-
-            gl.deleteFramebuffer(this._frameBufferSource);
-            this._frameBufferSource = null;
-
-            gl.deleteFramebuffer(this._frameBuffer);
-            this._frameBuffer = null;
         }
     }
 }

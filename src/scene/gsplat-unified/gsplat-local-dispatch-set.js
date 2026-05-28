@@ -2,6 +2,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
+import { DebugHelper } from '../../core/debug.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
@@ -222,6 +223,15 @@ class GSplatLocalDispatchSet {
         this._chunkRangesBuffer = new StorageBuffer(this.device, maxChunks * 8);
         this._totalChunksBuffer = new StorageBuffer(this.device, 1 * 4, BUFFERUSAGE_COPY_DST);
         this._chunkSortIndirectBuffer = new StorageBuffer(this.device, 3 * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_INDIRECT);
+        DebugHelper.setName(this._tileSplatCountsBuffer, 'GsplatLocalDispatchSet.tileSplatCounts');
+        DebugHelper.setName(this._smallTileListBuffer, 'GsplatLocalDispatchSet.smallTileList');
+        DebugHelper.setName(this._largeTileListBuffer, 'GsplatLocalDispatchSet.largeTileList');
+        DebugHelper.setName(this._largeTileOverflowBasesBuffer, 'GsplatLocalDispatchSet.largeTileOverflowBases');
+        DebugHelper.setName(this._rasterizeTileListBuffer, 'GsplatLocalDispatchSet.rasterizeTileList');
+        DebugHelper.setName(this._tileListCountsBuffer, 'GsplatLocalDispatchSet.tileListCounts');
+        DebugHelper.setName(this._chunkRangesBuffer, 'GsplatLocalDispatchSet.chunkRanges');
+        DebugHelper.setName(this._totalChunksBuffer, 'GsplatLocalDispatchSet.totalChunks');
+        DebugHelper.setName(this._chunkSortIndirectBuffer, 'GsplatLocalDispatchSet.chunkSortIndirect');
 
         this.prefixSumKernel.destroyPasses();
     }

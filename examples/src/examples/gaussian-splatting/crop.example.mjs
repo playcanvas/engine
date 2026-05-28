@@ -1,9 +1,11 @@
-// @config DESCRIPTION This example demonstrates AABB-based cropping of gaussian splats with animated bounds.
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// This example demonstrates AABB-based cropping of gaussian splats with animated bounds.
 
-const { GsplatCropShaderEffect } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/shader-effect-crop.mjs`);
+import * as pc from 'playcanvas';
+import { GsplatCropShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-crop.mjs';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -47,8 +49,8 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/hotel-culpture.compressed.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    hotel: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -231,5 +233,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

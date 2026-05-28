@@ -1,24 +1,32 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: Sheen Chair
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/SheenChair
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType, win } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    lights: new pc.Asset('lights', 'container', { url: `${rootPath}/static/assets/models/Lights.glb` }),
-    sheen: new pc.Asset('sheen', 'container', { url: `${rootPath}/static/assets/models/SheenChair.glb` }),
-    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
-    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` }),
-    luts: new pc.Asset('luts', 'json', { url: `${rootPath}/static/assets/json/area-light-luts.json` })
+    lights: new pc.Asset('lights', 'container', { url: './assets/models/Lights.glb' }),
+    sheen: new pc.Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    luts: new pc.Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
 };
 
 const gfxOptions = {
@@ -295,7 +303,7 @@ assetListLoader.load(() => {
 
         // resize control panel to fit the content better
         if (resizeControlPanel) {
-            const panel = window.top.document.getElementById('controlPanel');
+            const panel = win.document.getElementById('controlPanel');
             if (panel) {
                 panel.style.width = '360px';
                 resizeControlPanel = false;
@@ -307,5 +315,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

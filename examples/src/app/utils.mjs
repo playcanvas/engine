@@ -1,10 +1,16 @@
-import { MIN_DESKTOP_WIDTH } from './constants.mjs';
+import { MIN_DESKTOP_HEIGHT, MIN_DESKTOP_WIDTH } from './constants.mjs';
 
 /**
- * @returns {'portrait'|'landscape'} Orientation, which is either 'portrait' (width < 601 px) or
- * 'landscape' (every width >= 601, not aspect related)
+ * @typedef {'mobile'|'desktop'} Layout
  */
-// @ts-ignore
-const getOrientation = () => (window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'portrait' : 'landscape');
 
-export { getOrientation };
+/**
+ * @returns {Layout} The app layout.
+ */
+const getLayout = () => {
+    const win = window.top ?? window;
+    const touch = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+    return win.innerWidth < MIN_DESKTOP_WIDTH || (touch && win.innerHeight < MIN_DESKTOP_HEIGHT) ? 'mobile' : 'desktop';
+};
+
+export { getLayout };

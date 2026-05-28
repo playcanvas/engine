@@ -1,19 +1,21 @@
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderFrag from './shader.frag';
+import shaderVert from './shader.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 // render to low resolution to make particles more visible on WebGPU, as it doesn't support point
 // size and those are very small otherwise. This is not a proper solution, and only a temporary
@@ -86,8 +88,8 @@ mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15));
 // Create a new material with a custom shader
 const material = new pc.ShaderMaterial({
     uniqueName: 'MyShader',
-    vertexGLSL: files['shader.vert'],
-    fragmentGLSL: files['shader.frag'],
+    vertexGLSL: shaderVert,
+    fragmentGLSL: shaderFrag,
     attributes: {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
@@ -160,5 +162,3 @@ app.on('update', (dt) => {
     camera.setLocalPosition(cameraPos);
     camera.lookAt(pc.Vec3.ZERO);
 });
-
-export { app };

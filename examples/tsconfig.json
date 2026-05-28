@@ -1,0 +1,24 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "checkJs": false,
+        "outDir": "dist"
+    },
+    "include": [
+        "src/**/*.mjs",
+        "src/**/*.js",
+        "src/**/*.d.ts",
+        "iframe/**/*.mjs",
+        "iframe/**/*.js",
+        "templates/**/*.mjs",
+        "utils/**/*.mjs",
+        "build.mjs",
+        "vite.config.mjs"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "cache",
+        "assets/wasm"
+    ]
+}

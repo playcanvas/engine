@@ -1,35 +1,53 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+// @config
+//
+// @credit
+// title: Chess Board
+// author: Idmental
+// source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: MorphStressTest
+// author: Ed Mackey
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/MorphStressTest/README.md
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Cross-hatching textures
+// author: Jaume Sanchez (spite)
+// source: https://github.com/spite/cross-hatching
+// license: MIT
+
 import * as pc from 'playcanvas';
 
-// import the createHatchMaterial function from the hatch-material.mjs file
-const { createHatchMaterial } = await fileImport(`${rootPath}/static/assets/scripts/misc/hatch-material.mjs`);
+import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    board: new pc.Asset('board', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    board: new pc.Asset('board', 'container', { url: './assets/models/chess-board.glb' }),
 
-    bitmoji: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
-    danceAnim: new pc.Asset('walkAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb` }),
-    morph: new pc.Asset('glb', 'container', { url: `${rootPath}/static/assets/models/morph-stress-test.glb` }),
+    bitmoji: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    danceAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
+    morph: new pc.Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' }),
 
     // hatch textures, sorted from light to dark
-    hatch0: new pc.Asset('hatch0', 'texture', { url: `${rootPath}/static/assets/textures/hatch-0.jpg` }, { srgb: true }),
-    hatch1: new pc.Asset('hatch1', 'texture', { url: `${rootPath}/static/assets/textures/hatch-1.jpg` }, { srgb: true }),
-    hatch2: new pc.Asset('hatch2', 'texture', { url: `${rootPath}/static/assets/textures/hatch-2.jpg` }, { srgb: true }),
-    hatch3: new pc.Asset('hatch3', 'texture', { url: `${rootPath}/static/assets/textures/hatch-3.jpg` }, { srgb: true }),
-    hatch4: new pc.Asset('hatch4', 'texture', { url: `${rootPath}/static/assets/textures/hatch-4.jpg` }, { srgb: true }),
-    hatch5: new pc.Asset('hatch5', 'texture', { url: `${rootPath}/static/assets/textures/hatch-5.jpg` }, { srgb: true })
+    hatch0: new pc.Asset('hatch0', 'texture', { url: './assets/textures/hatch-0.jpg' }, { srgb: true }),
+    hatch1: new pc.Asset('hatch1', 'texture', { url: './assets/textures/hatch-1.jpg' }, { srgb: true }),
+    hatch2: new pc.Asset('hatch2', 'texture', { url: './assets/textures/hatch-2.jpg' }, { srgb: true }),
+    hatch3: new pc.Asset('hatch3', 'texture', { url: './assets/textures/hatch-3.jpg' }, { srgb: true }),
+    hatch4: new pc.Asset('hatch4', 'texture', { url: './assets/textures/hatch-4.jpg' }, { srgb: true }),
+    hatch5: new pc.Asset('hatch5', 'texture', { url: './assets/textures/hatch-5.jpg' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -235,5 +253,3 @@ assetListLoader.load(() => {
         toon: false
     });
 });
-
-export { app };

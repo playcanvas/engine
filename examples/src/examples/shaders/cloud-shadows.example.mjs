@@ -1,18 +1,31 @@
-// @config DESCRIPTION <div style='color: white;'>This example demonstrates scrolling cloud shadows using a shader chunk override on StandardMaterial.</div>
-import { data } from 'examples/observer';
-import { deviceType, rootPath, localImport } from 'examples/utils';
+// @config
+//
+// This example demonstrates scrolling cloud shadows using a shader chunk
+// override on {accent:StandardMaterial}.
+//
+// @credit
+// title: Low-poly Tree with Twisting Branches
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/low-poly-tree-with-twisting-branches-4e2589134f2442bcbdab51c1f306cd58
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+import * as shaderChunksGlsl from './shader-chunks.glsl.mjs';
+import * as shaderChunksWgsl from './shader-chunks.wgsl.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('tree', 'container', { url: `${rootPath}/static/assets/models/low-poly-tree.glb` }),
-    clouds: new pc.Asset('clouds', 'texture', { url: `${rootPath}/static/assets/textures/clouds.jpg` }),
+    tree: new pc.Asset('tree', 'container', { url: './assets/models/low-poly-tree.glb' }),
+    clouds: new pc.Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' }),
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -25,8 +38,7 @@ const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const shaderLanguage = device.isWebGPU ? pc.SHADERLANGUAGE_WGSL : pc.SHADERLANGUAGE_GLSL;
-const shaderChunkFile = device.isWebGPU ? 'shader-chunks.wgsl.mjs' : 'shader-chunks.glsl.mjs';
-const shaderChunks = await localImport(shaderChunkFile);
+const shaderChunks = device.isWebGPU ? shaderChunksWgsl : shaderChunksGlsl;
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -168,5 +180,3 @@ assetListLoader.load(() => {
         camera.lookAt(pc.Vec3.ZERO);
     });
 });
-
-export { app };

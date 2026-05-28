@@ -62,6 +62,16 @@ const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
 const _dynamicBindGroup = new DynamicBindGroup();
 
+// Reusable scratch passed to GraphicsDevice.clear so the per-frame call site
+// does not allocate a fresh options object + color array.
+const _tempClearColor = [0, 0, 0, 1];
+const _tempClearOptions = {
+    color: _tempClearColor,
+    depth: 1,
+    stencil: 0,
+    flags: 0
+};
+
 // helton sequence of 2d offsets for jittering
 const _haltonSequence = [
     new Vec2(0.5, 0.333333),
@@ -408,16 +418,14 @@ class Renderer {
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
 
-        // viewport size
-        let viewportWidth = target ? target.width : this.device.width;
-        let viewportHeight = target ? target.height : this.device.height;
+        // viewport size. In stereo XR the XR session reports the per-eye viewport directly,
+        // which is correct for both side-by-side single-texture and multi-pass per-eye-view
+        // layouts — preferred over inferring from target.width.
+        const xrView = camera.xr?.session ? camera.xr.views.list[0] : null;
+        let viewportWidth = xrView ? xrView.viewport.z : (target ? target.width : this.device.width);
+        let viewportHeight = xrView ? xrView.viewport.w : (target ? target.height : this.device.height);
         viewportWidth *= camera.rect.z;
         viewportHeight *= camera.rect.w;
-
-        // adjust viewport for stereoscopic VR sessions
-        if (camera.xr?.session && camera.xr.views.list.length === 2) {
-            viewportWidth *= 0.5;
-        }
 
         this.viewportSize[0] = viewportWidth;
         this.viewportSize[1] = viewportHeight;
@@ -452,12 +460,15 @@ class Renderer {
             const device = this.device;
             DebugGraphics.pushGpuMarker(device, 'CLEAR');
 
-            device.clear({
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                stencil: camera._clearStencil,
-                flags: flags
-            });
+            const c = camera._clearColor;
+            _tempClearColor[0] = c.r;
+            _tempClearColor[1] = c.g;
+            _tempClearColor[2] = c.b;
+            _tempClearColor[3] = c.a;
+            _tempClearOptions.depth = camera._clearDepth;
+            _tempClearOptions.stencil = camera._clearStencil;
+            _tempClearOptions.flags = flags;
+            device.clear(_tempClearOptions);
 
             DebugGraphics.popGpuMarker(device);
         }
@@ -1074,13 +1085,14 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // event before the camera is culling
-            scene?.fire(EVENT_PRECULL, camera);
-
             // update camera and frustum
             const renderTarget = camera.renderTarget;
             camera.frameUpdate(renderTarget);
             this.updateCameraFrustum(camera.camera);
+
+            // event before the camera is culling, fired after the frustum has been updated so
+            // listeners can rely on the current camera state
+            scene?.fire(EVENT_PRECULL, camera);
 
             // for all of its enabled layers
             const layerIds = camera.layers;

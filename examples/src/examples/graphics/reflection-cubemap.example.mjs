@@ -1,5 +1,6 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,10 +9,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/utils/cubemap-renderer.js` })
+    script: new pc.Asset('script', 'script', { url: './scripts/utils/cubemap-renderer.js' })
 };
 
 const gfxOptions = {
@@ -304,5 +305,3 @@ assetListLoader.load(() => {
         app.drawTexture(0, -0.7, 0.5, 0.4, textureAtlas);
     });
 });
-
-export { app };

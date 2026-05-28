@@ -1,4 +1,4 @@
-import { BUTTON_TRANSITION_MODE_TINT, Color, Entity, Quat, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { BUTTON_TRANSITION_MODE_TINT, Color, Entity, Quat, Script, Vec2, Vec3, Vec4, XRTARGETRAY_POINTER } from 'playcanvas';
 
 /** @import { Asset, XrInputSource } from 'playcanvas' */
 
@@ -6,6 +6,7 @@ import { BUTTON_TRANSITION_MODE_TINT, Color, Entity, Quat, Script, Vec2, Vec3, V
 const tmpVec3A = new Vec3();
 const tmpVec3B = new Vec3();
 const tmpVec3C = new Vec3();
+const tmpVec3D = new Vec3();
 const tmpQuat = new Quat();
 
 // Finger joint IDs for extension detection (pre-allocated to avoid GC pressure)
@@ -17,32 +18,71 @@ const FINGER_JOINTS = [
 ];
 
 /**
- * Provides a hybrid WebXR menu system that works with both Hand Tracking ("Palm Up" gesture)
- * and Controllers (Button Toggle). The menu automatically detects the input mode and switches
- * between hand-anchored and controller-anchored positioning.
+ * Provides a hybrid WebXR menu system that supports Hand Tracking ("Palm Up" gesture),
+ * Controller button toggle, and an always-visible camera-anchored mode for debug HUDs. The
+ * menu automatically picks the right input mode and switches between hand-anchored,
+ * controller-anchored, and camera-anchored positioning.
  *
  * This script uses PlayCanvas' UI system (Screen, Element, Button components) for rendering
  * the menu, providing proper text rendering and familiar button interaction patterns.
  *
  * This script should be attached to an entity in your scene. It creates menu buttons dynamically
- * based on the `menuItems` configuration. When a button is activated, it fires the corresponding
- * app event.
+ * based on the `menuItems` configuration. When an interactive item is activated, it fires the
+ * corresponding app event.
+ *
+ * Items in `menuItems` come in two kinds:
+ *
+ * - **Interactive buttons** — declared with both `label` and `eventName`. Clickable; fire
+ *   `app.fire(eventName)` when triggered.
+ * - **Labels** — declared with only `label` (no `eventName`). Non-interactive. Render in the
+ *   same stack but skip click/hover, and their text is dimmed via {@link XrMenu#labelTextOpacity}.
+ *   Useful for value readouts that can be updated at runtime with {@link XrMenu#setItemLabel}.
  *
  * Features:
- * - Hand Tracking: Detects "looking at open palm" gesture to show menu anchored to palm
- * - Controller Mode: Toggle menu visibility with a configurable button, anchored to controller
- * - Uses PlayCanvas UI system for proper text rendering
- * - Smooth following with configurable dampening
- * - Finger touch and button click interaction support
- * - Fires 'xr:menu:active' app event when menu visibility changes (for coordination with other scripts)
+ *
+ * - **Hand Tracking** — detects "open palm facing camera" gesture to show the menu anchored
+ *   to the palm.
+ * - **Controller mode** — toggle menu visibility with a configurable gamepad button, anchored
+ *   to the controller.
+ * - **Always-visible mode** ({@link XrMenu#alwaysVisible}) — bypasses palm/button toggling,
+ *   keeps the menu visible for the full XR session, and follows the camera at a configurable
+ *   offset ({@link XrMenu#followDistance}, {@link XrMenu#followOffset}). Useful for debug HUDs.
+ * - **XR ray picking** — controller pointer rays drive hover via ray-vs-`worldCorners`
+ *   intersection, and the trigger (gamepad button 0) fires clicks. Self-contained, does not
+ *   rely on ElementInput's XR hover events.
+ * - **Finger touch** — hand-tracking index-fingertip pokes are also supported on interactive
+ *   buttons.
+ * - **Runtime label updates** — {@link XrMenu#setItemLabel} changes the displayed text of any
+ *   item (interactive or label-only) after the menu has been built. The new text is persisted
+ *   into `menuItems` so it survives a future regeneration.
+ * - Smooth following with configurable dampening.
+ * - Fires `'xr:menu:active'` app event when menu visibility changes (for coordination with
+ *   other scripts).
  *
  * @example
- * // Configure menu items via script attributes:
+ * // Configure menu items via script attributes — mix interactive buttons with read-only labels:
  * menuItems: [
- *     { label: 'Teleport', eventName: 'menu:teleport' },
+ *     { label: 'STATUS: idle' },                            // label-only row
+ *     { label: 'Teleport', eventName: 'menu:teleport' },    // interactive
  *     { label: 'Settings', eventName: 'menu:settings' },
- *     { label: 'Exit', eventName: 'xr:end' }
+ *     { label: 'Exit',     eventName: 'xr:end' }
  * ]
+ *
+ * @example
+ * // Update a label at runtime (e.g. show live values):
+ * const xrMenu = menuEntity.script.xrMenu;
+ * app.on('update', () => xrMenu.setItemLabel(0, `STATUS: ${currentStatus}`));
+ *
+ * @example
+ * // Always-visible debug HUD anchored to the right of the eye line:
+ * menuEntity.script.create(XrMenu, {
+ *     properties: {
+ *         menuItems: [ ... ],
+ *         alwaysVisible: true,
+ *         followDistance: 0.6,
+ *         followOffset: new pc.Vec2(0.25, -0.15)
+ *     }
+ * });
  */
 class XrMenu extends Script {
     static scriptName = 'xrMenu';
@@ -190,20 +230,21 @@ class XrMenu extends Script {
     pressCooldown = 0.3;
 
     /**
-     * Background color of menu buttons.
+     * Background color of menu buttons. Default is a dark slate so white text reads cleanly.
      *
      * @type {Color}
      * @attribute
      */
-    buttonColor = new Color(0.85, 0.85, 0.85, 0.9);
+    buttonColor = new Color(0.12, 0.14, 0.18, 0.85);
 
     /**
-     * Color of menu buttons when hovered.
+     * Color of menu buttons when hovered. Default matches the typical XR pointer-ray cyan so
+     * "ray on button" reads as a single visual feedback loop.
      *
      * @type {Color}
      * @attribute
      */
-    hoverColor = new Color(1, 1, 1, 1);
+    hoverColor = new Color(0.30, 0.65, 0.95, 1);
 
     /**
      * Color of menu buttons when pressed/activated.
@@ -211,7 +252,7 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    pressColor = new Color(0.7, 0.7, 0.7, 1);
+    pressColor = new Color(0.55, 0.85, 1.0, 1);
 
     /**
      * Text color for button labels.
@@ -219,7 +260,19 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    textColor = new Color(1, 1, 1);
+    textColor = new Color(0.95, 0.97, 1.0);
+
+    /**
+     * Opacity multiplier applied to text on label-only items (those declared without an
+     * `eventName`). Used so interactive buttons read as the primary affordance and label rows
+     * sit visually behind them. Range 0..1.
+     *
+     * @type {number}
+     * @attribute
+     * @range [0, 1]
+     * @precision 0.05
+     */
+    labelTextOpacity = 0.65;
 
     /**
      * Optional texture asset for button backgrounds.
@@ -238,6 +291,35 @@ class XrMenu extends Script {
      * @precision 0.05
      */
     fadeDuration = 0.15;
+
+    /**
+     * When true, the menu is shown for the full duration of the XR session and follows the
+     * camera, rather than being toggled by the palm-up gesture or controller button. Hand-tracking
+     * finger-touch and controller-ray interaction still work. Useful for debug HUDs.
+     *
+     * @type {boolean}
+     * @attribute
+     */
+    alwaysVisible = false;
+
+    /**
+     * Distance in meters in front of the camera to place the menu when {@link alwaysVisible} is on.
+     *
+     * @type {number}
+     * @attribute
+     * @range [0.2, 2]
+     * @precision 0.05
+     */
+    followDistance = 0.6;
+
+    /**
+     * Lateral and vertical offset in meters applied in camera-local space when
+     * {@link alwaysVisible} is on. `x` is positive-right, `y` is positive-up.
+     *
+     * @type {Vec2}
+     * @attribute
+     */
+    followOffset = new Vec2(0, -0.2);
 
     // Internal state
     /** @type {Entity|null} */
@@ -287,6 +369,18 @@ class XrMenu extends Script {
 
     /** @type {number} */
     _targetOpacity = 0;
+
+    /** @type {boolean} */
+    _followInitialized = false;
+
+    /**
+     * Per-input-source previous gamepad trigger (button 0) state, used to edge-detect "trigger pull"
+     * during XR ray picking. WeakMap so entries clean up when the input source goes away.
+     *
+     * @type {WeakMap<XrInputSource, boolean>}
+     * @private
+     */
+    _triggerWasPressed = new WeakMap();
 
     initialize() {
         if (!this.app.xr) {
@@ -351,6 +445,38 @@ class XrMenu extends Script {
         this._setMenuVisible(false);
         this._inputSources.clear();
         this._activeInputSource = null;
+        this._followInitialized = false;
+    }
+
+    /**
+     * Updates the displayed text of a menu item by index. Works for both interactive buttons
+     * and label-only items (those declared without an `eventName`). The caller controls casing —
+     * the text is written verbatim.
+     *
+     * @param {number} index - Index into the `menuItems` array passed at construction.
+     * @param {string} text - New display text.
+     * @returns {boolean} True if the item was found and updated, false otherwise.
+     */
+    setItemLabel(index, text) {
+        // Persist the new text into menuItems so it survives a future _generateButtons call,
+        // and so the *first* _generateButtons (which may run after this method when
+        // setItemLabel is called synchronously after script.create) picks up the updated label
+        // instead of the placeholder originally passed in menuItems.
+        const item = this.menuItems[index];
+        if (item) item.label = text;
+
+        const entity = this._buttons[index];
+        if (!entity) return false;
+
+        // Prefer the direct ref captured in menuData; fall back to children[0] for items that
+        // were created before menuData.textElement was added (defensive — shouldn't happen).
+        // @ts-ignore - menuData is a custom property attached in _createButton
+        const textElement = entity.menuData?.textElement ?? entity.children[0]?.element;
+        if (!textElement) return false;
+        textElement.text = text;
+        // @ts-ignore
+        if (entity.menuData) entity.menuData.label = text;
+        return true;
     }
 
     /**
@@ -451,16 +577,23 @@ class XrMenu extends Script {
      * @private
      */
     _createButton(label, eventName, index, widthPx, heightPx) {
-        const button = new Entity(`MenuButton_${index}`);
+        const isLabel = !eventName;
+        const button = new Entity(isLabel ? `MenuLabel_${index}` : `MenuButton_${index}`);
 
-        // Add button component for interactivity
-        button.addComponent('button', {
-            active: true,
-            transitionMode: BUTTON_TRANSITION_MODE_TINT,
-            hoverTint: this.hoverColor,
-            pressedTint: this.pressColor,
-            inactiveTint: this.buttonColor
-        });
+        // Add button component for interactivity (interactive items only). We keep TINT mode
+        // (the only auto-color mode the engine ships) but set all three tints equal to the
+        // base buttonColor, so the component's auto-tint is effectively a no-op. Visuals are
+        // driven manually by _setButtonHover / _setButtonPress, which works reliably for both
+        // XR ray picking and finger touch even when ElementInput's XR hover events don't fire.
+        if (!isLabel) {
+            button.addComponent('button', {
+                active: true,
+                transitionMode: BUTTON_TRANSITION_MODE_TINT,
+                hoverTint: this.buttonColor,
+                pressedTint: this.buttonColor,
+                inactiveTint: this.buttonColor
+            });
+        }
 
         // Add element component for visual appearance (image type for button background)
         /** @type {Object} */
@@ -472,12 +605,12 @@ class XrMenu extends Script {
             height: heightPx,
             color: this.buttonColor,
             opacity: this.buttonColor.a,
-            useInput: true,
+            useInput: !isLabel,
             layers: [this.app.scene.layers.getLayerByName('UI')?.id ?? 0]
         };
 
-        // Use texture if provided
-        if (this.buttonTexture?.resource) {
+        // Textured background only for interactive buttons; labels stay flat so they read as non-buttons
+        if (!isLabel && this.buttonTexture?.resource) {
             elementConfig.textureAsset = this.buttonTexture.id;
             elementConfig.color = new Color(1, 1, 1, this.buttonColor.a); // Tint white to show texture
         }
@@ -489,24 +622,24 @@ class XrMenu extends Script {
         button.menuData = {
             label: label,
             eventName: eventName,
-            index: index
+            index: index,
+            isLabel: isLabel,
+            /** @type {import('playcanvas').ElementComponent|null} */
+            textElement: null // populated after the text child is created below
         };
 
-        // Handle button click
-        if (button.button) {
+        // Handle button click (interactive items only). We keep the click event as a fallback
+        // for input paths that still work through ElementInput (e.g. desktop mouse during
+        // pre-XR debugging). _onButtonClick has a cooldown guard, so double-firing with our
+        // own ray-picking click is harmless.
+        //
+        // We deliberately do NOT subscribe to hoverstart/hoverend here: ElementInput's XR hover
+        // events are unreliable in practice, and if they fire they'd update _hoveredButton
+        // without applying any visual — fighting the ray-picking path that drives both. Hover
+        // state in this script is owned entirely by _updateRayInteraction and _checkFingerTouch.
+        if (!isLabel && button.button) {
             button.button.on('click', () => {
                 this._onButtonClick(button);
-            });
-
-            // Handle hover events for finger touch visual feedback
-            button.button.on('hoverstart', () => {
-                this._hoveredButton = button;
-            });
-
-            button.button.on('hoverend', () => {
-                if (this._hoveredButton === button) {
-                    this._hoveredButton = null;
-                }
             });
         }
 
@@ -514,7 +647,7 @@ class XrMenu extends Script {
         const textEntity = new Entity('ButtonText');
         textEntity.addComponent('element', {
             type: 'text',
-            text: label.toUpperCase(),
+            text: label,
             anchor: new Vec4(0, 0, 1, 1),
             pivot: new Vec2(0.5, 0.5),
             margin: new Vec4(4, 4, 4, 4),
@@ -527,6 +660,11 @@ class XrMenu extends Script {
             alignment: new Vec2(0.5, 0.5)
         });
         button.addChild(textEntity);
+
+        // Direct reference — avoids relying on children[0] indexing (cheap to mis-assume if a
+        // future change adds a sibling element).
+        // @ts-ignore - menuData is a custom property attached above
+        button.menuData.textElement = textEntity.element;
 
         return button;
     }
@@ -556,6 +694,12 @@ class XrMenu extends Script {
         // @ts-ignore
         const menuData = button.menuData;
         if (!menuData) return;
+
+        // Debounce: avoid double-firing if multiple input paths (ray picking + ElementInput
+        // click + finger touch) all detect the same press within pressCooldown.
+        const now = Date.now() / 1000;
+        if (now - this._lastPressTime < this.pressCooldown) return;
+        this._lastPressTime = now;
 
         // Play click sound
         if (this.entity.sound) {
@@ -697,10 +841,13 @@ class XrMenu extends Script {
             if (button.element) {
                 button.element.opacity = opacity * this.buttonColor.a;
             }
-            // Also update text opacity
+            // Also update text opacity. Label-only items get a dim multiplier so the eye is drawn
+            // to interactive buttons.
             const textChild = /** @type {Entity|undefined} */ (button.children[0]);
             if (textChild?.element) {
-                textChild.element.opacity = opacity;
+                // @ts-ignore - menuData is a custom property attached in _createButton
+                const isLabel = button.menuData?.isLabel === true;
+                textChild.element.opacity = opacity * (isLabel ? this.labelTextOpacity : 1);
             }
         }
     }
@@ -961,6 +1108,8 @@ class XrMenu extends Script {
         let closestDist = this.touchDistance;
 
         for (const button of this._buttons) {
+            // @ts-ignore - menuData is a custom property attached in _createButton
+            if (button.menuData?.isLabel) continue;
             const buttonPos = button.getPosition();
             const dist = fingerPos.distance(buttonPos);
 
@@ -1117,6 +1266,21 @@ class XrMenu extends Script {
             }
         }
 
+        // Always-visible mode: pin to the camera and skip the palm-up / toggle-button gating.
+        // Hand-tracking finger touch and custom controller ray picking still work.
+        if (this.alwaysVisible) {
+            if (!this._menuVisible) this._setMenuVisible(true);
+            this._followCamera(dt);
+            for (const source of this._inputSources) {
+                if (source.hand && source.hand.tracking) {
+                    this._checkFingerTouch(source);
+                    break;
+                }
+            }
+            this._updateRayInteraction();
+            return;
+        }
+
         // Find the preferred input source
         const inputSource = this._findPreferredInput();
         if (!inputSource) return;
@@ -1132,6 +1296,129 @@ class XrMenu extends Script {
             this._updateHandMode(inputSource, dt);
         } else if (inputSource.grip) {
             this._updateControllerMode(inputSource, dt);
+        }
+    }
+
+    /**
+     * Positions the menu container in front of the camera with smoothing. Used by
+     * {@link alwaysVisible} mode.
+     *
+     * @param {number} dt - Delta time.
+     * @private
+     */
+    _followCamera(dt) {
+        const cam = this._cameraEntity;
+        const container = this._menuContainer;
+        if (!cam || !container) return;
+
+        const camPos = cam.getPosition();
+        const camRot = cam.getRotation();
+
+        // Target: camPos + forward * distance + right * offset.x + up * offset.y
+        tmpVec3A.copy(cam.forward).mulScalar(this.followDistance).add(camPos);
+        tmpVec3B.copy(cam.right).mulScalar(this.followOffset.x);
+        tmpVec3A.add(tmpVec3B);
+        tmpVec3B.copy(cam.up).mulScalar(this.followOffset.y);
+        tmpVec3A.add(tmpVec3B);
+
+        // Snap on the first frame so the menu doesn't fly in from the world origin
+        if (!this._followInitialized) {
+            container.setPosition(tmpVec3A);
+            container.setRotation(camRot);
+            this._followInitialized = true;
+            return;
+        }
+
+        const t = Math.min(1, this.followSpeed * dt);
+        tmpVec3B.lerp(container.getPosition(), tmpVec3A, t);
+        container.setPosition(tmpVec3B);
+
+        tmpQuat.slerp(container.getRotation(), camRot, t);
+        container.setRotation(tmpQuat);
+    }
+
+    /**
+     * Picks interactive buttons by raycasting each tracked-pointer XR input source against the
+     * menu's plane and bounds. Drives hover visuals via {@link _setButtonHover}, and edge-detects
+     * the gamepad trigger (button 0) to fire {@link _onButtonClick}. Self-contained — does not
+     * depend on ElementInput's XR support.
+     *
+     * @private
+     */
+    _updateRayInteraction() {
+        if (!this._menuContainer || this._currentOpacity <= 0) return;
+
+        let bestButton = null;
+        let bestDist = Infinity;
+        let pickingSource = null;
+
+        for (const source of this._inputSources) {
+            if (source.targetRayMode !== XRTARGETRAY_POINTER) continue;
+            const origin = source.getOrigin();
+            const direction = source.getDirection();
+            if (!origin || !direction) continue;
+
+            for (const button of this._buttons) {
+                // @ts-ignore - menuData is a custom property attached in _createButton
+                if (button.menuData?.isLabel) continue;
+                if (!button.element) continue;
+
+                // Use the element's actual world corners (BL, BR, TR, TL). This accounts for
+                // the screen's internal Y-flip on world-space screens and any anchor/pivot
+                // offset between the entity origin and the visual rectangle.
+                const corners = button.element.worldCorners;
+                const bl = corners[0];
+                const br = corners[1];
+                const tl = corners[3];
+
+                // Width vector (BL -> BR) and height vector (BL -> TL), not normalised.
+                tmpVec3A.sub2(br, bl);              // width vec
+                tmpVec3B.sub2(tl, bl);              // height vec
+                tmpVec3C.cross(tmpVec3A, tmpVec3B); // plane normal (length = w * h)
+
+                const denom = tmpVec3C.dot(direction);
+                if (Math.abs(denom) < 1e-6) continue; // ray parallel to plane
+
+                tmpVec3D.sub2(bl, origin);
+                const t = tmpVec3D.dot(tmpVec3C) / denom;
+                if (t < 0 || t > bestDist) continue;
+
+                // Hit point relative to BL
+                tmpVec3D.copy(direction).mulScalar(t).add(origin).sub(bl);
+
+                // Project onto the (un-normalised) width and height vectors.
+                // For a point inside the rectangle:
+                //   u = hit . widthVec   ∈ [0, widthVec.lengthSq]
+                //   v = hit . heightVec  ∈ [0, heightVec.lengthSq]
+                const u = tmpVec3D.dot(tmpVec3A);
+                const v = tmpVec3D.dot(tmpVec3B);
+                const widthSq = tmpVec3A.lengthSq();
+                const heightSq = tmpVec3B.lengthSq();
+
+                if (u >= 0 && u <= widthSq && v >= 0 && v <= heightSq) {
+                    bestButton = button;
+                    bestDist = t;
+                    pickingSource = source;
+                }
+            }
+        }
+
+        // Hover transition — single owner of _hoveredButton.
+        if (this._hoveredButton !== bestButton) {
+            if (this._hoveredButton) this._setButtonHover(this._hoveredButton, false);
+            if (bestButton) this._setButtonHover(bestButton, true);
+            this._hoveredButton = bestButton;
+        }
+
+        // Edge-detect trigger pull per source; fire click only for the source currently pointing.
+        for (const source of this._inputSources) {
+            if (source.targetRayMode !== XRTARGETRAY_POINTER) continue;
+            const triggerNow = !!source.gamepad?.buttons?.[0]?.pressed;
+            const triggerPrev = this._triggerWasPressed.get(source) ?? false;
+            if (source === pickingSource && bestButton && triggerNow && !triggerPrev) {
+                this._onButtonClick(bestButton);
+            }
+            this._triggerWasPressed.set(source, triggerNow);
         }
     }
 }

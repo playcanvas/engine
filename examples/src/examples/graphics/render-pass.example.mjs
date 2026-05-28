@@ -1,5 +1,14 @@
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: Chess Board
+// author: Idmental
+// source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -53,17 +62,17 @@ class RenderPassTint extends pc.RenderPassShaderQuad {
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
+    board: new pc.Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -181,5 +190,3 @@ assetListLoader.load(() => {
         tintPass.tint.lerp(pc.Color.YELLOW, pc.Color.CYAN, Math.sin(angle * 0.5) * 0.5 + 0.5);
     });
 });
-
-export { app };

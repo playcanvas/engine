@@ -1,18 +1,28 @@
-// @config WEBGL_DISABLED
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag WEBGL_DISABLED
+//
+// @credit
+// title: UXR Icosahedron
+// author: enealefons
+// source: https://sketchfab.com/3d-models/uxr-icosahedron-66c69bd0538a455197aebe81ae3a4961
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import computeShaderWgsl from './compute-shader.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    texture: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    solid: new pc.Asset('solid', 'container', { url: `${rootPath}/static/assets/models/icosahedron.glb` }),
+    texture: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    solid: new pc.Asset('solid', 'container', { url: './assets/models/icosahedron.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -84,7 +94,7 @@ assetListLoader.load(() => {
         new pc.Shader(device, {
             name: 'ComputeShader',
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: files['compute-shader.wgsl'],
+            cshader: computeShaderWgsl,
 
             computeUniformBufferFormats: {
                 ub: new pc.UniformBufferFormat(device, [
@@ -188,5 +198,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

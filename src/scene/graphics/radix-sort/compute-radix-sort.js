@@ -179,15 +179,19 @@ class ComputeRadixSort {
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing sorted keys on
      * the last pass (marginal perf win; only use when sorted keys aren't
      * needed afterwards).
+     * @param {boolean} [destructiveKeys] - When true, the sort may overwrite
+     * `keysBuffer` after the first pass reads it, saving one internal N×4
+     * key buffer. The caller must not read `keysBuffer` after the sort
+     * returns.
      * @returns {StorageBuffer} Sorted values buffer (same as
      * {@link sortedIndices}).
      */
-    sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite) {
+    sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite, destructiveKeys = false) {
         Debug.assert(!this._impl._indirect, 'ComputeRadixSort.sort: this instance was created with indirect:true and only supports sortIndirect');
         Debug.assert(keysBuffer, 'ComputeRadixSort.sort: keysBuffer is required');
         Debug.assert(elementCount > 0, 'ComputeRadixSort.sort: elementCount must be > 0');
         Debug.assert(numBits % this.radixBits === 0, `ComputeRadixSort.sort: numBits must be a multiple of radixBits (${this.radixBits}), got ${numBits}`);
-        return this._impl.sort(keysBuffer, elementCount, numBits, initialValues, skipLastPassKeyWrite);
+        return this._impl.sort(keysBuffer, elementCount, numBits, initialValues, skipLastPassKeyWrite, destructiveKeys);
     }
 
     /**
@@ -211,15 +215,19 @@ class ComputeRadixSort {
      * pass 0.
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing keys on the
      * last pass.
+     * @param {boolean} [destructiveKeys] - When true, the sort may overwrite
+     * `keysBuffer` after the first pass reads it, saving one internal N×4
+     * key buffer. The caller must not read `keysBuffer` after the sort
+     * returns.
      * @returns {StorageBuffer} Sorted values buffer.
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite) {
+    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite, destructiveKeys = false) {
         Debug.assert(this._impl._indirect, 'ComputeRadixSort.sortIndirect: this instance was created without indirect:true');
         Debug.assert(keysBuffer, 'ComputeRadixSort.sortIndirect: keysBuffer is required');
         Debug.assert(maxElementCount > 0, 'ComputeRadixSort.sortIndirect: maxElementCount must be > 0');
         Debug.assert(numBits % this.radixBits === 0, `ComputeRadixSort.sortIndirect: numBits must be a multiple of radixBits (${this.radixBits}), got ${numBits}`);
         Debug.assert(sortElementCountBuffer, 'ComputeRadixSort.sortIndirect: sortElementCountBuffer is required');
-        return this._impl.sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite);
+        return this._impl.sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite, destructiveKeys);
     }
 
     /**

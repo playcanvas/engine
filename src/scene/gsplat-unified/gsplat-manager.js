@@ -1613,15 +1613,14 @@ class GSplatManager {
         const cam = this.cameraNode.camera;
         const sceneCam = cam.camera;
         const rt = cam.renderTarget;
-        const rtWidth = rt ? rt.width : this.device.width;
-        const rtHeight = rt ? rt.height : this.device.height;
         const rect = cam.rect;
-        let viewportWidth = Math.floor(rtWidth * rect.z);
-        const viewportHeight = Math.floor(rtHeight * rect.w);
-        // Match Renderer#setCameraUniforms: per-eye width for stereo XR (two views).
-        if (sceneCam.xr?.session && sceneCam.xr.views?.list?.length === 2) {
-            viewportWidth = Math.floor(viewportWidth * 0.5);
-        }
+
+        // Match Renderer#setCameraUniforms: in stereo XR the XR session reports the per-eye
+        // viewport directly, which is correct for both side-by-side single-texture and
+        // multi-pass per-eye-view layouts — preferred over inferring from target.width.
+        const xrView = sceneCam.xr?.session ? sceneCam.xr.views.list[0] : null;
+        const viewportWidth = Math.floor((xrView ? xrView.viewport.z : (rt ? rt.width : this.device.width)) * rect.z);
+        const viewportHeight = Math.floor((xrView ? xrView.viewport.w : (rt ? rt.height : this.device.height)) * rect.w);
 
         const sortedIndices = this.sortGpuHybridForCamera(
             worldState,
@@ -1734,7 +1733,8 @@ class GSplatManager {
             this.indirectDispatchSlot + 1,
             /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
             undefined,
-            false
+            false,
+            true  // destructiveKeys: projector overwrites sortKeys each frame before the sort
         );
     }
 

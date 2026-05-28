@@ -842,8 +842,8 @@ class AnimComponent extends Component {
     }
 
     resolveDuplicatedEntityReferenceProperties(oldAnim, duplicatedIdsMap) {
-        if (oldAnim.rootBone && duplicatedIdsMap[oldAnim.rootBone.getGuid()]) {
-            this.rootBone = duplicatedIdsMap[oldAnim.rootBone.getGuid()];
+        if (oldAnim.rootBone && duplicatedIdsMap[oldAnim.rootBone.guid]) {
+            this.rootBone = duplicatedIdsMap[oldAnim.rootBone.guid];
         } else {
             this.rebind();
         }

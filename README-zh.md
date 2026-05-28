@@ -7,7 +7,7 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [用户手册](https://developer.playcanvas.com/user-manual/engine/) | [API 参考](https://api.playcanvas.com/engine/) | [例子](https://playcanvas.github.io) | [博客](https://blog.playcanvas.com) | [论坛](https://forum.playcanvas.com) |
+| [用户手册](https://developer.playcanvas.com/user-manual/engine/) | [API 参考](https://api.playcanvas.com/engine/) | [例子](https://playcanvas.com/examples/) | [博客](https://blog.playcanvas.com) | [论坛](https://forum.playcanvas.com) |
 
 PlayCanvas 是一款基于 WebGL2 和 WebGPU 构建的开源游戏引擎。使用它可以创建在任何浏览器和任何设备上运行的交互式 3D 应用、游戏和可视化内容。
 

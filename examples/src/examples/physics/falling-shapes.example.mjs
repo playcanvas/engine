@@ -1,20 +1,21 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    torus: new pc.Asset('torus', 'container', { url: `${rootPath}/static/assets/models/torus.glb` })
+    torus: new pc.Asset('torus', 'container', { url: './assets/models/torus.glb' })
 };
 
 const gfxOptions = {
@@ -264,5 +265,3 @@ assetListLoader.load(() => {
         });
     });
 });
-
-export { app };

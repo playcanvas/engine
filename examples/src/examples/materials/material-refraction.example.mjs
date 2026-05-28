@@ -1,6 +1,6 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,12 +9,12 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    other: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` })
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    other: new pc.Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
 };
 
 const gfxOptions = {
@@ -168,5 +168,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

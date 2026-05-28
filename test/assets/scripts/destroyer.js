@@ -6,19 +6,19 @@ Destroyer.attributes.add('destroyScriptComponent', { type: 'boolean' });
 Destroyer.attributes.add('destroyScriptInstance', { type: 'boolean' });
 
 Destroyer.prototype.initialize = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} initialize destroyer`);
+    window.initializeCalls.push(`${this.entity.guid} initialize destroyer`);
 
     this.on('state', function (state) {
-        window.initializeCalls.push(`${this.entity.getGuid()} state ${state} destroyer`);
+        window.initializeCalls.push(`${this.entity.guid} state ${state} destroyer`);
     });
     this.on('disable', function () {
-        window.initializeCalls.push(`${this.entity.getGuid()} disable destroyer`);
+        window.initializeCalls.push(`${this.entity.guid} disable destroyer`);
     });
     this.on('enable', function () {
-        window.initializeCalls.push(`${this.entity.getGuid()} enable destroyer`);
+        window.initializeCalls.push(`${this.entity.guid} enable destroyer`);
     });
     this.on('destroy', function () {
-        window.initializeCalls.push(`${this.entity.getGuid()} destroy destroyer`);
+        window.initializeCalls.push(`${this.entity.guid} destroy destroyer`);
     });
 
     if (this.methodName === 'initialize') {
@@ -27,7 +27,7 @@ Destroyer.prototype.initialize = function () {
 };
 
 Destroyer.prototype.postInitialize = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} postInitialize destroyer`);
+    window.initializeCalls.push(`${this.entity.guid} postInitialize destroyer`);
 
     if (this.methodName === 'postInitialize') {
         this.destroySomething();
@@ -35,7 +35,7 @@ Destroyer.prototype.postInitialize = function () {
 };
 
 Destroyer.prototype.update = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} update destroyer`);
+    window.initializeCalls.push(`${this.entity.guid} update destroyer`);
 
     if (!this.methodName || this.methodName === 'update')  {
         this.destroySomething();
@@ -43,7 +43,7 @@ Destroyer.prototype.update = function () {
 };
 
 Destroyer.prototype.postUpdate = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} postUpdate destroyer`);
+    window.initializeCalls.push(`${this.entity.guid} postUpdate destroyer`);
 
     if (this.methodName === 'postUpdate') {
         this.destroySomething();

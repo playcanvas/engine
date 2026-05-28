@@ -2,11 +2,11 @@
 import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
 import swcPlugin from '@rollup/plugin-swc';
+import { minify } from '@swc/core';
 
 // unofficial package plugins
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
-import { visualizer } from 'rollup-plugin-visualizer'; // eslint-disable-line import/no-unresolved
 
 // custom plugins
 import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
@@ -62,28 +62,26 @@ const STRIP_FUNCTIONS = [
 ];
 
 const BANNER = {
-    debug: ' (DEBUG)',
-    release: ' (RELEASE)',
-    profiler: ' (PROFILE)',
+    dbg: ' (DEBUG)',
+    rel: ' (RELEASE)',
+    prf: ' (PROFILE)',
     min: ' (RELEASE)'
 };
 
 const OUT_PREFIX = {
-    debug: 'playcanvas.dbg',
-    release: 'playcanvas',
-    profiler: 'playcanvas.prf',
+    dbg: 'playcanvas.dbg',
+    rel: 'playcanvas',
+    prf: 'playcanvas.prf',
     min: 'playcanvas.min'
 };
 
-const HISTORY = new Map();
-
 /**
- * @param {'debug'|'release'|'profiler'} buildType - The build type.
+ * @param {'rel'|'dbg'|'prf'} buildType - The build type.
  * @returns {object} - The JSCC options.
  */
 function getJSCCOptions(buildType) {
     const options = {
-        debug: {
+        dbg: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
@@ -93,14 +91,14 @@ function getJSCCOptions(buildType) {
             asloader: false,
             keepLines: true
         },
-        release: {
+        rel: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision
             },
             asloader: false
         },
-        profiler: {
+        prf: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
@@ -113,55 +111,45 @@ function getJSCCOptions(buildType) {
 }
 
 /**
- * @param {string} type - The type of the output (e.g., 'umd', 'es').
- * @returns {OutputOptions['plugins']} - The output plugins.
+ * Create a Rollup plugin to minify the output using SWC.
+ *
+ * @param {boolean} esm - Whether the output is an ES module.
+ * @param {string} banner - The banner to prepend to the minified code.
+ * @returns {import('rollup').Plugin} The Rollup plugin.
  */
-function getOutPlugins(type) {
-    const plugins = [];
-
-    if (process.env.treemap) {
-        plugins.push(visualizer({
-            filename: `treemap.${type}.html`,
-            brotliSize: true,
-            gzipSize: true
-        }));
-    }
-
-    if (process.env.treenet) {
-        plugins.push(visualizer({
-            filename: `treenet.${type}.html`,
-            template: 'network'
-        }));
-    }
-
-    if (process.env.treesun) {
-        plugins.push(visualizer({
-            filename: `treesun.${type}.html`,
-            template: 'sunburst'
-        }));
-    }
-
-    if (process.env.treeflame) {
-        plugins.push(visualizer({
-            filename: `treeflame.${type}.html`,
-            template: 'flamegraph'
-        }));
-    }
-
-    return plugins;
+function minifyOutput(esm, banner) {
+    return {
+        name: 'swc-minify',
+        async renderChunk(code) {
+            const result = await minify(code, {
+                sourceMap: true,
+                inlineSourcesContent: true,
+                module: esm,
+                compress: {
+                    drop_console: true,
+                    pure_funcs: []
+                },
+                mangle: true,
+                format: {
+                    comments: false,
+                    preamble: `${banner}\n`
+                }
+            });
+            return {
+                code: result.code,
+                map: result.map ? JSON.parse(result.map) : null
+            };
+        }
+    };
 }
 
 /**
- * Build rollup options for JS (bundled and unbundled).
- *
- * For faster subsequent builds, the unbundled and release builds are cached in the HISTORY map to
- * be used for bundled and minified builds. They are stored in the HISTORY map with the key:
- * `<debug|release|profiler>-<umd|esm>-<bundled>`.
+ * Build rollup options for JS.
  *
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
- * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
- * @param {'unbundled'|'bundled'} [options.bundleState] - The bundle state.
+ * @param {'rel'|'dbg'|'prf'|'min'} options.buildType - The build type.
+ * @param {boolean} [options.preserveModules] - Generate the ESM module tree.
  * @param {string} [options.input] - Only used for examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @returns {RollupOptions[]} Rollup targets.
@@ -169,69 +157,38 @@ function getOutPlugins(type) {
 function buildJSOptions({
     moduleFormat,
     buildType,
-    bundleState,
+    preserveModules = moduleFormat === 'esm' && buildType !== 'min',
     input = 'src/index.js',
     dir = 'build'
 }) {
     const isUMD = moduleFormat === 'umd';
-    const isDebug = buildType === 'debug';
+    const isDebug = buildType === 'dbg';
     const isMin = buildType === 'min';
-    const bundled = isUMD || isMin || bundleState === 'bundled';
+    const preserve = preserveModules && !isUMD && !isMin;
 
     const prefix = `${OUT_PREFIX[buildType]}`;
     const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
+    const banner = getBanner(BANNER[buildType]);
 
-    const targets = [];
+    /** @type {OutputOptions[]} */
+    const output = [{
+        banner: isMin ? undefined : banner,
+        format: isUMD ? 'umd' : 'es',
+        indent: '\t',
+        sourcemap: isDebug && 'inline',
+        name: isUMD ? 'pc' : undefined,
+        file: `${dir}/${file}`
+    }];
 
-    // bundle from unbundled
-    if (bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
-        const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
-
-        /**
-         * @type {RollupOptions}
-         */
-        const target = {
-            input: `${unbundled.output.dir}/src/index.js`,
-            output: {
-                banner: getBanner(BANNER[buildType]),
-                format: 'es',
-                indent: '\t',
-                sourcemap: isDebug && 'inline',
-                name: 'pc',
-                preserveModules: false,
-                file: `${dir}/${prefix}.mjs`
-            }
-        };
-
-        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
-        targets.push(target);
-
-        return targets;
-    }
-
-    // minify from release build
-    if (isMin && HISTORY.has(`release-${moduleFormat}-true`)) {
-        const release = HISTORY.get(`release-${moduleFormat}-true`);
-
-        /**
-         * @type {RollupOptions}
-         */
-        const target = {
-            input: release.output.file,
-            plugins: [
-                swcPlugin({ swc: swcOptions(isDebug, isMin) })
-            ],
-            output: {
-                banner: isUMD ? getBanner(BANNER[buildType]) : undefined,
-                file: `${dir}/${file}`
-            },
-            context: isUMD ? 'this' : undefined
-        };
-
-        HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
-        targets.push(target);
-
-        return targets;
+    if (preserve) {
+        output.push({
+            format: 'es',
+            indent: '\t',
+            preserveModules: true,
+            preserveModulesRoot: rootDir,
+            dir: `${dir}/${prefix}`,
+            entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
+        });
     }
 
     /**
@@ -239,36 +196,23 @@ function buildJSOptions({
      */
     const target = {
         input,
-        output: {
-            banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: buildType === 'release' ? getOutPlugins(isUMD ? 'umd' : 'es') : undefined,
-            format: isUMD ? 'umd' : 'es',
-            indent: '\t',
-            sourcemap: bundled && isDebug && 'inline',
-            name: 'pc',
-            preserveModules: !bundled,
-            preserveModulesRoot: !bundled ? rootDir : undefined,
-            file: bundled ? `${dir}/${file}` : undefined,
-            dir: !bundled ? `${dir}/${prefix}` : undefined,
-            entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
-        },
+        output,
+        context: isUMD ? 'this' : undefined,
         plugins: [
             resolve(),
-            jscc(getJSCCOptions(isMin ? 'release' : buildType)),
+            jscc(getJSCCOptions(isMin ? 'rel' : buildType)),
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            swcPlugin({ swc: swcOptions(isDebug, isMin) }),
+            swcPlugin({ swc: swcOptions(isDebug, false) }),
             !isUMD ? dynamicImportBundlerSuppress() : undefined,
-            !isDebug ? spacesToTabs() : undefined
+            !isDebug ? spacesToTabs() : undefined,
+            isMin ? minifyOutput(!isUMD, banner) : undefined
         ]
     };
 
-    HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
-    targets.push(target);
-
-    return targets;
+    return [target];
 }
 
 /**

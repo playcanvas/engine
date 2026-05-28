@@ -1,19 +1,28 @@
-// @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag HIDDEN
+//
+// @credit
+// title: NormalTangentTest
+// author: Ed Mackey
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/blob/main/2.0/NormalTangentTest/README.md
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/NormalTangentTest.glb` })
+    model: new pc.Asset('model', 'container', { url: './assets/models/NormalTangentTest.glb' })
 };
 
 const gfxOptions = {
@@ -97,5 +106,3 @@ assetListLoader.load(() => {
     directionalLight.setEulerAngles(45, 180, 0);
     app.root.addChild(directionalLight);
 });
-
-export { app };

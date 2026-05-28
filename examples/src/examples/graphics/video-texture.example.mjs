@@ -1,5 +1,6 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -21,7 +22,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    tv: new pc.Asset('tv', 'container', { url: `${rootPath}/static/assets/models/tv.glb` })
+    tv: new pc.Asset('tv', 'container', { url: './assets/models/tv.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -92,7 +93,7 @@ assetListLoader.load(() => {
         'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
     );
 
-    video.src = `${rootPath}/static/assets/video/SampleVideo_1280x720_1mb.mp4`;
+    video.src = './assets/video/SampleVideo_1280x720_1mb.mp4';
     document.body.append(video);
 
     video.addEventListener('canplaythrough', () => {
@@ -142,5 +143,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

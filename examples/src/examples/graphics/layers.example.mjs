@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -111,5 +112,3 @@ app.on('update', (dt) => {
         blueBox.rotate(0, -10 * dt, 0);
     }
 });
-
-export { app };

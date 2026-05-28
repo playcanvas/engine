@@ -1,6 +1,9 @@
-// @config WEBGPU_DISABLED
-import files from 'examples/files';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import uiCss from './ui.css';
+import uiHtml from './ui.html';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,11 +11,11 @@ window.focus();
 // create UI
 // html
 const div = document.createElement('div');
-div.innerHTML = files['ui.html'];
+div.innerHTML = uiHtml;
 document.body.appendChild(div);
 // css
 const css = document.createElement('style');
-css.innerHTML = files['ui.css'];
+css.innerHTML = uiCss;
 document.head.appendChild(css);
 
 /**
@@ -22,13 +25,35 @@ const message = function (msg) {
     document.querySelector('.message').textContent = msg;
 };
 
-// application
-const app = new pc.Application(canvas, {
-    mouse: new pc.Mouse(canvas),
-    touch: new pc.TouchDevice(canvas),
-    keyboard: new pc.Keyboard(window),
-    graphicsDeviceOptions: { alpha: true }
-});
+const gfxOptions = {
+    deviceTypes: [deviceType],
+    alpha: true
+};
+
+const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = window.devicePixelRatio;
+
+const createOptions = new pc.AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new pc.Mouse(canvas);
+createOptions.touch = new pc.TouchDevice(canvas);
+createOptions.keyboard = new pc.Keyboard(window);
+createOptions.xr = pc.XrManager;
+
+createOptions.componentSystems = [
+    pc.RenderComponentSystem,
+    pc.ModelComponentSystem,
+    pc.CameraComponentSystem,
+    pc.LightComponentSystem
+];
+createOptions.resourceHandlers = [
+    pc.TextureHandler,
+    pc.ContainerHandler
+];
+
+const app = new pc.AppBase(canvas);
+app.init(createOptions);
+
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -38,9 +63,6 @@ window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
-
-// use device pixel ratio
-app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
 app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
@@ -250,5 +272,3 @@ if (app.xr.supported) {
 } else {
     message('WebXR is not supported');
 }
-
-export { app };

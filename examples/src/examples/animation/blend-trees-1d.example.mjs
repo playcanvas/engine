@@ -1,20 +1,20 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/idle.glb` }),
+    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
     danceAnim: new pc.Asset('danceAnim', 'container', {
-        url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb`
+        url: './assets/animations/bitmoji/win-dance.glb'
     }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -158,5 +158,3 @@ assetListLoader.load(() => {
 
     app.start();
 });
-
-export { app };

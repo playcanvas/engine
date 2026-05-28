@@ -239,6 +239,35 @@ class ColorLUT {
      * @step 0.001
      */
     intensity = 1;
+
+    /**
+     * Optional secondary LUT texture. When set, both LUTs are sampled and the two graded
+     * results are crossfaded according to {@link ColorLUT#blend}.
+     *
+     * @attribute
+     * @type {Asset}
+     * @resource texture
+     */
+    texture2 = null;
+
+    /**
+     * @visibleif {texture2}
+     * @range [0, 1]
+     * @precision 3
+     * @step 0.001
+     */
+    intensity2 = 1;
+
+    /**
+     * Crossfade between the two graded results. 0 shows only the primary LUT, 1 shows only the
+     * secondary LUT, intermediate values produce a linear-space mix.
+     *
+     * @visibleif {texture2}
+     * @range [0, 1]
+     * @precision 3
+     * @step 0.001
+     */
+    blend = 0;
 }
 
 /** @interface */
@@ -547,6 +576,13 @@ class CameraFrame extends Script {
             dstColorLUT.intensity = colorLUT.intensity;
         } else {
             dstColorLUT.texture = null;
+        }
+        if (colorLUT.texture2?.resource) {
+            dstColorLUT.texture2 = colorLUT.texture2.resource;
+            dstColorLUT.intensity2 = colorLUT.intensity2;
+            dstColorLUT.blend = colorLUT.blend;
+        } else {
+            dstColorLUT.texture2 = null;
         }
 
         // vignette

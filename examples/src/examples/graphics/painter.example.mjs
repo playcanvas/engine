@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -206,5 +207,3 @@ app.on('update', (dt) => {
     // rotate the box in the world
     box.rotate(5 * dt, 10 * dt, 15 * dt);
 });
-
-export { app };

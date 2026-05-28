@@ -1,7 +1,11 @@
-// @config DESCRIPTION Renders Gaussian Splats from multiple camera viewports simultaneously with different projection types.
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// Renders Gaussian Splats from multiple camera viewports simultaneously with different projection
+// types.
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -45,12 +49,12 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    logo: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -159,5 +163,3 @@ assetListLoader.load(() => {
         cameraRight.lookAt(logoEntity2.getPosition());
     });
 });
-
-export { app };

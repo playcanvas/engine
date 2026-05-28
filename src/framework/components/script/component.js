@@ -610,9 +610,9 @@ class ScriptComponent extends Component {
 
             const newGuidArray = oldValue.slice();
             for (let i = 0; i < len; i++) {
-                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].guid : newGuidArray[i];
                 if (duplicatedIdsMap[guid]) {
-                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].guid : duplicatedIdsMap[guid];
                 }
             }
 
@@ -620,7 +620,7 @@ class ScriptComponent extends Component {
         } else {
             // handle regular entity attribute
             if (oldValue instanceof Entity) {
-                oldValue = oldValue.getGuid();
+                oldValue = oldValue.guid;
             } else if (typeof oldValue !== 'string') {
                 return;
             }

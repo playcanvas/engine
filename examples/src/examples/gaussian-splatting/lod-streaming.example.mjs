@@ -1,15 +1,23 @@
-// @config NO_MINISTATS
-// @config DESCRIPTION Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
+//
+// @flag NO_MINISTATS
+//
+// @credit
+// title: Roman Parish
+// author: Andrii Shramko
+// source: https://www.linkedin.com/in/andrii-shramko/
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { GsplatRevealRadial } = await fileImport(`${rootPath}/static/scripts/esm/gsplat/reveal-radial.mjs`);
+import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+
+import { data, deviceType, win } from 'examples/context';
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
-const hashQuery = (window.top?.location.hash || window.location.hash || '').split('?')[1] || '';
+const hashQuery = (win.location.hash || window.location.hash || '').split('?')[1] || '';
 const hashParams = new URLSearchParams(hashQuery);
 const paramUrl = hashParams.get('url');
 const paramOrientation = hashParams.get('orientation');
@@ -152,7 +160,7 @@ const assets = {
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -536,12 +544,27 @@ assetListLoader.load(async () => {
         });
     });
 
-    // update HUD stats every frame
+    let logTexturesRequested = false;
+    data.on('logTextures', () => {
+        logTexturesRequested = true;
+    });
+
+    let logBuffersRequested = false;
+    data.on('logBuffers', () => {
+        logBuffersRequested = true;
+    });
+
     app.on('update', () => {
+
+        // log textures for one frame if requested
+        pc.Tracing.set(pc.TRACEID_TEXTURES, logTexturesRequested);
+        logTexturesRequested = false;
+
+        pc.Tracing.set(pc.TRACEID_BUFFERS, logBuffersRequested);
+        logBuffersRequested = false;
+
         data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
         const bb = app.graphicsDevice.backBufferSize;
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
     });
 });
-
-export { app };

@@ -1,20 +1,24 @@
-// @config WEBGL_DISABLED
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import computeShaderWgsl from './compute-shader.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
-    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -114,7 +118,7 @@ assetListLoader.load(() => {
         new pc.Shader(device, {
             name: 'ComputeShader',
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: files['compute-shader.wgsl'],
+            cshader: computeShaderWgsl,
 
             // format of a uniform buffer used by the compute shader
             computeUniformBufferFormats: {
@@ -168,5 +172,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

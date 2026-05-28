@@ -725,7 +725,7 @@ class RenderComponent extends Component {
     set rootBone(value) {
         if (this._rootBone !== value) {
             const isString = typeof value === 'string';
-            if (this._rootBone && isString && this._rootBone.getGuid() === value) {
+            if (this._rootBone && isString && this._rootBone.guid === value) {
                 return;
             }
 
@@ -1067,7 +1067,7 @@ class RenderComponent extends Component {
 
     resolveDuplicatedEntityReferenceProperties(oldRender, duplicatedIdsMap) {
         if (oldRender.rootBone) {
-            this.rootBone = duplicatedIdsMap[oldRender.rootBone.getGuid()];
+            this.rootBone = duplicatedIdsMap[oldRender.rootBone.guid];
         }
     }
 }

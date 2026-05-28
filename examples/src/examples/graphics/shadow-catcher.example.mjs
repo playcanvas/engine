@@ -1,18 +1,26 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+// @config
+//
+// @credit
+// title: St Peter's Square Night
+// author: Poly Haven
+// source: https://polyhaven.com/a/st_peters_square_night
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
-const { ShadowCatcher } = await fileImport(`${rootPath}/static/scripts/esm/shadow-catcher.mjs`);
+import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
     hdri_street: new pc.Asset(
         'hdri',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/st-peters-square.hdr` },
+        { url: './assets/hdri/st-peters-square.hdr' },
         { mipmaps: false }
     )
 };
@@ -224,5 +232,3 @@ assetListLoader.load(() => {
         light2.light.intensity = affectScene ? 1 : 0;
     });
 });
-
-export { app };

@@ -1,5 +1,14 @@
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: MorphStressTest
+// author: Ed Mackey
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/MorphStressTest/README.md
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,10 +17,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    morph: new pc.Asset('glb', 'container', { url: `${rootPath}/static/assets/models/morph-stress-test.glb` })
+    morph: new pc.Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' })
 };
 
 const gfxOptions = {
@@ -93,5 +102,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

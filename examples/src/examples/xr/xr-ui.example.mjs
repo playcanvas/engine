@@ -1,7 +1,10 @@
-// @config WEBGPU_DISABLED
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import uiText from './text.txt';
+import uiCss from './ui.css';
+import uiHtml from './ui.html';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,11 +12,11 @@ window.focus();
 // create UI
 // html
 const div = document.createElement('div');
-div.innerHTML = files['ui.html'];
+div.innerHTML = uiHtml;
 document.body.appendChild(div);
 // css
 const css = document.createElement('style');
-css.innerHTML = files['ui.css'];
+css.innerHTML = uiCss;
 document.head.appendChild(css);
 
 /**
@@ -24,8 +27,8 @@ const message = function (msg) {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` }),
-    monitor: new pc.Asset('monitor', 'template', { url: `${rootPath}/static/assets/templates/monitor.json` })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' }),
+    monitor: new pc.Asset('monitor', 'template', { url: './assets/templates/monitor.json' })
 };
 
 assets.font.id = 42;
@@ -39,11 +42,11 @@ const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new pc.AppOptions();
-createOptions.xr = pc.XrManager;
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(document.body);
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new pc.Mouse(canvas);
+createOptions.touch = new pc.TouchDevice(canvas);
+createOptions.keyboard = new pc.Keyboard(window);
+createOptions.xr = pc.XrManager;
 createOptions.elementInput = new pc.ElementInput(canvas);
 
 createOptions.componentSystems = [
@@ -76,9 +79,6 @@ app.on('destroy', () => {
     css.remove();
 });
 
-// use device pixel ratio
-app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
-
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
@@ -102,7 +102,7 @@ assetListLoader.load(() => {
 
     // resize scrollable area to match its content
     const entityText = monitor.findByName('Lorem');
-    entityText.element.text = files['text.txt'];
+    entityText.element.text = uiText;
     monitor.findByName('Content').element.height = entityText.element.height + 40;
 
     // fps counter
@@ -202,5 +202,3 @@ assetListLoader.load(() => {
         message('WebXR is not supported');
     }
 });
-
-export { app };

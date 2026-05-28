@@ -54,7 +54,7 @@ class ComponentSystem extends EventHandler {
         const component = new this.ComponentType(this, entity);
         const componentData = new this.DataType();
 
-        this.store[entity.getGuid()] = {
+        this.store[entity.guid] = {
             entity: entity,
             data: componentData
         };
@@ -80,13 +80,13 @@ class ComponentSystem extends EventHandler {
      */
     removeComponent(entity) {
         const id = this.id;
-        const record = this.store[entity.getGuid()];
+        const record = this.store[entity.guid];
         const component = entity.c[id];
 
         component.fire('beforeremove');
         this.fire('beforeremove', entity, component);
 
-        delete this.store[entity.getGuid()];
+        delete this.store[entity.guid];
 
         entity[id] = undefined;
         delete entity.c[id];
@@ -104,7 +104,7 @@ class ComponentSystem extends EventHandler {
      */
     cloneComponent(entity, clone) {
         // default clone is just to add a new component with existing data
-        const src = this.store[entity.getGuid()];
+        const src = this.store[entity.guid];
         return this.addComponent(clone, src.data);
     }
 

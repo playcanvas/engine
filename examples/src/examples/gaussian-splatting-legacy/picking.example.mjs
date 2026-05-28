@@ -1,7 +1,13 @@
-// @config HIDDEN
-// @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene using legacy (non-unified) mode.
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example shows how to use the Picker to pick GSplat objects in the scene using legacy
+// (non-unified) mode.
+//
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -44,12 +50,12 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    logo: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    logo: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -71,7 +77,8 @@ assetListLoader.load(() => {
         const splat = new pc.Entity(`splat-${i}`);
         splat.addComponent('gsplat', {
             asset: assets.logo,
-            castShadows: false
+            castShadows: false,
+            unified: false
         });
 
         app.root.addChild(splat);
@@ -216,5 +223,3 @@ assetListLoader.load(() => {
         handlePointer(touch.x, touch.y);
     });
 });
-
-export { app };

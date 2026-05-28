@@ -52,7 +52,7 @@ class SceneParser {
     _createEntity(data, compressed) {
         const entity = new Entity(data.name, this._app);
 
-        entity.setGuid(data.resource_id);
+        entity.guid = data.resource_id;
         this._setPosRotScale(entity, data, compressed);
         entity._enabled = data.enabled ?? true;
 
@@ -93,7 +93,7 @@ class SceneParser {
         const systemsList = this._app.systems.list;
 
         let len = systemsList.length;
-        const entityData = entities[entity.getGuid()];
+        const entityData = entities[entity.guid];
         for (let i = 0; i < len; i++) {
             const system = systemsList[i];
             const componentData = entityData.components[system.id];

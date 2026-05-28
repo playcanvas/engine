@@ -1,7 +1,11 @@
-// @config DESCRIPTION Click on objects to detect world space intersection. Objects within the colored rectangles are highlighted.
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// Click on objects to detect world space intersection. Objects within the colored rectangles are
+// highlighted.
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,7 +14,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -324,5 +328,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

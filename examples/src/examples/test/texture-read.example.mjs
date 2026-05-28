@@ -1,15 +1,20 @@
-// @config DESCRIPTION Test example for texture.read() - verifies read/write roundtrip for 8-bit texture formats
-// @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// Test example for texture.read() - verifies read/write roundtrip for 8-bit texture formats
+//
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -257,5 +262,3 @@ app.on('destroy', () => {
 
 // Run tests after a short delay to ensure everything is initialized
 setTimeout(runTests, 100);
-
-export { app };

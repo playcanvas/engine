@@ -1,24 +1,50 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: Iridescent Dish with Olives
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/IridescentDishWithOlives
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Real-time Refraction Demo: Mosquito in Amber
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/real-time-refraction-demo-mosquito-in-amber-37233d6ed84844fea1ebe88069ea58d1
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Sheen Chair
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/SheenChair
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Stained Glass Lamp
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/StainedGlassLamp
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    dish: new pc.Asset('dish', 'container', { url: `${rootPath}/static/assets/models/IridescentDishWithOlives.glb` }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: `${rootPath}/static/assets/models/MosquitoInAmber.glb` }),
-    sheen: new pc.Asset('sheen', 'container', { url: `${rootPath}/static/assets/models/SheenChair.glb` }),
-    lamp: new pc.Asset('lamp', 'container', { url: `${rootPath}/static/assets/models/StainedGlassLamp.glb` }),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` })
+    dish: new pc.Asset('dish', 'container', { url: './assets/models/IridescentDishWithOlives.glb' }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
+    sheen: new pc.Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
+    lamp: new pc.Asset('lamp', 'container', { url: './assets/models/StainedGlassLamp.glb' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' })
 };
 
 const gfxOptions = {
@@ -246,5 +272,3 @@ assetListLoader.load(() => {
         jumpToAsset(1);
     });
 });
-
-export { app };

@@ -1,5 +1,6 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,12 +9,12 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/flakes5n.png` }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/flakes5c.png` }),
-    other: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/flakes5o.png` })
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/flakes5n.png' }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: './assets/textures/flakes5c.png' }),
+    other: new pc.Asset('other', 'texture', { url: './assets/textures/flakes5o.png' })
 };
 
 const gfxOptions = {
@@ -131,5 +132,3 @@ assetListLoader.load(() => {
         camera.lookAt(pc.Vec3.ZERO);
     });
 });
-
-export { app };

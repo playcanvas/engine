@@ -1,39 +1,47 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: Chess Board
+// author: Idmental
+// source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
-    bloom: new pc.Asset('bloom', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-bloom.js` }),
-    bokeh: new pc.Asset('bokeh', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-bokeh.js` }),
-    sepia: new pc.Asset('sepia', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-sepia.js` }),
+    board: new pc.Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
+    bloom: new pc.Asset('bloom', 'script', { url: './scripts/posteffects/posteffect-bloom.js' }),
+    bokeh: new pc.Asset('bokeh', 'script', { url: './scripts/posteffects/posteffect-bokeh.js' }),
+    sepia: new pc.Asset('sepia', 'script', { url: './scripts/posteffects/posteffect-sepia.js' }),
     vignette: new pc.Asset('vignette', 'script', {
-        url: `${rootPath}/static/scripts/posteffects/posteffect-vignette.js`
+        url: './scripts/posteffects/posteffect-vignette.js'
     }),
-    ssao: new pc.Asset('ssao', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-ssao.js` }),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
+    ssao: new pc.Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -273,5 +281,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

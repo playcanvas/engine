@@ -897,7 +897,7 @@ class CameraComponent extends Component {
         if (value && !this._sceneColorMapRequested) {
             this.requestSceneColorMap(true);
             this._sceneColorMapRequested = true;
-        } else if (this._sceneColorMapRequested) {
+        } else if (!value && this._sceneColorMapRequested) {
             this.requestSceneColorMap(false);
             this._sceneColorMapRequested = false;
         }
@@ -911,7 +911,7 @@ class CameraComponent extends Component {
         if (value && !this._sceneDepthMapRequested) {
             this.requestSceneDepthMap(true);
             this._sceneDepthMapRequested = true;
-        } else if (this._sceneDepthMapRequested) {
+        } else if (!value && this._sceneDepthMapRequested) {
             this.requestSceneDepthMap(false);
             this._sceneDepthMapRequested = false;
         }

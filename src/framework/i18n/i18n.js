@@ -313,7 +313,7 @@ class I18n extends EventHandler {
         try {
             parsed = this._parser.parse(data);
         } catch (err) {
-            console.error(err);
+            console.error(`I18n.addData: failed to parse localization data: ${err?.message ?? err}`, err);
             return;
         }
 
@@ -349,7 +349,7 @@ class I18n extends EventHandler {
         try {
             parsed = this._parser.parse(data);
         } catch (err) {
-            console.error(err);
+            console.error(`I18n.removeData: failed to parse localization data: ${err?.message ?? err}`, err);
             return;
         }
 

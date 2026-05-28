@@ -1,0 +1,272 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    ".git/HEAD",
+    ".git/packed-refs",
+    "build.mjs",
+    "package-lock.json",
+    "package.json",
+    "rollup.config.mjs",
+    "tsconfig*.json",
+    "utils/esbuild-*.mjs",
+    "utils/types-*.mjs",
+    "utils/plugins/**/*.mjs",
+    "utils/rollup-*.mjs"
+  ],
+  "tasks": {
+    "clean": {
+      "cache": false
+    },
+    "build:all": {
+      "cache": false,
+      "dependsOn": [
+        "build:umd",
+        "build:esm",
+        "build:types"
+      ]
+    },
+    "build:rel": {
+      "cache": false,
+      "dependsOn": [
+        "build:rel:umd",
+        "build:rel:esm"
+      ]
+    },
+    "build:dbg": {
+      "cache": false,
+      "dependsOn": [
+        "build:dbg:umd",
+        "build:dbg:esm"
+      ]
+    },
+    "build:prf": {
+      "cache": false,
+      "dependsOn": [
+        "build:prf:umd",
+        "build:prf:esm"
+      ]
+    },
+    "build:min": {
+      "cache": false,
+      "dependsOn": [
+        "build:min:umd",
+        "build:min:esm"
+      ]
+    },
+    "build:umd": {
+      "cache": false,
+      "dependsOn": [
+        "build:rel:umd",
+        "build:dbg:umd",
+        "build:prf:umd",
+        "build:min:umd"
+      ]
+    },
+    "build:esm": {
+      "cache": false,
+      "dependsOn": [
+        "build:rel:esm",
+        "build:dbg:esm",
+        "build:prf:esm",
+        "build:min:esm"
+      ]
+    },
+    "build:rel:umd": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.js"
+      ]
+    },
+    "build:rel:esm": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.mjs",
+        "build/playcanvas/modules/**/*.js",
+        "build/playcanvas/src/**/*.js"
+      ]
+    },
+    "build:dbg:umd": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.dbg.js"
+      ]
+    },
+    "build:dbg:esm": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.dbg.mjs",
+        "build/playcanvas.dbg/modules/**/*.js",
+        "build/playcanvas.dbg/src/**/*.js"
+      ]
+    },
+    "build:prf:umd": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.prf.js"
+      ]
+    },
+    "build:prf:esm": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.prf.mjs",
+        "build/playcanvas.prf/modules/**/*.js",
+        "build/playcanvas.prf/src/**/*.js"
+      ]
+    },
+    "build:min:umd": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.min.js"
+      ]
+    },
+    "build:min:esm": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.min.mjs"
+      ]
+    },
+    "build:types": {
+      "inputs": [
+        "src/**/*.js"
+      ],
+      "outputs": [
+        "build/playcanvas.d.ts",
+        "build/.cache/playcanvas-types.tsbuildinfo",
+        "build/playcanvas/src/**/*.d.ts"
+      ]
+    },
+    "watch:all": {
+      "cache": false,
+      "with": [
+        "watch:umd",
+        "watch:esm",
+        "watch:types"
+      ]
+    },
+    "watch:rel": {
+      "cache": false,
+      "with": [
+        "watch:rel:umd",
+        "watch:rel:esm"
+      ]
+    },
+    "watch:dbg": {
+      "cache": false,
+      "with": [
+        "watch:dbg:umd",
+        "watch:dbg:esm"
+      ]
+    },
+    "watch:prf": {
+      "cache": false,
+      "with": [
+        "watch:prf:umd",
+        "watch:prf:esm"
+      ]
+    },
+    "watch:min": {
+      "cache": false,
+      "with": [
+        "watch:min:umd",
+        "watch:min:esm"
+      ]
+    },
+    "watch:umd": {
+      "cache": false,
+      "with": [
+        "watch:rel:umd",
+        "watch:dbg:umd",
+        "watch:prf:umd",
+        "watch:min:umd"
+      ]
+    },
+    "watch:esm": {
+      "cache": false,
+      "with": [
+        "watch:rel:esm",
+        "watch:dbg:esm",
+        "watch:prf:esm",
+        "watch:min:esm"
+      ]
+    },
+    "watch:rel:umd": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    },
+    "watch:rel:esm": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    },
+    "watch:dbg:umd": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    },
+    "watch:dbg:esm": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    },
+    "watch:prf:umd": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    },
+    "watch:prf:esm": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    },
+    "watch:min:umd": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    },
+    "watch:min:esm": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    },
+    "watch:types": {
+      "cache": false,
+      "persistent": true,
+      "inputs": [
+        "src/**/*.js"
+      ]
+    }
+  }
+}

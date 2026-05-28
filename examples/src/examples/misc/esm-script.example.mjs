@@ -1,8 +1,10 @@
-// @config HIDDEN
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+// @config
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
 
-const { Rotator } = await fileImport(`${rootPath}/static/assets/scripts/misc/rotator.mjs`);
+import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -57,5 +59,3 @@ const light = new pc.Entity('light');
 light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(45, 0, 0);
-
-export { app };

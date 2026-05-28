@@ -1,23 +1,35 @@
 import { Button, Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 
+import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { logo } from '../paths.mjs';
+import { getLayout } from '../utils.mjs';
 
 /**
  * @typedef {object} Props
  * @property {(value: boolean) => void} setShowMiniStats - The state set function .
+ * @property {'mobile'|'desktop'} [layout] - Current layout.
+ * @property {boolean} showCredits - Whether the desktop credits overlay is visible.
+ * @property {(value: boolean) => void} setShowCredits - Set credits overlay visibility.
  */
 
-// eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} State
+ * @property {boolean} showMiniStats - Show MiniStats state.
+ * @property {boolean} hasCredits - Whether the loaded example has any credits.
  */
 
 /** @type {typeof Component<Props, State>} */
 const TypedComponent = Component;
 
 class Menu extends TypedComponent {
+    /** @type {State} */
+    state = {
+        showMiniStats: getLayout() === 'desktop',
+        hasCredits: false
+    };
+
     mouseTimeout = null;
 
     /**
@@ -27,10 +39,25 @@ class Menu extends TypedComponent {
         super(props);
         this._handleKeyDown = this._handleKeyDown.bind(this);
         this._handleExampleLoad = this._handleExampleLoad.bind(this);
+        this._handleMiniStats = this._handleMiniStats.bind(this);
+        this.toggleMiniStats = this.toggleMiniStats.bind(this);
+        this.toggleCredits = this.toggleCredits.bind(this);
+    }
+
+    toggleCredits() {
+        this.props.setShowCredits(!this.props.showCredits);
     }
 
     /** @type {EventListener | null} */
     clickFullscreenListener = null;
+
+    resizeIframe() {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                iframe.window?.dispatchEvent(new Event('resize'));
+            });
+        });
+    }
 
     toggleFullscreen() {
         const contentDocument = document.querySelector('iframe')?.contentDocument;
@@ -57,6 +84,7 @@ class Menu extends TypedComponent {
             };
             contentDocument.addEventListener('mousemove', this.clickFullscreenListener);
         }
+        this.resizeIframe();
     }
 
     componentDidMount() {
@@ -68,6 +96,7 @@ class Menu extends TypedComponent {
         }
         document.addEventListener('keydown', this._handleKeyDown);
         window.addEventListener('exampleLoad', this._handleExampleLoad);
+        window.addEventListener('miniStats', this._handleMiniStats);
     }
 
     componentWillUnmount() {
@@ -77,6 +106,7 @@ class Menu extends TypedComponent {
         }
         document.removeEventListener('keydown', this._handleKeyDown);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
+        window.removeEventListener('miniStats', this._handleMiniStats);
     }
 
     /**
@@ -92,16 +122,32 @@ class Menu extends TypedComponent {
         }
     }
 
-    _handleExampleLoad() {
-        const showMiniStatsBtn = document.getElementById('showMiniStatsButton');
-        if (!showMiniStatsBtn) {
-            return;
-        }
-        const selected = showMiniStatsBtn.classList.contains('selected');
-        this.props.setShowMiniStats(selected);
+    /**
+     * @param {Event} event - exampleLoad event.
+     */
+    _handleExampleLoad(event) {
+        this.props.setShowMiniStats(this.state.showMiniStats);
+        const detail = /** @type {CustomEvent<{ credits?: unknown[] }>} */ (event).detail;
+        this.setState({ hasCredits: (detail?.credits?.length ?? 0) > 0 });
+    }
+
+    toggleMiniStats() {
+        const value = !this.state.showMiniStats;
+        this.setState({ showMiniStats: value });
+        this.props.setShowMiniStats(value);
+    }
+
+    /**
+     * @param {Event} event - MiniStats state event.
+     */
+    _handleMiniStats(event) {
+        const customEvent = /** @type {CustomEvent<{ state: boolean }>} */ (event);
+        this.setState({ showMiniStats: !!customEvent.detail.state });
     }
 
     render() {
+        const { showMiniStats, hasCredits } = this.state;
+        const { layout, showCredits } = this.props;
         return jsx(
             Container,
             {
@@ -132,13 +178,15 @@ class Menu extends TypedComponent {
                 jsx(Button, {
                     icon: 'E149',
                     id: 'showMiniStatsButton',
-                    class: 'selected',
+                    class: showMiniStats ? 'selected' : undefined,
                     text: '',
-                    onClick: () => {
-                        document.getElementById('showMiniStatsButton')?.classList.toggle('selected');
-                        const selected = document.getElementById('showMiniStatsButton')?.classList.contains('selected');
-                        this.props.setShowMiniStats(!!selected);
-                    }
+                    onClick: this.toggleMiniStats
+                }),
+                hasCredits && layout === 'desktop' && jsx(Button, {
+                    id: 'showCreditsButton',
+                    class: showCredits ? 'selected' : undefined,
+                    text: '',
+                    onClick: this.toggleCredits
                 }),
                 jsx(Button, {
                     icon: 'E127',

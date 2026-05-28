@@ -1,7 +1,11 @@
-// @config DESCRIPTION This example demonstrates unified gsplat rendering, where all individual gaussian splats are consistently sorted in a global order, rather than rendering splat meshes based on camera distance.
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example demonstrates unified gsplat rendering, where all individual gaussian splats are
+// consistently sorted in a global order, rather than rendering splat meshes based on camera distance.
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -45,10 +49,10 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/hotel-culpture.compressed.ply` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    hotel: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    guitar: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/guitar.compressed.ply' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -63,9 +67,7 @@ assetListLoader.load(() => {
         }
     });
 
-    // default unified mode
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('unified', true);
 
     // instantiate garage gsplat
     const hotel = new pc.Entity('garage');
@@ -117,7 +119,6 @@ assetListLoader.load(() => {
     camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            focusEntity: guitar,
             distanceMax: 3.2,
             frameOnStart: false
         }
@@ -126,14 +127,8 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
-    // toggle unified rendering for all gsplats via controls
-    data.on('unified:set', () => {
-        const unified = !!data.get('unified');
-        const comps = /** @type {pc.GSplatComponent[]} */ (app.root.findComponents('gsplat'));
-        comps.forEach((comp) => {
-            comp.unified = unified;
-        });
-    });
+    // orbit around the statue's world-space centre
+    const orbitPivot = new pc.Vec3();
+    hotel.getWorldTransform().transformPoint(new pc.Vec3(0, 0.2, 0), orbitPivot);
+    camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(3, 1, 0.5), orbitPivot);
 });
-
-export { app };

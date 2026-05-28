@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -55,5 +56,3 @@ light.setEulerAngles(45, 0, 0);
 
 // rotate the box according to the delta time since the last frame
 app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
-
-export { app };

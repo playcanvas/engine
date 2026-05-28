@@ -1,15 +1,16 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     particlesCoinsTexture: new pc.Asset('particlesCoinsTexture', 'texture', {
-        url: `${rootPath}/static/assets/textures/particles-coins.png`
+        url: './assets/textures/particles-coins.png'
     }, { srgb: true }),
     particlesBonusTexture: new pc.Asset('particlesBonusTexture', 'texture', {
-        url: `${rootPath}/static/assets/textures/particles-bonus.png`
+        url: './assets/textures/particles-bonus.png'
     }, { srgb: true })
 };
 
@@ -178,5 +179,3 @@ assetListLoader.load(() => {
 
     app.start();
 });
-
-export { app };

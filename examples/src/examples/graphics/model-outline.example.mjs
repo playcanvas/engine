@@ -1,16 +1,17 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    outline: new pc.Asset('outline', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-outline.js` })
+    outline: new pc.Asset('outline', 'script', { url: './scripts/posteffects/posteffect-outline.js' })
 };
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
@@ -186,5 +187,3 @@ assetListLoader.load(() => {
         outlineCamera.setLocalRotation(camera.getLocalRotation());
     });
 });
-
-export { app };

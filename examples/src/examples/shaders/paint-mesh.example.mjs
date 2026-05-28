@@ -1,6 +1,11 @@
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,11 +15,11 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }, { srgb: true }),
-    decal: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` }, { srgb: true })
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
+    decal: new pc.Asset('color', 'texture', { url: './assets/textures/heart.png' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -131,10 +136,10 @@ assetListLoader.load(() => {
     // Create a decal material with a custom shader
     const decalMaterial = new pc.ShaderMaterial({
         uniqueName: 'DecalShader',
-        vertexGLSL: files['shader.glsl.vert'],
-        fragmentGLSL: files['shader.glsl.frag'],
-        vertexWGSL: files['shader.wgsl.vert'],
-        fragmentWGSL: files['shader.wgsl.frag'],
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: shaderGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: shaderWgslFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0
@@ -209,5 +214,3 @@ assetListLoader.load(() => {
         app.drawTexture(0, -0.6, 1.4, 0.6, texture);
     });
 });
-
-export { app };

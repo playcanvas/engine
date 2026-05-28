@@ -1,8 +1,19 @@
-// @config DESCRIPTION Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
-import files from 'examples/files';
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
+//
+// @credit
+// title: VR Gallery
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/vr-gallery-1e087aa25dc742e680accb15249bd6be
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -45,11 +56,11 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.compressed.ply` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/skull.sog` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    gallery: new pc.Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' }),
+    guitar: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/guitar.compressed.ply' }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    skull: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/skull.sog' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -130,8 +141,8 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
 
-    const glslVs = files['shader.glsl.vert'];
-    const wgslVs = files['shader.wgsl.vert'];
+    const glslVs = shaderGlslVert;
+    const wgslVs = shaderWgslVert;
     const sceneMat = app.scene.gsplat.material;
 
     /**
@@ -154,16 +165,13 @@ assetListLoader.load(() => {
     applyCustomShader(false);
     data.set('shader', false);
 
-    const uTime = app.graphicsDevice.scope.resolve('uTime');
-
     let currentTime = 0;
     app.on('update', (dt) => {
         currentTime += dt;
 
-        uTime.setValue(currentTime);
+        sceneMat.setParameter('uTime', currentTime);
+        sceneMat.update();
 
         skull.rotate(0, 80 * dt, 0);
     });
 });
-
-export { app };

@@ -6,7 +6,7 @@ import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
-import { TRACEID_TEXTURES } from '../../core/constants.js';
+import { TRACEID_BUFFERS, TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     BUFFER_STATIC,
     CULLFACE_BACK, CULLFACE_NONE,
@@ -25,6 +25,7 @@ import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { StorageBuffer } from './storage-buffer.js';
 
 /**
  * @import { Compute } from './compute.js'
@@ -34,7 +35,6 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
- * @import { StorageBuffer } from './storage-buffer.js';
  * @import { DrawCommands } from './draw-commands.js';
  */
 
@@ -294,6 +294,59 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     supportsLinearIndexing = false;
+
+    /**
+     * True if the device supports the WGSL `pointer_composite_access` language feature, which
+     * provides syntactic sugar for dereferencing pointers to composite types: `p.field` and
+     * `p[i]` may be written instead of `(*p).field` and `(*p)[i]`. The
+     * `requires pointer_composite_access;` directive is automatically injected into WGSL
+     * shaders when this feature is available, and the shader define
+     * `CAPS_POINTER_COMPOSITE_ACCESS` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPointerCompositeAccess = false;
+
+    /**
+     * True if the device supports the WGSL `packed_4x8_integer_dot_product` language feature,
+     * which exposes the DP4a-family built-in functions for 8-bit packed integer dot products:
+     * `dot4U8Packed`, `dot4I8Packed`, and the `pack4x{I,U}8`, `pack4x{I,U}8Clamp`,
+     * `unpack4x{I,U}8` helpers. Useful for accelerating quantized inference and similar
+     * integer-heavy compute workloads. The `requires packed_4x8_integer_dot_product;`
+     * directive is automatically injected into WGSL shaders when this feature is available,
+     * and the shader define `CAPS_PACKED_4X8_INTEGER_DOT_PRODUCT` is set for conditional
+     * compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPacked4x8IntegerDotProduct = false;
+
+    /**
+     * True if the device supports the WGSL `texture_and_sampler_let` language feature, which
+     * allows assigning texture and sampler variables to `let` bindings within a WGSL shader
+     * (preparation for bindless-style indirection patterns). The
+     * `requires texture_and_sampler_let;` directive is automatically injected into WGSL
+     * shaders when this feature is available, and the shader define
+     * `CAPS_TEXTURE_AND_SAMPLER_LET` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureAndSamplerLet = false;
+
+    /**
+     * True if the device supports the WGSL `unrestricted_pointer_parameters` language feature,
+     * which allows passing pointers in the `storage`, `uniform`, and `workgroup` address spaces
+     * as function arguments. The `requires unrestricted_pointer_parameters;` directive is
+     * automatically injected into WGSL shaders when this feature is available, and the shader
+     * define `CAPS_UNRESTRICTED_POINTER_PARAMETERS` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsUnrestrictedPointerParameters = false;
 
     /**
      * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either
@@ -600,6 +653,9 @@ class GraphicsDevice extends EventHandler {
         this.initOptions.powerPreference ??= 'high-performance';
         this.initOptions.displayFormat ??= DISPLAYFORMAT_LDR;
 
+        // If WebXR is exposed, default to an XR-suitable GPU
+        this.initOptions.xrCompatible ??= platform.browser && !!navigator.xr;
+
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
@@ -681,6 +737,10 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
         if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
         if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
+        if (this.supportsUnrestrictedPointerParameters) capsDefines.set('CAPS_UNRESTRICTED_POINTER_PARAMETERS', '');
+        if (this.supportsPointerCompositeAccess) capsDefines.set('CAPS_POINTER_COMPOSITE_ACCESS', '');
+        if (this.supportsPacked4x8IntegerDotProduct) capsDefines.set('CAPS_PACKED_4X8_INTEGER_DOT_PRODUCT', '');
+        if (this.supportsTextureAndSamplerLet) capsDefines.set('CAPS_TEXTURE_AND_SAMPLER_LET', '');
         if (this.supportsStorageTextureRead) capsDefines.set('CAPS_STORAGE_TEXTURE_READ', '');
 
         // Platform defines
@@ -747,6 +807,8 @@ class GraphicsDevice extends EventHandler {
      */
     loseContext() {
 
+        Debug.log('pc.GraphicsDevice: Graphics context lost.');
+
         this.contextLost = true;
 
         // force the back-buffer to be recreated on restore
@@ -778,6 +840,8 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     restoreContext() {
+
+        Debug.log('pc.GraphicsDevice: Graphics context restored.');
 
         this.contextLost = false;
 
@@ -1286,6 +1350,52 @@ class GraphicsDevice extends EventHandler {
                     Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
+            }
+
+            // log out all tracked GPU buffers, sorted by size
+            if (Tracing.get(TRACEID_BUFFERS)) {
+                const entries = [...this.buffers].map((buffer) => {
+                    let kind;
+                    let size;
+                    if (buffer instanceof VertexBuffer) {
+                        kind = 'VB';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? 0;
+                    } else if (buffer instanceof IndexBuffer) {
+                        kind = 'IB';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? 0;
+                    } else if (buffer instanceof StorageBuffer) {
+                        kind = 'SB';
+                        size = buffer.byteSize ?? 0;
+                    } else {
+                        kind = buffer.constructor?.name ?? '?';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? buffer.byteSize ?? 0;
+                    }
+                    return { buffer, kind, size };
+                });
+                entries.sort((a, b) => b.size - a.size);
+                Debug.log(`Buffers: ${entries.length}`);
+                let total = 0;
+                let totalVB = 0;
+                let totalIB = 0;
+                let totalSB = 0;
+                entries.forEach((entry, index) => {
+                    const { buffer, kind, size } = entry;
+                    total += size;
+                    if (kind === 'VB') {
+                        totalVB += size;
+                    } else if (kind === 'IB') {
+                        totalIB += size;
+                    } else if (kind === 'SB') {
+                        totalSB += size;
+                    }
+                    const namePart = buffer.name ? ` ${buffer.name}` : '';
+                    Debug.log(`${index}. ${kind} Id: ${buffer.id}${namePart} VRAM: ${(size / 1024 / 1024).toFixed(2)} MB`);
+                });
+                const mb = n => (n / 1024 / 1024).toFixed(2);
+                Debug.log(`Total VB: ${totalVB} bytes (${mb(totalVB)} MB)`);
+                Debug.log(`Total IB: ${totalIB} bytes (${mb(totalIB)} MB)`);
+                Debug.log(`Total SB: ${totalSB} bytes (${mb(totalSB)} MB)`);
+                Debug.log(`Total: ${total} bytes (${mb(total)} MB)`);
             }
         });
     }

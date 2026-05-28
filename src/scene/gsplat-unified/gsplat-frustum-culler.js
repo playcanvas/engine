@@ -1,5 +1,6 @@
 import { Frustum } from '../../core/shape/frustum.js';
 import { Mat4 } from '../../core/math/mat4.js';
+import { DebugHelper } from '../../core/debug.js';
 import { BUFFERUSAGE_COPY_DST } from '../../platform/graphics/constants.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 
@@ -124,6 +125,7 @@ class GSplatFrustumCuller {
             this.boundsBuffer?.destroy();
             this._allocatedBoundsEntries = totalEntries;
             this.boundsBuffer = new StorageBuffer(this.device, totalEntries * BOUNDS_ENTRY_FLOATS * 4, BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this.boundsBuffer, 'GsplatFrustumCuller.bounds');
 
             const ab = new ArrayBuffer(totalEntries * BOUNDS_ENTRY_FLOATS * 4);
             this._boundsFloatView = new Float32Array(ab);
@@ -172,6 +174,7 @@ class GSplatFrustumCuller {
             this._allocatedTransformCount = numMatrices;
             // 3 vec4f per matrix = 12 floats = 48 bytes
             this.transformsBuffer = new StorageBuffer(this.device, numMatrices * 12 * 4, BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this.transformsBuffer, 'GsplatFrustumCuller.transforms');
             this._transformsData = new Float32Array(numMatrices * 12);
         }
 

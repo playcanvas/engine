@@ -134,12 +134,13 @@ class SogParser {
 
         const textures = {};
         const promises = [];
+        const base = window.document?.baseURI ?? window.location.href;
 
         subs.forEach((sub) => {
             const files = meta[sub]?.files ?? [];
             textures[sub] = files.map((filename) => {
                 const texture = new Asset(filename, 'texture', {
-                    url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, new URL(url.load, window.location.href).toString())).toString(),
+                    url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, new URL(url.load, base).toString())).toString(),
                     filename
                 }, {
                     mipmaps: false

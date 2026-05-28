@@ -15,7 +15,7 @@ import {
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
 import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, FOG_NONE, GSPLAT_DEBUG_HEATMAP } from '../constants.js';
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Camera } from '../camera.js';
@@ -532,11 +532,16 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._depthBuffer = new StorageBuffer(device, numSplats * 4);
             this._splatPairStartBuffer = new StorageBuffer(device, numSplats * 4);
             this._splatPairCountBuffer = new StorageBuffer(device, numSplats * 4);
+            DebugHelper.setName(this._projCacheBuffer, 'GsplatComputeLocalRenderer.projCache');
+            DebugHelper.setName(this._depthBuffer, 'GsplatComputeLocalRenderer.depth');
+            DebugHelper.setName(this._splatPairStartBuffer, 'GsplatComputeLocalRenderer.splatPairStart');
+            DebugHelper.setName(this._splatPairCountBuffer, 'GsplatComputeLocalRenderer.splatPairCount');
         }
 
         // Packed atomic counters: [0] = global pair counter, [1] = large splat count.
         if (!this._countersBuffer) {
             this._countersBuffer = new StorageBuffer(device, 8, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
+            DebugHelper.setName(this._countersBuffer, 'GsplatComputeLocalRenderer.counters');
         }
 
         // Large-splat ID buffer (grow-only)
@@ -544,6 +549,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._largeSplatIdsBuffer?.destroy();
             this._allocatedLargeSplatCapacity = this._largeSplatIdsCapacity;
             this._largeSplatIdsBuffer = new StorageBuffer(device, this._largeSplatIdsCapacity * 4);
+            DebugHelper.setName(this._largeSplatIdsBuffer, 'GsplatComputeLocalRenderer.largeSplatIds');
         }
 
         // Entry capacity (tileEntries + pairBuffer — both sized identically)
@@ -557,6 +563,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._allocatedEntryCapacity = requiredEntryCapacity;
             this._tileEntriesBuffer = new StorageBuffer(device, requiredEntryCapacity * 4, BUFFERUSAGE_COPY_DST);
             this._pairBuffer = new StorageBuffer(device, requiredEntryCapacity * 4);
+            DebugHelper.setName(this._tileEntriesBuffer, 'GsplatComputeLocalRenderer.tileEntries');
+            DebugHelper.setName(this._pairBuffer, 'GsplatComputeLocalRenderer.pair');
         }
 
         this._lastBufferSubmitVersion = device.submitVersion;
@@ -1013,6 +1021,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             });
 
             this._placeEntryPrepDispatchBuffer = new StorageBuffer(device, 6 * 4, BUFFERUSAGE_INDIRECT);
+            DebugHelper.setName(this._placeEntryPrepDispatchBuffer, 'GsplatComputeLocalRenderer.placeEntryPrepDispatch');
             this._placeEntryPrepCompute = new Compute(device, this._placeEntryPrepShader);
         }
 
@@ -1073,6 +1082,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             });
 
             this._largeSplatDispatchBuffer = new StorageBuffer(device, 3 * 4, BUFFERUSAGE_INDIRECT);
+            DebugHelper.setName(this._largeSplatDispatchBuffer, 'GsplatComputeLocalRenderer.largeSplatDispatch');
             this._largeSplatPrepCompute = new Compute(device, this._largeSplatPrepShader);
         }
 

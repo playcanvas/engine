@@ -1,10 +1,19 @@
-// @config HIDDEN
-// @config DESCRIPTION Demonstrates shadow catching with Gaussian Splats.
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// Demonstrates shadow catching with Gaussian Splats.
+//
+// @flag HIDDEN
+//
+// @credit
+// title: St Peter's Square Night
+// author: Poly Haven
+// source: https://polyhaven.com/a/st_peters_square_night
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-const { ShadowCatcher } = await fileImport(`${rootPath}/static/scripts/esm/shadow-catcher.mjs`);
+import * as pc from 'playcanvas';
+import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -48,14 +57,14 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
     hdri: new pc.Asset(
         'hdri',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/st-peters-square.hdr` },
+        { url: './assets/hdri/st-peters-square.hdr' },
         { mipmaps: false }
     ),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -176,5 +185,3 @@ assetListLoader.load(() => {
         directionalLight.setEulerAngles(55, 90 + lightAngle, 0);
     });
 });
-
-export { app };

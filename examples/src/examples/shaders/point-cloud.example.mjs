@@ -1,14 +1,17 @@
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderFrag from './shader.frag';
+import shaderVert from './shader.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -24,7 +27,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -58,8 +61,8 @@ assetListLoader.load(() => {
     // Create a new material with a custom shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag'],
+        vertexGLSL: shaderVert,
+        fragmentGLSL: shaderFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0
@@ -90,5 +93,3 @@ assetListLoader.load(() => {
         entity.rotate(0, 15 * dt, 0);
     });
 });
-
-export { app };
