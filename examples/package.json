@@ -21,13 +21,13 @@
     "type:check:examples": "tsc -p tsconfig.examples.json --pretty false"
   },
   "devDependencies": {
-    "@babel/standalone": "7.29.4",
+    "@babel/standalone": "7.29.7",
     "@monaco-editor/react": "4.7.0",
     "@playcanvas/eslint-config": "2.1.0",
     "@playcanvas/observer": "1.7.1",
     "@playcanvas/pcui": "5.8.0",
     "@tweenjs/tween.js": "25.0.0",
-    "@types/react": "19.2.14",
+    "@types/react": "19.2.15",
     "@types/react-dom": "19.2.3",
     "@types/react-router-dom": "5.3.3",
     "cross-env": "10.1.0",
