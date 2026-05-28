@@ -25,7 +25,7 @@
     "@monaco-editor/react": "4.7.0",
     "@playcanvas/eslint-config": "2.1.0",
     "@playcanvas/observer": "1.7.1",
-    "@playcanvas/pcui": "5.8.0",
+    "@playcanvas/pcui": "6.1.4",
     "@tweenjs/tween.js": "25.0.0",
     "@types/react": "19.2.15",
     "@types/react-dom": "19.2.3",
@@ -39,13 +39,13 @@
     "monaco-editor": "0.55.1",
     "playcanvas": "file:..",
     "prop-types": "15.8.1",
-    "puppeteer": "24.43.1",
+    "puppeteer": "25.1.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "react-router-dom": "7.15.1",
     "sharp": "0.34.5",
     "typescript": "5.9.3",
-    "vite": "6.4.2"
+    "vite": "8.0.14"
   },
   "author": "PlayCanvas <support@playcanvas.com>",
   "license": "MIT"
