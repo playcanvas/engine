@@ -1,5 +1,6 @@
-import { deviceType } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -75,5 +76,3 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 camera.setLocalPosition(0, 0, 5);
-
-export { app };

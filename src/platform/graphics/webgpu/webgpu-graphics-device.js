@@ -1,5 +1,6 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { warnInsecureContext } from '../../../core/secure-context-warning.js';
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
@@ -33,10 +34,11 @@ import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
 import { WebgpuUploadStream } from './webgpu-upload-stream.js';
-import { WebgpuComputeBenchmark } from './webgpu-compute-benchmark.js';
+import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
+ * @import { Texture } from '../texture.js'
  */
 
 const _uniqueLocations = new Map();
@@ -78,7 +80,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Number of indirect draw slots allocated.
      *
-     * @type {number}
      * @private
      */
     _indirectDrawBufferCount = 0;
@@ -86,7 +87,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Next unused index in indirectDrawBuffer.
      *
-     * @type {number}
      * @private
      */
     _indirectDrawNextIndex = 0;
@@ -102,7 +102,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Number of indirect dispatch slots allocated.
      *
-     * @type {number}
      * @private
      */
     _indirectDispatchBufferCount = 0;
@@ -110,7 +109,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Next unused index in indirectDispatchBuffer.
      *
-     * @type {number}
      * @private
      */
     _indirectDispatchNextIndex = 0;
@@ -155,10 +153,64 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Monotonically increasing counter incremented each time queue.submit() is called.
      *
-     * @type {number}
      * @ignore
      */
     submitVersion = 0;
+
+    /**
+     * When set, immersive XR writes color to this texture instead of the canvas swapchain.
+     * @type {any} // `GPUTexture | null`; using `any` to avoid exporting WebGPU types in published typings.
+     * @ignore
+     */
+    xrColorTexture = null;
+
+    /**
+     * View format of {@link WebgpuGraphicsDevice#xrColorTexture} for render pass attachment views.
+     * @type {any} // `GPUTextureFormat | null`; using `any` to avoid exporting WebGPU types in published typings.
+     * @ignore
+     */
+    xrColorTextureViewFormat = null;
+
+    /**
+     * Optional `GPUTextureViewDescriptor` describing how the framebuffer's color attachment view
+     * should be created from {@link WebgpuGraphicsDevice#xrColorTexture}. Used to pick the right
+     * array layer / mip when XR provides a layered (texture array) projection layer. Set per eye
+     * by {@link FramePassMultiView}; cleared back to `null` outside the per-view loop.
+     *
+     * @type {any} // `GPUTextureViewDescriptor | null`; using `any` to avoid exporting WebGPU types in published typings.
+     * @ignore
+     */
+    xrColorTextureViewDescriptor = null;
+
+    /**
+     * Per-view XR sub-image entries populated each frame by the WebGPU XR bridge. Each entry
+     * describes one XR view: the underlying GPU color texture, the view descriptor that selects the
+     * right slice, the viewport, and the view's GPU format. Empty outside immersive WebGPU XR.
+     *
+     * @type {{ colorTexture: any, viewDescriptor: any, viewport: any, viewFormat: any }[]}
+     * @ignore
+     */
+    xrSubImages = [];
+
+    /**
+     * Active XR view index for the multi-view rendering wrapper, or `-1` when not iterating views.
+     * Read by the forward renderer's per-view inner loop to render only the active eye.
+     *
+     * @type {number}
+     * @ignore
+     */
+    xrCurrentViewIndex = -1;
+
+    /**
+     * When set, used as the main color attachment in {@link WebgpuGraphicsDevice#frameStart} if there is
+     * no XR color texture and no canvas {@link GPUCanvasContext#getCurrentTexture} (for example headless
+     * or custom-surface hosts). Must be a WebGPU-backed {@link Texture}; {@link Texture#impl} must expose
+     * {@link WebgpuTexture#gpuTexture}.
+     *
+     * @type {Texture|null}
+     * @ignore
+     */
+    externalBackbuffer = null;
 
     /**
      * Current command buffer encoder.
@@ -217,7 +269,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.resolver.destroy();
         this.resolver = null;
 
+        this._clearXrState();
+
+        this.externalBackbuffer = null;
+
         super.destroy();
+    }
+
+    /**
+     * Reset all per-frame WebGPU XR render state to its inactive defaults. Called by the XR bridge
+     * at the end of each XR frame and on session teardown, and by the graphics device on destroy.
+     *
+     * @ignore
+     */
+    _clearXrState() {
+        this.xrColorTexture = null;
+        this.xrColorTextureViewFormat = null;
+        this.xrColorTextureViewDescriptor = null;
+        this.xrSubImages.length = 0;
+        this.xrCurrentViewIndex = -1;
     }
 
     initDeviceCaps() {
@@ -253,6 +323,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
         this.supportsSubgroupUniformity = wgslFeatures?.has('subgroup_uniformity');
         this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
+        this.supportsLinearIndexing = wgslFeatures?.has('linear_indexing');
+        this.supportsUnrestrictedPointerParameters = wgslFeatures?.has('unrestricted_pointer_parameters');
+        this.supportsPointerCompositeAccess = wgslFeatures?.has('pointer_composite_access');
+        this.supportsPacked4x8IntegerDotProduct = wgslFeatures?.has('packed_4x8_integer_dot_product');
+        this.supportsTextureAndSamplerLet = wgslFeatures?.has('texture_and_sampler_let');
 
         this.initCapsDefines();
     }
@@ -260,6 +335,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     async initWebGpu(glslangUrl, twgslUrl) {
 
         if (!window.navigator.gpu) {
+            warnInsecureContext('WebGPU');
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
 
@@ -270,13 +346,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (glslangUrl && twgslUrl) {
 
             // build a full URL from a relative or absolute path
+            const baseUrl = window.document?.baseURI ?? window.location.href;
             const buildUrl = (srcPath) => {
-                return new URL(srcPath, window.location.href).toString();
+                return new URL(srcPath, baseUrl).toString();
             };
+            const twgslScriptUrl = buildUrl(twgslUrl);
+            const twgslWasmUrl = buildUrl(twgslUrl.replace('.js', '.wasm'));
+            const glslangScriptUrl = buildUrl(glslangUrl);
 
             const results = await Promise.all([
-                import(`${buildUrl(twgslUrl)}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
-                import(`${buildUrl(glslangUrl)}`).then(module => module.default())
+                import(`${twgslScriptUrl}`).then(() => twgsl(twgslWasmUrl)),
+                import(`${glslangScriptUrl}`).then(module => module.default())
             ]);
 
             this.twgsl = results[0];
@@ -292,7 +372,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
             powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined,
-            xrCompatible: this.initOptions.xrCompatible
+
+            // Required for WebXR sessions using WebGPU
+            xrCompatible: !!this.initOptions.xrCompatible
         };
 
         /**
@@ -333,7 +415,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         this.supportsSubgroups = requireFeature('subgroups');
-        Debug.log(`WEBGPU features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}`);
+        this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMaxSize ?? 0) : 0;
+        this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
+        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
+            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
+        Debug.log(
+            `WEBGPU${this.gpuAdapter?.info ?
+                ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
+                ''
+            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
+        );
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
@@ -371,15 +462,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
 
-        /**
-         * Compute performance index measured at startup (milliseconds for a fixed benchmark
-         * workload). Used by GSplat auto-selection to choose between compute and V/F renderers.
-         * -1 if timestamp queries are unavailable.
-         *
-         * @type {number}
-         * @ignore
-         */
-        this.computePerfIndex = await WebgpuComputeBenchmark.run(this.wgpu, this.supportsTimestampQuery);
+        // surface any uncaptured WebGPU errors
+        this.wgpu.addEventListener?.('uncapturederror', (ev) => {
+            const e = /** @type {any} */ (ev).error;
+            Debug.error(`WebGPU uncaptured ${e?.constructor?.name ?? 'Error'}: ${e?.message ?? e}`);
+        });
 
         this.initDeviceCaps();
 
@@ -463,10 +550,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
 
             super.loseContext(); // 'super' works correctly here
+            this.fire('devicelost');
 
-            await this.createDevice(); // Ensure this method is defined in your class
+            await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
 
             super.restoreContext(); // 'super' works correctly here
+            this.fire('devicerestored');
         }
     }
 
@@ -509,11 +598,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
 
-        // current frame color output buffer (fallback to external backbuffer if not available)
-        const outColorBuffer = this.gpuContext?.getCurrentTexture?.() ?? this.externalBackbuffer?.impl.gpuTexture;
+        // current frame color output buffer (XR overrides canvas swapchain; external backbuffer is last resort)
+        const outColorBuffer =
+            this.xrColorTexture ??
+            this.gpuContext?.getCurrentTexture?.() ??
+            this.externalBackbuffer?.impl.gpuTexture;
+        Debug.assert(outColorBuffer, 'WebGPU frameStart requires an XR color texture, canvas swapchain texture, or externalBackbuffer.');
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
-        // reallocate framebuffer if dimensions change, to match the output texture
+        // Reallocate framebuffer if dimensions change, to match the output texture. For WebXR
+        // WebGPU projection color targets that are 2d-array textures, width/height are the per-layer
+        // extent (same for every view), which matches what the render pass and internal depth need.
         if (this.backBufferSize.x !== outColorBuffer.width || this.backBufferSize.y !== outColorBuffer.height) {
 
             this.backBufferSize.set(outColorBuffer.width, outColorBuffer.height);
@@ -527,13 +622,22 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const rt = this.backBuffer;
         const wrt = rt.impl;
 
+        const attachmentViewFormat = (outColorBuffer === this.xrColorTexture && this.xrColorTextureViewFormat) ?
+            this.xrColorTextureViewFormat :
+            this.backBufferViewFormat;
+
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-        wrt.setColorAttachment(0, undefined, this.backBufferViewFormat);
+        wrt.setColorAttachment(0, undefined, attachmentViewFormat);
+
+        // Track the backbuffer's dimensions to whatever texture we're rendering into
+        // this frame (canvas swapchain in normal use, XR projection-layer texture during XR).
+        rt._width = outColorBuffer.width;
+        rt._height = outColorBuffer.height;
 
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
-        wrt.assignColorTexture(this, outColorBuffer);
+        wrt.assignColorTexture(outColorBuffer, attachmentViewFormat);
 
         WebgpuDebug.end(this, 'frameStart');
         WebgpuDebug.end(this, 'frameStart');
@@ -583,6 +687,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuTexture(texture);
     }
 
+    createXrBridgeImpl(xrBridge) {
+        return new WebgpuXrBridge(xrBridge);
+    }
+
     createRenderTargetImpl(renderTarget) {
         return new WebgpuRenderTarget(renderTarget);
     }
@@ -619,6 +727,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // allocate buffer
         if (this._indirectDrawBuffer === null) {
             this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this._indirectDrawBuffer, 'WebgpuGraphicsDevice.indirectDraw');
             this._indirectDrawBufferCount = this.maxIndirectDrawCount;
         }
     }
@@ -652,6 +761,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // allocate buffer
         if (this._indirectDispatchBuffer === null) {
             this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this._indirectDispatchBuffer, 'WebgpuGraphicsDevice.indirectDispatch');
             this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
         }
     }
@@ -1188,6 +1298,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
+            // When the backbuffer is bound to an XR projection-layer texture, do NOT call
+            // passEncoder.setViewport to avoid issues on Apple's visionOS. This should be ok in
+            // general, as we're not likely to do a multi-view rendering when XR is active.
+            if (this.xrColorTexture) {
+                return;
+            }
+
             if (!this.renderTarget.flipY) {
                 y = this.renderTarget.height - y - h;
             }
@@ -1206,6 +1323,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // so we can skip this if fullscreen
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
+
+            // When the backbuffer is bound to an XR projection-layer texture, do NOT call
+            // passEncoder.setScissorRect to avoid issues on Apple's visionOS. This should be ok in
+            // general, as we're not likely to do a multi-view rendering when XR is active.
+            if (this.xrColorTexture) {
+                return;
+            }
 
             if (!this.renderTarget.flipY) {
                 y = this.renderTarget.height - y - h;

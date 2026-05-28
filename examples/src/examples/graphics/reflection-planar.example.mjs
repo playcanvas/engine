@@ -1,6 +1,11 @@
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,11 +14,11 @@ const assets = {
     envatlas: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/utils/planar-renderer.js` })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    script: new pc.Asset('script', 'script', { url: './scripts/utils/planar-renderer.js' })
 };
 
 const gfxOptions = {
@@ -105,10 +110,10 @@ assetListLoader.load(() => {
     // This is in the excluded layer so it does not render into reflection texture
     const groundMaterial = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexGLSL: files['shader.glsl.vert'],
-        fragmentGLSL: files['shader.glsl.frag'],
-        vertexWGSL: files['shader.wgsl.vert'],
-        fragmentWGSL: files['shader.wgsl.frag'],
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: shaderGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: shaderWgslFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0
@@ -198,5 +203,3 @@ assetListLoader.load(() => {
         groundMaterial.update();
     });
 });
-
-export { app };

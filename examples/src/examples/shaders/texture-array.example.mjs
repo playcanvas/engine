@@ -1,7 +1,13 @@
-import files from 'examples/files';
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+import groundGlslFrag from './ground.glsl.frag';
+import groundWgslFrag from './ground.wgsl.frag';
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -46,11 +52,11 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: `${rootPath}/static/assets/textures/rocky_trail_diff_1k.jpg` }, { srgb: true }),
-    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: `${rootPath}/static/assets/textures/rock_boulder_cracked_diff_1k.jpg` }, { srgb: true }),
-    coastSand: new pc.Asset('coastSand', 'texture', { url: `${rootPath}/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg` }, { srgb: true }),
-    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: `${rootPath}/static/assets/textures/aerial_rocks_02_diff_1k.jpg` }, { srgb: true }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: './assets/textures/rocky_trail_diff_1k.jpg' }, { srgb: true }),
+    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: './assets/textures/rock_boulder_cracked_diff_1k.jpg' }, { srgb: true }),
+    coastSand: new pc.Asset('coastSand', 'texture', { url: './assets/textures/coast_sand_rocks_02_diff_1k.jpg' }, { srgb: true }),
+    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: './assets/textures/aerial_rocks_02_diff_1k.jpg' }, { srgb: true }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
@@ -139,10 +145,10 @@ assetListLoader.load(() => {
     // Create a new material with the new shader
     const material = new pc.ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexGLSL: files['shader.glsl.vert'],
-        fragmentGLSL: files['shader.glsl.frag'],
-        vertexWGSL: files['shader.wgsl.vert'],
-        fragmentWGSL: files['shader.wgsl.frag'],
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: shaderGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: shaderWgslFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0,
@@ -155,10 +161,10 @@ assetListLoader.load(() => {
     // Create a another material with the new shader
     const groundMaterial = new pc.ShaderMaterial({
         uniqueName: 'MyShaderGround',
-        vertexGLSL: files['shader.glsl.vert'],
-        fragmentGLSL: files['ground.glsl.frag'],
-        vertexWGSL: files['shader.wgsl.vert'],
-        fragmentWGSL: files['ground.wgsl.frag'],
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: groundGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: groundWgslFrag,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0,
@@ -237,5 +243,3 @@ assetListLoader.load(() => {
         material.setParameter('uDiffuseMap', value ? mipmapTextureArray : textureArray);
     });
 });
-
-export { app };

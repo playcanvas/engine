@@ -38,6 +38,12 @@ const browserName =
                     'other')));
 
 const xbox = /xbox/i.test(ua);
+// visionOS Safari reports a macOS-style UA (no "visionOS" string) but uniquely has
+// maxTouchPoints > 0 on a "Macintosh" UA without any iPhone/iPad/iPod token.
+const visionos = /Macintosh/i.test(ua) &&
+    typeof navigator !== 'undefined' &&
+    navigator.maxTouchPoints > 0 &&
+    !/iPhone|iPad|iPod/i.test(ua);
 const touch = (environment === 'browser') && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
 const gamepads = (environment === 'browser') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
 const workers = (typeof Worker !== 'undefined');
@@ -122,6 +128,14 @@ const platform = {
      * @type {boolean}
      */
     android: platformName === 'android',
+
+    /**
+     * True if running on Apple Vision Pro (visionOS).
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    visionos: visionos,
 
     /**
      * True if running on an Xbox device.

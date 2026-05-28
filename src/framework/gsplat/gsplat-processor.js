@@ -393,8 +393,10 @@ class GSplatProcessor {
             return info.returnType;
         });
 
-        // Create defines
+        // Create defines - start from the source resource's format-specific defines (e.g. SOG_V2)
+        // so the shared read chunk compiles for the correct variant, then override SH_BANDS.
         const defines = new Map();
+        this._srcResource.configureMaterialDefines(defines);
         defines.set('SH_BANDS', '0'); // SH processing is currently not supported.
 
         const isWebGPU = device.isWebGPU;

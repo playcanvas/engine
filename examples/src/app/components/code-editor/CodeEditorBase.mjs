@@ -7,9 +7,16 @@ import { playcanvasTheme } from '../../monaco/theme.mjs';
 import { jsRules } from '../../monaco/tokenizer-rules.mjs';
 import { pcTypes } from '../../paths.mjs';
 
-/** @typedef {import('../../events.js').StateEvent} StateEvent */
+/**
+ * @import { Monaco } from '@monaco-editor/react'
+ * @import { editor } from 'monaco-editor'
+ * @import { ReactElement } from 'react'
+ * @import { StateEvent } from '../../events.js'
+ */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
+
+const EDITOR_DIRTY_EVENT = 'editorDirty';
 
 function getShowMinimap() {
     let showMinimap = true;
@@ -56,11 +63,20 @@ class CodeEditorBase extends TypedComponent {
      */
     _handleExampleLoad(event) {
         const { files } = event.detail;
+        this._setDirty(false);
         this.mergeState({ files, selectedFile: 'example.mjs' });
     }
 
     _handleExampleLoading() {
+        this._setDirty(false);
         this.mergeState({ files: { 'example.mjs': '// reloading' } });
+    }
+
+    /**
+     * @param {boolean} dirty - The dirty state.
+     */
+    _setDirty(dirty) {
+        window.dispatchEvent(new CustomEvent(EDITOR_DIRTY_EVENT, { detail: { dirty } }));
     }
 
     /**
@@ -83,7 +99,7 @@ class CodeEditorBase extends TypedComponent {
     }
 
     /**
-     * @param {import('@monaco-editor/react').Monaco} monaco - The monaco editor.
+     * @param {Monaco} monaco - The monaco editor.
      */
     beforeMount(monaco) {
         // set languages
@@ -97,7 +113,7 @@ class CodeEditorBase extends TypedComponent {
 
         // patches highlighter tokenizer for javascript to include jsdoc
         const allLangs = monaco.languages.getLanguages();
-        const jsLang = allLangs.find(({ id }) => id === 'javascript');
+        const jsLang = /** @type {any[]} */ (allLangs).find(({ id }) => id === 'javascript');
         // @ts-ignore
         jsLang?.loader()?.then(({ language }) => {
             Object.assign(language.tokenizer, jsRules);
@@ -108,12 +124,13 @@ class CodeEditorBase extends TypedComponent {
             return r.text();
         })
         .then((playcanvasDefs) => {
+            const typescript = /** @type {any} */ (monaco.languages.typescript);
             // set types
-            monaco.languages.typescript.typescriptDefaults.addExtraLib(
+            typescript.typescriptDefaults.addExtraLib(
                 playcanvasDefs,
                 '@playcanvas/playcanvas.d.ts'
             );
-            monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            typescript.javascriptDefaults.addExtraLib(
                 playcanvasDefs,
                 '@playcanvas/playcanvas.d.ts'
             );
@@ -121,7 +138,7 @@ class CodeEditorBase extends TypedComponent {
     }
 
     /**
-     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor - The monaco editor.
+     * @param {editor.IStandaloneCodeEditor} editor - The monaco editor.
      */
     editorDidMount(editor) {
         // @ts-ignore
@@ -133,7 +150,7 @@ class CodeEditorBase extends TypedComponent {
     }
 
     /**
-     * @returns {JSX.Element} - The rendered component.
+     * @returns {ReactElement} - The rendered component.
      */
     render() {
         return jsx('pre', null, 'Not implemented');

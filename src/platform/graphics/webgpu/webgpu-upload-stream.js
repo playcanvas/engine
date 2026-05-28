@@ -35,7 +35,6 @@ class WebgpuUploadStream {
      * The device's _submitVersion at the time the last staging copy was recorded.
      * Used to detect whether the copy has been submitted before the next upload.
      *
-     * @type {number}
      * @private
      */
     _lastUploadSubmitVersion = -1;

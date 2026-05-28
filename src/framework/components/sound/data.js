@@ -1,7 +1,5 @@
 class SoundComponentData {
-    constructor() {
-        this.enabled = true;
-    }
+    enabled = true;
 }
 
 export { SoundComponentData };

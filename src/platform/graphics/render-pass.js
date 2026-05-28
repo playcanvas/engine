@@ -34,22 +34,16 @@ class ColorAttachmentOps {
      * single or multi-sampled. Further, if a multi-sampled surface is used, the resolve flag
      * further specifies if this gets resolved to a single-sampled surface. This behavior matches
      * the WebGPU specification.
-     *
-     * @type {boolean}
      */
     store = false;
 
     /**
      * True if the attachment needs to be resolved.
-     *
-     * @type {boolean}
      */
     resolve = true;
 
     /**
      * True if the attachment needs to have mipmaps generated.
-     *
-     * @type {boolean}
      */
     genMipmaps = false;
 }
@@ -80,23 +74,17 @@ class DepthStencilAttachmentOps {
     /**
      * True if the depth attachment needs to be stored after the render pass. False
      * if it can be discarded.
-     *
-     * @type {boolean}
      */
     storeDepth = false;
 
     /**
      * True if the depth attachment needs to be resolved.
-     *
-     * @type {boolean}
      */
     resolveDepth = false;
 
     /**
      * True if the stencil attachment needs to be stored after the render pass. False
      * if it can be discarded.
-     *
-     * @type {boolean}
      */
     storeStencil = false;
 }
@@ -128,8 +116,6 @@ class RenderPass extends FramePass {
     /**
      * Number of samples. 0 if no render target, otherwise number of samples from the render target,
      * or the main framebuffer if render target is null.
-     *
-     * @type {number}
      */
     samples = 0;
 
@@ -157,15 +143,11 @@ class RenderPass extends FramePass {
      * If true, this pass might use dynamically rendered cubemaps. Use for a case where rendering to cubemap
      * faces is interleaved with rendering to shadows, to avoid generating cubemap mipmaps. This will likely
      * be retired when render target dependency tracking gets implemented.
-     *
-     * @type {boolean}
      */
     requiresCubemaps = true;
 
     /**
      * True if the render pass uses the full viewport / scissor for rendering into the render target.
-     *
-     * @type {boolean}
      */
     fullSizeClearRect = true;
 

@@ -1,13 +1,14 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 await new Promise((resolve) => {
@@ -18,13 +19,13 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script1: new pc.Asset('script1', 'script', { url: `${rootPath}/static/scripts/camera/tracking-camera.js` }),
-    script2: new pc.Asset('script2', 'script', { url: `${rootPath}/static/scripts/physics/render-physics.js` }),
-    script3: new pc.Asset('script3', 'script', { url: `${rootPath}/static/scripts/physics/action-physics-reset.js` }),
-    script4: new pc.Asset('script4', 'script', { url: `${rootPath}/static/scripts/physics/vehicle.js` })
+    script1: new pc.Asset('script1', 'script', { url: './scripts/camera/tracking-camera.js' }),
+    script2: new pc.Asset('script2', 'script', { url: './scripts/physics/render-physics.js' }),
+    script3: new pc.Asset('script3', 'script', { url: './scripts/physics/action-physics-reset.js' }),
+    script4: new pc.Asset('script4', 'script', { url: './scripts/physics/vehicle.js' })
 };
 
 const gfxOptions = {
@@ -216,5 +217,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

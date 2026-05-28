@@ -6,7 +6,7 @@ import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
-import { TRACEID_TEXTURES } from '../../core/constants.js';
+import { TRACEID_BUFFERS, TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     BUFFER_STATIC,
     CULLFACE_BACK, CULLFACE_NONE,
@@ -25,6 +25,7 @@ import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { StorageBuffer } from './storage-buffer.js';
 
 /**
  * @import { Compute } from './compute.js'
@@ -34,7 +35,6 @@ import { DebugGraphics } from './debug-graphics.js';
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
- * @import { StorageBuffer } from './storage-buffer.js';
  * @import { DrawCommands } from './draw-commands.js';
  */
 
@@ -93,8 +93,6 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the back buffer should use anti-aliasing.
-     *
-     * @type {boolean}
      */
     backBufferAntialias = false;
 
@@ -142,16 +140,12 @@ class GraphicsDevice extends EventHandler {
      * The maximum number of indirect draw calls that can be used within a single frame. Used on
      * WebGPU only. This needs to be adjusted based on the maximum number of draw calls that can
      * be used within a single frame. Defaults to 1024.
-     *
-     * @type {number}
      */
     maxIndirectDrawCount = 1024;
 
     /**
      * The maximum number of indirect compute dispatches that can be used within a single frame.
      * Used on WebGPU only. Defaults to 256.
-     *
-     * @type {number}
      */
     maxIndirectDispatchCount = 256;
 
@@ -231,8 +225,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports multi-draw. This is always supported on WebGPU, and support on
      * WebGL2 is optional, but pretty common.
-     *
-     * @type {boolean}
      */
     supportsMultiDraw = true;
 
@@ -247,9 +239,10 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device can read from StorageTexture in the compute shader. By default, the
      * storage texture can be only used with the write operation.
-     * When a shader uses this feature, it's recommended to use a `requires` directive to signal the
-     * potential for non-portability at the top of the WGSL shader code:
-     * ```javascript
+     * When a shader uses this feature, add a `requires` directive to signal non-portability at the
+     * top of the WGSL shader code. The shader define `CAPS_STORAGE_TEXTURE_READ` is set when this
+     * capability is available.
+     * ```wgsl
      * requires readonly_and_readwrite_storage_textures;
      * ```
      *
@@ -273,7 +266,7 @@ class GraphicsDevice extends EventHandler {
      * True if the device supports the WGSL subgroup_uniformity extension, which allows
      * subgroup functionality to be considered uniform in more cases during shader compilation.
      * This is automatically enabled via the `enable subgroups;` directive when
-     * {@link GraphicsDevice#supportsSubgroups} is true.
+     * {@link supportsSubgroups} is true.
      *
      * @readonly
      * @type {boolean}
@@ -289,6 +282,91 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     supportsSubgroupId = false;
+
+    /**
+     * True if the device supports the WGSL `linear_indexing` extension, which provides the
+     * `global_invocation_index` and `workgroup_index` built-in values in compute shaders. The
+     * `requires linear_indexing;` directive is then automatically injected for compute shader
+     * modules, and the shader define `CAPS_LINEAR_INDEXING` is set for conditional
+     * compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsLinearIndexing = false;
+
+    /**
+     * True if the device supports the WGSL `pointer_composite_access` language feature, which
+     * provides syntactic sugar for dereferencing pointers to composite types: `p.field` and
+     * `p[i]` may be written instead of `(*p).field` and `(*p)[i]`. The
+     * `requires pointer_composite_access;` directive is automatically injected into WGSL
+     * shaders when this feature is available, and the shader define
+     * `CAPS_POINTER_COMPOSITE_ACCESS` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPointerCompositeAccess = false;
+
+    /**
+     * True if the device supports the WGSL `packed_4x8_integer_dot_product` language feature,
+     * which exposes the DP4a-family built-in functions for 8-bit packed integer dot products:
+     * `dot4U8Packed`, `dot4I8Packed`, and the `pack4x{I,U}8`, `pack4x{I,U}8Clamp`,
+     * `unpack4x{I,U}8` helpers. Useful for accelerating quantized inference and similar
+     * integer-heavy compute workloads. The `requires packed_4x8_integer_dot_product;`
+     * directive is automatically injected into WGSL shaders when this feature is available,
+     * and the shader define `CAPS_PACKED_4X8_INTEGER_DOT_PRODUCT` is set for conditional
+     * compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsPacked4x8IntegerDotProduct = false;
+
+    /**
+     * True if the device supports the WGSL `texture_and_sampler_let` language feature, which
+     * allows assigning texture and sampler variables to `let` bindings within a WGSL shader
+     * (preparation for bindless-style indirection patterns). The
+     * `requires texture_and_sampler_let;` directive is automatically injected into WGSL
+     * shaders when this feature is available, and the shader define
+     * `CAPS_TEXTURE_AND_SAMPLER_LET` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTextureAndSamplerLet = false;
+
+    /**
+     * True if the device supports the WGSL `unrestricted_pointer_parameters` language feature,
+     * which allows passing pointers in the `storage`, `uniform`, and `workgroup` address spaces
+     * as function arguments. The `requires unrestricted_pointer_parameters;` directive is
+     * automatically injected into WGSL shaders when this feature is available, and the shader
+     * define `CAPS_UNRESTRICTED_POINTER_PARAMETERS` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsUnrestrictedPointerParameters = false;
+
+    /**
+     * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either
+     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
+     * implementation did not expose the value.
+     *
+     * @type {number}
+     * @ignore
+     */
+    maxSubgroupSize = 0;
+
+    /**
+     * Minimum subgroup (warp/wavefront) size reported for the device. Zero means either
+     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
+     * implementation did not expose the value.
+     *
+     * @type {number}
+     * @ignore
+     */
+    minSubgroupSize = 0;
 
     /**
      * Currently active render target.
@@ -334,7 +412,6 @@ class GraphicsDevice extends EventHandler {
      * A version number that is incremented every frame. This is used to detect if some object were
      * invalidated.
      *
-     * @type {number}
      * @ignore
      */
     renderVersion = 0;
@@ -353,7 +430,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports uniform buffers.
      *
-     * @type {boolean}
      * @ignore
      */
     supportsUniformBuffers = false;
@@ -361,8 +437,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
      * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
-     *
-     * @type {boolean}
      */
     supportsClipDistances = false;
 
@@ -516,10 +590,7 @@ class GraphicsDevice extends EventHandler {
      */
     gpuProfiler;
 
-    /**
-     * @type {boolean}
-     * @ignore
-     */
+    /** @ignore */
     _destroyed = false;
 
     defaultClearOptions = {
@@ -543,7 +614,6 @@ class GraphicsDevice extends EventHandler {
     /**
      * A very heavy handed way to force all shaders to be rebuilt. Avoid using as much as possible.
      *
-     * @type {boolean}
      * @ignore
      */
     _shadersDirty = false;
@@ -582,6 +652,9 @@ class GraphicsDevice extends EventHandler {
         this.initOptions.antialias ??= true;
         this.initOptions.powerPreference ??= 'high-performance';
         this.initOptions.displayFormat ??= DISPLAYFORMAT_LDR;
+
+        // If WebXR is exposed, default to an XR-suitable GPU
+        this.initOptions.xrCompatible ??= platform.browser && !!navigator.xr;
 
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
@@ -663,6 +736,12 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
         if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
         if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
+        if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
+        if (this.supportsUnrestrictedPointerParameters) capsDefines.set('CAPS_UNRESTRICTED_POINTER_PARAMETERS', '');
+        if (this.supportsPointerCompositeAccess) capsDefines.set('CAPS_POINTER_COMPOSITE_ACCESS', '');
+        if (this.supportsPacked4x8IntegerDotProduct) capsDefines.set('CAPS_PACKED_4X8_INTEGER_DOT_PRODUCT', '');
+        if (this.supportsTextureAndSamplerLet) capsDefines.set('CAPS_TEXTURE_AND_SAMPLER_LET', '');
+        if (this.supportsStorageTextureRead) capsDefines.set('CAPS_STORAGE_TEXTURE_READ', '');
 
         // Platform defines
         if (platform.desktop) capsDefines.set('PLATFORM_DESKTOP', '');
@@ -728,6 +807,8 @@ class GraphicsDevice extends EventHandler {
      */
     loseContext() {
 
+        Debug.log('pc.GraphicsDevice: Graphics context lost.');
+
         this.contextLost = true;
 
         // force the back-buffer to be recreated on restore
@@ -760,14 +841,16 @@ class GraphicsDevice extends EventHandler {
      */
     restoreContext() {
 
+        Debug.log('pc.GraphicsDevice: Graphics context restored.');
+
         this.contextLost = false;
 
         this.initializeRenderState();
         this.initializeContextCaches();
 
-        // Recreate buffer objects and reupload buffer data to the GPU
+        // Recreate buffer GPU objects; vertex/index reupload from CPU storage, storage buffers empty
         for (const buffer of this.buffers) {
-            buffer.unlock();
+            buffer.restoreContext();
         }
 
         this.gpuProfiler?.restoreContext?.();
@@ -927,6 +1010,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Clears the vertex buffer set on the graphics device. This is called automatically by the
      * renderer.
+     *
      * @ignore
      */
     clearVertexBuffer() {
@@ -1117,9 +1201,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
-     * specified width and height values will be multiplied by the value of
-     * {@link GraphicsDevice#maxPixelRatio} to give the final resultant width and height for the
-     * canvas.
+     * specified width and height values will be multiplied by the value of {@link maxPixelRatio}
+     * to give the final resultant width and height for the canvas.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
@@ -1136,7 +1219,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
-     * value of {@link GraphicsDevice#maxPixelRatio} is ignored.
+     * value of {@link maxPixelRatio} is ignored.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
@@ -1267,6 +1350,52 @@ class GraphicsDevice extends EventHandler {
                     Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
+            }
+
+            // log out all tracked GPU buffers, sorted by size
+            if (Tracing.get(TRACEID_BUFFERS)) {
+                const entries = [...this.buffers].map((buffer) => {
+                    let kind;
+                    let size;
+                    if (buffer instanceof VertexBuffer) {
+                        kind = 'VB';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? 0;
+                    } else if (buffer instanceof IndexBuffer) {
+                        kind = 'IB';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? 0;
+                    } else if (buffer instanceof StorageBuffer) {
+                        kind = 'SB';
+                        size = buffer.byteSize ?? 0;
+                    } else {
+                        kind = buffer.constructor?.name ?? '?';
+                        size = buffer.storage?.byteLength ?? buffer.numBytes ?? buffer.byteSize ?? 0;
+                    }
+                    return { buffer, kind, size };
+                });
+                entries.sort((a, b) => b.size - a.size);
+                Debug.log(`Buffers: ${entries.length}`);
+                let total = 0;
+                let totalVB = 0;
+                let totalIB = 0;
+                let totalSB = 0;
+                entries.forEach((entry, index) => {
+                    const { buffer, kind, size } = entry;
+                    total += size;
+                    if (kind === 'VB') {
+                        totalVB += size;
+                    } else if (kind === 'IB') {
+                        totalIB += size;
+                    } else if (kind === 'SB') {
+                        totalSB += size;
+                    }
+                    const namePart = buffer.name ? ` ${buffer.name}` : '';
+                    Debug.log(`${index}. ${kind} Id: ${buffer.id}${namePart} VRAM: ${(size / 1024 / 1024).toFixed(2)} MB`);
+                });
+                const mb = n => (n / 1024 / 1024).toFixed(2);
+                Debug.log(`Total VB: ${totalVB} bytes (${mb(totalVB)} MB)`);
+                Debug.log(`Total IB: ${totalIB} bytes (${mb(totalIB)} MB)`);
+                Debug.log(`Total SB: ${totalSB} bytes (${mb(totalSB)} MB)`);
+                Debug.log(`Total: ${total} bytes (${mb(total)} MB)`);
             }
         });
     }

@@ -17,7 +17,6 @@ export const computeGsplatLocalRasterizeSource = /* wgsl */`
     #endif
 #endif
 
-const CACHE_STRIDE: u32 = 7u;
 const BATCH_SIZE: u32 = 64u;
 const ALPHA_THRESHOLD: half = half(1.0) / half(255.0);
 const EXP4: half = exp(half(-4.0));
@@ -60,6 +59,9 @@ struct Uniforms {
 
 var<workgroup> sharedCenterScreen: array<vec2f, 64>;
 var<workgroup> sharedCoeffs: array<vec3f, 64>;
+// Per-splat Gaussian exponent cutoff: -radiusFactor / 2. Used to skip exp() and the
+// blend chain for splats whose contribution at all 4 pixels of the quad is below alphaClip.
+var<workgroup> sharedPowerCutoff: array<f32, 64>;
 #ifdef HEATMAP_MODE
     var<workgroup> sharedHeatCount: atomic<u32>;
 #endif
@@ -210,7 +212,7 @@ fn main(
         let batchOffset = batch * BATCH_SIZE + localIdx;
         if (batchOffset < tileCount) {
             let cacheIdx = tileEntries[tStart + batchOffset];
-            let base = cacheIdx * CACHE_STRIDE;
+            let base = cacheIdx * {CACHE_STRIDE}u;
             sharedCenterScreen[localIdx] = vec2f(
                 bitcast<f32>(projCache[base + 0u]),
                 bitcast<f32>(projCache[base + 1u])
@@ -220,6 +222,7 @@ fn main(
             let cy = bitcast<f32>(projCache[base + 3u]);
             let cz = bitcast<f32>(projCache[base + 4u]);
             sharedCoeffs[localIdx] = vec3f(cx * -0.5, cz * -0.5, -cy);
+            sharedPowerCutoff[localIdx] = bitcast<f32>(projCache[base + 7u]);
 
             #ifdef PICK_MODE
                 sharedPickId[localIdx] = projCache[base + 5u];
@@ -265,6 +268,16 @@ fn main(
                     let splatPickId = sharedPickId[i];
                     let splatDepth = sharedViewDepth[i];
 
+                    // Skip the 4 per-pixel pick evaluations entirely when the splat
+                    // contributes nothing to any pixel in this quad.
+                    let d = p00 - center;
+                    let dxV = vec4f(d.x, d.x + 1.0, d.x, d.x + 1.0);
+                    let dyV = vec4f(d.y, d.y, d.y + 1.0, d.y + 1.0);
+                    let power4 = coeffs.x * dxV * dxV + coeffs.z * dxV * dyV + coeffs.y * dyV * dyV;
+                    if (all(power4 <= vec4f(sharedPowerCutoff[i]))) {
+                        continue;
+                    }
+
                     evalSplatPick(p00, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId00, &dAcc00, &wAcc00, &T00);
                     evalSplatPick(p10, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId10, &dAcc10, &wAcc10, &T10);
                     evalSplatPick(p01, center, coeffs.x, coeffs.y, coeffs.z, splatOpacity, splatPickId, splatDepth, clipH, &pickId01, &dAcc01, &wAcc01, &T01);
@@ -295,6 +308,14 @@ fn main(
                     let dxV = vec4f(d.x, d.x + 1.0, d.x, d.x + 1.0);
                     let dyV = vec4f(d.y, d.y, d.y + 1.0, d.y + 1.0);
                     let power4 = coeffs.x * dxV * dxV + coeffs.z * dxV * dyV + coeffs.y * dyV * dyV;
+
+                    // Skip exp() and the blend chain when the splat contributes nothing
+                    // at any of the 4 pixels. The per-splat cutoff is tighter than -4 for
+                    // low-opacity splats, so they drop earlier.
+                    if (all(power4 <= vec4f(sharedPowerCutoff[i]))) {
+                        continue;
+                    }
+
                     let gauss4 = (half4(exp(power4)) - half4(EXP4)) * half4(INV_EXP4);
                     let alpha4 = min(half4(0.99), half4(splatColor.a) * gauss4);
                     let newT = T * (half4(1.0) - alpha4);

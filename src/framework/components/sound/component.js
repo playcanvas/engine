@@ -612,7 +612,7 @@ class SoundComponent extends Component {
 
     /**
      * Pauses playback of the slot with the specified name. If the name is undefined then all slots
-     * currently played will be paused. The slots can be resumed by calling {@link SoundComponent#resume}.
+     * currently played will be paused. The slots can be resumed by calling {@link resume}.
      *
      * @param {string} [name] - The name of the slot to pause. Leave undefined to pause everything.
      * @example

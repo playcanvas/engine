@@ -181,22 +181,13 @@ class XrInputSource extends EventHandler {
      */
     _xrInputSource;
 
-    /**
-     * @type {Ray}
-     * @private
-     */
+    /** @private */
     _ray = new Ray();
 
-    /**
-     * @type {Ray}
-     * @private
-     */
+    /** @private */
     _rayLocal = new Ray();
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _grip = false;
 
     /**
@@ -205,16 +196,10 @@ class XrInputSource extends EventHandler {
      */
     _hand = null;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _velocitiesAvailable = false;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _velocitiesTimestamp = now();
 
     /**
@@ -229,16 +214,10 @@ class XrInputSource extends EventHandler {
      */
     _worldTransform = null;
 
-    /**
-     * @type {Vec3}
-     * @private
-     */
+    /** @private */
     _position = new Vec3();
 
-    /**
-     * @type {Quat}
-     * @private
-     */
+    /** @private */
     _rotation = new Quat();
 
     /**
@@ -265,34 +244,19 @@ class XrInputSource extends EventHandler {
      */
     _linearVelocity = null;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _dirtyLocal = true;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _dirtyRay = false;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _selecting = false;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _squeezing = false;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _elementInput = true;
 
     /**
@@ -464,7 +428,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * If {@link XrInputSource#elementInput} is true, this property will hold entity with Element
+     * If {@link elementInput} is true, this property will hold entity with Element
      * component at which this input source is hovering, or null if not hovering over any element.
      *
      * @type {Entity|null}
@@ -580,8 +544,8 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * Get the world space position of input source if it is handheld ({@link XrInputSource#grip}
-     * is true). Otherwise it will return null.
+     * Get the world space position of input source if it is handheld ({@link grip} is true).
+     * Otherwise it will return null.
      *
      * @returns {Vec3|null} The world space position of handheld input source.
      */
@@ -595,8 +559,8 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * Get the local space position of input source if it is handheld ({@link XrInputSource#grip}
-     * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * Get the local space position of input source if it is handheld ({@link grip} is true). Local
+     * space is relative to parent of the XR camera. Otherwise it will return null.
      *
      * @returns {Vec3|null} The local space position of handheld input source.
      */
@@ -605,8 +569,8 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * Get the world space rotation of input source if it is handheld ({@link XrInputSource#grip}
-     * is true). Otherwise it will return null.
+     * Get the world space rotation of input source if it is handheld ({@link grip} is true).
+     * Otherwise it will return null.
      *
      * @returns {Quat|null} The world space rotation of handheld input source.
      */
@@ -620,8 +584,8 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip}
-     * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * Get the local space rotation of input source if it is handheld ({@link grip} is true). Local
+     * space is relative to parent of the XR camera. Otherwise it will return null.
      *
      * @returns {Quat|null} The local space rotation of handheld input source.
      */
@@ -631,7 +595,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * Get the linear velocity (units per second) of the input source if it is handheld
-     * ({@link XrInputSource#grip} is true). Otherwise it will return null.
+     * ({@link grip} is true). Otherwise it will return null.
      *
      * @returns {Vec3|null} The world space linear velocity of the handheld input source.
      */

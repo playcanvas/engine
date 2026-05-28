@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U,
     BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION, getGlslShaderType
@@ -117,9 +117,7 @@ class WorkBufferRenderInfo {
     }
 }
 
-/**
- * @ignore
- */
+/** @ignore */
 class GSplatWorkBuffer {
     /** @type {GraphicsDevice} */
     device;
@@ -189,12 +187,17 @@ class GSplatWorkBuffer {
         // Build render targets from textures
         this._createRenderTargets();
 
-        // Create upload stream for non-blocking uploads
-        this.uploadStream = new UploadStream(device);
+        // Create upload stream for the per-frame splat order. On WebGL, use
+        // single-buffer mode: the PBO + texSubImage2D path stalls the main
+        // thread on multi-MB uploads through Chrome's renderer→GPU IPC, while
+        // a single texImage2D (used by uploadDirect) does not. WebGPU keeps
+        // the staging path, which is already non-blocking.
+        this.uploadStream = new UploadStream(device, !device.isWebGPU);
 
         // Use storage buffer on WebGPU, texture on WebGL
         if (device.isWebGPU) {
             this.orderBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this.orderBuffer, 'GsplatWorkBuffer.order');
         } else {
             this.orderTexture = new Texture(device, {
                 name: 'SplatGlobalOrder',
@@ -318,6 +321,7 @@ class GSplatWorkBuffer {
             if (this.orderBuffer.byteSize < newByteSize) {
                 this.orderBuffer.destroy();
                 this.orderBuffer = new StorageBuffer(this.device, newByteSize, BUFFERUSAGE_COPY_DST);
+                DebugHelper.setName(this.orderBuffer, 'GsplatWorkBuffer.order');
             }
         } else {
             this.orderTexture.resize(textureSize, textureSize);

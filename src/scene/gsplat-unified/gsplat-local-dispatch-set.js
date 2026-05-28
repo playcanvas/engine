@@ -2,6 +2,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
+import { DebugHelper } from '../../core/debug.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
@@ -19,6 +20,7 @@ import {
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { computeGsplatLocalRasterizeSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-rasterize.js';
+import { CACHE_STRIDE } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -221,6 +223,15 @@ class GSplatLocalDispatchSet {
         this._chunkRangesBuffer = new StorageBuffer(this.device, maxChunks * 8);
         this._totalChunksBuffer = new StorageBuffer(this.device, 1 * 4, BUFFERUSAGE_COPY_DST);
         this._chunkSortIndirectBuffer = new StorageBuffer(this.device, 3 * 4, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_INDIRECT);
+        DebugHelper.setName(this._tileSplatCountsBuffer, 'GsplatLocalDispatchSet.tileSplatCounts');
+        DebugHelper.setName(this._smallTileListBuffer, 'GsplatLocalDispatchSet.smallTileList');
+        DebugHelper.setName(this._largeTileListBuffer, 'GsplatLocalDispatchSet.largeTileList');
+        DebugHelper.setName(this._largeTileOverflowBasesBuffer, 'GsplatLocalDispatchSet.largeTileOverflowBases');
+        DebugHelper.setName(this._rasterizeTileListBuffer, 'GsplatLocalDispatchSet.rasterizeTileList');
+        DebugHelper.setName(this._tileListCountsBuffer, 'GsplatLocalDispatchSet.tileListCounts');
+        DebugHelper.setName(this._chunkRangesBuffer, 'GsplatLocalDispatchSet.chunkRanges');
+        DebugHelper.setName(this._totalChunksBuffer, 'GsplatLocalDispatchSet.totalChunks');
+        DebugHelper.setName(this._chunkSortIndirectBuffer, 'GsplatLocalDispatchSet.chunkSortIndirect');
 
         this.prefixSumKernel.destroyPasses();
     }
@@ -355,6 +366,7 @@ class GSplatLocalDispatchSet {
         const bgf = new BindGroupFormat(device, [...sharedBindings, ...outputBindings, ...depthBindings]);
 
         const cdefines = new Map();
+        cdefines.set('{CACHE_STRIDE}', CACHE_STRIDE.toString());
         if (pickMode) cdefines.set('PICK_MODE', '');
         if (depthTest) cdefines.set('DEPTH_TEST', '');
         if (heatmap) cdefines.set('HEATMAP_MODE', '');

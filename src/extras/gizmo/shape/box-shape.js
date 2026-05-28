@@ -11,14 +11,11 @@ import { Shape } from './shape.js';
  * @property {number} [size] - The size of the box.
  */
 
-/**
- * @ignore
- */
+/** @ignore */
 class BoxShape extends Shape {
     /**
      * The internal size of the box.
      *
-     * @type {number}
      * @private
      */
     _size = 0.06;

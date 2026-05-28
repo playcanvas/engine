@@ -1,6 +1,6 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -15,26 +15,26 @@ function createMaterial(colors) {
 }
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    heart: new pc.Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
     xmas_negx: new pc.Asset('xmas_negx', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negx.png`
+        url: './assets/cubemaps/xmas_faces/xmas_negx.png'
     }),
     xmas_negy: new pc.Asset('xmas_negy', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negy.png`
+        url: './assets/cubemaps/xmas_faces/xmas_negy.png'
     }),
     xmas_negz: new pc.Asset('xmas_negz', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negz.png`
+        url: './assets/cubemaps/xmas_faces/xmas_negz.png'
     }),
     xmas_posx: new pc.Asset('xmas_posx', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posx.png`
+        url: './assets/cubemaps/xmas_faces/xmas_posx.png'
     }),
     xmas_posy: new pc.Asset('xmas_posy', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posy.png`
+        url: './assets/cubemaps/xmas_faces/xmas_posy.png'
     }),
     xmas_posz: new pc.Asset('xmas_posz', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posz.png`
+        url: './assets/cubemaps/xmas_faces/xmas_posz.png'
     })
 };
 
@@ -277,5 +277,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

@@ -24,37 +24,27 @@ import wgslSsaoPS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/ssao
 class RenderPassSsao extends RenderPassShaderQuad {
     /**
      * The filter radius.
-     *
-     * @type {number}
      */
     radius = 5;
 
     /**
      * The intensity.
-     *
-     * @type {number}
      */
     intensity = 1;
 
     /**
      * The power controlling the falloff curve.
-     *
-     * @type {number}
      */
     power = 1;
 
     /**
      * The number of samples to take.
-     *
-     * @type {number}
      */
     sampleCount = 10;
 
     /**
      * The minimum angle in degrees that creates an occlusion. Helps to reduce fake occlusions due
      * to low geometry tessellation.
-     *
-     * @type {number}
      */
     minAngle = 5;
 

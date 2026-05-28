@@ -1,7 +1,13 @@
-// @config WEBGPU_DISABLED
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag WEBGPU_DISABLED
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderCloudFrag from './shaderCloud.frag';
+import shaderCloudVert from './shaderCloud.vert';
+import shaderFeedbackVert from './shaderFeedback.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -23,7 +29,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -119,8 +125,8 @@ assetListLoader.load(() => {
         // Create the material from the vertex and fragment shaders which is used to render point sprites
         const material = new pc.ShaderMaterial({
             uniqueName: 'TransformFeerback',
-            vertexGLSL: files['shaderCloud.vert'],
-            fragmentGLSL: files['shaderCloud.frag'],
+            vertexGLSL: shaderCloudVert,
+            fragmentGLSL: shaderCloudFrag,
             attributes: { aPosition: pc.SEMANTIC_POSITION }
         });
 
@@ -142,7 +148,7 @@ assetListLoader.load(() => {
         tf = new pc.TransformFeedback(mesh.vertexBuffer);
         shader = pc.TransformFeedback.createShader(
             app.graphicsDevice,
-            files['shaderFeedback.vert'],
+            shaderFeedbackVert,
             'transformShaderExample',
             ['updated_vertex_position']
         );
@@ -168,5 +174,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

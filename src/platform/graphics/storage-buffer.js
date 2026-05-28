@@ -13,6 +13,14 @@ let id = 0;
  * used to provide data for compute shader, and to store the result of the computation.
  * Note that this class is only supported on the WebGPU platform.
  *
+ * After a graphics device is lost and restored, the GPU backing for a storage buffer is
+ * recreated at the same byte size but its contents are undefined until you write to it again or
+ * repopulate it via compute.
+ *
+ * For debug identification in buffer memory listings (when the {@link TRACEID_BUFFERS} trace
+ * channel is enabled), call sites may assign the instance's `name` property to a descriptive
+ * string.
+ *
  * @category Graphics
  */
 class StorageBuffer {
@@ -38,7 +46,8 @@ class StorageBuffer {
         const usage = addStorageUsage ? (BUFFERUSAGE_STORAGE | bufferUsage) : bufferUsage;
         this.impl = graphicsDevice.createBufferImpl(usage);
         this.impl.allocate(graphicsDevice, byteSize);
-        this.device.buffers.add(this);
+
+        graphicsDevice.buffers.add(this);
 
         this.adjustVramSizeTracking(graphicsDevice._vram, this.byteSize);
     }
@@ -47,13 +56,29 @@ class StorageBuffer {
      * Frees resources associated with this storage buffer.
      */
     destroy() {
-
-        // stop tracking the buffer
         const device = this.device;
         device.buffers.delete(this);
-
-        this.adjustVramSizeTracking(device._vram, -this.byteSize);
         this.impl.destroy(device);
+        this.adjustVramSizeTracking(device._vram, -this.byteSize);
+    }
+
+    /**
+     * Called when the rendering context was lost. It releases the GPU buffer handle.
+     *
+     * @ignore
+     */
+    loseContext() {
+        this.impl.loseContext();
+    }
+
+    /**
+     * Called when the rendering context is restored. Recreates an empty GPU buffer of the same
+     * size; contents are not restored from CPU memory.
+     *
+     * @ignore
+     */
+    restoreContext() {
+        this.impl.allocate(this.device, this.byteSize);
     }
 
     adjustVramSizeTracking(vram, size) {

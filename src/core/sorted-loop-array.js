@@ -15,8 +15,6 @@ class SortedLoopArray {
 
     /**
      * The number of elements in the array.
-     *
-     * @type {number}
      */
     length = 0;
 
@@ -24,8 +22,6 @@ class SortedLoopArray {
      * The current index used to loop through the array. This gets modified if we add or remove
      * elements from the array while looping. See the example to see how to loop through this
      * array.
-     *
-     * @type {number}
      */
     loopIndex = -1;
 

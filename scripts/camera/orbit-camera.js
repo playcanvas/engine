@@ -310,20 +310,46 @@ OrbitCamera.prototype._buildAabb = function (entity) {
         }
     }
 
+    // additional world-space AABBs collected from gsplats (unified mode has no per-component
+    // mesh instance, so we transform the gsplat's object-space AABB into world space here)
+    var extraAabbs = [];
+
     var gsplats = entity.findComponents('gsplat');
     for (i = 0; i < gsplats.length; i++) {
         var gsplat = gsplats[i];
-        var instance = gsplat.instance;
-        if (instance?.meshInstance) {
-            meshInstances.push(instance.meshInstance);
+        if (gsplat.unified) {
+            // unified gsplat: customAabb returns object-space (custom AABB, placement AABB, or
+            // resource AABB) - transform it to world space using the entity's world transform
+            var localAabb = gsplat.customAabb;
+            if (localAabb) {
+                var worldAabb = new pc.BoundingBox();
+                worldAabb.setFromTransformedAabb(localAabb, gsplat.entity.getWorldTransform());
+                extraAabbs.push(worldAabb);
+            }
+        } else {
+            // legacy gsplat: mesh instance already exposes a world-space AABB
+            var instance = gsplat.instance;
+            if (instance?.meshInstance) {
+                meshInstances.push(instance.meshInstance);
+            }
         }
     }
 
+    var first = true;
     for (i = 0; i < meshInstances.length; i++) {
-        if (i === 0) {
+        if (first) {
             this._modelsAabb.copy(meshInstances[i].aabb);
+            first = false;
         } else {
             this._modelsAabb.add(meshInstances[i].aabb);
+        }
+    }
+    for (i = 0; i < extraAabbs.length; i++) {
+        if (first) {
+            this._modelsAabb.copy(extraAabbs[i]);
+            first = false;
+        } else {
+            this._modelsAabb.add(extraAabbs[i]);
         }
     }
 };

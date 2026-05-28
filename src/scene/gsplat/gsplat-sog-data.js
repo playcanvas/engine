@@ -5,23 +5,18 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { PIXELFORMAT_RGBA32U, PIXELFORMAT_RGBA8, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    FILTER_NEAREST,
+    PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA32U,
+    SEMANTIC_POSITION
+} from '../../platform/graphics/constants.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { RenderPassQuad } from '../../scene/graphics/render-pass-quad.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import glslGsplatSogReorderPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogReorder.js';
-import wgslGsplatSogReorderPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogReorder.js';
-
-import glslGsplatSogReorderSh from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogReorderSh.js';
-
-import wgslGsplatSogReorderSH from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogReorderSh.js';
-
 import glslSogCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogCenters.js';
 import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCenters.js';
-
-/**
- * @import { EventHandle } from '../../core/event-handle.js'
- */
 
 const SH_C0 = 0.28209479177387814;
 
@@ -175,32 +170,18 @@ class GSplatSogData {
 
     sh_labels;
 
-    packedTexture;
-
-    packedSh0;
-
-    packedShN;
+    /**
+     * V2-only codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a unused.
+     * Built from meta codebooks in prepareCodebook(). Null for V1 assets.
+     *
+     * @type {Texture|null}
+     */
+    codebookTexture = null;
 
     /**
      * URL of the asset, used for debugging texture names.
-     *
-     * @type {string}
      */
     url = '';
-
-    /**
-     * Whether to use minimal memory mode (releases source textures after packing).
-     *
-     * @type {boolean}
-     */
-    minimalMemory = false;
-
-    /**
-     * Event handle for devicerestored listener (when minimalMemory is false).
-     *
-     * @type {EventHandle|null}
-     */
-    deviceRestoredEvent = null;
 
     /**
      * Cached centers array (x, y, z per splat), length = numSplats * 3.
@@ -215,8 +196,6 @@ class GSplatSogData {
 
     /**
      * Number of spherical harmonics bands.
-     *
-     * @type {number}
      */
     shBands = 0;
 
@@ -228,9 +207,8 @@ class GSplatSogData {
         this.sh0?.destroy();
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
-        this.packedTexture?.destroy();
-        this.packedSh0?.destroy();
-        this.packedShN?.destroy();
+        this.codebookTexture?.destroy();
+        this.codebookTexture = null;
     }
 
     // calculate the number of bands given the centroids texture width
@@ -241,10 +219,6 @@ class GSplatSogData {
     }
 
     destroy() {
-        // Remove devicerestored listener if it was registered
-        this.deviceRestoredEvent?.off();
-        this.deviceRestoredEvent = null;
-
         this.destroyed = true;
         this._destroyGpuResources();
     }
@@ -303,6 +277,10 @@ class GSplatSogData {
             'scale_0', 'scale_1', 'scale_2',
             'rot_0', 'rot_1', 'rot_2', 'rot_3'
         ];
+
+        // ensure V2 codebooks are patched before the CPU iterator indexes them; the GPU flow
+        // does this via prepareCodebook(), but decompress runs without that path.
+        this._patchCodebooks();
 
         const { shBands } = this;
 
@@ -448,188 +426,87 @@ class GSplatSogData {
         centersTexture.destroy();
     }
 
-    // pack the means, quats, scales and sh_labels data into one RGBA32U texture
-    packGpuMemory() {
-        const { meta, means_l, means_u, quats, scales, sh0, sh_labels, numSplats } = this;
-        const { device } = means_l;
-        const { scope } = device;
+    /**
+     * Creates the V2 codebook LUT texture. Packs the three 256-entry scalar codebooks
+     * (scales, sh0, shN) into a single 256x1 RGBA32F texture:
+     * - .r = scales codebook
+     * - .g = sh0 codebook
+     * - .b = shN codebook
+     * - .a = 0 (unused)
+     *
+     * @private
+     */
+    _createCodebookTexture() {
+        Debug.assert(!this.codebookTexture, 'GSplatSogData: codebookTexture already exists - _createCodebookTexture() should only be called once per data instance.');
 
-        const shaderKey = meta.version === 2 ? 'v2' : 'v1';
+        const device = this.means_l.device;
+        const { scales, sh0, shN } = this.meta;
 
-        // Note: do not destroy it, keep it available for the lifetime of the app
-        const shader = ShaderUtils.createShader(device, {
-            uniqueName: `GsplatSogReorderShader-${shaderKey}`,
-            attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslGsplatSogReorderPS,
-            fragmentWGSL: wgslGsplatSogReorderPS,
-            fragmentOutputTypes: ['uvec4', 'vec4'],
-            fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
-        });
+        // scales and sh0 codebooks are mandatory for V2, shN only present when SH > 0
+        const scalesCb = scales.codebook;
+        const sh0Cb = sh0.codebook;
+        const shNCb = shN?.codebook;
 
-        const renderTarget = new RenderTarget({
-            colorBuffers: [this.packedTexture, this.packedSh0],
-            depth: false,
-            mipLevel: 0
-        });
-
-        resolve(scope, {
-            means_l,
-            means_u,
-            quats,
-            scales,
-            sh0,
-            // use means_l as dummy texture for sh_labels if there is no spherical harmonics data
-            sh_labels: sh_labels ?? means_l,
-            numSplats,
-            'scales_codebook[0]': this.meta.scales.codebook,
-            'sh0_codebook[0]': this.meta.sh0.codebook,
-            // V1
-            scalesMins: meta.scales.mins,
-            scalesMaxs: meta.scales.maxs,
-            sh0Mins: meta.sh0.mins,
-            sh0Maxs: meta.sh0.maxs
-        });
-
-        const quad = new QuadRender(shader);
-        const renderPass = new RenderPassQuad(device, quad);
-        renderPass.name = 'SogPackGpuMemory';
-        renderPass.init(renderTarget);
-        renderPass.colorOps.clear = false;
-        renderPass.depthStencilOps.clearDepth = false;
-        renderPass.render();
-        quad.destroy();
-
-        renderTarget.destroy();
-    }
-
-    packShMemory() {
-        const { meta, sh_centroids } = this;
-        const { device } = sh_centroids;
-        const { scope } = device;
-
-        const shaderKey = meta.version === 2 ? 'v2' : 'v1';
-
-        const shader = ShaderUtils.createShader(device, {
-            uniqueName: `GsplatSogReorderShShader-${shaderKey}`,
-            attributes: { vertex_position: SEMANTIC_POSITION },
-            vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslGsplatSogReorderSh,
-            fragmentWGSL: wgslGsplatSogReorderSH,
-            fragmentDefines: (meta.version === 2) ? undefined : new Map([['REORDER_V1', '1']])
-        });
-
-        const renderTarget = new RenderTarget({
-            colorBuffer: this.packedShN,
-            depth: false,
-            mipLevel: 0
-        });
-
-        resolve(scope, {
-            sh_centroids,
-            'shN_codebook[0]': this.meta.shN.codebook
-        });
-
-        const quad = new QuadRender(shader);
-        const renderPass = new RenderPassQuad(device, quad);
-        renderPass.name = 'SogPackShMemory';
-        renderPass.init(renderTarget);
-        renderPass.colorOps.clear = false;
-        renderPass.depthStencilOps.clearDepth = false;
-        renderPass.render();
-        quad.destroy();
-
-        renderTarget.destroy();
-    }
-
-    async prepareGpuData() {
-        let device = this.means_l.device;
-        const { height, width } = this.means_l;
-
-        if (this.destroyed || !device || device._destroyed) return;
-
-        // Include URL in texture name for debugging
-        const urlSuffix = this.url ? `_${this.url}` : '';
-
-        this.packedTexture = new Texture(device, {
-            name: `sogPackedTexture${urlSuffix}`,
-            width,
-            height,
-            format: PIXELFORMAT_RGBA32U,
-            mipmaps: false
-        });
-
-        this.packedSh0 = new Texture(device, {
-            name: `sogPackedSh0${urlSuffix}`,
-            width,
-            height,
-            format: PIXELFORMAT_RGBA8,
-            mipmaps: false
-        });
-
-        this.packedShN = this.sh_centroids && new Texture(device, {
-            name: `sogPackedShN${urlSuffix}`,
-            width: this.sh_centroids.width,
-            height: this.sh_centroids.height,
-            format: PIXELFORMAT_RGBA8,
-            mipmaps: false
-        });
-
-        if (!this.minimalMemory) {
-
-            // when context is restored, pack the gpu data again
-            this.deviceRestoredEvent = device.on('devicerestored', () => {
-                this.packGpuMemory();
-                if (this.packedShN) {
-                    this.packShMemory();
-                }
-            });
+        const data = new Float32Array(256 * 4);
+        for (let i = 0; i < 256; i++) data[i * 4]     = scalesCb[i];
+        for (let i = 0; i < 256; i++) data[i * 4 + 1] = sh0Cb[i];
+        if (shNCb) {
+            for (let i = 0; i < 256; i++) data[i * 4 + 2] = shNCb[i];
         }
+        // .a unused (stays 0 from Float32Array init; .b also 0 when no SH)
 
-        // patch codebooks starting with a null entry
+        const urlSuffix = this.url ? `_${this.url}` : '';
+        this.codebookTexture = new Texture(device, {
+            name: `sogCodebook${urlSuffix}`,
+            width: 256,
+            height: 1,
+            format: PIXELFORMAT_RGBA32F,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            levels: [data]
+        });
+    }
+
+    /**
+     * Patches any null-leading codebook entries in place. A null `codebook[0]` was a bug in
+     * older SOG creation tools (since fixed); this workaround keeps already-published assets
+     * in the wild renderable by synthesizing a plausible value so downstream sampling never
+     * produces NaN. Required for both GPU rendering and CPU decompression flows.
+     *
+     * @private
+     */
+    _patchCodebooks() {
         ['scales', 'sh0', 'shN'].forEach((name) => {
             const codebook = this.meta[name]?.codebook;
             if (codebook?.[0] === null) {
                 codebook[0] = codebook[1] + (codebook[1] - codebook[255]) / 255;
             }
         });
+    }
 
-        device = this.means_l?.device;
+    /**
+     * Synchronous codebook preparation. Patches any null-leading codebook entries and, for V2
+     * assets, builds the codebook LUT texture. Must be called before {@link prepareGpuData}.
+     */
+    prepareCodebook() {
+        const device = this.means_l?.device;
         if (this.destroyed || !device || device._destroyed) return;
-        await this.generateCenters();
 
-        device = this.means_l?.device;
-        if (this.destroyed || !device || device._destroyed) return;
-        this.packGpuMemory();
-        if (this.packedShN) {
-            device = this.means_l?.device;
-            if (this.destroyed || !device || device._destroyed) return;
-            this.packShMemory();
-        }
+        this._patchCodebooks();
 
-        if (this.minimalMemory) {
-            // Release source textures to save memory
-            this.means_l?.destroy();
-            this.means_u?.destroy();
-            this.quats?.destroy();
-            this.scales?.destroy();
-            this.sh0?.destroy();
-            this.sh_centroids?.destroy();
-            this.sh_labels?.destroy();
-
-            this.means_l = null;
-            this.means_u = null;
-            this.quats = null;
-            this.scales = null;
-            this.sh0 = null;
-            this.sh_centroids = null;
-            this.sh_labels = null;
+        // V2 only: build the codebook LUT texture
+        if (this.meta.version === 2) {
+            this._createCodebookTexture();
         }
     }
 
-    // temporary, for backwards compatibility
-    reorderData() {
-        return this.prepareGpuData();
+    async prepareGpuData() {
+        const device = this.means_l?.device;
+        if (this.destroyed || !device || device._destroyed) return;
+        await this.generateCenters();
     }
 }
 

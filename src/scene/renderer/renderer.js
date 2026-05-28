@@ -38,9 +38,9 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
+import { Camera } from '../camera.js';
 
 /**
- * @import { Camera } from '../camera.js'
  * @import { CulledInstances } from '../layer.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
@@ -58,18 +58,19 @@ const viewMat = new Mat4();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
 const tempFrustum = new Frustum();
-const _flipYMat = new Mat4().setScale(1, -1, 1);
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
 const _dynamicBindGroup = new DynamicBindGroup();
 
-// Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
-const _fixProjRangeMat = new Mat4().set([
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 0.5, 0,
-    0, 0, 0.5, 1
-]);
+// Reusable scratch passed to GraphicsDevice.clear so the per-frame call site
+// does not allocate a fresh options object + color array.
+const _tempClearColor = [0, 0, 0, 1];
+const _tempClearOptions = {
+    color: _tempClearColor,
+    depth: 1,
+    stencil: 0,
+    flags: 0
+};
 
 // helton sequence of 2d offsets for jittering
 const _haltonSequence = [
@@ -93,8 +94,6 @@ const _haltonSequence = [
 
 const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
-const _tempProjMat2 = new Mat4();
-const _tempProjMat3 = new Mat4();
 const _tempProjMat4 = new Mat4();
 const _tempProjMat5 = new Mat4();
 const _tempSet = new Set();
@@ -335,17 +334,9 @@ class Renderer {
             }
             let projMatSkybox = camera.getProjectionMatrixSkybox();
 
-            // flip projection matrices
-            if (flipY) {
-                projMat = _tempProjMat0.mul2(_flipYMat, projMat);
-                projMatSkybox = _tempProjMat1.mul2(_flipYMat, projMatSkybox);
-            }
-
-            // update depth range of projection matrices (-1..1 to 0..1)
-            if (this.device.isWebGPU) {
-                projMat = _tempProjMat2.mul2(_fixProjRangeMat, projMat);
-                projMatSkybox = _tempProjMat3.mul2(_fixProjRangeMat, projMatSkybox);
-            }
+            const webgpu = this.device.isWebGPU;
+            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu);
+            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu);
 
             // camera jitter
             const { jitter } = camera;
@@ -427,16 +418,14 @@ class Renderer {
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
 
-        // viewport size
-        let viewportWidth = target ? target.width : this.device.width;
-        let viewportHeight = target ? target.height : this.device.height;
+        // viewport size. In stereo XR the XR session reports the per-eye viewport directly,
+        // which is correct for both side-by-side single-texture and multi-pass per-eye-view
+        // layouts — preferred over inferring from target.width.
+        const xrView = camera.xr?.session ? camera.xr.views.list[0] : null;
+        let viewportWidth = xrView ? xrView.viewport.z : (target ? target.width : this.device.width);
+        let viewportHeight = xrView ? xrView.viewport.w : (target ? target.height : this.device.height);
         viewportWidth *= camera.rect.z;
         viewportHeight *= camera.rect.w;
-
-        // adjust viewport for stereoscopic VR sessions
-        if (camera.xr?.session && camera.xr.views.list.length === 2) {
-            viewportWidth *= 0.5;
-        }
 
         this.viewportSize[0] = viewportWidth;
         this.viewportSize[1] = viewportHeight;
@@ -471,12 +460,15 @@ class Renderer {
             const device = this.device;
             DebugGraphics.pushGpuMarker(device, 'CLEAR');
 
-            device.clear({
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                stencil: camera._clearStencil,
-                flags: flags
-            });
+            const c = camera._clearColor;
+            _tempClearColor[0] = c.r;
+            _tempClearColor[1] = c.g;
+            _tempClearColor[2] = c.b;
+            _tempClearColor[3] = c.a;
+            _tempClearOptions.depth = camera._clearDepth;
+            _tempClearOptions.stencil = camera._clearStencil;
+            _tempClearOptions.flags = flags;
+            device.clear(_tempClearOptions);
 
             DebugGraphics.popGpuMarker(device);
         }
@@ -1093,13 +1085,14 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // event before the camera is culling
-            scene?.fire(EVENT_PRECULL, camera);
-
             // update camera and frustum
             const renderTarget = camera.renderTarget;
             camera.frameUpdate(renderTarget);
             this.updateCameraFrustum(camera.camera);
+
+            // event before the camera is culling, fired after the frustum has been updated so
+            // listeners can rely on the current camera state
+            scene?.fire(EVENT_PRECULL, camera);
 
             // for all of its enabled layers
             const layerIds = camera.layers;

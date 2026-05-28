@@ -40,7 +40,10 @@ class GSplatSorter extends EventHandler {
     constructor(device, scene) {
         super();
         this.scene = scene ?? null;
-        this.uploadStream = new UploadStream(device);
+        // Use single-buffer mode on WebGL: a single texImage2D outperforms the
+        // PBO + texSubImage2D path on Chrome's renderer→GPU IPC for multi-MB
+        // integer-format uploads. WebGPU keeps the staging path.
+        this.uploadStream = new UploadStream(device, !device.isWebGPU);
 
         const messageHandler = (message) => {
             const msgData = message.data ?? message;

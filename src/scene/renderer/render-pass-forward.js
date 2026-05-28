@@ -70,8 +70,6 @@ class RenderPassForward extends RenderPass {
     /**
      * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
      * pre-pass.
-     *
-     * @type {boolean}
      */
     noDepthClear = false;
 

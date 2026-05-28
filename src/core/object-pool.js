@@ -25,7 +25,6 @@ class ObjectPool {
     /**
      * The number of object instances that are currently allocated.
      *
-     * @type {number}
      * @private
      */
     _count = 0;

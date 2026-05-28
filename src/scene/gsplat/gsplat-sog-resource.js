@@ -1,33 +1,67 @@
-import { PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
+import { Debug } from '../../core/debug.js';
+import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
 
+/**
+ * @import { GSplatSogData } from './gsplat-sog-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
+
 class GSplatSogResource extends GSplatResourceBase {
-    constructor(device, gsplatData) {
-        super(device, gsplatData);
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatSogData} gsplatData - The splat data.
+     * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
+     */
+    constructor(device, gsplatData, options = {}) {
+        super(device, gsplatData, options);
 
-        // Set texture dimensions for splatTextureSize uniform and order texture creation
-        // Use means_l if available, otherwise try packedTexture (for LOD assets)
-        const sizeTexture = gsplatData.means_l || gsplatData.packedTexture;
-        if (sizeTexture) {
-            this.streams.textureDimensions.set(sizeTexture.width, sizeTexture.height);
-        }
+        const { meta, means_l } = gsplatData;
+        const isV2 = meta.version === 2;
+        const hasSH = gsplatData.shBands > 0;
 
-        // Add external textures to streams for auto-binding (textures are managed by gsplatData, not destroyed here)
-        if (gsplatData.packedTexture) {
-            this.streams.textures.set('packedTexture', gsplatData.packedTexture);
-        }
-        if (gsplatData.packedSh0) {
-            this.streams.textures.set('packedSh0', gsplatData.packedSh0);
-        }
-        if (gsplatData.packedShN) {
-            this.streams.textures.set('packedShN', gsplatData.packedShN);
+        // splat texture dimensions come from the source means_l texture - used for the
+        // splatTextureSize uniform and for sizing the order texture
+        if (means_l) {
+            this.streams.textureDimensions.set(means_l.width, means_l.height);
         }
 
-        // Define streams for textures that use splatUV
+        // register externally-owned source textures for auto-binding (owned by gsplatData,
+        // not destroyed here)
+        this.streams.textures.set('means_l', gsplatData.means_l);
+        this.streams.textures.set('means_u', gsplatData.means_u);
+        this.streams.textures.set('quats', gsplatData.quats);
+        this.streams.textures.set('scales', gsplatData.scales);
+        this.streams.textures.set('sh0', gsplatData.sh0);
+        if (hasSH) {
+            this.streams.textures.set('sh_labels', gsplatData.sh_labels);
+            this.streams.textures.set('sh_centroids', gsplatData.sh_centroids);
+        }
+        if (isV2) {
+            // V2 always declares the sogCodebook stream below, so the texture must exist or the
+            // streams system would auto-create a default (wrong-sized) RGBA32F texture at bind.
+            // Callers must invoke gsplatData.prepareCodebook() before constructing the resource.
+            Debug.assert(gsplatData.codebookTexture, 'GSplatSogResource: V2 asset is missing codebookTexture - prepareCodebook() must be called first.');
+            this.streams.textures.set('sogCodebook', gsplatData.codebookTexture);
+        }
+
+        // declare streams matching the registered textures; formats drive generated uniform
+        // declarations and load functions for the read shader chunk
         const streams = [
-            { name: 'packedTexture', format: PIXELFORMAT_RGBA32U }
+            { name: 'means_l', format: PIXELFORMAT_RGBA8 },
+            { name: 'means_u', format: PIXELFORMAT_RGBA8 },
+            { name: 'quats', format: PIXELFORMAT_RGBA8 },
+            { name: 'scales', format: PIXELFORMAT_RGBA8 },
+            { name: 'sh0', format: PIXELFORMAT_RGBA8 }
         ];
+        if (hasSH) {
+            streams.push({ name: 'sh_labels', format: PIXELFORMAT_RGBA8 });
+            streams.push({ name: 'sh_centroids', format: PIXELFORMAT_RGBA8 });
+        }
+        if (isV2) {
+            streams.push({ name: 'sogCodebook', format: PIXELFORMAT_RGBA32F });
+        }
 
         // Create format with streams and shader chunk include
         // Note: We don't call streams.init() as textures are externally managed by gsplatData
@@ -41,24 +75,47 @@ class GSplatSogResource extends GSplatResourceBase {
     }
 
     /**
-     * @protected
+     * Opts each of the owned source textures into releasing its CPU-side ImageBitmap after
+     * upload. Called by the gsplat octree, which re-creates these resources from scratch on
+     * device loss and therefore does not need the CPU source retained for re-upload.
+     *
+     * @ignore
      */
+    releaseTextureSources() {
+        const d = /** @type {GSplatSogData} */ (this.gsplatData);
+        d.means_l?.setReleaseSourceAfterUpload();
+        d.means_u?.setReleaseSourceAfterUpload();
+        d.quats?.setReleaseSourceAfterUpload();
+        d.scales?.setReleaseSourceAfterUpload();
+        d.sh0?.setReleaseSourceAfterUpload();
+        d.sh_centroids?.setReleaseSourceAfterUpload();
+        d.sh_labels?.setReleaseSourceAfterUpload();
+    }
+
+    /** @protected */
     _actualDestroy() {
         // Remove externally-owned textures without destroying them (they're owned by gsplatData)
-        this.streams.textures.delete('packedTexture');
-        this.streams.textures.delete('packedSh0');
-        this.streams.textures.delete('packedShN');
-        this.gsplatData.destroy();
+        this.streams.textures.delete('means_l');
+        this.streams.textures.delete('means_u');
+        this.streams.textures.delete('quats');
+        this.streams.textures.delete('scales');
+        this.streams.textures.delete('sh0');
+        this.streams.textures.delete('sh_labels');
+        this.streams.textures.delete('sh_centroids');
+        this.streams.textures.delete('sogCodebook');
+        /** @type {GSplatSogData} */ (this.gsplatData).destroy();
         super._actualDestroy();
     }
 
     /**
-     * Populates the parameters map with dequantization uniforms for SOG format.
+     * Populates the parameters map with dequantization uniforms.
+     * V1 needs per-axis/component min/max ranges. V2 derives everything from the codebook LUT
+     * texture so only the means min/max are required.
      *
      * @private
      */
     _populateParameters() {
-        const { meta } = this.gsplatData;
+        const { meta } = /** @type {GSplatSogData} */ (this.gsplatData);
 
         // means
         if (meta.means) {
@@ -66,36 +123,29 @@ class GSplatSogResource extends GSplatResourceBase {
             this.parameters.set('means_maxs', meta.means.maxs);
         }
 
-        // scales, sh0, shN - version-dependent logic
-        if (meta.version === 2) {
-            ['scales', 'sh0', 'shN'].forEach((name) => {
-                const v = meta[name];
-                if (v) {
-                    this.parameters.set(`${name}_mins`, v.codebook[0]);
-                    this.parameters.set(`${name}_maxs`, v.codebook[255]);
-                }
-            });
-        } else {
-            ['scales', 'sh0'].forEach((name) => {
-                const v = meta[name];
-                if (v) {
-                    this.parameters.set(`${name}_mins`, Math.min(...v.mins.slice(0, 3)));
-                    this.parameters.set(`${name}_maxs`, Math.max(...v.maxs.slice(0, 3)));
-                }
-            });
-
-            ['shN'].forEach((name) => {
-                const v = meta[name];
-                if (v) {
-                    this.parameters.set(`${name}_mins`, v.mins);
-                    this.parameters.set(`${name}_maxs`, v.maxs);
-                }
-            });
+        if (meta.version !== 2) {
+            // V1: upload full min/max arrays for linear dequantization
+            if (meta.scales) {
+                this.parameters.set('scales_mins', meta.scales.mins);
+                this.parameters.set('scales_maxs', meta.scales.maxs);
+            }
+            if (meta.sh0) {
+                this.parameters.set('sh0_mins', meta.sh0.mins);
+                this.parameters.set('sh0_maxs', meta.sh0.maxs);
+            }
+            if (meta.shN) {
+                this.parameters.set('shN_mins', meta.shN.mins);
+                this.parameters.set('shN_maxs', meta.shN.maxs);
+            }
         }
     }
 
     configureMaterialDefines(defines) {
-        defines.set('SH_BANDS', this.gsplatData.shBands);
+        const gsplatData = /** @type {GSplatSogData} */ (this.gsplatData);
+        defines.set('SH_BANDS', gsplatData.shBands);
+        if (gsplatData.meta.version === 2) {
+            defines.set('SOG_V2', '');
+        }
     }
 }
 

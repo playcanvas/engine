@@ -104,7 +104,11 @@ class WebglUploadStream {
     }
 
     /**
-     * Direct texture upload (simple, blocking).
+     * Direct texture upload via gl.texImage2D — uploads the full buffer with a
+     * fresh storage allocation each call. Bypasses the engine's Texture.upload
+     * path (which uses texSubImage2D after the first frame). This avoids the
+     * texSubImage2D path's stall on multi-MB integer-format uploads through
+     * Chrome's renderer→GPU IPC on some drivers.
      *
      * @param {Uint8Array|Uint32Array|Float32Array} data - The data to upload.
      * @param {Texture} target - The target texture.
@@ -114,10 +118,39 @@ class WebglUploadStream {
      */
     uploadDirect(data, target, offset, size) {
         Debug.assert(offset === 0, 'Direct texture upload with non-zero offset is not supported. Use PBO mode instead.');
-        Debug.assert(target._levels);
 
-        target._levels[0] = data;
-        target.upload();
+        const device = this.uploadStream.device;
+        // @ts-ignore - gl is available on WebglGraphicsDevice
+        const gl = device.gl;
+        const impl = target.impl;
+
+        // Ensure the GL texture object exists and is bound.
+        // @ts-ignore - setTexture is available on WebglGraphicsDevice
+        device.setTexture(target, 0);
+        device.activeTexture(0);
+        device.bindTexture(target);
+
+        device.setUnpackFlipY(false);
+        device.setUnpackPremultiplyAlpha(false);
+        device.setUnpackAlignment(data.BYTES_PER_ELEMENT);
+
+        // Wrap the source TypedArray to match the texture's pixel type when needed
+        // (e.g. RGBA8UI expects UNSIGNED_BYTE → Uint8Array, even if the caller passes Uint32Array).
+        let src = data;
+        if (impl._glPixelType === gl.UNSIGNED_BYTE && data.BYTES_PER_ELEMENT !== 1) {
+            const byteSize = size * data.BYTES_PER_ELEMENT;
+            src = new Uint8Array(data.buffer, data.byteOffset, byteSize);
+        }
+
+        // Full-buffer upload (texImage2D allocates fresh storage each call).
+        gl.texImage2D(
+            gl.TEXTURE_2D, 0, impl._glInternalFormat,
+            target.width, target.height, 0,
+            impl._glFormat, impl._glPixelType, src
+        );
+
+        // Keep engine texture state consistent: storage exists now.
+        impl._glCreated = true;
     }
 
     /**

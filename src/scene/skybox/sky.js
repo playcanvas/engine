@@ -25,7 +25,6 @@ class Sky {
     /**
      * The center of the sky.
      *
-     * @type {Vec3}
      * @private
      */
     _center = new Vec3(0, 1, 0);
@@ -38,16 +37,10 @@ class Sky {
      */
     skyMesh = null;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _depthWrite = false;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _fisheye = 0;
 
     /**
@@ -102,12 +95,13 @@ class Sky {
     }
 
     /**
-     * The type of the sky. One of the SKYTYPE_* constants. Defaults to {@link SKYTYPE_INFINITE}.
-     * Can be:
+     * Sets the type of the sky. Can be:
      *
      * - {@link SKYTYPE_INFINITE}
      * - {@link SKYTYPE_BOX}
      * - {@link SKYTYPE_DOME}
+     *
+     * Defaults to {@link SKYTYPE_INFINITE}.
      *
      * @type {string}
      */
@@ -119,13 +113,18 @@ class Sky {
         }
     }
 
+    /**
+     * Gets the type of the sky.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }
 
     /**
-     * The center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Typically only the y-coordinate
-     * is used, representing the tripod height. Defaults to (0, 1, 0).
+     * Sets the center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Typically only the
+     * y-coordinate is used, representing the tripod height. Defaults to (0, 1, 0).
      *
      * @type {Vec3}
      */
@@ -133,12 +132,17 @@ class Sky {
         this._center.copy(value);
     }
 
+    /**
+     * Gets the center of the sky.
+     *
+     * @type {Vec3}
+     */
     get center() {
         return this._center;
     }
 
     /**
-     * Whether depth writing is enabled for the sky. Defaults to false.
+     * Sets whether depth writing is enabled for the sky. Defaults to false.
      *
      * Writing a depth value for the skydome is supported when its type is not
      * {@link SKYTYPE_INFINITE}. When enabled, the depth is written during a prepass render pass and
@@ -159,7 +163,7 @@ class Sky {
     }
 
     /**
-     * Returns whether depth writing is enabled for the sky.
+     * Gets whether depth writing is enabled for the sky.
      *
      * @type {boolean}
      */
@@ -168,15 +172,13 @@ class Sky {
     }
 
     /**
-     * Controls the fisheye projection strength for the sky. The value is in the range [0, 1]:
+     * Sets the fisheye projection strength for the sky. The value is in the range [0, 1]:
      *
      * - 0: Standard rectilinear (perspective) projection.
      * - (0, 1]: Increasing barrel distortion, producing a wider field of view.
      *
      * Only supported with {@link SKYTYPE_INFINITE}. Has no effect on dome or box sky types,
-     * and has no effect with orthographic cameras.
-     *
-     * Defaults to 0.
+     * and has no effect with orthographic cameras. Defaults to 0.
      *
      * @type {number}
      */
@@ -195,6 +197,11 @@ class Sky {
         }
     }
 
+    /**
+     * Gets the fisheye projection strength for the sky.
+     *
+     * @type {number}
+     */
     get fisheye() {
         return this._fisheye;
     }

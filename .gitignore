@@ -2,10 +2,12 @@
 .cursor
 .idea/
 .vscode/
+.turbo
 build
 tree*.*.html
 coverage
 docs
+examples/.cert
 examples/dist
 examples/node_modules
 node_modules

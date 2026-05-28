@@ -100,8 +100,10 @@ const _tempColor = new Color();
  * @property {Color} specular The specular color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1. Defines surface reflection/specular color.
  * Affects specular intensity and tint.
- * @property {boolean} specularTint Multiply specular map and/or specular vertex color by the
- * constant specular value.
+ * @property {boolean} specularTint Force inclusion of the constant `specular` color when
+ * compositing with `specularMap` and/or specular vertex colors. Defaults to `false`. Setting
+ * this to `true` is rarely needed - the constant is automatically applied whenever `specular`
+ * differs from white. Provided as an explicit override.
  * @property {Texture|null} specularMap The specular map of the material (default is null).
  * @property {number} specularMapUv Specular map UV channel.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
@@ -114,8 +116,10 @@ const _tempColor = new Color();
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} specularityFactorTint Multiply specularity factor map and/or specular vertex color by the
- * constant specular value.
+ * @property {boolean} specularityFactorTint Force inclusion of the constant `specularityFactor`
+ * when compositing with `specularityFactorMap` and/or specularity factor vertex colors. Defaults
+ * to `false`. Setting this to `true` is rarely needed - the constant is automatically applied
+ * whenever `specularityFactor` differs from 1. Provided as an explicit override.
  * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is
  * null).
@@ -130,9 +134,9 @@ const _tempColor = new Color();
  * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
- * {@link StandardMaterial#anisotropyIntensity} parameter to set material anisotropy.
+ * {@link anisotropyIntensity} parameter to set material anisotropy.
  * @property {number} anisotropyIntensity Defines amount of anisotropy. Requires
- * {@link StandardMaterial#enableGGXSpecular} is set to true.
+ * {@link enableGGXSpecular} is set to true.
  * - When anisotropyIntensity == 0, specular is isotropic.
  * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
  * @property {number} anisotropyRotation Defines the rotation (in degrees) of anisotropy.
@@ -270,7 +274,7 @@ const _tempColor = new Color();
  * @property {string} refractionMapChannel Color channels of the refraction map to use. Can be "r",
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} refractionVertexColor Use mesh vertex colors for refraction. If
- * refraction map is set, it will be be multiplied by vertex colors.
+ * refraction map is set, it will be multiplied by vertex colors.
  * @property {boolean} refractionVertexColorChannel Vertex color channel to use for refraction.
  * Can be "r", "g", "b" or "a".
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of
@@ -295,7 +299,7 @@ const _tempColor = new Color();
  * @property {string} thicknessMapChannel Color channels of the thickness map to use. Can be "r",
  * "g", "b" or "a".
  * @property {boolean} thicknessVertexColor Use mesh vertex colors for thickness. If
- * thickness map is set, it will be be multiplied by vertex colors.
+ * thickness map is set, it will be multiplied by vertex colors.
  * @property {Color} attenuation The attenuation color for refractive materials, only used when
  * useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
@@ -371,8 +375,8 @@ const _tempColor = new Color();
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be
  * "r", "g", "b" or "a".
  * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
- * faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use
- * {@link Material#alphaFade} to fade out materials.
+ * faded out using {@link opacity}. Default is true. When set to false use {@link alphaFade} to
+ * fade out materials.
  * @property {string} opacityDither Used to specify whether opacity is dithered, which allows
  * transparency without alpha blending. Can be:
  *
@@ -383,7 +387,7 @@ const _tempColor = new Color();
  *
  * Defaults to {@link DITHER_NONE}.
  * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
- * allows shadow transparency without alpha blending.  Can be:
+ * allows shadow transparency without alpha blending. Can be:
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
@@ -391,8 +395,18 @@ const _tempColor = new Color();
  * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
- * @property {number} alphaFade Used to fade out materials when
- * {@link StandardMaterial#opacityFadesSpecular} is set to false.
+ * @property {number} alphaFade Used to fade out materials when {@link opacityFadesSpecular} is
+ * set to false.
+ * @property {number} alphaDither The alpha value used by the opacity dither path, in the range
+ * [0, 1]. Independent of {@link opacity}, which keeps driving alpha blending. Lets a material be
+ * alpha-blended and dithered at the same time with different strengths — useful for fading
+ * objects out via dither while preserving their alpha-blended look (e.g. fading glass as the
+ * camera approaches). Has no effect unless {@link opacityDither} (or
+ * {@link opacityShadowDither}) is set to a dither mode. Set to `1.0` to disable dither at runtime
+ * without changing the dither mode, or `0.0` to fully discard via dither. For backwards
+ * compatibility, a material that has never had this property assigned uses {@link opacity} as
+ * the dither alpha, matching the historical behavior where the dither pass shares the blend
+ * alpha.
  * @property {Texture|null} normalMap The main (primary) normal map of the material (default is
  * null). The texture must contains normalized, tangent space normals.
  * @property {number} normalMapUv Main (primary) normal map UV channel.
@@ -515,8 +529,8 @@ const _tempColor = new Color();
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
  * @property {boolean} useLighting Apply lighting
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
- * @property {boolean} useTonemap Apply tonemapping (as configured in {@link Scene#rendering} or
- * {@link CameraComponent.rendering}). Defaults to true.
+ * @property {boolean} useTonemap Apply tonemapping (as configured via
+ * {@link CameraComponent#toneMapping}). Defaults to true.
  * @property {boolean} pixelSnap Align vertices to pixel coordinates when rendering. Useful for
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
@@ -618,6 +632,11 @@ class StandardMaterial extends Material {
             this[k] = source[k];
         });
 
+        // alphaDither uses a null sentinel for "implicit, mirror opacity"; the prop-loop above
+        // goes through the getter which materializes null into a number, so copy the raw field
+        // directly to preserve the implicit state across clone
+        this._alphaDither = source._alphaDither;
+
         // clone user attributes
         this.userAttributes = new Map(source.userAttributes);
 
@@ -699,14 +718,21 @@ class StandardMaterial extends Material {
         this._setParameter('material_diffuse', getUniform('diffuse'));
         this._setParameter('material_aoIntensity', this.aoIntensity);
 
+        // The constant specular color / specularity factor is uploaded whenever it differs from the
+        // multiplicative identity (white / 1), so that it always composites with the corresponding
+        // map. The legacy tint flags remain as explicit overrides. This must stay in sync with
+        // StandardMaterialOptionsBuilder.
+        const specularNotWhite = this.specular.r !== 1 || this.specular.g !== 1 || this.specular.b !== 1;
+        const useSpecularConstant = !this.specularMap || this.specularTint || specularNotWhite;
+
         if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
             }
-            if (!this.specularMap || this.specularTint) {
+            if (useSpecularConstant) {
                 this._setParameter('material_specular', getUniform('specular'));
             }
-            if (!this.specularityFactorMap || this.specularityFactorTint) {
+            if (!this.specularityFactorMap || this.specularityFactorTint || this.specularityFactor !== 1) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
 
@@ -715,7 +741,7 @@ class StandardMaterial extends Material {
 
             this._setParameter('material_refractionIndex', this.refractionIndex);
         } else {
-            if (!this.specularMap || this.specularTint) {
+            if (useSpecularConstant) {
                 this._setParameter('material_specular', getUniform('specular'));
             }
         }
@@ -764,6 +790,14 @@ class StandardMaterial extends Material {
         }
 
         this._setParameter('material_opacity', this.opacity);
+
+        // dither shader does dAlpha * scale; this.alphaDither getter falls back to opacity when
+        // the user hasn't opted in, giving scale = 1 and bit-identical legacy behavior. Set the
+        // uniform unconditionally so any shader compiled with dither enabled (including via
+        // onUpdateShader overrides that bypass opacityDither / opacityShadowDither) sees a safe
+        // value rather than an uninitialized one
+        const ditherScale = this._opacity > 0 ? this.alphaDither / this._opacity : 1;
+        this._setParameter('material_alphaDitherScale', ditherScale);
 
         if (this.opacityFadesSpecular === false) {
             this._setParameter('material_alphaFade', this.alphaFade);
@@ -870,7 +904,6 @@ class StandardMaterial extends Material {
         library.register('standard', standard);
         const shader = library.getProgram('standard', options, processingOptions, this.userId);
 
-        this._dirtyShader = false;
         return shader;
     }
 
@@ -1120,6 +1153,20 @@ function _defineMaterialProps() {
     });
     _defineFloat('opacity', 1);
     _defineFloat('alphaFade', 1);
+
+    // alphaDither is the alpha used by the dither path, independent of opacity (the blend alpha).
+    // Defaults to null: the getter then falls back to opacity, matching the historical behavior
+    // where dither and blend share the same alpha value. Setter stores the raw value, so passing
+    // null resets to the default fall-through.
+    defineProp({
+        name: 'alphaDither',
+        defaultValue: null,
+        dirtyShaderFunc: () => false,
+        getterFunc: function () {
+            return this._alphaDither ?? this._opacity;
+        }
+    });
+
     _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
     _defineFloat('bumpiness', 1);
     _defineFloat('normalDetailMapBumpiness', 1);

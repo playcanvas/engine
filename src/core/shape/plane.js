@@ -13,8 +13,6 @@ import { Vec3 } from '../math/vec3.js';
 class Plane {
     /**
      * The normal of the plane.
-     *
-     * @type {Vec3}
      */
     normal = new Vec3();
 

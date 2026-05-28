@@ -1,4 +1,5 @@
 import { Color } from '../core/math/color.js';
+import { Debug } from '../core/debug.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
@@ -14,6 +15,8 @@ import { CameraShaderParams } from './camera-shader-params.js';
 
 /**
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { FogParams } from './fog-params.js'
  * @import { ShaderPassInfo } from './shader-pass.js'
  */
@@ -31,6 +34,49 @@ const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3
  * @ignore
  */
 class Camera {
+    /** @private */
+    static _flipYProjectionMatrix = new Mat4().setScale(1, -1, 1);
+
+    /** @private */
+    static _webGpuDepthRangeMatrix = new Mat4().set([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 0.5, 0,
+        0, 0, 0.5, 1
+    ]);
+
+    /** @private */
+    static _applyShaderProjectionScratch = new Mat4();
+
+    /**
+     * Builds the projection matrix matching shader `matrix_projection` after optional flip-Y
+     * for render targets and optional WebGPU clip-depth range adjustment.
+     *
+     * @param {Mat4} projection - Source projection ({@link Camera#projectionMatrix}).
+     * @param {Mat4} out - Receives the transformed matrix.
+     * @param {boolean} flipY - When true, apply render-target Y flip first.
+     * @param {boolean} applyWebGpuDepthRange - When true, map clip Z from -1..1 to 0..1.
+     * @returns {Mat4} out
+     */
+    static applyShaderProjectionTransform(projection, out, flipY, applyWebGpuDepthRange) {
+        if (!flipY && !applyWebGpuDepthRange) {
+            out.copy(projection);
+            return out;
+        }
+        if (flipY && applyWebGpuDepthRange) {
+            const scratch = Camera._applyShaderProjectionScratch;
+            scratch.mul2(Camera._flipYProjectionMatrix, projection);
+            out.mul2(Camera._webGpuDepthRangeMatrix, scratch);
+            return out;
+        }
+        if (flipY) {
+            out.mul2(Camera._flipYProjectionMatrix, projection);
+            return out;
+        }
+        out.mul2(Camera._webGpuDepthRangeMatrix, projection);
+        return out;
+    }
+
     /**
      * @type {ShaderPassInfo|null}
      */
@@ -79,7 +125,22 @@ class Camera {
     /** @type {number} */
     jitter = 0;
 
-    constructor() {
+    /**
+     * The graphics device used by this camera. Required so the camera can compute its aspect
+     * ratio from the backbuffer size when no render target is assigned.
+     *
+     * @type {GraphicsDevice}
+     */
+    device;
+
+    /**
+     * @param {GraphicsDevice} graphicsDevice - The graphics device this camera will use for
+     * automatic aspect ratio calculation against the backbuffer size.
+     */
+    constructor(graphicsDevice) {
+        Debug.assert(graphicsDevice, 'Camera constructor requires a GraphicsDevice.');
+        this.device = graphicsDevice;
+
         this._aspectRatio = 16 / 9;
         this._aspectRatioMode = ASPECT_AUTO;
         this._calculateProjection = null;
@@ -184,7 +245,18 @@ class Camera {
     }
 
     get aspectRatio() {
-        return (this.xr?.active) ? this._xrProperties.aspectRatio : this._aspectRatio;
+        if (this.xr?.active) return this._xrProperties.aspectRatio;
+
+        // in ASPECT_AUTO mode, always recompute from current inputs (render target / backbuffer
+        // size and rect). The computation is trivially cheap, and this avoids a few complexities.
+        if (this._aspectRatioMode === ASPECT_AUTO) {
+            const newValue = this.calculateAspectRatio();
+            if (this._aspectRatio !== newValue) {
+                this._aspectRatio = newValue;
+                this._projMatDirty = true;
+            }
+        }
+        return this._aspectRatio;
     }
 
     set aspectRatioMode(newValue) {
@@ -381,6 +453,7 @@ class Camera {
 
     set rect(newValue) {
         this._rect.copy(newValue);
+        this._projMatDirty = true;
     }
 
     get rect() {
@@ -389,6 +462,7 @@ class Camera {
 
     set renderTarget(newValue) {
         this._renderTarget = newValue;
+        this._projMatDirty = true;
     }
 
     get renderTarget() {
@@ -448,12 +522,30 @@ class Camera {
     }
 
     /**
+     * Calculates the aspect ratio that should be used for the camera, based on the size of the
+     * given render target (or the backbuffer if no render target is given), and the camera's
+     * `rect`. The `rect` is included so that a camera rendering into a sub-region of a render
+     * target gets the aspect ratio of the actual rendered pixel area (important for split-screen
+     * and similar setups, otherwise rendering would appear stretched).
+     *
+     * @param {RenderTarget|null} [rt] - Optional render target. If unspecified, the camera's
+     * own render target (or, if that is also null, the backbuffer) is used.
+     * @returns {number} The computed aspect ratio.
+     */
+    calculateAspectRatio(rt) {
+        const target = rt ?? this._renderTarget;
+        const width = target ? target.width : this.device.width;
+        const height = target ? target.height : this.device.height;
+        return (width * this._rect.z) / (height * this._rect.w);
+    }
+
+    /**
      * Creates a duplicate of the camera.
      *
      * @returns {Camera} A cloned Camera.
      */
     clone() {
-        return new Camera().copy(this);
+        return new Camera(this.device).copy(this);
     }
 
     /**
@@ -627,15 +719,19 @@ class Camera {
     }
 
     _evaluateProjectionMatrix() {
+        // in ASPECT_AUTO, reading the aspectRatio getter recomputes it from current inputs
+        // and marks _projMatDirty if the value changed (e.g. after a backbuffer resize with
+        // no other input changes)
+        const aspect = this.aspectRatio;
         if (this._projMatDirty) {
             if (this._projection === PROJECTION_PERSPECTIVE) {
-                this._projMat.setPerspective(this.fov, this.aspectRatio, this.nearClip, this.farClip, this.horizontalFov);
+                this._projMat.setPerspective(this.fov, aspect, this.nearClip, this.farClip, this.horizontalFov);
                 this._projMatSkybox.copy(this._projMat);
             } else {
                 const y = this._orthoHeight;
-                const x = y * this.aspectRatio;
+                const x = y * aspect;
                 this._projMat.setOrtho(-x, x, -y, y, this.nearClip, this.farClip);
-                this._projMatSkybox.setPerspective(this.fov, this.aspectRatio, this.nearClip, this.farClip);
+                this._projMatSkybox.setPerspective(this.fov, aspect, this.nearClip, this.farClip);
             }
 
             this._projMatDirty = false;

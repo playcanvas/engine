@@ -1,5 +1,6 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -39,8 +40,8 @@ app.on('destroy', () => {
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-const objurl = `${rootPath}/static/assets/models/monkey.obj`;
-const scripturl = `${rootPath}/static/scripts/parsers/obj-model.js`;
+const objurl = './assets/models/monkey.obj';
+const scripturl = './scripts/parsers/obj-model.js';
 /** @type {pc.Entity} */
 let entity;
 app.assets.loadFromUrl(scripturl, 'script', () => {
@@ -93,5 +94,3 @@ app.on('update', (dt) => {
         entity.rotate(0, 100 * dt, 0);
     }
 });
-
-export { app };

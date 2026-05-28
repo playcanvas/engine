@@ -92,6 +92,7 @@ const standardMaterialParameterTypes = {
     alphaToCoverage: 'boolean',
     alphaTest: 'number',
     alphaFade: 'number',
+    alphaDither: 'number',
     opacity: 'number',
     ..._textureParameter('opacity'),
     opacityFadesSpecular: 'boolean',

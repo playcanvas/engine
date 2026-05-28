@@ -1,34 +1,41 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// @credit
+// title: Mitsubishi F-2 - Fighter Jet - Free
+// author: bohmerang
+// source: https://sketchfab.com/3d-models/mitsubishi-f-2-fighter-jet-free-d3d7244554974f499b106e6c11fe3aaf
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-const { Annotation, AnnotationManager } = await fileImport(`${rootPath}/static/scripts/esm/annotations.mjs`);
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { ShadowCatcher } = await fileImport(`${rootPath}/static/scripts/esm/shadow-catcher.mjs`);
+import * as pc from 'playcanvas';
+import { Annotation, AnnotationManager } from 'playcanvas/scripts/esm/annotations.mjs';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // Set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 // Initialize basis to allow loading of compressed textures
 pc.basisInitialize({
-    glueUrl: `${rootPath}/static/lib/basis/basis.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/basis/basis.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/basis/basis.js`
+    glueUrl: './assets/wasm/basis/basis.wasm.js',
+    wasmUrl: './assets/wasm/basis/basis.wasm.wasm',
+    fallbackUrl: './assets/wasm/basis/basis.js'
 });
 
 const assets = {
-    jetFighter: new pc.Asset('jet-fighter', 'container', { url: `${rootPath}/static/assets/models/jet-fighter.glb` }),
+    jetFighter: new pc.Asset('jet-fighter', 'container', { url: './assets/models/jet-fighter.glb' }),
     shanghai: new pc.Asset(
         'shanghai',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/shanghai-riverside-4k.hdr` },
+        { url: './assets/hdri/shanghai-riverside-4k.hdr' },
         { mipmaps: false }
     )
 };
@@ -249,5 +256,3 @@ assetListLoader.load(() => {
     });
     app.root.addChild(shadowCatcher);
 });
-
-export { app };

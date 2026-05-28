@@ -107,7 +107,6 @@ class GSplatFormat {
      * When true, allows extra streams to be removed via {@link removeExtraStreams}.
      * Only work buffer formats (returned by {@link GSplatParams#format}) should set this.
      *
-     * @type {boolean}
      * @ignore
      */
     allowStreamRemoval = false;
@@ -133,7 +132,6 @@ class GSplatFormat {
     /**
      * Version counter that increments when extra streams change.
      *
-     * @type {number}
      * @private
      */
     _extraStreamsVersion = 0;

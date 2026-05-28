@@ -1,19 +1,39 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: Mirror's Edge Apartment - Interior Scene
+// author: Aurélien Martel
+// source: https://sketchfab.com/3d-models/mirrors-edge-apartment-interior-scene-9804e9f2fe284070b081c96ceaf8af96
+// license: CC BY-NC 4.0 (https://creativecommons.org/licenses/by-nc/4.0/)
+//
+// @credit
+// title: Love neon sign 02
+// author: daysena
+// source: https://sketchfab.com/3d-models/love-neon-sign-02-9add8bfcb25943d0aae87e0af07c8e4d
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Egyptian Cat Statue
+// author: Ankledot
+// source: https://sketchfab.com/3d-models/egyptian-cat-statue-02b0456362f9442da46d39fb34b3ee5b
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    apartment: new pc.Asset('apartment', 'container', { url: `${rootPath}/static/assets/models/apartment.glb` }),
-    love: new pc.Asset('love', 'container', { url: `${rootPath}/static/assets/models/love.glb` }),
-    cat: new pc.Asset('cat', 'container', { url: `${rootPath}/static/assets/models/cat.glb` }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    apartment: new pc.Asset('apartment', 'container', { url: './assets/models/apartment.glb' }),
+    love: new pc.Asset('love', 'container', { url: './assets/models/love.glb' }),
+    cat: new pc.Asset('cat', 'container', { url: './assets/models/cat.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -202,5 +222,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

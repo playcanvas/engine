@@ -1,17 +1,19 @@
-// @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
-    rocks: new pc.Asset('rocks', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-diffuse-alpha.png` }, { srgb: true }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    rocks: new pc.Asset('rocks', 'texture', { url: './assets/textures/seaside-rocks01-diffuse-alpha.png' }, { srgb: true }),
 
-
-    opacity: new pc.Asset('rocks', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-roughness.jpg` })
+    opacity: new pc.Asset('rocks', 'texture', { url: './assets/textures/seaside-rocks01-roughness.jpg' })
 
 };
 
@@ -195,5 +197,3 @@ assetListLoader.load(() => {
         });
     });
 });
-
-export { app };

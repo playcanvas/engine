@@ -17,7 +17,6 @@ export const computeGsplatLocalTileCountLargeSource = /* wgsl */`
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"
 
-const CACHE_STRIDE: u32 = 7u;
 const WG_SIZE: u32 = 256u;
 const MAX_TILE_ENTRIES: u32 = 0xFFFFu;
 
@@ -72,7 +71,7 @@ fn main(
     if (isActive) {
         threadIdx = largeSplatIds[largeSplatIdx];
 
-        let cacheBase = threadIdx * CACHE_STRIDE;
+        let cacheBase = threadIdx * {CACHE_STRIDE}u;
         screen = vec2f(bitcast<f32>(projCache[cacheBase + 0u]), bitcast<f32>(projCache[cacheBase + 1u]));
         cx = bitcast<f32>(projCache[cacheBase + 2u]);
         cy = bitcast<f32>(projCache[cacheBase + 3u]);

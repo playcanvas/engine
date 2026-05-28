@@ -78,10 +78,7 @@ class KeyboardMouseSource extends InputSource {
      */
     static keyCode = KEY_CODES;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _pointerId = -1;
 
     /**
@@ -281,9 +278,7 @@ class KeyboardMouseSource extends InputSource {
         this._setKey(event.code, 0);
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _clearButtons() {
         for (let i = 0; i < this._button.length; i++) {
             if (this._button[i] === 1) {
@@ -319,6 +314,7 @@ class KeyboardMouseSource extends InputSource {
         this._element.addEventListener('pointerup', this._onPointerUp);
         this._element.addEventListener('pointercancel', this._onPointerUp);
         this._element.addEventListener('pointerleave', this._onPointerUp);
+        this._element.addEventListener('lostpointercapture', this._onPointerUp);
         this._element.addEventListener('contextmenu', this._onContextMenu);
 
         window.addEventListener('keydown', this._onKeyDown, false);
@@ -335,6 +331,7 @@ class KeyboardMouseSource extends InputSource {
         this._element.removeEventListener('pointerup', this._onPointerUp);
         this._element.removeEventListener('pointercancel', this._onPointerUp);
         this._element.removeEventListener('pointerleave', this._onPointerUp);
+        this._element.removeEventListener('lostpointercapture', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
         window.removeEventListener('keydown', this._onKeyDown, false);
@@ -346,9 +343,7 @@ class KeyboardMouseSource extends InputSource {
         super.detach();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         for (let i = 0; i < array.length; i++) {
             array[i] = this._keyNow[i] - this._keyPrev[i];

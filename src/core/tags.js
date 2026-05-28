@@ -51,6 +51,12 @@ class Tags extends EventHandler {
     _list = [];
 
     /**
+     * @type {object}
+     * @private
+     */
+    _parent;
+
+    /**
      * Create a new Tags instance.
      *
      * @param {object} [parent] - Parent object who tags belong to.

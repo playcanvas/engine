@@ -24,8 +24,6 @@ import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 class RenderPassTAA extends RenderPassShaderQuad {
     /**
      * The index of the history texture to render to.
-     *
-     * @type {number}
      */
     historyIndex = 0;
 

@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, BooleanInput, Panel, SelectInput, SliderInput, Label, TextInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, BooleanInput, Button, Panel, SelectInput, SliderInput, Label, TextInput } = ReactPCUI;
     return fragment(
         jsx(
             Panel,
@@ -198,6 +198,17 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Alpha Clip' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'alphaClipForward' },
+                    min: 0,
+                    max: 1,
+                    precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Radial' },
                 jsx(BooleanInput, {
                     type: 'toggle',
@@ -214,22 +225,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'compact' },
                     value: observer.get('compact') || false
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Debug' },
-                jsx(SelectInput, {
-                    type: 'number',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'debug' },
-                    value: observer.get('debug') ?? 0,
-                    options: [
-                        { v: 0, t: 'None' },
-                        { v: 1, t: 'LOD' },
-                        { v: 2, t: 'SH Update' },
-                        { v: 3, t: 'Heatmap' }
-                    ]
                 })
             ),
             jsx(
@@ -282,6 +277,40 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     step: 0.1
                 })
             )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Debug' },
+            jsx(
+                LabelGroup,
+                { text: 'Debug Render' },
+                jsx(SelectInput, {
+                    type: 'number',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'debug' },
+                    value: observer.get('debug') ?? 0,
+                    options: [
+                        { v: 0, t: 'None' },
+                        { v: 1, t: 'LOD' },
+                        { v: 2, t: 'SH Update' },
+                        { v: 3, t: 'Heatmap' },
+                        { v: 4, t: 'AABBs' },
+                        { v: 5, t: 'Node AABBs' }
+                    ]
+                })
+            ),
+            jsx(Button, {
+                text: 'Log Textures',
+                onClick: () => {
+                    observer.emit('logTextures');
+                }
+            }),
+            jsx(Button, {
+                text: 'Log Buffers',
+                onClick: () => {
+                    observer.emit('logBuffers');
+                }
+            })
         ),
         jsx(
             Panel,

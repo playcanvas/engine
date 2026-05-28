@@ -38,7 +38,7 @@ const math = {
     },
 
     /**
-     * Convert an 24 bit integer into an array of 3 bytes.
+     * Convert a 24-bit integer into an array of 3 bytes.
      *
      * @param {number} i - Number holding an integer value.
      * @returns {number[]} An array of 3 bytes.
@@ -55,7 +55,7 @@ const math = {
     },
 
     /**
-     * Convert an 32 bit integer into an array of 4 bytes.
+     * Convert a 32-bit integer into an array of 4 bytes.
      *
      * @param {number} i - Number holding an integer value.
      * @returns {number[]} An array of 4 bytes.

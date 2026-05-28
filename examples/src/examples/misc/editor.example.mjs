@@ -1,17 +1,18 @@
-// @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div><div>Snap (Hold Shift), Non-Uniform (Hold Ctrl)</div></div>
-import { data } from 'examples/observer';
-import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// `1` Translate · `2` Rotate · `3` Scale · `X` Toggle world/local · `P` Perspective · `O` Orthographic · Hold `Shift` Snap · Hold `Ctrl` Non-uniform scale
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
-const { Grid } = await fileImport(`${rootPath}/static/scripts/esm/grid.mjs`);
+import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
+
+import { data, deviceType } from 'examples/context';
+
+import { GizmoHandler } from './gizmo-handler.mjs';
+import { Selector } from './selector.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
-
-// class for handling gizmo
-const { GizmoHandler } = await localImport('gizmo-handler.mjs');
-const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
     deviceTypes: [deviceType]
@@ -40,7 +41,7 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 /**
  * @param {pc.Asset[] | number[]} assetList - The asset list.
@@ -374,5 +375,3 @@ selector.fire('select', box, true);
 
 // focus canvas
 window.focus();
-
-export { app };

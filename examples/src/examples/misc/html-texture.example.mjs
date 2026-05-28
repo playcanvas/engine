@@ -1,4 +1,9 @@
-// @config DESCRIPTION <div style="color:black">Renders live HTML content directly as a WebGL texture via the <b>HTML-in-Canvas</b> API (<code>texElementImage2D</code>).<br>Includes animated CSS gradients, text glow, and a pulsing circle — all driven by standard CSS.</div>
+// @config
+//
+// Renders live HTML content directly as a WebGL texture via the
+// {accent:HTML-in-Canvas} API ({accent:texElementImage2D}). Includes animated
+// CSS gradients, text glow, and a pulsing circle — all driven by standard CSS.
+
 //
 // This example demonstrates the HTML-in-Canvas API: a styled HTML element with
 // CSS animations is appended to a canvas marked with the "layoutsubtree"
@@ -7,8 +12,9 @@
 // Fallback: when device.supportsHtmlTextures is false, a static 2D canvas with
 // hand-drawn placeholder graphics is used as the texture source instead.
 //
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 
@@ -21,7 +27,7 @@ const assets = {
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -218,5 +224,3 @@ assetListLoader.load(() => {
         box.rotate(3 * dt, 5 * dt, 6 * dt);
     });
 });
-
-export { app };

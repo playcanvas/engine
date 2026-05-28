@@ -1,16 +1,24 @@
-// @config HIDDEN
-// @config WEBGPU_DISABLED
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag HIDDEN
+// @flag WEBGPU_DISABLED
+//
+// @credit
+// title: Black Honey Robotic Arm
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/black-honey-robotic-arm-c50671f2a8e74de2a2e687103fdc93ab
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType, win } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 await new Promise((resolve) => {
@@ -18,16 +26,16 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
-    luts: new pc.Asset('luts', 'json', { url: `${rootPath}/static/assets/json/area-light-luts.json` }),
-    asset: new pc.Asset('asset', 'container', { url: `${rootPath}/static/assets/models/robot-arm.glb` })
+    cube: new pc.Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
+    luts: new pc.Asset('luts', 'json', { url: './assets/json/area-light-luts.json' }),
+    asset: new pc.Asset('asset', 'container', { url: './assets/models/robot-arm.glb' })
 };
 
 const gfxOptions = {
@@ -295,9 +303,9 @@ assetListLoader.load(() => {
         }
     });
 
-    const areaLightElement = window.top.document.getElementById('area-light');
-    const pointLightElement = window.top.document.getElementById('point-light');
-    const directionalLightElement = window.top.document.getElementById('directional-light');
+    const areaLightElement = win.document.getElementById('area-light');
+    const pointLightElement = win.document.getElementById('point-light');
+    const directionalLightElement = win.document.getElementById('directional-light');
 
     let resizeControlPanel = true;
     let time = 0;
@@ -348,7 +356,7 @@ assetListLoader.load(() => {
 
         // resize control panel to fit the content better
         if (resizeControlPanel) {
-            const panel = window.top.document.getElementById('controlPanel');
+            const panel = win.document.getElementById('controlPanel');
             if (panel) {
                 panel.style.width = '360px';
                 resizeControlPanel = false;
@@ -356,5 +364,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

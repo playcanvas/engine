@@ -53,7 +53,7 @@ let id = 0;
  *     - on WebGPU, rendering to float and half-float formats is always supported.
  *     - on WebGPU, rendering to small-float format is supported only if
  * {@link GraphicsDevice#textureRG11B10Renderable} is true.
- *     - on WebGL2, rendering to these 3 formats formats is supported only if
+ *     - on WebGL2, rendering to these 3 formats is supported only if
  * {@link GraphicsDevice#textureFloatRenderable} is true.
  *     - on WebGL2, if {@link GraphicsDevice#textureFloatRenderable} is false, but
  * {@link GraphicsDevice#textureHalfFloatRenderable} is true, rendering to half-float formats only
@@ -63,6 +63,7 @@ let id = 0;
  *     - {@link PIXELFORMAT_RGB10A2} provides 10 bits per RGB channel with 2-bit alpha, offering
  * higher precision than {@link PIXELFORMAT_RGBA8} at the same memory cost. It is renderable on
  * both WebGL2 and WebGPU. {@link PIXELFORMAT_RGB10A2U} is the unsigned integer variant.
+ *
  * @category Graphics
  */
 class Texture {
@@ -104,6 +105,9 @@ class Texture {
     /** @ignore */
     _gpuSize = 0;
 
+    /** @ignore */
+    releaseSourceAfterUpload = false;
+
     /** @protected */
     id = id++;
 
@@ -120,7 +124,6 @@ class Texture {
      * A render version used to track the last time the texture properties requiring bind group
      * to be updated were changed.
      *
-     * @type {number}
      * @ignore
      */
     renderVersionDirty = 0;
@@ -204,7 +207,7 @@ class Texture {
      * Defaults to undefined.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume.
      * Defaults to false.
-     * @param {string} [options.type] - Specifies the texture type.  Can be:
+     * @param {string} [options.type] - Specifies the texture type. Can be:
      *
      * - {@link TEXTURETYPE_DEFAULT}
      * - {@link TEXTURETYPE_RGBM}
@@ -352,8 +355,62 @@ class Texture {
             // Update texture stats
             this.adjustVramSizeTracking(device._vram, -this._gpuSize);
 
+            // Free CPU-side decoded pixel data if the owner has opted in via
+            // setReleaseSourceAfterUpload; only safe when the source is engine-owned.
+            if (this.releaseSourceAfterUpload) {
+                this.releaseImageSources();
+            }
+
             this._levels = null;
             this.device = null;
+        }
+    }
+
+    /**
+     * Closes any ImageBitmaps held on `_levels` and nulls those entries. The GPU has its own
+     * copy after upload, so the decoded pixels in CPU memory can be released. Safe to call only
+     * when no subsequent re-upload from CPU source will be needed and the source is owned by
+     * the engine (not shared with caller code or other textures). Clears the
+     * `releaseSourceAfterUpload` flag so future uploads keep their sources by default.
+     *
+     * @ignore
+     */
+    releaseImageSources() {
+        this.releaseSourceAfterUpload = false;
+        if (typeof ImageBitmap === 'undefined' || !this._levels) {
+            return;
+        }
+        for (let i = 0; i < this._levels.length; i++) {
+            const level = this._levels[i];
+            if (level instanceof ImageBitmap) {
+                level.close();
+                this._levels[i] = null;
+            } else if (Array.isArray(level)) {
+                for (let j = 0; j < level.length; j++) {
+                    if (level[j] instanceof ImageBitmap) {
+                        level[j].close();
+                        level[j] = null;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * One-shot opt-in: marks this texture so its CPU-side ImageBitmap source is released after
+     * the next upload completes. The flag is cleared once the release runs, so callers must
+     * re-arm after assigning a new source. The caller must own the ImageBitmap and guarantee
+     * that no re-upload from CPU source will be needed (e.g. the owner re-creates the texture
+     * on device loss). Used by the gsplat octree for streamed SOG textures.
+     *
+     * @ignore
+     */
+    setReleaseSourceAfterUpload() {
+        this.releaseSourceAfterUpload = true;
+
+        // If upload has already happened, release eagerly.
+        if (!this._needsUpload && !this._needsMipmapsUpload) {
+            this.releaseImageSources();
         }
     }
 
@@ -1039,7 +1096,7 @@ class Texture {
         this._lockedLevel = options.level;
 
         const levels = this.cubemap ? this._levels[options.face] : this._levels;
-        if (levels[options.level] === null) {
+        if (!levels[options.level]) {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
@@ -1213,10 +1270,10 @@ class Texture {
     }
 
     /**
-     * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-     * is called by internally by {@link setSource} and {@link unlock}. However, it still needs to
+     * Forces a reupload of the texture's pixel data to graphics memory. Ordinarily, this function
+     * is called internally by {@link setSource} and {@link unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the
-     * texture.  Normally, this is done once every frame before video textured geometry is
+     * texture. Normally, this is done once every frame before video textured geometry is
      * rendered.
      */
     upload() {

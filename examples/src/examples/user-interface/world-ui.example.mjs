@@ -1,13 +1,14 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    checkboard: new pc.Asset('checkboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` }),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    checkboard: new pc.Asset('checkboard', 'texture', { url: './assets/textures/checkboard.png' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
@@ -164,5 +165,3 @@ assetListLoader.load(() => {
         camera.camera.clearColor = new pc.Color(Math.random(), Math.random(), Math.random());
     });
 });
-
-export { app };

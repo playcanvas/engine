@@ -11,7 +11,7 @@ import { hashCode } from '../../core/hash.js';
 
 /**
  * A collection of shader chunks, used by {@link ShaderChunks}. This is a map of shader chunk names
- * to their code.  As this class extends `Map`, it can be used as a `Map` as well in addition to
+ * to their code. As this class extends `Map`, it can be used as a `Map` as well in addition to
  * custom functionality it provides.
  *
  * @category Graphics
@@ -151,7 +151,14 @@ class ShaderChunkMap extends Map {
      * @ignore
      */
     copy(source) {
-        this.clear();
+        // delete entries not present in source
+        for (const key of this.keys()) {
+            if (!source.has(key)) {
+                this.delete(key);
+            }
+        }
+
+        // add or update entries from source (set() only marks dirty when the value actually changes)
         for (const [key, value] of source) {
             this.set(key, value);
         }

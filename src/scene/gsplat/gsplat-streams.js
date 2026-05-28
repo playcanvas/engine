@@ -37,7 +37,6 @@ class GSplatStreams {
     /**
      * Texture dimensions (width and height).
      *
-     * @type {Vec2}
      * @private
      */
     _textureDimensions = new Vec2();
@@ -45,7 +44,6 @@ class GSplatStreams {
     /**
      * Whether this manages instance-level textures (true) or resource-level textures (false).
      *
-     * @type {boolean}
      * @private
      */
     _isInstance = false;
@@ -53,7 +51,6 @@ class GSplatStreams {
     /**
      * The format version at last sync.
      *
-     * @type {number}
      * @private
      */
     _formatVersion = -1;

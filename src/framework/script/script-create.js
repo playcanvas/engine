@@ -83,12 +83,12 @@ ScriptAttributes.reservedNames.forEach((value, value2, set) => {
 createScript.reservedAttributes = reservedAttributes;
 
 /**
- * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
- * a ES6 script class that extends {@link ScriptType} (see example).
+ * Register an existing class type as a Script Type with {@link ScriptRegistry}. Useful when defining
+ * an ES6 script class that extends {@link ScriptType} (see example).
  *
  * @param {typeof ScriptType} script - The existing class type (constructor function) to be
  * registered as a Script Type. Class must extend {@link ScriptType} (see example). Please note: A
- * class created using {@link createScript} is auto-registered, and should therefore not be pass
+ * class created using {@link createScript} is auto-registered, and should therefore not be passed
  * into {@link registerScript} (which would result in swapping out all related script instances).
  * @param {string} [name] - Optional unique name of the Script Type. By default it will use the
  * same name as the existing class. If a Script Type with the same name has already been registered
@@ -98,10 +98,10 @@ createScript.reservedAttributes = reservedAttributes;
  * (underscore): system, entity, create, destroy, swap, move, scripts, onEnable, onDisable,
  * onPostStateChange, has, on, off, fire, once, hasEvent.
  * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
- * to register the script type to. By default it will use `Application.getApplication()` to get
- * current {@link AppBase}.
+ * to register the script type with. By default it will use `Application.getApplication()` to get
+ * the current {@link AppBase}.
  * @example
- * // define a ES6 script class
+ * // define an ES6 script class
  * class PlayerController extends pc.ScriptType {
  *
  *     initialize() {

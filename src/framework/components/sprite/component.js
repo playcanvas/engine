@@ -10,7 +10,6 @@ import {
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
-import { Model } from '../../../scene/model.js';
 import { Component } from '../component.js';
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
@@ -32,7 +31,33 @@ const PARAM_OUTER_SCALE = 'outerScale';
 const PARAM_ATLAS_RECT = 'atlasRect';
 
 /**
- * Enables an Entity to render a simple static sprite or sprite animations.
+ * The SpriteComponent enables an {@link Entity} to render a simple static sprite or sprite
+ * animations. The {@link type} property can be set to either {@link SPRITETYPE_SIMPLE} to render
+ * a single frame from a sprite asset, or {@link SPRITETYPE_ANIMATED} to play one or more
+ * {@link SpriteAnimationClip}s.
+ *
+ * You should never need to use the SpriteComponent constructor directly. To add a
+ * SpriteComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('sprite', {
+ *     spriteAsset: spriteAsset
+ * });
+ * ```
+ *
+ * Once the SpriteComponent is added to the entity, you can access it via the
+ * {@link Entity#sprite} property:
+ *
+ * ```javascript
+ * entity.sprite.color = pc.Color.RED; // Tint the sprite red
+ *
+ * console.log(entity.sprite.color);   // Get the sprite tint and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Animated sprite](https://playcanvas.github.io/#/misc/animated-sprite)
  *
  * @hideconstructor
  * @category Graphics
@@ -128,63 +153,125 @@ class SpriteComponent extends Component {
      */
     _evtLayerRemoved = null;
 
+    /** @private */
+    _type = SPRITETYPE_SIMPLE;
+
+    /** @private */
+    _material = null;
+
+    /** @private */
+    _color = new Color(1, 1, 1, 1);
+
+    /** @private */
+    _colorUniform = new Float32Array(3);
+
+    /** @private */
+    _speed = 1;
+
+    /** @private */
+    _flipX = false;
+
+    /** @private */
+    _flipY = false;
+
+    /** @private */
+    _width = 1;
+
+    /** @private */
+    _height = 1;
+
+    /** @private */
+    _drawOrder = 0;
+
+    /** @private */
+    _layers = [LAYERID_WORLD]; // assign to the default world layer
+
+    // 9-slicing
+
+    /** @private */
+    _outerScale = new Vec2(1, 1);
+
+    /** @private */
+    _outerScaleUniform = new Float32Array(2);
+
+    /** @private */
+    _innerOffset = new Vec4();
+
+    /** @private */
+    _innerOffsetUniform = new Float32Array(4);
+
+    /** @private */
+    _atlasRect = new Vec4();
+
+    /** @private */
+    _atlasRectUniform = new Float32Array(4);
+
+    // batch groups
+
+    /** @private */
+    _batchGroupId = -1;
+
+    // node / mesh instance
+
+    /** @private */
+    _node = new GraphNode();
+
+    /**
+     * @type {MeshInstance|null}
+     * @private
+     */
+    _meshInstance = null;
+
+    /** @private */
+    _updateAabbFunc = null;
+
+    /** @private */
+    _inLayers = false;
+
+    // animated sprites
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _autoPlayClip = null;
+
+    /**
+     * Dictionary of sprite animation clips.
+     *
+     * @type {Object<string, SpriteAnimationClip>}
+     * @private
+     */
+    _clips = {};
+
+    /**
+     * @type {SpriteAnimationClip|null}
+     * @private
+     */
+    _defaultClip = null;
+
+    /**
+     * The sprite animation clip currently playing.
+     *
+     * @type {SpriteAnimationClip|null}
+     * @private
+     */
+    _currentClip = null;
+
     /**
      * Create a new SpriteComponent instance.
      *
-     * @param {SpriteComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {SpriteComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
 
-        this._type = SPRITETYPE_SIMPLE;
         this._material = system.defaultMaterial;
-        this._color = new Color(1, 1, 1, 1);
-        this._colorUniform = new Float32Array(3);
-        this._speed = 1;
-        this._flipX = false;
-        this._flipY = false;
-        this._width = 1;
-        this._height = 1;
 
-        this._drawOrder = 0;
-        this._layers = [LAYERID_WORLD]; // assign to the default world layer
+        entity.addChild(this._node);
 
-        // 9-slicing
-        this._outerScale = new Vec2(1, 1);
-        this._outerScaleUniform = new Float32Array(2);
-        this._innerOffset = new Vec4();
-        this._innerOffsetUniform = new Float32Array(4);
-        this._atlasRect = new Vec4();
-        this._atlasRectUniform = new Float32Array(4);
-
-        // batch groups
-        this._batchGroupId = -1;
-        this._batchGroup = null;
-
-        // node / mesh instance
-        this._node = new GraphNode();
-        this._model = new Model();
-        this._model.graph = this._node;
-        this._meshInstance = null;
-        entity.addChild(this._model.graph);
-        this._model._entity = entity;
         this._updateAabbFunc = this._updateAabb.bind(this);
-
-        this._addedModel = false;
-
-        // animated sprites
-        this._autoPlayClip = null;
-
-        /**
-         * Dictionary of sprite animation clips.
-         *
-         * @type {Object<string, SpriteAnimationClip>}
-         * @private
-         */
-        this._clips = {};
 
         // create default clip for simple sprite type
         this._defaultClip = new SpriteAnimationClip(this, {
@@ -194,12 +281,6 @@ class SpriteComponent extends Component {
             spriteAsset: null
         });
 
-        /**
-         * The sprite animation clip currently playing.
-         *
-         * @type {SpriteAnimationClip}
-         * @private
-         */
         this._currentClip = this._defaultClip;
     }
 
@@ -227,9 +308,9 @@ class SpriteComponent extends Component {
                 this._currentClip.frame = this.frame;
 
                 if (this._currentClip.sprite) {
-                    this._showModel();
+                    this.addToLayers();
                 } else {
-                    this._hideModel();
+                    this.removeFromLayers();
                 }
             }
 
@@ -241,9 +322,9 @@ class SpriteComponent extends Component {
             }
 
             if (this._currentClip && this._currentClip.isPlaying && this.enabled && this.entity.enabled) {
-                this._showModel();
+                this.addToLayers();
             } else {
-                this._hideModel();
+                this.removeFromLayers();
             }
         }
     }
@@ -423,9 +504,9 @@ class SpriteComponent extends Component {
             this._tryAutoPlay();
         }
 
-        // if the current clip doesn't have a sprite then hide the model
+        // if the current clip doesn't have a sprite then remove the mesh instance from layers
         if (!this._currentClip || !this._currentClip.sprite) {
-            this._hideModel();
+            this.removeFromLayers();
         }
     }
 
@@ -578,10 +659,10 @@ class SpriteComponent extends Component {
         if (this.entity.enabled && value >= 0) {
             this.system.app.batcher?.insert(BatchGroup.SPRITE, value, this.entity);
         } else {
-            // re-add model to scene in case it was removed by batching
+            // re-add the sprite mesh instance to layers in case it was removed by batching
             if (prev >= 0) {
                 if (this._currentClip && this._currentClip.sprite && this.enabled && this.entity.enabled) {
-                    this._showModel();
+                    this.addToLayers();
                 }
             }
         }
@@ -644,8 +725,8 @@ class SpriteComponent extends Component {
      * @type {number[]}
      */
     set layers(value) {
-        if (this._addedModel) {
-            this._hideModel();
+        if (this._inLayers) {
+            this.removeFromLayers();
         }
 
         this._layers = value;
@@ -656,7 +737,7 @@ class SpriteComponent extends Component {
         }
 
         if (this.enabled && this.entity.enabled) {
-            this._showModel();
+            this.addToLayers();
         }
     }
 
@@ -689,7 +770,7 @@ class SpriteComponent extends Component {
             this._evtLayerRemoved = layers.on('remove', this._onLayerRemoved, this);
         }
 
-        this._showModel();
+        this.addToLayers();
         if (this._autoPlayClip) {
             this._tryAutoPlay();
         }
@@ -715,7 +796,7 @@ class SpriteComponent extends Component {
         }
 
         this.stop();
-        this._hideModel();
+        this.removeFromLayers();
 
 
         if (this._batchGroupId >= 0) {
@@ -735,8 +816,7 @@ class SpriteComponent extends Component {
         }
         this._clips = null;
 
-        this._hideModel();
-        this._model = null;
+        this.removeFromLayers();
 
         this._node?.remove();
         this._node = null;
@@ -749,8 +829,9 @@ class SpriteComponent extends Component {
         }
     }
 
-    _showModel() {
-        if (this._addedModel) return;
+    /** @ignore */
+    addToLayers() {
+        if (this._inLayers) return;
         if (!this._meshInstance) return;
 
         const meshInstances = [this._meshInstance];
@@ -762,11 +843,12 @@ class SpriteComponent extends Component {
             }
         }
 
-        this._addedModel = true;
+        this._inLayers = true;
     }
 
-    _hideModel() {
-        if (!this._addedModel || !this._meshInstance) return;
+    /** @ignore */
+    removeFromLayers() {
+        if (!this._inLayers || !this._meshInstance) return;
 
         const meshInstances = [this._meshInstance];
 
@@ -777,7 +859,7 @@ class SpriteComponent extends Component {
             }
         }
 
-        this._addedModel = false;
+        this._inLayers = false;
     }
 
     // Set the desired mesh on the mesh instance
@@ -810,7 +892,6 @@ class SpriteComponent extends Component {
             this._meshInstance.castShadow = false;
             this._meshInstance.receiveShadow = false;
             this._meshInstance.drawOrder = this._drawOrder;
-            this._model.meshInstances.push(this._meshInstance);
 
             // set overrides on mesh instance
             this._colorUniform[0] = this._color.r;
@@ -819,9 +900,9 @@ class SpriteComponent extends Component {
             this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
             this._meshInstance.setParameter(PARAM_OPACITY, this._color.a);
 
-            // now that we created the mesh instance, add the model to the scene
+            // now that we created the mesh instance, add it to the layers
             if (this.enabled && this.entity.enabled) {
-                this._showModel();
+                this.addToLayers();
             }
         }
 
@@ -978,13 +1059,13 @@ class SpriteComponent extends Component {
     }
 
     _onLayersChanged(oldComp, newComp) {
-        oldComp.off('add', this.onLayerAdded, this);
-        oldComp.off('remove', this.onLayerRemoved, this);
-        newComp.on('add', this.onLayerAdded, this);
-        newComp.on('remove', this.onLayerRemoved, this);
+        oldComp.off('add', this._onLayerAdded, this);
+        oldComp.off('remove', this._onLayerRemoved, this);
+        newComp.on('add', this._onLayerAdded, this);
+        newComp.on('remove', this._onLayerRemoved, this);
 
         if (this.enabled && this.entity.enabled) {
-            this._showModel();
+            this.addToLayers();
         }
     }
 
@@ -992,7 +1073,7 @@ class SpriteComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
 
-        if (this._addedModel && this.enabled && this.entity.enabled && this._meshInstance) {
+        if (this._inLayers && this.enabled && this.entity.enabled && this._meshInstance) {
             layer.addMeshInstances([this._meshInstance]);
         }
     }
@@ -1003,14 +1084,6 @@ class SpriteComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances([this._meshInstance]);
-    }
-
-    removeModelFromLayers() {
-        for (let i = 0; i < this.layers.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-            if (!layer) continue;
-            layer.removeMeshInstances([this._meshInstance]);
-        }
     }
 
     /**

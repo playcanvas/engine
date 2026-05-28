@@ -5,7 +5,7 @@ LoadedLater.attributes.add('disableScriptComponent', { type: 'boolean' });
 LoadedLater.attributes.add('disableScriptInstance', { type: 'boolean' });
 
 LoadedLater.prototype.initialize = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} initialize loadedLater`);
+    window.initializeCalls.push(`${this.entity.guid} initialize loadedLater`);
 
     if (this.disableEntity) {
         this.entity.enabled = false;
@@ -21,5 +21,5 @@ LoadedLater.prototype.initialize = function () {
 };
 
 LoadedLater.prototype.postInitialize = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} postInitialize loadedLater`);
+    window.initializeCalls.push(`${this.entity.guid} postInitialize loadedLater`);
 };

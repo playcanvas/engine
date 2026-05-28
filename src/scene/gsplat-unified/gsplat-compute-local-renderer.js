@@ -15,9 +15,10 @@ import {
     UNIFORMTYPE_UINT
 } from '../../platform/graphics/constants.js';
 import { GSPLAT_FORWARD, PROJECTION_ORTHOGRAPHIC, FOG_NONE, GSPLAT_DEBUG_HEATMAP } from '../constants.js';
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
+import { Camera } from '../camera.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
 import { FramePassGSplatComputeLocal } from './frame-pass-gsplat-compute-local.js';
 import { computeGsplatLocalDispatchPrepSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-dispatch-prep.js';
@@ -32,10 +33,12 @@ import { computeGsplatLocalBucketSortSource } from '../shader-lib/wgsl/chunks/gs
 import { computeGsplatLocalChunkSortSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-chunk-sort.js';
 import { computeGsplatLocalCopySource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-copy.js';
 import { computeGsplatLocalBitonicSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-local-bitonic.js';
+import { computeGsplatProjectCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-project-common.js';
 import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-common.js';
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import { GSplatTileComposite } from './gsplat-tile-composite.js';
 import { GSplatLocalDispatchSet } from './gsplat-local-dispatch-set.js';
+import { ALPHA_VISIBILITY_THRESHOLD, CACHE_STRIDE } from './constants.js';
 import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
 
 /**
@@ -76,7 +79,6 @@ const INITIAL_LARGE_SPLAT_CAPACITY = 16384;
 
 const TILE_SIZE = 16;
 const MAX_TILES = 65535; // tile index must fit in 16 bits for pair packing (tileIdx << 16 | localOffset)
-const CACHE_STRIDE = 7;
 const MAX_CHUNKS_PER_TILE = 8;
 
 // ---- Module-scope scratch (reusable, never exported) ----
@@ -84,6 +86,7 @@ const MAX_CHUNKS_PER_TILE = 8;
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewData = new Float32Array(16);
+const _shaderProjMat = new Mat4();
 const _fogColorLinear = new Color();
 const _fogColorArray = new Float32Array(3);
 
@@ -160,6 +163,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
     /** @type {number} */
     _alphaClip = 0.3;
+
+    /** @type {number} */
+    _alphaClipForward = ALPHA_VISIBILITY_THRESHOLD;
 
     /** @type {number} */
     _exposure = 1.0;
@@ -429,6 +435,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         this._minPixelSize = gsplat.minPixelSize;
         this._minContribution = gsplat.minContribution;
         this._alphaClip = gsplat.alphaClip;
+        this._alphaClipForward = gsplat.alphaClipForward;
         this._exposure = exposure ?? 1.0;
         this._fisheye = gsplat.fisheye;
         this._fogParams = fogParams ?? null;
@@ -525,11 +532,16 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._depthBuffer = new StorageBuffer(device, numSplats * 4);
             this._splatPairStartBuffer = new StorageBuffer(device, numSplats * 4);
             this._splatPairCountBuffer = new StorageBuffer(device, numSplats * 4);
+            DebugHelper.setName(this._projCacheBuffer, 'GsplatComputeLocalRenderer.projCache');
+            DebugHelper.setName(this._depthBuffer, 'GsplatComputeLocalRenderer.depth');
+            DebugHelper.setName(this._splatPairStartBuffer, 'GsplatComputeLocalRenderer.splatPairStart');
+            DebugHelper.setName(this._splatPairCountBuffer, 'GsplatComputeLocalRenderer.splatPairCount');
         }
 
         // Packed atomic counters: [0] = global pair counter, [1] = large splat count.
         if (!this._countersBuffer) {
             this._countersBuffer = new StorageBuffer(device, 8, BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
+            DebugHelper.setName(this._countersBuffer, 'GsplatComputeLocalRenderer.counters');
         }
 
         // Large-splat ID buffer (grow-only)
@@ -537,6 +549,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._largeSplatIdsBuffer?.destroy();
             this._allocatedLargeSplatCapacity = this._largeSplatIdsCapacity;
             this._largeSplatIdsBuffer = new StorageBuffer(device, this._largeSplatIdsCapacity * 4);
+            DebugHelper.setName(this._largeSplatIdsBuffer, 'GsplatComputeLocalRenderer.largeSplatIds');
         }
 
         // Entry capacity (tileEntries + pairBuffer — both sized identically)
@@ -550,6 +563,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             this._allocatedEntryCapacity = requiredEntryCapacity;
             this._tileEntriesBuffer = new StorageBuffer(device, requiredEntryCapacity * 4, BUFFERUSAGE_COPY_DST);
             this._pairBuffer = new StorageBuffer(device, requiredEntryCapacity * 4);
+            DebugHelper.setName(this._tileEntriesBuffer, 'GsplatComputeLocalRenderer.tileEntries');
+            DebugHelper.setName(this._pairBuffer, 'GsplatComputeLocalRenderer.pair');
         }
 
         this._lastBufferSubmitVersion = device.submitVersion;
@@ -639,16 +654,17 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const cam = camera.camera;
 
         const view = cam.viewMatrix;
-        const proj = cam.projectionMatrix;
-        _viewProjMat.mul2(proj, view);
+        const flipY = !!camera.renderTarget?.flipY;
+        const webgpu = device.isWebGPU;
+        _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu), view);
         _viewProjData.set(_viewProjMat.data);
         _viewData.set(view.data);
-        const focal = width * proj.data[0];
+        const focal = width * _shaderProjMat.data[0];
 
-        const alphaClip = pickMode ? this._alphaClip : (1.0 / 255.0);
+        const alphaClip = pickMode ? this._alphaClip : Math.max(ALPHA_VISIBILITY_THRESHOLD, this._alphaClipForward);
 
         // Ensure fisheyeProj is up-to-date (culling may not have run this frame)
-        this.fisheyeProj.update(this._fisheye, camera.fov, proj);
+        this.fisheyeProj.update(this._fisheye, camera.fov, cam.projectionMatrix);
 
         const fisheyeEnabled = this.fisheyeProj.enabled;
         const createCountShader = (pick, fisheye) => this._createCountShaderAndFormat(pick, fisheye);
@@ -1005,6 +1021,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             });
 
             this._placeEntryPrepDispatchBuffer = new StorageBuffer(device, 6 * 4, BUFFERUSAGE_INDIRECT);
+            DebugHelper.setName(this._placeEntryPrepDispatchBuffer, 'GsplatComputeLocalRenderer.placeEntryPrepDispatch');
             this._placeEntryPrepCompute = new Compute(device, this._placeEntryPrepShader);
         }
 
@@ -1031,11 +1048,15 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
                 new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
             ]);
 
+            const cdefines = new Map();
+            cdefines.set('{CACHE_STRIDE}', CACHE_STRIDE.toString());
+
             this._largeSplatShader = new Shader(device, {
                 name: 'GSplatLocalTileCountLarge',
                 shaderLanguage: SHADERLANGUAGE_WGSL,
                 cshader: computeGsplatLocalTileCountLargeSource,
                 cincludes,
+                cdefines,
                 computeBindGroupFormat: this._largeSplatBindGroupFormat,
                 computeUniformBufferFormats: { uniforms: ubf }
             });
@@ -1061,6 +1082,7 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
             });
 
             this._largeSplatDispatchBuffer = new StorageBuffer(device, 3 * 4, BUFFERUSAGE_INDIRECT);
+            DebugHelper.setName(this._largeSplatDispatchBuffer, 'GsplatComputeLocalRenderer.largeSplatDispatch');
             this._largeSplatPrepCompute = new Compute(device, this._largeSplatPrepShader);
         }
 
@@ -1259,8 +1281,10 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         cincludes.set('gsplatComputeSplatCS', computeSplatSource);
         cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(fixedBindings.length));
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
+        cincludes.set('gsplatProjectCommonCS', computeGsplatProjectCommonSource);
 
         const cdefines = new Map();
+        cdefines.set('{CACHE_STRIDE}', CACHE_STRIDE.toString());
         if (fisheyeEnabled) {
             cdefines.set('GSPLAT_FISHEYE', '');
         }

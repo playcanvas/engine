@@ -1,22 +1,36 @@
-// @config DESCRIPTION This example demonstrates indirect compute dispatch. A scan shader classifies tiles by detecting depth discontinuities (edges/silhouettes), then indirectly dispatches effect shaders to colorize edge (red) and smooth (blue) regions.
-// @config WEBGL_DISABLED
-import files from 'examples/files';
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example demonstrates indirect compute dispatch. A scan shader classifies tiles by detecting
+// depth discontinuities (edges/silhouettes), then indirectly dispatches effect shaders to colorize
+// edge (red) and smooth (blue) regions.
+//
+// @flag WEBGL_DISABLED
+//
+// @credit
+// title: Wide Street 02
+// author: Poly Haven
+// source: https://polyhaven.com/a/wide_street_02
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+import effectShaderWgsl from './effect-shader.wgsl';
+import scanShaderWgsl from './scan-shader.wgsl';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
     hdri: new pc.Asset(
         'hdri',
         'texture',
-        { url: `${rootPath}/static/assets/hdri/wide-street.hdr` },
+        { url: './assets/hdri/wide-street.hdr' },
         { mipmaps: false }
     ),
-    orbit: new pc.Asset('orbit', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
@@ -259,7 +273,7 @@ assetListLoader.load(() => {
     const scanShader = new pc.Shader(device, {
         name: 'ScanShader',
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['scan-shader.wgsl'],
+        cshader: scanShaderWgsl,
         cdefines: shaderDefines,
 
         computeUniformBufferFormats: {
@@ -294,7 +308,7 @@ assetListLoader.load(() => {
     const effectShader = new pc.Shader(device, {
         name: 'EffectShader',
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['effect-shader.wgsl'],
+        cshader: effectShaderWgsl,
         cdefines: shaderDefines,
 
         computeUniformBufferFormats: {
@@ -392,5 +406,3 @@ assetListLoader.load(() => {
         app.drawTexture(0, -0.5 + gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, outputTexture);
     });
 });
-
-export { app };

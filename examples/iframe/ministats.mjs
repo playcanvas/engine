@@ -1,28 +1,31 @@
-import { getQueryParams } from 'examples/utils';
+import { getQueryParams } from './runtime.mjs';
 
-const params = getQueryParams(window.top?.location.href ?? '');
+/** @import { AppBase, MiniStats as PcMiniStats } from 'playcanvas' */
+
+const params = getQueryParams(window.location.href);
 
 export default class MiniStats {
-    /** @type {import('playcanvas').MiniStats | null} */
+    /** @type {PcMiniStats | null} */
     static instance = null;
 
     /**
-     * @param {import('playcanvas').AppBase} app - The app instance.
+     * @param {AppBase} app - The app instance.
      * @param {any} state - The enabled state.
+     * @returns {boolean} The resolved MiniStats enabled state.
      */
     static enable(app, state) {
         if (params.miniStats === 'false') {
-            return;
+            return false;
         }
         if (typeof window.pc === 'undefined') {
-            return;
+            return false;
         }
         if (!app) {
-            return;
+            return false;
         }
         const deviceType = app?.graphicsDevice?.deviceType;
         if (deviceType === 'null') {
-            return;
+            return false;
         }
         if (state) {
             if (!MiniStats.instance) {
@@ -30,9 +33,10 @@ export default class MiniStats {
             }
         }
         if (!MiniStats.instance) {
-            return;
+            return false;
         }
         MiniStats.instance.enabled = state;
+        return MiniStats.instance.enabled;
     }
 
     static destroy() {

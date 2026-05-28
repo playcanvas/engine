@@ -87,8 +87,13 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     modifySplatColor(modelCenter, &clrF32);
     clr = half4(clrF32);
 
-    // discard splats with alpha too low to contribute any visible pixel
-    if (half(255.0) * clr.w <= half(1.0)) {
+    // discard splats with alpha too low (threshold matches fragment pass)
+    #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
+        let alphaClipValue = half(uniform.alphaClip);
+    #else
+        let alphaClipValue = half(uniform.alphaClipForward);
+    #endif
+    if (clr.w <= alphaClipValue) {
         output.position = discardVec;
         return output;
     }

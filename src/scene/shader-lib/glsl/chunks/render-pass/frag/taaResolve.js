@@ -30,24 +30,22 @@ export default /* glsl */`
         return (screenPrevious.xy / screenPrevious.w) * 0.5 + 0.5;
     }
 
-    vec4 colorClamp(vec2 uv, vec4 historyColor) {
+    vec3 colorClampPremul(vec2 uv, vec3 historyPremul) {
 
-        // out of range numbers
-        vec3 minColor = vec3(9999.0);
-        vec3 maxColor = vec3(-9999.0);
+        vec3 minPremul = vec3(9999.0);
+        vec3 maxPremul = vec3(-9999.0);
 
-        // sample a 3x3 neighborhood to create a box in color space
+        // 3x3 neighborhood in premultiplied space — same domain as the temporal mix (see main()).
         for(float x = -1.0; x <= 1.0; ++x) {
             for(float y = -1.0; y <= 1.0; ++y) {
-                vec3 color = texture2D(sourceTexture, uv + vec2(x, y) / textureSize).rgb;
-                minColor = min(minColor, color);
-                maxColor = max(maxColor, color);
+                vec4 s = texture2D(sourceTexture, uv + vec2(x, y) / textureSize);
+                vec3 premul = s.rgb * s.a;
+                minPremul = min(minPremul, premul);
+                maxPremul = max(maxPremul, premul);
             }
         }
 
-        // clamp the history color to min/max bounding box
-        vec3 clamped = clamp(historyColor.rgb, minColor, maxColor);
-        return vec4(clamped, historyColor.a);
+        return clamp(historyPremul, minPremul, maxPremul);
     }
 
     void main()
@@ -64,23 +62,32 @@ export default /* glsl */`
 
         #ifdef QUALITY_HIGH
 
-            // high quality history, sharper result
-            vec4 historyColor = SampleTextureCatmullRom(TEXTURE_PASS(historyTexture), historyUv, textureSize);
+            vec4 historySample = SampleTextureCatmullRom(TEXTURE_PASS(historyTexture), historyUv, textureSize);
 
         #else
 
-            // single sample history, more blurry result
-            vec4 historyColor = texture2D(historyTexture, historyUv);
+            vec4 historySample = texture2D(historyTexture, historyUv);
 
         #endif
 
-        // handle disocclusion by clamping the history color
-        vec4 historyColorClamped = colorClamp(uv0, historyColor);
+        // Premultiplied (rgb * a) is the coverage-correct space for TAA: straight RGB interpolates
+        // uncorrelated color and opacity at edges, which causes colored fringes and alpha-related
+        // ghosting when history is blended or clamped against a 3x3 neighborhood. We clamp and mix
+        // in premultiplied space, then un-premultiply once using the current frame's alpha only
+        // (alpha is not temporally filtered — output stays tied to this frame's coverage).
+        vec3 historyPremul = historySample.rgb * historySample.a;
+        vec3 srcPremul = srcColor.rgb * srcColor.a;
 
-        // handle history buffer outside of the frame
+        vec3 historyPremulClamped = colorClampPremul(uv0, historyPremul);
+
         float mixFactor = (historyUv.x < 0.0 || historyUv.x > 1.0 || historyUv.y < 0.0 || historyUv.y > 1.0) ?
             1.0 : 0.05;
 
-        gl_FragColor = mix(historyColorClamped, srcColor, mixFactor);
+        vec3 mixedPremul = mix(historyPremulClamped, srcPremul, mixFactor);
+        float a = srcColor.a;
+        // Match UNORM8 alpha quantum: below one step, un-premul is ill-defined / noisy; use current RGB.
+        const float UNPREMUL_EPS = 1.0 / 255.0;
+        vec3 rgbStraight = (a > UNPREMUL_EPS) ? (mixedPremul / a) : srcColor.rgb;
+        gl_FragColor = vec4(rgbStraight, a);
     }
 `;

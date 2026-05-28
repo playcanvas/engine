@@ -172,7 +172,7 @@ const resolve = (scope, values) => {
 
 class CustomRenderPass extends RenderPass {
     /**
-     * @type {() => void | null}
+     * @type {(() => void) | null}
      */
     executeCallback = null;
 

@@ -361,7 +361,7 @@ class WebgpuTexture {
         if (this.desc && (this.desc.size.width !== texture.width || this.desc.size.height !== texture.height)) {
             Debug.warnOnce(`Texture '${texture.name}' is being recreated due to dimension change from ${this.desc.size.width}x${this.desc.size.height} to ${texture.width}x${texture.height}. Consider creating the texture with correct dimensions to avoid recreation.`);
 
-            this.gpuTexture.destroy();
+            device.deferDestroy(this.gpuTexture);
             this.create(device);
 
             // Notify bind groups that this texture has changed and needs rebinding
@@ -467,6 +467,10 @@ class WebgpuTexture {
 
             texture._gpuSize = texture.gpuSize;
             texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
+
+            if (texture.releaseSourceAfterUpload) {
+                texture.releaseImageSources();
+            }
         }
     }
 

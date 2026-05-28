@@ -18,21 +18,19 @@ import { getScriptName } from '../../script/script.js';
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
 /**
- * The ScriptComponent allows you add custom behavior to an {@link Entity} by attaching
- * your own scripts written in JavaScript (or TypeScript).
+ * The ScriptComponent enables an {@link Entity} to have custom behavior by attaching scripts
+ * written in JavaScript (or TypeScript).
  *
  * You should never need to use the ScriptComponent constructor directly. To add a
- * ScriptComponent to an Entity, use {@link Entity#addComponent}:
+ * ScriptComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
  * const entity = new pc.Entity();
  * entity.addComponent('script');
  * ```
  *
- * Once the ScriptComponent is added to the entity, you can access it via the {@link Entity#script}
- * property.
- *
- * Add scripts to the entity by calling the `create` method:
+ * Once the ScriptComponent is added to the entity, you can access it via the
+ * {@link Entity#script} property:
  *
  * ```javascript
  * // Option 1: Add a script using the name registered in the ScriptRegistry
@@ -612,9 +610,9 @@ class ScriptComponent extends Component {
 
             const newGuidArray = oldValue.slice();
             for (let i = 0; i < len; i++) {
-                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].guid : newGuidArray[i];
                 if (duplicatedIdsMap[guid]) {
-                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].guid : duplicatedIdsMap[guid];
                 }
             }
 
@@ -622,7 +620,7 @@ class ScriptComponent extends Component {
         } else {
             // handle regular entity attribute
             if (oldValue instanceof Entity) {
-                oldValue = oldValue.getGuid();
+                oldValue = oldValue.guid;
             } else if (typeof oldValue !== 'string') {
                 return;
             }

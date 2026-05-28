@@ -37,6 +37,8 @@ import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { WebglUploadStream } from './webgl-upload-stream.js';
+import { WebglXrBridge } from './webgl-xr-bridge.js';
+import { WebglXrMsaaCopy } from './webgl-xr-msaa-copy.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -104,6 +106,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
     _defaultFramebufferChanged = false;
 
     /**
+     * Helper for resolving MSAA color into the XR framebuffer via a blit-to-scratch + fullscreen
+     * quad copy on visionOS. Created lazily; null on all other platforms.
+     *
+     * @type {import('./webgl-xr-msaa-copy.js').WebglXrMsaaCopy|null}
+     * @private
+     */
+    _xrMsaaCopy = null;
+
+    /**
      * Creates a new WebglGraphicsDevice instance.
      *
      * @param {HTMLCanvasElement} canvas - The canvas to which the graphics device will render.
@@ -157,14 +168,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._contextLostHandler = (event) => {
             event.preventDefault();
             this.loseContext();
-            Debug.log('pc.GraphicsDevice: WebGL context lost.');
-            this.fire('devicelost');
         };
 
         this._contextRestoredHandler = () => {
-            Debug.log('pc.GraphicsDevice: WebGL context restored.');
             this.restoreContext();
-            this.fire('devicerestored');
         };
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
@@ -632,6 +639,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.clearVertexArrayObjectCache();
 
+        this._xrMsaaCopy?.destroy();
+        this._xrMsaaCopy = null;
+
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
         this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
@@ -706,6 +716,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
     createTextureImpl(texture) {
         this.textures.add(texture);
         return new WebglTexture(texture);
+    }
+
+    createXrBridgeImpl(xrBridge) {
+        return new WebglXrBridge(xrBridge);
     }
 
     createRenderTargetImpl(renderTarget) {
@@ -1025,6 +1039,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const shader of this.shaders) {
             shader.loseContext();
         }
+
+        this.fire('devicelost');
     }
 
     /**
@@ -1043,6 +1059,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const shader of this.shaders) {
             shader.restoreContext();
         }
+
+        this.fire('devicerestored');
     }
 
     /**
@@ -1093,6 +1111,23 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
             this.activeFramebuffer = fb;
         }
+    }
+
+    /**
+     * Resolve multisampled color into the WebXR session framebuffer by first blitting MSAA into
+     * an internal scratch texture, then copying that texture into the XR FBO with a single
+     * fullscreen textured quad. Used on visionOS / Apple Vision Pro where direct
+     * `blitFramebuffer` into the XR opaque framebuffer does not produce correct results.
+     *
+     * @param {WebGLFramebuffer} msaaReadFbo - Multisampled source framebuffer.
+     * @param {WebGLFramebuffer} xrDrawFbo - XR base layer framebuffer.
+     * @param {number} width - Full SBS framebuffer width in pixels.
+     * @param {number} height - Framebuffer height in pixels.
+     * @ignore
+     */
+    resolveMsaaColorToXrFramebufferViaQuads(msaaReadFbo, xrDrawFbo, width, height) {
+        this._xrMsaaCopy ??= new WebglXrMsaaCopy(this);
+        this._xrMsaaCopy.copy(msaaReadFbo, xrDrawFbo, width, height);
     }
 
     /**

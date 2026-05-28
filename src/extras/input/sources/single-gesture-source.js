@@ -59,12 +59,12 @@ class SingleGestureSource extends InputSource {
     }
 
     /**
-     * The layout of the single touch input source. The layout can be one of the following:
+     * Sets the layout of the single touch input source. Can be one of the following:
      *
      * - `joystick`: A virtual joystick.
      * - `touch`: A touch.
      *
-     * Default is `joystick`.
+     * Defaults to `joystick`.
      *
      * @type {'joystick' | 'touch'}
      */
@@ -81,6 +81,11 @@ class SingleGestureSource extends InputSource {
         this._pointerData.clear();
     }
 
+    /**
+     * Gets the layout of the single touch input source.
+     *
+     * @type {'joystick' | 'touch'}
+     */
     get layout() {
         return this._layout;
     }
@@ -200,9 +205,7 @@ class SingleGestureSource extends InputSource {
         super.detach();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         this.deltas.input.append([this._joystick.value.x, this._joystick.value.y]);
 

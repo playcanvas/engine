@@ -24,7 +24,7 @@ import { FogParams } from './fog-params.js';
  */
 
 /**
- * A scene is graphical representation of an environment. It manages the scene hierarchy, all
+ * A scene is a graphical representation of an environment. It manages the scene hierarchy, all
  * graphical objects, lights, and scene-wide properties.
  *
  * @category Graphics
@@ -58,7 +58,7 @@ class Scene extends EventHandler {
     /**
      * Fired when the skybox is set. The handler is passed the {@link Texture} that is the
      * previously used skybox cubemap texture. The new skybox cubemap texture is in the
-     * {@link Scene#skybox} property.
+     * {@link skybox} property.
      *
      * @event
      * @example
@@ -144,61 +144,45 @@ class Scene extends EventHandler {
 
     /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the
-     * {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
-     *
-     * @type {boolean}
+     * {@link skybox} if set up, otherwise {@link ambientLight}. Defaults to false.
      */
     ambientBake = false;
 
     /**
-     * If {@link Scene#ambientBake} is true, this specifies the brightness of ambient occlusion.
-     * Typical range is -1 to 1. Defaults to 0, representing no change to brightness.
-     *
-     * @type {number}
+     * If {@link ambientBake} is true, this specifies the brightness of ambient occlusion. Typical
+     * range is -1 to 1. Defaults to 0, representing no change to brightness.
      */
     ambientBakeOcclusionBrightness = 0;
 
     /**
-     * If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion.
-     * Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
-     *
-     * @type {number}
+     * If {@link ambientBake} is true, this specifies the contrast of ambient occlusion. Typical
+     * range is -1 to 1. Defaults to 0, representing no change to contrast.
      */
     ambientBakeOcclusionContrast = 0;
 
     /**
      * The color of the scene's ambient light, specified in sRGB color space. Defaults to black
      * (0, 0, 0).
-     *
-     * @type {Color}
      */
     ambientLight = new Color(0, 0, 0);
 
     /**
      * The luminosity of the scene's ambient light in lux (lm/m^2). Used if physicalUnits is true. Defaults to 0.
-     *
-     * @type {number}
      */
     ambientLuminance = 0;
 
     /**
      * The exposure value tweaks the overall brightness of the scene. Ignored if physicalUnits is true. Defaults to 1.
-     *
-     * @type {number}
      */
     exposure = 1;
 
     /**
      * The lightmap resolution multiplier. Defaults to 1.
-     *
-     * @type {number}
      */
     lightmapSizeMultiplier = 1;
 
     /**
      * The maximum lightmap resolution. Defaults to 2048.
-     *
-     * @type {number}
      */
     lightmapMaxResolution = 2048;
 
@@ -222,16 +206,12 @@ class Scene extends EventHandler {
      * in the image space of the lightmap, and it does not filter across lightmap UV space seams,
      * often making the seams more visible. It's important to balance the strength of the filter
      * with number of samples used for lightmap baking to limit the visible artifacts.
-     *
-     * @type {boolean}
      */
     lightmapFilterEnabled = false;
 
     /**
      * Enables HDR lightmaps. This can result in smoother lightmaps especially when many samples
      * are used. Defaults to false.
-     *
-     * @type {boolean}
      */
     lightmapHDR = false;
 
@@ -245,8 +225,6 @@ class Scene extends EventHandler {
 
     /**
      * Use physically based units for cameras and lights. When used, the exposure value is ignored.
-     *
-     * @type {boolean}
      */
     physicalUnits = false;
 
@@ -338,6 +316,18 @@ class Scene extends EventHandler {
             this.updateShaders = true;
         });
 
+        /**
+         * When true (default), loaded gsplat assets include the extra data needed for
+         * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} and non-unified gsplat rendering. Set to false
+         * **before** you start loading a gsplat asset (e.g. before {@link AppBase#assets}.load) to
+         * use less memory if you only need unified rendering with GPU sorting. Each load uses the
+         * value in effect when that load begins.
+         *
+         * @type {boolean}
+         * @ignore
+         */
+        this.gsplatCentersEnabled = true;
+
         // gsplat params
         this._gsplatParams = new GSplatParams(this.device);
 
@@ -356,7 +346,6 @@ class Scene extends EventHandler {
          * This flag indicates changes were made to the scene which may require recompilation of
          * shaders that reference global settings.
          *
-         * @type {boolean}
          * @ignore
          */
         this.updateShaders = true;
@@ -379,8 +368,8 @@ class Scene extends EventHandler {
 
     /**
      * Sets the number of samples used to bake the ambient light into the lightmap. Note that
-     * {@link Scene#ambientBake} must be true for this to have an effect. Defaults to 1. Maximum
-     * value is 255.
+     * {@link ambientBake} must be true for this to have an effect. Defaults to 1. Maximum value
+     * is 255.
      *
      * @type {number}
      */
@@ -399,7 +388,7 @@ class Scene extends EventHandler {
 
     /**
      * Sets the part of the sphere which represents the source of ambient light. Note that
-     * {@link Scene#ambientBake} must be true for this to have an effect. The valid range is 0..1,
+     * {@link ambientBake} must be true for this to have an effect. The valid range is 0..1,
      * representing a part of the sphere from top to the bottom. A value of 0.5 represents the
      * upper hemisphere. A value of 1 represents a full sphere. Defaults to 0.4, which is a smaller
      * upper hemisphere as this requires fewer samples to bake.
@@ -543,9 +532,9 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Sets the range parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled}
-     * is enabled. Larger value applies more widespread blur. This needs to be a positive non-zero
-     * value. Defaults to 10.
+     * Sets the range parameter of the bilateral filter. It's used when
+     * {@link lightmapFilterEnabled} is enabled. Larger value applies more widespread blur. This
+     * needs to be a positive non-zero value. Defaults to 10.
      *
      * @type {number}
      */
@@ -563,9 +552,9 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Sets the spatial parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled}
-     * is enabled. Larger value blurs less similar colors. This needs to be a positive non-zero
-     * value. Defaults to 0.2.
+     * Sets the spatial parameter of the bilateral filter. It's used when
+     * {@link lightmapFilterEnabled} is enabled. Larger value blurs less similar colors. This
+     * needs to be a positive non-zero value. Defaults to 0.2.
      *
      * @type {number}
      */

@@ -100,8 +100,6 @@ class ShaderChunks {
      * custom shader chunks, set this to the latest supported version. If a future engine release no
      * longer supports the specified version, a warning will be issued. In that case, update your
      * shader chunks to match the new format and set this to the latest version accordingly.
-     *
-     * @type {string}
      */
     version = '';
 

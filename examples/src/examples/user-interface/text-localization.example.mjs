@@ -1,11 +1,12 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
@@ -169,5 +170,3 @@ assetListLoader.load(() => {
     screen.addChild(createButton('es-ES', 75, -100));
     screen.addChild(createButton('pt-BR', 225, -100));
 });
-
-export { app };

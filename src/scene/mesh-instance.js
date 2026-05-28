@@ -64,8 +64,6 @@ class InstancingData {
 
     /**
      * True if the vertex buffer is destroyed when the mesh instance is destroyed.
-     *
-     * @type {boolean}
      */
     _destroyVertexBuffer = false;
 
@@ -177,7 +175,8 @@ class ShaderInstance {
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {Vec3} cameraPosition - The position of the camera.
  * @param {Vec3} cameraForward - The forward vector of the camera.
- * @returns {void}
+ * @returns {number} The sort distance for the mesh instance. Mesh instances are sorted by this
+ * value in ascending or descending order depending on the layer's sort mode.
  */
 
 /**
@@ -245,8 +244,6 @@ class MeshInstance {
      * casting without overhead of removing from scene. Note that this property does not add the
      * mesh instance to appropriate list of shadow casters on a {@link Layer}, but allows mesh to
      * be skipped from shadow casting while it is in the list already. Defaults to false.
-     *
-     * @type {boolean}
      */
     castShadow = false;
 
@@ -263,8 +260,6 @@ class MeshInstance {
     /**
      * Controls whether the mesh instance can be culled by frustum culling (see
      * {@link CameraComponent#frustumCulling}). Defaults to true.
-     *
-     * @type {boolean}
      */
     cull = true;
 
@@ -272,15 +267,10 @@ class MeshInstance {
      * Determines the rendering order of mesh instances. Only used when mesh instances are added to
      * a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode}
      * (depending on the material) set to {@link SORTMODE_MANUAL}.
-     *
-     * @type {number}
      */
     drawOrder = 0;
 
-    /**
-     * @type {number}
-     * @ignore
-     */
+    /** @ignore */
     _drawBucket = 127;
 
     /**
@@ -294,23 +284,18 @@ class MeshInstance {
      * Enable rendering for this mesh instance. Use visible property to enable/disable rendering
      * without overhead of removing from scene. But note that the mesh instance is still in the
      * hierarchy and still in the draw call list.
-     *
-     * @type {boolean}
      */
     visible = true;
 
     /**
-     * Read this value in {@link Scene.EVENT_POSTCULL} event to determine if the object is actually going
-     * to be rendered.
-     *
-     * @type {boolean}
+     * Read this value in the {@link Scene.EVENT_POSTCULL} event to determine if the object is
+     * actually going to be rendered.
      */
     visibleThisFrame = false;
 
     /**
      * Negative scale batching support.
      *
-     * @type {number}
      * @ignore
      */
     flipFacesFactor = 1;
@@ -370,7 +355,6 @@ class MeshInstance {
     /**
      * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
      *
-     * @type {boolean}
      * @ignore
      */
     pick = true;
@@ -1135,7 +1119,7 @@ class MeshInstance {
      * buffer attribute — the caller must set {@link instancingCount} manually. Pass null to turn
      * off hardware instancing.
      * @param {boolean} cull - Whether to perform frustum culling on this instance. If true, the whole
-     * instance will be culled by the  camera frustum. This often involves setting
+     * instance will be culled by the camera frustum. This often involves setting
      * {@link RenderComponent#customAabb} containing all instances. Defaults to false, which means
      * the whole instance is always rendered.
      */
@@ -1303,7 +1287,8 @@ class MeshInstance {
      * Retrieves the specified shader parameter from a mesh instance.
      *
      * @param {string} name - The name of the parameter to query.
-     * @returns {object} The named parameter.
+     * @returns {object|undefined} The named parameter, or `undefined` if no parameter with that
+     * name is set on this mesh instance.
      */
     getParameter(name) {
         return this.parameters[name];

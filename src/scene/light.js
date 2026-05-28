@@ -80,7 +80,7 @@ class LightRenderData {
         this.camera = camera;
 
         // camera used to cull / render the shadow map
-        this.shadowCamera = ShadowRenderer.createShadowCamera(light._shadowType, light._type, face);
+        this.shadowCamera = ShadowRenderer.createShadowCamera(light.device, light._shadowType, light._type, face);
 
         // shadow view-projection matrix
         this.shadowMatrix = new Mat4();
@@ -159,7 +159,6 @@ class Light {
      * The flags used for clustered lighting. Stored as a bitfield, updated as properties change to
      * avoid those being updated each frame.
      *
-     * @type {number}
      * @ignore
      */
     clusteredFlags = 0;
@@ -1103,7 +1102,7 @@ class Light {
     }
 
     /**
-     * Updates a integer key for the light. The key is used to identify all shader related features
+     * Updates an integer key for the light. The key is used to identify all shader related features
      * of the light, and so needs to have all properties that modify the generated shader encoded.
      * Properties without an effect on the shader (color, shadow intensity) should not be encoded.
      */

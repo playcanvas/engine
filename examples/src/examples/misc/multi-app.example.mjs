@@ -1,10 +1,12 @@
-// @config NO_MINISTATS
-// @config NO_DEVICE_SELECTOR
-// @config WEBGPU_DISABLED
-// @config WEBGL_DISABLED
-import { data } from 'examples/observer';
-import { rootPath } from 'examples/utils';
+// @config
+// @flag NO_MINISTATS
+// @flag NO_DEVICE_SELECTOR
+// @flag WEBGPU_DISABLED
+// @flag WEBGL_DISABLED
+
 import * as pc from 'playcanvas';
+
+import { data } from 'examples/context';
 
 // Use custom createGraphicsDevice function to not automatically include fall backs
 /**
@@ -16,7 +18,7 @@ async function createGraphicsDevice(canvas, deviceType) {
     let device;
     if (deviceType === 'webgpu') {
         device = new pc.WebgpuGraphicsDevice(canvas, {});
-        await device.initWebGpu(`${rootPath}/static/lib/glslang/glslang.js`, `${rootPath}/static/lib/twgsl/twgsl.js`);
+        await device.initWebGpu('./assets/wasm/glslang/glslang.js', './assets/wasm/twgsl/twgsl.js');
     } else if (deviceType === 'webgl2') {
         device = new pc.WebglGraphicsDevice(canvas);
     } else {
@@ -31,7 +33,7 @@ async function createGraphicsDevice(canvas, deviceType) {
  */
 async function createApp(deviceType) {
     const assets = {
-        font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
+        font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
     };
 
     const canvas = document.createElement('canvas');
@@ -177,21 +179,6 @@ for (const deviceType in apps) {
     });
 }
 
-// Make sure to remove all apps when the example is destroyed or hot reloaded
-const destroy = () => {
-    for (const deviceType in apps) {
-        let i = 0;
-        while (apps[deviceType].length) {
-            data.emit(`remove:${deviceType}`);
-            if (i++ > 1e3) {
-                break;
-            }
-        }
-    }
-};
-
 // Start with a webgl2 and webgpu app
 await addApp('webgl2');
 await addApp('webgpu');
-
-export { destroy };

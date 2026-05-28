@@ -1,13 +1,13 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    snowflake: new pc.Asset('snowflake', 'texture', { url: `${rootPath}/static/assets/textures/snowflake.png` }, { srgb: true })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    snowflake: new pc.Asset('snowflake', 'texture', { url: './assets/textures/snowflake.png' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -147,5 +147,3 @@ assetListLoader.load(() => {
         soft: true
     });
 });
-
-export { app };

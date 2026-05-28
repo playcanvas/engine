@@ -14,7 +14,7 @@ import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE,
+    CULLFACE_NONE,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
 } from '../platform/graphics/constants.js';
@@ -87,15 +87,6 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 /**
  * @callback PreloadAppCallback
  * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
- * @returns {void}
- */
-
-/**
- * @callback MakeTickCallback
- * Callback used by {@link AppBase#start} and itself to request the rendering of a new animation
- * frame.
- * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
- * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
  * @returns {void}
  */
 
@@ -174,16 +165,10 @@ class AppBase extends EventHandler {
      */
     _entityIndex = {};
 
-    /**
-     * @type {boolean}
-     * @ignore
-     */
+    /** @ignore */
     _inTools = false;
 
-    /**
-     * @type {string}
-     * @ignore
-     */
+    /** @ignore */
     _scriptPrefix = '';
 
     /** @ignore */
@@ -193,7 +178,6 @@ class AppBase extends EventHandler {
      * Set this to false if you want to run without using bundles. We set it to true only if
      * TextDecoder is available because we currently rely on it for untarring.
      *
-     * @type {boolean}
      * @ignore
      */
     enableBundles = (typeof TextDecoder !== 'undefined');
@@ -206,9 +190,95 @@ class AppBase extends EventHandler {
     frameRequestId;
 
     /**
+     * Main loop tick, invoked by `requestAnimationFrame` each frame. Bound to this instance so
+     * it can be passed directly to `requestAnimationFrame`. Subclasses may replace this with
+     * their own tick function.
+     *
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+     * @param {XRFrame} [xrFrame] - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
+    tick = (timestamp, xrFrame) => {
+        if (!this.graphicsDevice) {
+            return;
+        }
+
+        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
+        if (this.frameRequestId) {
+            this.xr?.session?.cancelAnimationFrame(this.frameRequestId);
+            cancelAnimationFrame(this.frameRequestId);
+            this.frameRequestId = null;
+        }
+
+        this._inFrameUpdate = true;
+
+        setApplication(this);
+
+        // have current application pointer in pc
+        app = this;
+
+        const currentTime = this._processTimestamp(timestamp) || now();
+        const ms = currentTime - (this._time || currentTime);
+        let dt = ms / 1000.0;
+        dt = math.clamp(dt, 0, this.maxDeltaTime);
+        dt *= this.timeScale;
+
+        this._time = currentTime;
+
+        // Submit a request to queue up a new animation frame immediately
+        this.requestAnimationFrame();
+
+        if (this.graphicsDevice.contextLost) {
+            return;
+        }
+
+        this.stats.updateBasic(currentTime, dt, ms, this.renderer, this.graphicsDevice);
+
+        // #if _PROFILER
+        this.stats.updateDetailed(this.renderer, this.graphicsDevice);
+        // #endif
+
+        this.fire('frameupdate', ms);
+
+        let skipUpdate = false;
+
+        if (xrFrame) {
+            skipUpdate = !this.xr?.update(xrFrame);
+        }
+
+        if (!skipUpdate) {
+
+            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${this.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
+
+            this.update(dt);
+
+            this.fire('framerender');
+
+            if (this.autoRender || this.renderNextFrame) {
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
+
+                this.render();
+                this.renderNextFrame = false;
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
+            }
+
+            this.fire('frameend');
+            this.stats.frameEnd();
+        }
+
+        this._inFrameUpdate = false;
+
+        if (this._destroyRequested) {
+            this.destroy();
+        }
+    };
+
+    /**
      * Scales the global time delta. Defaults to 1.
      *
-     * @type {number}
      * @example
      * // Set the app to run at half speed
      * this.app.timeScale = 0.5;
@@ -230,7 +300,6 @@ class AppBase extends EventHandler {
     /**
      * The total number of frames the application has updated since start() was called.
      *
-     * @type {number}
      * @ignore
      */
     frame = 0;
@@ -271,7 +340,6 @@ class AppBase extends EventHandler {
      * false is useful to applications where the rendered image may often be unchanged over time.
      * This can heavily reduce the application's load on the CPU and GPU. Defaults to true.
      *
-     * @type {boolean}
      * @example
      * // Disable rendering every frame and only render on a keydown event
      * this.app.autoRender = false;
@@ -286,7 +354,6 @@ class AppBase extends EventHandler {
      * effect if {@link autoRender} is set to false. The value of renderNextFrame is set back to
      * false again as soon as the scene has been rendered.
      *
-     * @type {boolean}
      * @example
      * // Render the scene only while space key is pressed
      * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
@@ -560,6 +627,10 @@ class AppBase extends EventHandler {
             this.loader.addHandler(handler.handlerType, handler);
         });
 
+        // default to retrying failed asset loads to make apps more resilient to transient network
+        // errors
+        this.loader.enableRetry();
+
         // Create and register all required component systems
         componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
@@ -567,27 +638,9 @@ class AppBase extends EventHandler {
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
-        // Depending on browser add the correct visibilitychange event and store the name of the
-        // hidden attribute in this._hiddenAttr.
         if (typeof document !== 'undefined') {
-            if (document.hidden !== undefined) {
-                this._hiddenAttr = 'hidden';
-                document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.mozHidden !== undefined) {
-                this._hiddenAttr = 'mozHidden';
-                document.addEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.msHidden !== undefined) {
-                this._hiddenAttr = 'msHidden';
-                document.addEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.webkitHidden !== undefined) {
-                this._hiddenAttr = 'webkitHidden';
-                document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
-            }
+            document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         }
-
-        // bind tick function to current scope
-        /* eslint-disable-next-line no-use-before-define */
-        this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
     static _applications = {};
@@ -747,7 +800,7 @@ class AppBase extends EventHandler {
 
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
-        // configure retrying assets
+        // configure retrying assets - overrides the default set in the constructor
         if (typeof props.maxAssetRetries === 'number' && props.maxAssetRetries > 0) {
             this.loader.enableRetry(props.maxAssetRetries);
         }
@@ -1000,9 +1053,6 @@ class AppBase extends EventHandler {
      * @private
      */
     inputUpdate(dt) {
-        if (this.controller) {
-            this.controller.update(dt);
-        }
         if (this.mouse) {
             this.mouse.update();
         }
@@ -1110,105 +1160,6 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * @param {number} now - The timestamp passed to the requestAnimationFrame callback.
-     * @param {number} dt - The time delta in seconds since the last frame. This is subject to the
-     * application's time scale and max delta values.
-     * @param {number} ms - The time in milliseconds since the last frame.
-     * @private
-     */
-    _fillFrameStatsBasic(now, dt, ms) {
-        // Timing stats
-        const stats = this.stats.frame;
-        stats.dt = dt;
-        stats.ms = ms;
-        if (now > stats._timeToCountFrames) {
-            stats.fps = stats._fpsAccum;
-            stats._fpsAccum = 0;
-            stats._timeToCountFrames = now + 1000;
-        } else {
-            stats._fpsAccum++;
-        }
-
-        // total draw call
-        this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
-        this.graphicsDevice._drawCallsPerFrame = 0;
-
-        stats.gsplats = this.renderer._gsplatCount;
-        stats.gsplatBufferCopy = this.renderer._gsplatBufferCopy ?? 0;
-    }
-
-    /** @private */
-    _fillFrameStats() {
-        let stats = this.stats.frame;
-
-        // Render stats
-        stats.cameras = this.renderer._camerasRendered;
-        stats.materials = this.renderer._materialSwitches;
-        stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
-        stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
-        stats.shadowMapTime = this.renderer._shadowMapTime;
-        stats.depthMapTime = this.renderer._depthMapTime;
-        stats.forwardTime = this.renderer._forwardTime;
-        const prims = this.graphicsDevice._primsPerFrame;
-        stats.triangles = prims[PRIMITIVE_TRIANGLES] / 3 +
-            Math.max(prims[PRIMITIVE_TRISTRIP] - 2, 0) +
-            Math.max(prims[PRIMITIVE_TRIFAN] - 2, 0);
-        stats.cullTime = this.renderer._cullTime;
-        stats.sortTime = this.renderer._sortTime;
-        stats.skinTime = this.renderer._skinTime;
-        stats.morphTime = this.renderer._morphTime;
-        stats.lightClusters = this.renderer._lightClusters;
-        stats.lightClustersTime = this.renderer._lightClustersTime;
-        stats.otherPrimitives = 0;
-        for (let i = 0; i < prims.length; i++) {
-            if (i < PRIMITIVE_TRIANGLES) {
-                stats.otherPrimitives += prims[i];
-            }
-            prims[i] = 0;
-        }
-        this.renderer._camerasRendered = 0;
-        this.renderer._materialSwitches = 0;
-        this.renderer._shadowMapUpdates = 0;
-        this.graphicsDevice._shaderSwitchesPerFrame = 0;
-        this.renderer._cullTime = 0;
-        this.renderer._layerCompositionUpdateTime = 0;
-        this.renderer._lightClustersTime = 0;
-        this.renderer._sortTime = 0;
-        this.renderer._skinTime = 0;
-        this.renderer._morphTime = 0;
-        this.renderer._shadowMapTime = 0;
-        this.renderer._depthMapTime = 0;
-        this.renderer._forwardTime = 0;
-
-        // Draw call stats
-        stats = this.stats.drawCalls;
-        stats.forward = this.renderer._forwardDrawCalls;
-        stats.culled = this.renderer._numDrawCallsCulled;
-        stats.depth = 0;
-        stats.shadow = this.renderer._shadowDrawCalls;
-        stats.skinned = this.renderer._skinDrawCalls;
-        stats.immediate = 0;
-        stats.instanced = 0;
-        stats.removedByInstancing = 0;
-        stats.misc = stats.total - (stats.forward + stats.shadow);
-        this.renderer._depthDrawCalls = 0;
-        this.renderer._shadowDrawCalls = 0;
-        this.renderer._forwardDrawCalls = 0;
-        this.renderer._numDrawCallsCulled = 0;
-        this.renderer._skinDrawCalls = 0;
-        this.renderer._immediateRendered = 0;
-        this.renderer._instancedDrawCalls = 0;
-
-        this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
-
-        stats = this.stats.particles;
-        stats.updatesPerFrame = stats._updatesPerFrame;
-        stats.frameTime = stats._frameTime;
-        stats._updatesPerFrame = 0;
-        stats._frameTime = 0;
-    }
-
-    /**
      * Controls how the canvas fills the window and resizes when the window changes.
      *
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
@@ -1258,7 +1209,7 @@ class AppBase extends EventHandler {
      * @returns {boolean} True if the application is not visible and false otherwise.
      */
     isHidden() {
-        return document[this._hiddenAttr];
+        return document.hidden;
     }
 
     /**
@@ -1289,7 +1240,9 @@ class AppBase extends EventHandler {
      *
      * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
-     * @returns {object} A object containing the values calculated to use as width and height.
+     * @returns {{width: number, height: number}|undefined} An object containing the values
+     * calculated to use as width and height, or `undefined` if resizing is not allowed or an XR
+     * session is active.
      */
     resizeCanvas(width, height) {
         if (!this._allowResize) return undefined; // prevent resizing (e.g. if presenting in VR HMD)
@@ -1675,8 +1628,8 @@ class AppBase extends EventHandler {
      * @param {number[]} positions - An array of points to draw lines between. Each point is
      * represented by 3 numbers - x, y and z coordinate.
      * @param {number[]|Color} colors - A single color for all lines, or an array of colors to color
-     * the lines. If an array is specified, number of colors it stores must match the number of
-     * positions provided.
+     * the lines. If an array is specified, the number of colors it stores must match the number
+     * of positions provided.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1876,9 +1829,6 @@ class AppBase extends EventHandler {
 
         if (typeof document !== 'undefined') {
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
         }
         this._visibilityChangeHandler = null;
 
@@ -1911,10 +1861,6 @@ class AppBase extends EventHandler {
         if (this.gamepads) {
             this.gamepads.destroy();
             this.gamepads = null;
-        }
-
-        if (this.controller) {
-            this.controller = null;
         }
 
         this.systems.destroy();
@@ -1983,8 +1929,6 @@ class AppBase extends EventHandler {
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
 
-        this.tick = null;
-
         this.off(); // remove all events
 
         this._soundManager?.destroy();
@@ -2032,100 +1976,5 @@ class AppBase extends EventHandler {
         });
     }
 }
-
-/**
- * Create tick function to be wrapped in closure.
- *
- * @param {AppBase} _app - The application.
- * @returns {MakeTickCallback} The tick function.
- * @private
- */
-const makeTick = function (_app) {
-    const application = _app;
-    /**
-     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {XRFrame} [xrFrame] - XRFrame from requestAnimationFrame callback.
-     */
-    return function (timestamp, xrFrame) {
-        if (!application.graphicsDevice) {
-            return;
-        }
-
-        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
-        if (application.frameRequestId) {
-            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
-            cancelAnimationFrame(application.frameRequestId);
-            application.frameRequestId = null;
-        }
-
-        application._inFrameUpdate = true;
-
-        setApplication(application);
-
-        // have current application pointer in pc
-        app = application;
-
-        const currentTime = application._processTimestamp(timestamp) || now();
-        const ms = currentTime - (application._time || currentTime);
-        let dt = ms / 1000.0;
-        dt = math.clamp(dt, 0, application.maxDeltaTime);
-        dt *= application.timeScale;
-
-        application._time = currentTime;
-
-        // Submit a request to queue up a new animation frame immediately
-        application.requestAnimationFrame();
-
-        if (application.graphicsDevice.contextLost) {
-            return;
-        }
-
-        application._fillFrameStatsBasic(currentTime, dt, ms);
-
-        // #if _PROFILER
-        application._fillFrameStats();
-        // #endif
-
-        application.fire('frameupdate', ms);
-
-        let skipUpdate = false;
-
-        if (xrFrame) {
-            skipUpdate = !application.xr?.update(xrFrame);
-            application.graphicsDevice.defaultFramebuffer = xrFrame.session.renderState.baseLayer.framebuffer;
-        } else {
-            application.graphicsDevice.defaultFramebuffer = null;
-        }
-
-        if (!skipUpdate) {
-
-            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
-            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
-
-            application.update(dt);
-
-            application.fire('framerender');
-
-            if (application.autoRender || application.renderNextFrame) {
-
-                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
-
-                application.render();
-                application.renderNextFrame = false;
-
-                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
-            }
-
-            application.fire('frameend');
-            application.stats.frameEnd();
-        }
-
-        application._inFrameUpdate = false;
-
-        if (application._destroyRequested) {
-            application.destroy();
-        }
-    };
-};
 
 export { app, AppBase };

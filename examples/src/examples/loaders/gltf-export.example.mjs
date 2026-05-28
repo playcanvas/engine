@@ -1,6 +1,20 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: bench_wooden_01
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/bench-wooden-01-1400c9340d5049589deb43601462ac55
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Chess Board
+// author: Idmental
+// source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -11,16 +25,16 @@ const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
 div.innerHTML = `<div style="text-align: center;">
     <a id="ar-link" rel="ar" download="scene.glb">
-        <img src="${rootPath}/static/assets/textures/transparent.png" id="button" width="200"/>
+        <img src="${'./assets/textures/transparent.png'}" id="button" width="200"/>
     </a>    
 </div>`;
 appInner.appendChild(div);
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
@@ -28,23 +42,23 @@ await new Promise((resolve) => {
 
 // initialize basis to allow to load compressed textures
 pc.basisInitialize({
-    glueUrl: `${rootPath}/static/lib/basis/basis.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/basis/basis.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/basis/basis.js`
+    glueUrl: './assets/wasm/basis/basis.wasm.js',
+    wasmUrl: './assets/wasm/basis/basis.wasm.wasm',
+    fallbackUrl: './assets/wasm/basis/basis.js'
 });
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset('bench', 'container', { url: `${rootPath}/static/assets/models/bench_wooden_01.glb` }),
-    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
-    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
-    boombox: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/boom-box.glb` }),
-    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.basis` })
+    bench: new pc.Asset('bench', 'container', { url: './assets/models/bench_wooden_01.glb' }),
+    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    board: new pc.Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
+    boombox: new pc.Asset('statue', 'container', { url: './assets/models/boom-box.glb' }),
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.basis' })
 };
 
 const gfxOptions = {
@@ -53,7 +67,6 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -154,5 +167,3 @@ assetListLoader.load(() => {
         link.click();
     });
 });
-
-export { app };

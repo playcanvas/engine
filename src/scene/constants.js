@@ -1139,19 +1139,13 @@ export const EVENT_POSTCULL = 'postcull';
  */
 export const EVENT_CULL_END = 'cull:end';
 
-/**
- * @ignore
- */
+/** @ignore */
 export const GSPLAT_FORWARD = 1;
 
-/**
- * @ignore
- */
+/** @ignore */
 export const GSPLAT_SHADOW = 2;
 
-/**
- * @ignore
- */
+/** @ignore */
 export const SHADOWCAMERA_NAME = 'pcShadowCamera';
 
 /**
@@ -1231,11 +1225,12 @@ export const GSPLAT_RENDERER_AUTO = 0;
 export const GSPLAT_RENDERER_RASTER_CPU_SORT = 1;
 
 /**
- * Rasterization-based rendering with compute shader sorting. WebGPU only. Experimental with
+ * Rasterization-based rendering with GPU-side culling and sorting. WebGPU only. Experimental with
  * limited functionality.
  *
  * @type {number}
  * @category Graphics
+ * @alpha
  */
 export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 
@@ -1281,3 +1276,50 @@ export const GSPLAT_DEBUG_SH_UPDATE = 2;
  * @category Graphics
  */
 export const GSPLAT_DEBUG_HEATMAP = 3;
+
+/**
+ * Debug rendering that draws world-space AABBs for each GSplat, colorized by LOD.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_AABBS = 4;
+
+/**
+ * Debug rendering that draws world-space AABBs for each octree node of streamed GSplats,
+ * colorized by the currently selected LOD.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_NODE_AABBS = 5;
+
+/**
+ * Automatically selects the best radix sort backend for the current WebGPU device:
+ * OneSweep on supported hardware (NVIDIA), the portable backend elsewhere. See
+ * {@link ComputeRadixSort}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const RADIX_SORT_AUTO = 0;
+
+/**
+ * Portable radix sort backend. Runs on every WebGPU device (no subgroup
+ * intrinsics required) and is chosen by {@link RADIX_SORT_AUTO} when no
+ * faster hardware-specific backend is available. See {@link ComputeRadixSort}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const RADIX_SORT_PORTABLE = 1;
+
+/**
+ * Single-sweep 8-bit radix sort (OneSweep). Requires subgroup support, 32-lane
+ * subgroups, and forward-thread-progress guarantees — currently enabled only on
+ * NVIDIA. See {@link ComputeRadixSort}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const RADIX_SORT_ONESWEEP = 2;

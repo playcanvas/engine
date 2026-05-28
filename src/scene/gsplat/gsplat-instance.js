@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
@@ -77,6 +77,7 @@ class GSplatInstance {
         // create order target: StorageBuffer on WebGPU, Texture on WebGL
         if (device.isWebGPU) {
             this.orderBuffer = new StorageBuffer(device, numSplats * 4, BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this.orderBuffer, 'GsplatInstance.order');
         } else {
             this.orderTexture = resource.streams.createTexture(
                 'splatOrder',
@@ -89,6 +90,7 @@ class GSplatInstance {
             this._material = options.material;
             this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
             this.setMaterialOrderData(this._material);
+            this._material.setParameter('alphaClipForward', 1.0 / 255.0);
         } else {
             this._material = new ShaderMaterial({
                 uniqueName: 'SplatMaterial',
@@ -113,12 +115,16 @@ class GSplatInstance {
         // only start rendering the splat after we've received the splat order data
         this.meshInstance.instancingCount = 0;
 
-        const centers = resource.centers.slice();
-        const chunks = resource.chunks?.slice();
+        if (resource.hasCenters) {
+            const centers = resource.centers.slice();
+            const chunks = resource.chunks?.slice();
 
-        const orderTarget = this.orderBuffer ?? this.orderTexture;
-        this.sorter = new GSplatSorter(device, options.scene);
-        this.sorter.init(orderTarget, numSplats, centers, chunks);
+            const orderTarget = this.orderBuffer ?? this.orderTexture;
+            this.sorter = new GSplatSorter(device, options.scene);
+            this.sorter.init(orderTarget, numSplats, centers, chunks);
+        } else {
+            Debug.warnOnce(`Skipping gsplat resource id ${resource.id} on the non-unified rendering path — no centers buffer. Scene#gsplatCentersEnabled needs to be true.`);
+        }
 
         this.setHighQualitySH(options.highQualitySH ?? false);
     }
@@ -155,6 +161,7 @@ class GSplatInstance {
             this._material = value;
             this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
             this.setMaterialOrderData(this._material);
+            this._material.setParameter('alphaClipForward', 1.0 / 255.0);
 
             if (this.meshInstance) {
                 this.meshInstance.material = value;
@@ -180,6 +187,7 @@ class GSplatInstance {
         material.setParameter('numSplats', 0);
         this.setMaterialOrderData(material);
         material.setParameter('alphaClip', 0.3);
+        material.setParameter('alphaClipForward', 1.0 / 255.0);
         material.setParameter('minPixelSize', 2.0);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         material.cull = CULLFACE_NONE;

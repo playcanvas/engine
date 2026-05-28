@@ -1,6 +1,11 @@
-// @config DESCRIPTION This example shows how to use the instancing feature of a StandardMaterial to render multiple copies of a mesh.
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example shows how to use the instancing feature of a StandardMaterial to render multiple copies
+// of a mesh.
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,7 +14,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -126,5 +131,3 @@ assetListLoader.load(() => {
         camera.lookAt(pc.Vec3.ZERO);
     });
 });
-
-export { app };

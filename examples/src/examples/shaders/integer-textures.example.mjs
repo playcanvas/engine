@@ -1,8 +1,15 @@
-// @config DESCRIPTION <ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>
-import files from 'examples/files';
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// `Click` Add sand · `Shift-click` Remove sand · `Space` Reset
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+import renderOutputGlslFrag from './renderOutput.glsl.frag';
+import renderOutputWgslFrag from './renderOutput.wgsl.frag';
+import sandSimulationGlslFrag from './sandSimulation.glsl.frag';
+import sandSimulationWgslFrag from './sandSimulation.wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -28,16 +35,16 @@ const TEXTURE_WIDTH = TEXTURE_HEIGHT * TEXTURE_RATIO;
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -128,8 +135,8 @@ const sandShader = pc.ShaderUtils.createShader(device, {
     uniqueName: 'SandShader',
     attributes: { aPosition: pc.SEMANTIC_POSITION },
     vertexChunk: 'quadVS',
-    fragmentGLSL: files['sandSimulation.glsl.frag'],
-    fragmentWGSL: files['sandSimulation.wgsl.frag'],
+    fragmentGLSL: sandSimulationGlslFrag,
+    fragmentWGSL: sandSimulationWgslFrag,
     // Note that we are changing the shader output type to 'uint'
     // This means we only have to return a single integer value from the shader,
     // whereas the default is to return a vec4. This option allows you to pass
@@ -144,8 +151,8 @@ const outputShader = pc.ShaderUtils.createShader(device, {
     uniqueName: 'RenderOutputShader',
     attributes: { aPosition: pc.SEMANTIC_POSITION },
     vertexChunk: 'quadVS',
-    fragmentGLSL: files['renderOutput.glsl.frag'],
-    fragmentWGSL: files['renderOutput.wgsl.frag']
+    fragmentGLSL: renderOutputGlslFrag,
+    fragmentWGSL: renderOutputWgslFrag
     // For the output shader, we don't need to specify the output type,
     // as we are returning a vec4 by default.
 });
@@ -338,5 +345,3 @@ assetListLoader.load(() => {
         pc.drawQuadWithShader(device, outputRenderTarget, outputShader);
     });
 });
-
-export { app };

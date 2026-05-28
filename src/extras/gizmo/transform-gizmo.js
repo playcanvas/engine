@@ -51,7 +51,7 @@ const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
  */
 class TransformGizmo extends Gizmo {
     /**
-     * Fired when when the transformation has started.
+     * Fired when the transformation has started.
      *
      * @event
      * @example
@@ -69,13 +69,13 @@ class TransformGizmo extends Gizmo {
      * @example
      * const gizmo = new pc.TransformGizmo(camera, layer);
      * gizmo.on('transform:move', (pointDelta, angleDelta) => {
-     *     console.log('Transformation moved by ${pointDelta} (angle: ${angleDelta})');
+     *     console.log(`Transformation moved by ${pointDelta} (angle: ${angleDelta})`);
      * });
      */
     static EVENT_TRANSFORMMOVE = 'transform:move';
 
     /**
-     * Fired when when the transformation has ended.
+     * Fired when the transformation has ended.
      *
      * @event
      * @example
@@ -119,7 +119,6 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal gizmo starting rotation in world space.
      *
-     * @type {Vec3}
      * @protected
      */
     _rootStartPos = new Vec3();
@@ -127,7 +126,6 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal gizmo starting rotation in world space.
      *
-     * @type {Quat}
      * @protected
      */
     _rootStartRot = new Quat();
@@ -167,7 +165,6 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal state of if currently hovered shape is a plane.
      *
-     * @type {boolean}
      * @private
      */
     _hoverIsPlane = false;
@@ -183,7 +180,6 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal state of if currently selected shape is a plane.
      *
-     * @type {boolean}
      * @protected
      */
     _selectedIsPlane = false;
@@ -191,22 +187,17 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal selection starting coordinates in world space.
      *
-     * @type {Vec3}
      * @protected
      */
     _selectionStartPoint = new Vec3();
 
     /**
      * Whether snapping is enabled. Defaults to false.
-     *
-     * @type {boolean}
      */
     snap = false;
 
     /**
      * Snapping increment. Defaults to 1.
-     *
-     * @type {number}
      */
     snapIncrement = 1;
 
@@ -310,7 +301,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#setTheme} instead.
+     * @deprecated Use {@link setTheme} instead.
      * @ignore
      */
     set xAxisColor(value) {
@@ -330,7 +321,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#theme} instead.
+     * @deprecated Use {@link theme} instead.
      * @ignore
      */
     get xAxisColor() {
@@ -339,7 +330,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#setTheme} instead.
+     * @deprecated Use {@link setTheme} instead.
      * @ignore
      */
     set yAxisColor(value) {
@@ -359,7 +350,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#theme} instead.
+     * @deprecated Use {@link theme} instead.
      * @ignore
      */
     get yAxisColor() {
@@ -368,7 +359,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#setTheme} instead.
+     * @deprecated Use {@link setTheme} instead.
      * @ignore
      */
     set zAxisColor(value) {
@@ -388,7 +379,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {Color}
-     * @deprecated Use {@link TransformGizmo#theme} instead.
+     * @deprecated Use {@link theme} instead.
      * @ignore
      */
     get zAxisColor() {
@@ -397,7 +388,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {number}
-     * @deprecated Use {@link TransformGizmo#setTheme} instead.
+     * @deprecated Use {@link setTheme} instead.
      * @ignore
      */
     set colorAlpha(value) {
@@ -414,7 +405,7 @@ class TransformGizmo extends Gizmo {
 
     /**
      * @type {number}
-     * @deprecated Use {@link TransformGizmo#theme} instead.
+     * @deprecated Use {@link theme} instead.
      * @ignore
      */
     get colorAlpha() {
@@ -611,7 +602,7 @@ class TransformGizmo extends Gizmo {
      * @param {number} y - The y coordinate.
      * @param {boolean} isFacing - Whether the axis is facing the camera.
      * @param {boolean} isLine - Whether the axis is a line.
-     * @returns {Vec3} The point (space is {@link TransformGizmo#coordSpace}).
+     * @returns {Vec3} The point (space is {@link Gizmo#coordSpace}).
      * @protected
      */
     _screenToPoint(x, y, isFacing = false, isLine = false) {
@@ -676,9 +667,7 @@ class TransformGizmo extends Gizmo {
         }
     }
 
-    /**
-     * @protected
-     */
+    /** @protected */
     _createTransform() {
         // shapes
         for (const key in this._shapes) {
@@ -774,9 +763,7 @@ class TransformGizmo extends Gizmo {
         }
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     prerender() {
         super.prerender();
 
@@ -791,9 +778,7 @@ class TransformGizmo extends Gizmo {
         this._drawGuideLines(gizmoPos, gizmoRot, activeAxis, activeIsPlane);
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     destroy() {
         super.destroy();
 

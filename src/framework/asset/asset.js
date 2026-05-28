@@ -160,7 +160,6 @@ class Asset extends EventHandler {
     /**
      * Whether to preload the asset.
      *
-     * @type {boolean}
      * @private
      */
     _preload = false;
@@ -183,15 +182,11 @@ class Asset extends EventHandler {
     /**
      * True if the asset has finished attempting to load the resource. It is not guaranteed
      * that the resources are available as there could have been a network error.
-     *
-     * @type {boolean}
      */
     loaded = false;
 
     /**
      * True if the resource is currently being loaded.
-     *
-     * @type {boolean}
      */
     loading = false;
 

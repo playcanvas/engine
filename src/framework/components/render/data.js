@@ -1,7 +1,5 @@
 class RenderComponentData {
-    constructor() {
-        this.enabled = true;
-    }
+    enabled = true;
 }
 
 export { RenderComponentData };

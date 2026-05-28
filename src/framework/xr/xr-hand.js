@@ -69,10 +69,7 @@ class XrHand extends EventHandler {
      */
     _inputSource;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _tracking = false;
 
     /**

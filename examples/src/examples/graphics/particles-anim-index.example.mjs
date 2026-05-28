@@ -1,12 +1,13 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     particlesNumbers: new pc.Asset('particlesNumbers', 'texture', {
-        url: `${rootPath}/static/assets/textures/particles-numbers.png`
+        url: './assets/textures/particles-numbers.png'
     }, { srgb: true })
 };
 
@@ -161,5 +162,3 @@ assetListLoader.load(() => {
 
     app.start();
 });
-
-export { app };

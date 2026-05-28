@@ -3,12 +3,7 @@
  * @import { GSplatPlacement } from './gsplat-placement.js'
  */
 
-/**
- * Number of buckets for distance-based sorting.
- * More buckets = finer granularity for budget prioritization.
- * @type {number}
- */
-const NUM_BUCKETS = 64;
+import { NUM_BUCKETS } from './constants.js';
 
 /**
  * Balances splat budget across multiple octree instances by adjusting LOD levels.
@@ -48,9 +43,8 @@ class GSplatBudgetBalancer {
      * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - Map of
      * GSplatOctreeInstance objects.
      * @param {number} budget - Target splat budget for octrees.
-     * @param {number} globalMaxDistance - Max world-space distance for bucket calculation.
      */
-    balance(octreeInstances, budget, globalMaxDistance) {
+    balance(octreeInstances, budget) {
         // Initialize buckets on first use
         this._initBuckets();
 
@@ -59,15 +53,7 @@ class GSplatBudgetBalancer {
             this._buckets[i].length = 0;
         }
 
-        // Pre-compute multiplier for fast bucket calculation:
-        // bucket = sqrt(worldDistance / globalMaxDistance) * NUM_BUCKETS
-        // Simplified to: sqrt(worldDistance) * (NUM_BUCKETS / sqrt(globalMaxDistance))
-        const bucketScale = NUM_BUCKETS / Math.sqrt(globalMaxDistance);
-
-        // Collect all nodes into buckets based on world distance
-        // Uses sqrt distribution: bucket 0 = nearest, bucket N-1 = farthest
-        // At distance=0: bucket=0, at distance=maxDistance: bucket=NUM_BUCKETS-1
-        // Nearby geometry gets more buckets (finer granularity) due to sqrt
+        // Collect all nodes into buckets (indices precomputed in evaluateNodeLods when enforcing budget).
         let totalOptimalSplats = 0;
         for (const [, inst] of octreeInstances) {
             const nodes = inst.octree.nodes;
@@ -82,11 +68,7 @@ class GSplatBudgetBalancer {
                 const lods = nodes[nodeIndex].lods;
                 nodeInfo.lods = lods;
 
-                // Fast bucket calculation: sqrt(distance) * pre-computed scale
-                // Bucket 0 = nearest (highest priority), bucket N-1 = farthest
-                const bucket = (Math.sqrt(nodeInfo.worldDistance) * bucketScale) >>> 0;
-                const bucketIdx = bucket < NUM_BUCKETS ? bucket : NUM_BUCKETS - 1;
-                this._buckets[bucketIdx].push(nodeInfo);
+                this._buckets[nodeInfo.budgetBucket].push(nodeInfo);
 
                 totalOptimalSplats += lods[optimalLod].count;
             }

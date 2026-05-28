@@ -12,7 +12,6 @@ import { Component } from '../component.js';
 
 /**
  * @import { Entity } from '../../entity.js'
- * @import { ScrollViewComponentData } from './data.js'
  * @import { ScrollViewComponentSystem } from './system.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  */
@@ -20,8 +19,39 @@ import { Component } from '../component.js';
 const _tempScrollValue = new Vec2();
 
 /**
- * A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with
- * optional horizontal and vertical scroll bars.
+ * The ScrollViewComponent enables an {@link Entity} to behave like a masked scrolling area, with
+ * optional horizontal and vertical scroll bars. The component exposes references to child
+ * entities that represent the viewport, the content, and the (optional) horizontal and vertical
+ * {@link ScrollbarComponent}s.
+ *
+ * You should never need to use the ScrollViewComponent constructor directly. To add a
+ * ScrollViewComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('element', {
+ *     type: pc.ELEMENTTYPE_GROUP,
+ *     useInput: true
+ * });
+ * entity.addComponent('scrollview', {
+ *     horizontal: false,
+ *     vertical: true,
+ *     bounceAmount: 0.1
+ * });
+ * ```
+ *
+ * Once the ScrollViewComponent is added to the entity, you can access it via the
+ * {@link Entity#scrollview} property:
+ *
+ * ```javascript
+ * entity.scrollview.scroll = new pc.Vec2(0, 1); // Scroll to the top
+ *
+ * console.log(entity.scrollview.scroll);        // Get the scroll position and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Scroll View](https://playcanvas.github.io/#/user-interface/scroll-view)
  *
  * @hideconstructor
  * @category User Interface
@@ -39,6 +69,51 @@ class ScrollViewComponent extends Component {
      * });
      */
     static EVENT_SETSCROLL = 'set:scroll';
+
+    /**
+     * @type {boolean|undefined}
+     * @private
+     */
+    _horizontal;
+
+    /**
+     * @type {boolean|undefined}
+     * @private
+     */
+    _vertical;
+
+    /**
+     * @type {number|undefined}
+     * @private
+     */
+    _scrollMode;
+
+    /**
+     * @type {number|undefined}
+     * @private
+     */
+    _bounceAmount;
+
+    /**
+     * @type {number|undefined}
+     * @private
+     */
+    _friction;
+
+    /** @private */
+    _dragThreshold = 10;
+
+    /** @private */
+    _useMouseWheel = true;
+
+    /** @private */
+    _mouseWheelSensitivity = new Vec2(1, 1);
+
+    /** @private */
+    _horizontalScrollbarVisibility = 0;
+
+    /** @private */
+    _verticalScrollbarVisibility = 0;
 
     /**
      * @type {Entity|null}
@@ -68,7 +143,19 @@ class ScrollViewComponent extends Component {
      * @type {EventHandle|null}
      * @private
      */
+    _evtElementAdd = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
     _evtElementRemove = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtViewportEntityElementAdd = null;
 
     /**
      * @type {EventHandle|null}
@@ -160,36 +247,8 @@ class ScrollViewComponent extends Component {
         this._disabledContentInput = false;
         this._disabledContentInputEntities = [];
 
-        this._toggleLifecycleListeners('on');
+        this._evtElementAdd = this.entity.on('element:add', this._onElementComponentAdd, this);
         this._toggleElementListeners('on');
-    }
-
-    // TODO: Remove this override in upgrading component
-    /**
-     * @type {ScrollViewComponentData}
-     * @ignore
-     */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
-    }
-
-    /**
-     * Sets the enabled state of the component.
-     *
-     * @type {boolean}
-     */
-    set enabled(arg) {
-        this._setValue('enabled', arg);
-    }
-
-    /**
-     * Gets the enabled state of the component.
-     *
-     * @type {boolean}
-     */
-    get enabled() {
-        return this.data.enabled;
     }
 
     /**
@@ -198,7 +257,12 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     set horizontal(arg) {
-        this._setValue('horizontal', arg);
+        if (this._horizontal === arg) {
+            return;
+        }
+
+        this._horizontal = arg;
+        this._syncScrollbarEnabledState(ORIENTATION_HORIZONTAL);
     }
 
     /**
@@ -207,7 +271,7 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     get horizontal() {
-        return this.data.horizontal;
+        return this._horizontal;
     }
 
     /**
@@ -216,7 +280,12 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     set vertical(arg) {
-        this._setValue('vertical', arg);
+        if (this._vertical === arg) {
+            return;
+        }
+
+        this._vertical = arg;
+        this._syncScrollbarEnabledState(ORIENTATION_VERTICAL);
     }
 
     /**
@@ -225,7 +294,7 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     get vertical() {
-        return this.data.vertical;
+        return this._vertical;
     }
 
     /**
@@ -239,7 +308,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set scrollMode(arg) {
-        this._setValue('scrollMode', arg);
+        this._scrollMode = arg;
     }
 
     /**
@@ -248,7 +317,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get scrollMode() {
-        return this.data.scrollMode;
+        return this._scrollMode;
     }
 
     /**
@@ -257,7 +326,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set bounceAmount(arg) {
-        this._setValue('bounceAmount', arg);
+        this._bounceAmount = arg;
     }
 
     /**
@@ -266,7 +335,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get bounceAmount() {
-        return this.data.bounceAmount;
+        return this._bounceAmount;
     }
 
     /**
@@ -278,7 +347,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set friction(arg) {
-        this._setValue('friction', arg);
+        this._friction = arg;
     }
 
     /**
@@ -287,15 +356,15 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get friction() {
-        return this.data.friction;
+        return this._friction;
     }
 
     set dragThreshold(arg) {
-        this._setValue('dragThreshold', arg);
+        this._dragThreshold = arg;
     }
 
     get dragThreshold() {
-        return this.data.dragThreshold;
+        return this._dragThreshold;
     }
 
     /**
@@ -304,7 +373,7 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     set useMouseWheel(arg) {
-        this._setValue('useMouseWheel', arg);
+        this._useMouseWheel = arg;
     }
 
     /**
@@ -313,7 +382,7 @@ class ScrollViewComponent extends Component {
      * @type {boolean}
      */
     get useMouseWheel() {
-        return this.data.useMouseWheel;
+        return this._useMouseWheel;
     }
 
     /**
@@ -325,7 +394,19 @@ class ScrollViewComponent extends Component {
      * @type {Vec2}
      */
     set mouseWheelSensitivity(arg) {
-        this._setValue('mouseWheelSensitivity', arg);
+        // Mirror the old schema-driven `type: 'vec2'` conversion in
+        // ComponentSystem.convertValue: pass null/undefined/0/'' through untouched,
+        // clone a Vec2 input (so callers can pass shared singletons like Vec2.ONE
+        // without mutations leaking into component state), and treat anything else
+        // as indexable to support `[x, y]` arrays and typed arrays from JSON-loaded
+        // scenes.
+        if (!arg) {
+            this._mouseWheelSensitivity = arg;
+        } else if (arg instanceof Vec2) {
+            this._mouseWheelSensitivity = arg.clone();
+        } else {
+            this._mouseWheelSensitivity = new Vec2(arg[0], arg[1]);
+        }
     }
 
     /**
@@ -334,7 +415,7 @@ class ScrollViewComponent extends Component {
      * @type {Vec2}
      */
     get mouseWheelSensitivity() {
-        return this.data.mouseWheelSensitivity;
+        return this._mouseWheelSensitivity;
     }
 
     /**
@@ -344,7 +425,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set horizontalScrollbarVisibility(arg) {
-        this._setValue('horizontalScrollbarVisibility', arg);
+        this._horizontalScrollbarVisibility = arg;
     }
 
     /**
@@ -354,7 +435,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get horizontalScrollbarVisibility() {
-        return this.data.horizontalScrollbarVisibility;
+        return this._horizontalScrollbarVisibility;
     }
 
     /**
@@ -364,7 +445,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     set verticalScrollbarVisibility(arg) {
-        this._setValue('verticalScrollbarVisibility', arg);
+        this._verticalScrollbarVisibility = arg;
     }
 
     /**
@@ -374,7 +455,7 @@ class ScrollViewComponent extends Component {
      * @type {number}
      */
     get verticalScrollbarVisibility() {
-        return this.data.verticalScrollbarVisibility;
+        return this._verticalScrollbarVisibility;
     }
 
     /**
@@ -389,7 +470,7 @@ class ScrollViewComponent extends Component {
         }
 
         const isString = typeof arg === 'string';
-        if (this._viewportEntity && isString && this._viewportEntity.getGuid() === arg) {
+        if (this._viewportEntity && isString && this._viewportEntity.guid === arg) {
             return;
         }
 
@@ -407,12 +488,6 @@ class ScrollViewComponent extends Component {
 
         if (this._viewportEntity) {
             this._viewportEntitySubscribe();
-        }
-
-        if (this._viewportEntity) {
-            this.data.viewportEntity = this._viewportEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.viewportEntity = arg;
         }
     }
 
@@ -437,7 +512,7 @@ class ScrollViewComponent extends Component {
         }
 
         const isString = typeof arg === 'string';
-        if (this._contentEntity && isString && this._contentEntity.getGuid() === arg) {
+        if (this._contentEntity && isString && this._contentEntity.guid === arg) {
             return;
         }
 
@@ -455,12 +530,6 @@ class ScrollViewComponent extends Component {
 
         if (this._contentEntity) {
             this._contentEntitySubscribe();
-        }
-
-        if (this._contentEntity) {
-            this.data.contentEntity = this._contentEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.contentEntity = arg;
         }
     }
 
@@ -485,7 +554,7 @@ class ScrollViewComponent extends Component {
         }
 
         const isString = typeof arg === 'string';
-        if (this._horizontalScrollbarEntity && isString && this._horizontalScrollbarEntity.getGuid() === arg) {
+        if (this._horizontalScrollbarEntity && isString && this._horizontalScrollbarEntity.guid === arg) {
             return;
         }
 
@@ -505,12 +574,6 @@ class ScrollViewComponent extends Component {
 
         if (this._horizontalScrollbarEntity) {
             this._horizontalScrollbarEntitySubscribe();
-        }
-
-        if (this._horizontalScrollbarEntity) {
-            this.data.horizontalScrollbarEntity = this._horizontalScrollbarEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.horizontalScrollbarEntity = arg;
         }
     }
 
@@ -535,7 +598,7 @@ class ScrollViewComponent extends Component {
         }
 
         const isString = typeof arg === 'string';
-        if (this._verticalScrollbarEntity && isString && this._verticalScrollbarEntity.getGuid() === arg) {
+        if (this._verticalScrollbarEntity && isString && this._verticalScrollbarEntity.guid === arg) {
             return;
         }
 
@@ -555,12 +618,6 @@ class ScrollViewComponent extends Component {
 
         if (this._verticalScrollbarEntity) {
             this._verticalScrollbarEntitySubscribe();
-        }
-
-        if (this._verticalScrollbarEntity) {
-            this.data.verticalScrollbarEntity = this._verticalScrollbarEntity.getGuid();
-        } else if (isString && arg) {
-            this.data.verticalScrollbarEntity = arg;
         }
     }
 
@@ -589,25 +646,6 @@ class ScrollViewComponent extends Component {
      */
     get scroll() {
         return this._scroll;
-    }
-
-    /** @ignore */
-    _setValue(name, value) {
-        const data = this.data;
-        const oldValue = data[name];
-        data[name] = value;
-        this.fire('set', name, oldValue, value);
-    }
-
-    /**
-     * @param {string} onOrOff - 'on' or 'off'.
-     * @private
-     */
-    _toggleLifecycleListeners(onOrOff) {
-        this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
-        this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
-
-        this.entity[onOrOff]('element:add', this._onElementComponentAdd, this);
     }
 
     /**
@@ -838,14 +876,6 @@ class ScrollViewComponent extends Component {
 
         this._evtVerticalScrollbarValue?.off();
         this._evtVerticalScrollbarValue = null;
-    }
-
-    _onSetHorizontalScrollingEnabled() {
-        this._syncScrollbarEnabledState(ORIENTATION_HORIZONTAL);
-    }
-
-    _onSetVerticalScrollingEnabled() {
-        this._syncScrollbarEnabledState(ORIENTATION_VERTICAL);
     }
 
     _onSetScroll(x, y, resetVelocity) {
@@ -1296,23 +1326,40 @@ class ScrollViewComponent extends Component {
     }
 
     onRemove() {
-        this._toggleLifecycleListeners('off');
+        this._evtElementAdd?.off();
+        this._evtElementAdd = null;
+
+        // `_evtElementRemove` is a `once('beforeremove', ...)` handle registered on
+        // `this.entity.element`. If the scrollview is removed while the element survives,
+        // the once handler would dangle on the element and keep this component referenced.
+        this._evtElementRemove?.off();
+        this._evtElementRemove = null;
+
+        // Setting each entity ref to null routes through the existing setter and triggers
+        // the matching `_*EntityUnsubscribe`, so any listeners we registered on those
+        // referenced entities (viewport/content/scrollbar `element:add`, `scrollbar:add`,
+        // element resize, scrollbar `set:value`, etc.) are torn down here.
+        this.viewportEntity = null;
+        this.contentEntity = null;
+        this.horizontalScrollbarEntity = null;
+        this.verticalScrollbarEntity = null;
+
         this._toggleElementListeners('off');
         this._destroyDragHelper();
     }
 
     resolveDuplicatedEntityReferenceProperties(oldScrollView, duplicatedIdsMap) {
         if (oldScrollView.viewportEntity) {
-            this.viewportEntity = duplicatedIdsMap[oldScrollView.viewportEntity.getGuid()];
+            this.viewportEntity = duplicatedIdsMap[oldScrollView.viewportEntity.guid];
         }
         if (oldScrollView.contentEntity) {
-            this.contentEntity = duplicatedIdsMap[oldScrollView.contentEntity.getGuid()];
+            this.contentEntity = duplicatedIdsMap[oldScrollView.contentEntity.guid];
         }
         if (oldScrollView.horizontalScrollbarEntity) {
-            this.horizontalScrollbarEntity = duplicatedIdsMap[oldScrollView.horizontalScrollbarEntity.getGuid()];
+            this.horizontalScrollbarEntity = duplicatedIdsMap[oldScrollView.horizontalScrollbarEntity.guid];
         }
         if (oldScrollView.verticalScrollbarEntity) {
-            this.verticalScrollbarEntity = duplicatedIdsMap[oldScrollView.verticalScrollbarEntity.getGuid()];
+            this.verticalScrollbarEntity = duplicatedIdsMap[oldScrollView.verticalScrollbarEntity.guid];
         }
     }
 }

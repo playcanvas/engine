@@ -1,6 +1,14 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: bench_wooden_01
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/bench-wooden-01-1400c9340d5049589deb43601462ac55
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -11,7 +19,7 @@ const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
 div.innerHTML = `<div style="text-align: center;">
     <a id="ar-link" rel="ar" download="bench.usdz">
-        <img src="${rootPath}/static/assets/textures/transparent.png" id="button" width="200"/>
+        <img src="${'./assets/textures/transparent.png'}" id="button" width="200"/>
     </a>    
 </div>`;
 appInner.appendChild(div);
@@ -20,10 +28,10 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset('bench', 'container', { url: `${rootPath}/static/assets/models/bench_wooden_01.glb` })
+    bench: new pc.Asset('bench', 'container', { url: './assets/models/bench_wooden_01.glb' })
 };
 
 const gfxOptions = {
@@ -109,5 +117,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

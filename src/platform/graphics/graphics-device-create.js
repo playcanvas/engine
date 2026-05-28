@@ -1,5 +1,3 @@
-import { platform } from '../../core/platform.js';
-
 import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE, DEVICETYPE_NULL } from './constants.js';
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
 import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
@@ -36,7 +34,8 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * {@link DEVICETYPE_WEBGL2} device type creation.
  * @param {string} [options.twgslUrl] - An url to twgsl script, required if glslangUrl was specified.
  * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
- * compatible graphics adapter for an immersive XR device.
+ * compatible graphics adapter for an immersive XR device. When omitted in a browser, defaults to
+ * `true` if `navigator.xr` is present, otherwise `false` (see {@link GraphicsDevice} constructor).
  * @param {'default'|'high-performance'|'low-power'} [options.powerPreference] - A hint indicating
  * what configuration of GPU would be selected. Possible values are:
  *
@@ -59,11 +58,6 @@ function createGraphicsDevice(canvas, options = {}) {
     }
     if (!deviceTypes.includes(DEVICETYPE_NULL)) {
         deviceTypes.push(DEVICETYPE_NULL);
-    }
-
-    // XR compatibility if not specified
-    if (platform.browser && !!navigator.xr) {
-        options.xrCompatible ??= true;
     }
 
     // make a list of device creation functions in priority order

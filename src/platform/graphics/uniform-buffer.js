@@ -228,8 +228,6 @@ class UniformBuffer {
     /**
      * A render version used to track the last time the properties requiring bind group to be
      * updated were changed.
-     *
-     * @type {number}
      */
     renderVersionDirty = 0;
 

@@ -15,6 +15,10 @@ export default /* wgsl */`
     #include "floatAsUintPS"
 #endif
 
+#if !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
+    uniform alphaClipForward: f32;
+#endif
+
 const EXP4: half = exp(half(-4.0));
 const INV_EXP4: half = half(1.0) / (half(1.0) - EXP4);
 
@@ -76,7 +80,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #else
 
-        if (alpha < half(1.0 / 255.0)) {
+        if (alpha < half(uniform.alphaClipForward)) {
             discard;
             return output;
         }

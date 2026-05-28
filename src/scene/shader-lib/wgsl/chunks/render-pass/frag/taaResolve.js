@@ -38,24 +38,22 @@ export default /* wgsl */`
         return result;
     }
 
-    fn colorClamp(uv: vec2f, historyColor: vec4f) -> vec4f {
+    fn colorClampPremul(uv: vec2f, historyPremul: vec3f) -> vec3f {
 
-        // out of range numbers
-        var minColor = vec3f(9999.0);
-        var maxColor = vec3f(-9999.0);
+        var minPremul = vec3f(9999.0);
+        var maxPremul = vec3f(-9999.0);
 
-        // sample a 3x3 neighborhood
+        // 3x3 neighborhood in premultiplied space — same domain as the temporal mix (see fragmentMain).
         for (var ix: i32 = -1; ix <= 1; ix = ix + 1) {
             for (var iy: i32 = -1; iy <= 1; iy = iy + 1) {
-                let color_sample = textureSample(sourceTexture, sourceTextureSampler, uv + vec2f(f32(ix), f32(iy)) / uniform.textureSize).rgb;
-                minColor = min(minColor, color_sample);
-                maxColor = max(maxColor, color_sample);
+                let s = textureSample(sourceTexture, sourceTextureSampler, uv + vec2f(f32(ix), f32(iy)) / uniform.textureSize);
+                let premul = s.rgb * s.a;
+                minPremul = min(minPremul, premul);
+                maxPremul = max(maxPremul, premul);
             }
         }
 
-        // clamp the history color to min/max bounding box
-        let clamped = clamp(historyColor.rgb, minColor, maxColor);
-        return vec4f(clamped, historyColor.a);
+        return clamp(historyPremul, minPremul, maxPremul);
     }
 
     @fragment
@@ -74,24 +72,33 @@ export default /* wgsl */`
 
         #ifdef QUALITY_HIGH
 
-            // high quality history, sharper result
-            var historyColor: vec4f = SampleTextureCatmullRom(historyTexture, historyTextureSampler, historyUv, uniform.textureSize);
+            var historySample: vec4f = SampleTextureCatmullRom(historyTexture, historyTextureSampler, historyUv, uniform.textureSize);
 
         #else
 
-            // single sample history, more blurry result
-            var historyColor: vec4f = textureSample(historyTexture, historyTextureSampler, historyUv);
+            var historySample: vec4f = textureSample(historyTexture, historyTextureSampler, historyUv);
 
         #endif
 
-        // handle disocclusion by clamping the history color
-        let historyColorClamped = colorClamp(uv0, historyColor);
+        // Premultiplied (rgb * a) is the coverage-correct space for TAA: straight RGB interpolates
+        // uncorrelated color and opacity at edges, which causes colored fringes and alpha-related
+        // ghosting when history is blended or clamped against a 3x3 neighborhood. We clamp and mix
+        // in premultiplied space, then un-premultiply once using the current frame's alpha only
+        // (alpha is not temporally filtered — output stays tied to this frame's coverage).
+        let historyPremul = historySample.rgb * historySample.a;
+        let srcPremul = srcColor.rgb * srcColor.a;
 
-        // handle history buffer outside of the frame
+        let historyPremulClamped = colorClampPremul(uv0, historyPremul);
+
         let mixFactor_condition = historyUv.x < 0.0 || historyUv.x > 1.0 || historyUv.y < 0.0 || historyUv.y > 1.0;
         let mixFactor = select(0.05, 1.0, mixFactor_condition);
 
-        output.color = mix(historyColorClamped, srcColor, mixFactor);
+        let mixedPremul = mix(historyPremulClamped, srcPremul, mixFactor);
+        let a = srcColor.a;
+        // UNORM8 alpha step — avoid un-premul in the lowest band (quantization / noise).
+        let UNPREMUL_EPS = 1.0 / 255.0;
+        let rgbStraight = select(srcColor.rgb, mixedPremul / a, a > UNPREMUL_EPS);
+        output.color = vec4f(rgbStraight, a);
         return output;
     }
 `;

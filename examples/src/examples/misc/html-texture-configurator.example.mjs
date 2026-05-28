@@ -1,4 +1,11 @@
-// @config DESCRIPTION <div style="color:black">3D product configurator with an HTML UI panel rendered as a WebGL texture via <b>HTML-in-Canvas</b> API. Uses <code>getElementTransform</code> for interactive hit testing — clicks and hovers on the 3D panel are handled by the browser's native DOM event system.<br><b>Click</b> to switch shoe material variants.</div>
+// @config
+//
+// 3D product configurator with an HTML UI panel rendered as a WebGL texture via
+// the {accent:HTML-in-Canvas} API. Uses {accent:getElementTransform} for
+// interactive hit testing — clicks and hovers on the 3D panel are handled by
+// the browser's native DOM event system. {accent:Click} to switch shoe
+// material variants.
+
 //
 // This example demonstrates a 3D product configurator where an interactive HTML
 // panel (styled with CSS glassmorphism) is rendered as a WebGL texture on a 3D
@@ -10,10 +17,10 @@
 // as a fixed DOM overlay on top of the canvas instead of a 3D textured plane.
 // Click handling works identically in both modes via standard DOM events.
 //
-import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
+import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
 
-const { BlurredPlanarReflection } = await fileImport(`${rootPath}/static/scripts/esm/blurred-planar-reflection.mjs`);
+import { deviceType } from 'examples/context';
 
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.
@@ -120,11 +127,11 @@ const assets = {
     envatlas: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    shoe: new pc.Asset('shoe', 'container', { url: `${rootPath}/static/assets/models/MaterialsVariantsShoe.glb` }),
-    background: new pc.Asset('background', 'texture', { url: `${rootPath}/static/assets/textures/background_shoes.png` }, { srgb: true })
+    shoe: new pc.Asset('shoe', 'container', { url: './assets/models/MaterialsVariantsShoe.glb' }),
+    background: new pc.Asset('background', 'texture', { url: './assets/textures/background_shoes.png' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -490,5 +497,3 @@ assetListLoader.load(() => {
         htmlSync?.update(camera.camera);
     });
 });
-
-export { app };

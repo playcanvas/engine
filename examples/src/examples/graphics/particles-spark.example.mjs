@@ -1,11 +1,12 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    spark: new pc.Asset('spark', 'texture', { url: `${rootPath}/static/assets/textures/spark.png` }, { srgb: true })
+    spark: new pc.Asset('spark', 'texture', { url: './assets/textures/spark.png' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -124,5 +125,3 @@ assetListLoader.load(() => {
         localVelocityGraph2: localVelocityCurve2
     });
 });
-
-export { app };

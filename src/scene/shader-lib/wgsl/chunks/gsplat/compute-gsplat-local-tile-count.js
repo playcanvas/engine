@@ -20,8 +20,6 @@ export const computeGsplatLocalTileCountSource = /* wgsl */`
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"
 
-const CACHE_STRIDE: u32 = 7u;
-
 // Caps the 16-bit localOffset field in packed pairs (tileIdx << 16 | localOffset).
 const MAX_TILE_ENTRIES: u32 = 0xFFFFu;
 
@@ -79,6 +77,7 @@ struct Uniforms {
 #include "gsplatComputeSplatCS"
 #include "gsplatFormatDeclCS"
 #include "gsplatFormatReadCS"
+#include "gsplatProjectCommonCS"
 
 // NOTE on tile entry cap: if a tile exceeds MAX_TILE_ENTRIES (65535), the atomicAdd
 // count overcounts. Impact: the prefix sum allocates extra tileEntries slots that go
@@ -95,43 +94,37 @@ fn main(
     let threadIdx = gid.y * (numWorkgroups.x * 256u) + gid.x;
     let numVisible = sortElementCount[0];
 
-    if (threadIdx >= numVisible) {
-        return;
-    }
-
-    let splatId = compactedSplatIds[threadIdx];
-    setSplat(splatId);
-    let center = getCenter();
-    let opacity = getOpacity();
-
-    if (opacity < uniforms.alphaClip) {
-        projCache[threadIdx * CACHE_STRIDE + 6u] = 0u;
-        splatPairStart[threadIdx] = 0u;
-        splatPairCount[threadIdx] = 0u;
-        return;
-    }
-
-    let rotation = half4(getRotation());
-    let scale = half3(getScale());
-
-    let proj = computeSplatCov(
-        center, rotation, scale,
-        uniforms.viewMatrix, uniforms.viewProj,
-        uniforms.focal, uniforms.viewportWidth, uniforms.viewportHeight,
-        uniforms.nearClip, uniforms.farClip, opacity, uniforms.minPixelSize,
-        uniforms.isOrtho, uniforms.alphaClip, uniforms.minContribution,
+    let projected = projectSplatCommon(
+        threadIdx,
+        numVisible,
+        uniforms.alphaClip,
+        uniforms.minPixelSize,
+        uniforms.minContribution,
+        uniforms.viewMatrix,
+        uniforms.viewProj,
+        uniforms.focal,
+        uniforms.viewportWidth,
+        uniforms.viewportHeight,
+        uniforms.nearClip,
+        uniforms.farClip,
+        uniforms.isOrtho,
         #ifdef GSPLAT_FISHEYE
             uniforms.fisheye_k, uniforms.fisheye_inv_k,
             uniforms.fisheye_projMat00, uniforms.fisheye_projMat11,
         #endif
     );
 
-    if (!proj.valid) {
-        projCache[threadIdx * CACHE_STRIDE + 6u] = 0u;
-        splatPairStart[threadIdx] = 0u;
-        splatPairCount[threadIdx] = 0u;
+    if (!projected.valid) {
+        if (threadIdx < numVisible) {
+            projCache[threadIdx * {CACHE_STRIDE}u + 6u] = 0u;
+            splatPairStart[threadIdx] = 0u;
+            splatPairCount[threadIdx] = 0u;
+        }
         return;
     }
+
+    let opacity = projected.opacity;
+    let proj = projected.proj;
 
     let det = proj.a * proj.c - proj.b * proj.b;
     let invDet = 1.0 / det;
@@ -139,7 +132,7 @@ fn main(
     let cy = -4.0 * proj.b * invDet;
     let cz = 4.0 * proj.a * invDet;
 
-    let base = threadIdx * CACHE_STRIDE;
+    let base = threadIdx * {CACHE_STRIDE}u;
     projCache[base + 0u] = bitcast<u32>(proj.screen.x);
     projCache[base + 1u] = bitcast<u32>(proj.screen.y);
     projCache[base + 2u] = bitcast<u32>(cx);
@@ -164,6 +157,13 @@ fn main(
                                     uniforms.viewportWidth, uniforms.viewportHeight,
                                     uniforms.alphaClip);
     let radiusFactor = eval.radiusFactor;
+
+    // Per-splat power cutoff for the rasterize pass: the Gaussian exponent below which
+    // the splat's contribution at a pixel drops below alphaClip. Equal to -radiusFactor / 2
+    // = -log(opacity / alphaClip), clamped with radiusFactor. For high-opacity splats this
+    // is -4 (matching the global cutoff); for low-opacity splats it's tighter, letting the
+    // rasterize kernel skip exp() and the blend chain entirely for non-contributing pixels.
+    projCache[base + 7u] = bitcast<u32>(-0.5 * radiusFactor);
 
     let minTileX = max(0i, i32(floor(eval.splatMin.x / f32(TILE_SIZE))));
     let maxTileX = min(i32(uniforms.numTilesX) - 1i, i32(floor(eval.splatMax.x / f32(TILE_SIZE))));

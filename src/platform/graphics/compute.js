@@ -48,10 +48,7 @@ class Compute {
      */
     parameters = new Map();
 
-    /**
-     * @type {number}
-     * @ignore
-     */
+    /** @ignore */
     countX = 1;
 
     /**
@@ -69,7 +66,6 @@ class Compute {
     /**
      * Slot index in the indirect dispatch buffer, or -1 for direct dispatch.
      *
-     * @type {number}
      * @ignore
      */
     indirectSlotIndex = -1;
@@ -86,7 +82,6 @@ class Compute {
      * Frame stamp (device.renderVersion) when indirect slot was set. Used for validation
      * when using the built-in buffer.
      *
-     * @type {number}
      * @ignore
      */
     indirectFrameStamp = 0;
@@ -131,7 +126,7 @@ class Compute {
      * Returns the value of a shader parameter from the compute instance.
      *
      * @param {string} name - The name of the parameter to get.
-     * @returns {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer|undefined}
+     * @returns {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer|TextureView|undefined}
      * The value of the specified parameter.
      */
     getParameter(name) {

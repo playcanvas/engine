@@ -202,15 +202,12 @@ class UniformFormat {
 }
 
 /**
- * A descriptor that defines the layout of of data inside the uniform buffer.
+ * A descriptor that defines the layout of data inside the uniform buffer.
  *
  * @category Graphics
  */
 class UniformBufferFormat {
-    /**
-     * @type {number}
-     * @ignore
-     */
+    /** @ignore */
     byteSize = 0;
 
     /**

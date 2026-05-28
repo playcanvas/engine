@@ -297,8 +297,7 @@ class Mat4 {
      * instance. This function assumes the matrices are affine transformation matrices, where the
      * upper left 3x3 elements are a rotation matrix, and the bottom left 3 elements are
      * translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters are not
-     * verified to be in the expected format. This function is faster than general
-     * {@link Mat4#mul2}.
+     * verified to be in the expected format. This function is faster than general {@link mul2}.
      *
      * @param {Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of
      * the operation.
@@ -1171,7 +1170,7 @@ class Mat4 {
     }
 
     /**
-     * -1 if the the matrix has an odd number of negative scales (mirrored); 1 otherwise.
+     * -1 if the matrix has an odd number of negative scales (mirrored); 1 otherwise.
      *
      * @type {number}
      * @ignore

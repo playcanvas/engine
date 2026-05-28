@@ -1,9 +1,8 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
+import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
-const { BlurredPlanarReflection } = await fileImport(`${rootPath}/static/scripts/esm/blurred-planar-reflection.mjs`);
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -12,10 +11,10 @@ const assets = {
     envatlas: new pc.Asset(
         'morning-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    sunglasses: new pc.Asset('sunglasses', 'container', { url: `${rootPath}/static/assets/models/SunglassesKhronos.glb` })
+    sunglasses: new pc.Asset('sunglasses', 'container', { url: './assets/models/SunglassesKhronos.glb' })
 };
 
 const gfxOptions = {
@@ -144,5 +143,3 @@ assetListLoader.load(() => {
     });
 
 });
-
-export { app };

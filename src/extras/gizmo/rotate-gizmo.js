@@ -115,7 +115,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal selection starting angle in world space.
      *
-     * @type {number}
      * @private
      */
     _selectionStartAngle = 0;
@@ -147,7 +146,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal vector for storing the mouse position in screen space.
      *
-     * @type {Vec2}
      * @private
      */
     _screenPos = new Vec2();
@@ -155,7 +153,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal vector for storing the mouse start position in screen space.
      *
-     * @type {Vec2}
      * @private
      */
     _screenStartPos = new Vec2();
@@ -163,7 +160,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal vector for the start point of the guide line angle.
      *
-     * @type {Vec3}
      * @private
      */
     _guideAngleStart = new Vec3();
@@ -171,7 +167,6 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal vector for the end point of the guide line angle.
      *
-     * @type {Vec3}
      * @private
      */
     _guideAngleEnd = new Vec3();
@@ -187,14 +182,11 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal copy of facing direction to avoid unnecessary updates.
      *
-     * @type {Vec3}
      * @private
      */
     _facingDir = new Vec3();
 
-    /**
-     * @override
-     */
+    /** @override */
     snapIncrement = 5;
 
     /**
@@ -440,7 +432,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @deprecated Use {@link rotationMode} instead.
      * @ignore
      */
     set orbitRotation(value) {
@@ -449,7 +441,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * @type {boolean}
-     * @deprecated Use {@link RotationGizmo#rotationMode} instead.
+     * @deprecated Use {@link rotationMode} instead.
      * @ignore
      */
     get orbitRotation() {
@@ -467,9 +459,7 @@ class RotateGizmo extends TransformGizmo {
         this._shapes.z[prop] = value;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _storeGuidePoints() {
         const gizmoPos = this.root.getLocalPosition();
         const axis = this._selectedAxis;
@@ -526,9 +516,7 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _shapesLookAtCamera() {
         // face shape
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
@@ -599,9 +587,7 @@ class RotateGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _storeNodeRotations() {
         const gizmoPos = this.root.getLocalPosition();
         for (let i = 0; i < this.nodes.length; i++) {
@@ -797,9 +783,7 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     prerender() {
         super.prerender();
 
@@ -810,9 +794,7 @@ class RotateGizmo extends TransformGizmo {
         this._shapesLookAtCamera();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     destroy() {
         this._guideAngleLines.forEach(line => line.destroy());
 

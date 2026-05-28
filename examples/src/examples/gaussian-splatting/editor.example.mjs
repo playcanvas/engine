@@ -1,8 +1,23 @@
-// @config DESCRIPTION <span style="color:yellow"><b>Controls:</b> Select button - show selection box | Gizmo - move selection box | Left Mouse Button - orbit </span><br>GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
-import { data } from 'examples/observer';
-import { deviceType, rootPath, localImport } from 'examples/utils';
+// @config
+//
+// GSplat editor with AABB selection, deletion, and cloning using GSplatProcessor.
+//
+// `Select button` Show selection box · `Gizmo` Move selection box · `LMB` Orbit
+//
+// @credit
+// title: SA3D_R&D_XP47
+// author: Stephane Agullo
+// source: https://superspl.at/view?id=cdcec084
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
+import { data, deviceType } from 'examples/context';
+
+import { copyProcessor } from './copy-processor.mjs';
+import { deleteProcessor } from './delete-processor.mjs';
+import { selectionProcessor } from './selection-processor.mjs';
+import { workBufferModifier } from './workbuffer-modifier.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -45,16 +60,10 @@ app.on('destroy', () => {
 data.set('boxSize', 0.67);
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    biker: new pc.Asset('biker', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.compressed.ply` }),
-    apartment: new pc.Asset('apartment', 'gsplat', { url: `${rootPath}/static/assets/splats/apartment.sog` })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    biker: new pc.Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    apartment: new pc.Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
-
-// Import shader modules
-const { workBufferModifier } = await localImport('workbuffer-modifier.mjs');
-const { selectionProcessor } = await localImport('selection-processor.mjs');
-const { deleteProcessor } = await localImport('delete-processor.mjs');
-const { copyProcessor } = await localImport('copy-processor.mjs');
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
@@ -612,5 +621,3 @@ assetListLoader.load(() => {
         uiPanel.remove();
     });
 });
-
-export { app };

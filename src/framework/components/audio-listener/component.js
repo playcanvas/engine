@@ -13,6 +13,15 @@ import { Component } from '../component.js';
  * entity.addComponent('audiolistener');
  * ```
  *
+ * Once the AudioListenerComponent is added to the entity, you can access it via the
+ * {@link Entity#audiolistener} property:
+ *
+ * ```javascript
+ * entity.audiolistener.enabled = false; // Disable the audio listener
+ *
+ * console.log(entity.audiolistener.enabled); // Get the enabled state and print it
+ * ```
+ *
  * Relevant Engine API examples:
  *
  * - [Positional Sound](https://playcanvas.github.io/#/sound/positional)

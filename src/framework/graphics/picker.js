@@ -34,9 +34,9 @@ const _int32View = new Int32Array(_floatView.buffer);
  * values to compute world positions.
  *
  * **Main API methods:**
- * - {@link Picker#prepare} - Renders the pick buffer (call once per frame before picking)
- * - {@link Picker#getSelectionAsync} - Get mesh instances in a screen area
- * - {@link Picker#getWorldPointAsync} - Get world position at screen coordinates (requires depth)
+ * - {@link prepare} - Renders the pick buffer (call once per frame before picking)
+ * - {@link getSelectionAsync} - Get mesh instances in a screen area
+ * - {@link getWorldPointAsync} - Get world position at screen coordinates (requires depth)
  *
  * **Performance considerations:**
  * The picker resolution can be set lower than the screen resolution for better performance,
@@ -137,7 +137,6 @@ class Picker {
     /**
      * When the device is destroyed, this allows us to ignore async results.
      *
-     * @type {boolean}
      * @private
      */
     deviceValid = true;
@@ -183,9 +182,9 @@ class Picker {
      * Return the list of mesh instances selected by the specified rectangle in the previously
      * prepared pick buffer. The rectangle using top-left coordinate system.
      *
-     * Note: This function is not supported on WebGPU. Use {@link Picker#getSelectionAsync} instead.
+     * Note: This function is not supported on WebGPU. Use {@link getSelectionAsync} instead.
      * Note: This function is blocks the main thread while reading pixels from GPU memory. It's
-     * recommended to use {@link Picker#getSelectionAsync} instead.
+     * recommended to use {@link getSelectionAsync} instead.
      *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
@@ -448,9 +447,9 @@ class Picker {
 
     /**
      * Primes the pick buffer with a rendering of the specified models from the point of view of
-     * the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can
+     * the supplied camera. Once the pick buffer has been prepared, {@link getSelection} can
      * be called multiple times on the same picker object. Therefore, if the models or camera do
-     * not change in any way, {@link Picker#prepare} does not need to be called again.
+     * not change in any way, {@link prepare} does not need to be called again.
      *
      * @param {CameraComponent} camera - The camera component used to render the scene.
      * @param {Scene} scene - The scene containing the pickable mesh instances.
@@ -486,7 +485,7 @@ class Picker {
      * Sets the resolution of the pick buffer. The pick buffer resolution does not need to match
      * the resolution of the corresponding frame buffer use for general rendering of the 3D scene.
      * However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers
+     * results returned by {@link getSelection}. On the other hand, smaller pick buffers
      * will yield greater performance, so there is a trade off.
      *
      * @param {number} width - The width of the pick buffer in pixels.

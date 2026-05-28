@@ -27,7 +27,6 @@ class FramePass {
     /**
      * True if the frame pass is enabled.
      *
-     * @type {boolean}
      * @private
      */
     _enabled = true;
@@ -36,7 +35,6 @@ class FramePass {
      * True if the render pass start is skipped. This means the render pass is merged into the
      * previous one. Used by FrameGraph.compile() for pass merging.
      *
-     * @type {boolean}
      * @private
      */
     _skipStart = false;
@@ -45,7 +43,6 @@ class FramePass {
      * True if the render pass end is skipped. This means the following render pass is merged into
      * this one. Used by FrameGraph.compile() for pass merging.
      *
-     * @type {boolean}
      * @private
      */
     _skipEnd = false;
@@ -59,8 +56,6 @@ class FramePass {
     /**
      * If true, this pass might use dynamically rendered cubemaps. Defaults to false for non-render
      * passes (RenderPass overrides to true).
-     *
-     * @type {boolean}
      */
     requiresCubemaps = false;
 

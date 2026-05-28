@@ -13,7 +13,29 @@ import { Component } from '../component.js';
  */
 
 /**
- * The Animation Component allows an Entity to playback animations on models.
+ * The AnimationComponent enables an {@link Entity} to play back skeletal animations on a model.
+ * It is a legacy component that has largely been superseded by {@link AnimComponent}, which
+ * supports more advanced features such as animation state graphs and blending.
+ *
+ * You should never need to use the AnimationComponent constructor directly. To add an
+ * AnimationComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('animation', {
+ *     assets: [animationAsset.id],
+ *     speed: 1
+ * });
+ * ```
+ *
+ * Once the AnimationComponent is added to the entity, you can access it via the
+ * {@link Entity#animation} property:
+ *
+ * ```javascript
+ * entity.animation.speed = 2; // Play the animation at double speed
+ *
+ * console.log(entity.animation.speed); // Get the playback speed and print it
+ * ```
  *
  * @hideconstructor
  * @category Animation
@@ -95,16 +117,12 @@ class AnimationComponent extends Component {
 
     /**
      * If true, the first animation asset will begin playing when the scene is loaded.
-     *
-     * @type {boolean}
      */
     activate = true;
 
     /**
      * Speed multiplier for animation play back. 1 is playback at normal speed and 0 pauses the
      * animation.
-     *
-     * @type {number}
      */
     speed = 1;
 

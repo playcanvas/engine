@@ -118,6 +118,7 @@ function isCanvasTransparent(canvas) {
 // supported texture semantics on a material
 const textureSemantics = [
     'anisotropyMap',
+    'aoMap',
     'clearCoatGlossMap',
     'clearCoatMap',
     'clearCoatNormalMap',
@@ -142,9 +143,7 @@ const textureSemantics = [
  * @category Exporter
  */
 class GltfExporter extends CoreExporter {
-    /**
-     * @ignore
-     */
+    /** @ignore */
     collectResources(root) {
         const resources = {
             buffers: [],
@@ -357,6 +356,12 @@ class GltfExporter extends CoreExporter {
             destination[name] = {
                 index: textureIndex
             };
+
+            // glTF defaults texCoord to 0, so only emit it when a non-default UV set is used
+            const textureTexCoord = material[`${textureSemantic}Uv`] ?? 0;
+            if (textureTexCoord !== 0) {
+                destination[name].texCoord = textureTexCoord;
+            }
 
             const scale = material[`${textureSemantic}Tiling`];
             const offset = material[`${textureSemantic}Offset`];
@@ -769,8 +774,13 @@ class GltfExporter extends CoreExporter {
                     isUsed = resources.materials.some((material) => {
                         return textureSemantics.some((texSemantic) => {
                             const texture = material[texSemantic];
-                            // Most materials use UV0 by default, so keep TEXCOORD_0 unless explicitly using a different UV set
-                            return texture && (texCoordIndex === 0 || material[`${texSemantic}Tiling`]?.uv === texCoordIndex);
+                            if (!texture) {
+                                return false;
+                            }
+
+                            // Preserve UV sets that are referenced by any material texture slot.
+                            const uv = material[`${texSemantic}Uv`] ?? 0;
+                            return uv === texCoordIndex;
                         });
                     });
                 }
