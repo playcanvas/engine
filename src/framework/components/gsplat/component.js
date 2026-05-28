@@ -403,7 +403,7 @@ class GSplatComponent extends Component {
             }
 
             // Handle non-unified mode mesh instance
-            const mi = this.instance?.meshInstance;
+            const mi = this._instance?.meshInstance;
 
             if (mi) {
                 if (this._castShadows && !value) {
@@ -777,7 +777,7 @@ class GSplatComponent extends Component {
             return;
         }
 
-        const meshInstance = this.instance?.meshInstance;
+        const meshInstance = this._instance?.meshInstance;
         if (meshInstance) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
@@ -800,7 +800,7 @@ class GSplatComponent extends Component {
             return;
         }
 
-        const meshInstance = this.instance?.meshInstance;
+        const meshInstance = this._instance?.meshInstance;
         if (meshInstance) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
@@ -844,10 +844,8 @@ class GSplatComponent extends Component {
     onLayerAdded(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
-        if (this.unified) {
-            Debug.errorOnce(`GSplatComponent#onLayerAdded is only used in legacy non-unified mode. ${UNIFIED_LEGACY_HINT}`);
-            return;
-        }
+        // unified mode manages layer membership via GSplatPlacement; no legacy mesh-instance work
+        if (this.unified) return;
 
         if (this._instance) {
             layer.addMeshInstances(this._instance.meshInstance);
@@ -857,10 +855,8 @@ class GSplatComponent extends Component {
     onLayerRemoved(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
-        if (this.unified) {
-            Debug.errorOnce(`GSplatComponent#onLayerRemoved is only used in legacy non-unified mode. ${UNIFIED_LEGACY_HINT}`);
-            return;
-        }
+        // unified mode manages layer membership via GSplatPlacement; no legacy mesh-instance work
+        if (this.unified) return;
 
         if (this._instance) {
             layer.removeMeshInstances(this._instance.meshInstance);
