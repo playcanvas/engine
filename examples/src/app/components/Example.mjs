@@ -13,6 +13,14 @@ import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx, fragment } from '../jsx.mjs';
 import { iframePath } from '../paths.mjs';
+import {
+    isRecord,
+    isVolatileControlPath,
+    patchState,
+    readState,
+    sanitizeControlValue,
+    valuesEqual
+} from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
 
 /**
@@ -20,6 +28,8 @@ import { getLayout } from '../utils.mjs';
  * @import { ComponentType, ReactElement } from 'react'
  * @import { Credit, ErrorEvent as ExampleErrorEvent, LoadingEvent, StateEvent } from '../events.js'
  */
+
+const SETTLE_WINDOW_MS = 2000;
 
 const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
 const CONTROLS_REACT_PCUI = /** @satisfies {typeof ReactPCUI} */ ({
@@ -87,6 +97,25 @@ const MOBILE_PANEL_TITLES = {
     description: 'INFO'
 };
 
+const createState = () => {
+    const layout = getLayout();
+    const ui = readState().ui ?? {};
+    const collapsed = typeof ui.controlPanelCollapsed === 'boolean' ? ui.controlPanelCollapsed : layout === 'mobile';
+    return {
+        layout,
+        collapsed,
+        exampleLoaded: false,
+        loadedPath: '',
+        loadError: null,
+        controls: () => null,
+        showDeviceSelector: true,
+        files: { 'example.mjs': '// loading' },
+        observer: null,
+        description: '',
+        credits: []
+    };
+};
+
 /**
  * @template {Record<string, string>} [FILES=Record<string, string>]
  * @typedef {object} ExampleOptions
@@ -140,22 +169,23 @@ const TypedComponent = Component;
 
 class Example extends TypedComponent {
     /** @type {State} */
-    state = {
-        layout: getLayout(),
-        collapsed: getLayout() === 'mobile',
-        exampleLoaded: false,
-        loadedPath: '',
-        loadError: null,
-        controls: () => null,
-        showDeviceSelector: true,
-        files: { 'example.mjs': '// loading' },
-        observer: null,
-        description: '',
-        credits: []
-    };
+    state = createState();
 
     /** @type {HTMLElement | null} */
     _controlPanelScrollRegion = null;
+
+    /** @type {{ unbind: () => void } | null} */
+    _observerHandle = null;
+
+    /** @type {Record<string, any>} */
+    _baseline = {};
+
+    /** @type {Record<string, any>} */
+    _loadControls = {};
+
+    _settleEnd = 0;
+
+    _applying = 0;
 
     /**
      * @param {Props} props - Component properties.
@@ -170,6 +200,7 @@ class Example extends TypedComponent {
         this._handleExampleError = this._handleExampleError.bind(this);
         this._handleUpdateFiles = this._handleUpdateFiles.bind(this);
         this._handleControlPanelScroll = this._handleControlPanelScroll.bind(this);
+        this._handleControlSet = this._handleControlSet.bind(this);
         this._reloadIframe = this._reloadIframe.bind(this);
     }
 
@@ -216,6 +247,7 @@ class Example extends TypedComponent {
      */
     _handleExampleLoading(event) {
         const { showDeviceSelector } = event.detail;
+        this.bindObserver(null);
         this.mergeState({
             exampleLoaded: false,
             loadedPath: '',
@@ -238,6 +270,8 @@ class Example extends TypedComponent {
             this.props.setMobilePanel?.(null);
         }
         if (controlsSrc) {
+            this.bindObserver(observer);
+            this.applyControlState(observer);
             const controls = await this._buildControls(controlsSrc);
             this.mergeState({
                 exampleLoaded: true,
@@ -261,6 +295,8 @@ class Example extends TypedComponent {
                 description,
                 credits
             });
+            this.bindObserver(null);
+            patchState({ controls: {} });
         }
     }
 
@@ -315,7 +351,13 @@ class Example extends TypedComponent {
                 description,
                 credits
             });
+            this.bindObserver(null);
+            patchState({ controls: {} });
+            window.dispatchEvent(new CustomEvent('resetErrorBoundary'));
+            return;
         }
+        this.bindObserver(observer);
+        this.applyControlState(observer);
         const controls = await this._buildControls(controlsSrc);
         this.mergeState({
             exampleLoaded: true,
@@ -399,6 +441,7 @@ class Example extends TypedComponent {
         const params = this.props.match.params;
         if (prevParams.category !== params.category || prevParams.example !== params.example) {
             window.dispatchEvent(new Event(CLOSE_SELECTS_EVENT));
+            this.bindObserver(null);
         }
 
         this.setupControlPanel();
@@ -406,6 +449,7 @@ class Example extends TypedComponent {
 
     componentWillUnmount() {
         window.dispatchEvent(new Event(CLOSE_SELECTS_EVENT));
+        this.bindObserver(null);
         this._controlPanelScrollRegion?.removeEventListener('scroll', this._handleControlPanelScroll);
         this._controlPanelScrollRegion = null;
         window.removeEventListener('resize', this._onLayoutChange);
@@ -612,7 +656,95 @@ class Example extends TypedComponent {
     }
 
     toggleCollapse() {
-        this.mergeState({ collapsed: !this.collapsed });
+        const collapsed = !this.collapsed;
+        this.mergeState({ collapsed });
+        patchState({ ui: { controlPanelCollapsed: collapsed } });
+    }
+
+    /**
+     * Apply URL-provided control overrides to the observer and arm the settle window.
+     *
+     * @param {Observer} observer - Example observer.
+     */
+    applyControlState(observer) {
+        const controls = readState().controls;
+        this._loadControls = isRecord(controls) ? /** @type {Record<string, any>} */ (controls) : {};
+        const baselineSnapshot = sanitizeControlValue(observer.json());
+        this._baseline = isRecord(baselineSnapshot) ? /** @type {Record<string, any>} */ (baselineSnapshot) : {};
+        this._settleEnd = Date.now() + SETTLE_WINDOW_MS;
+        this._applying++;
+        for (const path of Object.keys(this._loadControls)) {
+            if (observer.has(path)) {
+                observer.set(path, this._loadControls[path]);
+            }
+        }
+        this._applying--;
+    }
+
+    /**
+     * @param {Observer | null} observer - Example observer.
+     */
+    bindObserver(observer) {
+        this._observerHandle?.unbind();
+        this._observerHandle = null;
+        if (!observer) {
+            this._baseline = {};
+            this._loadControls = {};
+            this._settleEnd = 0;
+        }
+        if (observer) {
+            this._observerHandle = observer.on('*:set', this._handleControlSet);
+        }
+    }
+
+    /**
+     * Within the settle window (~2s after example load), observer mutations are
+     * treated as the example finishing its async init — they update the local
+     * baseline rather than writing the URL. URL-provided overrides take priority
+     * over init's value during this window. After the window, any mutation is a
+     * user change and gets diffed into pendingState.controls.
+     *
+     * @param {string} path - Observer path.
+     * @param {any} value - New value.
+     */
+    _handleControlSet(path, value) {
+        if (isVolatileControlPath(path) || this._applying > 0) {
+            return;
+        }
+        const { observer } = this.state;
+        if (!observer) {
+            return;
+        }
+        if (Date.now() < this._settleEnd) {
+            if (path in this._loadControls && !valuesEqual(value, this._loadControls[path])) {
+                this._applying++;
+                observer.set(path, this._loadControls[path]);
+                this._applying--;
+                return;
+            }
+            const safe = sanitizeControlValue(value, path);
+            if (safe !== undefined) {
+                this._baseline[path] = safe;
+            }
+            return;
+        }
+        this._writeControlsDiff(observer);
+    }
+
+    /**
+     * @param {Observer} observer - Example observer.
+     */
+    _writeControlsDiff(observer) {
+        const current = sanitizeControlValue(observer.json());
+        const safeCurrent = /** @type {Record<string, any>} */ (isRecord(current) ? current : {});
+        /** @type {Record<string, any>} */
+        const diff = {};
+        for (const path of Object.keys(safeCurrent)) {
+            if (!valuesEqual(safeCurrent[path], this._baseline[path])) {
+                diff[path] = safeCurrent[path];
+            }
+        }
+        patchState({ controls: diff });
     }
 
     renderMobilePanel() {
