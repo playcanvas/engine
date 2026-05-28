@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: Portal Frame
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/portal-frame-da34b37a224e4e49b307c0b17a50af2c
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

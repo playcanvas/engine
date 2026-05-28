@@ -1,6 +1,12 @@
 // @config
 //
 // `WASD` Move · `Space` Jump · `Mouse` Look
+//
+// @credit
+// title: De Dust 2 with Real Light
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/de-dust-2-with-real-light-4ce74cd95c584ce9b12b5ed9dc418db5
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';

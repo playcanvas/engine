@@ -6,6 +6,7 @@ const regexPatterns = [
 ];
 const configRegex = /^[ \t]*\/\/ @config[ \t]*(?:\r?\n[ \t]*\/\/[^\r\n]*)*(?:\r?\n|$)/gm;
 const CREDIT_FIELDS = ['title', 'author', 'source', 'license'];
+const REQUIRED_CREDIT_FIELDS = ['title', 'author'];
 const CREDIT_FIELD_SET = new Set(CREDIT_FIELDS);
 
 const parseValue = (val) => {
@@ -22,7 +23,7 @@ const parseExampleConfig = (block, config) => {
     let credit = null;
 
     const completeCredit = () => {
-        const missing = CREDIT_FIELDS.filter(field => !credit[field]);
+        const missing = REQUIRED_CREDIT_FIELDS.filter(field => !credit[field]);
         if (missing.length) {
             throw new Error(`Incomplete @credit: missing ${missing.join(', ')}`);
         }
@@ -88,7 +89,21 @@ const parseExampleConfig = (block, config) => {
         completeCredit();
     }
 
-    const text = description.join('\n').trim();
+    const paragraphs = [];
+    let current = [];
+    for (const line of description) {
+        const trimmed = line.trim();
+        if (trimmed) {
+            current.push(trimmed);
+        } else if (current.length) {
+            paragraphs.push(current.join(' '));
+            current = [];
+        }
+    }
+    if (current.length) {
+        paragraphs.push(current.join(' '));
+    }
+    const text = paragraphs.join('\n').trim();
     if (text) {
         config.DESCRIPTION = text;
     }
@@ -125,7 +140,7 @@ export const stripConfig = (source) => {
 /**
  * @typedef {object} ExampleConfig
  * @property {string} [DESCRIPTION] - The example description.
- * @property {{ title: string, author: string, source: string, license: string }[]} [CREDITS] - Scene credits.
+ * @property {{ title: string, author: string, source?: string, license?: string }[]} [CREDITS] - Scene credits.
  * @property {boolean} [HIDDEN] - The example is hidden from the sidebar list in production builds (`npm run build`). It is still built and reachable via its URL. In development (`npm run develop`) it is still shown in the sidebar.
  * @property {'development' | 'performance' | 'debug'} [ENGINE] - The engine type.
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.

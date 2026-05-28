@@ -4,6 +4,12 @@
 // red.
 //
 // @flag WEBGL_DISABLED
+//
+// @credit
+// title: Chess Board
+// author: Idmental
+// source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

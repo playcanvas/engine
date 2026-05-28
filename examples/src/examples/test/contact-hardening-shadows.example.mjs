@@ -1,6 +1,12 @@
 // @config
 // @flag HIDDEN
 // @flag WEBGPU_DISABLED
+//
+// @credit
+// title: Black Honey Robotic Arm
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/black-honey-robotic-arm-c50671f2a8e74de2a2e687103fdc93ab
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

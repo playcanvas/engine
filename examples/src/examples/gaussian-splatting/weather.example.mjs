@@ -4,6 +4,11 @@
 // Particles follow the camera using a deterministic 3D grid with hash-based positioning and animation.
 //
 // @flag NO_MINISTATS
+//
+// @credit
+// title: Roman Parish
+// author: Andrii Shramko
+// source: https://www.linkedin.com/in/andrii-shramko/
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

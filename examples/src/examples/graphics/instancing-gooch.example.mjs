@@ -2,6 +2,12 @@
 //
 // This example demonstrates how a custom shader can be used to render instanced geometry, but also
 // skinned, morphed and static geometry. A simple Gooch shading shader is used.
+//
+// @credit
+// title: Low-poly Tree with Twisting Branches
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/low-poly-tree-with-twisting-branches-4e2589134f2442bcbdab51c1f306cd58
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

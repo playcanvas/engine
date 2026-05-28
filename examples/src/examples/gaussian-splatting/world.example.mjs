@@ -1,6 +1,11 @@
 // @config
 //
 // Shows a large world scene with LOD streaming and additional moving splats.
+//
+// @credit
+// title: Skatepark
+// author: Christoph Schindelar
+// source: https://superspl.at/user?id=schindelar3d
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

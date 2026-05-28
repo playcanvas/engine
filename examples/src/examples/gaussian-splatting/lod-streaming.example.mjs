@@ -3,6 +3,11 @@
 // Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
 //
 // @flag NO_MINISTATS
+//
+// @credit
+// title: Roman Parish
+// author: Andrii Shramko
+// source: https://www.linkedin.com/in/andrii-shramko/
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

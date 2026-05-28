@@ -493,23 +493,26 @@ class Example extends TypedComponent {
      * @returns {ReactElement} rendered credit row.
      */
     renderCredit(credit, index) {
-        const source = URL_IN_TEXT_PATTERN.exec(credit.source);
+        const source = credit.source ? URL_IN_TEXT_PATTERN.exec(credit.source) : null;
         const label = fragment(
             jsx('span', { className: 'example-credit-title' }, credit.title),
             ' by ',
             jsx('span', { className: 'example-credit-author' }, credit.author)
         );
+        const children = [source ? this.renderCreditLink(source[1], label) : label];
+        if (!source && credit.source) {
+            children.push(' \u00b7 ', credit.source);
+        }
+        if (credit.license) {
+            children.push(' \u00b7 ', this.renderLicenseLink(credit.license));
+        }
         return jsx(
             'p',
             {
                 className: 'example-credit',
                 key: index
             },
-            source ? this.renderCreditLink(source[1], label) : label,
-            source ? null : ' \u00b7 ',
-            source ? null : credit.source,
-            ' \u00b7 ',
-            this.renderLicenseLink(credit.license)
+            ...children
         );
     }
 

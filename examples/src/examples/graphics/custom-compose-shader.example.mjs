@@ -3,6 +3,18 @@
 // This example shows how to customize the final compose pass by injecting a simple pixelation
 // post-effect. Useful if no additional render passes are needed. Changes are applied globally to all
 // CameraFrames.
+//
+// @credit
+// title: Mirror's Edge Apartment - Interior Scene
+// author: Aurélien Martel
+// source: https://sketchfab.com/3d-models/mirrors-edge-apartment-interior-scene-9804e9f2fe284070b081c96ceaf8af96
+// license: CC BY-NC 4.0 (https://creativecommons.org/licenses/by-nc/4.0/)
+//
+// @credit
+// title: Love neon sign 02
+// author: daysena
+// source: https://sketchfab.com/3d-models/love-neon-sign-02-9add8bfcb25943d0aae87e0af07c8e4d
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

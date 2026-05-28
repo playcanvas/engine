@@ -1,5 +1,11 @@
 // @config
 // @flag HIDDEN
+//
+// @credit
+// title: Terrain Low Poly
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/terrain-low-poly-248b21331315466e98d20c441935d99d
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

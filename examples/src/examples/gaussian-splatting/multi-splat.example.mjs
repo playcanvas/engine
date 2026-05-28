@@ -1,6 +1,12 @@
 // @config
 //
 // Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
+//
+// @credit
+// title: VR Gallery
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/vr-gallery-1e087aa25dc742e680accb15249bd6be
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

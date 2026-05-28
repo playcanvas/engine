@@ -1,3 +1,29 @@
+// @config
+//
+// @credit
+// title: Iridescent Dish with Olives
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/IridescentDishWithOlives
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Real-time Refraction Demo: Mosquito in Amber
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/real-time-refraction-demo-mosquito-in-amber-37233d6ed84844fea1ebe88069ea58d1
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Sheen Chair
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/SheenChair
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Stained Glass Lamp
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/StainedGlassLamp
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

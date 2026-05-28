@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: Sheen Chair
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/SheenChair
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType, win } from 'examples/context';

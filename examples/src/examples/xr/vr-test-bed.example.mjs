@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: XR VR Gallery Space
+// author: Josh Johanson
+// source: https://sketchfab.com/3d-models/xr-vr-gallery-space-873a1808080e47d2a804f3c991e33b4f
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
 

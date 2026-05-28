@@ -1,11 +1,15 @@
 // @config
 //
-// <div style="color:black">
-//     Independent strengths for alpha blending and opacity dithering. Both tables have alpha
-//     blending and dither enabled. Left: <code>alphaDither</code> untouched — opacity drives both
-//     blend and dither (legacy behavior). Right: <code>alphaDither</code> driven by its slider —
-//     opacity drives only blend; <b>Alpha Dither</b> drives only dither.
-// </div>
+// Independent strengths for alpha blending and opacity dithering. Both tables have alpha blending
+// and dither enabled. Left: `alphaDither` untouched — opacity drives both blend and dither
+// (legacy behavior). Right: `alphaDither` driven by its slider — opacity drives only blend;
+// **Alpha Dither** drives only dither.
+//
+// @credit
+// title: Low-poly Glass Table
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/low-poly-glass-table-6acac6d9201e448b92dff859b6f63aad
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

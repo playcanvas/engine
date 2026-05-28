@@ -20,6 +20,7 @@ const booleanFlags = new Set([
 ]);
 const engineTypes = new Set(['development', 'performance', 'debug']);
 const creditFields = ['title', 'author', 'source', 'license'];
+const requiredCreditFields = ['title', 'author'];
 const creditFieldSet = new Set(creditFields);
 
 const splitFlag = (line) => {
@@ -134,7 +135,7 @@ const configBlockShape = {
                         return null;
                     }
 
-                    const missing = creditFields.filter(field => !credit.fields[field]);
+                    const missing = requiredCreditFields.filter(field => !credit.fields[field]);
                     if (missing.length) {
                         report(line, 'missingCreditFields', { fields: missing.join(', ') });
                     }

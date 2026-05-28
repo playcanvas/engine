@@ -2,6 +2,12 @@
 //
 // Demonstrates a grid of Gaussian Splat instances using the LOD system for stable performance, with a
 // custom data stream storing IDs to colorize splats via a color lookup texture.
+//
+// @credit
+// title: PLAYBOT
+// author: Stephane Agullo
+// source: https://superspl.at/view?id=ee6d8bc4
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

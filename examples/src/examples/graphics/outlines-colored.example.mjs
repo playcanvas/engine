@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: Laboratory
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/laboratory-e860e49837c044478db650868866a448
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';

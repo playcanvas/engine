@@ -1,5 +1,11 @@
 // @config
 // @flag HIDDEN
+//
+// @credit
+// title: NormalTangentTest
+// author: Ed Mackey
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/blob/main/2.0/NormalTangentTest/README.md
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

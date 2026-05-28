@@ -1,3 +1,11 @@
+// @config
+//
+// @credit
+// title: Wide Street 02
+// author: Poly Haven
+// source: https://polyhaven.com/a/wide_street_02
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';

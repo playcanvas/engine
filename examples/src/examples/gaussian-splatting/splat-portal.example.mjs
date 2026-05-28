@@ -4,6 +4,22 @@
 // through it.
 //
 // @flag NO_MINISTATS
+//
+// @credit
+// title: Portal Frame
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/portal-frame-da34b37a224e4e49b307c0b17a50af2c
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Roman Parish
+// author: Andrii Shramko
+// source: https://www.linkedin.com/in/andrii-shramko/
+//
+// @credit
+// title: Skatepark
+// author: Christoph Schindelar
+// source: https://superspl.at/user?id=schindelar3d
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';

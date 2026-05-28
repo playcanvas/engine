@@ -3,6 +3,12 @@
 // 3D painting on gaussian splats using GSplatProcessor.
 //
 // `RMB` Paint · `LMB` Orbit
+//
+// @credit
+// title: SA3D_R&D_XP47
+// author: Stephane Agullo
+// source: https://superspl.at/view?id=cdcec084
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
 

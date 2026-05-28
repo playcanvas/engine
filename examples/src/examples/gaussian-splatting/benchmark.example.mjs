@@ -6,6 +6,11 @@
 // @flag NO_DEVICE_SELECTOR
 // @flag WEBGPU_DISABLED
 // @flag WEBGL_DISABLED
+//
+// @credit
+// title: Roman Parish
+// author: Andrii Shramko
+// source: https://www.linkedin.com/in/andrii-shramko/
 
 import * as pc from 'playcanvas';
 
