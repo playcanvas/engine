@@ -265,26 +265,42 @@ export const writeExampleHtml = async (item, files, options) => {
  * @param {ExampleMetadata} item - example metadata.
  * @returns {Promise<void>} completion promise.
  */
-export const writeShareHtml = async (item) => {
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @param {string} [origin] - origin url for meta tags; defaults to VERCEL_URL.
+ * @returns {Promise<string>} generated share html.
+ */
+export const createShareHtml = async (item, origin = `https://${process.env.VERCEL_URL ?? 'playcanvas.vercel.app'}`) => {
     const name = targetName(item);
     const template = await fs.promises.readFile(SHARE_TEMPLATE, 'utf8');
     const html = template
+    .replace(/@ORIGIN/g, origin)
     .replace(/@PATH/g, `${item.categoryKebab}/${item.exampleNameKebab}`)
+    .replace(/@SLUG/g, name)
     .replace(/@TITLE/g, `${item.exampleNameKebab.split('-').join(' ')}`)
     .replace(/@THUMB/g, `${name}_large`);
     if (/'@[A-Z0-9_]+'/.test(html)) {
         throw new Error('HTML file still has unreplaced values');
     }
+    return html;
+};
+
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @returns {Promise<void>} completion promise.
+ */
+export const writeShareHtml = async (item) => {
+    const name = targetName(item);
+    const html = await createShareHtml(item);
     const dir = `dist/share/${name}`;
     await fs.promises.mkdir(dir, { recursive: true });
     await fs.promises.writeFile(`${dir}/index.html`, html);
 };
 
 /**
- * @param {string} [nodeEnv] - node environment.
  * @returns {ExampleTargets} example build targets.
  */
-export const getExampleTargets = (nodeEnv = process.env.NODE_ENV ?? '') => {
+export const getExampleTargets = () => {
     const local = {};
     const sources = [];
     const assets = [];
@@ -296,9 +312,7 @@ export const getExampleTargets = (nodeEnv = process.env.NODE_ENV ?? '') => {
         const name = targetName(item);
         const files = getFiles(item);
         html.push({ item, files });
-        if (nodeEnv === 'production') {
-            share.push(item);
-        }
+        share.push(item);
 
         for (let j = 0; j < files.length; j++) {
             const file = files[j];

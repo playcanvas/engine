@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import {
     createExampleHtml,
+    createShareHtml,
     exampleMetaData,
     getEnginePath,
     getEnginePathInfo,
@@ -14,14 +15,14 @@ import {
     readExampleConfig,
     slash,
     transformSource
-} from './build-shared.mjs';
+} from './build-examples.mjs';
 import { createdLog, startLog } from './log.mjs';
 import { buildTypes } from '../../utils/types-build-target.mjs';
 
 /**
  * @import { IncomingMessage as HttpRequest, ServerResponse as HttpResponse } from 'node:http'
  * @import { Logger as ViteLogger, Plugin as VitePlugin, ViteDevServer as ViteServer } from 'vite'
- * @import { EnginePathInfo, ExampleMetadata } from './build-shared.mjs'
+ * @import { EnginePathInfo, ExampleMetadata } from './build-examples.mjs'
  * @import { ExampleConfig } from './example-source.mjs'
  */
 
@@ -450,6 +451,25 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
         );
         sendText(res, await server.transformIndexHtml(req.url ?? '/', dev), 'text/html; charset=utf-8');
         return true;
+    }
+
+    // /share/<slug>/ or /share/<slug>/index.html — render the share template inline so dev
+    // mode can serve the same crawler-friendly wrapper as prod without writing dist/.
+    if (url.startsWith('/share/')) {
+        const slug = url.slice('/share/'.length).replace(/\/(index\.html)?$/, '');
+        const item = slug ? getExample(slug) : undefined;
+        if (item) {
+            const host = req.headers.host ?? 'localhost';
+            const proto = req.headers['x-forwarded-proto'] ?? (req.socket?.encrypted ? 'https' : 'http');
+            const origin = `${proto}://${host}`;
+            const html = await createShareHtml(item, origin);
+            const dev = html.replace(
+                /<script src="\/index\.js"><\/script>/,
+                '<script type="module" src="/src/app/index.mjs"></script>'
+            );
+            sendText(res, await server.transformIndexHtml(req.url ?? '/', dev), 'text/html; charset=utf-8');
+            return true;
+        }
     }
 
     if (ROOT_FILES[url]) {

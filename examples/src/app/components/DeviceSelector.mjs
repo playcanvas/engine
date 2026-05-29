@@ -8,6 +8,7 @@ import {
     DEVICETYPE_NULL
 } from '../constants.mjs';
 import { jsx } from '../jsx.mjs';
+import { patchState, readState } from '../url-state.mjs';
 
 /** @import { DeviceEvent } from '../events.js' */
 
@@ -104,6 +105,7 @@ class DeviceSelector extends TypedComponent {
      */
     get preferredGraphicsDevice() {
         return validDeviceType(window.preferredGraphicsDevice) ??
+            validDeviceType(readState().device) ??
             validDeviceType(localStorage.getItem('preferredGraphicsDevice')) ??
             DEVICETYPE_WEBGL2;
     }
@@ -173,6 +175,7 @@ class DeviceSelector extends TypedComponent {
     onSetPreferredGraphicsDevice(value) {
         this.mergeState({ disabledOptions: null, activeDevice: value });
         this.preferredGraphicsDevice = value;
+        patchState({ device: value });
         this.updateMiniStats(value);
         this.props.onSelect(value);
     }

@@ -7,12 +7,12 @@ import fs from 'node:fs';
 import { launch } from 'puppeteer';
 import sharp from 'sharp';
 
-import { loadExampleMetaData } from './build-shared.mjs';
+import { loadExampleMetaData } from './build-examples.mjs';
 
 /**
  * @import { ChildProcess } from 'node:child_process'
  * @import { Browser, Page } from 'puppeteer'
- * @import { ExampleMetadata } from './build-shared.mjs'
+ * @import { ExampleMetadata } from './build-examples.mjs'
  */
 
 /**
