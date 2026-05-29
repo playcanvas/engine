@@ -11,12 +11,6 @@ import { data, deviceType } from 'examples/context';
 import { GizmoHandler } from './gizmo-handler.mjs';
 import { Selector } from './selector.mjs';
 
-const GIZMO_SNAP_DEFAULTS = {
-    translate: 1,
-    rotate: 5,
-    scale: 1
-};
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -172,8 +166,6 @@ light.setEulerAngles(0, 0, -60);
 
 // gizmos
 let skipObserverFire = false;
-/** @type {number | null} */
-let snapIncrementOverride = null;
 const gizmoHandler = new GizmoHandler(camera.camera);
 const setGizmoControls = () => {
     skipObserverFire = true;
@@ -181,6 +173,7 @@ const setGizmoControls = () => {
         type: gizmoHandler.type,
         size: gizmoHandler.gizmo.size,
         snapIncrement: gizmoHandler.gizmo.snapIncrement,
+        colorAlpha: gizmoHandler.gizmo.colorAlpha,
         coordSpace: gizmoHandler.gizmo.coordSpace
     });
     skipObserverFire = false;
@@ -314,28 +307,11 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 return;
             }
             if (key === 'type') {
-                const snapIncrement = snapIncrementOverride;
                 gizmoHandler.switch(value);
-                const defaultSnapIncrement = GIZMO_SNAP_DEFAULTS[gizmoHandler.type];
-                gizmoHandler.gizmo.snapIncrement = defaultSnapIncrement;
-                skipObserverFire = true;
-                data.set('gizmo.snapIncrement', defaultSnapIncrement, false, true, true);
-                data.set('gizmo.coordSpace', gizmoHandler.gizmo.coordSpace, false, true, true);
-                if (snapIncrement !== null && snapIncrement !== defaultSnapIncrement) {
-                    snapIncrementOverride = snapIncrement;
-                    gizmoHandler.gizmo.snapIncrement = snapIncrement;
-                    data.set('gizmo.snapIncrement', snapIncrement);
-                } else {
-                    snapIncrementOverride = null;
-                }
-                skipObserverFire = false;
+                setGizmoControls();
                 return;
             }
             gizmoHandler.gizmo[key] = value;
-            if (key === 'snapIncrement') {
-                const defaultSnapIncrement = GIZMO_SNAP_DEFAULTS[gizmoHandler.type];
-                snapIncrementOverride = value === defaultSnapIncrement ? null : value;
-            }
             break;
         }
         case 'grid': {

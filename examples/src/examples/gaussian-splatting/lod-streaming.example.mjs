@@ -509,6 +509,7 @@ assetListLoader.load(async () => {
         }
     };
 
+    // Initial load (use URL from hash params if provided)
     await loadGsplat(paramUrl || null);
 
     data.on('lodPreset:set', applyPreset);
