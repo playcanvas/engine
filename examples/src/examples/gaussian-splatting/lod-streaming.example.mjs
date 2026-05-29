@@ -509,8 +509,9 @@ assetListLoader.load(async () => {
         }
     };
 
-    // Initial load (use URL from hash params if provided)
-    await loadGsplat(paramUrl || null);
+    // Initial load — use the observer's current url, which is paramUrl from the
+    // hash query if set, or the share-URL state value applied during app.start().
+    await loadGsplat(data.get('url') || null);
 
     data.on('lodPreset:set', applyPreset);
 
