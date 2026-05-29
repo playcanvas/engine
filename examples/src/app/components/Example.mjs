@@ -237,9 +237,6 @@ class Example extends TypedComponent {
     /** @type {ReturnType<typeof setTimeout> | null} */
     _settleTimer = null;
 
-    /** @type {((e: Event) => void) | null} */
-    _earlyCaptureHandler = null;
-
     _applying = 0;
 
     /**
@@ -720,8 +717,7 @@ class Example extends TypedComponent {
     /**
      * Apply URL-provided control overrides to the observer and arm the settle window.
      * Baseline is captured once at the end of the window so async-init `data.set` calls
-     * don't pollute it — or as soon as the user touches the controls panel, whichever
-     * comes first, so user input during the window isn't folded into the baseline.
+     * don't pollute it.
      *
      * @param {Observer} observer - Example observer.
      */
@@ -731,16 +727,10 @@ class Example extends TypedComponent {
         flattenLeaves(readState().controls, '', flat);
         this._loadControls = flat;
         this._baseline = {};
-        this._clearSettle();
+        if (this._settleTimer) {
+            clearTimeout(this._settleTimer);
+        }
         this._settleTimer = setTimeout(this._captureBaseline, SETTLE_WINDOW_MS);
-        this._earlyCaptureHandler = (e) => {
-            const target = /** @type {Node | null} */ (e.target);
-            if (target && document.getElementById('controlPanel')?.contains(target)) {
-                this._captureBaseline();
-            }
-        };
-        document.addEventListener('pointerdown', this._earlyCaptureHandler, true);
-        document.addEventListener('focusin', this._earlyCaptureHandler, true);
         this._applying++;
         for (const path of Object.keys(this._loadControls)) {
             if (observer.has(path)) {
@@ -750,20 +740,8 @@ class Example extends TypedComponent {
         this._applying--;
     }
 
-    _clearSettle() {
-        if (this._settleTimer !== null) {
-            clearTimeout(this._settleTimer);
-            this._settleTimer = null;
-        }
-        if (this._earlyCaptureHandler) {
-            document.removeEventListener('pointerdown', this._earlyCaptureHandler, true);
-            document.removeEventListener('focusin', this._earlyCaptureHandler, true);
-            this._earlyCaptureHandler = null;
-        }
-    }
-
     _captureBaseline() {
-        this._clearSettle();
+        this._settleTimer = null;
         const { observer } = this.state;
         if (!observer) {
             return;
@@ -781,7 +759,10 @@ class Example extends TypedComponent {
         if (!observer) {
             this._baseline = {};
             this._loadControls = {};
-            this._clearSettle();
+            if (this._settleTimer) {
+                clearTimeout(this._settleTimer);
+                this._settleTimer = null;
+            }
         }
         if (observer) {
             this._observerHandle = observer.on('*:set', this._handleControlSet);
