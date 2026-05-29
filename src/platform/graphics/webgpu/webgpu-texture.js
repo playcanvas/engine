@@ -535,13 +535,17 @@ class WebgpuTexture {
             premultipliedAlpha: this.texture._premultiplyAlpha
         };
 
+        // texture dimensions at the specified mip level
+        const width = TextureUtils.calcLevelDimension(this.texture.width, mipLevel);
+        const height = TextureUtils.calcLevelDimension(this.texture.height, mipLevel);
+
         // submit existing scheduled commands to the queue before copying to preserve the order
         device.submit();
 
         Debug.trace(TRACEID_RENDER_QUEUE, `ELEMENT-TO-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
 
-        // scale the element's rendered image to the texture dimensions
-        device.wgpu.queue.copyElementImageToTexture(element, this.desc.size.width, this.desc.size.height, dst);
+        // scale the element's rendered image to the mip level's dimensions
+        device.wgpu.queue.copyElementImageToTexture(element, width, height, dst);
     }
 
     uploadTypedArrayData(device, data, mipLevel, index) {
