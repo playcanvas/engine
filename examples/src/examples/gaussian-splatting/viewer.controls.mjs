@@ -25,6 +25,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: 3, t: 'Compute' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Anti-alias' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.antialias' }
+                })
             )
         ),
         jsx(

@@ -106,9 +106,10 @@ class GSplatProjector {
     binWeightsUtil;
 
     /**
-     * Lazily-created projector compute variants keyed by `radial|pick|fisheye`
-     * combination (see `_projectorKey`). Up to 8 variants exist; only the
-     * combinations actually needed by the running app are compiled.
+     * Lazily-created projector compute variants keyed by `radial|pick|fisheye|aa`
+     * combination (see `_projectorKey`). AA is mutually exclusive with pick, so up to
+     * 12 variants exist; only the combinations actually needed by the running app are
+     * compiled.
      *
      * @type {Map<string, Compute>}
      */
@@ -303,11 +304,12 @@ class GSplatProjector {
      * @param {boolean} radialSort - Radial vs linear sort.
      * @param {boolean} pickMode - Pick output mode.
      * @param {boolean} fisheyeMode - Fisheye projection mode.
+     * @param {boolean} antiAlias - Anti-aliasing opacity compensation mode.
      * @returns {string} The cache key.
      * @private
      */
-    _projectorKey(radialSort, pickMode, fisheyeMode) {
-        return `${radialSort ? 'r' : 'l'}${pickMode ? 'p' : ''}${fisheyeMode ? 'f' : ''}`;
+    _projectorKey(radialSort, pickMode, fisheyeMode, antiAlias) {
+        return `${radialSort ? 'r' : 'l'}${pickMode ? 'p' : ''}${fisheyeMode ? 'f' : ''}${antiAlias ? 'a' : ''}`;
     }
 
     /**
@@ -317,10 +319,12 @@ class GSplatProjector {
      * @param {boolean} radialSort - Whether to compile the RADIAL_SORT variant.
      * @param {boolean} pickMode - Whether to write pcId into the cache for picking.
      * @param {boolean} fisheyeMode - Whether to compile the GSPLAT_FISHEYE variant.
+     * @param {boolean} antiAlias - Whether to compile the GSPLAT_AA variant (bakes the
+     * anti-aliasing opacity compensation into the cached alpha).
      * @returns {Compute} The created compute instance.
      * @private
      */
-    _createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode) {
+    _createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias) {
         const device = this.device;
         const wbFormat = workBuffer.format;
 
@@ -360,6 +364,9 @@ class GSplatProjector {
         if (fisheyeMode) {
             cdefines.set('GSPLAT_FISHEYE', '');
         }
+        if (antiAlias) {
+            cdefines.set('GSPLAT_AA', '');
+        }
 
         // Format-specific defines mirroring the compute renderer (compute-gsplat-local-renderer.js).
         const colorStream = wbFormat.getStream('dataColor');
@@ -367,7 +374,7 @@ class GSplatProjector {
             cdefines.set('GSPLAT_COLOR_FLOAT', '');
         }
 
-        const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}`;
+        const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}${antiAlias ? 'Aa' : ''}`;
 
         const ubFormat = fisheyeMode ?
             this._projectorUniformBufferFormatFisheye :
@@ -395,20 +402,21 @@ class GSplatProjector {
      * @param {boolean} radialSort - Whether to use the radial sort variant.
      * @param {boolean} [pickMode] - Whether to use the pick-output variant.
      * @param {boolean} [fisheyeMode] - Whether to use the fisheye projection variant.
+     * @param {boolean} [antiAlias] - Whether to use the anti-aliasing variant.
      * @returns {Compute} The projector compute instance.
      * @private
      */
-    _getProjectorCompute(workBuffer, radialSort, pickMode = false, fisheyeMode = false) {
+    _getProjectorCompute(workBuffer, radialSort, pickMode = false, fisheyeMode = false, antiAlias = false) {
         const wbFormat = workBuffer.format;
         if (this._formatVersion !== wbFormat.extraStreamsVersion) {
             this._destroyProjectorComputes();
             this._formatVersion = wbFormat.extraStreamsVersion;
         }
 
-        const key = this._projectorKey(radialSort, pickMode, fisheyeMode);
+        const key = this._projectorKey(radialSort, pickMode, fisheyeMode, antiAlias);
         let compute = this._projectorComputes.get(key);
         if (!compute) {
-            compute = this._createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode);
+            compute = this._createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias);
             this._projectorComputes.set(key, compute);
         }
         return compute;
@@ -461,6 +469,9 @@ class GSplatProjector {
      * @param {import('../graphics/fisheye-projection.js').FisheyeProjection} [params.fisheyeProj] -
      * Fisheye projection state. When `fisheyeProj.enabled` is true the projector picks the
      * GSPLAT_FISHEYE variant and writes NDC-style clip data; otherwise the linear path runs.
+     * @param {boolean} [params.antiAlias] - Whether to bake anti-aliasing opacity
+     * compensation into the cached alpha. Ignored in pick mode (picking only gates on a
+     * binary opacity threshold), which keeps the projector variant count down.
      */
     dispatch(params) {
         const {
@@ -469,10 +480,15 @@ class GSplatProjector {
             alphaClip, minPixelSize, minContribution,
             viewportWidth, viewportHeight, flipY,
             pickMode = false,
-            fisheyeProj
+            fisheyeProj,
+            antiAlias = false
         } = params;
 
         const fisheyeMode = !!fisheyeProj?.enabled;
+
+        // AA only matters for the forward color path; skip it for picking to avoid
+        // doubling the projector variant count.
+        const aaMode = antiAlias && !pickMode;
 
         this._ensureCapacity(totalCapacity);
 
@@ -481,7 +497,7 @@ class GSplatProjector {
         // workgroups run their atomicAdds.
         this.renderCounter.clear();
 
-        const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode);
+        const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, aaMode);
 
         // Camera position / forward (camera Z basis, matching cpu-sort path).
         const cameraPos = cameraNode.getPosition();

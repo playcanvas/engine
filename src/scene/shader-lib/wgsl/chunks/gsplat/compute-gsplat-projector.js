@@ -190,7 +190,13 @@ fn main(
         #else
             let color = getColor();
             rgb = max(color, vec3f(0.0));
-            alpha = opacity;
+            #if GSPLAT_AA
+                // Bake the AA opacity compensation into the cached alpha (the hybrid VS
+                // reads it pre-modulated). Only compiled for the non-pick variant.
+                alpha = opacity * proj.aaFactor;
+            #else
+                alpha = opacity;
+            #endif
         #endif
 
         valid = true;
