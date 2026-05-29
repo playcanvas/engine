@@ -6,6 +6,7 @@ import * as languages from '../../monaco/languages/index.mjs';
 import { playcanvasTheme } from '../../monaco/theme.mjs';
 import { jsRules } from '../../monaco/tokenizer-rules.mjs';
 import { pcTypes } from '../../paths.mjs';
+import { getSelectedFile, patchState } from '../../url-state.mjs';
 
 /**
  * @import { Monaco } from '@monaco-editor/react'
@@ -63,8 +64,10 @@ class CodeEditorBase extends TypedComponent {
      */
     _handleExampleLoad(event) {
         const { files } = event.detail;
+        const selectedFile = getSelectedFile(files);
         this._setDirty(false);
-        this.mergeState({ files, selectedFile: 'example.mjs' });
+        this.mergeState({ files, selectedFile });
+        patchState({ ui: { selectedFile } });
     }
 
     _handleExampleLoading() {

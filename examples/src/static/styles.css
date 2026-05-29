@@ -1161,6 +1161,161 @@ body {
     background-color: #F60;
 }
 
+.share-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.share-dialog {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 420px;
+    padding: 16px 20px 20px;
+    border-radius: 6px;
+    background-color: rgba(54, 67, 70, 0.95);
+    color: #f2f2f2;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    font-size: 13px;
+}
+
+.share-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.share-dialog-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f2f2f2;
+}
+
+.share-dialog-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #c7ced1;
+    cursor: pointer;
+}
+
+.share-dialog-close:hover {
+    color: #f2f2f2;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.share-dialog-socials {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 4px 0 16px;
+}
+
+.share-dialog-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: opacity 0.12s ease;
+}
+
+.share-dialog-social svg {
+    width: 18px;
+    height: 18px;
+}
+
+.share-dialog-social:hover {
+    opacity: 0.85;
+}
+
+.share-dialog-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    color: #c7ced1;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+}
+
+.share-dialog-divider::before,
+.share-dialog-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: #4a5a5f;
+}
+
+.share-dialog-copy {
+    display: flex;
+    gap: 8px;
+}
+
+.share-dialog-input {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0 10px;
+    height: 30px;
+    border: 1px solid #4a5a5f;
+    border-radius: 4px;
+    background-color: #20292b;
+    color: #f2f2f2;
+    font-size: 12px;
+    font-family: inherit;
+}
+
+.share-dialog-input:focus {
+    outline: none;
+    border-color: #F60;
+}
+
+.share-dialog-copy-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #F60;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.share-dialog-copy-button:hover {
+    background-color: #ff7a1a;
+}
+
+.share-dialog-copy-button.copied {
+    background-color: #4a5a5f;
+}
+
 #menu #showCreditsButton {
     --credits-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 1.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17Z'/%3E%3Cpath d='M12.5 7a5 5 0 1 0 0 10c1.7 0 3.2-.8 4-2.2l-1.7-1c-.5.9-1.4 1.4-2.3 1.4a3 3 0 1 1 0-6c.9 0 1.8.5 2.3 1.4l1.7-1A5 5 0 0 0 12.5 7z'/%3E%3C/svg%3E");
 }
