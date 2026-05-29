@@ -1,23 +1,12 @@
 import { Button, Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 
+import { ShareDialog } from './ShareDialog.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { logo } from '../paths.mjs';
-import { buildShareUrl, patchState, readState } from '../url-state.mjs';
+import { buildShareUrl, getHashPath, patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
-
-/**
- * @param {() => Promise<any>} task - Async task to execute.
- * @returns {Promise<[any, any]>} Error and result tuple.
- */
-const tryCatchAsync = async (task) => {
-    try {
-        return [null, await task()];
-    } catch (err) {
-        return [err, null];
-    }
-};
 
 /**
  * @typedef {object} Props
@@ -32,7 +21,9 @@ const tryCatchAsync = async (task) => {
  * @property {boolean} showMiniStats - Show MiniStats state.
  * @property {boolean} fullscreen - Fullscreen state.
  * @property {boolean} hasCredits - Whether the loaded example has any credits.
- * @property {boolean} shareCopied - True briefly after the share URL is copied to clipboard.
+ * @property {boolean} shareDialogOpen - Whether the share dialog is visible.
+ * @property {string} shareUrl - URL displayed in the share dialog.
+ * @property {string} shareTitle - Title used for social share intents.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -46,12 +37,11 @@ class Menu extends TypedComponent {
             showMiniStats: typeof ui.miniStats === 'boolean' ? ui.miniStats : getLayout() === 'desktop',
             fullscreen: typeof ui.fullscreen === 'boolean' ? ui.fullscreen : false,
             hasCredits: false,
-            shareCopied: false
+            shareDialogOpen: false,
+            shareUrl: '',
+            shareTitle: ''
         };
     })();
-
-    /** @type {ReturnType<typeof setTimeout> | null} */
-    _shareCopiedTimer = null;
 
     mouseTimeout = null;
 
@@ -65,7 +55,8 @@ class Menu extends TypedComponent {
         this._handleMiniStats = this._handleMiniStats.bind(this);
         this.toggleMiniStats = this.toggleMiniStats.bind(this);
         this.toggleCredits = this.toggleCredits.bind(this);
-        this.copyShareUrl = this.copyShareUrl.bind(this);
+        this.openShareDialog = this.openShareDialog.bind(this);
+        this.closeShareDialog = this.closeShareDialog.bind(this);
     }
 
     toggleCredits() {
@@ -152,27 +143,22 @@ class Menu extends TypedComponent {
         document.removeEventListener('keydown', this._handleKeyDown);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
         window.removeEventListener('miniStats', this._handleMiniStats);
-        if (this._shareCopiedTimer) {
-            clearTimeout(this._shareCopiedTimer);
-            this._shareCopiedTimer = null;
-        }
     }
 
-    async copyShareUrl() {
-        const url = buildShareUrl();
-        const [err] = await tryCatchAsync(() => navigator.clipboard.writeText(url));
-        if (err) {
-            console.error('Failed to copy share URL', err);
-            return;
-        }
-        this.setState({ shareCopied: true });
-        if (this._shareCopiedTimer) {
-            clearTimeout(this._shareCopiedTimer);
-        }
-        this._shareCopiedTimer = setTimeout(() => {
-            this._shareCopiedTimer = null;
-            this.setState({ shareCopied: false });
-        }, 1500);
+    openShareDialog() {
+        const path = getHashPath().replace(/^\//, '');
+        const parts = path.split('/').filter(Boolean);
+        const exampleName = (parts[1] ?? parts[0] ?? '').replace(/-/g, ' ');
+        const title = exampleName ? `${exampleName} - PlayCanvas Examples` : 'PlayCanvas Examples';
+        this.setState({
+            shareDialogOpen: true,
+            shareUrl: buildShareUrl(),
+            shareTitle: title
+        });
+    }
+
+    closeShareDialog() {
+        this.setState({ shareDialogOpen: false });
     }
 
     /**
@@ -215,7 +201,7 @@ class Menu extends TypedComponent {
     }
 
     render() {
-        const { showMiniStats, hasCredits, shareCopied } = this.state;
+        const { showMiniStats, hasCredits, shareDialogOpen, shareUrl, shareTitle } = this.state;
         const { layout, showCredits } = this.props;
         return jsx(
             Container,
@@ -237,9 +223,9 @@ class Menu extends TypedComponent {
                 jsx('button', {
                     type: 'button',
                     id: 'shareButton',
-                    className: `pcui-button${shareCopied ? ' selected' : ''}`,
-                    onClick: this.copyShareUrl,
-                    'aria-label': 'Copy share link',
+                    className: 'pcui-button',
+                    onClick: this.openShareDialog,
+                    'aria-label': 'Share this page',
                     style: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }
                 }, jsx('svg', {
                     viewBox: '0 0 24 24',
@@ -250,15 +236,13 @@ class Menu extends TypedComponent {
                     strokeLinejoin: 'round',
                     width: 20,
                     height: 20
-                }, ...(shareCopied ? [
-                    jsx('polyline', { key: 'check', points: '20 6 9 17 4 12' })
-                ] : [
-                    jsx('circle', { key: 'c1', cx: 18, cy: 5, r: 3 }),
-                    jsx('circle', { key: 'c2', cx: 6, cy: 12, r: 3 }),
-                    jsx('circle', { key: 'c3', cx: 18, cy: 19, r: 3 }),
-                    jsx('line', { key: 'l1', x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
-                    jsx('line', { key: 'l2', x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
-                ]))),
+                },
+                jsx('circle', { cx: 18, cy: 5, r: 3 }),
+                jsx('circle', { cx: 6, cy: 12, r: 3 }),
+                jsx('circle', { cx: 18, cy: 19, r: 3 }),
+                jsx('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+                jsx('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
+                )),
                 jsx(Button, {
                     icon: 'E149',
                     id: 'showMiniStatsButton',
@@ -278,7 +262,12 @@ class Menu extends TypedComponent {
                     id: 'fullscreen-button',
                     onClick: this.toggleFullscreen.bind(this)
                 })
-            )
+            ),
+            shareDialogOpen && jsx(ShareDialog, {
+                url: shareUrl,
+                title: shareTitle,
+                onClose: this.closeShareDialog
+            })
         );
     }
 }
