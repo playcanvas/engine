@@ -1,13 +1,15 @@
 // @config
 //
-// Renders live HTML content directly as a WebGL texture via the
-// {accent:HTML-in-Canvas} API ({accent:texElementImage2D}). Includes animated
-// CSS gradients, text glow, and a pulsing circle — all driven by standard CSS.
+// Renders live HTML content directly as a GPU texture via the
+// {accent:HTML-in-Canvas} API, supported on both {accent:WebGL} and
+// {accent:WebGPU}. Includes animated CSS gradients, text glow, and a pulsing
+// circle — all driven by standard CSS.
 
 //
 // This example demonstrates the HTML-in-Canvas API: a styled HTML element with
 // CSS animations is appended to a canvas marked with the "layoutsubtree"
-// attribute, then captured into a WebGL texture via texElementImage2D.
+// attribute, then captured into a GPU texture (texElementImage2D on WebGL,
+// copyElementImageToTexture on WebGPU).
 //
 // Fallback: when device.supportsHtmlTextures is false, a static 2D canvas with
 // hand-drawn placeholder graphics is used as the texture source instead.
