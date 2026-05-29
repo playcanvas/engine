@@ -1,20 +1,18 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script1: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    script2: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/utils/cubemap-renderer.js` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` })
+    script1: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    script2: new pc.Asset('script', 'script', { url: './scripts/utils/cubemap-renderer.js' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -147,7 +145,7 @@ assetListLoader.load(() => {
         'style',
         'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
     );
-    video.src = `${rootPath}/static/assets/video/SampleVideo_1280x720_1mb.mp4`;
+    video.src = './assets/video/SampleVideo_1280x720_1mb.mp4';
     document.body.append(video);
     video.addEventListener('canplaythrough', () => {
         videoTexture.setSource(video);
@@ -289,7 +287,7 @@ assetListLoader.load(() => {
         farClip: 500
     });
 
-    // Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly useable
+    // Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly usable
     // as a lighting source for envAtlas generation
     // Position it in the center of the room.
     probe.script.create('cubemapRenderer', {
@@ -359,5 +357,3 @@ assetListLoader.load(() => {
         sphereMaterial.update();
     });
 });
-
-export { app };

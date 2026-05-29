@@ -127,22 +127,13 @@ class GraphNode extends EventHandler {
     tags = new Tags(this);
 
     // Local space properties of transform (only first 3 are settable by the user)
-    /**
-     * @type {Vec3}
-     * @private
-     */
+    /** @private */
     localPosition = new Vec3();
 
-    /**
-     * @type {Quat}
-     * @private
-     */
+    /** @private */
     localRotation = new Quat();
 
-    /**
-     * @type {Vec3}
-     * @private
-     */
+    /** @private */
     localScale = new Vec3(1, 1, 1);
 
     /**
@@ -152,22 +143,13 @@ class GraphNode extends EventHandler {
     localEulerAngles = new Vec3(); // Only calculated on request
 
     // World space properties of transform
-    /**
-     * @type {Vec3}
-     * @private
-     */
+    /** @private */
     position = new Vec3();
 
-    /**
-     * @type {Quat}
-     * @private
-     */
+    /** @private */
     rotation = new Quat();
 
-    /**
-     * @type {Vec3}
-     * @private
-     */
+    /** @private */
     eulerAngles = new Vec3();
 
     /**
@@ -176,22 +158,13 @@ class GraphNode extends EventHandler {
      */
     _scale = null;
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     localTransform = new Mat4();
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _dirtyLocal = false;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _aabbVer = 0;
 
     /**
@@ -199,21 +172,14 @@ class GraphNode extends EventHandler {
      * automatically freezes and unfreezes objects whenever required. Segregating dynamic and
      * stationary nodes into subhierarchies allows to reduce sync time significantly.
      *
-     * @type {boolean}
      * @private
      */
     _frozen = false;
 
-    /**
-     * @type {Mat4}
-     * @private
-     */
+    /** @private */
     worldTransform = new Mat4();
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _dirtyWorld = false;
 
     /**
@@ -222,21 +188,14 @@ class GraphNode extends EventHandler {
      * transform is not negatively scaled. If the value is -1, the world transform is negatively
      * scaled.
      *
-     * @type {number}
      * @private
      */
     _worldScaleSign = 0;
 
-    /**
-     * @type {Mat3}
-     * @private
-     */
+    /** @private */
     _normalMatrix = new Mat3();
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _dirtyNormal = true;
 
     /**
@@ -269,17 +228,13 @@ class GraphNode extends EventHandler {
      */
     _children = [];
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     _graphDepth = 0;
 
     /**
      * Represents enabled state of the entity. If the entity is disabled, the entity including all
      * children are excluded from updates.
      *
-     * @type {boolean}
      * @private
      */
     _enabled = true;
@@ -288,15 +243,11 @@ class GraphNode extends EventHandler {
      * Represents enabled state of the entity in the hierarchy. It's true only if this entity and
      * all parent entities all the way to the scene's root are enabled.
      *
-     * @type {boolean}
      * @private
      */
     _enabledInHierarchy = false;
 
-    /**
-     * @type {boolean}
-     * @ignore
-     */
+    /** @ignore */
     scaleCompensation = false;
 
     /**
@@ -590,7 +541,7 @@ class GraphNode extends EventHandler {
      * string then it represents the name of a field or a method of the node. If this is the name
      * of a field then the value passed as the second argument will be checked for equality. If
      * this is the name of a function then the return value of the function will be checked for
-     * equality against the valued passed as the second argument to this function.
+     * equality against the value passed as the second argument to this function.
      * @param {*} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
@@ -626,10 +577,10 @@ class GraphNode extends EventHandler {
      * findOne. If it's a string then it represents the name of a field or a method of the node. If
      * this is the name of a field then the value passed as the second argument will be checked for
      * equality. If this is the name of a function then the return value of the function will be
-     * checked for equality against the valued passed as the second argument to this function.
+     * checked for equality against the value passed as the second argument to this function.
      * @param {*} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
-     * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+     * @returns {GraphNode|null} A graph node that matches the search criteria. Returns null if no
      * node is found.
      * @example
      * // Find the first node that is called 'head' and has a model component
@@ -647,23 +598,23 @@ class GraphNode extends EventHandler {
 
     /**
      * Return all graph nodes that satisfy the search query. Query can be simply a string, or comma
-     * separated strings, to have inclusive results of assets that match at least one query. A
+     * separated strings, to have inclusive results of graph nodes that match at least one query. A
      * query that consists of an array of tags can be used to match graph nodes that have each tag
-     * of array.
+     * of the array.
      *
      * @param {...*} query - Name of a tag or array of tags.
      * @returns {GraphNode[]} A list of all graph nodes that match the query.
      * @example
-     * // Return all graph nodes that tagged by `animal`
+     * // Return all graph nodes tagged with `animal`
      * const animals = node.findByTag("animal");
      * @example
-     * // Return all graph nodes that tagged by `bird` OR `mammal`
+     * // Return all graph nodes tagged with `bird` OR `mammal`
      * const birdsAndMammals = node.findByTag("bird", "mammal");
      * @example
-     * // Return all assets that tagged by `carnivore` AND `mammal`
+     * // Return all graph nodes tagged with `carnivore` AND `mammal`
      * const meatEatingMammals = node.findByTag(["carnivore", "mammal"]);
      * @example
-     * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
+     * // Return all graph nodes tagged with (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
      * const meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
     findByTag(...query) {
@@ -687,7 +638,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the first node found in the graph with the name. The search is depth first.
      *
-     * @param {string} name - The name of the graph.
+     * @param {string} name - The name of the node.
      * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
      * null if no node is found.
      */

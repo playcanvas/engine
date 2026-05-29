@@ -1,16 +1,43 @@
 <!-- N.B. All single quote strings starting with '@' and are in all caps denote placeholders for replacement code  -->
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="refresh" content="0; url='/#/@PATH'" />
-        <meta name="twitter:card" content="photo" />
-        <meta name="twitter:site" content="@playcanvas" />
-        <meta name="twitter:title" content="@TITLE" />
-        <meta name="twitter:description" content="A PlayCanvas engine example" />
-        <meta name="twitter:image" content="https://playcanvas.github.io/thumbnails/@THUMB.webp" />
-        <meta name="twitter:url" content="https://playcanvas.github.io/@PATH" />
-    </head>
-    <body>
-        <p>Please follow <a href="/#/@PATH">this link</a>.</p>
-    </body>
+<head>
+    <title>PlayCanvas Examples — @TITLE</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#171E20">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="PlayCanvas Examples">
+
+    <!-- crawler meta: served when fetched non-interactively (twitter, slack, discord, etc.) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@playcanvas" />
+    <meta name="twitter:title" content="PlayCanvas Examples — @TITLE" />
+    <meta name="twitter:description" content="A PlayCanvas engine example" />
+    <meta name="twitter:image" content="@ORIGIN/thumbnails/@THUMB.webp" />
+    <meta name="twitter:url" content="@ORIGIN/share/@SLUG/" />
+    <meta property="og:title" content="PlayCanvas Examples — @TITLE" />
+    <meta property="og:description" content="A PlayCanvas engine example" />
+    <meta property="og:image" content="@ORIGIN/thumbnails/@THUMB.webp" />
+    <meta property="og:url" content="@ORIGIN/share/@SLUG/" />
+
+    <!-- absolute paths so assets resolve from /share/<slug>/ -->
+    <link rel="icon" type="image/png" href="/playcanvas-logo.png" />
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/icons/playcanvas-180.png">
+    <link rel="stylesheet" href="/styles.css">
+
+    <!-- swap to canonical SPA url before the bundle boots; forward ?s= state if present -->
+    <script>
+        (function () {
+            var s = new URLSearchParams(window.location.search).get('s');
+            history.replaceState(null, '', '/#/@PATH' + (s ? '?s=' + s : ''));
+        })();
+    </script>
+</head>
+<body>
+    <div id='app'></div>
+    <script src="/index.js"></script>
+</body>
 </html>

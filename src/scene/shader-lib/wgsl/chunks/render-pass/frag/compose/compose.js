@@ -11,20 +11,21 @@ export default /* wgsl */`
     #include "composeDofPS"
     #include "composeSsaoPS"
     #include "composeGradingPS"
+    #include "composeColorEnhancePS"
     #include "composeVignettePS"
     #include "composeFringingPS"
     #include "composeCasPS"
     #include "composeColorLutPS"
 
+    #include "composeDeclarationsPS"
+
     @fragment
     fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+
+        #include "composeMainStartPS"
+
         var output: FragmentOutput;
         var uv = uv0;
-
-        // TAA pass renders upside-down on WebGPU, flip it here
-        #ifdef TAA
-            uv.y = 1.0 - uv.y;
-        #endif
 
         let scene = textureSampleLevel(sceneTexture, sceneTextureSampler, uv, 0.0);
         var result = scene.rgb;
@@ -54,13 +55,18 @@ export default /* wgsl */`
             result = applyBloom(result, uv0);
         #endif
 
+        // Apply Color Enhancement (shadows, highlights, vibrance)
+        #ifdef COLOR_ENHANCE
+            result = applyColorEnhance(result);
+        #endif
+
         // Apply Color Grading
         #ifdef GRADING
             result = applyGrading(result);
         #endif
 
         // Apply Tone Mapping
-        result = toneMap(result);
+        result = toneMap(max(vec3f(0.0), result));
 
         // Apply Color LUT after tone mapping, in LDR space
         #ifdef COLOR_LUT
@@ -71,6 +77,8 @@ export default /* wgsl */`
         #ifdef VIGNETTE
             result = applyVignette(result, uv);
         #endif
+
+        #include "composeMainEndPS"
 
         // Debug output handling in one centralized location
         #ifdef DEBUG_COMPOSE

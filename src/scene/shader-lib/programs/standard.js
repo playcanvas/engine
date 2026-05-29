@@ -53,7 +53,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     }
 
     /**
-     * Get the code with which to to replace '*_TEXTURE_UV' in the map shader functions.
+     * Get the code with which to replace '*_TEXTURE_UV' in the map shader functions.
      *
      * @param {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
      * @param {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
@@ -88,11 +88,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         return expression;
     }
 
-    _validateMapChunk(propName, chunkName, chunks) {
+    _validateMapChunk(code, propName, chunkName, chunks) {
         Debug.call(() => {
-            // strip comments from the chunk
-            const code = chunks.get(chunkName).replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
-
             const requiredChangeStrings = [];
 
             // Helper function to add a formatted change string if the old syntax is found
@@ -128,7 +125,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
 
             if (requiredChangeStrings.length > 0) {
-                Debug.errorOnce(`Shader chunk ${chunkName} is in no longer compatible format. Please make these replacements to bring it to the current version:\n${requiredChangeStrings.join('\n')}`, { code: code });
+                Debug.errorOnce(`Shader chunk ${chunkName} is no longer in a compatible format. Please make these replacements to bring it to the current version:\n${requiredChangeStrings.join('\n')}`, { code: code });
             }
         });
     }
@@ -139,7 +136,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
      * @param {Map<string, string>} fDefines - The fragment defines.
      * @param {string} propName - The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao.
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
-     * @param {object} options - The options passed into to createShaderDefinition.
+     * @param {object} options - The options passed into createShaderDefinition.
      * @param {Map<string, string>} chunks - The set of shader chunks to choose from.
      * @param {object} mapping - The mapping between chunk and sampler
      * @param {string|null} encoding - The texture's encoding
@@ -170,7 +167,16 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         // log errors if the chunk format is deprecated (format changed in engine 2.7)
         Debug.call(() => {
             if (chunkCode) {
-                this._validateMapChunk(propNameCaps, chunkName, chunks);
+                // strip comments from the chunk
+                const code = chunks.get(chunkName).replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+
+                this._validateMapChunk(code, propNameCaps, chunkName, chunks);
+
+                if (vertexColorOption) {
+                    if (code.includes('gammaCorrectInputVec3(saturate3(vVertexColor.') || code.includes('gammaCorrectInput(saturate(vVertexColor.')) {
+                        Debug.errorOnce(`Shader chunk ${chunkName} contains gamma correction code which is incompatible with vertexColorGamma=true. Please remove gamma correction calls from the chunk.`, { code: code });
+                    }
+                }
             }
         });
 

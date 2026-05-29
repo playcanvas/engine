@@ -33,6 +33,8 @@ const standardMaterialParameterTypes = {
     ..._textureParameter('diffuseDetail', true, false),
     diffuseDetailMode: 'string',
 
+    vertexColorGamma: 'boolean',
+
     specular: 'rgb',
     specularTint: 'boolean',
     ..._textureParameter('specular'),
@@ -90,6 +92,7 @@ const standardMaterialParameterTypes = {
     alphaToCoverage: 'boolean',
     alphaTest: 'number',
     alphaFade: 'number',
+    alphaDither: 'number',
     opacity: 'number',
     ..._textureParameter('opacity'),
     opacityFadesSpecular: 'boolean',

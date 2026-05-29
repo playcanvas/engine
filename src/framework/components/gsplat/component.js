@@ -1,27 +1,40 @@
-import { LAYERID_WORLD } from '../../../scene/constants.js';
+import { hashCode } from '../../../core/hash.js';
+import { LAYERID_WORLD, WORKBUFFER_UPDATE_AUTO } from '../../../scene/constants.js';
 import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js';
 import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
+import { Debug } from '../../../core/debug.js';
+import { GSplatPlacement } from '../../../scene/gsplat-unified/gsplat-placement.js';
+import { PickerId } from '../../../scene/picker-id.js';
 
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { GSplatComponentSystem } from './system.js'
+ * @import { GSplatResourceBase } from '../../../scene/gsplat/gsplat-resource-base.js'
+ * @import { ScopeId } from '../../../platform/graphics/scope-id.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
+ * @import { StorageBuffer } from '../../../platform/graphics/storage-buffer.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
  */
+
+// Appended to warnings fired when a legacy (non-unified) API is hit in unified mode.
+// Explains the default flip and the temporary workaround.
+const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unified rendering). To temporarily restore the deprecated legacy behavior, explicitly set unified=false when creating the component — note that non-unified mode will be removed in a future release.';
 
 /**
  * The GSplatComponent enables an {@link Entity} to render 3D Gaussian Splats. Splats are always
  * loaded from {@link Asset}s rather than being created programmatically. The asset type is
- * `gsplat` which are in the `.ply` file format.
+ * `gsplat` which supports multiple file formats including `.ply`, `.sog`, `.meta.json` (SOG
+ * format), and `.lod-meta.json` (streaming LOD format).
  *
- * You should never need to use the GSplatComponent constructor directly. To add an
+ * You should never need to use the GSplatComponent constructor directly. To add a
  * GSplatComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('gsplat', {
  *     asset: asset
  * });
@@ -38,9 +51,18 @@ import { Component } from '../component.js';
  *
  * Relevant Engine API examples:
  *
- * - [Loading a Splat](https://playcanvas.github.io/#/gaussian-splatting/simple)
- * - [Custom Splat Shaders](https://playcanvas.github.io/#/gaussian-splatting/multi-splat)
- * - [Splat picking](https://playcanvas.github.io/#/gaussian-splatting/picking)
+ * - [Simple Splat Loading](https://playcanvas.github.io/#/gaussian-splatting/simple)
+ * - [Global Sorting](https://playcanvas.github.io/#/gaussian-splatting/global-sorting)
+ * - [LOD](https://playcanvas.github.io/#/gaussian-splatting/lod)
+ * - [LOD Instances](https://playcanvas.github.io/#/gaussian-splatting/lod-instances)
+ * - [LOD Streaming](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming)
+ * - [LOD Streaming with Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming-sh)
+ * - [Multi-Splat](https://playcanvas.github.io/#/gaussian-splatting/multi-splat)
+ * - [Multi-View](https://playcanvas.github.io/#/gaussian-splatting/multi-view)
+ * - [Picking](https://playcanvas.github.io/#/gaussian-splatting/picking)
+ * - [Reveal Effect](https://playcanvas.github.io/#/gaussian-splatting/reveal)
+ * - [Shader Effects](https://playcanvas.github.io/#/gaussian-splatting/shader-effects)
+ * - [Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/spherical-harmonics)
  *
  * @hideconstructor
  * @category Graphics
@@ -56,10 +78,41 @@ class GSplatComponent extends Component {
     _instance = null;
 
     /**
+     * @type {GSplatPlacement|null}
+     * @private
+     */
+    _placement = null;
+
+    /**
+     * Unique identifier for this component, used by the picking system.
+     *
+     * @type {number}
+     * @private
+     */
+    _id = PickerId.get();
+
+    /**
      * @type {ShaderMaterial|null}
      * @private
      */
     _materialTmp = null;
+
+    /** @private */
+    _highQualitySH = true;
+
+    /**
+     * Base distance for the first LOD transition (LOD 0 to LOD 1).
+     *
+     * @private
+     */
+    _lodBaseDistance = 5;
+
+    /**
+     * Geometric multiplier between successive LOD distance thresholds.
+     *
+     * @private
+     */
+    _lodMultiplier = 3;
 
     /**
      * @type {BoundingBox|null}
@@ -72,6 +125,14 @@ class GSplatComponent extends Component {
      * @private
      */
     _assetReference;
+
+    /**
+     * Direct resource reference (for container splats).
+     *
+     * @type {GSplatResourceBase|null}
+     * @private
+     */
+    _resource = null;
 
     /**
      * @type {EventHandle|null}
@@ -93,6 +154,37 @@ class GSplatComponent extends Component {
 
     /** @private */
     _castShadows = false;
+
+    /**
+     * Whether to use the unified gsplat rendering. Defaults to true.
+     *
+     * @private
+     */
+    _unified = true;
+
+    /**
+     * Per-instance shader parameters. Stores objects with scopeId and data.
+     *
+     * @type {Map<string, {scopeId: ScopeId, data: *}>}
+     * @private
+     */
+    _parameters = new Map();
+
+    /**
+     * Render mode for work buffer updates.
+     *
+     * @type {number}
+     * @private
+     */
+    _workBufferUpdate = WORKBUFFER_UPDATE_AUTO;
+
+    /**
+     * Custom shader modify code for this component (object with code and pre-computed hash).
+     *
+     * @type {{ code: string, hash: number }|null}
+     * @private
+     */
+    _workBufferModifier = null;
 
     /**
      * Create a new GSplatComponent.
@@ -134,15 +226,21 @@ class GSplatComponent extends Component {
 
         // set it on meshInstance
         this._instance?.meshInstance?.setCustomAabb(this._customAabb);
+
+        // set it on placement
+        if (this._placement) {
+            this._placement.aabb = this._customAabb;
+        }
     }
 
     /**
      * Gets the custom object space bounding box for visibility culling of the attached gsplat.
+     * Returns the custom AABB if set, otherwise falls back to the resource's AABB.
      *
      * @type {BoundingBox|null}
      */
     get customAabb() {
-        return this._customAabb;
+        return this._customAabb ?? this._placement?.aabb ?? this.resource?.aabb ?? null;
     }
 
     /**
@@ -152,6 +250,11 @@ class GSplatComponent extends Component {
      * @ignore
      */
     set instance(value) {
+
+        if (this.unified) {
+            Debug.errorOnce(`GSplatComponent#instance setter is only available in legacy non-unified mode. ${UNIFIED_LEGACY_HINT}`);
+            return;
+        }
 
         // destroy existing instance
         this.destroyInstance();
@@ -181,15 +284,17 @@ class GSplatComponent extends Component {
      * @ignore
      */
     get instance() {
+        if (this.unified) {
+            Debug.warnOnce(`GSplatComponent#instance getter returns null in unified mode. ${UNIFIED_LEGACY_HINT}`);
+        }
         return this._instance;
     }
 
-    /**
-     * Sets the material used to render the gsplat.
-     *
-     * @param {ShaderMaterial} value - The material instance.
-     */
     set material(value) {
+        if (this.unified) {
+            Debug.warn(`GSplatComponent#material setter is only available in legacy non-unified mode; in unified mode use app.systems.gsplat.getMaterial(camera, layer). ${UNIFIED_LEGACY_HINT}`);
+            return;
+        }
         if (this._instance) {
             this._instance.material = value;
         } else {
@@ -197,13 +302,23 @@ class GSplatComponent extends Component {
         }
     }
 
-    /**
-     * Gets the material used to render the gsplat.
-     *
-     * @type {ShaderMaterial|null}
-     */
     get material() {
+        if (this.unified) {
+            Debug.warnOnce(`GSplatComponent#material getter returns null in unified mode; use app.systems.gsplat.getMaterial(camera, layer) instead. ${UNIFIED_LEGACY_HINT}`);
+            return null;
+        }
         return this._instance?.material ?? this._materialTmp ?? null;
+    }
+
+    set highQualitySH(value) {
+        if (value !== this._highQualitySH) {
+            this._highQualitySH = value;
+            this._instance?.setHighQualitySH(value);
+        }
+    }
+
+    get highQualitySH() {
+        return this._highQualitySH;
     }
 
     /**
@@ -215,18 +330,34 @@ class GSplatComponent extends Component {
     set castShadows(value) {
 
         if (this._castShadows !== value) {
+            const layers = this.layers;
+            const scene = this.system.app.scene;
 
-            const mi = this.instance?.meshInstance;
+            // Handle unified mode placement
+            if (this._placement) {
+                if (value) {
+                    // Add to shadow casters
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
+                        layer?.addGSplatShadowCaster(this._placement);
+                    }
+                } else {
+                    // Remove from shadow casters
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
+                        layer?.removeGSplatShadowCaster(this._placement);
+                    }
+                }
+            }
+
+            // Handle non-unified mode mesh instance
+            const mi = this._instance?.meshInstance;
 
             if (mi) {
-                const layers = this.layers;
-                const scene = this.system.app.scene;
                 if (this._castShadows && !value) {
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(this.layers[i]);
-                        if (layer) {
-                            layer.removeShadowCasters([mi]);
-                        }
+                        layer?.removeShadowCasters([mi]);
                     }
                 }
 
@@ -235,9 +366,7 @@ class GSplatComponent extends Component {
                 if (!this._castShadows && value) {
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(layers[i]);
-                        if (layer) {
-                            layer.addShadowCasters([mi]);
-                        }
+                        layer?.addShadowCasters([mi]);
                     }
                 }
             }
@@ -253,6 +382,212 @@ class GSplatComponent extends Component {
      */
     get castShadows() {
         return this._castShadows;
+    }
+
+    /**
+     * Sets the base distance for the first LOD transition (LOD 0 to LOD 1). Objects closer
+     * than this distance use the highest quality LOD. Each subsequent LOD level transitions
+     * at a progressively larger distance, controlled by {@link lodMultiplier}. Clamped to a
+     * minimum of 0.1. Defaults to 5.
+     *
+     * @type {number}
+     */
+    set lodBaseDistance(value) {
+        this._lodBaseDistance = Math.max(0.1, value);
+        if (this._placement) {
+            this._placement.lodBaseDistance = this._lodBaseDistance;
+        }
+    }
+
+    /**
+     * Gets the base distance for the first LOD transition.
+     *
+     * @type {number}
+     */
+    get lodBaseDistance() {
+        return this._lodBaseDistance;
+    }
+
+    /**
+     * Sets the multiplier between successive LOD distance thresholds. Each LOD level
+     * transitions at this factor times the previous level's distance, creating a geometric
+     * progression. Lower values keep higher quality at distance; higher values switch to
+     * coarser LODs sooner. Clamped to a minimum of 1.2 to avoid degenerate logarithmic LOD
+     * computation. LOD distances are automatically compensated for the camera's field of
+     * view — a wider FOV makes objects appear smaller on screen, so LOD switches to coarser
+     * levels sooner to match the reduced screen-space detail. Defaults to 3.
+     *
+     * @type {number}
+     */
+    set lodMultiplier(value) {
+        this._lodMultiplier = Math.max(1.2, value);
+        if (this._placement) {
+            this._placement.lodMultiplier = this._lodMultiplier;
+        }
+    }
+
+    /**
+     * Gets the geometric multiplier between successive LOD distance thresholds.
+     *
+     * @type {number}
+     */
+    get lodMultiplier() {
+        return this._lodMultiplier;
+    }
+
+    /**
+     * @type {number[]|null}
+     * @deprecated Use {@link lodBaseDistance} and {@link lodMultiplier} instead.
+     * @ignore
+     */
+    set lodDistances(value) {
+        Debug.removed('GSplatComponent#lodDistances is removed. Use lodBaseDistance and lodMultiplier instead.');
+        if (Array.isArray(value) && value.length > 0) {
+            this.lodBaseDistance = value[0];
+            this.lodMultiplier = 3;
+        }
+    }
+
+    /**
+     * @type {number[]}
+     * @deprecated Use {@link lodBaseDistance} and {@link lodMultiplier} instead.
+     * @ignore
+     */
+    get lodDistances() {
+        Debug.removed('GSplatComponent#lodDistances is removed. Use lodBaseDistance and lodMultiplier instead.');
+        return [];
+    }
+
+    /**
+     * @type {number}
+     * @deprecated Use app.scene.gsplat.splatBudget instead for global budget control.
+     * @ignore
+     */
+    set splatBudget(value) {
+        Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
+    }
+
+    /**
+     * @type {number}
+     * @deprecated Use app.scene.gsplat.splatBudget instead for global budget control.
+     * @ignore
+     */
+    get splatBudget() {
+        Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
+        return 0;
+    }
+
+    /**
+     * Sets whether to use the unified gsplat rendering.
+     *
+     * @type {boolean}
+     * @deprecated Non-unified gsplat rendering is being removed; unified rendering will be the only supported mode.
+     * @ignore
+     */
+    set unified(value) {
+        if (value === false) {
+            Debug.deprecated('GSplatComponent#unified is deprecated. Non-unified gsplat rendering will be removed in a future release; please migrate to unified rendering (the new default).');
+        }
+        if (this._unified !== value) {
+            this._unified = value;
+            this._onGSplatAssetAdded();
+        }
+    }
+
+    /**
+     * Gets whether to use the unified gsplat rendering.
+     *
+     * @type {boolean}
+     * @deprecated Non-unified gsplat rendering is being removed; unified rendering will be the only supported mode.
+     * @ignore
+     */
+    get unified() {
+        return this._unified;
+    }
+
+    /**
+     * Gets the unique identifier for this component. This ID is used by the picking system
+     * and is also written to the work buffer when `app.scene.gsplat.enableIds` is enabled, making
+     * it available to custom shaders for effects like highlighting or animation.
+     *
+     * @type {number}
+     */
+    get id() {
+        return this._id;
+    }
+
+    /**
+     * Sets the work buffer update mode.
+     *
+     * Splat data is rendered to a work buffer only when needed (e.g., when transforms change).
+     * Can be:
+     * - {@link WORKBUFFER_UPDATE_AUTO}: Update only when needed (default).
+     * - {@link WORKBUFFER_UPDATE_ONCE}: Force update this frame, then switch to AUTO.
+     * - {@link WORKBUFFER_UPDATE_ALWAYS}: Update every frame.
+     *
+     * This is typically useful when using custom shader code via {@link setWorkBufferModifier}
+     * that depends on external factors like time or animated uniforms.
+     *
+     * Note: {@link WORKBUFFER_UPDATE_ALWAYS} has a performance impact as it re-renders
+     * all splat data to the work buffer every frame. Where possible, consider using shader
+     * customization on the gsplat material (`app.scene.gsplat.material`) which is applied
+     * during final rendering without re-rendering the work buffer.
+     *
+     * @type {number}
+     */
+    set workBufferUpdate(value) {
+        this._workBufferUpdate = value;
+        if (this._placement) {
+            this._placement.workBufferUpdate = value;
+        }
+    }
+
+    /**
+     * Gets the work buffer update mode.
+     *
+     * @type {number}
+     */
+    get workBufferUpdate() {
+        return this._workBufferUpdate;
+    }
+
+    /**
+     * Sets custom shader code for modifying splats when written to the work buffer.
+     *
+     * Must provide all three functions:
+     * - `modifySplatCenter`: Modify the splat center position
+     * - `modifySplatRotationScale`: Modify the splat rotation and scale
+     * - `modifySplatColor`: Modify the splat color
+     *
+     * Calling this method automatically triggers a work buffer re-render.
+     *
+     * @param {{ glsl?: string, wgsl?: string }|null} value - The modifier code for GLSL and/or WGSL.
+     * @example
+     * entity.gsplat.setWorkBufferModifier({
+     *     glsl: `
+     *         void modifySplatCenter(inout vec3 center) {}
+     *         void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {}
+     *         void modifySplatColor(vec3 center, inout vec4 color) { color.rgb *= vec3(1.0, 0.0, 0.0); }
+     *     `,
+     *     wgsl: `
+     *         fn modifySplatCenter(center: ptr<function, vec3f>) {}
+     *         fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {}
+     *         fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) { (*color).r = 1.0; (*color).g = 0.0; (*color).b = 0.0; }
+     *     `
+     * });
+     */
+    setWorkBufferModifier(value) {
+        if (value) {
+            const device = this.system.app.graphicsDevice;
+            const code = (device.isWebGPU ? value.wgsl : value.glsl) ?? null;
+            // create new object with pre-computed hash (object is not mutated, always replaced)
+            this._workBufferModifier = code ? { code, hash: hashCode(code) } : null;
+        } else {
+            this._workBufferModifier = null;
+        }
+        if (this._placement) {
+            this._placement.workBufferModifier = this._workBufferModifier;
+        }
     }
 
     /**
@@ -320,8 +655,51 @@ class GSplatComponent extends Component {
         return this._assetReference.id;
     }
 
+    /**
+     * Sets a GSplat resource directly (for procedural/container splats).
+     * When set, this takes precedence over the asset property.
+     *
+     * @type {GSplatResourceBase|null}
+     */
+    set resource(value) {
+        if (this._resource === value) return;
+
+        // Clean up existing (whether from direct resource or asset)
+        if (this._resource || this._assetReference.asset?.resource) {
+            this._onGSplatAssetRemove();
+        }
+
+        // Disconnect asset when setting resource directly
+        if (value && this._assetReference.id) {
+            this._assetReference.id = null;
+        }
+
+        this._resource = value;
+
+        if (this._resource && this.enabled && this.entity.enabled) {
+            this._onGSplatAssetLoad();
+        }
+    }
+
+    /**
+     * Gets the GSplat resource. Returns the directly set resource if available,
+     * otherwise returns the resource from the assigned asset.
+     *
+     * @type {GSplatResourceBase|null}
+     */
+    get resource() {
+        return this._resource ?? this._assetReference.asset?.resource ?? null;
+    }
+
     /** @private */
     destroyInstance() {
+
+        if (this._placement) {
+            this.removeFromLayers();
+            this._placement.destroy();
+            this._placement = null;
+        }
+
         if (this._instance) {
             this.removeFromLayers();
             this._instance?.destroy();
@@ -331,7 +709,22 @@ class GSplatComponent extends Component {
 
     /** @private */
     addToLayers() {
-        const meshInstance = this.instance?.meshInstance;
+
+        if (this._placement) {
+            const layers = this.system.app.scene.layers;
+            for (let i = 0; i < this._layers.length; i++) {
+                const layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.addGSplatPlacement(this._placement);
+                    if (this._castShadows) {
+                        layer.addGSplatShadowCaster(this._placement);
+                    }
+                }
+            }
+            return;
+        }
+
+        const meshInstance = this._instance?.meshInstance;
         if (meshInstance) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
@@ -341,7 +734,20 @@ class GSplatComponent extends Component {
     }
 
     removeFromLayers() {
-        const meshInstance = this.instance?.meshInstance;
+
+        if (this._placement) {
+            const layers = this.system.app.scene.layers;
+            for (let i = 0; i < this._layers.length; i++) {
+                const layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.removeGSplatPlacement(this._placement);
+                    layer.removeGSplatShadowCaster(this._placement);
+                }
+            }
+            return;
+        }
+
+        const meshInstance = this._instance?.meshInstance;
         if (meshInstance) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
@@ -357,8 +763,10 @@ class GSplatComponent extends Component {
 
     /** @private */
     onInsertChild() {
-        if (this._instance && this.enabled && this.entity.enabled) {
-            this.addToLayers();
+        if (this.enabled && this.entity.enabled) {
+            if (this._instance || this._placement) {
+                this.addToLayers();
+            }
         }
     }
 
@@ -383,6 +791,9 @@ class GSplatComponent extends Component {
     onLayerAdded(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
+        // unified mode manages layer membership via GSplatPlacement; no legacy mesh-instance work
+        if (this.unified) return;
+
         if (this._instance) {
             layer.addMeshInstances(this._instance.meshInstance);
         }
@@ -391,6 +802,9 @@ class GSplatComponent extends Component {
     onLayerRemoved(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
+        // unified mode manages layer membership via GSplatPlacement; no legacy mesh-instance work
+        if (this.unified) return;
+
         if (this._instance) {
             layer.removeMeshInstances(this._instance.meshInstance);
         }
@@ -407,10 +821,12 @@ class GSplatComponent extends Component {
             this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
-        if (this._instance) {
+        if (this._instance || this._placement) {
             this.addToLayers();
         } else if (this.asset) {
             this._onGSplatAssetAdded();
+        } else if (this._resource) {
+            this._onGSplatAssetLoad();
         }
     }
 
@@ -441,12 +857,72 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Enable rendering of the component if hidden using {@link GSplatComponent#hide}.
+     * Enable rendering of the component if hidden using {@link hide}.
      */
     show() {
         if (this._instance) {
             this._instance.meshInstance.visible = true;
         }
+    }
+
+    /**
+     * Sets a shader parameter for this gsplat instance. Parameters set here are applied
+     * during rendering.
+     *
+     * @param {string} name - The name of the parameter (uniform name in shader).
+     * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the parameter.
+     */
+    setParameter(name, data) {
+        const scopeId = this.system.app.graphicsDevice.scope.resolve(name);
+        this._parameters.set(name, { scopeId, data });
+        if (this._placement) this._placement.renderDirty = true;
+    }
+
+    /**
+     * Gets a shader parameter value previously set with {@link setParameter}.
+     *
+     * @param {string} name - The name of the parameter.
+     * @returns {number|number[]|ArrayBufferView|undefined} The parameter value, or undefined if not set.
+     */
+    getParameter(name) {
+        return this._parameters.get(name)?.data;
+    }
+
+    /**
+     * Deletes a shader parameter previously set with {@link setParameter}.
+     *
+     * @param {string} name - The name of the parameter to delete.
+     */
+    deleteParameter(name) {
+        this._parameters.delete(name);
+        if (this._placement) this._placement.renderDirty = true;
+    }
+
+    /**
+     * Gets an instance texture by name. Instance textures are per-component textures defined
+     * in the resource's format with `storage: GSPLAT_STREAM_INSTANCE`.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {Texture|null} The texture, or null if not found.
+     * @example
+     * // Add an instance stream to the resource format
+     * resource.format.addExtraStreams([
+     *     { name: 'instanceTint', format: pc.PIXELFORMAT_RGBA8, storage: pc.GSPLAT_STREAM_INSTANCE }
+     * ]);
+     *
+     * // Get the instance texture and fill it with data
+     * const texture = entity.gsplat.getInstanceTexture('instanceTint');
+     * if (texture) {
+     *     const data = texture.lock();
+     *     // Fill texture data...
+     *     texture.unlock();
+     * }
+     */
+    getInstanceTexture(name) {
+        if (!this._placement) {
+            return null;
+        }
+        return this._placement.getInstanceTexture(name, this.system.app.graphicsDevice) ?? null;
     }
 
     _onGSplatAssetAdded() {
@@ -466,12 +942,34 @@ class GSplatComponent extends Component {
         // remove existing instance
         this.destroyInstance();
 
-        // create new instance
-        const asset = this._assetReference.asset;
-        if (asset) {
-            this.instance = new GSplatInstance(asset.resource, this._materialTmp);
+        // Get resource from either direct resource or asset
+        const resource = this._resource ?? this._assetReference.asset?.resource;
+        if (!resource) return;
+
+        if (this.unified) {
+
+            this._placement = null;
+
+            this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
+            this._placement.lodBaseDistance = this._lodBaseDistance;
+            this._placement.lodMultiplier = this._lodMultiplier;
+            this._placement.workBufferUpdate = this._workBufferUpdate;
+            this._placement.workBufferModifier = this._workBufferModifier;
+
+            // add placement to layers if component is enabled
+            if (this.enabled && this.entity.enabled) {
+                this.addToLayers();
+            }
+
+        } else {
+
+            // create new instance
+            this.instance = new GSplatInstance(resource, {
+                material: this._materialTmp,
+                highQualitySH: this._highQualitySH,
+                scene: this.system.app.scene
+            });
             this._materialTmp = null;
-            this.customAabb = this.instance.resource.aabb.clone();
         }
     }
 

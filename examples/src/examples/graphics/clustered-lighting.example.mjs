@@ -1,19 +1,20 @@
-// @config ENGINE performance
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag ENGINE=performance
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` })
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
@@ -240,5 +241,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

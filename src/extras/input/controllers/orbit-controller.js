@@ -46,23 +46,17 @@ class OrbitController extends InputController {
     /**
      * The rotation damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
      * full damping. Default is 0.98.
-     *
-     * @type {number}
      */
     rotateDamping = 0.98;
 
     /**
      * The movement damping. In the range 0 to 1, where a value of 0 means no damping and 1 means
      * full damping. Default is 0.98.
-     *
-     * @type {number}
      */
     moveDamping = 0.98;
 
     /**
      * The zoom damping. A higher value means more damping. A value of 0 means no damping.
-     *
-     * @type {number}
      */
     zoomDamping = 0.98;
 
@@ -124,7 +118,8 @@ class OrbitController extends InputController {
         offset.set(move[0], move[1], 0);
         rotation.setFromEulerAngles(this._rootPose.angles).transformVector(offset, offset);
         this._targetRootPose.move(offset);
-        this._targetChildPose.move(offset.set(0, 0, move[2]));
+        const { z: dist } = this._targetChildPose.position;
+        this._targetChildPose.move(offset.set(0, 0, dist * (1 + move[2]) - dist));
 
         // rotate
         this._targetRootPose.rotate(angles.set(-rotate[1], -rotate[0], 0));
@@ -149,7 +144,7 @@ class OrbitController extends InputController {
         rotation.setFromEulerAngles(this._rootPose.angles)
         .transformVector(this._childPose.position, offset)
         .add(this._rootPose.position);
-        return this._pose.set(offset, this._rootPose.angles, this._childPose.position.length());
+        return this._pose.set(offset, this._rootPose.angles, this._childPose.position.z);
     }
 
     destroy() {

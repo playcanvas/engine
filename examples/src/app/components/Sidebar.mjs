@@ -1,28 +1,35 @@
 import { Observer } from '@playcanvas/observer';
 import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 import { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import { exampleMetaData } from '../../../cache/metadata.mjs';
-import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
+import { VERSION } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
-import { getOrientation } from '../utils.mjs';
+import { getHashPath, patchState, readState } from '../url-state.mjs';
+import { getLayout } from '../utils.mjs';
 
-// eslint-disable-next-line jsdoc/require-property
+/** @import { ReactElement } from 'react' */
+
 /**
  * @typedef {object} Props
+ * @property {{ pathname: string, hash: string }} location - The router location.
+ * @property {'mobile'|'desktop'} [layout] - Current layout.
+ * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
+ * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
+ * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
 /**
  * @typedef {object} State
  * @property {Record<string, Record<string, object>>} defaultCategories - The default categories.
  * @property {Record<string, Record<string, object>>|null} filteredCategories - The filtered categories.
- * @property {string} hash - The hash.
  * @property {Observer} observer - The observer.
  * @property {boolean} collapsed - Collapsed or not.
- * @property {string} orientation - Current orientation.
+ * @property {string} filterText - The current filter.
+ * @property {'mobile'|'desktop'} layout - Current layout.
  */
 
 /**
@@ -37,7 +44,14 @@ function getDefaultExampleFiles() {
     /** @type {Record<string, { examples: Record<string, string> }>} */
     const categories = {};
     for (let i = 0; i < exampleMetaData.length; i++) {
-        const { categoryKebab, exampleNameKebab } = exampleMetaData[i];
+        const { categoryKebab, exampleNameKebab, hidden } = exampleMetaData[i];
+
+        // hidden examples are always built and reachable via URL, but are only listed in the
+        // sidebar during development (`npm run develop`), not in production builds (`npm run build`)
+        if (hidden && process.env.NODE_ENV !== 'development') {
+            continue;
+        }
+
         if (!categories[categoryKebab]) {
             categories[categoryKebab] = { examples: {} };
         }
@@ -47,17 +61,74 @@ function getDefaultExampleFiles() {
     return categories;
 }
 
+/**
+ * @param {Record<string, Record<string, any>>} defaultCategories - Default categories.
+ * @param {string} filter - Filter string.
+ * @returns {Record<string, Record<string, any>> | null} Filtered categories.
+ */
+function filterCategories(defaultCategories, filter) {
+    const query = filter.replace(/\s/g, '.*');
+    const reg = query && query.length > 0 ? new RegExp(query, 'i') : null;
+    if (!reg) {
+        return null;
+    }
+
+    /** @type {Record<string, Record<string, any>>} */
+    const updatedCategories = {};
+    Object.keys(defaultCategories).forEach((category) => {
+        if (category.search(reg) !== -1) {
+            updatedCategories[category] = defaultCategories[category];
+            return null;
+        }
+        Object.keys(defaultCategories[category].examples).forEach((example) => {
+            const title = defaultCategories[category].examples[example];
+            if (title.search(reg) !== -1) {
+                if (!updatedCategories[category]) {
+                    updatedCategories[category] = {
+                        name: defaultCategories[category].name,
+                        examples: {
+                            [example]: title
+                        }
+                    };
+                } else {
+                    updatedCategories[category].examples[example] = title;
+                }
+            }
+        });
+    });
+    return updatedCategories;
+}
+
+const createState = () => {
+    const ui = readState().ui ?? {};
+    const filter = typeof ui.filter === 'string' ? ui.filter : '';
+    const largeThumbnails = typeof ui.largeThumbnails === 'boolean' ? ui.largeThumbnails : false;
+    const collapsed = typeof ui.sideBarCollapsed === 'boolean' ?
+        ui.sideBarCollapsed :
+        localStorage.getItem('sideBarCollapsed') === 'true' || getLayout() === 'mobile';
+    const defaultCategories = getDefaultExampleFiles();
+    return {
+        defaultCategories,
+        filteredCategories: filterCategories(defaultCategories, filter),
+        filterText: filter,
+        observer: new Observer({ largeThumbnails }),
+        collapsed,
+        layout: getLayout()
+    };
+};
+
 class SideBar extends TypedComponent {
     /** @type {State} */
-    state = {
-        defaultCategories: getDefaultExampleFiles(),
-        filteredCategories: null,
-        hash: location.hash,
-        observer: new Observer({ largeThumbnails: false }),
-        // @ts-ignore
-        collapsed: localStorage.getItem('sideBarCollapsed') === 'true' || window.top.innerWidth < MIN_DESKTOP_WIDTH,
-        orientation: getOrientation()
-    };
+    state = createState();
+
+    /** @type {HTMLElement | null} */
+    _sideBar = null;
+
+    /** @type {string} */
+    _sideBarLayout = '';
+
+    /** @type {{ unbind: () => void } | null} */
+    _largeThumbnailsHandle = null;
 
     /**
      * @param {Props} props - Component properties.
@@ -66,31 +137,70 @@ class SideBar extends TypedComponent {
         super(props);
         this._onLayoutChange = this._onLayoutChange.bind(this);
         this._onClickExample = this._onClickExample.bind(this);
+        this._onLargeThumbnailsSet = this._onLargeThumbnailsSet.bind(this);
+    }
+
+    setupSideBar() {
+        const sideBar = document.getElementById('sideBar');
+        const layout = this.props.layout ?? this.state.layout;
+        if (!sideBar || (this._sideBar === sideBar && this._sideBarLayout === layout)) {
+            return;
+        }
+        this._sideBar = sideBar;
+        this._sideBarLayout = layout;
+        const drag = this.props.onMobilePanelDragStart;
+        sideBar.onpointerdown = layout === 'mobile' && drag ? event => drag(event) : null;
+
+        // PCUI should just have a "onHeaderClick" but can't find anything
+        const sideBarHeader = /** @type {HTMLElement | null} */ (
+            /** @type {unknown} */ (sideBar.querySelector('.pcui-panel-header'))
+        );
+        if (sideBarHeader) {
+            sideBarHeader.onclick = layout === 'mobile' ? null : () => this.toggleCollapse();
+            sideBarHeader.onpointerdown = null;
+        }
+        this.setupControlPanelToggleButton();
     }
 
     componentDidMount() {
-        // PCUI should just have a "onHeaderClick" but can't find anything
-        const sideBar = document.getElementById('sideBar');
-        if (!sideBar) {
-            return;
-        }
-
-        /** @type {HTMLElement | null} */
-        const sideBarHeader = sideBar.querySelector('.pcui-panel-header');
-        if (!sideBarHeader) {
-            return;
-        }
-        sideBarHeader.onclick = () => this.toggleCollapse();
-        this.setupControlPanelToggleButton();
-
-        // setup events
+        this._largeThumbnailsHandle = this.state.observer.on('largeThumbnails:set', this._onLargeThumbnailsSet);
+        this.setupSideBar();
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('orientationchange', this._onLayoutChange);
     }
 
+    componentDidUpdate() {
+        this.setupSideBar();
+    }
+
     componentWillUnmount() {
+        this._largeThumbnailsHandle?.unbind();
+        this._largeThumbnailsHandle = null;
         window.removeEventListener('resize', this._onLayoutChange);
         window.removeEventListener('orientationchange', this._onLayoutChange);
+    }
+
+    _onLargeThumbnailsSet() {
+        patchState({ ui: { largeThumbnails: this.state.observer.get('largeThumbnails') === true } });
+        const sideBar = document.getElementById('sideBar');
+        if (!sideBar) {
+            return;
+        }
+        let minTopNavItemDistance = Number.MAX_VALUE;
+
+        const navItems = /** @type {NodeListOf<HTMLElement>} */ (
+            /** @type {unknown} */ (document.querySelectorAll('.nav-item'))
+        );
+        for (let i = 0; i < navItems.length; i++) {
+            const nav = navItems[i];
+            const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
+            if (navItemDistance < minTopNavItemDistance) {
+                minTopNavItemDistance = navItemDistance;
+                sideBar.classList.toggle('small-thumbnails');
+                nav.scrollIntoView();
+                break;
+            }
+        }
     }
 
     setupControlPanelToggleButton() {
@@ -99,30 +209,11 @@ class SideBar extends TypedComponent {
         if (!sideBar) {
             return;
         }
-        window.addEventListener('hashchange', () => {
-            this.mergeState({ hash: location.hash });
-        });
-        this.state.observer.on('largeThumbnails:set', () => {
-            let minTopNavItemDistance = Number.MAX_VALUE;
-
-            /** @type {NodeListOf<HTMLElement>} */
-            const navItems = document.querySelectorAll('.nav-item');
-            for (let i = 0; i < navItems.length; i++) {
-                const nav = navItems[i];
-                const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
-                if (navItemDistance < minTopNavItemDistance) {
-                    minTopNavItemDistance = navItemDistance;
-                    sideBar.classList.toggle('small-thumbnails');
-                    nav.scrollIntoView();
-                    break;
-                }
-            }
-        });
         sideBar.classList.add('visible');
         // when first opening the examples browser via a specific example, scroll it into view
         // @ts-ignore
         if (!window._scrolledToExample) {
-            const examplePath = location.hash.split('/');
+            const examplePath = getHashPath().split('/');
             document.getElementById(`link-${examplePath[1]}-${examplePath[2]}`)?.scrollIntoView();
             // @ts-ignore
             window._scrolledToExample = true;
@@ -142,10 +233,11 @@ class SideBar extends TypedComponent {
         const { collapsed } = this.state;
         localStorage.setItem('sideBarCollapsed', `${!collapsed}`);
         this.mergeState({ collapsed: !collapsed });
+        patchState({ ui: { sideBarCollapsed: !collapsed } });
     }
 
     _onLayoutChange() {
-        this.mergeState({ orientation: getOrientation() });
+        this.mergeState({ layout: getLayout() });
     }
 
     /**
@@ -153,42 +245,16 @@ class SideBar extends TypedComponent {
      */
     onChangeFilter(filter) {
         const { defaultCategories } = this.state;
-        // Turn a filter like 'mes dec' (for mesh decals) into 'mes.*dec', because the examples
-        // show "MESH DECALS" but internally it's just "MeshDecals".
-        filter = filter.replace(/\s/g, '.*');
-        const reg = filter && filter.length > 0 ? new RegExp(filter, 'i') : null;
-        if (!reg) {
-            this.mergeState({ filteredCategories: defaultCategories });
-            return;
-        }
-        /** @type {Record<string, Record<string, object>>} */
-        const updatedCategories = {};
-        Object.keys(defaultCategories).forEach((category) => {
-            if (category.search(reg) !== -1) {
-                updatedCategories[category] = defaultCategories[category];
-                return null;
-            }
-            Object.keys(defaultCategories[category].examples).forEach((example) => {
-                // @ts-ignore
-                const title = defaultCategories[category].examples[example];
-                if (title.search(reg) !== -1) {
-                    if (!updatedCategories[category]) {
-                        updatedCategories[category] = {
-                            name: defaultCategories[category].name,
-                            examples: {
-                                [example]: title
-                            }
-                        };
-                    } else {
-                        // @ts-ignore
-                        updatedCategories[category].examples[example] = title;
-                    }
-                }
-            });
+        this.mergeState({
+            filterText: filter,
+            filteredCategories: filterCategories(defaultCategories, filter)
         });
-        this.mergeState({ filteredCategories: updatedCategories });
+        patchState({ ui: { filter } });
     }
 
+    clearFilter() {
+        this.onChangeFilter('');
+    }
 
     /**
      * @param {import("react").MouseEvent<HTMLAnchorElement, MouseEvent>} e - The event.
@@ -207,7 +273,7 @@ class SideBar extends TypedComponent {
         if (Object.keys(categories).length === 0) {
             return jsx(Label, { text: 'No results' });
         }
-        const { hash } = this.state;
+        const { pathname } = this.props.location;
         return Object.keys(categories)
         .sort((a, b) => (a > b ? 1 : -1))
         .map((category) => {
@@ -229,8 +295,8 @@ class SideBar extends TypedComponent {
                     .sort((a, b) => (a > b ? 1 : -1))
                     .map((example) => {
                         const path = `/${category}/${example}`;
-                        const isSelected = new RegExp(`${path}$`).test(hash);
-                        const className = `nav-item ${isSelected ? 'selected' : null}`;
+                        const isSelected = pathname === path;
+                        const className = `nav-item ${isSelected ? 'selected' : ''}`;
                         return jsx(
                             Link,
                             {
@@ -267,29 +333,49 @@ class SideBar extends TypedComponent {
     }
 
     render() {
-        const { observer, collapsed, orientation } = this.state;
+        const { observer, collapsed } = this.state;
+        const layout = this.props.layout ?? this.state.layout;
+        const smallThumbnails = observer.get('largeThumbnails') !== true;
         const panelOptions = {
-            headerText: 'EXAMPLES',
+            headerText: `EXAMPLES - v${VERSION}`,
             collapsible: true,
             collapsed: false,
             id: 'sideBar',
-            class: ['small-thumbnails', collapsed ? 'collapsed' : null]
+            class: [...(smallThumbnails ? ['small-thumbnails'] : []), ...(collapsed ? ['collapsed'] : [])]
         };
-        if (orientation === 'portrait') {
-            panelOptions.class = ['small-thumbnails'];
-            panelOptions.collapsed = collapsed;
+        if (layout === 'mobile') {
+            if (this.props.mobilePanel !== 'examples') {
+                return null;
+            }
+            panelOptions.headerText = `EXAMPLES - v${VERSION}`;
+            panelOptions.class = ['mobile-sheet', 'small-thumbnails'];
+            panelOptions.collapsible = false;
+            panelOptions.collapsed = false;
         }
         return jsx(
             Panel,
             // @ts-ignore
             panelOptions,
-            jsx(TextInput, {
-                class: 'filter-input',
-                keyChange: true,
-                placeholder: 'Filter...',
-                onChange: this.onChangeFilter.bind(this)
-            }),
             jsx(
+                Container,
+                { class: ['filter-container', ...(this.state.filterText ? ['has-filter-text'] : [])] },
+                jsx(/** @type {any} */ (TextInput), {
+                    class: 'filter-input',
+                    keyChange: true,
+                    placeholder: 'Filter...',
+                    value: this.state.filterText,
+                    onChange: this.onChangeFilter.bind(this)
+                }),
+                this.state.filterText ? jsx(
+                    'div',
+                    {
+                        className: 'filter-clear',
+                        onClick: this.clearFilter.bind(this)
+                    },
+                    '\u2715'
+                ) : null
+            ),
+            layout !== 'mobile' && jsx(
                 LabelGroup,
                 { text: 'Large thumbnails:' },
                 jsx(BooleanInput, {
@@ -303,4 +389,13 @@ class SideBar extends TypedComponent {
     }
 }
 
-export { SideBar };
+/**
+ * @param {Omit<Props, 'location'>} props - Component properties.
+ * @returns {ReactElement} The SideBar component with router location.
+ */
+function SideBarWithRouter(props) {
+    const location = useLocation();
+    return jsx(SideBar, { ...props, location });
+}
+
+export { SideBarWithRouter as SideBar };

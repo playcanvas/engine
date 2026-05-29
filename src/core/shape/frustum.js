@@ -70,7 +70,7 @@ class Frustum {
      * @param {Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
      * // Create a perspective projection matrix
-     * const projection = pc.Mat4();
+     * const projection = new pc.Mat4();
      * projection.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
@@ -78,12 +78,11 @@ class Frustum {
      * frustum.setFromMat4(projection);
      */
     setFromMat4(matrix) {
-        const [
-            m00, m01, m02, m03,
-            m10, m11, m12, m13,
-            m20, m21, m22, m23,
-            m30, m31, m32, m33
-        ] = matrix.data;
+        const d = matrix.data;
+        const m00 = d[0], m01 = d[1], m02 = d[2], m03 = d[3];
+        const m10 = d[4], m11 = d[5], m12 = d[6], m13 = d[7];
+        const m20 = d[8], m21 = d[9], m22 = d[10], m23 = d[11];
+        const m30 = d[12], m31 = d[13], m32 = d[14], m33 = d[15];
         const planes = this.planes;
 
         planes[0].set(m03 - m00, m13 - m10, m23 - m20, m33 - m30).normalize(); // RIGHT
@@ -109,6 +108,30 @@ class Frustum {
             }
         }
         return true;
+    }
+
+    /**
+     * Expands this frustum to also contain another frustum. For each of the 6 planes, the plane
+     * that is further out (larger distance) is kept, creating a combined frustum that encompasses
+     * both. This is useful for multi-view rendering such as stereo XR where culling should keep
+     * objects visible in any view.
+     *
+     * Note: This method assumes both frustums have similar orientation (parallel views). This is
+     * valid for WebXR stereo rendering where eyes use parallel projection with only a horizontal
+     * offset, not toe-in convergence.
+     *
+     * @param {Frustum} other - The other frustum to add.
+     * @returns {Frustum} Self for chaining.
+     */
+    add(other) {
+        const planes = this.planes;
+        const otherPlanes = other.planes;
+        for (let p = 0; p < 6; p++) {
+            if (otherPlanes[p].distance > planes[p].distance) {
+                planes[p].copy(otherPlanes[p]);
+            }
+        }
+        return this;
     }
 
     /**

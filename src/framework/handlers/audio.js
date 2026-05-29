@@ -1,37 +1,12 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { http, Http } from '../../platform/net/http.js';
-import { hasAudioContext } from '../../platform/sound/capabilities.js';
 import { Sound } from '../../platform/sound/sound.js';
 import { ResourceHandler } from './handler.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
  */
-
-// checks if user is running IE
-const ie = (function () {
-    if (typeof window === 'undefined') {
-        // Node.js => return false
-        return false;
-    }
-    const ua = window.navigator.userAgent;
-
-    const msie = ua.indexOf('MSIE ');
-    if (msie > 0) {
-        // IE 10 or older => return version number
-        return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
-    }
-
-    const trident = ua.indexOf('Trident/');
-    if (trident > 0) {
-        // IE 11 => return version number
-        const rv = ua.indexOf('rv:');
-        return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
-    }
-
-    return false;
-})();
 
 const supportedExtensions = [
     '.ogg',
@@ -114,74 +89,31 @@ class AudioHandler extends ResourceHandler {
      * @private
      */
     _createSound(url, success, error) {
-        if (hasAudioContext()) {
-            const manager = this.manager;
+        const manager = this.manager;
 
-            if (!manager.context) {
-                error('Audio manager has no audio context');
-                return;
-            }
-
-            // if this is a blob URL we need to set the response type to arraybuffer
-            const options = {
-                retry: this.maxRetries > 0,
-                maxRetries: this.maxRetries
-            };
-
-            if (url.startsWith('blob:') || url.startsWith('data:')) {
-                options.responseType = Http.ResponseType.ARRAY_BUFFER;
-            }
-
-            http.get(url, options, (err, response) => {
-                if (err) {
-                    error(err);
-                    return;
-                }
-
-                manager.context.decodeAudioData(response, success, error);
-            });
-        } else {
-            let audio = null;
-
-            try {
-                audio = new Audio();
-            } catch (e) {
-                // Some windows platforms will report Audio as available, then throw an exception when
-                // the object is created.
-                error('No support for Audio element');
-                return;
-            }
-
-            // audio needs to be added to the DOM for IE
-            if (ie) {
-                document.body.appendChild(audio);
-            }
-
-            const onReady = function () {
-                audio.removeEventListener('canplaythrough', onReady);
-
-                // remove from DOM no longer necessary
-                if (ie) {
-                    document.body.removeChild(audio);
-                }
-
-                success(audio);
-            };
-
-            audio.onerror = function () {
-                audio.onerror = null;
-
-                // remove from DOM no longer necessary
-                if (ie) {
-                    document.body.removeChild(audio);
-                }
-
-                error();
-            };
-
-            audio.addEventListener('canplaythrough', onReady);
-            audio.src = url;
+        if (!manager.context) {
+            error('Audio manager has no audio context');
+            return;
         }
+
+        // if this is a blob URL we need to set the response type to arraybuffer
+        const options = {
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
+        };
+
+        if (url.startsWith('blob:') || url.startsWith('data:')) {
+            options.responseType = Http.ResponseType.ARRAY_BUFFER;
+        }
+
+        http.get(url, options, (err, response) => {
+            if (err) {
+                error(err);
+                return;
+            }
+
+            manager.context.decodeAudioData(response, success, error);
+        });
     }
 }
 

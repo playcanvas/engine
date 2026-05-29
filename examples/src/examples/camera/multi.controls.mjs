@@ -66,7 +66,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.moveSpeed' },
                     min: 1,
-                    max: 10
+                    max: 100
                 })
             ),
             jsx(
@@ -76,7 +76,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.moveFastSpeed' },
                     min: 1,
-                    max: 10
+                    max: 100
                 })
             ),
             jsx(
@@ -86,7 +86,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.moveSlowSpeed' },
                     min: 1,
-                    max: 10
+                    max: 100
                 })
             ),
             jsx(

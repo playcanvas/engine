@@ -1,19 +1,17 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    snowflake: new pc.Asset('snowflake', 'texture', { url: `${rootPath}/static/assets/textures/snowflake.png` }, { srgb: true })
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    snowflake: new pc.Asset('snowflake', 'texture', { url: './assets/textures/snowflake.png' }, { srgb: true })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -136,15 +134,12 @@ assetListLoader.load(() => {
     ground.setLocalPosition(0, 0, 0);
     app.root.addChild(ground);
 
-    let depthRendering = false;
     data.on('*:set', (/** @type {string} */ path, value) => {
 
-        // toggle the depth texture for the camera based on the soft parameter
+        // toggle the depth softening on the particle system and the depth texture on the camera
         const soft = data.get('data.soft');
-        if (depthRendering !== soft) {
-            cameraEntity.camera.requestSceneDepthMap(soft);
-            depthRendering = soft;
-        }
+        entity.particlesystem.depthSoftening = soft ? 0.08 : 0;
+        cameraEntity.camera.requestSceneDepthMap(soft);
     });
 
     // initial values
@@ -152,5 +147,3 @@ assetListLoader.load(() => {
         soft: true
     });
 });
-
-export { app };

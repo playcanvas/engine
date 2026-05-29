@@ -1,4 +1,6 @@
+import { DOUBLE_TAP_THRESHOLD, DOUBLE_TAP_VARIANCE } from '../constants.js';
 import { InputSource } from '../input.js';
+import { movementState } from '../utils.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
@@ -9,9 +11,16 @@ import { VirtualJoystick } from './virtual-joystick.js';
  *
  * @typedef {object} SingleGestureSourceDeltas
  * @property {number[]} input - The input deltas, represented as an array of [x, y] coordinates.
+ * @property {number[]} doubleTap - The double tap delta.
  * @augments {InputSource<SingleGestureSourceDeltas>}
  */
 class SingleGestureSource extends InputSource {
+    /**
+     * @type {ReturnType<typeof movementState>}
+     * @private
+     */
+    _movementState = movementState();
+
     /**
      * @type {'joystick' | 'touch'}
      * @private
@@ -25,6 +34,12 @@ class SingleGestureSource extends InputSource {
     _pointerData = new Map();
 
     /**
+     * @type {{ x: number, y: number, time: number }}
+     * @private
+     */
+    _lastPointer = { x: 0, y: 0, time: 0 };
+
+    /**
      * @type {VirtualJoystick}
      * @private
      */
@@ -32,7 +47,8 @@ class SingleGestureSource extends InputSource {
 
     constructor() {
         super({
-            input: [0, 0]
+            input: [0, 0],
+            doubleTap: [0]
         });
 
         this._joystick = new VirtualJoystick();
@@ -43,12 +59,12 @@ class SingleGestureSource extends InputSource {
     }
 
     /**
-     * The layout of the single touch input source. The layout can be one of the following:
+     * Sets the layout of the single touch input source. Can be one of the following:
      *
      * - `joystick`: A virtual joystick.
      * - `touch`: A touch.
      *
-     * Default is `joystick`.
+     * Defaults to `joystick`.
      *
      * @type {'joystick' | 'touch'}
      */
@@ -65,6 +81,11 @@ class SingleGestureSource extends InputSource {
         this._pointerData.clear();
     }
 
+    /**
+     * Gets the layout of the single touch input source.
+     *
+     * @type {'joystick' | 'touch'}
+     */
     get layout() {
         return this._layout;
     }
@@ -79,6 +100,7 @@ class SingleGestureSource extends InputSource {
      */
     _onPointerDown(event) {
         const { pointerType, pointerId, clientX, clientY } = event;
+        this._movementState.down(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -90,6 +112,15 @@ class SingleGestureSource extends InputSource {
             y: clientY
         });
 
+        const now = Date.now();
+        const sqrDist = (this._lastPointer.x - clientX) ** 2 + (this._lastPointer.y - clientY) ** 2;
+        if (sqrDist < DOUBLE_TAP_VARIANCE && now - this._lastPointer.time < DOUBLE_TAP_THRESHOLD) {
+            this.deltas.doubleTap.append([1]);
+        }
+        this._lastPointer.x = clientX;
+        this._lastPointer.y = clientY;
+        this._lastPointer.time = now;
+
         if (this._layout === 'joystick') {
             this.fire('joystick:position', this._joystick.down(clientX, clientY));
         }
@@ -100,7 +131,8 @@ class SingleGestureSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
-        const { pointerType, pointerId, target, clientX, clientY, movementX, movementY } = event;
+        const { pointerType, pointerId, target, clientX, clientY } = event;
+        const [movementX, movementY] = this._movementState.move(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -128,6 +160,7 @@ class SingleGestureSource extends InputSource {
      */
     _onPointerUp(event) {
         const { pointerType, pointerId } = event;
+        this._movementState.up(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -172,9 +205,7 @@ class SingleGestureSource extends InputSource {
         super.detach();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         this.deltas.input.append([this._joystick.value.x, this._joystick.value.y]);
 

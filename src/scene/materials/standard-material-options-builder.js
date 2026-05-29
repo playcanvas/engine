@@ -208,12 +208,17 @@ class StandardMaterialOptionsBuilder {
                             (stdMat.clearCoat > 0));
 
         const useSpecularColor = (!stdMat.useMetalness || stdMat.useMetalnessSpecularColor);
+
+        // The constant specular color / specularity factor is included whenever it differs from
+        // the multiplicative identity (white / 1), regardless of whether a map is also present.
+        // This matches the glTF KHR_materials_specular spec (specularFactor * specularTexture) and
+        // mirrors how metalness is handled below. The legacy `specularTint` / `specularityFactorTint`
+        // flags are still honored as explicit overrides.
         const specularTint = useSpecular &&
-                             (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
-                             notWhite(stdMat.specular);
+                             (stdMat.specularTint || notWhite(stdMat.specular));
 
         const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
-                                      (stdMat.specularityFactorTint || (stdMat.specularityFactor < 1 && !stdMat.specularityFactorMap));
+                                      (stdMat.specularityFactorTint || stdMat.specularityFactor !== 1);
 
         const isPackedNormalMap = texture => (texture ? (texture.format === PIXELFORMAT_DXT5 || texture.type === TEXTURETYPE_SWIZZLEGGGR) : false);
 
@@ -228,8 +233,8 @@ class StandardMaterialOptionsBuilder {
         options.emissiveEncoding = stdMat.emissiveMap?.encoding;
         options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.packedNormal = isPackedNormalMap(stdMat.normalMap);
-        options.refractionTint = equalish(stdMat.refraction, 1.0);
-        options.refractionIndexTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
+        options.refractionTint = !equalish(stdMat.refraction, 1.0);
+        options.refractionIndexTint = !equalish(stdMat.refractionIndex, 1.0 / 1.5);
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
         options.specularEncoding = stdMat.specularMap?.encoding;
         options.sheenEncoding = stdMat.sheenMap?.encoding;
@@ -242,7 +247,7 @@ class StandardMaterialOptionsBuilder {
         options.aoDetailMode = stdMat.aoDetailMode;
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
-        options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5);
+        options.iorTint = !equalish(stdMat.refractionIndex, 1.0 / 1.5);
 
         // hack, see Scene.forcePassThroughSpecular description
         if (scene.forcePassThroughSpecular) {
@@ -280,6 +285,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useSpecular = useSpecular;
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
+        options.litOptions.useAnisotropy = stdMat.enableGGXSpecular && (stdMat.anisotropyIntensity > 0 || !!stdMat.anisotropyMap);
         options.litOptions.fresnelModel = stdMat.fresnelModel;
         options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || options.litOptions.reflectionSource !== REFLECTIONSRC_NONE);
         options.litOptions.useClearCoat = !!stdMat.clearCoat;
@@ -289,6 +295,8 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.litOptions.dispersion = stdMat.dispersion > 0;
         options.litOptions.shadowCatcher = stdMat.shadowCatcher;
+
+        options.litOptions.useVertexColorGamma = stdMat.vertexColorGamma;
     }
 
     _updateEnvOptions(options, stdMat, scene, cameraShaderParams) {

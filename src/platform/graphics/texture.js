@@ -4,7 +4,7 @@ import { math } from '../../core/math/math.js';
 import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
-    ADDRESS_REPEAT,
+    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
@@ -19,6 +19,7 @@ import {
     requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
+import { TextureView } from './texture-view.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -45,21 +46,55 @@ let id = 0;
  * sampling.
  *     - float formats are supported on WebGL2 and WebGPU with linear sampling only if
  * {@link GraphicsDevice#textureFloatFilterable} is true.
+ *     - {@link PIXELFORMAT_RGB9E5} is a compact HDR format with shared exponent, supported for
+ * sampling on both WebGL2 and WebGPU, but cannot be used as a render target.
  *
  * 2. **As renderable textures** that can be used as color buffers in a {@link RenderTarget}:
  *     - on WebGPU, rendering to float and half-float formats is always supported.
  *     - on WebGPU, rendering to small-float format is supported only if
  * {@link GraphicsDevice#textureRG11B10Renderable} is true.
- *     - on WebGL2, rendering to these 3 formats formats is supported only if
+ *     - on WebGL2, rendering to these 3 formats is supported only if
  * {@link GraphicsDevice#textureFloatRenderable} is true.
  *     - on WebGL2, if {@link GraphicsDevice#textureFloatRenderable} is false, but
  * {@link GraphicsDevice#textureHalfFloatRenderable} is true, rendering to half-float formats only
  * is supported. This is the case of many mobile iOS devices.
  *     - you can determine available renderable HDR format using
  * {@link GraphicsDevice#getRenderableHdrFormat}.
+ *     - {@link PIXELFORMAT_RGB10A2} provides 10 bits per RGB channel with 2-bit alpha, offering
+ * higher precision than {@link PIXELFORMAT_RGBA8} at the same memory cost. It is renderable on
+ * both WebGL2 and WebGPU. {@link PIXELFORMAT_RGB10A2U} is the unsigned integer variant.
+ *
  * @category Graphics
  */
 class Texture {
+    /**
+     * Creates a 2D data texture with nearest filtering, clamp-to-edge addressing and no mipmaps.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+     * @param {string} name - The name of the texture.
+     * @param {number} width - The width of the texture in pixels.
+     * @param {number} height - The height of the texture in pixels.
+     * @param {number} format - The pixel format of the texture.
+     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [levels]
+     * - Optional initial mip level data.
+     * @returns {Texture} The created texture.
+     * @ignore
+     */
+    static createDataTexture2D(graphicsDevice, name, width, height, format, levels) {
+        return new Texture(graphicsDevice, {
+            name,
+            width,
+            height,
+            format,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            levels
+        });
+    }
+
     /**
      * The name of the texture.
      *
@@ -69,6 +104,9 @@ class Texture {
 
     /** @ignore */
     _gpuSize = 0;
+
+    /** @ignore */
+    releaseSourceAfterUpload = false;
 
     /** @protected */
     id = id++;
@@ -86,7 +124,6 @@ class Texture {
      * A render version used to track the last time the texture properties requiring bind group
      * to be updated were changed.
      *
-     * @type {number}
      * @ignore
      */
     renderVersionDirty = 0;
@@ -170,7 +207,7 @@ class Texture {
      * Defaults to undefined.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume.
      * Defaults to false.
-     * @param {string} [options.type] - Specifies the texture type.  Can be:
+     * @param {string} [options.type] - Specifies the texture type. Can be:
      *
      * - {@link TEXTURETYPE_DEFAULT}
      * - {@link TEXTURETYPE_RGBM}
@@ -259,7 +296,7 @@ class Texture {
         if (options.numLevels !== undefined) {
             this._numLevels = options.numLevels;
         }
-        this._updateNumLevel();
+        this._updateNumLevels();
 
         this._minFilter = options.minFilter ?? FILTER_LINEAR_MIPMAP_LINEAR;
         this._magFilter = options.magFilter ?? FILTER_LINEAR;
@@ -289,13 +326,10 @@ class Texture {
         this._levels = options.levels;
         const upload = !!options.levels;
         if (!this._levels) {
-            this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+            this._clearLevels();
         }
 
         this.recreateImpl(upload);
-
-        // track the texture
-        graphicsDevice.textures.push(this);
 
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
@@ -313,14 +347,7 @@ class Texture {
 
         const device = this.device;
         if (device) {
-            // stop tracking the texture
-            const idx = device.textures.indexOf(this);
-            if (idx !== -1) {
-                device.textures.splice(idx, 1);
-            }
-
-            // Remove texture from any uniforms
-            device.scope.removeValue(this);
+            device.onTextureDestroyed(this);
 
             // destroy implementation
             this.impl.destroy(device);
@@ -328,8 +355,62 @@ class Texture {
             // Update texture stats
             this.adjustVramSizeTracking(device._vram, -this._gpuSize);
 
+            // Free CPU-side decoded pixel data if the owner has opted in via
+            // setReleaseSourceAfterUpload; only safe when the source is engine-owned.
+            if (this.releaseSourceAfterUpload) {
+                this.releaseImageSources();
+            }
+
             this._levels = null;
             this.device = null;
+        }
+    }
+
+    /**
+     * Closes any ImageBitmaps held on `_levels` and nulls those entries. The GPU has its own
+     * copy after upload, so the decoded pixels in CPU memory can be released. Safe to call only
+     * when no subsequent re-upload from CPU source will be needed and the source is owned by
+     * the engine (not shared with caller code or other textures). Clears the
+     * `releaseSourceAfterUpload` flag so future uploads keep their sources by default.
+     *
+     * @ignore
+     */
+    releaseImageSources() {
+        this.releaseSourceAfterUpload = false;
+        if (typeof ImageBitmap === 'undefined' || !this._levels) {
+            return;
+        }
+        for (let i = 0; i < this._levels.length; i++) {
+            const level = this._levels[i];
+            if (level instanceof ImageBitmap) {
+                level.close();
+                this._levels[i] = null;
+            } else if (Array.isArray(level)) {
+                for (let j = 0; j < level.length; j++) {
+                    if (level[j] instanceof ImageBitmap) {
+                        level[j].close();
+                        level[j] = null;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * One-shot opt-in: marks this texture so its CPU-side ImageBitmap source is released after
+     * the next upload completes. The flag is cleared once the release runs, so callers must
+     * re-arm after assigning a new source. The caller must own the ImageBitmap and guarantee
+     * that no re-upload from CPU source will be needed (e.g. the owner re-creates the texture
+     * on device loss). Used by the gsplat octree for streamed SOG textures.
+     *
+     * @ignore
+     */
+    setReleaseSourceAfterUpload() {
+        this.releaseSourceAfterUpload = true;
+
+        // If upload has already happened, release eagerly.
+        if (!this._needsUpload && !this._needsMipmapsUpload) {
+            this.releaseImageSources();
         }
     }
 
@@ -350,9 +431,16 @@ class Texture {
         }
     }
 
+    _clearLevels() {
+        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+    }
+
     /**
-     * Resizes the texture. Only supported for render target textures, as it does not resize the
-     * existing content of the texture, but only the allocated buffer for rendering into.
+     * Resizes the texture. This operation is supported for render target textures, and it resizes
+     * the allocated buffer used for rendering, not the existing content of the texture.
+     *
+     * It is also supported for textures with data provided via the {@link lock} method. After
+     * resizing, the appropriately sized data must be assigned by calling {@link lock} again.
      *
      * @param {number} width - The new width of the texture.
      * @param {number} height - The new height of the texture.
@@ -361,19 +449,24 @@ class Texture {
      */
     resize(width, height, depth = 1) {
 
-        // destroy texture impl
-        const device = this.device;
-        this.adjustVramSizeTracking(device._vram, -this._gpuSize);
-        this.impl.destroy(device);
+        if (this.width !== width || this.height !== height || this.depth !== depth) {
 
-        this._width = Math.floor(width);
-        this._height = Math.floor(height);
-        this._depth = Math.floor(depth);
-        this._updateNumLevel();
+            // destroy texture impl
+            const device = this.device;
+            this.adjustVramSizeTracking(device._vram, -this._gpuSize);
+            this._gpuSize = 0;
+            this.impl.destroy(device);
+            this._clearLevels();
 
-        // re-create the implementation
-        this.impl = device.createTextureImpl(this);
-        this.dirtyAll();
+            this._width = Math.floor(width);
+            this._height = Math.floor(height);
+            this._depth = Math.floor(depth);
+            this._updateNumLevels();
+
+            // re-create the implementation
+            this.impl = device.createTextureImpl(this);
+            this.dirtyAll();
+        }
     }
 
     /**
@@ -413,7 +506,7 @@ class Texture {
         this.renderVersionDirty = this.device.renderVersion;
     }
 
-    _updateNumLevel() {
+    _updateNumLevels() {
 
         const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
         const requestedLevels = this._numLevelsRequested;
@@ -665,10 +758,26 @@ class Texture {
             } else if (isIntegerPixelFormat(this._format)) {
                 Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
             } else {
-                this._mipmaps = v;
-            }
+                const oldMipmaps = this._mipmaps;
+                const oldNumLevels = this._numLevels;
 
-            if (v) this._needsMipmapsUpload = true;
+                this._mipmaps = v;
+                this._updateNumLevels();
+
+                // Changing mip count on array textures requires re-creating immutable storage.
+                if (this.array && this._numLevels !== oldNumLevels) {
+                    this.recreateImpl();
+                } else if (this._mipmaps !== oldMipmaps) {
+                    this.propertyChanged(TEXPROPERTY_MIN_FILTER);
+
+                    if (this._mipmaps) {
+                        this._needsMipmapsUpload = true;
+                        this.device?.texturesToUpload?.add(this);
+                    } else {
+                        this._needsMipmapsUpload = false;
+                    }
+                }
+            }
         }
     }
 
@@ -891,7 +1000,7 @@ class Texture {
     set flipY(flipY) {
         if (this._flipY !== flipY) {
             this._flipY = flipY;
-            this._needsUpload = true;
+            this.markForUpload();
         }
     }
 
@@ -907,7 +1016,7 @@ class Texture {
     set premultiplyAlpha(premultiplyAlpha) {
         if (this._premultiplyAlpha !== premultiplyAlpha) {
             this._premultiplyAlpha = premultiplyAlpha;
-            this._needsUpload = true;
+            this.markForUpload();
         }
     }
 
@@ -943,7 +1052,7 @@ class Texture {
     dirtyAll() {
         this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
-        this._needsUpload = true;
+        this.markForUpload();
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
@@ -987,7 +1096,7 @@ class Texture {
         this._lockedLevel = options.level;
 
         const levels = this.cubemap ? this._levels[options.face] : this._levels;
-        if (levels[options.level] === null) {
+        if (!levels[options.level]) {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
@@ -1000,16 +1109,31 @@ class Texture {
     }
 
     /**
-     * Set the pixel data of the texture from a canvas, image, video DOM element. If the texture is
-     * a cubemap, the supplied source must be an array of 6 canvases, images or videos.
+     * Set the pixel data of the texture from a canvas, image, video, or HTML DOM element. If the
+     * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A
-     * canvas, image or video element, or an array of 6 canvas, image or video elements.
+     * Note: using an HTML element (e.g. `<div>`) as a source requires
+     * {@link GraphicsDevice#supportsHtmlTextures} to be true.
+     *
+     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|HTMLElement[]} source - A
+     * canvas, image, video, or HTML element, or an array of 6 canvas, image, video, or HTML
+     * elements.
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
      * than 0, represents the image source for the Nth mipmap reduction level.
      */
     setSource(source, mipLevel = 0) {
+        if (this.device._isHTMLElementInterface(source)) {
+            if (!this.device.supportsHtmlTextures) {
+                Debug.error('Texture#setSource: HTML element textures are not supported on this device. Check device.supportsHtmlTextures before calling setSource with an HTML element.');
+                return;
+            }
+            if (this._cubemap || this._volume) {
+                Debug.error('Texture#setSource: HTML element textures can only be used with 2D textures, not cubemaps or volume textures.');
+                return;
+            }
+        }
+
         let invalid = false;
         let width, height;
 
@@ -1058,6 +1182,10 @@ class Texture {
                 if (source instanceof HTMLVideoElement) {
                     width = source.videoWidth;
                     height = source.videoHeight;
+                } else if (this.device._isHTMLElementInterface(source)) {
+                    const rect = source.getBoundingClientRect();
+                    width = Math.floor(rect.width) || 1;
+                    height = Math.floor(rect.height) || 1;
                 } else {
                     width = source.width;
                     height = source.height;
@@ -1132,22 +1260,30 @@ class Texture {
     }
 
     /**
-     * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-     * is called by internally by {@link setSource} and {@link unlock}. However, it still needs to
+     * Mark this texture as needing upload to the GPU.
+     *
+     * @ignore
+     */
+    markForUpload() {
+        this._needsUpload = true;
+        this.device?.texturesToUpload?.add(this);
+    }
+
+    /**
+     * Forces a reupload of the texture's pixel data to graphics memory. Ordinarily, this function
+     * is called internally by {@link setSource} and {@link unlock}. However, it still needs to
      * be called explicitly in the case where an HTMLVideoElement is set as the source of the
-     * texture.  Normally, this is done once every frame before video textured geometry is
+     * texture. Normally, this is done once every frame before video textured geometry is
      * rendered.
      */
     upload() {
-        this._needsUpload = true;
+        this.markForUpload();
         this._needsMipmapsUpload = this._mipmaps;
         this.impl.uploadImmediate?.(this.device, this);
     }
 
     /**
      * Download the textures data from the graphics memory to the local memory.
-     *
-     * Note a public API yet, as not all options are implemented on all platforms.
      *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
@@ -1168,7 +1304,6 @@ class Texture {
      * to false.
      * @returns {Promise<Uint8Array|Uint16Array|Uint32Array|Float32Array>} A promise that resolves
      * with the pixel data of the texture.
-     * @ignore
      */
     read(x, y, width, height, options = {}) {
         return this.impl.read?.(x, y, width, height, options);
@@ -1188,6 +1323,31 @@ class Texture {
      */
     write(x, y, width, height, data) {
         return this.impl.write?.(x, y, width, height, data);
+    }
+
+    /**
+     * Creates a TextureView for this texture, specifying a subset of mip levels and array layers.
+     * TextureViews can be used with compute shaders to access specific portions of a texture.
+     *
+     * Note: TextureView is only supported on WebGPU. On WebGL, the full texture is always bound.
+     *
+     * @param {number} [baseMipLevel] - The first mip level accessible to the view. Defaults to 0.
+     * @param {number} [mipLevelCount] - The number of mip levels accessible to the view. Defaults
+     * to 1.
+     * @param {number} [baseArrayLayer] - The first array layer accessible to the view. Defaults to
+     * 0.
+     * @param {number} [arrayLayerCount] - The number of array layers accessible to the view.
+     * Defaults to 1.
+     * @returns {TextureView} A new TextureView for this texture.
+     * @example
+     * // Create a view for mip level 1
+     * const mip1View = texture.getView(1);
+     *
+     * // Use with compute shader
+     * compute.setParameter('outputTexture', mip1View);
+     */
+    getView(baseMipLevel = 0, mipLevelCount = 1, baseArrayLayer = 0, arrayLayerCount = 1) {
+        return new TextureView(this, baseMipLevel, mipLevelCount, baseArrayLayer, arrayLayerCount);
     }
 }
 

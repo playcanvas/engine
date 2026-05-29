@@ -1,13 +1,16 @@
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// Basic example showing a simple Gaussian Splat with orbit camera controls.
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
@@ -45,13 +48,32 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
+
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.on('alphaClip:set', () => {
+        app.scene.gsplat.alphaClip = data.get('alphaClip');
+    });
+    data.on('alphaClipForward:set', () => {
+        app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+    data.set('alphaClip', 0.4);
+    data.set('alphaClipForward', 1 / 255);
+    app.scene.gsplat.alphaClip = data.get('alphaClip');
+    app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
 
     // create a splat entity and place it in the world
     const biker = new pc.Entity();
@@ -64,8 +86,11 @@ assetListLoader.load(() => {
     biker.setLocalScale(0.7, 0.7, 0.7);
     app.root.addChild(biker);
 
-    // set alpha clip value, used by shadows and picking
-    biker.gsplat.material.setParameter('alphaClip', 0.4);
+    const ORBIT_PIVOT = new pc.Vec3().copy(biker.getPosition());
+    ORBIT_PIVOT.y += 1;
+    const ORBIT_DISTANCE = 4;
+    const ORBIT_INITIAL_YAW = 32;
+    const ORBIT_INITIAL_PITCH = -10;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -73,21 +98,23 @@ assetListLoader.load(() => {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         toneMapping: pc.TONEMAP_ACES
     });
-    camera.setLocalPosition(-0.8, 2, 3);
+    app.root.addChild(camera);
 
-    // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
-    camera.script.create('orbitCamera', {
+    const orbitCam = /** @type {any} */ (camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            focusEntity: biker,
             distanceMax: 60,
             frameOnStart: false
         }
-    });
+    }));
+    if (orbitCam) {
+        orbitCam.pivotPoint.copy(ORBIT_PIVOT);
+        orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
+        orbitCam._updatePosition();
+    }
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
 
     // create ground to receive shadows
     const material = new pc.StandardMaterial();
@@ -129,5 +156,3 @@ assetListLoader.load(() => {
     directionalLight.setEulerAngles(55, 0, 20);
     app.root.addChild(directionalLight);
 });
-
-export { app };

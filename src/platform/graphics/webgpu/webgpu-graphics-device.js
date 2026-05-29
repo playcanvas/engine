@@ -1,5 +1,6 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { warnInsecureContext } from '../../../core/secure-context-warning.js';
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
@@ -31,9 +32,13 @@ import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
+import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
+import { WebgpuUploadStream } from './webgpu-upload-stream.js';
+import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
+ * @import { Texture } from '../texture.js'
  */
 
 const _uniqueLocations = new Map();
@@ -41,7 +46,19 @@ const _uniqueLocations = new Map();
 // size of indirect draw entry in bytes, 5 x 32bit
 const _indirectEntryByteSize = 5 * 4;
 
+// size of indirect dispatch entry in bytes, 3 x 32bit (x, y, z workgroup counts)
+const _indirectDispatchEntryByteSize = 3 * 4;
+
 class WebgpuGraphicsDevice extends GraphicsDevice {
+    /**
+     * Array of GPU resources pending destruction. Resources are destroyed after the current
+     * command buffers are submitted to ensure they're not in use.
+     *
+     * @type {Array<GPUTexture|GPUBuffer|GPUQuerySet>}
+     * @private
+     */
+    _deferredDestroys = [];
+
     /**
      * Object responsible for caching and creation of render pipelines.
      */
@@ -63,7 +80,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Number of indirect draw slots allocated.
      *
-     * @type {number}
      * @private
      */
     _indirectDrawBufferCount = 0;
@@ -71,10 +87,31 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Next unused index in indirectDrawBuffer.
      *
-     * @type {number}
      * @private
      */
     _indirectDrawNextIndex = 0;
+
+    /**
+     * Buffer used to store arguments for indirect dispatch calls.
+     *
+     * @type {StorageBuffer|null}
+     * @private
+     */
+    _indirectDispatchBuffer = null;
+
+    /**
+     * Number of indirect dispatch slots allocated.
+     *
+     * @private
+     */
+    _indirectDispatchBufferCount = 0;
+
+    /**
+     * Next unused index in indirectDispatchBuffer.
+     *
+     * @private
+     */
+    _indirectDispatchNextIndex = 0;
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -114,6 +151,68 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     emptyBindGroup;
 
     /**
+     * Monotonically increasing counter incremented each time queue.submit() is called.
+     *
+     * @ignore
+     */
+    submitVersion = 0;
+
+    /**
+     * When set, immersive XR writes color to this texture instead of the canvas swapchain.
+     * @type {any} // `GPUTexture | null`; using `any` to avoid exporting WebGPU types in published typings.
+     * @ignore
+     */
+    xrColorTexture = null;
+
+    /**
+     * View format of {@link WebgpuGraphicsDevice#xrColorTexture} for render pass attachment views.
+     * @type {any} // `GPUTextureFormat | null`; using `any` to avoid exporting WebGPU types in published typings.
+     * @ignore
+     */
+    xrColorTextureViewFormat = null;
+
+    /**
+     * Optional `GPUTextureViewDescriptor` describing how the framebuffer's color attachment view
+     * should be created from {@link WebgpuGraphicsDevice#xrColorTexture}. Used to pick the right
+     * array layer / mip when XR provides a layered (texture array) projection layer. Set per eye
+     * by {@link FramePassMultiView}; cleared back to `null` outside the per-view loop.
+     *
+     * @type {any} // `GPUTextureViewDescriptor | null`; using `any` to avoid exporting WebGPU types in published typings.
+     * @ignore
+     */
+    xrColorTextureViewDescriptor = null;
+
+    /**
+     * Per-view XR sub-image entries populated each frame by the WebGPU XR bridge. Each entry
+     * describes one XR view: the underlying GPU color texture, the view descriptor that selects the
+     * right slice, the viewport, and the view's GPU format. Empty outside immersive WebGPU XR.
+     *
+     * @type {{ colorTexture: any, viewDescriptor: any, viewport: any, viewFormat: any }[]}
+     * @ignore
+     */
+    xrSubImages = [];
+
+    /**
+     * Active XR view index for the multi-view rendering wrapper, or `-1` when not iterating views.
+     * Read by the forward renderer's per-view inner loop to render only the active eye.
+     *
+     * @type {number}
+     * @ignore
+     */
+    xrCurrentViewIndex = -1;
+
+    /**
+     * When set, used as the main color attachment in {@link WebgpuGraphicsDevice#frameStart} if there is
+     * no XR color texture and no canvas {@link GPUCanvasContext#getCurrentTexture} (for example headless
+     * or custom-surface hosts). Must be a WebGPU-backed {@link Texture}; {@link Texture#impl} must expose
+     * {@link WebgpuTexture#gpuTexture}.
+     *
+     * @type {Texture|null}
+     * @ignore
+     */
+    externalBackbuffer = null;
+
+    /**
      * Current command buffer encoder.
      *
      * @type {GPUCommandEncoder|null}
@@ -151,6 +250,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
+        this.featureLevel = options.featureLevel;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }
@@ -169,7 +269,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.resolver.destroy();
         this.resolver = null;
 
+        this._clearXrState();
+
+        this.externalBackbuffer = null;
+
         super.destroy();
+    }
+
+    /**
+     * Reset all per-frame WebGPU XR render state to its inactive defaults. Called by the XR bridge
+     * at the end of each XR frame and on session teardown, and by the graphics device on destroy.
+     *
+     * @ignore
+     */
+    _clearXrState() {
+        this.xrColorTexture = null;
+        this.xrColorTextureViewFormat = null;
+        this.xrColorTextureViewDescriptor = null;
+        this.xrSubImages.length = 0;
+        this.xrCurrentViewIndex = -1;
     }
 
     initDeviceCaps() {
@@ -203,6 +321,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // WGSL features
         const wgslFeatures = window.navigator.gpu.wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
+        this.supportsSubgroupUniformity = wgslFeatures?.has('subgroup_uniformity');
+        this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
+        this.supportsLinearIndexing = wgslFeatures?.has('linear_indexing');
+        this.supportsUnrestrictedPointerParameters = wgslFeatures?.has('unrestricted_pointer_parameters');
+        this.supportsPointerCompositeAccess = wgslFeatures?.has('pointer_composite_access');
+        this.supportsPacked4x8IntegerDotProduct = wgslFeatures?.has('packed_4x8_integer_dot_product');
+        this.supportsTextureAndSamplerLet = wgslFeatures?.has('texture_and_sampler_let');
 
         this.initCapsDefines();
     }
@@ -210,6 +335,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     async initWebGpu(glslangUrl, twgslUrl) {
 
         if (!window.navigator.gpu) {
+            warnInsecureContext('WebGPU');
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
 
@@ -220,13 +346,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (glslangUrl && twgslUrl) {
 
             // build a full URL from a relative or absolute path
+            const baseUrl = window.document?.baseURI ?? window.location.href;
             const buildUrl = (srcPath) => {
-                return new URL(srcPath, window.location.href).toString();
+                return new URL(srcPath, baseUrl).toString();
             };
+            const twgslScriptUrl = buildUrl(twgslUrl);
+            const twgslWasmUrl = buildUrl(twgslUrl.replace('.js', '.wasm'));
+            const glslangScriptUrl = buildUrl(glslangUrl);
 
             const results = await Promise.all([
-                import(`${buildUrl(twgslUrl)}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
-                import(`${buildUrl(glslangUrl)}`).then(module => module.default())
+                import(`${twgslScriptUrl}`).then(() => twgsl(twgslWasmUrl)),
+                import(`${glslangScriptUrl}`).then(module => module.default())
             ]);
 
             this.twgsl = results[0];
@@ -242,7 +372,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
             powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined,
-            xrCompatible: this.initOptions.xrCompatible
+
+            // Required for WebXR sessions using WebGPU
+            xrCompatible: !!this.initOptions.xrCompatible
         };
 
         /**
@@ -251,9 +383,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
-        // request optional features
+        const featureLevel = this.initOptions.featureLevel;
+        const bare = featureLevel === 'bare';
+
+        // request optional features (returns false for bare mode to simulate the most constrained device)
         const requiredFeatures = [];
-        const requireFeature = (feature) => {
+        const requireFeature = bare ? () => false : (feature) => {
             const supported = this.gpuAdapter.features.has(feature);
             if (supported) {
                 requiredFeatures.push(feature);
@@ -263,8 +398,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureFloatFilterable = requireFeature('float32-filterable');
         this.textureFloatBlendable = requireFeature('float32-blendable');
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
+        this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
+        this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
         this.supportsDepthClip = requireFeature('depth-clip-control');
         this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
@@ -273,18 +410,34 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         this.supportsClipDistances = requireFeature('clip-distances');
-        Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
+        this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
+        this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
+        this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
+        this.supportsPrimitiveIndex = requireFeature('primitive-index');
+        this.supportsSubgroups = requireFeature('subgroups');
+        this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMaxSize ?? 0) : 0;
+        this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
+        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
+            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
+        Debug.log(
+            `WEBGPU${this.gpuAdapter?.info ?
+                ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
+                ''
+            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
+        );
 
-        // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available
-        const adapterLimits = this.gpuAdapter?.limits;
+        // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
-        if (adapterLimits) {
-            for (const limitName in adapterLimits) {
-                // skip these as they fail on Windows Chrome and are not part of spec currently
-                if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
-                    continue;
+        if (!bare) {
+            const adapterLimits = this.gpuAdapter?.limits;
+            if (adapterLimits) {
+                for (const limitName in adapterLimits) {
+                    // skip these as they fail on Windows Chrome and are not part of spec currently
+                    if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
+                        continue;
+                    }
+                    requiredLimits[limitName] = adapterLimits[limitName];
                 }
-                requiredLimits[limitName] = adapterLimits[limitName];
             }
         }
 
@@ -306,8 +459,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
 
+        // HTML-in-Canvas support (copyElementImageToTexture)
+        this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
+
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+
+        // surface any uncaptured WebGPU errors
+        this.wgpu.addEventListener?.('uncapturederror', (ev) => {
+            const e = /** @type {any} */ (ev).error;
+            Debug.error(`WebGPU uncaptured ${e?.constructor?.name ?? 'Error'}: ${e?.message ?? e}`);
+        });
 
         this.initDeviceCaps();
 
@@ -391,10 +553,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
 
             super.loseContext(); // 'super' works correctly here
+            this.fire('devicelost');
 
-            await this.createDevice(); // Ensure this method is defined in your class
+            await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
 
             super.restoreContext(); // 'super' works correctly here
+            this.fire('devicerestored');
         }
     }
 
@@ -437,11 +601,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
 
-        // current frame color output buffer (fallback to external backbuffer if not available)
-        const outColorBuffer = this.gpuContext?.getCurrentTexture?.() ?? this.externalBackbuffer?.impl.gpuTexture;
+        // current frame color output buffer (XR overrides canvas swapchain; external backbuffer is last resort)
+        const outColorBuffer =
+            this.xrColorTexture ??
+            this.gpuContext?.getCurrentTexture?.() ??
+            this.externalBackbuffer?.impl.gpuTexture;
+        Debug.assert(outColorBuffer, 'WebGPU frameStart requires an XR color texture, canvas swapchain texture, or externalBackbuffer.');
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
-        // reallocate framebuffer if dimensions change, to match the output texture
+        // Reallocate framebuffer if dimensions change, to match the output texture. For WebXR
+        // WebGPU projection color targets that are 2d-array textures, width/height are the per-layer
+        // extent (same for every view), which matches what the render pass and internal depth need.
         if (this.backBufferSize.x !== outColorBuffer.width || this.backBufferSize.y !== outColorBuffer.height) {
 
             this.backBufferSize.set(outColorBuffer.width, outColorBuffer.height);
@@ -455,13 +625,22 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const rt = this.backBuffer;
         const wrt = rt.impl;
 
+        const attachmentViewFormat = (outColorBuffer === this.xrColorTexture && this.xrColorTextureViewFormat) ?
+            this.xrColorTextureViewFormat :
+            this.backBufferViewFormat;
+
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-        wrt.setColorAttachment(0, undefined, this.backBufferViewFormat);
+        wrt.setColorAttachment(0, undefined, attachmentViewFormat);
+
+        // Track the backbuffer's dimensions to whatever texture we're rendering into
+        // this frame (canvas swapchain in normal use, XR projection-layer texture during XR).
+        rt._width = outColorBuffer.width;
+        rt._height = outColorBuffer.height;
 
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
-        wrt.assignColorTexture(this, outColorBuffer);
+        wrt.assignColorTexture(outColorBuffer, attachmentViewFormat);
 
         WebgpuDebug.end(this, 'frameStart');
         WebgpuDebug.end(this, 'frameStart');
@@ -479,6 +658,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         this._indirectDrawNextIndex = 0;
+        this._indirectDispatchNextIndex = 0;
     }
 
     createBufferImpl(usageFlags) {
@@ -501,12 +681,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuShader(shader);
     }
 
+    createDrawCommandImpl(drawCommands) {
+        return new WebgpuDrawCommands(this);
+    }
+
     createTextureImpl(texture) {
+        this.textures.add(texture);
         return new WebgpuTexture(texture);
+    }
+
+    createXrBridgeImpl(xrBridge) {
+        return new WebgpuXrBridge(xrBridge);
     }
 
     createRenderTargetImpl(renderTarget) {
         return new WebgpuRenderTarget(renderTarget);
+    }
+
+    createUploadStreamImpl(uploadStream) {
+        return new WebgpuUploadStream(uploadStream);
     }
 
     createBindGroupFormatImpl(bindGroupFormat) {
@@ -536,20 +729,56 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // allocate buffer
         if (this._indirectDrawBuffer === null) {
-            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * 4, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this._indirectDrawBuffer, 'WebgpuGraphicsDevice.indirectDraw');
             this._indirectDrawBufferCount = this.maxIndirectDrawCount;
         }
     }
 
-    getIndirectDrawSlot() {
+    getIndirectDrawSlot(count = 1) {
 
         // make sure the buffer is allocated
         this.allocateIndirectDrawBuffer();
 
-        // allocate slot
+        // allocate consecutive slots
         const slot = this._indirectDrawNextIndex;
-        Debug.assert(slot < this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (currently ${this._indirectDrawNextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
-        this._indirectDrawNextIndex++;
+        const nextIndex = this._indirectDrawNextIndex + count;
+        Debug.assert(nextIndex <= this.maxIndirectDrawCount, `Insufficient indirect draw slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDrawCount`);
+        this._indirectDrawNextIndex = nextIndex;
+        return slot;
+    }
+
+    get indirectDispatchBuffer() {
+        this.allocateIndirectDispatchBuffer();
+        return this._indirectDispatchBuffer;
+    }
+
+    allocateIndirectDispatchBuffer() {
+
+        // handle reallocation
+        if (this._indirectDispatchNextIndex === 0 && this._indirectDispatchBufferCount < this.maxIndirectDispatchCount) {
+            this._indirectDispatchBuffer?.destroy();
+            this._indirectDispatchBuffer = null;
+        }
+
+        // allocate buffer
+        if (this._indirectDispatchBuffer === null) {
+            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            DebugHelper.setName(this._indirectDispatchBuffer, 'WebgpuGraphicsDevice.indirectDispatch');
+            this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
+        }
+    }
+
+    getIndirectDispatchSlot(count = 1) {
+
+        // make sure the buffer is allocated
+        this.allocateIndirectDispatchBuffer();
+
+        // allocate consecutive slots
+        const slot = this._indirectDispatchNextIndex;
+        const nextIndex = this._indirectDispatchNextIndex + count;
+        Debug.assert(nextIndex <= this.maxIndirectDispatchCount, `Insufficient indirect dispatch slots per frame (requested ${count}, currently ${nextIndex}), please adjust GraphicsDevice#maxIndirectDispatchCount`);
+        this._indirectDispatchNextIndex = nextIndex;
         return slot;
     }
 
@@ -612,7 +841,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         _uniqueLocations.clear();
     }
 
-    draw(primitive, indexBuffer, numInstances = 1, indirectSlot, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true) {
 
         if (this.shader.ready && !this.shader.failed) {
 
@@ -642,7 +871,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 // render pipeline
                 pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                    this.stencilEnabled, this.stencilFront, this.stencilBack);
+                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace);
                 Debug.assert(pipeline);
 
                 if (this.pipeline !== pipeline) {
@@ -656,21 +885,44 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
 
             // draw
-            if (indirectSlot !== undefined) {
-                const indirectOffset = indirectSlot * _indirectEntryByteSize;
-                const indirectBuffer = this.indirectDrawBuffer.impl.buffer;
-                if (indexBuffer) {
-                    passEncoder.drawIndexedIndirect(indirectBuffer, indirectOffset);
-                } else {
-                    passEncoder.drawIndirect(indirectBuffer, indirectOffset);
+            if (drawCommands) { // indirect draw path
+
+                const storage = drawCommands.impl?.storage ?? this.indirectDrawBuffer;
+                const indirectBuffer = storage.impl.buffer;
+                const drawsCount = drawCommands.count;
+
+                // TODO: when multiDrawIndirect is supported, we can use it here instead of a loop
+                for (let d = 0; d < drawsCount; d++) {
+                    const indirectOffset = (drawCommands.slotIndex + d) * _indirectEntryByteSize;
+                    if (indexBuffer) {
+                        passEncoder.drawIndexedIndirect(indirectBuffer, indirectOffset);
+                    } else {
+                        passEncoder.drawIndirect(indirectBuffer, indirectOffset);
+                    }
                 }
-            } else {
+            } else { // single draw path
+
                 if (indexBuffer) {
                     passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, 0);
                 } else {
                     passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
                 }
             }
+
+            // track draw calls - always count as 1 (one material setup, one API call)
+            this._drawCallsPerFrame++;
+
+            // #if _PROFILER
+            // track primitive count
+            if (drawCommands) {
+                // use pre-calculated primitive count from drawCommands
+                this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+            } else {
+                // single draw
+                const primCount = primitive.count * (numInstances > 1 ? numInstances : 1);
+                this._primsPerFrame[primitive.type] += primCount;
+            }
+            // #endif
 
             WebgpuDebug.end(this, 'Drawing', {
                 vb0,
@@ -738,6 +990,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.cullMode = cullMode;
     }
 
+    setFrontFace(frontFace) {
+        this.frontFace = frontFace;
+    }
+
     setAlphaToCoverage(state) {
     }
 
@@ -755,25 +1011,28 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     _uploadDirtyTextures() {
-
-        this.textures.forEach((texture) => {
-            if (texture._needsUpload || texture._needsMipmaps) {
+        this.texturesToUpload.forEach((texture) => {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
                 texture.upload();
             }
         });
+        this.texturesToUpload.clear();
     }
 
     setupTimeStampWrites(passDesc, name) {
         if (this.gpuProfiler._enabled) {
             if (this.gpuProfiler.timestampQueriesSet) {
                 const slot = this.gpuProfiler.getSlot(name);
-
-                passDesc = passDesc ?? {};
-                passDesc.timestampWrites = {
-                    querySet: this.gpuProfiler.timestampQueriesSet.querySet,
-                    beginningOfPassWriteIndex: slot * 2,
-                    endOfPassWriteIndex: slot * 2 + 1
-                };
+                if (slot === -1) {
+                    Debug.warnOnce('Too many GPU profiler slots allocated during the frame, ignoring timestamp writes');
+                } else {
+                    passDesc = passDesc ?? {};
+                    passDesc.timestampWrites = {
+                        querySet: this.gpuProfiler.timestampQueriesSet.querySet,
+                        beginningOfPassWriteIndex: slot * 2,
+                        endOfPassWriteIndex: slot * 2 + 1
+                    };
+                }
             }
         }
         return passDesc;
@@ -884,6 +1143,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     startComputePass(name) {
 
+        // upload textures that need it, to avoid them being uploaded during the pass
+        this._uploadDirtyTextures();
+
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
 
@@ -894,6 +1156,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const computePassDesc = this.setupTimeStampWrites(undefined, name);
 
         // start the pass
+        DebugHelper.setLabel(computePassDesc, `ComputePass-${name}`);
         const commandEncoder = this.getCommandEncoder();
         this.passEncoder = commandEncoder.beginComputePass(computePassDesc);
         DebugHelper.setLabel(this.passEncoder, `ComputePass-${name}`);
@@ -952,6 +1215,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     endCommandEncoder() {
 
+        Debug.assert(!this.insideRenderPass, 'Attempted to finish GPUCommandEncoder while inside a pass. This will invalidate the current pass encoder and cause "Parent encoder is already finished" validation errors.');
+
         const { commandEncoder } = this;
         if (commandEncoder) {
 
@@ -973,6 +1238,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     submit() {
 
+        Debug.assert(!this.insideRenderPass, 'Attempted to submit command buffers while inside a pass. This finishes the parent command encoder and invalidates the active pass ("Parent encoder is already finished") .');
+
         // end the current encoder
         this.endCommandEncoder();
 
@@ -993,9 +1260,32 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             this.wgpu.queue.submit(this.commandBuffers);
             this.commandBuffers.length = 0;
+            this.submitVersion++;
 
             // notify dynamic buffers
             this.dynamicBuffers.onCommandBuffersSubmitted();
+        }
+
+        // destroy deferred resources after submit to ensure they're no longer referenced
+        const deferredDestroys = this._deferredDestroys;
+        if (deferredDestroys.length > 0) {
+            for (let i = 0; i < deferredDestroys.length; i++) {
+                deferredDestroys[i].destroy();
+            }
+            deferredDestroys.length = 0;
+        }
+    }
+
+    /**
+     * Defer destruction of a GPU resource until after the current command buffers are submitted.
+     * This ensures the resource is not destroyed while still referenced by pending GPU commands.
+     *
+     * @param {GPUTexture|GPUBuffer|GPUQuerySet} gpuResource - The GPU resource to destroy.
+     * @private
+     */
+    deferDestroy(gpuResource) {
+        if (gpuResource) {
+            this._deferredDestroys.push(gpuResource);
         }
     }
 
@@ -1010,6 +1300,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // so we can skip this if fullscreen
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
+
+            // When the backbuffer is bound to an XR projection-layer texture, do NOT call
+            // passEncoder.setViewport to avoid issues on Apple's visionOS. This should be ok in
+            // general, as we're not likely to do a multi-view rendering when XR is active.
+            if (this.xrColorTexture) {
+                return;
+            }
 
             if (!this.renderTarget.flipY) {
                 y = this.renderTarget.height - y - h;
@@ -1029,6 +1326,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // so we can skip this if fullscreen
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
+
+            // When the backbuffer is bound to an XR projection-layer texture, do NOT call
+            // passEncoder.setScissorRect to avoid issues on Apple's visionOS. This should be ok in
+            // general, as we're not likely to do a multi-view rendering when XR is active.
+            if (this.xrColorTexture) {
+                return;
+            }
 
             if (!this.renderTarget.flipY) {
                 y = this.renderTarget.height - y - h;
@@ -1174,14 +1478,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             /** @type {GPUImageCopyTexture} */
             const copySrc = {
                 texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
-                mipLevel: 0
+                mipLevel: source ? source.mipLevel : 0
             };
 
             // write to supplied render target, or to the framebuffer
             /** @type {GPUImageCopyTexture} */
             const copyDst = {
                 texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
-                mipLevel: 0
+                mipLevel: dest ? dest.mipLevel : 0
             };
 
             Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
@@ -1193,6 +1497,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // read from supplied render target, or from the framebuffer
             const sourceRT = source ? source : this.renderTarget;
             const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
+            const sourceMipLevel = sourceRT.mipLevel;
 
             if (source.samples > 1) {
 
@@ -1204,17 +1509,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
                 // write to supplied render target, or to the framebuffer
                 const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
+                const destMipLevel = dest ? dest.mipLevel : this.renderTarget.mipLevel;
 
                 /** @type {GPUImageCopyTexture} */
                 const copySrc = {
                     texture: sourceTexture,
-                    mipLevel: 0
+                    mipLevel: sourceMipLevel
                 };
 
                 /** @type {GPUImageCopyTexture} */
                 const copyDst = {
                     texture: destTexture,
-                    mipLevel: 0
+                    mipLevel: destMipLevel
                 };
 
                 Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
@@ -1225,6 +1531,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
 
         return true;
+    }
+
+    get hasTranspilers() {
+        return this.glslang && this.twgsl;
     }
 
     // #if _DEBUG

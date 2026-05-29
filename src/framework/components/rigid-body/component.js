@@ -26,12 +26,12 @@ const _vec3 = new Vec3();
  * collide with other rigid bodies. Using scripts, you can apply forces and impulses to rigid
  * bodies.
  *
- * You should never need to use the RigidBodyComponent constructor directly. To add an
+ * You should never need to use the RigidBodyComponent constructor directly. To add a
  * RigidBodyComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
  * // Create a static 1x1x1 box-shaped rigid body
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('collision'); // Without options, this defaults to a 1x1x1 box shape
  * entity.addComponent('rigidbody'); // Without options, this defaults to a 'static' body
  * ```
@@ -39,7 +39,7 @@ const _vec3 = new Vec3();
  * To create a dynamic sphere with mass of 10, do:
  *
  * ```javascript
- * const entity = pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('collision', {
  *     type: 'sphere'
  * });
@@ -170,7 +170,10 @@ class RigidBodyComponent extends Component {
     /** @private */
     _simulationEnabled = false;
 
-    /** @private */
+    /**
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
+     * @private
+     */
     _type = BODYTYPE_STATIC;
 
     /** @ignore */
@@ -546,7 +549,7 @@ class RigidBodyComponent extends Component {
      *
      * Defaults to {@link BODYTYPE_STATIC}.
      *
-     * @type {string}
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
     set type(type) {
         if (this._type !== type) {
@@ -579,7 +582,7 @@ class RigidBodyComponent extends Component {
     /**
      * Gets the rigid body type determines how the body is simulated.
      *
-     * @type {string}
+     * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
     get type() {
         return this._type;
@@ -743,8 +746,8 @@ class RigidBodyComponent extends Component {
 
     /**
      * Apply a force to the body at a point. By default, the force is applied at the origin of the
-     * body. However, the force can be applied at an offset this point by specifying a world space
-     * vector from the body's origin to the point of application.
+     * body. However, the force can be applied at an offset from this point by specifying a world
+     * space vector from the body's origin to the point of application.
      *
      * @overload
      * @param {number} x - X-component of the force in world space.
@@ -766,8 +769,8 @@ class RigidBodyComponent extends Component {
      */
     /**
      * Apply a force to the body at a point. By default, the force is applied at the origin of the
-     * body. However, the force can be applied at an offset this point by specifying a world space
-     * vector from the body's origin to the point of application.
+     * body. However, the force can be applied at an offset from this point by specifying a world
+     * space vector from the body's origin to the point of application.
      *
      * @overload
      * @param {Vec3} force - Vector representing the force in world space.

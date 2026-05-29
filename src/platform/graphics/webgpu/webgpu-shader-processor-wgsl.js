@@ -38,13 +38,60 @@ const KEYWORD_RESOURCE = /^[ \t]*var\s*(?:(<storage,[^>]*>)\s*([\w\d_]+)\s*:\s*(
 
 // match varying name from string like: '@interpolate(perspective, centroid) smoothColor : vec3f;'
 // eslint-disable-next-line
-const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:/;
+const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:\s*([\w<>]+)/;
 
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
 
 // matches vertex of fragment entry function, extracts the input name. Ends at the start of the function body '{'.
 const ENTRY_FUNCTION = /(@vertex|@fragment)\s*fn\s+\w+\s*\(\s*(\w+)\s*:[\s\S]*?\{/;
+
+// Tables describing optional WGSL built-in inputs that the engine emits on demand. Each entry
+// maps a public private global (pcXxx) and a struct field (`<input>.xxx`) to the underlying
+// `@builtin(...)` declaration. Detection is data-driven so adding a new built-in is a one-row
+// change.
+//
+// - `requiresFeature` (optional): name of a `device.<X>` boolean that must be true to emit it.
+// - `isFallback` (optional): used as a sentinel when no other built-in or user input is present,
+//   to guarantee the input struct is never empty (which is invalid WGSL).
+const FRAGMENT_BUILTINS = [
+    { wgslName: 'position', wgslType: 'vec4f', wgslBuiltin: 'position', pcName: 'pcPosition', isFallback: true },
+    { wgslName: 'frontFacing', wgslType: 'bool', wgslBuiltin: 'front_facing', pcName: 'pcFrontFacing' },
+    { wgslName: 'sampleIndex', wgslType: 'u32', wgslBuiltin: 'sample_index', pcName: 'pcSampleIndex' },
+    { wgslName: 'primitiveIndex', wgslType: 'u32', wgslBuiltin: 'primitive_index', pcName: 'pcPrimitiveIndex', requiresFeature: 'supportsPrimitiveIndex' }
+];
+
+const VERTEX_BUILTINS = [
+    { wgslName: 'vertexIndex', wgslType: 'u32', wgslBuiltin: 'vertex_index', pcName: 'pcVertexIndex', isFallback: true },
+    { wgslName: 'instanceIndex', wgslType: 'u32', wgslBuiltin: 'instance_index', pcName: 'pcInstanceIndex' }
+];
+
+// Returns the subset of `builtins` whose pcName or `<entryInputName>.wgslName` appears in `source`
+// as a whole word, skipping any whose required device feature is not supported. Word boundaries
+// prevent false positives on identifiers that contain these names as a substring. Comments are
+// stripped by the preprocessor before this runs, so they don't need to be considered.
+const detectUsedBuiltins = (builtins, source, entryInputName, device) => {
+    return builtins.filter((b) => {
+        if (b.requiresFeature && !device[b.requiresFeature]) return false;
+        return new RegExp(`\\b(?:${b.pcName}|${entryInputName}\\.${b.wgslName})\\b`).test(source);
+    });
+};
+
+// Guarantees the input struct is never empty (which is invalid WGSL): if no built-ins were
+// detected and the rest of the struct (varyings / attributes) is also empty, fall back to the
+// stage's designated sentinel built-in.
+const ensureNonEmptyStruct = (used, builtins, device, otherFieldsPresent) => {
+    if (used.length === 0 && !otherFieldsPresent) {
+        const fallback = builtins.find(b => b.isFallback && (!b.requiresFeature || device[b.requiresFeature]));
+        if (fallback) return [fallback];
+    }
+    return used;
+};
+
+// Codegen helpers for a list of detected built-ins.
+const renderBuiltinStructFields = used => used.map(b => `    @builtin(${b.wgslBuiltin}) ${b.wgslName} : ${b.wgslType},\n`).join('');
+const renderBuiltinPrivates = used => used.map(b => `    var<private> ${b.pcName}: ${b.wgslType};\n`).join('');
+const renderBuiltinCopies = used => used.map(b => `    ${b.pcName} = input.${b.wgslName};\n`).join('');
 
 const textureBaseInfo = {
     'texture_1d': { viewDimension: TEXTUREDIMENSION_1D, baseSampleType: SAMPLETYPE_FLOAT },
@@ -330,15 +377,22 @@ class WebgpuShaderProcessorWGSL {
         const vertexExtracted = WebgpuShaderProcessorWGSL.extract(shaderDefinition.vshader);
         const fragmentExtracted = WebgpuShaderProcessorWGSL.extract(shaderDefinition.fshader);
 
+        // extract the user's input parameter name from each entry function for built-in detection.
+        // Note: only the parameter name is captured here, not the brace position - `renameUniformAccess`
+        // below modifies the source and invalidates any cached match positions, so `copyInputs` re-runs
+        // the regex against the post-rename source to find its injection point.
+        const vertexInputName = vertexExtracted.src.match(ENTRY_FUNCTION)?.[2] ?? '';
+        const fragmentInputName = fragmentExtracted.src.match(ENTRY_FUNCTION)?.[2] ?? '';
+
         // VS - convert a list of attributes to a shader block with fixed locations
         const attributesMap = new Map();
-        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions, shader);
+        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions, shader, device, vertexExtracted.src, vertexInputName);
 
         // VS - convert a list of varyings to a shader block
-        const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
+        const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true, device);
 
         // FS - convert a list of varyings to a shader block
-        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false);
+        const fragmentVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(fragmentExtracted.varyings, varyingMap, false, device, fragmentExtracted.src, fragmentInputName);
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
         // Note that as both vertex and fragment can declare the same uniform, we need to remove duplicates
@@ -602,12 +656,12 @@ class WebgpuShaderProcessorWGSL {
         let code = '';
         processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {
             if (format) {
-                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex, 1);
+                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex);
             }
         });
 
         // and also for generated mesh format
-        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH, 0);
+        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH);
 
         return {
             code,
@@ -671,31 +725,27 @@ class WebgpuShaderProcessorWGSL {
      * ```
      * @param {BindGroupFormat} format - The format of the bind group.
      * @param {number} bindGroup - The bind group index.
-     * @param {number} startBindIndex - The starting bind index.
      * @returns {string} - The shader code for the bind group.
      */
-    static getTextureShaderDeclaration(format, bindGroup, startBindIndex) {
+    static getTextureShaderDeclaration(format, bindGroup) {
         let code = '';
-        let bindIndex = startBindIndex;
 
         format.textureFormats.forEach((format) => {
 
             const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType);
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.name}: ${textureTypeName};\n`;
-            bindIndex++;
+            code += `@group(${bindGroup}) @binding(${format.slot}) var ${format.name}: ${textureTypeName};\n`;
 
             if (format.hasSampler) {
+                // A slot should have been left empty for the sampler at format.slot+1
                 const samplerName = format.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
-                code += `@group(${bindGroup}) @binding(${bindIndex}) var ${format.samplerName}: ${samplerName};\n`;
-                bindIndex++;
+                code += `@group(${bindGroup}) @binding(${format.slot + 1}) var ${format.samplerName}: ${samplerName};\n`;
             }
         });
 
         format.storageBufferFormats.forEach((format) => {
 
             const access = format.readOnly ? 'read' : 'read_write';
-            code += `@group(${bindGroup}) @binding(${bindIndex}) var<storage, ${access}> ${format.name} : ${format.format};\n`;
-            bindIndex++;
+            code += `@group(${bindGroup}) @binding(${format.slot}) var<storage, ${access}> ${format.name} : ${format.format};\n`;
 
         });
 
@@ -705,16 +755,18 @@ class WebgpuShaderProcessorWGSL {
         return code;
     }
 
-    static processVaryings(varyingLines, varyingMap, isVertex) {
+    static processVaryings(varyingLines, varyingMap, isVertex, device, source = '', entryInputName = '') {
         let block = '';
         let blockPrivates = '';
         let blockCopy = '';
+
         varyingLines.forEach((line, index) => {
             const match = line.match(VARYING);
             Debug.assert(match, `Varying line is not valid: ${line}`);
 
             if (match) {
                 const name = match[1];
+                const type = match[2];
 
                 if (isVertex) {
                     // store it in the map
@@ -731,7 +783,7 @@ class WebgpuShaderProcessorWGSL {
                 if (!isVertex) {
 
                     // private global variable for fragment varying
-                    blockPrivates += `    var<private> ${line};\n`;
+                    blockPrivates += `    var<private> ${name}: ${type};\n`;
 
                     // copy input variable to the private variable
                     blockCopy += `    ${name} = input.${name};\n`;
@@ -739,45 +791,52 @@ class WebgpuShaderProcessorWGSL {
             }
         });
 
-        // add built-in varyings
+        // vertex output: @builtin(position) is required by WGSL, always emitted
         if (isVertex) {
-            block += '    @builtin(position) position : vec4f,\n';          // output position
-        } else {
-            block += '    @builtin(position) position : vec4f,\n';          // interpolated fragment position
-            block += '    @builtin(front_facing) frontFacing : bool,\n';    // front-facing
-            block += '    @builtin(sample_index) sampleIndex : u32\n';      // sample index for MSAA
+            block += '    @builtin(position) position : vec4f,\n';
+            return `
+                struct VertexOutput {
+                    ${block}
+                };
+            `;
         }
 
-        // global variables for build-in input into fragment shader
-        const fragmentGlobals = isVertex ? '' : `
-            var<private> pcPosition: vec4f;
-            var<private> pcFrontFacing: bool;
-            var<private> pcSampleIndex: u32;
+        // fragment input: data-driven detection of optional built-ins, with sentinel fallback
+        // to guarantee a non-empty FragmentInput struct (which is invalid WGSL).
+        const usedBuiltins = ensureNonEmptyStruct(
+            detectUsedBuiltins(FRAGMENT_BUILTINS, source, entryInputName, device),
+            FRAGMENT_BUILTINS,
+            device,
+            block.length > 0
+        );
+        block += renderBuiltinStructFields(usedBuiltins);
+
+        return `
+            struct FragmentInput {
+                ${block}
+            };
+
+            ${renderBuiltinPrivates(usedBuiltins)}
             ${blockPrivates}
-            
+
             // function to copy inputs (varyings) to private global variables
             fn _pcCopyInputs(input: FragmentInput) {
                 ${blockCopy}
-                pcPosition = input.position;
-                pcFrontFacing = input.frontFacing;
-                pcSampleIndex = input.sampleIndex;
+                ${renderBuiltinCopies(usedBuiltins)}
             }
-        `;
-
-        const structName = isVertex ? 'VertexOutput' : 'FragmentInput';
-        return `
-            struct ${structName} {
-                ${block}
-            };
-            ${fragmentGlobals}
         `;
     }
 
     static generateFragmentOutputStruct(src, numRenderTargets) {
         let structCode = 'struct FragmentOutput {\n';
 
+        // only include color outputs that the shader actually writes to
+        const colorName = i => `color${i > 0 ? i : ''}`;
         for (let i = 0; i < numRenderTargets; i++) {
-            structCode += `    @location(${i}) color${i > 0 ? i : ''} : vec4f,\n`;
+            const name = colorName(i);
+            if (src.search(new RegExp(`\\.${name}\\s*=`)) !== -1) {
+                structCode += `    @location(${i}) ${name} : pcOutType${i},\n`;
+            }
         }
 
         // find if the src contains `.fragDepth =`, ignoring whitespace before = sign
@@ -813,7 +872,7 @@ class WebgpuShaderProcessorWGSL {
         return floatToIntShort[shortType] || null;
     }
 
-    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, attributesMap, processingOptions, shader) {
+    static processAttributes(attributeLines, shaderDefinitionAttributes = {}, attributesMap, processingOptions, shader, device, source = '', entryInputName = '') {
         let blockAttributes = '';
         let blockPrivates = '';
         let blockCopy = '';
@@ -864,35 +923,42 @@ class WebgpuShaderProcessorWGSL {
             }
         });
 
+        // vertex input: data-driven detection of optional built-ins, with sentinel fallback
+        // to guarantee a non-empty VertexInput struct (which is invalid WGSL).
+        const usedBuiltins = ensureNonEmptyStruct(
+            detectUsedBuiltins(VERTEX_BUILTINS, source, entryInputName, device),
+            VERTEX_BUILTINS,
+            device,
+            blockAttributes.length > 0
+        );
+
         return `
             struct VertexInput {
                 ${blockAttributes}
-                @builtin(vertex_index) vertexIndex : u32,       // built-in vertex index
-                @builtin(instance_index) instanceIndex : u32    // built-in instance index
+                ${renderBuiltinStructFields(usedBuiltins)}
             };
 
             ${blockPrivates}
-            var<private> pcVertexIndex: u32;
-            var<private> pcInstanceIndex: u32;
+            ${renderBuiltinPrivates(usedBuiltins)}
 
             fn _pcCopyInputs(input: VertexInput) {
                 ${blockCopy}
-                pcVertexIndex = input.vertexIndex;
-                pcInstanceIndex = input.instanceIndex;
+                ${renderBuiltinCopies(usedBuiltins)}
             }
         `;
     }
 
     /**
      * Injects a call to _pcCopyInputs with the function's input parameter right after the opening
-     * brace of a WGSL function marked with `@vertex` or `@fragment`.
+     * brace of a WGSL function marked with `@vertex` or `@fragment`. The regex is run inside this
+     * function (not hoisted) so the brace position is always derived from the current `src` - any
+     * earlier source-modifying step (e.g. `renameUniformAccess`) would invalidate a cached position.
      *
      * @param {string} src - The source string containing the WGSL code.
      * @param {Shader} shader - The shader.
      * @returns {string} - The modified source string.
      */
     static copyInputs(src, shader) {
-        // find @vertex or @fragment followed by the function signature and capture the input parameter name
         const match = src.match(ENTRY_FUNCTION);
 
         // check if match exists AND the parameter name (Group 2) was captured

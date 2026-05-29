@@ -15,7 +15,7 @@ const areaHalfAxisHeight = new Vec3(0, 0, 0.5);
 const TextureIndexFloat = {
     POSITION_RANGE: 0,              // positions.xyz, range
     DIRECTION_FLAGS: 1,             // spot direction.xyz, 32bit flags
-    COLOR_ANGLES_BIAS: 2,           // color.rgb, spot inner and outer, bias and normal bias (half floats format), 16bits unused
+    COLOR_ANGLES_BIAS: 2,           // x: color.rg, y: color.b & angle flags, z: cone angles, w: biases (all packed as 16-bit values)
 
     PROJ_MAT_0: 3,                  // projection matrix row 0 (spot light)
     ATLAS_VIEWPORT: 3,              // atlas viewport data (omni light)

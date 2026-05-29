@@ -3,7 +3,7 @@
 
 // input and output is vec4, containing position in .xyz and lifetime in .w
 attribute vec4 vertex_position;
-varying vec4 out_vertex_position;
+varying vec4 updated_vertex_position;
 
 // parameters controlling simulation
 uniform float deltaTime;
@@ -45,5 +45,5 @@ void main(void) {
     }
 
     // write out updated particle
-    out_vertex_position = vec4(pos, liveTime);
+    updated_vertex_position = vec4(pos, liveTime);
 }

@@ -1,7 +1,5 @@
 class GSplatComponentData {
-    constructor() {
-        this.enabled = true;
-    }
+    enabled = true;
 }
 
 export { GSplatComponentData };

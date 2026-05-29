@@ -1,13 +1,12 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -134,5 +133,3 @@ app.on('update', (/** @type {number} */ dt) => {
     camera.setLocalPosition(70 * Math.sin(time), 0, 70 * Math.cos(time));
     camera.lookAt(pc.Vec3.ZERO);
 });
-
-export { app };

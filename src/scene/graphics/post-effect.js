@@ -11,8 +11,8 @@ import { drawQuadWithShader } from './quad-render-utils.js';
 const _viewport = new Vec4();
 
 /**
- * Base class for all post effects. Post effects take a a render target as input apply effects to
- * it and then render the result to an output render target or the screen if no output is
+ * Base class for all post effects. Post effects take a render target as input, apply effects to
+ * it, and then render the result to an output render target or the screen if no output is
  * specified.
  *
  * @category Graphics
@@ -34,8 +34,6 @@ class PostEffect {
         /**
          * The property that should to be set to `true` (by the custom post effect) if a depth map
          * is necessary (default is false).
-         *
-         * @type {boolean}
          */
         this.needsDepthBuffer = false;
     }

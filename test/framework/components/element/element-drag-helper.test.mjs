@@ -10,6 +10,7 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { Mouse } from '../../../../src/platform/input/mouse.js';
 import { TouchDevice } from '../../../../src/platform/input/touch-device.js';
+import { ASPECT_MANUAL } from '../../../../src/scene/constants.js';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ElementDragHelper', function () {
@@ -86,6 +87,10 @@ describe('ElementDragHelper', function () {
         const cameraEntity = new Entity('camera', app);
         cameraEntity.setPosition(new Vec3(0, 0, 100));
         camera = cameraEntity.addComponent('camera', {});
+
+        // lock the aspect ratio so the drag math is independent of the test canvas dimensions
+        camera.aspectRatioMode = ASPECT_MANUAL;
+        camera.aspectRatio = 16 / 9;
 
         parent = new Entity('parent', app);
         parent.addChild(entity);

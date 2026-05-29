@@ -1,20 +1,22 @@
-// @config DESCRIPTION This example demonstrates how to use the Anim Component to animate the properties of other Components.
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example demonstrates how to use the Anim Component to animate the properties of other
+// Components.
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', {
-        url: `${rootPath}/static/assets/textures/playcanvas-grey.png`
+        url: './assets/textures/playcanvas-grey.png'
     })
 };
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -247,5 +249,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

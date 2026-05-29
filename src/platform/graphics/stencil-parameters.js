@@ -51,10 +51,7 @@ class StencilParameters {
      */
     _writeMask;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _dirty = true;
 
     /**

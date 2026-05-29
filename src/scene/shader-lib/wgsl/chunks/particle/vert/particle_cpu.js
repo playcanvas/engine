@@ -26,18 +26,20 @@ uniform numParticles: f32;
 uniform lifetime: f32;
 uniform stretch: f32;
 uniform seed: f32;
-uniform wrapBounds: vec3f;
 uniform emitterScale: vec3f;
 uniform faceTangent: vec3f;
 uniform faceBinorm: vec3f;
 
 #ifdef PARTICLE_GPU
-    var internalTex0: texture_2d<f32>;
-    var internalTex0Sampler: sampler;
-    var internalTex1: texture_2d<f32>;
-    var internalTex1Sampler: sampler;
-    var internalTex2: texture_2d<f32>;
-    var internalTex2Sampler: sampler;
+    #ifdef WRAP
+        uniform wrapBounds: vec3f;
+    #endif
+#endif
+
+#ifdef PARTICLE_GPU
+    var internalTex0: texture_2d<uff>;
+    var internalTex1: texture_2d<uff>;
+    var internalTex2: texture_2d<uff>;
 #endif
 uniform emitterPos: vec3f;
 
@@ -51,19 +53,29 @@ struct RotateResult {
 fn rotateWithMatrix(quadXY: vec2f, pRotation: f32) -> RotateResult {
     let c = cos(pRotation);
     let s = sin(pRotation);
-    let m = mat2x2f(vec2f(c, s), vec2f(-s, c));
+    let m = mat2x2f(vec2f(c, -s), vec2f(s, c));
     return RotateResult(m * quadXY, m);
 }
 
 
 fn billboard(InstanceCoords: vec3f, quadXY: vec2f) -> vec3f {
-    let pos = -uniform.matrix_viewInverse[0].xyz * quadXY.x + -uniform.matrix_viewInverse[1].xyz * quadXY.y;
+    var pos: vec3f;
+    #ifdef SCREEN_SPACE
+        pos = vec3f(-1.0, 0.0, 0.0) * quadXY.x + vec3f(0.0, -1.0, 0.0) * quadXY.y;
+    #else
+        pos = -uniform.matrix_viewInverse[0].xyz * quadXY.x + -uniform.matrix_viewInverse[1].xyz * quadXY.y;
+    #endif
     return pos;
 }
 
 fn customFace(InstanceCoords: vec3f, quadXY: vec2f) -> vec3f {
     let pos = uniform.faceTangent * quadXY.x + uniform.faceBinorm * quadXY.y;
     return pos;
+}
+
+fn safeNormalize(v: vec2f) -> vec2f {
+    let l = length(v);
+    return select(v, v / l, l > 1e-06);
 }
 
 @vertex
@@ -94,7 +106,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #endif
     var rotMatrix: mat2x2f;
 
-    let inAngle = input.particle_vertexData2.x;
+    var inAngle = input.particle_vertexData2.x;
     var particlePosMoved = vec3f(0.0);
     let meshLocalPos = input.particle_vertexData3.xyz;
 `;

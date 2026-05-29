@@ -358,8 +358,8 @@ export const SHADOW_PCF1 = 5;  // alias for SHADOW_PCF1_32F for backwards compat
 /**
  * A shadow sampling technique using a 32-bit shadow map that adjusts filter size based on blocker
  * distance, producing realistic, soft shadow edges that vary with the light's occlusion. Note that
- * this technique requires either {@link GraphicsDevice#textureFloatRenderable} or
- * {@link GraphicsDevice#textureHalfFloatRenderable} to be true, and falls back to
+ * this technique requires both {@link GraphicsDevice#textureFloatRenderable} and
+ * {@link GraphicsDevice#textureFloatFilterable} to be true, and falls back to
  * {@link SHADOW_PCF3_32F} otherwise.
  *
  * @category Graphics
@@ -407,6 +407,41 @@ export const shadowTypeInfo = new Map([
     [SHADOW_VSM_32F,     { name: 'VSM_32F', kind: 'VSM', format: PIXELFORMAT_RGBA32F, vsm: true }],
     [SHADOW_PCSS_32F,    { name: 'PCSS_32F', kind: 'PCSS', format: PIXELFORMAT_R32F, pcss: true }]
 ]);
+
+/**
+ * The flag that controls shadow rendering for the 0 cascade
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_0 = 1;
+
+/**
+ * The flag that controls shadow rendering for the 1 cascade
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_1 = 2;
+
+/**
+ * The flag that controls shadow rendering for the 2 cascade
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_2 = 4;
+
+/**
+ * The flag that controls shadow rendering for the 3 cascade
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_3 = 8;
+
+/**
+ * The flag that controls shadow rendering for the all cascades
+ *
+ * @category Graphics
+ */
+export const SHADOW_CASCADE_ALL = 255;
 
 /**
  * Box filter.
@@ -777,6 +812,9 @@ export const SHADER_SHADOW = 2;
 // shader pass used by the Picker class to render mesh ID
 export const SHADER_PICK = 3;
 
+// shader pass used by the Picker class to render mesh ID and depth
+export const SHADER_DEPTH_PICK = 4;
+
 /**
  * Shader that performs forward rendering.
  *
@@ -1100,3 +1138,188 @@ export const EVENT_POSTCULL = 'postcull';
  * @ignore
  */
 export const EVENT_CULL_END = 'cull:end';
+
+/** @ignore */
+export const GSPLAT_FORWARD = 1;
+
+/** @ignore */
+export const GSPLAT_SHADOW = 2;
+
+/** @ignore */
+export const SHADOWCAMERA_NAME = 'pcShadowCamera';
+
+/**
+ * Work buffer is updated only when needed (transform, format, LOD changes, new gsplat etc).
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const WORKBUFFER_UPDATE_AUTO = 0;
+
+/**
+ * Work buffer is updated once on the next frame, then automatically switches to
+ * {@link WORKBUFFER_UPDATE_AUTO}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const WORKBUFFER_UPDATE_ONCE = 1;
+
+/**
+ * Work buffer is updated every frame. Useful for custom shader code via
+ * {@link GSplatComponent#setWorkBufferModifier} that depends on time or animated uniforms.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const WORKBUFFER_UPDATE_ALWAYS = 2;
+
+/**
+ * Stream texture is stored at resource level, shared across all component instances.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_STREAM_RESOURCE = 0;
+
+/**
+ * Stream texture is stored per gsplat component instance.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_STREAM_INSTANCE = 1;
+
+/**
+ * Large work buffer data format with full precision. Uses RGBA16F color, float16
+ * rotation and float16 scale. 32 bytes per splat.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const GSPLATDATA_LARGE = 'large';
+
+/**
+ * Compact work buffer data format optimized for reduced memory and bandwidth. Uses 11+11+10 bit
+ * RGB color, half-angle quaternion rotation and log-encoded scale. 20 bytes per splat.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const GSPLATDATA_COMPACT = 'compact';
+
+/**
+ * Automatically selects the best rendering pipeline for the current platform.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_RENDERER_AUTO = 0;
+
+/**
+ * Rasterization-based rendering with CPU-side sorting.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_RENDERER_RASTER_CPU_SORT = 1;
+
+/**
+ * Rasterization-based rendering with GPU-side culling and sorting. WebGPU only. Experimental with
+ * limited functionality.
+ *
+ * @type {number}
+ * @category Graphics
+ * @alpha
+ */
+export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
+
+/**
+ * Full compute pipeline for rendering. WebGPU only. Experimental with limited functionality.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_RENDERER_COMPUTE = 3;
+
+/**
+ * No debug rendering for Gaussian splats. Normal rendering mode.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_NONE = 0;
+
+/**
+ * Debug rendering that colorizes Gaussian splats by their selected LOD level.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_LOD = 1;
+
+/**
+ * Debug rendering that assigns a random color per spherical harmonics update pass,
+ * visualizing when SH color updates occur.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_SH_UPDATE = 2;
+
+/**
+ * Debug heatmap rendering for the compute rasterizer. Visualizes the average number of splats
+ * processed per pixel in each tile as a blue-to-red color ramp. Only supported with
+ * {@link GSPLAT_RENDERER_COMPUTE}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_HEATMAP = 3;
+
+/**
+ * Debug rendering that draws world-space AABBs for each GSplat, colorized by LOD.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_AABBS = 4;
+
+/**
+ * Debug rendering that draws world-space AABBs for each octree node of streamed GSplats,
+ * colorized by the currently selected LOD.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const GSPLAT_DEBUG_NODE_AABBS = 5;
+
+/**
+ * Automatically selects the best radix sort backend for the current WebGPU device:
+ * OneSweep on supported hardware (NVIDIA), the portable backend elsewhere. See
+ * {@link ComputeRadixSort}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const RADIX_SORT_AUTO = 0;
+
+/**
+ * Portable radix sort backend. Runs on every WebGPU device (no subgroup
+ * intrinsics required) and is chosen by {@link RADIX_SORT_AUTO} when no
+ * faster hardware-specific backend is available. See {@link ComputeRadixSort}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const RADIX_SORT_PORTABLE = 1;
+
+/**
+ * Single-sweep 8-bit radix sort (OneSweep). Requires subgroup support, 32-lane
+ * subgroups, and forward-thread-progress guarantees — currently enabled only on
+ * NVIDIA. See {@link ComputeRadixSort}.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const RADIX_SORT_ONESWEEP = 2;

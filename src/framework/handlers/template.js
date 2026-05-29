@@ -52,6 +52,18 @@ class TemplateHandler extends ResourceHandler {
         this.decoder ??= new TextDecoder('utf-8');
         return new Template(this._app, JSON.parse(this.decoder.decode(data)));
     }
+
+    patch(asset, registry) {
+        // only process if this looks like valid template data
+        if (!asset || !asset.resource || !asset.data || !asset.data.entities) {
+            return;
+        }
+
+        const template = asset.resource;
+
+        // the `data` setter will handle cache invalidation
+        template.data = asset.data;
+    }
 }
 
 export { TemplateHandler };

@@ -84,10 +84,7 @@ class XrMeshDetection extends EventHandler {
      */
     _supported = platform.browser && !!window.XRMesh;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _available = false;
 
     /**

@@ -1,5 +1,6 @@
 export default /* wgsl */`
 uniform material_opacity: f32;
+uniform material_alphaDitherScale: f32;
 
 fn getOpacity() {
     dAlpha = uniform.material_opacity;

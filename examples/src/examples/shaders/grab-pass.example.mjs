@@ -1,25 +1,28 @@
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
-    roughness: new pc.Asset('roughness', 'texture', { url: `${rootPath}/static/assets/textures/pc-gray.png` }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
+    roughness: new pc.Asset('roughness', 'texture', { url: './assets/textures/pc-gray.png' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -131,10 +134,10 @@ assetListLoader.load(() => {
     // reflection material using the shader
     const refractionMaterial = new pc.ShaderMaterial({
         uniqueName: 'RefractionShader',
-        vertexGLSL: files['shader.glsl.vert'],
-        fragmentGLSL: files['shader.glsl.frag'],
-        vertexWGSL: files['shader.wgsl.vert'],
-        fragmentWGSL: files['shader.wgsl.frag'],
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: shaderGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: shaderWgslFrag,
         attributes: {
             vertex_position: pc.SEMANTIC_POSITION,
             vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
@@ -188,5 +191,3 @@ assetListLoader.load(() => {
         camera.lookAt(new pc.Vec3(0, 2, 0));
     });
 });
-
-export { app };

@@ -150,13 +150,19 @@ class WebglShader {
         const definition = shader.definition;
         const attrs = definition.attributes;
         if (definition.useTransformFeedback) {
-            // Collect all "out_" attributes and use them for output
-            const outNames = [];
-            for (const attr in attrs) {
-                if (attrs.hasOwnProperty(attr)) {
-                    outNames.push(`out_${attr}`);
+            let outNames = definition.feedbackVaryings;
+
+            if (!outNames) {
+                outNames = [];
+
+                // Collect all "out_" attributes and use them for output
+                for (const attr in attrs) {
+                    if (attrs.hasOwnProperty(attr)) {
+                        outNames.push(`out_${attr}`);
+                    }
                 }
             }
+
             gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
         }
 
@@ -338,6 +344,11 @@ class WebglShader {
         for (let i = 0; i < numUniforms; i++) {
             const info = gl.getActiveUniform(glProgram, i);
             const location = gl.getUniformLocation(glProgram, info.name);
+
+            // a built-in variables reported as uniforms for which we do not need to provide any data
+            if (_vertexShaderBuiltins.has(info.name)) {
+                continue;
+            }
 
             const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 

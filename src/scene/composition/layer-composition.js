@@ -9,6 +9,7 @@ import { RenderAction } from './render-action.js';
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../layer.js'
+ * @import { Camera } from '../camera.js'
  */
 
 /**
@@ -44,7 +45,7 @@ class LayerComposition extends EventHandler {
     layerNameMap = new Map();
 
     /**
-     * A mapping of {@link Layer} to its opaque index in {@link LayerComposition#layerList}.
+     * A mapping of {@link Layer} to its opaque index in {@link layerList}.
      *
      * @type {Map<Layer, number>}
      * @ignore
@@ -52,7 +53,7 @@ class LayerComposition extends EventHandler {
     layerOpaqueIndexMap = new Map();
 
     /**
-     * A mapping of {@link Layer} to its transparent index in {@link LayerComposition#layerList}.
+     * A mapping of {@link Layer} to its transparent index in {@link layerList}.
      *
      * @type {Map<Layer, number>}
      * @ignore
@@ -60,7 +61,7 @@ class LayerComposition extends EventHandler {
     layerTransparentIndexMap = new Map();
 
     /**
-     * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means only
+     * A read-only array of boolean values, matching {@link layerList}. True means only
      * semi-transparent objects are rendered, and false means opaque.
      *
      * @type {boolean[]}
@@ -69,7 +70,7 @@ class LayerComposition extends EventHandler {
     subLayerList = [];
 
     /**
-     * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means the
+     * A read-only array of boolean values, matching {@link layerList}. True means the
      * layer is rendered, false means it's skipped.
      *
      * @type {boolean[]}
@@ -83,6 +84,14 @@ class LayerComposition extends EventHandler {
      * @ignore
      */
     cameras = [];
+
+    /**
+     * A set of {@link Camera}s.
+     *
+     * @type {Set<Camera>}
+     * @ignore
+     */
+    camerasSet = new Set();
 
     /**
      * The actual rendering sequence, generated based on layers and cameras
@@ -146,16 +155,17 @@ class LayerComposition extends EventHandler {
 
             // walk the layers and build an array of unique cameras from all layers
             this.cameras.length = 0;
+            this.camerasSet.clear();
             for (let i = 0; i < len; i++) {
                 const layer = this.layerList[i];
                 layer._dirtyComposition = false;
 
                 // for all cameras in the layer
                 for (let j = 0; j < layer.cameras.length; j++) {
-                    const camera = layer.cameras[j];
-                    const index = this.cameras.indexOf(camera);
-                    if (index < 0) {
-                        this.cameras.push(camera);
+                    const cameraComponent = layer.cameras[j];
+                    if (!this.camerasSet.has(cameraComponent.camera)) {
+                        this.camerasSet.add(cameraComponent.camera);
+                        this.cameras.push(cameraComponent);
                     }
                 }
             }
@@ -176,9 +186,9 @@ class LayerComposition extends EventHandler {
                 const camera = this.cameras[i];
                 cameraLayers.length = 0;
 
-                // if the camera uses custom render passes, only add a dummy render action to mark
+                // if the camera defines frame passes, only add a dummy render action to mark
                 // the place where to add them during building of the frame graph
-                if (camera.camera.renderPasses.length > 0) {
+                if (camera.camera.framePasses.length > 0) {
                     this.addDummyRenderAction(renderActionCount, camera);
                     renderActionCount++;
                     continue;
@@ -332,7 +342,7 @@ class LayerComposition extends EventHandler {
                 continue;
             }
 
-            // end of stacking if camera with custom render passes
+            // end of stacking if camera with custom frame passes
             if (ra.useCameraPasses) {
                 break;
             }
@@ -402,7 +412,7 @@ class LayerComposition extends EventHandler {
     // Whole layer API
 
     /**
-     * Adds a layer (both opaque and semi-transparent parts) to the end of the {@link LayerComposition#layerList}.
+     * Adds a layer (both opaque and semi-transparent parts) to the end of the {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to add.
      */
@@ -423,7 +433,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the
-     * {@link LayerComposition#layerList}.
+     * {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
@@ -445,7 +455,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Removes a layer (both opaque and semi-transparent parts) from {@link LayerComposition#layerList}.
+     * Removes a layer (both opaque and semi-transparent parts) from {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
@@ -476,7 +486,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * Adds part of the layer with opaque (non semi-transparent) objects to the end of the
-     * {@link LayerComposition#layerList}.
+     * {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to add.
      */
@@ -494,7 +504,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen
-     * index in the {@link LayerComposition#layerList}.
+     * index in the {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
@@ -517,7 +527,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * Removes an opaque part of the layer (non semi-transparent mesh instances) from
-     * {@link LayerComposition#layerList}.
+     * {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
@@ -543,7 +553,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Adds part of the layer with semi-transparent objects to the end of the {@link LayerComposition#layerList}.
+     * Adds part of the layer with semi-transparent objects to the end of the {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to add.
      */
@@ -560,7 +570,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Inserts a semi-transparent part of the layer at the chosen index in the {@link LayerComposition#layerList}.
+     * Inserts a semi-transparent part of the layer at the chosen index in the {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
@@ -582,7 +592,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Removes a transparent part of the layer from {@link LayerComposition#layerList}.
+     * Removes a transparent part of the layer from {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
@@ -608,7 +618,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Gets index of the opaque part of the supplied layer in the {@link LayerComposition#layerList}.
+     * Gets index of the opaque part of the supplied layer in the {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the opaque part of the specified layer, or -1 if it is not
@@ -619,7 +629,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Gets index of the semi-transparent part of the supplied layer in the {@link LayerComposition#layerList}.
+     * Gets index of the semi-transparent part of the supplied layer in the {@link layerList}.
      *
      * @param {Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the semi-transparent part of the specified layer, or -1 if it

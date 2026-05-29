@@ -7,8 +7,8 @@
  * the target DOM element.
  *
  * @param {globalThis.Touch} touch - The browser Touch object.
- * @returns {object} The coordinates of the touch relative to the touch.target DOM element. In the
- * format \{x, y\}.
+ * @returns {{x: number, y: number}} The coordinates of the touch relative to the touch.target
+ * DOM element.
  * @category Input
  */
 function getTouchTargetCoords(touch) {

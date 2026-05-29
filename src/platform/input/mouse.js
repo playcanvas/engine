@@ -86,6 +86,36 @@ class Mouse extends EventHandler {
     _attached = false;
 
     /**
+     * @type {(event: globalThis.MouseEvent) => void}
+     * @private
+     */
+    _upHandler;
+
+    /**
+     * @type {(event: globalThis.MouseEvent) => void}
+     * @private
+     */
+    _downHandler;
+
+    /**
+     * @type {(event: globalThis.MouseEvent) => void}
+     * @private
+     */
+    _moveHandler;
+
+    /**
+     * @type {(event: globalThis.WheelEvent) => void}
+     * @private
+     */
+    _wheelHandler;
+
+    /**
+     * @type {(event: Event) => void}
+     * @private
+     */
+    _contextMenuHandler;
+
+    /**
      * Create a new Mouse instance.
      *
      * @param {Element} [element] - The Element that the mouse events are attached to.
@@ -106,7 +136,7 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * Check if the mouse pointer has been locked, using {@link Mouse#enablePointerLock}.
+     * Check if the mouse pointer has been locked, using {@link enablePointerLock}.
      *
      * @returns {boolean} True if locked.
      */

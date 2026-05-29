@@ -1,23 +1,48 @@
 import { Button, Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 
+import { ShareDialog } from './ShareDialog.mjs';
+import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { logo } from '../paths.mjs';
+import { buildShareUrl, getHashPath, patchState, readState } from '../url-state.mjs';
+import { getLayout } from '../utils.mjs';
 
 /**
  * @typedef {object} Props
  * @property {(value: boolean) => void} setShowMiniStats - The state set function .
+ * @property {'mobile'|'desktop'} [layout] - Current layout.
+ * @property {boolean} showCredits - Whether the desktop credits overlay is visible.
+ * @property {(value: boolean) => void} setShowCredits - Set credits overlay visibility.
  */
 
-// eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} State
+ * @property {boolean} showMiniStats - Show MiniStats state.
+ * @property {boolean} fullscreen - Fullscreen state.
+ * @property {boolean} hasCredits - Whether the loaded example has any credits.
+ * @property {boolean} shareDialogOpen - Whether the share dialog is visible.
+ * @property {string} shareUrl - URL displayed in the share dialog.
+ * @property {string} shareTitle - Title used for social share intents.
  */
 
 /** @type {typeof Component<Props, State>} */
 const TypedComponent = Component;
 
 class Menu extends TypedComponent {
+    /** @type {State} */
+    state = (() => {
+        const ui = readState().ui ?? {};
+        return {
+            showMiniStats: typeof ui.miniStats === 'boolean' ? ui.miniStats : getLayout() === 'desktop',
+            fullscreen: typeof ui.fullscreen === 'boolean' ? ui.fullscreen : false,
+            hasCredits: false,
+            shareDialogOpen: false,
+            shareUrl: '',
+            shareTitle: ''
+        };
+    })();
+
     mouseTimeout = null;
 
     /**
@@ -27,24 +52,51 @@ class Menu extends TypedComponent {
         super(props);
         this._handleKeyDown = this._handleKeyDown.bind(this);
         this._handleExampleLoad = this._handleExampleLoad.bind(this);
+        this._handleMiniStats = this._handleMiniStats.bind(this);
+        this.toggleMiniStats = this.toggleMiniStats.bind(this);
+        this.toggleCredits = this.toggleCredits.bind(this);
+        this.openShareDialog = this.openShareDialog.bind(this);
+        this.closeShareDialog = this.closeShareDialog.bind(this);
+    }
+
+    toggleCredits() {
+        this.props.setShowCredits(!this.props.showCredits);
     }
 
     /** @type {EventListener | null} */
     clickFullscreenListener = null;
 
-    toggleFullscreen() {
+    resizeIframe() {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                iframe.window?.dispatchEvent(new Event('resize'));
+            });
+        });
+    }
+
+    /**
+     * @param {boolean} value - Fullscreen state.
+     * @param {boolean} [force] - Reapply state even when unchanged.
+     */
+    setFullscreen(value, force = false) {
         const contentDocument = document.querySelector('iframe')?.contentDocument;
         if (!contentDocument) {
             return;
         }
         if (this.clickFullscreenListener) {
             contentDocument.removeEventListener('mousemove', this.clickFullscreenListener);
+            this.clickFullscreenListener = null;
         }
-        document.querySelector('#canvas-container')?.classList.toggle('fullscreen');
+        const canvasContainer = document.querySelector('#canvas-container');
         const app = document.querySelector('#appInner');
-        app?.classList.toggle('fullscreen');
-        contentDocument.getElementById('appInner')?.classList.toggle('fullscreen');
-        if (app?.classList.contains('fullscreen')) {
+        const fullscreen = app?.classList.contains('fullscreen') ?? false;
+        if (!force && fullscreen === value) {
+            return;
+        }
+        canvasContainer?.classList.toggle('fullscreen', value);
+        app?.classList.toggle('fullscreen', value);
+        contentDocument.getElementById('appInner')?.classList.toggle('fullscreen', value);
+        if (value) {
             this.clickFullscreenListener = () => {
                 app?.classList.add('active');
                 if (this.mouseTimeout) {
@@ -52,11 +104,20 @@ class Menu extends TypedComponent {
                 }
                 // @ts-ignore
                 this.mouseTimeout = setTimeout(() => {
-                    app.classList.remove('active');
+                    app?.classList.remove('active');
                 }, 2000);
             };
             contentDocument.addEventListener('mousemove', this.clickFullscreenListener);
         }
+        this.resizeIframe();
+    }
+
+    toggleFullscreen() {
+        const fullscreen = !this.state.fullscreen;
+        this.setState({ fullscreen }, () => {
+            this.setFullscreen(fullscreen);
+            patchState({ ui: { fullscreen } });
+        });
     }
 
     componentDidMount() {
@@ -68,15 +129,36 @@ class Menu extends TypedComponent {
         }
         document.addEventListener('keydown', this._handleKeyDown);
         window.addEventListener('exampleLoad', this._handleExampleLoad);
+        window.addEventListener('miniStats', this._handleMiniStats);
     }
 
     componentWillUnmount() {
         const iframe = document.querySelector('iframe');
         if (iframe) {
             iframe.contentDocument?.removeEventListener('keydown', this._handleKeyDown);
+            if (this.clickFullscreenListener) {
+                iframe.contentDocument?.removeEventListener('mousemove', this.clickFullscreenListener);
+            }
         }
         document.removeEventListener('keydown', this._handleKeyDown);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
+        window.removeEventListener('miniStats', this._handleMiniStats);
+    }
+
+    openShareDialog() {
+        const path = getHashPath().replace(/^\//, '');
+        const parts = path.split('/').filter(Boolean);
+        const exampleName = (parts[1] ?? parts[0] ?? '').replace(/-/g, ' ');
+        const title = exampleName ? `${exampleName} - PlayCanvas Examples` : 'PlayCanvas Examples';
+        this.setState({
+            shareDialogOpen: true,
+            shareUrl: buildShareUrl(),
+            shareTitle: title
+        });
+    }
+
+    closeShareDialog() {
+        this.setState({ shareDialogOpen: false });
     }
 
     /**
@@ -92,16 +174,35 @@ class Menu extends TypedComponent {
         }
     }
 
-    _handleExampleLoad() {
-        const showMiniStatsBtn = document.getElementById('showMiniStatsButton');
-        if (!showMiniStatsBtn) {
-            return;
-        }
-        const selected = showMiniStatsBtn.classList.contains('selected');
-        this.props.setShowMiniStats(selected);
+    /**
+     * @param {Event} event - exampleLoad event.
+     */
+    _handleExampleLoad(event) {
+        this.props.setShowMiniStats(this.state.showMiniStats);
+        this.setFullscreen(this.state.fullscreen, true);
+        const detail = /** @type {CustomEvent<{ credits?: unknown[] }>} */ (event).detail;
+        this.setState({ hasCredits: (detail?.credits?.length ?? 0) > 0 });
+    }
+
+    toggleMiniStats() {
+        const value = !this.state.showMiniStats;
+        this.setState({ showMiniStats: value }, () => patchState({ ui: { miniStats: this.state.showMiniStats } }));
+        this.props.setShowMiniStats(value);
+    }
+
+    /**
+     * @param {Event} event - MiniStats state event.
+     */
+    _handleMiniStats(event) {
+        const customEvent = /** @type {CustomEvent<{ state: boolean }>} */ (event);
+        this.setState({
+            showMiniStats: !!customEvent.detail.state
+        }, () => patchState({ ui: { miniStats: this.state.showMiniStats } }));
     }
 
     render() {
+        const { showMiniStats, hasCredits, shareDialogOpen, shareUrl, shareTitle } = this.state;
+        const { layout, showCredits } = this.props;
         return jsx(
             Container,
             {
@@ -119,26 +220,41 @@ class Menu extends TypedComponent {
                         window.open('https://github.com/playcanvas/engine');
                     }
                 }),
-                jsx(Button, {
-                    icon: 'E256',
-                    text: '',
-                    onClick: () => {
-                        const url = new URL(location.href);
-                        const link = `${url.origin}/share/${url.hash.slice(2).replace(/\//g, '_')}`;
-                        const tweetText = encodeURI(`Check out this @playcanvas engine example! ${link}`);
-                        window.open(`https://twitter.com/intent/tweet?text=${tweetText}`);
-                    }
-                }),
+                jsx('button', {
+                    type: 'button',
+                    id: 'shareButton',
+                    className: 'pcui-button',
+                    onClick: this.openShareDialog,
+                    'aria-label': 'Share this page',
+                    style: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }
+                }, jsx('svg', {
+                    viewBox: '0 0 24 24',
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    strokeWidth: 2,
+                    strokeLinecap: 'round',
+                    strokeLinejoin: 'round',
+                    width: 20,
+                    height: 20
+                },
+                jsx('circle', { cx: 18, cy: 5, r: 3 }),
+                jsx('circle', { cx: 6, cy: 12, r: 3 }),
+                jsx('circle', { cx: 18, cy: 19, r: 3 }),
+                jsx('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+                jsx('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
+                )),
                 jsx(Button, {
                     icon: 'E149',
                     id: 'showMiniStatsButton',
-                    class: 'selected',
+                    class: showMiniStats ? 'selected' : undefined,
                     text: '',
-                    onClick: () => {
-                        document.getElementById('showMiniStatsButton')?.classList.toggle('selected');
-                        const selected = document.getElementById('showMiniStatsButton')?.classList.contains('selected');
-                        this.props.setShowMiniStats(!!selected);
-                    }
+                    onClick: this.toggleMiniStats
+                }),
+                hasCredits && layout === 'desktop' && jsx(Button, {
+                    id: 'showCreditsButton',
+                    class: showCredits ? 'selected' : undefined,
+                    text: '',
+                    onClick: this.toggleCredits
                 }),
                 jsx(Button, {
                     icon: 'E127',
@@ -146,7 +262,12 @@ class Menu extends TypedComponent {
                     id: 'fullscreen-button',
                     onClick: this.toggleFullscreen.bind(this)
                 })
-            )
+            ),
+            shareDialogOpen && jsx(ShareDialog, {
+                url: shareUrl,
+                title: shareTitle,
+                onClose: this.closeShareDialog
+            })
         );
     }
 }

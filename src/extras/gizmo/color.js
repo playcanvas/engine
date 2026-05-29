@@ -7,15 +7,12 @@ export const COLOR_YELLOW = Object.freeze(new Color(1, 1, 0.5));
 export const COLOR_GRAY = Object.freeze(new Color(0.5, 0.5, 0.5, 0.5));
 
 /**
- * Converts Color4 to Color3.
+ * Converts Color3 to Color4.
  *
- * @param {Color} color - Color4
- * @returns {Color} - Color3
+ * @param {Color} color - Color3
+ * @param {number} a - Alpha value for Color4
+ * @returns {Color} - Color4
  */
-export const color3from4  = (color) => {
-    return new Color(color.r, color.g, color.b);
-};
-
 export const color4from3 = (color, a) => {
     return new Color(color.r, color.g, color.b, a);
 };

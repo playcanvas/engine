@@ -41,7 +41,7 @@ export default /* glsl */`
         // parallax
         #ifdef STD_HEIGHT_MAP
             vec2 dUvOffset;
-            #ifdef STD_DIFFUSE_TEXTURE_ALLOCATE
+            #ifdef STD_HEIGHT_TEXTURE_ALLOCATE
                 uniform sampler2D texture_heightMap;
             #endif
         #endif

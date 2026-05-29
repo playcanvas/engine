@@ -3,10 +3,7 @@ import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
 
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 
@@ -66,6 +63,7 @@ class ParticleGPUUpdater {
         this.constantMaxVel = gd.scope.resolve('maxVel');
         this.constantFaceTangent = gd.scope.resolve('faceTangent');
         this.constantFaceBinorm = gd.scope.resolve('faceBinorm');
+        this.constantRadialSpeedDivMult = gd.scope.resolve('radialSpeedDivMult');
     }
 
     _setInputBounds() {
@@ -92,11 +90,11 @@ class ParticleGPUUpdater {
 
         const emitter = this._emitter;
 
-        device.setBlendState(BlendState.NOBLEND);
-        device.setDepthState(DepthState.NODEPTH);
-        device.setCullMode(CULLFACE_NONE);
+        device.setDrawStates();
 
         this.randomize();
+
+        this.constantRadialSpeedDivMult.setValue(emitter.material.getParameter('radialSpeedDivMult').data);
 
         this.constantGraphSampleSize.setValue(1.0 / emitter.precision);
         this.constantGraphNumSamples.setValue(emitter.precision);

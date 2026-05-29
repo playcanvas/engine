@@ -1,16 +1,17 @@
-// @config ENGINE performance
-// @config NO_MINISTATS
-// @config WEBGPU_DISABLED
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag ENGINE=performance
+// @flag NO_MINISTATS
+// @flag WEBGPU_DISABLED
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -99,10 +100,10 @@ options.stats = [
         unitsName: 'ms'
     },
 
-    // used VRAM, displayed using 2 colors - red for textures, green for geometry
+    // used VRAM in MB
     {
         name: 'VRAM',
-        stats: ['vram.tex', 'vram.geom'],
+        stats: ['vram.totalUsed'],
         decimalPlaces: 1,
         multiplier: 1 / (1024 * 1024),
         unitsName: 'MB',
@@ -261,5 +262,3 @@ app.on('update', () => {
         }
     }
 });
-
-export { app };

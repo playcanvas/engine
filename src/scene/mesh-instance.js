@@ -3,13 +3,17 @@ import { BoundingBox } from '../core/shape/bounding-box.js';
 import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 import { BindGroup } from '../platform/graphics/bind-group.js';
 import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
+import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
+import { DrawCommands } from '../platform/graphics/draw-commands.js';
+import { indexFormatByteSize } from '../platform/graphics/constants.js';
 import {
     LAYER_WORLD,
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SHADOW_CASCADE_ALL
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -17,6 +21,7 @@ import { LightmapCache } from './graphics/lightmap-cache.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { hash32Fnv1a } from '../core/hash.js';
 import { array } from '../core/array-utils.js';
+import { PickerId } from './picker-id.js';
 
 /**
  * @import { BindGroupFormat } from '../platform/graphics/bind-group-format.js'
@@ -35,11 +40,9 @@ import { array } from '../core/array-utils.js';
  * @import { Texture } from '../platform/graphics/texture.js'
  * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
  * @import { Vec3 } from '../core/math/vec3.js'
- * @import { VertexBuffer } from '../platform/graphics/vertex-buffer.js'
  * @import { CameraComponent } from '../framework/components/camera/component.js';
  */
 
-let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
@@ -61,8 +64,6 @@ class InstancingData {
 
     /**
      * True if the vertex buffer is destroyed when the mesh instance is destroyed.
-     *
-     * @type {boolean}
      */
     _destroyVertexBuffer = false;
 
@@ -78,38 +79,6 @@ class InstancingData {
             this.vertexBuffer?.destroy();
         }
         this.vertexBuffer = null;
-    }
-}
-
-/**
- * Internal data structure used to store data used by indirect rendering.
- *
- * @ignore
- */
-class IndirectData {
-    /**
-     * A map of camera components to their corresponding slot in the indirect buffer.
-     *
-     * @type {Map<CameraComponent, number>}
-     */
-    map = new Map();
-
-    /**
-     * An array of 4 integers used to store mesh metadata needed for indirect rendering.
-     *
-     * @type {Int32Array}
-     */
-    meshMetaData = new Int32Array(4);
-
-    /**
-     * Retrieves the slot in the indirect buffer for a specific camera.
-     *
-     * @param {CameraComponent|null} camera - The camera component to retrieve the slot for, or null
-     * if the slot should be used for all cameras.
-     * @returns {number|undefined} - The slot in the indirect buffer, or undefined.
-     */
-    get(camera) {
-        return this.map.get(camera) ?? this.map.get(null);
     }
 }
 
@@ -206,7 +175,8 @@ class ShaderInstance {
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {Vec3} cameraPosition - The position of the camera.
  * @param {Vec3} cameraForward - The forward vector of the camera.
- * @returns {void}
+ * @returns {number} The sort distance for the mesh instance. Mesh instances are sorted by this
+ * value in ascending or descending order depending on the layer's sort mode.
  */
 
 /**
@@ -235,17 +205,36 @@ class ShaderInstance {
  * ### GPU-Driven Indirect Rendering (WebGPU Only)
  *
  * Instead of issuing draw calls from the CPU, parameters are written into a GPU
- * storage buffer and executed via indirect draw commands. Allocate a slot with
- * `GraphicsDevice.getIndirectDrawSlot()`, then bind the mesh instance to that slot:
+ * storage buffer and executed via indirect draw commands. Allocate one or more slots with
+ * `GraphicsDevice.getIndirectDrawSlot(count)`, then bind the mesh instance to those slots:
  *
  * ```javascript
- * const slot = app.graphicsDevice.getIndirectDrawSlot();
- * meshInstance.setIndirect(null, slot); // first arg can be a CameraComponent or null
+ * const slot = app.graphicsDevice.getIndirectDrawSlot(count);
+ * meshInstance.setIndirect(null, slot, count); // first arg can be a CameraComponent or null
  * ```
  *
  * **Example**
  *
  * - {@link https://playcanvas.github.io/#compute/indirect-draw compute/indirect-draw}
+ *
+ * ### Multi-draw
+ *
+ * Multi-draw lets the engine submit multiple sub-draws with a single API call. On WebGL2 this maps
+ * to the `WEBGL_multi_draw` extension; on WebGPU, to indirect multi-draw. Use {@link setMultiDraw}
+ * to allocate a {@link DrawCommands} container, fill it with sub-draws using
+ * {@link DrawCommands#add} and finalize with {@link DrawCommands#update} whenever the data changes.
+ *
+ * Support: {@link GraphicsDevice#supportsMultiDraw} is true on WebGPU and commonly true on WebGL2
+ * (high coverage). When not supported, the engine can still render by issuing a fast internal loop
+ * of single draws using the multi-draw data.
+ *
+ * ```javascript
+ * // two indexed sub-draws from a single mesh
+ * const cmd = meshInstance.setMultiDraw(null, 2);
+ * cmd.add(0, 36, 1, 0);
+ * cmd.add(1, 60, 1, 36);
+ * cmd.update(2);
+ * ```
  *
  * @category Graphics
  */
@@ -255,16 +244,22 @@ class MeshInstance {
      * casting without overhead of removing from scene. Note that this property does not add the
      * mesh instance to appropriate list of shadow casters on a {@link Layer}, but allows mesh to
      * be skipped from shadow casting while it is in the list already. Defaults to false.
-     *
-     * @type {boolean}
      */
     castShadow = false;
 
     /**
+     * Specifies a bitmask that controls which shadow cascades a mesh instance contributes
+     * to when rendered with a {@link LIGHTTYPE_DIRECTIONAL} light source.
+     * This setting is only effective if the {@link castShadow} property is enabled.
+     * Defaults to {@link SHADOW_CASCADE_ALL}, which means the mesh casts shadows into all available cascades.
+     *
+     * @type {number}
+     */
+    shadowCascadeMask = SHADOW_CASCADE_ALL;
+
+    /**
      * Controls whether the mesh instance can be culled by frustum culling (see
      * {@link CameraComponent#frustumCulling}). Defaults to true.
-     *
-     * @type {boolean}
      */
     cull = true;
 
@@ -272,15 +267,10 @@ class MeshInstance {
      * Determines the rendering order of mesh instances. Only used when mesh instances are added to
      * a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode}
      * (depending on the material) set to {@link SORTMODE_MANUAL}.
-     *
-     * @type {number}
      */
     drawOrder = 0;
 
-    /**
-     * @type {number}
-     * @ignore
-     */
+    /** @ignore */
     _drawBucket = 127;
 
     /**
@@ -294,23 +284,18 @@ class MeshInstance {
      * Enable rendering for this mesh instance. Use visible property to enable/disable rendering
      * without overhead of removing from scene. But note that the mesh instance is still in the
      * hierarchy and still in the draw call list.
-     *
-     * @type {boolean}
      */
     visible = true;
 
     /**
-     * Read this value in {@link Scene.EVENT_POSTCULL} event to determine if the object is actually going
-     * to be rendered.
-     *
-     * @type {boolean}
+     * Read this value in the {@link Scene.EVENT_POSTCULL} event to determine if the object is
+     * actually going to be rendered.
      */
     visibleThisFrame = false;
 
     /**
      * Negative scale batching support.
      *
-     * @type {number}
      * @ignore
      */
     flipFacesFactor = 1;
@@ -322,7 +307,7 @@ class MeshInstance {
     gsplatInstance = null;
 
     /** @ignore */
-    id = id++;
+    id = PickerId.get();
 
     /**
      * Custom function used to customize culling (e.g. for 2D UI elements).
@@ -339,10 +324,27 @@ class MeshInstance {
     instancingData = null;
 
     /**
-     * @type {IndirectData|null}
+     * @type {DrawCommands|null}
      * @ignore
      */
     indirectData = null;
+
+    /**
+     * Map of camera to their corresponding indirect draw data. Lazily allocated.
+     *
+     * @type {Map<Camera|null, DrawCommands>|null}
+     * @ignore
+     */
+    drawCommands = null;
+
+    /**
+     * Stores mesh metadata used for indirect rendering. Lazily allocated on first access
+     * via getIndirectMetaData().
+     *
+     * @type {Int32Array|null}
+     * @ignore
+     */
+    meshMetaData = null;
 
     /**
      * @type {Record<string, {scopeId: ScopeId|null, data: any, passFlags: number}>}
@@ -353,7 +355,6 @@ class MeshInstance {
     /**
      * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
      *
-     * @type {boolean}
      * @ignore
      */
     pick = true;
@@ -1025,6 +1026,17 @@ class MeshInstance {
         this.material = null;
 
         this.instancingData?.destroy();
+
+        this.destroyDrawCommands();
+    }
+
+    destroyDrawCommands() {
+        if (this.drawCommands) {
+            for (const cmd of this.drawCommands.values()) {
+                cmd?.destroy();
+            }
+            this.drawCommands = null;
+        }
     }
 
     // shader uniform names for lightmaps
@@ -1085,34 +1097,43 @@ class MeshInstance {
 
     updateKey() {
 
-        // 31      : sign bit (leave)
-        // 30 - 25 : 8 bits for draw bucket - this is the highest priority for sorting
-        // 24      : 1 bit for alpha test / coverage, to render them after opaque to keep GPU efficiency
-        // 23 - 0  : 24 bits for material ID
+        // 31      : sign bit (leave as 0)
+        // 30 - 23 : 8 bits for draw bucket - highest priority for sorting
+        // 22      : 1 bit for alpha test / coverage, to render them after opaque for GPU efficiency
+        // 21 - 0  : 22 bits for material ID
         const { material } = this;
         this._sortKeyForward =
-            (this._drawBucket << 25) |
-            ((material.alphaToCoverage || material.alphaTest) ? 0x1000000 : 0) |
-            (material.id & 0xffffff);
+            (this._drawBucket << 23) |
+            ((material.alphaToCoverage || material.alphaTest) ? 0x400000 : 0) |
+            (material.id & 0x3fffff);
     }
 
     /**
      * Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
+     * Note that {@link instancingCount} is automatically set to the number of vertices of the
+     * vertex buffer when it is provided.
      *
-     * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
-     * (usually world matrices). Pass null to turn off hardware instancing.
+     * @param {VertexBuffer|true|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
+     * (usually world matrices). Pass `true` to enable attributeless instancing where the instance
+     * index is derived from `gl_InstanceID` / `instance_index` builtins rather than a vertex
+     * buffer attribute — the caller must set {@link instancingCount} manually. Pass null to turn
+     * off hardware instancing.
      * @param {boolean} cull - Whether to perform frustum culling on this instance. If true, the whole
-     * instance will be culled by the  camera frustum. This often involves setting
+     * instance will be culled by the camera frustum. This often involves setting
      * {@link RenderComponent#customAabb} containing all instances. Defaults to false, which means
      * the whole instance is always rendered.
      */
     setInstancing(vertexBuffer, cull = false) {
         if (vertexBuffer) {
-            this.instancingData = new InstancingData(vertexBuffer.numVertices);
-            this.instancingData.vertexBuffer = vertexBuffer;
+            if (vertexBuffer === true) {
+                this.instancingData = new InstancingData(0);
+            } else {
+                this.instancingData = new InstancingData(vertexBuffer.numVertices);
+                this.instancingData.vertexBuffer = vertexBuffer;
 
-            // mark vertex buffer as instancing data
-            vertexBuffer.format.instancing = true;
+                // mark vertex buffer as instancing data
+                vertexBuffer.format.instancing = true;
+            }
 
             // set up culling
             this.cull = cull;
@@ -1121,7 +1142,9 @@ class MeshInstance {
             this.cull = true;
         }
 
-        this._updateShaderDefs(vertexBuffer ? (this._shaderDefs | SHADERDEF_INSTANCING) : (this._shaderDefs & ~SHADERDEF_INSTANCING));
+        this._updateShaderDefs(vertexBuffer instanceof VertexBuffer ?
+            (this._shaderDefs | SHADERDEF_INSTANCING) :
+            (this._shaderDefs & ~SHADERDEF_INSTANCING));
     }
 
     /**
@@ -1132,18 +1155,97 @@ class MeshInstance {
      * @param {CameraComponent|null} camera - Camera component to set indirect data for, or
      * null if the indirect slot should be used for all cameras.
      * @param {number} slot - Slot in the buffer to set the draw call parameters. Allocate a slot
-     * in the buffer by calling {@link GraphicsDevice#getIndirectDrawSlot}.
+     * in the buffer by calling {@link GraphicsDevice#getIndirectDrawSlot}. Pass -1 to disable
+     * indirect rendering for the specified camera (or the shared entry when camera is null).
+     * @param {number} [count] - Optional number of consecutive slots to use. Defaults to 1.
      */
-    setIndirect(camera, slot) {
+    setIndirect(camera, slot, count = 1) {
+        const key = camera?.camera ?? null;
 
-        this._allocIndirectData();
+        // disable when slot is -1
+        if (slot === -1) {
+            this._deleteDrawCommandsKey(key);
+        } else {
 
-        // store camera to slot mapping
-        this.indirectData.map.set(camera?.camera ?? null, slot);
+            // lazy map allocation
+            this.drawCommands ??= new Map();
 
-        // remove all data from this map at the end of the frame, slot needs to be assigned each frame
-        const device = this.mesh.device;
-        device.mapsToClear.add(this.indirectData.map);
+            // allocate or get per-camera command
+            const cmd = this.drawCommands.get(key) ?? new DrawCommands(this.mesh.device);
+            cmd.slotIndex = slot;
+            cmd.update(count);
+            this.drawCommands.set(key, cmd);
+
+            // remove all data from this map at the end of the frame, slot needs to be assigned each frame
+            const device = this.mesh.device;
+            device.mapsToClear.add(this.drawCommands);
+        }
+    }
+
+    /**
+     * Sets the {@link MeshInstance} to be rendered using multi-draw, where multiple sub-draws are
+     * executed with a single draw call.
+     *
+     * Note: Each call to this method invalidates any previously stored draw command data for the
+     * specified camera.
+     *
+     * @param {CameraComponent|null} camera - Camera component to bind commands to, or null to share
+     * across all cameras.
+     * @param {number} [maxCount] - Maximum number of sub-draws to allocate. Defaults to 1. Pass 0
+     * to disable multi-draw for the specified camera (or the shared entry when camera is null).
+     * @returns {DrawCommands|undefined} The commands container to populate with sub-draw commands.
+     */
+    setMultiDraw(camera, maxCount = 1) {
+        const key = camera?.camera ?? null;
+        let cmd;
+
+        // disable when maxCount is 0
+        if (maxCount === 0) {
+            this._deleteDrawCommandsKey(key);
+        } else {
+
+            // lazy map allocation
+            this.drawCommands ??= new Map();
+
+            // allocate or get per-camera command
+            cmd = this.drawCommands.get(key);
+            if (!cmd) {
+                // determine index size from current mesh index buffer
+                const indexBuffer = this.mesh.indexBuffer?.[0];
+                const indexFormat = indexBuffer?.format;
+                const indexSizeBytes = (indexFormat !== undefined) ? indexFormatByteSize[indexFormat] : 0;
+                cmd = new DrawCommands(this.mesh.device, indexSizeBytes);
+                this.drawCommands.set(key, cmd);
+            }
+            cmd.allocate(maxCount);
+        }
+        return cmd;
+    }
+
+    _deleteDrawCommandsKey(key) {
+        const cmds = this.drawCommands;
+        if (cmds) {
+            const cmd = cmds.get(key);
+            cmd?.destroy();
+            cmds.delete(key);
+            if (cmds.size === 0) {
+                this.destroyDrawCommands();
+            }
+        }
+    }
+
+    /**
+     * Retrieves the draw commands for a specific camera, or the default commands when none are
+     * bound to that camera.
+     *
+     * @param {Camera} camera - The camera to retrieve commands for.
+     * @returns {DrawCommands|undefined} - The draw commands, or undefined.
+     * @ignore
+     */
+    getDrawCommands(camera) {
+        const cmds = this.drawCommands;
+        if (!cmds) return undefined;
+        return cmds.get(camera) ?? cmds.get(null);
     }
 
     /**
@@ -1156,22 +1258,13 @@ class MeshInstance {
      * always zero and is reserved for future use.
      */
     getIndirectMetaData() {
-
-        this._allocIndirectData();
-
         const prim = this.mesh?.primitive[this.renderStyle];
-        const data = this.indirectData.meshMetaData;
+        const data = this.meshMetaData ?? (this.meshMetaData = new Int32Array(4));
         data[0] = prim.count;
         data[1] = prim.base;
         data[2] = prim.baseVertex;
         // data[3] is padding, can be used for first instance in the future
         return data;
-    }
-
-    _allocIndirectData() {
-        if (!this.indirectData) {
-            this.indirectData = new IndirectData();
-        }
     }
 
     ensureMaterial(device) {
@@ -1194,7 +1287,8 @@ class MeshInstance {
      * Retrieves the specified shader parameter from a mesh instance.
      *
      * @param {string} name - The name of the parameter to query.
-     * @returns {object} The named parameter.
+     * @returns {object|undefined} The named parameter, or `undefined` if no parameter with that
+     * name is set on this mesh instance.
      */
     getParameter(name) {
         return this.parameters[name];

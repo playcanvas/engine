@@ -144,10 +144,7 @@ class XrInput extends EventHandler {
      */
     _onInputSourcesChangeEvt;
 
-    /**
-     * @type {boolean}
-     * @ignore
-     */
+    /** @ignore */
     velocitiesSupported = false;
 
     /**

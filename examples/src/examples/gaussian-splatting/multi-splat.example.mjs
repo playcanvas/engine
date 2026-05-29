@@ -1,16 +1,25 @@
-import files from 'examples/files';
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// Shows multiple Gaussian Splat objects in a gallery scene with custom vertex shaders.
+//
+// @credit
+// title: VR Gallery
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/vr-gallery-1e087aa25dc742e680accb15249bd6be
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
-
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
@@ -47,15 +56,31 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: `${rootPath}/static/assets/models/vr-gallery.glb` }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/guitar.ply` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.ply` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    gallery: new pc.Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' }),
+    guitar: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/guitar.compressed.ply' }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    skull: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/skull.sog' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
+
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
+    // camera placement
+    const ORBIT_PIVOT = new pc.Vec3(0, 0.8, 0);
+    const ORBIT_DISTANCE = 5;
+    const ORBIT_INITIAL_YAW = 28;
+    const ORBIT_INITIAL_PITCH = -8;
 
     // get the instance of the gallery and set up with render component
     const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
@@ -67,24 +92,20 @@ assetListLoader.load(() => {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         toneMapping: pc.TONEMAP_ACES
     });
-    camera.setLocalPosition(-3, 1, 2);
 
-    // instantiate guitar with a custom shader
     const guitar = new pc.Entity('guitar');
     guitar.addComponent('gsplat', {
         asset: assets.guitar
     });
-    guitar.gsplat.material.getShaderChunks('glsl').set('gsplatVS', files['shader.vert']);
     guitar.setLocalPosition(0, 0.8, 0);
     guitar.setLocalEulerAngles(0, 0, 180);
     guitar.setLocalScale(0.4, 0.4, 0.4);
     app.root.addChild(guitar);
 
-    // helper function to create a splat instance
-    const createSplatInstance = (name, asset, px, py, pz, scale, vertex, fragment) => {
+    const createSplatInstance = (name, asset, px, py, pz, scale) => {
         const entity = new pc.Entity(name);
         entity.addComponent('gsplat', {
-            asset: asset
+            asset
         });
         entity.setLocalPosition(px, py, pz);
         entity.setLocalEulerAngles(180, 90, 0);
@@ -94,64 +115,60 @@ assetListLoader.load(() => {
         return entity;
     };
 
-    const biker1 = createSplatInstance('biker1', assets.biker, -1.5, 0.05, 0, 0.7);
+    createSplatInstance('biker', assets.biker, -1.5, 0.05, 0, 0.7);
 
-    // clone the biker and add the clone to the scene
-    const biker2 = biker1.clone();
-    biker2.setLocalPosition(1.5, 0.05, 0);
-    biker2.rotate(0, 150, 0);
-    app.root.addChild(biker2);
+    const skull = createSplatInstance('skull', assets.skull, 1.5, 0.05, 0, 0.7);
+    skull.rotate(0, 150, 0);
 
-    // add orbit camera script with a mouse and a touch support
+    app.root.addChild(camera);
+
     camera.addComponent('script');
-    camera.script.create('orbitCamera', {
+    const orbitCam = /** @type {any} */ (camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            focusEntity: guitar,
             distanceMax: 60,
             frameOnStart: false
         }
-    });
+    }));
+    if (orbitCam) {
+        orbitCam.pivotPoint.copy(ORBIT_PIVOT);
+        orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
+        orbitCam._updatePosition();
+    }
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
 
-    let useCustomShader = true;
+    const glslVs = shaderGlslVert;
+    const wgslVs = shaderWgslVert;
+    const sceneMat = app.scene.gsplat.material;
+
+    /**
+     * @param {boolean} enabled - Whether to apply the shared gsplatModifyVS chunk.
+     */
+    const applyCustomShader = (enabled) => {
+        if (enabled) {
+            sceneMat.getShaderChunks('glsl').set('gsplatModifyVS', glslVs);
+            sceneMat.getShaderChunks('wgsl').set('gsplatModifyVS', wgslVs);
+        } else {
+            sceneMat.getShaderChunks('glsl').delete('gsplatModifyVS');
+            sceneMat.getShaderChunks('wgsl').delete('gsplatModifyVS');
+        }
+        sceneMat.update();
+    };
+
     data.on('shader:set', () => {
-        // Apply custom or default material options to the splats when the button is clicked. Note
-        // that this uses non-public API, which is subject to change when a proper API is added.
-        const vs = files['shader.vert'];
-
-        const mat1 = biker1.gsplat.material;
-        if (useCustomShader) {
-            mat1.getShaderChunks('glsl').set('gsplatVS', vs);
-        } else {
-            mat1.getShaderChunks('glsl').delete('gsplatVS');
-        }
-        mat1.update();
-
-        const mat2 = biker2.gsplat.material;
-        if (useCustomShader) {
-            mat2.getShaderChunks('glsl').set('gsplatVS', vs);
-        } else {
-            mat2.getShaderChunks('glsl').delete('gsplatVS');
-        }
-        mat2.setDefine('CUTOUT', true);
-        mat2.update();
-
-        useCustomShader = !useCustomShader;
+        applyCustomShader(!!data.get('shader'));
     });
-
-    const uTime = app.graphicsDevice.scope.resolve('uTime');
+    applyCustomShader(false);
+    data.set('shader', false);
 
     let currentTime = 0;
     app.on('update', (dt) => {
         currentTime += dt;
 
-        uTime.setValue(currentTime);
+        sceneMat.setParameter('uTime', currentTime);
+        sceneMat.update();
 
-        biker2.rotate(0, 80 * dt, 0);
+        skull.rotate(0, 80 * dt, 0);
     });
 });
-
-export { app };

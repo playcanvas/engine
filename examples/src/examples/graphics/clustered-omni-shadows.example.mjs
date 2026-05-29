@@ -1,37 +1,35 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
     xmas_negx: new pc.Asset('xmas_negx', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negx.png`
+        url: './assets/cubemaps/xmas_faces/xmas_negx.png'
     }),
     xmas_negy: new pc.Asset('xmas_negy', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negy.png`
+        url: './assets/cubemaps/xmas_faces/xmas_negy.png'
     }),
     xmas_negz: new pc.Asset('xmas_negz', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negz.png`
+        url: './assets/cubemaps/xmas_faces/xmas_negz.png'
     }),
     xmas_posx: new pc.Asset('xmas_posx', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posx.png`
+        url: './assets/cubemaps/xmas_faces/xmas_posx.png'
     }),
     xmas_posy: new pc.Asset('xmas_posy', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posy.png`
+        url: './assets/cubemaps/xmas_faces/xmas_posy.png'
     }),
     xmas_posz: new pc.Asset('xmas_posz', 'texture', {
-        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posz.png`
+        url: './assets/cubemaps/xmas_faces/xmas_posz.png'
     })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -266,19 +264,12 @@ assetListLoader.load(() => {
 
         // display shadow texture (debug feature)
         if (app.graphicsDevice.isWebGPU) {
-            // @ts-ignore engine-tsd
-            app.drawTexture(
-                -0.7,
-                -0.7,
-                0.5,
-                0.5,
-                app.renderer.lightTextureAtlas.shadowAtlas.texture,
-                undefined,
-                undefined,
-                false
-            );
+            const texture = app.renderer.lightTextureAtlas.shadowAtlas?.texture;
+            // skip if texture is not ready (placeholder or destroyed)
+            if (texture?.device && texture.width > 1) {
+                // @ts-ignore engine-tsd
+                app.drawTexture(-0.7, -0.7, 0.5, 0.5, texture, undefined, undefined, false);
+            }
         }
     });
 });
-
-export { app };

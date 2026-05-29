@@ -1,6 +1,6 @@
-// @config WEBGPU_DISABLED
-import { rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -19,11 +19,34 @@ const message = function (msg) {
     el.textContent = msg;
 };
 
-const app = new pc.Application(canvas, {
-    mouse: new pc.Mouse(canvas),
-    touch: new pc.TouchDevice(canvas),
-    keyboard: new pc.Keyboard(window)
-});
+const gfxOptions = {
+    deviceTypes: [deviceType],
+    alpha: true
+};
+
+const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = window.devicePixelRatio;
+
+const createOptions = new pc.AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new pc.Mouse(canvas);
+createOptions.touch = new pc.TouchDevice(canvas);
+createOptions.keyboard = new pc.Keyboard(window);
+createOptions.xr = pc.XrManager;
+
+createOptions.componentSystems = [
+    pc.RenderComponentSystem,
+    pc.ModelComponentSystem,
+    pc.CameraComponentSystem,
+    pc.LightComponentSystem
+];
+createOptions.resourceHandlers = [
+    pc.TextureHandler,
+    pc.ContainerHandler
+];
+
+const app = new pc.AppBase(canvas);
+app.init(createOptions);
 
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -36,13 +59,11 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    glb: new pc.Asset('glb', 'container', { url: `${rootPath}/static/assets/models/vr-controller.glb` })
+    glb: new pc.Asset('glb', 'container', { url: './assets/models/vr-controller.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
-    // use device pixel ratio
-    app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
     app.start();
 
     // create camera
@@ -174,5 +195,3 @@ assetListLoader.load(() => {
         message('WebXR is not supported');
     }
 });
-
-export { app };

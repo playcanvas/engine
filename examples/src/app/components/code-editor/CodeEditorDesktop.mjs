@@ -5,8 +5,15 @@ import { CodeEditorBase } from './CodeEditorBase.mjs';
 import { iframe } from '../../iframe.mjs';
 import { jsx } from '../../jsx.mjs';
 import { removeRedundantSpaces } from '../../strings.mjs';
+import { getHashPath, getSelectedFile, patchState, readState } from '../../url-state.mjs';
 
-/** @typedef {import('../../events.js').StateEvent} StateEvent */
+/**
+ * @import { EditorProps } from '@monaco-editor/react'
+ * @import { editor } from 'monaco-editor'
+ * @import { ReactElement } from 'react'
+ * @import { ErrorEvent as ExampleErrorEvent, StateEvent } from '../../events.js'
+ * @import { State } from './CodeEditorBase.mjs'
+ */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
@@ -36,7 +43,7 @@ const FILE_TYPE_LANGUAGES = {
 };
 
 /**
- * @type {import('monaco-editor').editor.IStandaloneCodeEditor}
+ * @type {editor.IStandaloneCodeEditor}
  */
 let monacoEditor;
 
@@ -46,10 +53,15 @@ let monacoEditor;
  */
 
 class CodeEditorDesktop extends CodeEditorBase {
+    _codePaneCollapsed = (() => {
+        const value = readState().ui?.codePaneCollapsed;
+        return typeof value === 'boolean' ? value : localStorage.getItem('codePaneCollapsed') === 'true';
+    })();
+
     /** @type {string[]} */
     _decorators = [];
 
-    /** @type {Map<string, object[]>} */
+    /** @type {Map<string, editor.IModelDeltaDecoration[]>} */
     _decoratorMap = new Map();
 
     /**
@@ -63,7 +75,7 @@ class CodeEditorDesktop extends CodeEditorBase {
     }
 
     /**
-     * @param {ErrorEvent} event - The event.
+     * @param {ExampleErrorEvent} event - The event.
      */
     _handleExampleError(event) {
         const editor = window.editor;
@@ -94,7 +106,11 @@ class CodeEditorDesktop extends CodeEditorBase {
         const { line, column } = locations[0];
 
         const messageMarkdown = `**${name}: ${message}** [Ln ${line}, Col ${column}]`;
-        const lineText = editor.getModel().getLineContent(line);
+        const model = editor.getModel();
+        if (!model) {
+            return;
+        }
+        const lineText = model.getLineContent(line);
         const decorator = {
             range: new monaco.Range(line, 0, line, lineText.length),
             options: {
@@ -121,7 +137,10 @@ class CodeEditorDesktop extends CodeEditorBase {
      */
     _handleRequestedFiles(event) {
         const { files } = event.detail;
-        this.mergeState({ files });
+        const selectedFile = getSelectedFile(files, this.state.selectedFile);
+        this._setDirty(false);
+        this.mergeState({ files, selectedFile });
+        patchState({ ui: { selectedFile } });
     }
 
     _handleExampleHotReload() {
@@ -153,9 +172,8 @@ class CodeEditorDesktop extends CodeEditorBase {
         window.removeEventListener('requestedFiles', this._handleRequestedFiles);
     }
 
-
     /**
-     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor - The monaco editor.
+     * @param {editor.IStandaloneCodeEditor} editor - The monaco editor.
      */
     editorDidMount(editor) {
         super.editorDidMount(editor);
@@ -179,8 +197,9 @@ class CodeEditorDesktop extends CodeEditorBase {
             this.mergeState({
                 selectedFile: 'example.mjs'
             });
+            patchState({ ui: { selectedFile: 'example.mjs' } });
         }
-        codePane.ui.on('resize', () => localStorage.setItem('codePaneStyle', codePane.getAttribute('style') ?? ''));
+        /** @type {any} */ (codePane).ui.on('resize', () => localStorage.setItem('codePaneStyle', codePane.getAttribute('style') ?? ''));
         const codePaneStyle = localStorage.getItem('codePaneStyle');
         if (codePaneStyle) {
             codePane.setAttribute('style', codePaneStyle);
@@ -192,7 +211,10 @@ class CodeEditorDesktop extends CodeEditorBase {
         }
         panelToggleDiv.addEventListener('click', () => {
             codePane.classList.toggle('collapsed');
-            localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
+            const collapsed = codePane.classList.contains('collapsed');
+            this._codePaneCollapsed = collapsed;
+            localStorage.setItem('codePaneCollapsed', collapsed ? 'true' : 'false');
+            patchState({ ui: { codePaneCollapsed: collapsed } });
         });
         // register Monaco commands (you can access them by pressing f1)
         // Toggling minimap is only six key strokes: F1 mini enter (even "F1 mi enter" works)
@@ -213,7 +235,11 @@ class CodeEditorDesktop extends CodeEditorBase {
      */
     onChange(value) {
         const { files, selectedFile } = this.state;
+        if (files[selectedFile] === value) {
+            return;
+        }
         files[selectedFile] = value;
+        this._setDirty(true);
     }
 
     /**
@@ -221,19 +247,20 @@ class CodeEditorDesktop extends CodeEditorBase {
      */
     selectFile(selectedFile) {
         this.mergeState({ selectedFile });
+        patchState({ ui: { selectedFile } });
         monacoEditor.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
     }
 
     renderTabs() {
         const { files, selectedFile } = this.state;
-        /** @type {JSX.Element[]} */
+        /** @type {ReactElement[]} */
         const tabs = [];
         for (const name in files) {
             const button = jsx(Button, {
                 key: name,
                 id: `code-editor-file-tab-${name}`,
                 text: name,
-                class: name === selectedFile ? 'selected' : null,
+                class: name === selectedFile ? 'selected' : undefined,
                 onClick: () => this.selectFile(name)
             });
             tabs.push(button);
@@ -255,7 +282,7 @@ class CodeEditorDesktop extends CodeEditorBase {
             value = '// reloading, please wait';
         }
 
-        /** @type {import('@monaco-editor/react').EditorProps} */
+        /** @type {EditorProps} */
         const options = {
             value,
             language,
@@ -286,7 +313,7 @@ class CodeEditorDesktop extends CodeEditorBase {
             {
                 headerText: 'CODE',
                 id: 'codePane',
-                class: localStorage.getItem('codePaneCollapsed') === 'true' ? 'collapsed' : null,
+                class: this._codePaneCollapsed ? 'collapsed' : undefined,
                 resizable: 'left',
                 resizeMax: 2000
             },
@@ -314,8 +341,7 @@ class CodeEditorDesktop extends CodeEditorBase {
                         icon: 'E259',
                         text: '',
                         onClick: () => {
-                            const examplePath =
-                                location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
+                            const examplePath = getHashPath() === '/' ? 'misc/hello-world' : getHashPath().slice(1);
                             window.open(
                                 `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.example.mjs`
                             );

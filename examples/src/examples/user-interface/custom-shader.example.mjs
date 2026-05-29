@@ -1,23 +1,25 @@
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    playcanvas: new pc.Asset('playcanvas', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` }, { srgb: true })
+    playcanvas: new pc.Asset('playcanvas', 'texture', { url: './assets/textures/playcanvas.png' }, { srgb: true })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -72,8 +74,10 @@ assetListLoader.load(() => {
     // Create a new material with the new shader and additive alpha blending
     const material = new pc.ShaderMaterial({
         uniqueName: 'myUIShader',
-        vertexGLSL: files['shader.vert'],
-        fragmentGLSL: files['shader.frag'],
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: shaderGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: shaderWgslFrag,
         attributes: {
             vertex_position: pc.SEMANTIC_POSITION,
             vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
@@ -104,5 +108,3 @@ assetListLoader.load(() => {
         material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
     });
 });
-
-export { app };

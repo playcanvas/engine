@@ -1,31 +1,31 @@
-// @config HIDDEN
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    fly: new pc.Asset('fly', 'script', { url: `${rootPath}/static/scripts/camera/fly-camera.js` }),
+    fly: new pc.Asset('fly', 'script', { url: './scripts/camera/fly-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    diffuseDetail: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` }),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
-    normalDetail: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
-    ao: new pc.Asset('ao', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-ao.jpg` }),
-    aoDetail: new pc.Asset('ao', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas-grey.png` })
+    diffuse: new pc.Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    diffuseDetail: new pc.Asset('diffuse', 'texture', { url: './assets/textures/playcanvas.png' }),
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    normalDetail: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
+    ao: new pc.Asset('ao', 'texture', { url: './assets/textures/seaside-rocks01-ao.jpg' }),
+    aoDetail: new pc.Asset('ao', 'texture', { url: './assets/textures/playcanvas-grey.png' })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -174,5 +174,3 @@ assetListLoader.load(() => {
         }
     });
 });
-
-export { app };

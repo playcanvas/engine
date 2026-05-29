@@ -21,9 +21,7 @@ import {
     typedArrayIndexFormats,
     requiresManualGamma,
     PIXELFORMAT_SRGBA8,
-    SEMANTIC_POSITION,
-    SHADERLANGUAGE_WGSL,
-    SHADERLANGUAGE_GLSL
+    SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
@@ -45,8 +43,6 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
 import { ParticleMaterial } from './particle-material.js';
-import { ShaderChunks } from '../shader-lib/shader-chunks.js';
-
 const particleVerts = [
     [-1, -1],
     [1, -1],
@@ -330,6 +326,8 @@ class ParticleEmitter {
 
         setProperty('radialSpeedGraph', default0Curve);
         setProperty('radialSpeedGraph2', this.radialSpeedGraph);
+        setPropertyTarget = null;
+        setPropertyOptions = null;
 
         this.animTilesParams = new Float32Array(2);
         this.animParams = new Float32Array(4);
@@ -581,7 +579,7 @@ class ParticleEmitter {
         gd.fragmentUniformsCount < 64 || // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
         gd.forceCpuParticles;
 
-        this._destroyResources();
+        const wasVisible = this._destroyResources();
 
         this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
@@ -665,16 +663,12 @@ class ParticleEmitter {
         if (this.emitterShape === EMITTERSHAPE_BOX) defines.set('EMITTERSHAPE_BOX', '');
         const shaderUniqueId = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
 
-        const engineChunks = ShaderChunks.get(gd, gd.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
-        const includes = new Map(engineChunks);
-
         // shader options shared by all 3 shaders
         const shaderOptions = {
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
             fragmentChunk: 'particle_simulationPS',
-            fragmentDefines: defines,
-            fragmentIncludes: includes
+            fragmentDefines: defines
         };
 
         // shader 1
@@ -711,7 +705,6 @@ class ParticleEmitter {
 
         this.resetMaterial();
 
-        const wasVisible = this.meshInstance ? this.meshInstance.visible : true;
         this.meshInstance = new MeshInstance(mesh, this.material, this.node);
         this.meshInstance.pick = false;
         this.meshInstance.updateKey(); // shouldn't be here?
@@ -1194,16 +1187,19 @@ class ParticleEmitter {
         this.colorParam?.destroy();
         this.colorParam = null;
 
-        this.vertexBuffer?.destroy();
         this.vertexBuffer = undefined; // we are testing if vb is undefined in some code, no idea why
-
-        this.indexBuffer?.destroy();
         this.indexBuffer = undefined;
+
+        const wasVisible = this.meshInstance?.visible ?? true;
+        this.meshInstance?.destroy();
+        this.meshInstance = null;
 
         this.material?.destroy();
         this.material = null;
 
         // note: shaders should not be destroyed as they could be shared between emitters
+
+        return wasVisible;
     }
 
     destroy() {

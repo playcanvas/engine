@@ -160,7 +160,6 @@ class Asset extends EventHandler {
     /**
      * Whether to preload the asset.
      *
-     * @type {boolean}
      * @private
      */
     _preload = false;
@@ -183,15 +182,11 @@ class Asset extends EventHandler {
     /**
      * True if the asset has finished attempting to load the resource. It is not guaranteed
      * that the resources are available as there could have been a network error.
-     *
-     * @type {boolean}
      */
     loaded = false;
 
     /**
      * True if the resource is currently being loaded.
-     *
-     * @type {boolean}
      */
     loading = false;
 
@@ -424,7 +419,7 @@ class Asset extends EventHandler {
 
     /**
      * Sets whether to preload an asset. If true, the asset will be loaded during the preload phase
-     * of application set up.
+     * of application initialization or when calling {@link AssetRegistry#add}.
      *
      * @type {boolean}
      */
@@ -623,10 +618,7 @@ class Asset extends EventHandler {
 
         // destroy resources
         for (let i = 0; i < old.length; ++i) {
-            const resource = old[i];
-            if (resource && resource.destroy) {
-                resource.destroy();
-            }
+            old[i]?.destroy?.();
         }
     }
 
@@ -653,7 +645,8 @@ class Asset extends EventHandler {
                 cache: true,
                 responseType: 'arraybuffer',
                 retry: maxRetries > 0,
-                maxRetries: maxRetries
+                maxRetries: maxRetries,
+                progress: asset
             }, callback);
         }
     }

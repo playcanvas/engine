@@ -1,6 +1,4 @@
 export default /* wgsl */`
-uniform exposure: f32;
-
 // ACES approximation by Stephen Hill
 
 // sRGB => XYZ => D65_2_D60 => AP1 => RRT_SAT
@@ -24,7 +22,7 @@ fn RRTAndODTFit(v: vec3f) -> vec3f {
 }
 
 fn toneMap(color: vec3f) -> vec3f {
-    var c: vec3f = color * (uniform.exposure / 0.6);
+    var c: vec3f = color * (getExposure() / 0.6);
     c = c * ACESInputMat;
 
     // Apply RRT and ODT

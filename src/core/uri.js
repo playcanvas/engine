@@ -169,7 +169,7 @@ class URI {
     }
 
     /**
-     * Set the query section of the URI from a Object.
+     * Set the query section of the URI from an Object.
      *
      * @param {object} params - Key-Value pairs to encode into the query string.
      * @example
@@ -179,7 +179,7 @@ class URI {
      *     "a": 1,
      *     "b": 2
      * });
-     * console.log(uri.toString()); // logs "http://example.com?a=1&b=2
+     * console.log(uri.toString()); // logs "http://example.com?a=1&b=2"
      */
     setQuery(params) {
         let q = '';

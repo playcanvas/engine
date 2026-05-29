@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { math } from '../../../core/math/math.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Entity } from '../../entity.js';
@@ -53,6 +54,41 @@ const _transform = new Mat4();
  * @category User Interface
  */
 class ScreenComponent extends Component {
+    /** @private */
+    _resolution = new Vec2(640, 320);
+
+    /** @private */
+    _referenceResolution = new Vec2(640, 320);
+
+    /** @private */
+    _scaleMode = SCALEMODE_NONE;
+
+    /** @ignore */
+    scale = 1;
+
+    /** @private */
+    _scaleBlend = 0.5;
+
+    /** @private */
+    _priority = 0;
+
+    /** @private */
+    _screenSpace = false;
+
+    /**
+     * If true, then elements inside this screen will not be rendered when outside of the screen
+     * (only valid when {@link screenSpace} is true).
+     *
+     * @type {boolean}
+     */
+    cull = false;
+
+    /** @private */
+    _screenMatrix = new Mat4();
+
+    /** @private */
+    _elements = new Set();
+
     /**
      * Create a new ScreenComponent.
      *
@@ -61,27 +97,6 @@ class ScreenComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this._resolution = new Vec2(640, 320);
-        this._referenceResolution = new Vec2(640, 320);
-        this._scaleMode = SCALEMODE_NONE;
-        this.scale = 1;
-        this._scaleBlend = 0.5;
-
-        this._priority = 0;
-
-        this._screenSpace = false;
-
-        /**
-         * If true, then elements inside this screen will be not be rendered when outside of the
-         * screen (only valid when screenSpace is true).
-         *
-         * @type {boolean}
-         */
-        this.cull = this._screenSpace;
-        this._screenMatrix = new Mat4();
-
-        this._elements = new Set();
 
         system.app.graphicsDevice.on('resizecanvas', this._onResize, this);
     }
@@ -92,7 +107,7 @@ class ScreenComponent extends Component {
      * the next update loop.
      */
     syncDrawOrder() {
-        this.system.queueDrawOrderSync(this.entity.getGuid(), this._processDrawOrderSync, this);
+        this.system.queueDrawOrderSync(this.entity.guid, this._processDrawOrderSync, this);
     }
 
     _recurseDrawOrderSync(e, i) {
@@ -355,16 +370,14 @@ class ScreenComponent extends Component {
 
     /**
      * Sets the screen's render priority. Priority determines the order in which ScreenComponents
-     * in the same layer are rendered. Number must be an integer between 0 and 255. Priority is set
+     * in the same layer are rendered. Number must be an integer between 0 and 127. Priority is set
      * into the top 8 bits of the {@link ElementComponent#drawOrder} property. Defaults to 0.
      *
      * @type {number}
      */
     set priority(value) {
-        if (value > 0xFF) {
-            Debug.warn(`Clamping screen priority from ${value} to 255`);
-            value = 0xFF;
-        }
+        Debug.assert(value >= 0 && value <= 0x7F, `Screen priority must be between 0 and 127, got ${value}`);
+        value = math.clamp(value, 0, 0x7F);
         if (this._priority === value) {
             return;
         }

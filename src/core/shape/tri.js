@@ -22,8 +22,8 @@ class Tri {
     /**
      * The first 3-dimensional vector of the triangle.
      *
-     * @readonly
      * @type {Vec3}
+     * @readonly
      */
     v0 = new Vec3();
 
@@ -65,7 +65,7 @@ class Tri {
      * @param {Vec3} v0 - The value set on the first 3-dimensional vector of the triangle.
      * @param {Vec3} v1 - The value set on the second 3-dimensional vector of the triangle.
      * @param {Vec3} v2 - The value set on the third 3-dimensional vector of the triangle.
-     * @returns {Tri} Self for chaining
+     * @returns {Tri} Self for chaining.
      * @example
      * const t = new pc.Tri(pc.Vec3.UP, pc.Vec3.RIGHT, pc.Vec3.BACK);
      * const v0 = new pc.Vec3(1, 0, 0);

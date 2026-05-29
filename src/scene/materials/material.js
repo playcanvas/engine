@@ -6,7 +6,8 @@ import {
     BLENDEQUATION_ADD, BLENDEQUATION_REVERSE_SUBTRACT,
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
     CULLFACE_BACK,
-    SHADERLANGUAGE_GLSL
+    SHADERLANGUAGE_GLSL,
+    FRONTFACE_CCW
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
@@ -31,6 +32,7 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
  * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
  * @import { ShaderChunkMap } from '../shader-lib/shader-chunk-map.js';
+ * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
  */
 
 // blend mode mapping to op, srcBlend and dstBlend
@@ -65,9 +67,12 @@ let id = 0;
  */
 
 /**
- * A material determines how a particular {@link MeshInstance} is rendered. It specifies the
- * {@link Shader} and render state that is set before the mesh instance is submitted to the
- * {@link GraphicsDevice}.
+ * A material determines how a particular {@link MeshInstance} is rendered, and specifies
+ * render state including uniforms, textures, defines, and other properties.
+ *
+ * This is a base class and cannot be instantiated and used directly. Only subclasses such
+ * as {@link ShaderMaterial} and {@link StandardMaterial} can be used to define materials
+ * for rendering.
  *
  * @category Graphics
  */
@@ -75,15 +80,13 @@ class Material {
     /**
      * The mesh instances referencing this material
      *
-     * @type {MeshInstance[]}
+     * @type {Set<MeshInstance>}
      * @private
      */
-    meshInstances = [];
+    meshInstances = new Set();
 
     /**
      * The name of the material.
-     *
-     * @type {string}
      */
     name = 'Untitled';
 
@@ -91,8 +94,6 @@ class Material {
      * A unique id the user can assign to the material. The engine internally does not use this for
      * anything, and the user can assign a value to this id for any purpose they like. Defaults to
      * an empty string.
-     *
-     * @type {string}
      */
     userId = '';
 
@@ -124,8 +125,6 @@ class Material {
      * active render target based on alpha value. All fragments with an alpha value of less than
      * the alphaTest reference value will be discarded. alphaTest defaults to 0 (all fragments
      * pass).
-     *
-     * @type {number}
      */
     alphaTest = 0;
 
@@ -136,8 +135,6 @@ class Material {
      * otherwise sharp alpha cutouts, but isn't recommended for large area semi-transparent
      * surfaces. Note, that you don't need to enable blending to make alpha to coverage work. It
      * will work without it, just like alphaTest.
-     *
-     * @type {boolean}
      */
     alphaToCoverage = false;
 
@@ -162,6 +159,19 @@ class Material {
      * @type {number}
      */
     cull = CULLFACE_BACK;
+
+    /**
+     * Controls whether polygons are front- or back-facing by setting a winding
+     * orientation. Can be:
+     *
+     * - {@link FRONTFACE_CW}: The clock-wise winding.
+     * - {@link FRONTFACE_CCW}: The counterclockwise winding.
+     *
+     * Defaults to {@link FRONTFACE_CCW}.
+     *
+     * @type {number}
+     */
+    frontFace = FRONTFACE_CCW;
 
     /**
      * Stencil parameters for front faces (default is null).
@@ -435,17 +445,15 @@ class Material {
     }
 
     _updateTransparency() {
-        const transparent = this.transparent;
-        const meshInstances = this.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].transparent = transparent;
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.transparent = this.transparent;
         }
     }
 
     /**
      * Sets the blend state for this material. Controls how fragment shader outputs are blended
      * when being written to the currently active render target. This overwrites blending type set
-     * using {@link Material#blendType}, and offers more control over blending.
+     * using {@link blendType}, and offers more control over blending.
      *
      * @type {BlendState}
      */
@@ -529,8 +537,8 @@ class Material {
     }
 
     /**
-     * Sets the depth state. Note that this can also be done by using {@link Material#depthTest},
-     * {@link Material#depthFunc} and {@link Material#depthWrite}.
+     * Sets the depth state. Note that this can also be done by using {@link depthTest},
+     * {@link depthFunc} and {@link depthWrite}.
      *
      * @type {DepthState}
      */
@@ -635,6 +643,7 @@ class Material {
         this._depthState.copy(source._depthState);
 
         this.cull = source.cull;
+        this.frontFace = source.frontFace;
 
         this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {
@@ -671,15 +680,15 @@ class Material {
     }
 
     _updateMeshInstanceKeys() {
-        const meshInstances = this.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].updateKey();
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.updateKey();
         }
     }
 
     updateUniforms(device, scene) {
         if (this._dirtyShader) {
             this.clearVariants();
+            this._dirtyShader = false;
         }
     }
 
@@ -692,7 +701,22 @@ class Material {
     }
 
     /**
-     * Applies any changes made to the material's properties.
+     * Applies any changes made to the material's properties. This method should be called after
+     * modifying material properties to ensure the changes take effect.
+     *
+     * The method will clear cached shader variants and trigger recompilation if:
+     * - Modified material properties require a different shader variant (e.g., enabling/disabling
+     *   textures or other properties that affect shader generation)
+     * - Material-specific shader chunks (from {@link getShaderChunks}) have been modified
+     * - Global shader chunks (from {@link ShaderChunks.get}) have been modified
+     * - Material defines have been changed
+     *
+     * Note: Shaders are not compiled immediately. Instead, existing shader variants are cleared
+     * and new variants will be compiled on-demand as they are needed for different render passes
+     * (e.g., forward, shadow, pick).
+     *
+     * When global shader chunks are modified, `update()` must be called on each material that
+     * should reflect those changes.
      */
     update() {
 
@@ -725,15 +749,12 @@ class Material {
     }
 
     clearVariants() {
-
         // clear variants on the material
         this.variants.clear();
 
         // but also clear them from all materials that reference them
-        const meshInstances = this.meshInstances;
-        const count = meshInstances.length;
-        for (let i = 0; i < count; i++) {
-            meshInstances[i].clearShaders();
+        for (const meshInstance of this.meshInstances) {
+            meshInstance.clearShaders();
         }
     }
 
@@ -751,7 +772,7 @@ class Material {
 
         Debug.call(() => {
             if (data === undefined) {
-                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`);
+                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`, this);
             }
         });
 
@@ -770,7 +791,7 @@ class Material {
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|Texture} data - The value for the specified parameter.
+     * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the specified parameter.
      */
     setParameter(name, data) {
 
@@ -865,8 +886,7 @@ class Material {
     destroy() {
         this.variants.clear();
 
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            const meshInstance = this.meshInstances[i];
+        for (const meshInstance of this.meshInstances) {
             meshInstance.clearShaders();
             meshInstance._material = null;
 
@@ -880,7 +900,7 @@ class Material {
             }
         }
 
-        this.meshInstances.length = 0;
+        this.meshInstances.clear();
     }
 
     /**
@@ -890,7 +910,7 @@ class Material {
      * @ignore
      */
     addMeshInstanceRef(meshInstance) {
-        this.meshInstances.push(meshInstance);
+        this.meshInstances.add(meshInstance);
     }
 
     /**
@@ -900,11 +920,7 @@ class Material {
      * @ignore
      */
     removeMeshInstanceRef(meshInstance) {
-        const meshInstances = this.meshInstances;
-        const i = meshInstances.indexOf(meshInstance);
-        if (i !== -1) {
-            meshInstances.splice(i, 1);
-        }
+        this.meshInstances.delete(meshInstance);
     }
 }
 

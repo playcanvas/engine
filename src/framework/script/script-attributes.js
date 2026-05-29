@@ -239,7 +239,7 @@ class ScriptAttributes {
      * @param {string} name - Name of an attribute.
      * @param {object} args - Object with Arguments for an attribute.
      * @param {("boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve")} args.type - Type
-     * of an attribute value.  Can be:
+     * of an attribute value. Can be:
      *
      * - "asset"
      * - "boolean"
@@ -323,6 +323,16 @@ class ScriptAttributes {
      * });
      */
     add(name, args) {
+        if (!args) {
+            Debug.error(`Cannot add attribute '${name}' to script type '${this.scriptType.name}': args parameter is required`);
+            return;
+        }
+
+        if (!args.type) {
+            Debug.error(`Cannot add attribute '${name}' to script type '${this.scriptType.name}': args.type is required`);
+            return;
+        }
+
         if (this.index[name]) {
             Debug.warn(`attribute '${name}' is already defined for script type '${this.scriptType.name}'`);
             return;

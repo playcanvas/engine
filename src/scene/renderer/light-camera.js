@@ -22,9 +22,9 @@ class LightCamera {
         new Quat().setFromEulerAngles(0, 0, 180)
     ];
 
-    static create(name, lightType, face) {
+    static create(device, name, lightType, face) {
 
-        const camera = new Camera();
+        const camera = new Camera(device);
         camera.node = new GraphNode(name);
         camera.aspectRatio = 1;
         camera.aspectRatioMode = ASPECT_MANUAL;
@@ -58,7 +58,7 @@ class LightCamera {
 
         let cookieCamera = LightCamera._spotCookieCamera;
         if (!cookieCamera) {
-            cookieCamera = LightCamera.create('SpotCookieCamera', LIGHTTYPE_SPOT);
+            cookieCamera = LightCamera.create(light.device, 'SpotCookieCamera', LIGHTTYPE_SPOT);
             LightCamera._spotCookieCamera = cookieCamera;
         }
 

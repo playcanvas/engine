@@ -1,5 +1,7 @@
 export default /* glsl */`
 
+#define WEBGPU
+
 // convert clip space position into texture coordinates for sampling scene grab textures
 fn getGrabScreenPos(clipPos: vec4<f32>) -> vec2<f32> {
     var uv: vec2<f32> = (clipPos.xy / clipPos.w) * 0.5 + vec2<f32>(0.5);

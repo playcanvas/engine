@@ -1,4 +1,6 @@
+import { DOUBLE_TAP_THRESHOLD, DOUBLE_TAP_VARIANCE } from '../constants.js';
 import { InputSource } from '../input.js';
+import { movementState } from '../utils.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
@@ -24,9 +26,16 @@ const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length
  * @typedef {object} DualGestureSourceDeltas
  * @property {number[]} leftInput - The left input deltas.
  * @property {number[]} rightInput - The right input deltas.
+ * @property {number[]} doubleTap - The double tap delta.
  * @augments {InputSource<DualGestureSourceDeltas>}
  */
 class DualGestureSource extends InputSource {
+    /**
+     * @type {ReturnType<typeof movementState>}
+     * @private
+     */
+    _movementState = movementState();
+
     /**
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      * @private
@@ -38,6 +47,12 @@ class DualGestureSource extends InputSource {
      * @private
      */
     _pointerData = new Map();
+
+    /**
+     * @type {{ x: number, y: number, time: number }}
+     * @private
+     */
+    _lastPointer = { x: 0, y: 0, time: 0 };
 
     /**
      * @type {VirtualJoystick}
@@ -58,7 +73,8 @@ class DualGestureSource extends InputSource {
     constructor(layout) {
         super({
             leftInput: [0, 0],
-            rightInput: [0, 0]
+            rightInput: [0, 0],
+            doubleTap: [0]
         });
 
         if (layout) {
@@ -74,6 +90,10 @@ class DualGestureSource extends InputSource {
     }
 
     /**
+     * Sets the layout of the dual gesture input source. The value is a hyphen-separated pair
+     * describing the left and right inputs respectively, where each side can be either
+     * `joystick` (a virtual joystick) or `touch` (a touch). Defaults to `joystick-touch`.
+     *
      * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
      */
     set layout(value) {
@@ -89,6 +109,11 @@ class DualGestureSource extends InputSource {
         this._pointerData.clear();
     }
 
+    /**
+     * Gets the layout of the dual gesture input source.
+     *
+     * @type {`${'joystick' | 'touch'}-${'joystick' | 'touch'}`}
+     */
     get layout() {
         return this._layout;
     }
@@ -107,6 +132,7 @@ class DualGestureSource extends InputSource {
      */
     _onPointerDown(event) {
         const { pointerType, pointerId, clientX, clientY } = event;
+        this._movementState.down(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -119,6 +145,15 @@ class DualGestureSource extends InputSource {
             y: clientY,
             left
         });
+
+        const now = Date.now();
+        const sqrDist = (this._lastPointer.x - clientX) ** 2 + (this._lastPointer.y - clientY) ** 2;
+        if (sqrDist < DOUBLE_TAP_VARIANCE && now - this._lastPointer.time < DOUBLE_TAP_THRESHOLD) {
+            this.deltas.doubleTap.append([1]);
+        }
+        this._lastPointer.x = clientX;
+        this._lastPointer.y = clientY;
+        this._lastPointer.time = now;
 
         if (left && startsWith(this._layout, 'joystick')) {
             this.fire('joystick:position:left', this._leftJoystick.down(clientX, clientY));
@@ -133,7 +168,8 @@ class DualGestureSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
-        const { pointerType, pointerId, target, clientX, clientY, movementX, movementY } = event;
+        const { pointerType, pointerId, target, clientX, clientY } = event;
+        const [movementX, movementY] = this._movementState.move(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -170,6 +206,7 @@ class DualGestureSource extends InputSource {
      */
     _onPointerUp(event) {
         const { pointerType, pointerId } = event;
+        this._movementState.up(event);
 
         if (pointerType !== 'touch') {
             return;
@@ -219,9 +256,7 @@ class DualGestureSource extends InputSource {
         super.detach();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         this.deltas.leftInput.append([this._leftJoystick.value.x, this._leftJoystick.value.y]);
         this.deltas.rightInput.append([this._rightJoystick.value.x, this._rightJoystick.value.y]);
@@ -229,9 +264,7 @@ class DualGestureSource extends InputSource {
         return super.read();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     destroy() {
         this._leftJoystick.up();
         this._rightJoystick.up();

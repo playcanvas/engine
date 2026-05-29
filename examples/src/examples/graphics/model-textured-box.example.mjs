@@ -1,17 +1,16 @@
-import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    clouds: new pc.Asset('clouds', 'texture', { url: `${rootPath}/static/assets/textures/clouds.jpg` })
+    clouds: new pc.Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -97,5 +96,3 @@ assetListLoader.load(() => {
         box.setEulerAngles(angle * 2, angle * 4, angle * 8);
     });
 });
-
-export { app };

@@ -76,6 +76,32 @@ describe('BatchManager', function () {
     });
 
 
+    it('prepare: splits batches when castShadow differs', function () {
+        const e1 = new Entity();
+        e1.addComponent('model', {
+            type: 'box',
+            batchGroupId: this.bg.id
+        });
+        const e2 = new Entity();
+        e2.addComponent('model', {
+            type: 'box',
+            batchGroupId: this.bg.id
+        });
+
+        app.root.addChild(e1);
+        app.root.addChild(e2);
+
+        e1.model.meshInstances[0].castShadow = false;
+        e2.model.meshInstances[0].castShadow = true;
+
+        app.batcher.generate();
+
+        const layer = app.scene.layers.getLayerById(LAYERID_WORLD);
+        expect(layer.meshInstances.length).to.equal(2);
+        const flags = layer.meshInstances.map(mi => mi.castShadow).sort();
+        expect(flags).to.deep.equal([false, true]);
+    });
+
     it('batch with all invisible meshinstances works', function () {
         const e1 = new Entity();
         e1.name = 'e1';

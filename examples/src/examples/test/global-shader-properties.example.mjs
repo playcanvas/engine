@@ -1,28 +1,34 @@
-// @config HIDDEN
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+// @config
+// @flag HIDDEN
+//
+// @credit
+// title: Terrain Low Poly
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/terrain-low-poly-248b21331315466e98d20c441935d99d
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
-const { createGoochMaterial } = await fileImport(`${rootPath}/static/assets/scripts/misc/gooch-material.mjs`);
+
+import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    terrain: new pc.Asset('terrain', 'container', { url: `${rootPath}/static/assets/models/terrain.glb` }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/biker.ply` }),
+    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    terrain: new pc.Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -119,6 +125,18 @@ assetListLoader.load(() => {
             litArgs_emission = vec3(0.7, 0.4, 0);
             litArgs_metalness = 0.5;
             litArgs_specularity = vec3(0.5, 0.5, 0.5);
+            litArgs_specularityFactor = 1.0;
+            litArgs_gloss = 0.5;
+            litArgs_ior = 0.1;
+            litArgs_ao = 0.0;
+            litArgs_opacity = 1.0;
+        }`;
+    material.shaderChunkWGSL = `
+        #include "litShaderCorePS"
+        fn evaluateFrontend() {
+            litArgs_emission = vec3f(0.7, 0.4, 0);
+            litArgs_metalness = 0.5;
+            litArgs_specularity = vec3f(0.5, 0.5, 0.5);
             litArgs_specularityFactor = 1.0;
             litArgs_gloss = 0.5;
             litArgs_ior = 0.1;
@@ -249,5 +267,3 @@ assetListLoader.load(() => {
         gamma: true
     });
 });
-
-export { app };

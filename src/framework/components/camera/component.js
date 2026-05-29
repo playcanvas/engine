@@ -14,7 +14,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { Mat4 } from '../../../core/math/mat4.js'
- * @import { RenderPass } from '../../../platform/graphics/render-pass.js'
+ * @import { FramePass } from '../../../platform/graphics/frame-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
  * @import { FogParams } from '../../../scene/fog-params.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'
@@ -60,6 +60,13 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *
+ * Relevant Engine API examples:
+ *
+ * - [First Person Camera](https://playcanvas.github.io/#/camera/first-person)
+ * - [Fly Camera](https://playcanvas.github.io/#/camera/fly)
+ * - [Multiple Cameras](https://playcanvas.github.io/#/camera/multi)
+ * - [Orbit Camera](https://playcanvas.github.io/#/camera/orbit)
+ *
  * @hideconstructor
  * @category Graphics
  */
@@ -75,7 +82,6 @@ class CameraComponent extends Component {
     /**
      * A counter of requests of depth map rendering.
      *
-     * @type {number}
      * @private
      */
     _renderSceneDepthMap = 0;
@@ -83,7 +89,6 @@ class CameraComponent extends Component {
     /**
      * A counter of requests of color map rendering.
      *
-     * @type {number}
      * @private
      */
     _renderSceneColorMap = 0;
@@ -105,8 +110,11 @@ class CameraComponent extends Component {
      */
     _disablePostEffectsLayer = LAYERID_UI;
 
-    /** @private */
-    _camera = new Camera();
+    /**
+     * @type {Camera}
+     * @private
+     */
+    _camera;
 
     /**
      * @type {EventHandle|null}
@@ -135,6 +143,7 @@ class CameraComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
+        this._camera = new Camera(system.app.graphicsDevice);
         this._camera.node = entity;
 
         // postprocessing management
@@ -205,26 +214,46 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the render passes the camera uses for rendering, instead of its default rendering.
+     * Sets the frame passes the camera uses for rendering, instead of its default rendering.
      * Set this to null to return to the default behavior.
      *
-     * @type {RenderPass[]|null}
+     * @type {FramePass[]|null}
      * @ignore
      */
-    set renderPasses(passes) {
-        this._camera.renderPasses = passes || [];
+    set framePasses(passes) {
+        this._camera.framePasses = passes || [];
         this.dirtyLayerCompositionCameras();
         this.system.app.scene.updateShaders = true;
     }
 
     /**
-     * Gets the render passes the camera uses for rendering, instead of its default rendering.
+     * Gets the frame passes the camera uses for rendering, instead of its default rendering.
      *
-     * @type {RenderPass[]}
+     * @type {FramePass[]}
+     * @ignore
+     */
+    get framePasses() {
+        return this._camera.framePasses;
+    }
+
+    /**
+     * @type {FramePass[]|null}
+     * @deprecated Use {@link framePasses} instead.
+     * @ignore
+     */
+    set renderPasses(passes) {
+        Debug.deprecated('CameraComponent#renderPasses is deprecated. Use CameraComponent#framePasses instead.');
+        this.framePasses = passes;
+    }
+
+    /**
+     * @type {FramePass[]}
+     * @deprecated Use {@link framePasses} instead.
      * @ignore
      */
     get renderPasses() {
-        return this._camera.renderPasses;
+        Debug.deprecated('CameraComponent#renderPasses is deprecated. Use CameraComponent#framePasses instead.');
+        return this.framePasses;
     }
 
     get shaderParams() {
@@ -234,8 +263,16 @@ class CameraComponent extends Component {
     /**
      * Sets the gamma correction to apply when rendering the scene. Can be:
      *
-     * - {@link GAMMA_NONE}
-     * - {@link GAMMA_SRGB}
+     * - {@link GAMMA_SRGB}: Output is gamma-encoded for standard sRGB displays. This is the
+     *   default and recommended setting for all normal rendering.
+     * - {@link GAMMA_NONE}: Output remains in linear space. This is only intended for advanced
+     *   HDR pipelines where the output is rendered to an intermediate HDR texture that will be
+     *   tonemapped and gamma-corrected in a subsequent pass.
+     *
+     * **Warning**: Setting `GAMMA_NONE` will cause the entire scene (including UI) to appear
+     * too dark on standard displays, as linear values are written directly without gamma
+     * encoding. For HDR rendering with post-processing, use {@link CameraFrame} which handles
+     * this automatically.
      *
      * Defaults to {@link GAMMA_SRGB}.
      *
@@ -458,6 +495,24 @@ class CameraComponent extends Component {
      */
     get clearColorBuffer() {
         return this._camera.clearColorBuffer;
+    }
+
+    /**
+     * Sets the depth value to clear the depth buffer to. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set clearDepth(value) {
+        this._camera.clearDepth = value;
+    }
+
+    /**
+     * Gets the depth value to clear the depth buffer to.
+     *
+     * @type {number}
+     */
+    get clearDepth() {
+        return this._camera.clearDepth;
     }
 
     /**
@@ -842,7 +897,7 @@ class CameraComponent extends Component {
         if (value && !this._sceneColorMapRequested) {
             this.requestSceneColorMap(true);
             this._sceneColorMapRequested = true;
-        } else if (this._sceneColorMapRequested) {
+        } else if (!value && this._sceneColorMapRequested) {
             this.requestSceneColorMap(false);
             this._sceneColorMapRequested = false;
         }
@@ -856,7 +911,7 @@ class CameraComponent extends Component {
         if (value && !this._sceneDepthMapRequested) {
             this.requestSceneDepthMap(true);
             this._sceneDepthMapRequested = true;
-        } else if (this._sceneDepthMapRequested) {
+        } else if (!value && this._sceneDepthMapRequested) {
             this.requestSceneDepthMap(false);
             this._sceneDepthMapRequested = false;
         }
@@ -875,8 +930,8 @@ class CameraComponent extends Component {
     set renderTarget(value) {
 
         Debug.call(() => {
-            if (this._camera.renderPasses.length > 0) {
-                Debug.warn(`Setting a render target on the camera ${this.entity.name} after the render passes is not supported, set it up first.`);
+            if (this._camera.framePasses.length > 0) {
+                Debug.warn(`Setting a render target on the camera ${this.entity.name} after the frame passes is not supported, set it up first.`);
             }
         });
 
@@ -989,7 +1044,7 @@ class CameraComponent extends Component {
     /**
      * Request the scene to generate a texture containing the scene color map. Note that this call
      * is accumulative, and for each enable request, a disable request need to be called. Note that
-     * this setting is ignored when the {@link CameraComponent#renderPasses} is used.
+     * this setting is ignored when {@link framePasses} is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
@@ -1008,7 +1063,7 @@ class CameraComponent extends Component {
     /**
      * Request the scene to generate a texture containing the scene depth map. Note that this call
      * is accumulative, and for each enable request, a disable request need to be called. Note that
-     * this setting is ignored when the {@link CameraComponent#renderPasses} is used.
+     * this setting is ignored when {@link framePasses} is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
@@ -1188,17 +1243,18 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Calculates aspect ratio value for a given render target.
+     * Computes the aspect ratio this camera would produce when rendering to the given render
+     * target, without changing the camera's state. When `rt` is omitted, the camera's own
+     * {@link CameraComponent#renderTarget} is used, and if that is also null, the backbuffer
+     * is used. The camera's {@link CameraComponent#rect} viewport is taken into account.
      *
-     * @param {RenderTarget|null} [rt] - Optional
-     * render target. If unspecified, the backbuffer is used.
-     * @returns {number} The aspect ratio of the render target (or backbuffer).
+     * @param {RenderTarget|null} [rt] - Optional render target to compute the aspect ratio
+     * against. Defaults to the camera's current render target, or the backbuffer if none is
+     * assigned.
+     * @returns {number} The computed aspect ratio.
      */
     calculateAspectRatio(rt) {
-        const device = this.system.app.graphicsDevice;
-        const width = rt ? rt.width : device.width;
-        const height = rt ? rt.height : device.height;
-        return (width * this.rect.z) / (height * this.rect.w);
+        return this._camera.calculateAspectRatio(rt);
     }
 
     /**

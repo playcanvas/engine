@@ -14,7 +14,7 @@ import { Mouse } from './mouse.js';
  * A general input handler which handles both mouse and keyboard input assigned to named actions.
  * This allows you to define input handlers separately to defining keyboard/mouse configurations.
  *
- * @category Input
+ * @ignore
  */
 class Controller {
     /**
@@ -168,10 +168,11 @@ class Controller {
     }
 
     /**
-     * Create or update a action which is enabled when the supplied keys are pressed.
+     * Register a new action which is enabled when the supplied keys are pressed.
      *
      * @param {string} action - The name of the action.
      * @param {number[]} keys - A list of keycodes.
+     * @throws {Error} If the action is already registered, or if `keys` is undefined.
      */
     registerKeys(action, keys) {
         if (!this._keyboard) {

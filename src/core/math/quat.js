@@ -57,7 +57,7 @@ class Quat {
      * Creates a new Quat instance.
      *
      * @overload
-     * @param {number[]} arr - The array to set the vector values from.
+     * @param {number[]} arr - The array to set the quaternion values from.
      * @example
      * const q = new pc.Quat([1, 2, 3, 4]);
      */
@@ -435,7 +435,7 @@ class Quat {
      * Normalizes the specified quaternion.
      *
      * @param {Quat} [src] - The quaternion to normalize. If not set, the operation is done in place.
-     * @returns {Quat} The result of the normalization.
+     * @returns {Quat} Self for chaining.
      * @example
      * const v = new pc.Quat(0, 0, 0, 5);
      * v.normalize();
@@ -471,7 +471,7 @@ class Quat {
      * q.set(1, 0, 0, 0);
      *
      * // Outputs 1, 0, 0, 0
-     * console.log("The result of the vector set is: " + q.toString());
+     * console.log("The result of the quaternion set is: " + q.toString());
      */
     set(x, y, z, w) {
         this.x = x;
@@ -585,6 +585,16 @@ class Quat {
         let m20 = d[8];
         let m21 = d[9];
         let m22 = d[10];
+
+        // if negative the space is inverted so flip X axis to restore right-handedness
+        const det = m00 * (m11 * m22 - m12 * m21) -
+                    m01 * (m10 * m22 - m12 * m20) +
+                    m02 * (m10 * m21 - m11 * m20);
+        if (det < 0) {
+            m00 = -m00;
+            m01 = -m01;
+            m02 = -m02;
+        }
 
         let l;
 
@@ -816,6 +826,22 @@ class Quat {
         return `[${this.x}, ${this.y}, ${this.z}, ${this.w}]`;
     }
 
+    /**
+     * @overload
+     * @param {number[]} [arr] - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {number[]} The quaternion as an array.
+     */
+    /**
+     * @overload
+     * @param {ArrayBufferView} arr - The array to populate with the quaternion's number
+     * components. If not specified, a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @returns {ArrayBufferView} The quaternion as an array.
+     */
     /**
      * Converts the quaternion to an array.
      *

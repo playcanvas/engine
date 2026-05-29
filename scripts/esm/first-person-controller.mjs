@@ -1,6 +1,5 @@
 import {
     math,
-    CameraComponent,
     InputFrame,
     KeyboardMouseSource,
     DualGestureSource,
@@ -21,6 +20,8 @@ import {
  * @property {number} shift - The shift key state.
  * @property {number} ctrl - The ctrl key state.
  */
+
+const EPSILON = 0.0001;
 
 const v = new Vec3();
 
@@ -65,11 +66,10 @@ class FirstPersonController extends Script {
     static scriptName = 'firstPersonController';
 
     /**
-     * @type {CameraComponent}
+     * @type {boolean}
      * @private
      */
-    // @ts-ignore
-    _camera;
+    _ready = false;
 
     /**
      * @type {RigidBodyComponent}
@@ -171,6 +171,15 @@ class FirstPersonController extends Script {
 
     /**
      * @attribute
+     * @title Camera
+     * @description The camera entity that will be used for looking around.
+     * @type {Entity}
+     */
+    // @ts-ignore
+    camera;
+
+    /**
+     * @attribute
      * @title Look Sensitivity
      * @description The sensitivity of the look controls.
      * @type {number}
@@ -225,10 +234,19 @@ class FirstPersonController extends Script {
      */
     jumpForce = 600;
 
+    /**
+     * The joystick event name for the UI position for the base and stick elements.
+     * The event name is appended with the side: ':left' or ':right'.
+     *
+     * @attribute
+     * @title Joystick Base Event Name
+     * @type {string}
+     */
+    joystickEventName = 'joystick';
+
     initialize() {
-        // check camera
-        if (!this._camera) {
-            throw new Error('FirstPersonController requires a camera component');
+        if (!this.camera) {
+            throw new Error('FirstPersonController: Camera entity is required.');
         }
 
         // check collision and rigidbody
@@ -258,23 +276,17 @@ class FirstPersonController extends Script {
         this._mobileInput.attach(this.app.graphicsDevice.canvas);
         this._gamepadInput.attach(this.app.graphicsDevice.canvas);
 
+        // expose ui events
+        this._mobileInput.on('joystick:position:left', ([bx, by, sx, sy]) => {
+            this.app.fire(`${this.joystickEventName}:left`, bx, by, sx, sy);
+        });
+        this._mobileInput.on('joystick:position:right', ([bx, by, sx, sy]) => {
+            this.app.fire(`${this.joystickEventName}:right`, bx, by, sx, sy);
+        });
+
         this.on('destroy', this.destroy, this);
-    }
 
-    /**
-     * @attribute
-     * @title Camera
-     * @description The camera entity that will be used for looking around.
-     * @type {Entity}
-     */
-    set camera(entity) {
-        if (entity.camera instanceof CameraComponent) {
-            this._camera = entity.camera;
-        }
-    }
-
-    get camera() {
-        return this._camera;
+        this._ready = true;
     }
 
     /**
@@ -283,6 +295,7 @@ class FirstPersonController extends Script {
      * @description Radial thickness of inner dead zone of the virtual joysticks. This dead zone ensures the virtual joysticks report a value of 0 even if a touch deviates a small amount from the initial touch.
      * @type {number}
      * @range [0, 0.4]
+     * @default 0.3
      */
     set mobileDeadZone(value) {
         this._mobileDeadZone = value ?? this._mobileDeadZone;
@@ -297,6 +310,7 @@ class FirstPersonController extends Script {
      * @title Mobile Turn Speed
      * @description Maximum turn speed in degrees per second
      * @type {number}
+     * @default 30
      */
     set mobileTurnSpeed(value) {
         this._mobileTurnSpeed = value ?? this._mobileTurnSpeed;
@@ -311,6 +325,7 @@ class FirstPersonController extends Script {
      * @title Mobile Radius
      * @description The radius of the virtual joystick in CSS pixels.
      * @type {number}
+     * @default 50
      */
     set mobileRadius(value) {
         this._mobileRadius = value ?? this._mobileRadius;
@@ -325,6 +340,7 @@ class FirstPersonController extends Script {
      * @title Mobile Double Tap Interval
      * @description The time in milliseconds between two taps of the right virtual joystick for a double tap to register. A double tap will trigger a cc:jump.
      * @type {number}
+     * @default 300
      */
     set mobileDoubleTapInterval(value) {
         this._mobileDoubleTapInterval = value ?? this._mobileDoubleTapInterval;
@@ -340,6 +356,7 @@ class FirstPersonController extends Script {
      * @description Radial thickness of inner dead zone of pad's joysticks. This dead zone ensures that all pads report a value of 0 for each joystick axis when untouched.
      * @type {number}
      * @range [0, 0.4]
+     * @default 0.1
      */
     set gamePadDeadZoneLow(value) {
         this._gamePadDeadZoneLow = value ?? this._gamePadDeadZoneLow;
@@ -355,6 +372,7 @@ class FirstPersonController extends Script {
      * @description Radial thickness of outer dead zone of pad's joysticks. This dead zone ensures that all pads can reach the -1 and 1 limits of each joystick axis.
      * @type {number}
      * @range [0, 0.4]
+     * @default 0.1
      */
     set gamePadDeadZoneHigh(value) {
         this._gamePadDeadZoneHigh = value ?? this._gamePadDeadZoneHigh;
@@ -369,6 +387,7 @@ class FirstPersonController extends Script {
      * @title GamePad Turn Speed
      * @description Maximum turn speed in degrees per second
      * @type {number}
+     * @default 30
      */
     set gamePadTurnSpeed(value) {
         this._gamePadTurnSpeed = value ?? this._gamePadTurnSpeed;
@@ -398,7 +417,7 @@ class FirstPersonController extends Script {
         // rotate
         this._angles.add(v.set(-rotate[1], -rotate[0], 0));
         this._angles.x = math.clamp(this._angles.x, -90, 90);
-        this.camera.entity.setLocalEulerAngles(this._angles);
+        this.camera.setLocalEulerAngles(this._angles);
 
         // move
         rotation.setFromEulerAngles(0, this._angles.y, 0);
@@ -418,11 +437,15 @@ class FirstPersonController extends Script {
      * @param {number} dt - The delta time.
      */
     update(dt) {
+        if (!this._ready) {
+            return;
+        }
+
         const { keyCode } = KeyboardMouseSource;
         const { buttonCode } = GamepadSource;
 
         const { key, button, mouse } = this._desktopInput.read();
-        const { leftInput, rightInput } = this._mobileInput.read();
+        const { leftInput, rightInput, doubleTap } = this._mobileInput.read();
         const { buttons, leftStick, rightStick } = this._gamepadInput.read();
 
         // apply dead zone to gamepad sticks
@@ -450,8 +473,7 @@ class FirstPersonController extends Script {
         const system = /** @type {RigidBodyComponentSystem} */ (this._rigidbody.system);
         this._grounded = !!system.raycastFirst(start, end);
 
-        const moveMult = (this._grounded ? this.speedGround : this.speedAir) *
-            (this._state.shift ? this.sprintMult : 1) * dt;
+        const moveMult = (this._grounded ? this.speedGround : this.speedAir) * dt;
         const rotateMult = this.lookSens * 60 * dt;
         const rotateTouchMult = this._mobileTurnSpeed * dt;
         const rotateJoystickMult = this.gamePadTurnSpeed * dt;
@@ -461,7 +483,7 @@ class FirstPersonController extends Script {
         // desktop move
         v.set(0, 0, 0);
         const keyMove = this._state.axis.clone().normalize();
-        v.add(keyMove.mulScalar(moveMult));
+        v.add(keyMove.mulScalar(moveMult * (this._state.shift ? this.sprintMult : 1)));
         deltas.move.append([v.x, v.y, v.z]);
 
         // desktop rotate
@@ -476,7 +498,12 @@ class FirstPersonController extends Script {
         // mobile move
         v.set(0, 0, 0);
         const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]);
-        v.add(flyMove.mulScalar(moveMult));
+        flyMove.mulScalar(2);
+        const mag = flyMove.length();
+        if (mag > 1) {
+            flyMove.normalize();
+        }
+        v.add(flyMove.mulScalar(moveMult * (mag > 2 - EPSILON ? this.sprintMult : 1)));
         deltas.move.append([v.x, v.y, v.z]);
 
         // mobile rotate
@@ -486,7 +513,7 @@ class FirstPersonController extends Script {
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // mobile jump
-        // TODO: implement double tap detection
+        deltas.jump.append([doubleTap[0]]);
 
         // gamepad move
         v.set(0, 0, 0);

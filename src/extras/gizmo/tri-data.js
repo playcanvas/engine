@@ -19,15 +19,11 @@ class TriData {
      *   - priority = 0 - no priority
      *   - priority > 0 - higher value represents a higher priority
      * defaults to 0.
-     *
-     * @type {number}
      */
     _priority = 0;
 
     /**
      * The transform of the triangles.
-     *
-     * @type {Mat4}
      */
     _transform = new Mat4();
 

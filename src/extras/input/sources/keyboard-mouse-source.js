@@ -1,8 +1,53 @@
 import { InputSource } from '../input.js';
+import { movementState } from '../utils.js';
 
-/** @type {AddEventListenerOptions & EventListenerOptions} */
-const PASSIVE = { passive: false };
-const KEY_COUNT = 42;
+const PASSIVE = /** @type {AddEventListenerOptions & EventListenerOptions} */ ({ passive: false });
+const KEY_CODES = /** @type {const} */ ({
+    A: 0,
+    B: 1,
+    C: 2,
+    D: 3,
+    E: 4,
+    F: 5,
+    G: 6,
+    H: 7,
+    I: 8,
+    J: 9,
+    K: 10,
+    L: 11,
+    M: 12,
+    N: 13,
+    O: 14,
+    P: 15,
+    Q: 16,
+    R: 17,
+    S: 18,
+    T: 19,
+    U: 20,
+    V: 21,
+    W: 22,
+    X: 23,
+    Y: 24,
+    Z: 25,
+    '0': 26,
+    '1': 27,
+    '2': 28,
+    '3': 29,
+    '4': 30,
+    '5': 31,
+    '6': 32,
+    '7': 33,
+    '8': 34,
+    '9': 35,
+    UP: 36,
+    DOWN: 37,
+    LEFT: 38,
+    RIGHT: 39,
+    SPACE: 40,
+    SHIFT: 41,
+    CTRL: 42
+});
+const KEY_COUNT = Object.keys(KEY_CODES).length;
 
 const array = Array(KEY_COUNT).fill(0);
 
@@ -21,61 +66,20 @@ const array = Array(KEY_COUNT).fill(0);
  */
 class KeyboardMouseSource extends InputSource {
     /**
+     * @type {ReturnType<typeof movementState>}
+     * @private
+     */
+    _movementState = movementState();
+
+    /**
      * The key codes for the keyboard keys.
      *
      * @readonly
      */
-    static keyCode = {
-        A: 0,
-        B: 1,
-        C: 2,
-        D: 3,
-        E: 4,
-        F: 5,
-        G: 6,
-        H: 7,
-        I: 8,
-        J: 9,
-        K: 10,
-        L: 11,
-        M: 12,
-        N: 13,
-        O: 14,
-        P: 15,
-        Q: 16,
-        R: 17,
-        S: 18,
-        T: 19,
-        U: 20,
-        V: 21,
-        W: 22,
-        X: 23,
-        Y: 24,
-        Z: 25,
-        '0': 26,
-        '1': 27,
-        '2': 28,
-        '3': 29,
-        '4': 30,
-        '5': 31,
-        '6': 32,
-        '7': 33,
-        '8': 34,
-        '9': 35,
-        UP: 36,
-        DOWN: 37,
-        LEFT: 38,
-        RIGHT: 39,
-        SPACE: 40,
-        SHIFT: 41,
-        CTRL: 42
-    };
+    static keyCode = KEY_CODES;
 
-    /**
-     * @type {number}
-     * @private
-     */
-    _pointerId = 0;
+    /** @private */
+    _pointerId = -1;
 
     /**
      * @type {boolean}
@@ -170,6 +174,8 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerDown(event) {
+        this._movementState.down(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
@@ -185,7 +191,7 @@ class KeyboardMouseSource extends InputSource {
         this._button[event.button] = 1;
         this.deltas.button.append(this._button);
 
-        if (this._pointerId) {
+        if (this._pointerId !== -1) {
             return;
         }
         this._pointerId = event.pointerId;
@@ -196,6 +202,11 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerMove(event) {
+        // Use native movementX/Y when pointer lock is active, otherwise use custom calculation
+        const [movementX, movementY] = this._pointerLock && document.pointerLockElement === this._element ?
+            [event.movementX, event.movementY] :
+            this._movementState.move(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
@@ -211,7 +222,8 @@ class KeyboardMouseSource extends InputSource {
                 return;
             }
         }
-        this.deltas.mouse.append([event.movementX, event.movementY]);
+
+        this.deltas.mouse.append([movementX, movementY]);
     }
 
     /**
@@ -219,6 +231,8 @@ class KeyboardMouseSource extends InputSource {
      * @private
      */
     _onPointerUp(event) {
+        this._movementState.up(event);
+
         if (event.pointerType !== 'mouse') {
             return;
         }
@@ -232,7 +246,7 @@ class KeyboardMouseSource extends InputSource {
         if (this._pointerId !== event.pointerId) {
             return;
         }
-        this._pointerId = 0;
+        this._pointerId = -1;
     }
 
     /**
@@ -264,9 +278,7 @@ class KeyboardMouseSource extends InputSource {
         this._setKey(event.code, 0);
     }
 
-    /**
-     * @private
-     */
+    /** @private */
     _clearButtons() {
         for (let i = 0; i < this._button.length; i++) {
             if (this._button[i] === 1) {
@@ -301,6 +313,8 @@ class KeyboardMouseSource extends InputSource {
         this._element.addEventListener('pointermove', this._onPointerMove);
         this._element.addEventListener('pointerup', this._onPointerUp);
         this._element.addEventListener('pointercancel', this._onPointerUp);
+        this._element.addEventListener('pointerleave', this._onPointerUp);
+        this._element.addEventListener('lostpointercapture', this._onPointerUp);
         this._element.addEventListener('contextmenu', this._onContextMenu);
 
         window.addEventListener('keydown', this._onKeyDown, false);
@@ -316,6 +330,8 @@ class KeyboardMouseSource extends InputSource {
         this._element.removeEventListener('pointermove', this._onPointerMove);
         this._element.removeEventListener('pointerup', this._onPointerUp);
         this._element.removeEventListener('pointercancel', this._onPointerUp);
+        this._element.removeEventListener('pointerleave', this._onPointerUp);
+        this._element.removeEventListener('lostpointercapture', this._onPointerUp);
         this._element.removeEventListener('contextmenu', this._onContextMenu);
 
         window.removeEventListener('keydown', this._onKeyDown, false);
@@ -327,9 +343,7 @@ class KeyboardMouseSource extends InputSource {
         super.detach();
     }
 
-    /**
-     * @override
-     */
+    /** @override */
     read() {
         for (let i = 0; i < array.length; i++) {
             array[i] = this._keyNow[i] - this._keyPrev[i];

@@ -1,16 +1,16 @@
-// @config DESCRIPTION This example shows how to use the Picker to pick GSplat objects in the scene.
-import files from 'examples/files';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// This example shows how to use the Picker to pick GSplat objects in the scene.
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
-
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
@@ -47,12 +47,12 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    skull: new pc.Asset('gsplat', 'gsplat', { url: `${rootPath}/static/assets/splats/playcanvas-logo/meta.json` }),
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    logo: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
+        { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -64,7 +64,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.skyboxMip = 3;
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxIntensity = 0.3;
+    app.scene.skyboxIntensity = 0.1;
 
     // create multiple instances of the gsplat
     const entities = [];
@@ -73,23 +73,31 @@ assetListLoader.load(() => {
         // create a splat entity and place it in the world
         const splat = new pc.Entity(`splat-${i}`);
         splat.addComponent('gsplat', {
-            asset: assets.skull,
+            asset: assets.logo,
             castShadows: false
         });
 
         app.root.addChild(splat);
-
-        // specify custom vertex shader
-        splat.gsplat.material.getShaderChunks('glsl').set('gsplatVS', files['shader.vert']);
-
-        // set alpha clip value, used picking
-        splat.gsplat.material.setParameter('alphaClip', 0.4);
 
         entities.push({
             entity: splat,
             fade: 0
         });
     }
+
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
+    // Enable gsplat ID for picking
+    app.scene.gsplat.enableIds = true;
+    app.scene.gsplat.alphaClip = 0.2;
+    app.scene.gsplat.minPixelSize = 1;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -98,6 +106,11 @@ assetListLoader.load(() => {
         toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(-2, -0.5, 2);
+
+    data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
+        camera.camera.projection = value ? pc.PROJECTION_ORTHOGRAPHIC : pc.PROJECTION_PERSPECTIVE;
+        camera.camera.orthoHeight = 6;
+    });
 
     // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');
@@ -111,7 +124,9 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputMouse');
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
-    camera.setLocalPosition(200, 0, 0);
+
+    // Set camera position looking at origin
+    camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(10, 4, 10), pc.Vec3.ZERO);
 
     // Custom render passes set up with bloom
     const cameraFrame = new pc.CameraFrame(app, camera.camera);
@@ -121,8 +136,8 @@ assetListLoader.load(() => {
     cameraFrame.bloom.intensity = 0.01;
     cameraFrame.update();
 
-    // Create an instance of the picker class
-    const picker = new pc.Picker(app, 1, 1);
+    // Create an instance of the picker class with depth enabled
+    const picker = new pc.Picker(app, 1, 1, true);
 
     // update things each frame
     let time = 0;
@@ -137,9 +152,28 @@ assetListLoader.load(() => {
             entity.entity.setLocalPosition(6 * Math.sin(offset2pi), 0, 6 * Math.cos(offset2pi));
             entity.entity.rotate(0, 150 * fraction * dt, 0);
 
-            // update face value and supply it to material as uniform
+            // update fade value
             entity.fade = Math.max(entity.fade - 0.5 * dt, 0);
-            entity.entity.gsplat.material.setParameter('fade', entity.fade);
+
+            // calculate scale animation based on fade
+            const angle = entity.fade * Math.PI;
+            const shrinkFactor = Math.sin(angle) * 0.5;
+            const scale = 1.0 - shrinkFactor;
+
+            // apply scale to the entity transform so both the splat and marker spheres scale together
+            entity.entity.setLocalScale(scale, scale, scale);
+        }
+
+        // display the picker's buffers side by side in the bottom right corner
+        // color buffer (left) and depth buffer (right), with equal margins from edges
+        if (picker.colorBuffer) {
+            // @ts-ignore engine-tsd
+            app.drawTexture(0.55, -0.77, 0.2, 0.2, picker.colorBuffer);
+        }
+
+        if (picker.depthBuffer) {
+            // @ts-ignore engine-tsd
+            app.drawTexture(0.77, -0.77, 0.2, 0.2, picker.depthBuffer);
         }
     });
 
@@ -154,17 +188,45 @@ assetListLoader.load(() => {
         const worldLayer = app.scene.layers.getLayerByName('World');
         picker.prepare(camera.camera, app.scene, [worldLayer]);
 
-        // get the meshInstance of the picked object
-        picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
+        // get the world position at the clicked point
+        picker.getWorldPointAsync(x * pickerScale, y * pickerScale).then((worldPoint) => {
+            if (worldPoint) {
+                // get the meshInstance of the picked object
+                picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
 
-            if (meshInstances.length > 0) {
-                const meshInstance = meshInstances[0];
-                // find entity with matching mesh instance
-                const entity = entities.find(e => e.entity.gsplat.instance.meshInstance === meshInstance);
-                if (entity) {
-                    // trigger the visual effect
-                    entity.fade = 1;
-                }
+                    if (meshInstances.length > 0) {
+                        // Unified mode: picker returns the GSplatComponent directly
+                        const picked = meshInstances[0];
+                        const entity = entities.find(e => e.entity.gsplat === picked);
+
+                        if (entity) {
+                            // trigger the visual effect only if not already animating
+                            if (entity.fade === 0) {
+                                entity.fade = 1;
+                            }
+
+                            // create a new marker sphere at the picked point with random color
+                            const markerMaterial = new pc.StandardMaterial();
+                            markerMaterial.emissive = new pc.Color(Math.random(), Math.random(), Math.random());
+                            markerMaterial.emissiveIntensity = 300;
+                            markerMaterial.useLighting = false;
+                            markerMaterial.update();
+
+                            const markerSphere = new pc.Entity('marker');
+                            markerSphere.addComponent('render', {
+                                type: 'sphere',
+                                material: markerMaterial
+                            });
+                            markerSphere.setLocalScale(0.3, 0.3, 0.3);
+                            markerSphere.render.meshInstances[0].pick = false;
+
+                            // parent it to the picked entity and convert world position to its local space
+                            entity.entity.addChild(markerSphere);
+                            const localPos = entity.entity.getWorldTransform().clone().invert().transformPoint(worldPoint);
+                            markerSphere.setLocalPosition(localPos);
+                        }
+                    }
+                });
             }
         });
     };
@@ -178,5 +240,3 @@ assetListLoader.load(() => {
         handlePointer(touch.x, touch.y);
     });
 });
-
-export { app };

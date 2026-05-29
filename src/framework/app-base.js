@@ -14,7 +14,7 @@ import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE,
+    CULLFACE_NONE,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
 } from '../platform/graphics/constants.js';
@@ -87,15 +87,6 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 /**
  * @callback PreloadAppCallback
  * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
- * @returns {void}
- */
-
-/**
- * @callback MakeTickCallback
- * Callback used by {@link AppBase#start} and itself to request the rendering of a new animation
- * frame.
- * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
- * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
  * @returns {void}
  */
 
@@ -174,16 +165,10 @@ class AppBase extends EventHandler {
      */
     _entityIndex = {};
 
-    /**
-     * @type {boolean}
-     * @ignore
-     */
+    /** @ignore */
     _inTools = false;
 
-    /**
-     * @type {string}
-     * @ignore
-     */
+    /** @ignore */
     _scriptPrefix = '';
 
     /** @ignore */
@@ -193,7 +178,6 @@ class AppBase extends EventHandler {
      * Set this to false if you want to run without using bundles. We set it to true only if
      * TextDecoder is available because we currently rely on it for untarring.
      *
-     * @type {boolean}
      * @ignore
      */
     enableBundles = (typeof TextDecoder !== 'undefined');
@@ -206,9 +190,95 @@ class AppBase extends EventHandler {
     frameRequestId;
 
     /**
+     * Main loop tick, invoked by `requestAnimationFrame` each frame. Bound to this instance so
+     * it can be passed directly to `requestAnimationFrame`. Subclasses may replace this with
+     * their own tick function.
+     *
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+     * @param {XRFrame} [xrFrame] - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
+    tick = (timestamp, xrFrame) => {
+        if (!this.graphicsDevice) {
+            return;
+        }
+
+        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
+        if (this.frameRequestId) {
+            this.xr?.session?.cancelAnimationFrame(this.frameRequestId);
+            cancelAnimationFrame(this.frameRequestId);
+            this.frameRequestId = null;
+        }
+
+        this._inFrameUpdate = true;
+
+        setApplication(this);
+
+        // have current application pointer in pc
+        app = this;
+
+        const currentTime = this._processTimestamp(timestamp) || now();
+        const ms = currentTime - (this._time || currentTime);
+        let dt = ms / 1000.0;
+        dt = math.clamp(dt, 0, this.maxDeltaTime);
+        dt *= this.timeScale;
+
+        this._time = currentTime;
+
+        // Submit a request to queue up a new animation frame immediately
+        this.requestAnimationFrame();
+
+        if (this.graphicsDevice.contextLost) {
+            return;
+        }
+
+        this.stats.updateBasic(currentTime, dt, ms, this.renderer, this.graphicsDevice);
+
+        // #if _PROFILER
+        this.stats.updateDetailed(this.renderer, this.graphicsDevice);
+        // #endif
+
+        this.fire('frameupdate', ms);
+
+        let skipUpdate = false;
+
+        if (xrFrame) {
+            skipUpdate = !this.xr?.update(xrFrame);
+        }
+
+        if (!skipUpdate) {
+
+            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${this.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
+
+            this.update(dt);
+
+            this.fire('framerender');
+
+            if (this.autoRender || this.renderNextFrame) {
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
+
+                this.render();
+                this.renderNextFrame = false;
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
+            }
+
+            this.fire('frameend');
+            this.stats.frameEnd();
+        }
+
+        this._inFrameUpdate = false;
+
+        if (this._destroyRequested) {
+            this.destroy();
+        }
+    };
+
+    /**
      * Scales the global time delta. Defaults to 1.
      *
-     * @type {number}
      * @example
      * // Set the app to run at half speed
      * this.app.timeScale = 0.5;
@@ -230,7 +300,6 @@ class AppBase extends EventHandler {
     /**
      * The total number of frames the application has updated since start() was called.
      *
-     * @type {number}
      * @ignore
      */
     frame = 0;
@@ -271,7 +340,6 @@ class AppBase extends EventHandler {
      * false is useful to applications where the rendered image may often be unchanged over time.
      * This can heavily reduce the application's load on the CPU and GPU. Defaults to true.
      *
-     * @type {boolean}
      * @example
      * // Disable rendering every frame and only render on a keydown event
      * this.app.autoRender = false;
@@ -286,7 +354,6 @@ class AppBase extends EventHandler {
      * effect if {@link autoRender} is set to false. The value of renderNextFrame is set back to
      * false again as soon as the scene has been rendered.
      *
-     * @type {boolean}
      * @example
      * // Render the scene only while space key is pressed
      * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
@@ -524,8 +591,7 @@ class AppBase extends EventHandler {
         // Placeholder texture for area light LUTs
         AreaLightLuts.createPlaceholder(graphicsDevice);
 
-        this.renderer = new ForwardRenderer(graphicsDevice);
-        this.renderer.scene = this.scene;
+        this.renderer = new ForwardRenderer(graphicsDevice, this.scene);
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
@@ -561,6 +627,10 @@ class AppBase extends EventHandler {
             this.loader.addHandler(handler.handlerType, handler);
         });
 
+        // default to retrying failed asset loads to make apps more resilient to transient network
+        // errors
+        this.loader.enableRetry();
+
         // Create and register all required component systems
         componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
@@ -568,27 +638,9 @@ class AppBase extends EventHandler {
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
-        // Depending on browser add the correct visibilitychange event and store the name of the
-        // hidden attribute in this._hiddenAttr.
         if (typeof document !== 'undefined') {
-            if (document.hidden !== undefined) {
-                this._hiddenAttr = 'hidden';
-                document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.mozHidden !== undefined) {
-                this._hiddenAttr = 'mozHidden';
-                document.addEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.msHidden !== undefined) {
-                this._hiddenAttr = 'msHidden';
-                document.addEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-            } else if (document.webkitHidden !== undefined) {
-                this._hiddenAttr = 'webkitHidden';
-                document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
-            }
+            document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         }
-
-        // bind tick function to current scope
-        /* eslint-disable-next-line no-use-before-define */
-        this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
     static _applications = {};
@@ -748,7 +800,7 @@ class AppBase extends EventHandler {
 
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
-        // configure retrying assets
+        // configure retrying assets - overrides the default set in the constructor
         if (typeof props.maxAssetRetries === 'number' && props.maxAssetRetries > 0) {
             this.loader.enableRetry(props.maxAssetRetries);
         }
@@ -978,7 +1030,20 @@ class AppBase extends EventHandler {
         this.systems.fire('postPostInitialize', this.root);
         this.fire('postinitialize');
 
-        this.tick();
+        this.requestAnimationFrame();
+    }
+
+    /**
+     * Request the next animation frame tick.
+     *
+     * @ignore
+     */
+    requestAnimationFrame() {
+        if (this.xr?.session) {
+            this.frameRequestId = this.xr.session.requestAnimationFrame(this.tick);
+        } else {
+            this.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(this.tick) : null;
+        }
     }
 
     /**
@@ -988,9 +1053,6 @@ class AppBase extends EventHandler {
      * @private
      */
     inputUpdate(dt) {
-        if (this.controller) {
-            this.controller.update(dt);
-        }
         if (this.mouse) {
             this.mouse.update();
         }
@@ -1013,15 +1075,30 @@ class AppBase extends EventHandler {
     update(dt) {
         this.frame++;
 
-        this.graphicsDevice.updateClientRect();
+        Debug.call(() => {
+            this.assets.log();
+        });
+
+        this.graphicsDevice.update();
 
         // #if _PROFILER
         this.stats.frame.updateStart = now();
         // #endif
 
+        // script update
+        this.stats.frame.scriptUpdateStart = now();
         this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
+        this.stats.frame.scriptUpdate = now() - this.stats.frame.scriptUpdateStart;
+
+        // animation update
+        this.stats.frame.animUpdateStart = now();
         this.systems.fire('animationUpdate', dt);
+        this.stats.frame.animUpdate = now() - this.stats.frame.animUpdateStart;
+
+        // post update
+        this.stats.frame.scriptPostUpdateStart = now();
         this.systems.fire('postUpdate', dt);
+        this.stats.frame.scriptPostUpdate = now() - this.stats.frame.scriptPostUpdateStart;
 
         // fire update event
         this.fire('update', dt);
@@ -1034,14 +1111,6 @@ class AppBase extends EventHandler {
         // #endif
     }
 
-    frameStart() {
-        this.graphicsDevice.frameStart();
-    }
-
-    frameEnd() {
-        this.graphicsDevice.frameEnd();
-    }
-
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
@@ -1050,6 +1119,10 @@ class AppBase extends EventHandler {
      * @ignore
      */
     render() {
+        this.updateCanvasSize();
+
+        this.graphicsDevice.frameStart();
+
         // #if _PROFILER
         this.stats.frame.renderStart = now();
         // #endif
@@ -1070,9 +1143,9 @@ class AppBase extends EventHandler {
 
         this.fire('postrender');
 
-        // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
-        // #endif
+
+        this.graphicsDevice.frameEnd();
     }
 
     // render a layer composition
@@ -1084,102 +1157,6 @@ class AppBase extends EventHandler {
 
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
         this.frameGraph.render(this.graphicsDevice);
-    }
-
-    /**
-     * @param {number} now - The timestamp passed to the requestAnimationFrame callback.
-     * @param {number} dt - The time delta in seconds since the last frame. This is subject to the
-     * application's time scale and max delta values.
-     * @param {number} ms - The time in milliseconds since the last frame.
-     * @private
-     */
-    _fillFrameStatsBasic(now, dt, ms) {
-        // Timing stats
-        const stats = this.stats.frame;
-        stats.dt = dt;
-        stats.ms = ms;
-        if (now > stats._timeToCountFrames) {
-            stats.fps = stats._fpsAccum;
-            stats._fpsAccum = 0;
-            stats._timeToCountFrames = now + 1000;
-        } else {
-            stats._fpsAccum++;
-        }
-
-        // total draw call
-        this.stats.drawCalls.total = this.graphicsDevice._drawCallsPerFrame;
-        this.graphicsDevice._drawCallsPerFrame = 0;
-    }
-
-    /** @private */
-    _fillFrameStats() {
-        let stats = this.stats.frame;
-
-        // Render stats
-        stats.cameras = this.renderer._camerasRendered;
-        stats.materials = this.renderer._materialSwitches;
-        stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
-        stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
-        stats.shadowMapTime = this.renderer._shadowMapTime;
-        stats.depthMapTime = this.renderer._depthMapTime;
-        stats.forwardTime = this.renderer._forwardTime;
-        const prims = this.graphicsDevice._primsPerFrame;
-        stats.triangles = prims[PRIMITIVE_TRIANGLES] / 3 +
-            Math.max(prims[PRIMITIVE_TRISTRIP] - 2, 0) +
-            Math.max(prims[PRIMITIVE_TRIFAN] - 2, 0);
-        stats.cullTime = this.renderer._cullTime;
-        stats.sortTime = this.renderer._sortTime;
-        stats.skinTime = this.renderer._skinTime;
-        stats.morphTime = this.renderer._morphTime;
-        stats.lightClusters = this.renderer._lightClusters;
-        stats.lightClustersTime = this.renderer._lightClustersTime;
-        stats.otherPrimitives = 0;
-        for (let i = 0; i < prims.length; i++) {
-            if (i < PRIMITIVE_TRIANGLES) {
-                stats.otherPrimitives += prims[i];
-            }
-            prims[i] = 0;
-        }
-        this.renderer._camerasRendered = 0;
-        this.renderer._materialSwitches = 0;
-        this.renderer._shadowMapUpdates = 0;
-        this.graphicsDevice._shaderSwitchesPerFrame = 0;
-        this.renderer._cullTime = 0;
-        this.renderer._layerCompositionUpdateTime = 0;
-        this.renderer._lightClustersTime = 0;
-        this.renderer._sortTime = 0;
-        this.renderer._skinTime = 0;
-        this.renderer._morphTime = 0;
-        this.renderer._shadowMapTime = 0;
-        this.renderer._depthMapTime = 0;
-        this.renderer._forwardTime = 0;
-
-        // Draw call stats
-        stats = this.stats.drawCalls;
-        stats.forward = this.renderer._forwardDrawCalls;
-        stats.culled = this.renderer._numDrawCallsCulled;
-        stats.depth = 0;
-        stats.shadow = this.renderer._shadowDrawCalls;
-        stats.skinned = this.renderer._skinDrawCalls;
-        stats.immediate = 0;
-        stats.instanced = 0;
-        stats.removedByInstancing = 0;
-        stats.misc = stats.total - (stats.forward + stats.shadow);
-        this.renderer._depthDrawCalls = 0;
-        this.renderer._shadowDrawCalls = 0;
-        this.renderer._forwardDrawCalls = 0;
-        this.renderer._numDrawCallsCulled = 0;
-        this.renderer._skinDrawCalls = 0;
-        this.renderer._immediateRendered = 0;
-        this.renderer._instancedDrawCalls = 0;
-
-        this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
-
-        stats = this.stats.particles;
-        stats.updatesPerFrame = stats._updatesPerFrame;
-        stats.frameTime = stats._frameTime;
-        stats._updatesPerFrame = 0;
-        stats._frameTime = 0;
     }
 
     /**
@@ -1232,7 +1209,7 @@ class AppBase extends EventHandler {
      * @returns {boolean} True if the application is not visible and false otherwise.
      */
     isHidden() {
-        return document[this._hiddenAttr];
+        return document.hidden;
     }
 
     /**
@@ -1263,7 +1240,9 @@ class AppBase extends EventHandler {
      *
      * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
      * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link FILLMODE_NONE}.
-     * @returns {object} A object containing the values calculated to use as width and height.
+     * @returns {{width: number, height: number}|undefined} An object containing the values
+     * calculated to use as width and height, or `undefined` if resizing is not allowed or an XR
+     * session is active.
      */
     resizeCanvas(width, height) {
         if (!this._allowResize) return undefined; // prevent resizing (e.g. if presenting in VR HMD)
@@ -1387,11 +1366,18 @@ class AppBase extends EventHandler {
      * of the scene.
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be
      * used as the scene's skybox. Defaults to null.
-     * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
-     * @param {number} settings.render.skyboxLuminance - Lux (lm/m^2) value for skybox intensity when physical light units are enabled.
-     * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed.
+     * @param {number} [settings.render.skyboxIntensity] - Multiplier for skybox intensity. Defaults to 1.
+     * @param {number} [settings.render.skyboxLuminance] - Lux (lm/m^2) value for skybox intensity when physical light units are enabled. Defaults to 20000.
+     * @param {number} [settings.render.skyboxMip] - The mip level of the skybox to be displayed. Defaults to 0.
      * Only valid for prefiltered cubemap skyboxes.
-     * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
+     * @param {number[]} [settings.render.skyboxRotation] - Rotation of skybox. Defaults to [0, 0, 0].
+     *
+     * @param {string} [settings.render.skyType] - The type of the sky. One of the SKYTYPE_* constants. Defaults to {@link SKYTYPE_INFINITE}.
+     * @param {number[]} [settings.render.skyMeshPosition] - The position of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
+     * @param {number[]} [settings.render.skyMeshRotation] - The rotation of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 0, 0].
+     * @param {number[]} [settings.render.skyMeshScale] - The scale of sky mesh. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [1, 1, 1].
+     * @param {number[]} [settings.render.skyCenter] - The center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Defaults to [0, 1, 0].
+     *
      * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
      * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
      * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
@@ -1399,21 +1385,25 @@ class AppBase extends EventHandler {
      * - {@link BAKE_COLOR}: single color lightmap
      * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
      *
-     * @param {boolean} settings.render.ambientBake - Enable baking ambient light into lightmaps.
-     * @param {number} settings.render.ambientBakeNumSamples - Number of samples to use when baking ambient light.
-     * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
-     * @param {number} settings.render.ambientBakeOcclusionBrightness - Brightness of the baked ambient occlusion.
-     * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
+     * @param {boolean} [settings.render.lightmapFilterEnabled] - Enables bilateral filter on runtime baked color lightmaps. Defaults to false.
+     * @param {number} [settings.render.lightmapFilterRange] - Sets the range parameter of the bilateral filter. Defaults to 10.
+     * @param {number} [settings.render.lightmapFilterSmoothness] - Sets the spatial parameter of the bilateral filter. Defaults to 0.2.
+     *
+     * @param {boolean} [settings.render.ambientBake] - Enable baking ambient light into lightmaps. Defaults to false.
+     * @param {number} [settings.render.ambientBakeNumSamples] - Number of samples to use when baking ambient light. Defaults to 1.
+     * @param {number} [settings.render.ambientBakeSpherePart] - How much of the sphere to include when baking ambient light. Defaults to 0.4.
+     * @param {number} [settings.render.ambientBakeOcclusionBrightness] - Brightness of the baked ambient occlusion. Defaults to 0.
+     * @param {number} [settings.render.ambientBakeOcclusionContrast] - Contrast of the baked ambient occlusion. Defaults to 0.
      * @param {number} settings.render.ambientLuminance - Lux (lm/m^2) value for ambient light intensity.
      *
-     * @param {boolean} settings.render.clusteredLightingEnabled - Enable clustered lighting.
-     * @param {boolean} settings.render.lightingShadowsEnabled - If set to true, the clustered lighting will support shadows.
-     * @param {boolean} settings.render.lightingCookiesEnabled - If set to true, the clustered lighting will support cookie textures.
-     * @param {boolean} settings.render.lightingAreaLightsEnabled - If set to true, the clustered lighting will support area lights.
-     * @param {number} settings.render.lightingShadowAtlasResolution - Resolution of the atlas texture storing all non-directional shadow textures.
-     * @param {number} settings.render.lightingCookieAtlasResolution - Resolution of the atlas texture storing all non-directional cookie textures.
-     * @param {number} settings.render.lightingMaxLightsPerCell - Maximum number of lights a cell can store.
-     * @param {number} settings.render.lightingShadowType - The type of shadow filtering used by all shadows. Can be:
+     * @param {boolean} [settings.render.clusteredLightingEnabled] - Enable clustered lighting. Defaults to false.
+     * @param {boolean} [settings.render.lightingShadowsEnabled] - If set to true, the clustered lighting will support shadows. Defaults to true.
+     * @param {boolean} [settings.render.lightingCookiesEnabled] - If set to true, the clustered lighting will support cookie textures. Defaults to false.
+     * @param {boolean} [settings.render.lightingAreaLightsEnabled] - If set to true, the clustered lighting will support area lights. Defaults to false.
+     * @param {number} [settings.render.lightingShadowAtlasResolution] - Resolution of the atlas texture storing all non-directional shadow textures. Defaults to 2048.
+     * @param {number} [settings.render.lightingCookieAtlasResolution] - Resolution of the atlas texture storing all non-directional cookie textures. Defaults to 2048.
+     * @param {number} [settings.render.lightingMaxLightsPerCell] - Maximum number of lights a cell can store. Defaults to 255.
+     * @param {number} [settings.render.lightingShadowType] - The type of shadow filtering used by all shadows. Can be:
      *
      * - {@link SHADOW_PCF1_32F}
      * - {@link SHADOW_PCF3_32F}
@@ -1422,8 +1412,9 @@ class AppBase extends EventHandler {
      * - {@link SHADOW_PCF3_16F}
      * - {@link SHADOW_PCF5_16F}
      *
-     * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
-     * is subdivided into.
+     * Defaults to {@link SHADOW_PCF3_32F}.
+     * @param {number[]} [settings.render.lightingCells] - Number of cells along each world space axis the space containing lights
+     * is subdivided into. Defaults to [10, 3, 10].
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
@@ -1637,8 +1628,8 @@ class AppBase extends EventHandler {
      * @param {number[]} positions - An array of points to draw lines between. Each point is
      * represented by 3 numbers - x, y and z coordinate.
      * @param {number[]|Color} colors - A single color for all lines, or an array of colors to color
-     * the lines. If an array is specified, number of colors it stores must match the number of
-     * positions provided.
+     * the lines. If an array is specified, the number of colors it stores must match the number
+     * of positions provided.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1750,9 +1741,9 @@ class AppBase extends EventHandler {
      * Draws a texture at [x, y] position on screen, with size [width, height]. The origin of the
      * screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
      *
-     * @param {number} x - The x coordinate on the screen of the top left corner of the texture.
+     * @param {number} x - The x coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the top left corner of the texture.
+     * @param {number} y - The y coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
      * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
      * range [0, 2].
@@ -1793,9 +1784,9 @@ class AppBase extends EventHandler {
      * Draws a depth texture at [x, y] position on screen, with size [width, height]. The origin of
      * the screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
      *
-     * @param {number} x - The x coordinate on the screen of the top left corner of the texture.
+     * @param {number} x - The x coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the top left corner of the texture.
+     * @param {number} y - The y coordinate on the screen of the center of the texture.
      * Should be in the range [-1, 1].
      * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
      * range [0, 2].
@@ -1832,11 +1823,12 @@ class AppBase extends EventHandler {
         this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
 
+        // Clean up gsplat sort timing event listener
+        this._gsplatSortedEvt?.off();
+        this._gsplatSortedEvt = null;
+
         if (typeof document !== 'undefined') {
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
         }
         this._visibilityChangeHandler = null;
 
@@ -1871,25 +1863,12 @@ class AppBase extends EventHandler {
             this.gamepads = null;
         }
 
-        if (this.controller) {
-            this.controller = null;
-        }
-
         this.systems.destroy();
 
         // layer composition
         if (this.scene.layers) {
             this.scene.layers.destroy();
         }
-
-        // destroy all texture resources
-        const assets = this.assets.list();
-        for (let i = 0; i < assets.length; i++) {
-            assets[i].unload();
-            assets[i].off();
-        }
-        this.assets.off();
-
 
         // destroy bundle registry
         this.bundles.destroy();
@@ -1903,9 +1882,6 @@ class AppBase extends EventHandler {
 
         this.loader.destroy();
         this.loader = null;
-
-        this.scene.destroy();
-        this.scene = null;
 
         this.systems = null;
         this.context = null;
@@ -1938,10 +1914,20 @@ class AppBase extends EventHandler {
         this.renderer.destroy();
         this.renderer = null;
 
+        // destroy all resources. Do this after managers have been destroyed
+        const assets = this.assets.list();
+        for (let i = 0; i < assets.length; i++) {
+            assets[i].unload();
+            assets[i].off();
+        }
+        this.assets.off();
+
+        // destroy scene after assets are unloaded (components need scene.layers during asset cleanup)
+        this.scene.destroy();
+        this.scene = null;
+
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
-
-        this.tick = null;
 
         this.off(); // remove all events
 
@@ -1961,7 +1947,7 @@ class AppBase extends EventHandler {
 
     static cancelTick(app) {
         if (app.frameRequestId) {
-            window.cancelAnimationFrame(app.frameRequestId);
+            cancelAnimationFrame(app.frameRequestId);
             app.frameRequestId = undefined;
         }
     }
@@ -1983,116 +1969,12 @@ class AppBase extends EventHandler {
      */
     _registerSceneImmediate(scene) {
         this.on('postrender', scene.immediate.onPostRender, scene.immediate);
+
+        // Listen for gsplat sort timing events and accumulate
+        this._gsplatSortedEvt = scene.on('gsplat:sorted', (sortTime) => {
+            this.stats.frame.gsplatSort += sortTime;
+        });
     }
 }
-
-// static data
-const _frameEndData = {};
-
-/**
- * Create tick function to be wrapped in closure.
- *
- * @param {AppBase} _app - The application.
- * @returns {MakeTickCallback} The tick function.
- * @private
- */
-const makeTick = function (_app) {
-    const application = _app;
-    /**
-     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
-     */
-    return function (timestamp, frame) {
-        if (!application.graphicsDevice) {
-            return;
-        }
-
-        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
-        if (application.frameRequestId) {
-            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
-            cancelAnimationFrame(application.frameRequestId);
-            application.frameRequestId = null;
-        }
-
-        application._inFrameUpdate = true;
-
-        setApplication(application);
-
-        // have current application pointer in pc
-        app = application;
-
-        const currentTime = application._processTimestamp(timestamp) || now();
-        const ms = currentTime - (application._time || currentTime);
-        let dt = ms / 1000.0;
-        dt = math.clamp(dt, 0, application.maxDeltaTime);
-        dt *= application.timeScale;
-
-        application._time = currentTime;
-
-        // Submit a request to queue up a new animation frame immediately
-        if (application.xr?.session) {
-            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
-        } else {
-            application.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(application.tick) : null;
-        }
-
-        if (application.graphicsDevice.contextLost) {
-            return;
-        }
-
-        application._fillFrameStatsBasic(currentTime, dt, ms);
-
-        // #if _PROFILER
-        application._fillFrameStats();
-        // #endif
-
-        application.fire('frameupdate', ms);
-
-        let shouldRenderFrame = true;
-
-        if (frame) {
-            shouldRenderFrame = application.xr?.update(frame);
-            application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
-        } else {
-            application.graphicsDevice.defaultFramebuffer = null;
-        }
-
-        if (shouldRenderFrame) {
-
-            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
-            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
-
-            application.update(dt);
-
-            application.fire('framerender');
-
-
-            if (application.autoRender || application.renderNextFrame) {
-
-                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
-
-                application.updateCanvasSize();
-                application.frameStart();
-                application.render();
-                application.frameEnd();
-                application.renderNextFrame = false;
-
-                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
-            }
-
-            // set event data
-            _frameEndData.timestamp = now();
-            _frameEndData.target = application;
-
-            application.fire('frameend', _frameEndData);
-        }
-
-        application._inFrameUpdate = false;
-
-        if (application._destroyRequested) {
-            application.destroy();
-        }
-    };
-};
 
 export { app, AppBase };

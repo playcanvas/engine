@@ -8,6 +8,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @import { CameraComponentSystem } from './camera/system.js'
  * @import { CollisionComponentSystem } from './collision/system.js'
  * @import { ElementComponentSystem } from './element/system.js'
+ * @import { GSplatComponentSystem } from './gsplat/system.js'
  * @import { JointComponentSystem } from './joint/system.js'
  * @import { LayoutChildComponentSystem } from './layout-child/system.js'
  * @import { LayoutGroupComponentSystem } from './layout-group/system.js'
@@ -94,6 +95,14 @@ class ComponentSystemRegistry extends EventHandler {
      * @readonly
      */
     element;
+
+    /**
+     * Gets the {@link GSplatComponentSystem} from the registry.
+     *
+     * @type {GSplatComponentSystem|undefined}
+     * @readonly
+     */
+    gsplat;
 
     /**
      * Gets the {@link JointComponentSystem} from the registry.

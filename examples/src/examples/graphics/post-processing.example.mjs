@@ -1,34 +1,46 @@
-import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: Real-time Refraction Demo: Mosquito in Amber
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/real-time-refraction-demo-mosquito-in-amber-37233d6ed84844fea1ebe88069ea58d1
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Scifi Platform Stage Scene (Baked)
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/scifi-platform-stage-scene-baked-64adb59a716d43e5a8705ff6fe86c0ce
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
-    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
-    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    platform: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/scifi-platform.glb` }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: `${rootPath}/static/assets/models/MosquitoInAmber.glb` }),
-    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    platform: new pc.Asset('statue', 'container', { url: './assets/models/scifi-platform.glb' }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
     // to avoid the additional cost. This is only used for the UI which renders on top of the
@@ -258,11 +270,25 @@ assetListLoader.load(() => {
         cameraFrame.grading.brightness = data.get('data.grading.brightness');
         cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
+        // colorEnhance
+        cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
+        if (cameraFrame.colorEnhance.enabled) {
+            cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
+            cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
+            cameraFrame.colorEnhance.midtones = data.get('data.colorEnhance.midtones');
+            cameraFrame.colorEnhance.vibrance = data.get('data.colorEnhance.vibrance');
+            cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
+        }
+
         // vignette
         cameraFrame.vignette.inner = data.get('data.vignette.inner');
         cameraFrame.vignette.outer = data.get('data.vignette.outer');
         cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
         cameraFrame.vignette.intensity = data.get('data.vignette.enabled') ? data.get('data.vignette.intensity') : 0;
+        const vignetteColor = data.get('data.vignette.color');
+        if (vignetteColor) {
+            cameraFrame.vignette.color.set(vignetteColor[0], vignetteColor[1], vignetteColor[2]);
+        }
 
         // fringing
         cameraFrame.fringing.intensity = data.get('data.fringing.enabled') ? data.get('data.fringing.intensity') : 0;
@@ -305,12 +331,21 @@ assetListLoader.load(() => {
             brightness: 1,
             contrast: 1
         },
+        colorEnhance: {
+            enabled: false,
+            shadows: 0,
+            highlights: 0,
+            midtones: 0,
+            vibrance: 0,
+            dehaze: 0
+        },
         vignette: {
             enabled: false,
             inner: 0.5,
             outer: 1.0,
             curvature: 0.5,
-            intensity: 0.3
+            intensity: 0.3,
+            color: [0, 0, 0]
         },
         fringing: {
             enabled: false,
@@ -338,5 +373,3 @@ assetListLoader.load(() => {
         mosquitoEntity.setLocalEulerAngles(0, angle * 30, 0);
     });
 });
-
-export { app };

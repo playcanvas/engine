@@ -1,9 +1,10 @@
 import {
-    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
+    SHADERLANGUAGE_WGSL,
+    primitiveGlslToWgslTypeMap
 } from '../../../platform/graphics/constants.js';
 import {
     LIGHTSHAPE_PUNCTUAL,
@@ -12,6 +13,7 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
+    ditherNames,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -35,18 +37,9 @@ const builtinAttributes = {
     vertex_boneIndices: SEMANTIC_BLENDINDICES
 };
 
-export const varyingsWGSLTypes = new Map([
-    ['vec4', 'vec4f'],
-    ['vec3', 'vec3f'],
-    ['vec2', 'vec2f'],
-    ['float', 'f32']
-]);
-
 class LitShader {
     /**
      * Shader code representing varyings.
-     *
-     * @type {string}
      */
     varyingsCode = '';
 
@@ -110,7 +103,15 @@ class LitShader {
 
         // shader language
         const userChunks = options.shaderChunks;
-        this.shaderLanguage = (device.isWebGPU && allowWGSL && userChunks?.useWGSL) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+
+        if (device.isWebGPU && this.shaderLanguage === SHADERLANGUAGE_GLSL) {
+            if (!device.hasTranspilers) {
+                Debug.errorOnce('Cannot use GLSL shader on WebGPU without transpilers', {
+                    litShader: this
+                });
+            }
+        }
 
         // resolve custom chunk attributes
         this.attributes = {
@@ -138,6 +139,7 @@ class LitShader {
             userChunkMap.forEach((chunk, chunkName) => {
 
                 // extract attribute names from the used chunk
+                Debug.assert(chunk);
                 for (const a in builtinAttributes) {
                     if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
                         this.attributes[a] = builtinAttributes[a];
@@ -222,8 +224,8 @@ class LitShader {
             // for the user to provide required attributes using material.setAttribute
             const languageChunks = ShaderChunks.get(this.device, this.shaderLanguage);
             if (this.chunks.get('transformInstancingVS') === languageChunks.get('transformInstancingVS')) {
-                attributes.instance_line1 = SEMANTIC_ATTR12;
-                attributes.instance_line2 = SEMANTIC_ATTR13;
+                attributes.instance_line1 = SEMANTIC_ATTR11;
+                attributes.instance_line2 = SEMANTIC_ATTR12;
                 attributes.instance_line3 = SEMANTIC_ATTR14;
                 attributes.instance_line4 = SEMANTIC_ATTR15;
             }
@@ -290,6 +292,9 @@ class LitShader {
             attributes.vertex_color = SEMANTIC_COLOR;
             vDefines.set('VERTEX_COLOR', true);
             varyings.set('vVertexColor', 'vec4');
+            if (options.useVertexColorGamma) {
+                vDefines.set('STD_VERTEX_COLOR_GAMMA', '');
+            }
         }
 
         if (options.useMsdf && options.msdfTextAttribute) {
@@ -330,7 +335,7 @@ class LitShader {
         varyings.forEach((type, name) => {
             this.varyingsCode += `#define VARYING_${name.toUpperCase()}\n`;
             this.varyingsCode += this.shaderLanguage === SHADERLANGUAGE_WGSL ?
-                `varying ${name}: ${varyingsWGSLTypes.get(type)};\n` :
+                `varying ${name}: ${primitiveGlslToWgslTypeMap.get(type)};\n` :
                 `varying ${type} ${name};\n`;
         });
 
@@ -459,6 +464,7 @@ class LitShader {
         this.fDefineSet(this.lighting, 'LIT_LIGHTING');
         this.fDefineSet(options.useMetalness, 'LIT_METALNESS');
         this.fDefineSet(options.enableGGXSpecular, 'LIT_GGX_SPECULAR');
+        this.fDefineSet(options.useAnisotropy, 'LIT_ANISOTROPY');
         this.fDefineSet(options.useSpecularityFactor, 'LIT_SPECULARITY_FACTOR');
         this.fDefineSet(options.useCubeMapRotation, 'CUBEMAP_ROTATION');
         this.fDefineSet(options.occludeSpecularFloat, 'LIT_OCCLUDE_SPECULAR_FLOAT');
@@ -506,6 +512,12 @@ class LitShader {
         this._setupLightingDefines(hasAreaLights, options.clusteredLightingEnabled);
     }
 
+    preparePrepassPass() {
+        const { options } = this;
+        this.fDefineSet(options.alphaTest, 'LIT_ALPHA_TEST');
+        this.fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[options.opacityShadowDither]);
+    }
+
     prepareShadowPass() {
 
         const { options } = this;
@@ -541,8 +553,10 @@ class LitShader {
         this.includes.set('frontendDeclPS', frontendDecl ?? '');
         this.includes.set('frontendCodePS', frontendCode ?? '');
 
-        if (options.pass === SHADER_PICK || options.pass === SHADER_PREPASS) {
+        if (options.pass === SHADER_PICK) {
             // nothing to prepare currently
+        } else if (options.pass === SHADER_PREPASS) {
+            this.preparePrepassPass();
         } else if (this.shadowPass) {
             this.prepareShadowPass();
         } else {

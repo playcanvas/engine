@@ -1,6 +1,9 @@
-// @config HIDDEN
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+// @flag HIDDEN
+
 import * as pc from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,21 +12,19 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
-    other: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-height.jpg` }),
-    gloss: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` }),
-    colors: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/colors.webp` }),
-    hatch: new pc.Asset('other', 'texture', { url: `${rootPath}/static/assets/textures/hatch-0.jpg` })
+    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    other: new pc.Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-height.jpg' }),
+    gloss: new pc.Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    colors: new pc.Asset('other', 'texture', { url: './assets/textures/colors.webp' }),
+    hatch: new pc.Asset('other', 'texture', { url: './assets/textures/hatch-0.jpg' })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -141,5 +142,3 @@ assetListLoader.load(() => {
         camera.lookAt(pc.Vec3.ZERO);
     });
 });
-
-export { app };

@@ -43,7 +43,18 @@ class RenderPassForward extends RenderPass {
     renderActions = [];
 
     /**
-     * The gamma correction setting for the render pass. In not set, setting from the camera is used.
+     * The gamma correction setting for the render pass. If not set, the setting from the camera
+     * is used. This allows render passes to override the camera's gamma correction during the
+     * render pass.
+     *
+     * For HDR pipelines, scene render passes typically set this to {@link GAMMA_NONE} to output
+     * linear values to an HDR render target, while subsequent passes (like UI) leave it undefined
+     * to use the camera's default {@link GAMMA_SRGB} for correct display output.
+     *
+     * Can be:
+     * - {@link GAMMA_NONE}
+     * - {@link GAMMA_SRGB}
+     * - `undefined` (uses camera setting)
      *
      * @type {number|undefined}
      */
@@ -59,8 +70,6 @@ class RenderPassForward extends RenderPass {
     /**
      * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
      * pre-pass.
-     *
-     * @type {boolean}
      */
     noDepthClear = false;
 
@@ -159,6 +168,26 @@ class RenderPassForward extends RenderPass {
         return index;
     }
 
+    // Collect before-passes from cameras whose first render action lives in this
+    // RenderPassForward. Uses the existing firstCameraUse flag (set by LayerComposition)
+    // to guarantee each camera's before-passes are scheduled exactly once, even when
+    // multiple RenderPassForward instances reference the same camera (e.g. CameraFrame's
+    // scenePass vs afterPass).
+    updateCameraBeforePasses() {
+        for (let i = 0; i < this.renderActions.length; i++) {
+            const ra = this.renderActions[i];
+            if (ra.firstCameraUse) {
+                const camera = ra.camera?.camera;
+                if (camera) {
+                    const { beforePasses } = camera;
+                    for (let j = 0; j < beforePasses.length; j++) {
+                        this.beforePasses.push(beforePasses[j]);
+                    }
+                }
+            }
+        }
+    }
+
     updateDirectionalShadows() {
         // add directional shadow passes if needed for the cameras used in this render pass
         const { renderer, renderActions } = this;
@@ -208,6 +237,7 @@ class RenderPassForward extends RenderPass {
 
     frameUpdate() {
         super.frameUpdate();
+        this.updateCameraBeforePasses();
         this.updateDirectionalShadows();
         this.updateClears();
     }
@@ -253,7 +283,7 @@ class RenderPassForward extends RenderPass {
             }
         }
 
-        // remove shadow before-passes
+        // remove dynamically added before-passes (camera before-passes, shadows)
         this.beforePasses.length = 0;
     }
 

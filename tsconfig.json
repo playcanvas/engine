@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
         "allowJs": true,
-        "baseUrl": ".",
+        "allowSyntheticDefaultImports": true,
         "checkJs": true,
         "module": "es6",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "outDir": "types",
+        "rootDir": ".",
         "strictNullChecks": true,
         "strictPropertyInitialization": true,
         "target": "es6",

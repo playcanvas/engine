@@ -39,7 +39,7 @@ class GizmoHandler {
 
         for (const type in this._gizmos) {
             const gizmo = this._gizmos[type];
-            gizmo.on('pointer:down', (x, y, /** @type {pc.MeshInstance} */ meshInstance) => {
+            gizmo.on('pointer:down', (_x, _y, /** @type {pc.MeshInstance} */ meshInstance) => {
                 app.fire('gizmo:pointer', !!meshInstance);
             });
             gizmo.on('pointer:up', () => {

@@ -59,7 +59,7 @@ class VertexBuffer {
             this.storage = new ArrayBuffer(this.numBytes);
         }
 
-        this.device.buffers.push(this);
+        this.device.buffers.add(this);
     }
 
     /**
@@ -69,10 +69,7 @@ class VertexBuffer {
 
         // stop tracking the vertex buffer
         const device = this.device;
-        const idx = device.buffers.indexOf(this);
-        if (idx !== -1) {
-            device.buffers.splice(idx, 1);
-        }
+        device.buffers.delete(this);
 
         if (this.impl.initialized) {
             this.impl.destroy(device);
@@ -92,6 +89,16 @@ class VertexBuffer {
      */
     loseContext() {
         this.impl.loseContext();
+    }
+
+    /**
+     * Called when the rendering context is restored. Recreates the GPU buffer and uploads from
+     * {@link VertexBuffer#lock|lock} storage.
+     *
+     * @ignore
+     */
+    restoreContext() {
+        this.unlock();
     }
 
     /**

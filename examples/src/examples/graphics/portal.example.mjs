@@ -1,5 +1,14 @@
-import { deviceType, rootPath } from 'examples/utils';
+// @config
+//
+// @credit
+// title: Portal Frame
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/portal-frame-da34b37a224e4e49b307c0b17a50af2c
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
 import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,23 +17,20 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    portal: new pc.Asset('portal', 'container', { url: `${rootPath}/static/assets/models/portal.glb` }),
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
-    bitmoji: new pc.Asset('bitmoji', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` })
+    portal: new pc.Asset('portal', 'container', { url: './assets/models/portal.glb' }),
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    bitmoji: new pc.Asset('bitmoji', 'container', { url: './assets/models/bitmoji.glb' })
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -156,13 +162,27 @@ assetListLoader.load(() => {
     camera.setLocalEulerAngles(-27, 45, 0);
     app.root.addChild(camera);
 
-    // ------ Custom render passes set up ------
+    // ------ Camera frame (optional), stencil + MSAA — default off ------
 
-    const cameraFrame = new pc.CameraFrame(app, camera.camera);
-    cameraFrame.rendering.stencil = true;
-    cameraFrame.rendering.samples = 4;
-    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
-    cameraFrame.update();
+    /** @type {pc.CameraFrame|null} */
+    let cameraFrame = null;
+
+    data.set('cameraFrame', false);
+    data.on('cameraFrame:set', () => {
+        if (data.get('cameraFrame')) {
+            if (!cameraFrame) {
+                cameraFrame = new pc.CameraFrame(app, camera.camera);
+                cameraFrame.rendering.stencil = true;
+                cameraFrame.rendering.samples = 4;
+                cameraFrame.rendering.toneMapping = camera.camera.toneMapping;
+            }
+            cameraFrame.enabled = true;
+            cameraFrame.update();
+        } else if (cameraFrame) {
+            cameraFrame.destroy();
+            cameraFrame = null;
+        }
+    });
 
     // ------------------------------------------
 
@@ -204,7 +224,7 @@ assetListLoader.load(() => {
     portalEntity.setLocalScale(0.02, 0.02, 0.02);
     group.addChild(portalEntity);
 
-    // Create a statue entity, whic is visible inside the portal only
+    // Create a statue entity, which is visible inside the portal only
     const statue = assets.statue.resource.instantiateRenderEntity();
     statue.addComponent('script');
     statue.script.create('portalGeometry', {
@@ -216,7 +236,7 @@ assetListLoader.load(() => {
     statue.setLocalScale(0.25, 0.25, 0.25);
     group.addChild(statue);
 
-    // Create a bitmoji entity, whic is visible outside the portal only
+    // Create a bitmoji entity, which is visible outside the portal only
     const bitmoji = assets.bitmoji.resource.instantiateRenderEntity();
     bitmoji.addComponent('script');
     bitmoji.script.create('portalGeometry', {
@@ -228,5 +248,3 @@ assetListLoader.load(() => {
     bitmoji.setLocalScale(2.5, 2.5, 2.5);
     group.addChild(bitmoji);
 });
-
-export { app };

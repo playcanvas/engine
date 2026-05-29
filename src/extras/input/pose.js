@@ -15,47 +15,46 @@ const rotation = new Quat();
 class Pose {
     /**
      * The position of the pose.
-     *
-     * @type {Vec3}
      */
     position = new Vec3();
 
     /**
      * The angles of the pose in degrees calculated from the forward vector.
-     *
-     * @type {Vec3}
      */
     angles = new Vec3();
 
     /**
      * The focus distance from the position to the pose.
-     *
-     * @type {number}
      */
     distance = 0;
 
     /**
-     * @type {Vec2}
+     * The allowed range of pitch angles in degrees, stored as (min, max). Applied when the pose
+     * is rotated via {@link rotate}.
      */
     pitchRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * @type {Vec2}
+     * The allowed range of yaw angles in degrees, stored as (min, max). Applied when the pose is
+     * rotated via {@link rotate}.
      */
     yawRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * @type {Vec2}
+     * The allowed range of positions along the x axis, stored as (min, max). Applied when the
+     * pose is translated via {@link move}.
      */
     xRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * @type {Vec2}
+     * The allowed range of positions along the y axis, stored as (min, max). Applied when the
+     * pose is translated via {@link move}.
      */
     yRange = new Vec2(-Infinity, Infinity);
 
     /**
-     * @type {Vec2}
+     * The allowed range of positions along the z axis, stored as (min, max). Applied when the
+     * pose is translated via {@link move}.
      */
     zRange = new Vec2(-Infinity, Infinity);
 

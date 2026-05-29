@@ -10,7 +10,6 @@ import { ELEMENTTYPE_GROUP } from '../element/constants.js';
 
 /**
  * @import { Asset } from '../../../framework/asset/asset.js'
- * @import { ButtonComponentData } from './data.js'
  * @import { ButtonComponentSystem } from './system.js'
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
@@ -43,8 +42,36 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.PRESSED] = 'pressedSpriteFrame';
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
 
 /**
- * A ButtonComponent enables a group of entities to behave like a button, with different visual
- * states for hover and press interactions.
+ * The ButtonComponent enables an {@link Entity} to behave like a button, with different visual
+ * states for hover and press interactions. It is designed to be used together with an
+ * {@link ElementComponent} on the same entity, which provides the button's visual appearance and
+ * input hit area.
+ *
+ * You should never need to use the ButtonComponent constructor directly. To add a
+ * ButtonComponent to an {@link Entity}, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * const entity = new pc.Entity();
+ * entity.addComponent('element', {
+ *     type: pc.ELEMENTTYPE_IMAGE,
+ *     useInput: true
+ * });
+ * entity.addComponent('button');
+ * ```
+ *
+ * Once the ButtonComponent is added to the entity, you can access it via the
+ * {@link Entity#button} property:
+ *
+ * ```javascript
+ * entity.button.hoverTint = pc.Color.YELLOW; // Set the hover tint color
+ *
+ * console.log(entity.button.hoverTint);      // Get the hover tint color and print it
+ * ```
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Basic Button](https://playcanvas.github.io/#/user-interface/button-basic)
+ * - [Sprite Button](https://playcanvas.github.io/#/user-interface/button-sprite)
  *
  * @hideconstructor
  * @category User Interface
@@ -325,26 +352,7 @@ class ButtonComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this._visualState = VisualState.DEFAULT;
-        this._isHovering = false;
-        this._hoveringCounter = 0;
-        this._isPressed = false;
-
-        this._defaultTint = new Color(1, 1, 1, 1);
-        this._defaultSpriteAsset = null;
-        this._defaultSpriteFrame = 0;
-
         this._toggleLifecycleListeners('on', system);
-    }
-
-    // TODO: Remove this override in upgrading component
-    /**
-     * @type {ButtonComponentData}
-     * @ignore
-     */
-    get data() {
-        const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
     }
 
     /**
@@ -393,7 +401,7 @@ class ButtonComponent extends Component {
     set imageEntity(arg) {
         if (this._imageEntity !== arg) {
             const isString = typeof arg === 'string';
-            if (this._imageEntity && isString && this._imageEntity.getGuid() === arg) {
+            if (this._imageEntity && isString && this._imageEntity.guid === arg) {
                 return;
             }
 
@@ -414,7 +422,7 @@ class ButtonComponent extends Component {
             }
 
             if (this._imageEntity) {
-                this.data.imageEntity = this._imageEntity.getGuid();
+                this.data.imageEntity = this._imageEntity.guid;
             } else if (isString && arg) {
                 this.data.imageEntity = arg;
             }
@@ -1177,7 +1185,7 @@ class ButtonComponent extends Component {
 
     resolveDuplicatedEntityReferenceProperties(oldButton, duplicatedIdsMap) {
         if (oldButton.imageEntity) {
-            this.imageEntity = duplicatedIdsMap[oldButton.imageEntity.getGuid()];
+            this.imageEntity = duplicatedIdsMap[oldButton.imageEntity.guid];
         }
     }
 }

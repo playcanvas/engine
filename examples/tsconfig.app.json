@@ -1,0 +1,19 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "checkJs": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true
+    },
+    "include": [
+        "src/app/**/*.mjs",
+        "src/app/**/*.js",
+        "src/app/**/*.d.ts",
+        "cache/metadata.mjs"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "assets/wasm"
+    ]
+}

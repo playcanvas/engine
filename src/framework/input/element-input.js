@@ -250,8 +250,6 @@ class ElementMouseEvent extends ElementInputEvent {
 
         /**
          * The amount of the wheel movement.
-         *
-         * @type {number}
          */
         this.wheelDelta = 0;
 
@@ -320,7 +318,7 @@ class ElementTouchEvent extends ElementInputEvent {
  */
 class ElementSelectEvent extends ElementInputEvent {
     /**
-     * Create an instance of a ElementSelectEvent.
+     * Create an instance of an ElementSelectEvent.
      *
      * @param {XRInputSourceEvent} event - The XRInputSourceEvent that was originally raised.
      * @param {ElementComponent} element - The
@@ -662,9 +660,9 @@ class ElementInput {
                 const hovered = this._getTargetElementByCoords(cameras[c], coords.x, coords.y);
                 if (hovered === element) {
 
-                    if (!this._clickedEntities[element.entity.getGuid()]) {
+                    if (!this._clickedEntities[element.entity.guid]) {
                         this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
-                        this._clickedEntities[element.entity.getGuid()] = Date.now();
+                        this._clickedEntities[element.entity.guid] = Date.now();
                     }
 
                 }
@@ -761,7 +759,7 @@ class ElementInput {
             // click event
             if (this._pressedElement === this._hoveredElement) {
                 // fire click event if it hasn't been fired already by the touchend handler
-                const guid = this._hoveredElement.entity.getGuid();
+                const guid = this._hoveredElement.entity.guid;
                 // Always fire, if there are no clicked entities
                 let fireClick = !this._clickedEntities;
                 // But if there are, we need to check how long ago touchend added a "click brake"

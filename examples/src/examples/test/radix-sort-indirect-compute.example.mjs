@@ -1,0 +1,413 @@
+// @config
+//
+// Test example for ComputeRadixSort.sortIndirect - validates indirect GPU radix sort
+//
+// @flag WEBGL_DISABLED
+// @flag HIDDEN
+
+import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const gfxOptions = {
+    deviceTypes: [deviceType],
+    glslangUrl: './assets/wasm/glslang/glslang.js',
+    twgslUrl: './assets/wasm/twgsl/twgsl.js'
+};
+
+const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+// Status overlay
+const statusOverlay = document.createElement('div');
+statusOverlay.style.cssText = `
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #ccc;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 12px;
+    border-radius: 4px;
+    z-index: 1000;
+    white-space: pre-wrap;
+    max-height: 90vh;
+    overflow-y: auto;
+`;
+statusOverlay.textContent = `Device: ${device.deviceType.toUpperCase()}\nInitializing...`;
+document.body.appendChild(statusOverlay);
+
+const createOptions = new pc.AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.componentSystems = [pc.CameraComponentSystem];
+createOptions.resourceHandlers = [];
+
+const app = new pc.AppBase(canvas);
+app.init(createOptions);
+app.start();
+
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+// Camera (required for app to render)
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', { clearColor: new pc.Color(0.1, 0.1, 0.15) });
+camera.setPosition(0, 0, 1);
+app.root.addChild(camera);
+
+// ==================== STATE ====================
+
+/** @type {number} */
+let currentMaxElements = 0;
+/** @type {number} */
+let currentNumBits = 0;
+/** @type {pc.StorageBuffer|null} */
+let keysBuffer = null;
+/** @type {pc.ComputeRadixSort|null} */
+let radixSort = null;
+/** @type {pc.StorageBuffer|null} */
+let sortElementCountBuffer = null;
+/** @type {number[]} */
+let originalValues = [];
+/** @type {boolean} */
+let needsRegen = true;
+/** @type {boolean} */
+let verificationPending = false;
+
+let totalTests = 0;
+let totalPassed = 0;
+let totalFailed = 0;
+const logLines = [];
+
+function log(msg) {
+    console.log(msg);
+    logLines.push(msg);
+    if (logLines.length > 40) logLines.shift();
+    statusOverlay.textContent = logLines.join('\n');
+}
+
+function logError(msg) {
+    console.error(msg);
+    logLines.push(`ERROR: ${msg}`);
+    if (logLines.length > 40) logLines.shift();
+    statusOverlay.textContent = logLines.join('\n');
+}
+
+// Create radix sort instance in indirect mode — sortIndirect requires this.
+radixSort = new pc.ComputeRadixSort(device, { indirect: true });
+
+// Create sortElementCount buffer (single u32, GPU-readable storage buffer)
+sortElementCountBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+
+// ==================== PREPARE-INDIRECT COMPUTE SHADER ====================
+// Simulates the GSplat pipeline's prepareIndirect: a compute shader writes
+// sortElementCount and indirect dispatch args within the command buffer
+// (instead of queue.writeBuffer which executes before the command buffer).
+//
+// The shader mirrors the sortIndirectArgsCS WGSL chunk: it uses the slot
+// count and per-slot granularities from ComputeRadixSort#prepareIndirect()
+// to support any backend (Multipass = 1 slot, OneSweep = 2 slots).
+
+const prepareSource = /* wgsl */`
+    @group(0) @binding(0) var<storage, read_write> sortElementCountBuf: array<u32>;
+    @group(0) @binding(1) var<storage, read_write> indirectDispatchArgs: array<u32>;
+    struct PrepareUniforms {
+        visibleCount:  u32,
+        sortSlotBase:  u32,  // first slot index (not u32 offset)
+        _pad0:         u32,
+        _pad1:         u32,
+        sortInfoX:     u32,  // slotCount (from prepareIndirect()[0])
+        sortInfoY:     u32,  // granularity for slot 0
+        sortInfoZ:     u32,  // granularity for slot 1 (0 if unused)
+        sortInfoW:     u32   // granularity for slot 2 (0 if unused)
+    };
+    @group(0) @binding(2) var<uniform> uniforms: PrepareUniforms;
+
+    @compute @workgroup_size(1)
+    fn main() {
+        let count = uniforms.visibleCount;
+        sortElementCountBuf[0] = count;
+
+        let base = uniforms.sortSlotBase;
+        let n = uniforms.sortInfoX;
+
+        if (n >= 1u) {
+            let g = uniforms.sortInfoY;
+            let wc = (count + g - 1u) / g;
+            indirectDispatchArgs[base * 3u + 0u] = wc;
+            indirectDispatchArgs[base * 3u + 1u] = 1u;
+            indirectDispatchArgs[base * 3u + 2u] = 1u;
+        }
+        if (n >= 2u) {
+            let g = uniforms.sortInfoZ;
+            let wc = (count + g - 1u) / g;
+            indirectDispatchArgs[(base + 1u) * 3u + 0u] = wc;
+            indirectDispatchArgs[(base + 1u) * 3u + 1u] = 1u;
+            indirectDispatchArgs[(base + 1u) * 3u + 2u] = 1u;
+        }
+        if (n >= 3u) {
+            let g = uniforms.sortInfoW;
+            let wc = (count + g - 1u) / g;
+            indirectDispatchArgs[(base + 2u) * 3u + 0u] = wc;
+            indirectDispatchArgs[(base + 2u) * 3u + 1u] = 1u;
+            indirectDispatchArgs[(base + 2u) * 3u + 2u] = 1u;
+        }
+    }
+`;
+
+const prepareUniformFormat = new pc.UniformBufferFormat(device, [
+    new pc.UniformFormat('visibleCount', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortSlotBase', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('_pad0', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('_pad1', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortInfoX', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortInfoY', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortInfoZ', pc.UNIFORMTYPE_UINT),
+    new pc.UniformFormat('sortInfoW', pc.UNIFORMTYPE_UINT)
+]);
+
+const prepareBindGroupFormat = new pc.BindGroupFormat(device, [
+    new pc.BindStorageBufferFormat('sortElementCountBuf', pc.SHADERSTAGE_COMPUTE, false),
+    new pc.BindStorageBufferFormat('indirectDispatchArgs', pc.SHADERSTAGE_COMPUTE, false),
+    new pc.BindUniformBufferFormat('uniforms', pc.SHADERSTAGE_COMPUTE)
+]);
+
+const prepareShader = new pc.Shader(device, {
+    name: 'PrepareIndirectTest',
+    shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+    cshader: prepareSource,
+    computeEntryPoint: 'main',
+    computeBindGroupFormat: prepareBindGroupFormat,
+    computeUniformBufferFormats: { uniforms: prepareUniformFormat }
+});
+
+const prepareCompute = new pc.Compute(device, prepareShader, 'PrepareIndirectTest');
+
+// ==================== HELPER FUNCTIONS ====================
+
+/**
+ * Regenerates random key data.
+ */
+function regenerateData() {
+    const maxElements = currentMaxElements;
+    const numBits = currentNumBits;
+    const maxValue = numBits >= 32 ? 0xFFFFFFFF : (1 << numBits) - 1;
+
+    if (keysBuffer) {
+        keysBuffer.destroy();
+    }
+
+    keysBuffer = new pc.StorageBuffer(device, maxElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+
+    const keysData = new Uint32Array(maxElements);
+    originalValues = [];
+
+    for (let i = 0; i < maxElements; i++) {
+        const value = Math.floor(Math.random() * maxValue);
+        keysData[i] = value;
+        originalValues.push(value);
+    }
+
+    keysBuffer.write(0, keysData);
+    needsRegen = false;
+}
+
+/**
+ * Verifies the indirect sort results against CPU reference.
+ *
+ * @param {pc.StorageBuffer} sortedIndices - Sorted indices buffer.
+ * @param {number[]} capturedValues - Copy of original key values.
+ * @param {number} maxElements - Total element count.
+ * @param {number} visibleCount - Number of elements that were sorted.
+ * @param {number} numBits - Number of bits used for sorting.
+ */
+async function doVerification(sortedIndices, capturedValues, maxElements, visibleCount, numBits) {
+    totalTests++;
+
+    // Read back sorted indices (only visibleCount entries matter)
+    const indicesData = new Uint32Array(visibleCount);
+    await sortedIndices.read(0, visibleCount * 4, indicesData, true);
+
+    // Check 1: All indices in range [0, visibleCount)
+    let outOfRangeCount = 0;
+    for (let i = 0; i < visibleCount; i++) {
+        if (indicesData[i] >= visibleCount) {
+            outOfRangeCount++;
+            if (outOfRangeCount <= 3) {
+                logError(`  Out-of-range index at [${i}]: ${indicesData[i]} >= ${visibleCount}`);
+            }
+        }
+    }
+
+    // Check 2: No duplicate indices (valid permutation)
+    const seen = new Uint8Array(visibleCount);
+    let duplicateCount = 0;
+    let missingCount = 0;
+    for (let i = 0; i < visibleCount; i++) {
+        const idx = indicesData[i];
+        if (idx < visibleCount) {
+            if (seen[idx]) {
+                duplicateCount++;
+                if (duplicateCount <= 3) {
+                    logError(`  Duplicate index ${idx} at position ${i}`);
+                }
+            }
+            seen[idx] = 1;
+        }
+    }
+    for (let i = 0; i < visibleCount; i++) {
+        if (!seen[i]) {
+            missingCount++;
+            if (missingCount <= 3) {
+                logError(`  Missing index ${i} from sorted output`);
+            }
+        }
+    }
+
+    // Check 3: Values are in sorted order
+    let orderErrors = 0;
+    const sortedValues = [];
+    for (let i = 0; i < visibleCount; i++) {
+        const idx = indicesData[i];
+        sortedValues.push(idx < capturedValues.length ? capturedValues[idx] : 0xFFFFFFFF);
+    }
+    for (let i = 1; i < visibleCount; i++) {
+        if (sortedValues[i] < sortedValues[i - 1]) {
+            orderErrors++;
+            if (orderErrors <= 3) {
+                logError(`  Order error at [${i}]: ${sortedValues[i]} < ${sortedValues[i - 1]}`);
+            }
+        }
+    }
+
+    // CPU reference sort for value comparison
+    const cpuSorted = capturedValues.slice(0, visibleCount).sort((a, b) => a - b);
+    let valueMismatches = 0;
+    for (let i = 0; i < visibleCount; i++) {
+        if (sortedValues[i] !== cpuSorted[i]) {
+            valueMismatches++;
+        }
+    }
+
+    const passed = outOfRangeCount === 0 && duplicateCount === 0 && missingCount === 0 && orderErrors === 0 && valueMismatches === 0;
+
+    if (passed) {
+        totalPassed++;
+        log(`✓ Test ${totalTests}: sortIndirect OK — ${visibleCount}/${maxElements} elements, ${numBits} bits (${totalPassed} passed, ${totalFailed} failed)`);
+    } else {
+        totalFailed++;
+        logError(`✗ Test ${totalTests}: sortIndirect FAILED — ${visibleCount}/${maxElements} elements, ${numBits} bits`);
+        logError(`  outOfRange=${outOfRangeCount} duplicates=${duplicateCount} missing=${missingCount} orderErrors=${orderErrors} valueMismatches=${valueMismatches}`);
+        logError(`  (${totalPassed} passed, ${totalFailed} failed)`);
+    }
+}
+
+// ==================== CONTROLS ====================
+
+data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+    if (path === 'options.elementsK') {
+        const newElements = value * 1000;
+        if (newElements !== currentMaxElements) {
+            currentMaxElements = newElements;
+            needsRegen = true;
+        }
+    } else if (path === 'options.bits') {
+        // Only accept multiples of the active backend's radix width
+        // (4 for Multipass, 8 for OneSweep). Snapping to an invalid
+        // multiple would trigger the sortIndirect assert every frame.
+        const rb = radixSort ? radixSort.radixBits : 4;
+        const validBits = [4, 8, 12, 16, 20, 24, 28, 32].filter(b => b % rb === 0);
+        const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev));
+        if (nearest !== currentNumBits) {
+            currentNumBits = nearest;
+            needsRegen = true;
+        }
+    }
+});
+
+// Initialize with defaults
+data.set('options', {
+    elementsK: 1000,
+    bits: 16
+});
+
+// ==================== UPDATE LOOP ====================
+// Simulate the GSplat pipeline: same keys buffer, but visibleCount changes every frame
+// (like camera rotation changing the culled set). This tests whether sortIndirect's
+// internal state (ping-pong buffers, block sums) handles varying counts correctly.
+
+let frameCount = 0;
+let varyingVisibleCount = 0;
+
+app.on('update', () => {
+    if (currentMaxElements === 0 || currentNumBits === 0) return;
+
+    // Regenerate data only when parameters change
+    if (needsRegen) {
+        regenerateData();
+    }
+
+    // Vary visible count every frame using a sine wave (simulates camera rotation)
+    // Oscillates between 10% and 90% of maxElements
+    frameCount++;
+    const t = frameCount * 0.05; // ~3 second full cycle at 60fps
+    const minPercent = 10;
+    const maxPercent = 90;
+    const percent = minPercent + (maxPercent - minPercent) * (0.5 + 0.5 * Math.sin(t));
+    varyingVisibleCount = Math.max(1, Math.floor(currentMaxElements * percent / 100));
+
+    // Override the visible count for this frame (don't use currentVisiblePercent)
+    const maxElements = currentMaxElements;
+    const visibleCount = varyingVisibleCount;
+    const numBits = currentNumBits;
+
+    if (!keysBuffer || !radixSort || !sortElementCountBuffer) return;
+
+    // Query backend slot requirements — varies by backend:
+    //   Multipass: [1, 2048, 0, 0]   (1 slot; see ELEMENTS_PER_WORKGROUP)
+    //   OneSweep:  [2, 3840, 32768, 0]  (2 slots: binning + globalHist)
+    const sortInfo = radixSort.prepareIndirect();
+    const slotCount = sortInfo[0];
+
+    // Allocate the required number of consecutive per-frame dispatch slots.
+    const dispatchSlot = device.getIndirectDispatchSlot(slotCount);
+
+    // Write sortElementCount and all dispatch slot args via compute shader.
+    prepareCompute.setParameter('sortElementCountBuf', sortElementCountBuffer);
+    prepareCompute.setParameter('indirectDispatchArgs', device.indirectDispatchBuffer);
+    prepareCompute.setParameter('visibleCount', visibleCount);
+    prepareCompute.setParameter('sortSlotBase', dispatchSlot);
+    prepareCompute.setParameter('_pad0', 0);
+    prepareCompute.setParameter('_pad1', 0);
+    prepareCompute.setParameter('sortInfoX', sortInfo[0]);
+    prepareCompute.setParameter('sortInfoY', sortInfo[1]);
+    prepareCompute.setParameter('sortInfoZ', sortInfo[2]);
+    prepareCompute.setParameter('sortInfoW', sortInfo[3]);
+    prepareCompute.setupDispatch(1, 1, 1);
+    device.computeDispatch([prepareCompute], 'PrepareIndirectTest');
+
+    // Run indirect sort with varying visible count
+    const sortedIndicesBuffer = radixSort.sortIndirect(
+        keysBuffer, maxElements, numBits, dispatchSlot, sortElementCountBuffer
+    );
+
+    // Verify every 10 frames to catch intermittent failures without overwhelming readbacks
+    if (frameCount % 10 === 0 && !verificationPending) {
+        verificationPending = true;
+        doVerification(sortedIndicesBuffer, originalValues.slice(), maxElements, visibleCount, numBits)
+        .then(() => {
+            verificationPending = false;
+        });
+    }
+});

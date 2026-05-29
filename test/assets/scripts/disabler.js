@@ -5,7 +5,7 @@ Disabler.attributes.add('disableScriptComponent', { type: 'boolean' });
 Disabler.attributes.add('disableScriptInstance', { type: 'boolean' });
 
 Disabler.prototype.initialize = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} initialize disabler`);
+    window.initializeCalls.push(`${this.entity.guid} initialize disabler`);
 
     if (this.disableEntity) {
         this.entity.enabled = false;
@@ -27,5 +27,5 @@ Disabler.prototype.initialize = function () {
 };
 
 Disabler.prototype.postInitialize = function () {
-    window.initializeCalls.push(`${this.entity.getGuid()} postInitialize disabler`);
+    window.initializeCalls.push(`${this.entity.guid} postInitialize disabler`);
 };

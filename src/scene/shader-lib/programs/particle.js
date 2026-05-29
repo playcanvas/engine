@@ -1,4 +1,7 @@
-import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
+import {
+    SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
+} from '../../../platform/graphics/constants.js';
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { blendNames } from '../../constants.js';
 import { ShaderGenerator } from './shader-generator.js';
@@ -45,6 +48,13 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         attributes.particle_vertexData = SEMANTIC_POSITION;
         if (options.mesh && options.meshUv) {
             attributes.particle_uv = SEMANTIC_TEXCOORD0;
+        }
+
+        if (options.useCpu) {
+            attributes.particle_vertexData2 = SEMANTIC_ATTR1;
+            attributes.particle_vertexData3 = SEMANTIC_ATTR2;
+            attributes.particle_vertexData4 = SEMANTIC_ATTR3;
+            attributes.particle_vertexData5 = SEMANTIC_ATTR4;
         }
 
         return vDefines;

@@ -1,7 +1,9 @@
 class GpuTimer {
     constructor(device) {
         this.device = device;
-        device.gpuProfiler.enabled = true;
+        if (device.gpuProfiler) {
+            device.gpuProfiler.enabled = true;
+        }
 
         this.enabled = true;
         this.unitsName = 'ms';
@@ -11,7 +13,7 @@ class GpuTimer {
     }
 
     get timings() {
-        this._timings[0] = this.device.gpuProfiler._frameTime;
+        this._timings[0] = this.device.gpuProfiler?._frameTime ?? 0;
         return this._timings;
     }
 }

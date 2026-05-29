@@ -14,7 +14,9 @@ uniform graphNumSamples: f32;
     uniform camera_params: vec4f;
 #endif
 
-uniform softening: f32;
+#ifdef SOFT
+    uniform softening: f32;
+#endif
 uniform colorMult: f32;
 
 fn saturate(x: f32) -> f32 {

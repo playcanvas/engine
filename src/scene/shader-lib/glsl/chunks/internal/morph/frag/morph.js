@@ -17,9 +17,11 @@ export default /* glsl */`
     void main (void) {
         highp vec3 color = vec3(0, 0, 0);
 
+        ivec2 pixelCoords = ivec2(uv0 * vec2(textureSize(morphTexture, 0).xy));
+        
         for (int i = 0; i < count; i++) {
             uint textureIndex = morphIndex[i];
-            vec3 delta = texture(morphTexture, vec3(uv0, textureIndex)).xyz;
+            vec3 delta = texelFetch(morphTexture, ivec3(pixelCoords, int(textureIndex)), 0).xyz;
             color += morphFactor[i] * delta;
         }
 

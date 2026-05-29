@@ -1,9 +1,11 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>LMB / RMB </b>) Orbit</div><div>(<b>Hold Shift / MMB </b>) Pan</div><div>(<b>Wheel / Pinch</b>) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
-import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-import * as pc from 'playcanvas';
+// @config
+//
+// `LMB` / `RMB` Orbit · Hold `Shift` / `MMB` Pan · `Wheel` / `Pinch` Zoom · `F` Focus · `R` Reset
 
-const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
+import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import { data, deviceType } from 'examples/context';
 
 const tmpVa = new pc.Vec2();
 
@@ -14,19 +16,17 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
-    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
+    deviceTypes: [deviceType]
 };
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
+    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -106,10 +106,13 @@ camera.addComponent('script');
 camera.setPosition(start);
 app.root.addChild(camera);
 const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+const sceneSize = bbox.halfExtents.length();
 Object.assign(cc, {
-    sceneSize: bbox.halfExtents.length(),
     focusPoint: bbox.center,
-    enableFly: false
+    enableFly: false,
+    moveSpeed: 2 * sceneSize,
+    moveFastSpeed: 4 * sceneSize,
+    moveSlowSpeed: sceneSize
 });
 
 // focus on entity when 'f' key is pressed
@@ -178,5 +181,3 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 
     cc[key] = value;
 });
-
-export { app };
