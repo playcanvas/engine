@@ -326,6 +326,8 @@ class ParticleEmitter {
 
         setProperty('radialSpeedGraph', default0Curve);
         setProperty('radialSpeedGraph2', this.radialSpeedGraph);
+        setPropertyTarget = null;
+        setPropertyOptions = null;
 
         this.animTilesParams = new Float32Array(2);
         this.animParams = new Float32Array(4);
