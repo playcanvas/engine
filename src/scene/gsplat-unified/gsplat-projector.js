@@ -534,7 +534,8 @@ class GSplatProjector {
         const cam = cameraComponent.camera;
         const view = cam.viewMatrix;
         const webgpu = this.device.isWebGPU;
-        _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu), view);
+        const reverseZ = this.device.isReverseZ;
+        _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu, reverseZ), view);
         _viewProjData.set(_viewProjMat.data);
         _viewData.set(view.data);
 

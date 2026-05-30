@@ -39,13 +39,24 @@ export default /* glsl */`
 
             vec4 positionInShadowSpace = shadowTransform * vec4(surfacePosition, 1.0);
             #ifdef LIGHT{i}_SHADOW_SAMPLE_ORTHO
-                positionInShadowSpace.z = saturate(positionInShadowSpace.z) - 0.0001;
+                #ifdef REVERSE_Z
+                    // reverse-z: 1=near light, 0=far. Push receiver TOWARDS light (greater z)
+                    // so the GREATER hardware compare reports lit against its own surface.
+                    positionInShadowSpace.z = saturate(positionInShadowSpace.z) + 0.0001;
+                #else
+                    positionInShadowSpace.z = saturate(positionInShadowSpace.z) - 0.0001;
+                #endif
             #else
                 #ifdef LIGHT{i}_SHADOW_SAMPLE_SOURCE_ZBUFFER
                     positionInShadowSpace.xyz /= positionInShadowSpace.w;
                 #else
                     positionInShadowSpace.xy /= positionInShadowSpace.w;
                     positionInShadowSpace.z = length(lightDir) * shadowParams.w;
+                    #ifdef REVERSE_Z
+                        // stored values are 1 - norm_dist (see modified-depth path in litShadowMain).
+                        // Flip the receiver to the same convention.
+                        positionInShadowSpace.z = 1.0 - positionInShadowSpace.z;
+                    #endif
                 #endif
             #endif
 

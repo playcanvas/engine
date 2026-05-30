@@ -46,6 +46,14 @@ class Camera {
     ]);
 
     /** @private */
+    static _webGpuDepthRangeMatrixReverseZ = new Mat4().set([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, -0.5, 0,
+        0, 0, 0.5, 1
+    ]);
+
+    /** @private */
     static _applyShaderProjectionScratch = new Mat4();
 
     /**
@@ -55,10 +63,14 @@ class Camera {
      * @param {Mat4} projection - Source projection ({@link Camera#projectionMatrix}).
      * @param {Mat4} out - Receives the transformed matrix.
      * @param {boolean} flipY - When true, apply render-target Y flip first.
-     * @param {boolean} applyWebGpuDepthRange - When true, map clip Z from -1..1 to 0..1.
+     * @param {boolean} applyWebGpuDepthRange - When true, map clip Z from -1..1 to 0..1
+     * (or 1..0 when reverseZ is also true).
+     * @param {boolean} [reverseZ] - When true alongside applyWebGpuDepthRange, map clip Z
+     * from -1..1 to 1..0 instead of 0..1.
      * @returns {Mat4} out
      */
-    static applyShaderProjectionTransform(projection, out, flipY, applyWebGpuDepthRange) {
+    static applyShaderProjectionTransform(projection, out, flipY, applyWebGpuDepthRange, reverseZ = false) {
+        const depthMat = reverseZ ? Camera._webGpuDepthRangeMatrixReverseZ : Camera._webGpuDepthRangeMatrix;
         if (!flipY && !applyWebGpuDepthRange) {
             out.copy(projection);
             return out;
@@ -66,14 +78,14 @@ class Camera {
         if (flipY && applyWebGpuDepthRange) {
             const scratch = Camera._applyShaderProjectionScratch;
             scratch.mul2(Camera._flipYProjectionMatrix, projection);
-            out.mul2(Camera._webGpuDepthRangeMatrix, scratch);
+            out.mul2(depthMat, scratch);
             return out;
         }
         if (flipY) {
             out.mul2(Camera._flipYProjectionMatrix, projection);
             return out;
         }
-        out.mul2(Camera._webGpuDepthRangeMatrix, projection);
+        out.mul2(depthMat, projection);
         return out;
     }
 

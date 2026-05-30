@@ -23,8 +23,14 @@ vec4 encodePickOutput(uint id) {
     vec4 getPickDepth() {
         float linearDepth;
         if (camera_params.w > 0.5) {
-            linearDepth = gl_FragCoord.z;
+            // orthographic: gl_FragCoord.z IS the hardware NDC z, flip for reverse-z
+            #ifdef REVERSE_Z
+                linearDepth = 1.0 - gl_FragCoord.z;
+            #else
+                linearDepth = gl_FragCoord.z;
+            #endif
         } else {
+            // perspective: 1/w is view distance, independent of z convention
             float viewDist = 1.0 / gl_FragCoord.w;
             linearDepth = (viewDist - camera_params.z) / (camera_params.y - camera_params.z);
         }

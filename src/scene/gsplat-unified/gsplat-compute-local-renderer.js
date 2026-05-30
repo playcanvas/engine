@@ -656,7 +656,8 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         const view = cam.viewMatrix;
         const flipY = !!camera.renderTarget?.flipY;
         const webgpu = device.isWebGPU;
-        _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu), view);
+        const reverseZ = device.isReverseZ;
+        _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu, reverseZ), view);
         _viewProjData.set(_viewProjMat.data);
         _viewData.set(view.data);
         const focal = width * _shaderProjMat.data[0];

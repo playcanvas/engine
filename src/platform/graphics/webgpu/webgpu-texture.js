@@ -278,8 +278,8 @@ class WebgpuTexture {
 
             if (sampleType === SAMPLETYPE_DEPTH || sampleType === SAMPLETYPE_INT || sampleType === SAMPLETYPE_UINT) {
 
-                // depth compare sampling
-                desc.compare = 'less';
+                // depth compare sampling — flips for reverse-z (shadow texels are smaller for further fragments)
+                desc.compare = device.isReverseZ ? 'greater' : 'less';
                 desc.magFilter = 'linear';
                 desc.minFilter = 'linear';
                 label = 'Compare';

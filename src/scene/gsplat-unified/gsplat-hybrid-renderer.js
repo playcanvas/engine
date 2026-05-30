@@ -293,7 +293,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             return;
         }
         const flipY = !!camComp.renderTarget?.flipY;
-        _invProjMat.copy(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, this.device.isWebGPU)).invert();
+        _invProjMat.copy(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, this.device.isWebGPU, this.device.isReverseZ)).invert();
         const d = _invProjMat.data;
         dst[0] = -d[2];
         dst[1] = -d[6];

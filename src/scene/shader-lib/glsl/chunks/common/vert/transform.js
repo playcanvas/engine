@@ -30,7 +30,13 @@ vec4 evalWorldPosition(vec3 vertexPosition, mat4 modelMatrix) {
     vec4 posW = modelMatrix * vec4(localPos, 1.0);
 
     #ifdef SCREENSPACE
-        posW.zw = vec2(0.0, 1.0);
+        // SCREENSPACE bypasses matrix_viewProjection — clip-space z is set directly.
+        // Place at near plane: z=0 in forward-z, z=1 in reverse-z (post-divide w=1).
+        #ifdef REVERSE_Z
+            posW.zw = vec2(1.0, 1.0);
+        #else
+            posW.zw = vec2(0.0, 1.0);
+        #endif
     #endif
 
     return posW;

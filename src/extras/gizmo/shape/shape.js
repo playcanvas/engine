@@ -262,7 +262,9 @@ class Shape {
     _createRenderComponent(entity, meshes) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
         this._material.setDefine('DEPTH_WRITE', this._depth > 0 ? '1' : '0');
-        this._material.setParameter('uDepth', this._depth);
+        // _depth is in standard convention (0=near, 1=far) — flip for reverse-z hardware
+        const uDepth = this.device.isReverseZ && this._depth >= 0 ? 1 - this._depth : this._depth;
+        this._material.setParameter('uDepth', uDepth);
         this._material.setParameter('uColor', color.toArray());
         this._material.cull = this._cull;
         this._material.blendType = BLEND_NORMAL;

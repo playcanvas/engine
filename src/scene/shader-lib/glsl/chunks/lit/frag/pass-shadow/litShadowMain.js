@@ -49,7 +49,11 @@ void main(void) {
         #else
             #ifdef MODIFIED_DEPTH
                 // If we end up using modified depth, it needs to be explicitly written to gl_FragDepth
-                gl_FragDepth = depth;
+                #ifdef REVERSE_Z
+                    gl_FragDepth = 1.0 - depth;
+                #else
+                    gl_FragDepth = depth;
+                #endif
             #endif
 
             // just the simplest code, color is not written anyway

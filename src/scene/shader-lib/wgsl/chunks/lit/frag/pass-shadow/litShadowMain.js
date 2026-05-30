@@ -52,7 +52,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         #else
             #ifdef MODIFIED_DEPTH
                 // If we end up using modified depth, it needs to be explicitly written to gl_FragDepth
-                output.fragDepth = depth;
+                #ifdef REVERSE_Z
+                    output.fragDepth = 1.0 - depth;
+                #else
+                    output.fragDepth = depth;
+                #endif
             #endif
 
             // just the simplest code, color is not written anyway

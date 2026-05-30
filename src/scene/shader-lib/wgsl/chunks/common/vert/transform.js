@@ -31,7 +31,11 @@ fn evalWorldPosition(vertexPosition: vec3f, modelMatrix: mat4x4f) -> vec4f {
     var posW: vec4f = modelMatrix * vec4f(localPos, 1.0);
 
     #ifdef SCREENSPACE
-        posW = vec4f(posW.xy, 0.0, 1.0);
+        #ifdef REVERSE_Z
+            posW = vec4f(posW.xy, 1.0, 1.0);
+        #else
+            posW = vec4f(posW.xy, 0.0, 1.0);
+        #endif
     #endif
 
     return posW;

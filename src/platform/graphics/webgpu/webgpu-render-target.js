@@ -478,8 +478,11 @@ class WebgpuRenderTarget {
      *
      * @param {RenderPass} renderPass - The render pass to start.
      * @param {RenderTarget} renderTarget - The render target to render to.
+     * @param {boolean} reverseZ - True if reverse-z is enabled on the device. The supplied
+     * clearDepthValue (in standard convention where 0=near, 1=far) is mapped to hardware-z by
+     * inverting it.
      */
-    setupForRenderPass(renderPass, renderTarget) {
+    setupForRenderPass(renderPass, renderTarget, reverseZ) {
 
         Debug.assert(this.renderPassDescriptor);
 
@@ -495,7 +498,8 @@ class WebgpuRenderTarget {
 
         const depthAttachment = this.renderPassDescriptor.depthStencilAttachment;
         if (depthAttachment) {
-            depthAttachment.depthClearValue = renderPass.depthStencilOps.clearDepthValue;
+            const userClear = renderPass.depthStencilOps.clearDepthValue;
+            depthAttachment.depthClearValue = reverseZ ? (1 - userClear) : userClear;
             depthAttachment.depthLoadOp = renderPass.depthStencilOps.clearDepth ? 'clear' : 'load';
             depthAttachment.depthStoreOp = renderPass.depthStencilOps.storeDepth ? 'store' : 'discard';
             depthAttachment.depthReadOnly = false;

@@ -111,7 +111,9 @@ class ShaderDefinitionUtils {
                 }
             }
 
-            return attachmentsDefine + deviceIntro;
+            const reverseZDefine = device.isReverseZ ? '#define REVERSE_Z\n' : '';
+
+            return attachmentsDefine + reverseZDefine + deviceIntro;
         };
 
         const getDefinesWgsl = (isVertex, options) => {
@@ -130,6 +132,10 @@ class ShaderDefinitionUtils {
                     Debug.assert(wgslOutType, `Unknown output type translation: ${glslOutType} -> ${wgslOutType}`);
                     code += `alias pcOutType${i} = ${wgslOutType};\n`;
                 }
+            }
+
+            if (device.isReverseZ) {
+                code += '#define REVERSE_Z\n';
             }
 
             return code;

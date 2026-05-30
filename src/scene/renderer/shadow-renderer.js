@@ -248,6 +248,11 @@ class ShadowRenderer {
         shadowCam.scissorRect = lightRenderData.shadowScissor;
 
         viewportMatrix.setViewport(rectViewport.x, rectViewport.y, rectViewport.z, rectViewport.w);
+        // viewport matrix bakes the GL [-1,1] -> [0,1] z remap. For reverse-z, flip the z row
+        // so shadowMatrix produces hardware-z in [1,0] (matching the reverse-z shadow buffer).
+        if (this.device.isReverseZ) {
+            viewportMatrix.data[10] = -0.5;
+        }
         lightRenderData.shadowMatrix.mul2(viewportMatrix, shadowCamViewProj);
 
         if (light._type === LIGHTTYPE_DIRECTIONAL) {
