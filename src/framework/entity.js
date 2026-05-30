@@ -91,7 +91,8 @@ class Entity extends GraphNode {
     static EVENT_DESTROY = 'destroy';
 
     /**
-     * Gets the {@link AnimComponent} attached to this entity.
+     * Gets the {@link AnimComponent} attached to this entity, which plays back animations on models
+     * and entity properties.
      *
      * @type {AnimComponent|undefined}
      * @readonly
@@ -99,7 +100,8 @@ class Entity extends GraphNode {
     anim;
 
     /**
-     * Gets the {@link AnimationComponent} attached to this entity.
+     * Gets the {@link AnimationComponent} attached to this entity, which plays back skeletal
+     * animations on a model.
      *
      * @type {AnimationComponent|undefined}
      * @readonly
@@ -107,7 +109,8 @@ class Entity extends GraphNode {
     animation;
 
     /**
-     * Gets the {@link AudioListenerComponent} attached to this entity.
+     * Gets the {@link AudioListenerComponent} attached to this entity, which represents the point
+     * from which positional {@link SoundComponent}s are heard.
      *
      * @type {AudioListenerComponent|undefined}
      * @readonly
@@ -115,7 +118,8 @@ class Entity extends GraphNode {
     audiolistener;
 
     /**
-     * Gets the {@link ButtonComponent} attached to this entity.
+     * Gets the {@link ButtonComponent} attached to this entity, which makes the entity behave like a
+     * button, with distinct visual states for hover and press interactions.
      *
      * @type {ButtonComponent|undefined}
      * @readonly
@@ -123,7 +127,7 @@ class Entity extends GraphNode {
     button;
 
     /**
-     * Gets the {@link CameraComponent} attached to this entity.
+     * Gets the {@link CameraComponent} attached to this entity, which renders the scene.
      *
      * @type {CameraComponent|undefined}
      * @readonly
@@ -131,7 +135,7 @@ class Entity extends GraphNode {
     camera;
 
     /**
-     * Gets the {@link CollisionComponent} attached to this entity.
+     * Gets the {@link CollisionComponent} attached to this entity, which acts as a collision volume.
      *
      * @type {CollisionComponent|undefined}
      * @readonly
@@ -139,7 +143,8 @@ class Entity extends GraphNode {
     collision;
 
     /**
-     * Gets the {@link ElementComponent} attached to this entity.
+     * Gets the {@link ElementComponent} attached to this entity, which is used to construct user
+     * interfaces.
      *
      * @type {ElementComponent|undefined}
      * @readonly
@@ -147,7 +152,7 @@ class Entity extends GraphNode {
     element;
 
     /**
-     * Gets the {@link GSplatComponent} attached to this entity.
+     * Gets the {@link GSplatComponent} attached to this entity, which renders 3D Gaussian Splats.
      *
      * @type {GSplatComponent|undefined}
      * @readonly
@@ -155,7 +160,8 @@ class Entity extends GraphNode {
     gsplat;
 
     /**
-     * Gets the {@link LayoutChildComponent} attached to this entity.
+     * Gets the {@link LayoutChildComponent} attached to this entity, which controls the sizing and
+     * fitting applied to it by its parent {@link LayoutGroupComponent}.
      *
      * @type {LayoutChildComponent|undefined}
      * @readonly
@@ -163,7 +169,8 @@ class Entity extends GraphNode {
     layoutchild;
 
     /**
-     * Gets the {@link LayoutGroupComponent} attached to this entity.
+     * Gets the {@link LayoutGroupComponent} attached to this entity, which positions and scales its
+     * child {@link ElementComponent}s according to configurable layout rules.
      *
      * @type {LayoutGroupComponent|undefined}
      * @readonly
@@ -171,7 +178,7 @@ class Entity extends GraphNode {
     layoutgroup;
 
     /**
-     * Gets the {@link LightComponent} attached to this entity.
+     * Gets the {@link LightComponent} attached to this entity, which lights the scene.
      *
      * @type {LightComponent|undefined}
      * @readonly
@@ -179,7 +186,7 @@ class Entity extends GraphNode {
     light;
 
     /**
-     * Gets the {@link ModelComponent} attached to this entity.
+     * Gets the {@link ModelComponent} attached to this entity, which renders 3D models.
      *
      * @type {ModelComponent|undefined}
      * @readonly
@@ -187,7 +194,8 @@ class Entity extends GraphNode {
     model;
 
     /**
-     * Gets the {@link ParticleSystemComponent} attached to this entity.
+     * Gets the {@link ParticleSystemComponent} attached to this entity, which simulates particles and
+     * produces a renderable particle mesh on either the CPU or GPU.
      *
      * @type {ParticleSystemComponent|undefined}
      * @readonly
@@ -195,7 +203,7 @@ class Entity extends GraphNode {
     particlesystem;
 
     /**
-     * Gets the {@link RenderComponent} attached to this entity.
+     * Gets the {@link RenderComponent} attached to this entity, which renders 3D meshes.
      *
      * @type {RenderComponent|undefined}
      * @readonly
@@ -203,7 +211,8 @@ class Entity extends GraphNode {
     render;
 
     /**
-     * Gets the {@link RigidBodyComponent} attached to this entity.
+     * Gets the {@link RigidBodyComponent} attached to this entity, which, combined with a
+     * {@link CollisionComponent}, simulates the entity using realistic physics.
      *
      * @type {RigidBodyComponent|undefined}
      * @readonly
@@ -211,7 +220,8 @@ class Entity extends GraphNode {
     rigidbody;
 
     /**
-     * Gets the {@link ScreenComponent} attached to this entity.
+     * Gets the {@link ScreenComponent} attached to this entity, which defines a rectangular area for
+     * constructing user interfaces.
      *
      * @type {ScreenComponent|undefined}
      * @readonly
@@ -219,7 +229,8 @@ class Entity extends GraphNode {
     screen;
 
     /**
-     * Gets the {@link ScriptComponent} attached to this entity.
+     * Gets the {@link ScriptComponent} attached to this entity, which adds custom behavior through
+     * scripts written in JavaScript or TypeScript.
      *
      * @type {ScriptComponent|undefined}
      * @readonly
@@ -227,7 +238,8 @@ class Entity extends GraphNode {
     script;
 
     /**
-     * Gets the {@link ScrollbarComponent} attached to this entity.
+     * Gets the {@link ScrollbarComponent} attached to this entity, which makes the entity behave like
+     * a draggable scrollbar.
      *
      * @type {ScrollbarComponent|undefined}
      * @readonly
@@ -235,7 +247,8 @@ class Entity extends GraphNode {
     scrollbar;
 
     /**
-     * Gets the {@link ScrollViewComponent} attached to this entity.
+     * Gets the {@link ScrollViewComponent} attached to this entity, which makes the entity behave like
+     * a masked scrolling area, with optional horizontal and vertical scroll bars.
      *
      * @type {ScrollViewComponent|undefined}
      * @readonly
@@ -243,7 +256,7 @@ class Entity extends GraphNode {
     scrollview;
 
     /**
-     * Gets the {@link SoundComponent} attached to this entity.
+     * Gets the {@link SoundComponent} attached to this entity, which plays audio.
      *
      * @type {SoundComponent|undefined}
      * @readonly
@@ -251,7 +264,8 @@ class Entity extends GraphNode {
     sound;
 
     /**
-     * Gets the {@link SpriteComponent} attached to this entity.
+     * Gets the {@link SpriteComponent} attached to this entity, which renders a static sprite or
+     * sprite animations.
      *
      * @type {SpriteComponent|undefined}
      * @readonly
