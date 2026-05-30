@@ -514,7 +514,7 @@ class RenderTarget {
     /**
      * Accessor for multiple render target color buffers.
      *
-     * @param {*} index - Index of the color buffer to get.
+     * @param {number} index - Index of the color buffer to get.
      * @returns {Texture} - Color buffer at the specified index.
      */
     getColorBuffer(index) {
