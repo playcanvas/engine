@@ -216,7 +216,6 @@ class InputConsumer {
     /**
      * @param {InputFrame} frame - The input frame.
      * @param {number} dt - The delta time.
-     * @returns {any} - The controller pose.
      */
     update(frame, dt) {
         // discard frame by default
