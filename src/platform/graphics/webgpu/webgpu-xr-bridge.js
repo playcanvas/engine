@@ -139,7 +139,7 @@ class WebgpuXrBridge {
     }
 
     /**
-     * @param {XRFrame} frame - Current XR frame.
+     * @param {XRFrame} _frame - Current XR frame.
      * @param {Vec2} out - Width in {@link Vec2#x}, height in {@link Vec2#y}.
      */
     getFramebufferSize(_frame, out) {
@@ -160,7 +160,7 @@ class WebgpuXrBridge {
     }
 
     /**
-     * @param {XRFrame} frame - Current XR frame.
+     * @param {XRFrame} _frame - Current XR frame.
      * @param {XRView} xrView - WebXR view.
      * @returns {XRViewport} Viewport for this view, or zeros if unavailable.
      */
