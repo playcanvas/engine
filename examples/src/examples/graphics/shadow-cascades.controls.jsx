@@ -93,6 +93,24 @@ export function Controls({ observer }) {
                         precision={0}
                     />
                 </LabelGroup>
+                <LabelGroup text='PCSS Penumbra'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.light.penumbraSize' }}
+                        min={0}
+                        max={0.2}
+                        precision={3}
+                    />
+                </LabelGroup>
+                <LabelGroup text='PCSS Falloff'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.light.penumbraFalloff' }}
+                        min={1}
+                        max={10}
+                        precision={1}
+                    />
+                </LabelGroup>
             </Panel>
         </>
     );
