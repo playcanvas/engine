@@ -462,6 +462,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // HTML-in-Canvas support (copyElementImageToTexture)
         this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
 
+        // transient (memoryless) attachment support (GPUTextureUsage.TRANSIENT_ATTACHMENT)
+        this.supportsTransientAttachments = typeof GPUTextureUsage !== 'undefined' && 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
+
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
 
@@ -580,12 +583,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     createBackbuffer() {
         this.supportsStencil = this.initOptions.stencil;
+
+        // transient (memoryless) attachment requests - RenderTarget gates these on device support
         this.backBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: this.initOptions.depth,
             stencil: this.supportsStencil,
-            samples: this.samples
+            samples: this.samples,
+            transientColor: this.initOptions.transientColor,
+            transientDepth: this.initOptions.transientDepth
         });
         this.backBuffer.impl.isBackbuffer = true;
     }
@@ -1122,7 +1129,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 if (renderPass.samples > 1 && target.autoResolve) {
                     const depthAttachment = target.impl.depthAttachment;
                     const destTexture = target.depthBuffer.impl.gpuTexture;
-                    if (depthAttachment && destTexture) {
+
+                    // a transient (memoryless) depth buffer cannot be sampled, so it cannot be the
+                    // source of a shader-based depth resolve (it has no TEXTURE_BINDING usage)
+                    if (depthAttachment?.transient) {
+                        Debug.errorOnce(`Depth resolve is not possible on render target '${target.name}' because its depth is a transient (memoryless) attachment. Disable transientDepth to allow depth resolve.`);
+                    } else if (depthAttachment && destTexture) {
                         this.resolver.resolveDepth(this.commandEncoder, depthAttachment.multisampledDepthBuffer, destTexture);
                     }
                 }
@@ -1496,10 +1508,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // read from supplied render target, or from the framebuffer
             const sourceRT = source ? source : this.renderTarget;
+
+            // a transient (memoryless) depth buffer cannot be sampled or copied out (it has neither
+            // TEXTURE_BINDING nor COPY_SRC), so a depth grab is not possible. Check the actual
+            // allocation state on the attachment rather than the requested RT flag.
+            if (sourceRT.impl.depthAttachment?.transient) {
+                Debug.errorOnce(`copyRenderTarget cannot copy depth from render target '${sourceRT.name}' because its depth is a transient (memoryless) attachment. Disable transientDepth to allow depth grab / copy.`);
+                DebugGraphics.popGpuMarker(this);
+                return false;
+            }
+
             const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
             const sourceMipLevel = sourceRT.mipLevel;
 
-            if (source.samples > 1) {
+            if (sourceRT.samples > 1) {
 
                 // resolve the depth to a color buffer of destination render target
                 const destTexture = dest.colorBuffer.impl.gpuTexture;

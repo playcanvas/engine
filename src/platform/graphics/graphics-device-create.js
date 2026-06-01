@@ -45,6 +45,19 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * - 'low-power': Prioritizes power saving over rendering performance.
  *
  * Defaults to 'default'.
+ * @param {boolean} [options.transientColor] - Boolean that requests the multi-sampled (MSAA)
+ * color attachment of the back-buffer to be allocated as a transient ("memoryless") attachment,
+ * allowing tile-based GPUs to keep its contents in on-chip memory and avoid VRAM allocation.
+ * WebGPU only, and only effective when anti-aliasing (MSAA) is enabled - it has no effect on
+ * single-sampled color, which is always presented. Ignored on devices without transient attachment
+ * support. Incompatible with a scene color grab pass (`sceneColorMap`): the attachment must be
+ * cleared on load and discarded on store. Defaults to false.
+ * @param {boolean} [options.transientDepth] - Boolean that requests the back-buffer depth
+ * attachment to be allocated as a transient ("memoryless") attachment (see `transientColor`).
+ * Applies to both single- and multi-sampled depth. WebGPU only; ignored on devices without
+ * transient attachment support. Incompatible with a scene depth grab pass (`sceneDepthMap`), a
+ * depth prepass, or any depth resolve, as the depth cannot be sampled or copied out. Defaults to
+ * false.
  * @returns {Promise} - Promise object representing the created graphics device.
  * @category Graphics
  */
