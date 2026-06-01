@@ -17,7 +17,16 @@ import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js
  * @import { ShadowRenderer } from './shadow-renderer.js'
  */
 
-const visibleSceneAabb = new BoundingBox();
+// Per-cascade scratch state used to make the directional shadow camera tightening cascade-stable.
+// Pass 1 of `cull()` collects each cascade's visible-caster AABB into _cascadeAabbs and its
+// frustum-slice bounding-sphere radius into _cascadeRadii (with a validity flag). For PCSS shadow
+// types pass 2 then tightens every cascade against the *union* of all valid cascade AABBs, so the
+// `depthRange` plumbed to the shader (cascade 0's farClip-nearClip) doesn't twitch as casters
+// move between cascade-frustum bins.
+const _unionSceneAabb = new BoundingBox();
+const _cascadeAabbs = [new BoundingBox(), new BoundingBox(), new BoundingBox(), new BoundingBox()];
+const _cascadeAabbValid = [false, false, false, false];
+const _cascadeRadii = [0, 0, 0, 0];
 const center = new Vec3();
 const shadowCamView = new Mat4();
 
@@ -82,6 +91,12 @@ class ShadowRendererDirectional {
         this.generateSplitDistances(light, nearDist, Math.min(camera._farClip, light.shadowDistance));
 
         const shadowUpdateOverrides = light.shadowUpdateOverrides;
+        let numActiveCascades = 0;
+
+        // PASS 1: per-cascade culling + per-cascade visible-caster AABB building. Defers the depth-range
+        // tightening (which moves the shadow camera and sets farClip) until pass 2 so that PCSS
+        // can use a stable cross-cascade union AABB rather than each cascade's own jumpy
+        // visible-caster bounds.
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
 
             // if manually controlling cascade rendering and the cascade does not render this frame
@@ -165,18 +180,18 @@ class ShadowRendererDirectional {
             const origNumVisibleCasters = visibleCasters.length;
 
             let numVisibleCasters = 0;
+            const cascadeAabb = _cascadeAabbs[cascade];
 
             // exclude all mesh instances that are hidden for this cascade.
             // find out AABB of visible shadow casters
-
             for (let i = 0; i < origNumVisibleCasters; i++) {
                 const meshInstance = visibleCasters[i];
                 if (meshInstance.shadowCascadeMask & cascadeFlag) {
                     visibleCasters[numVisibleCasters++] = meshInstance;
                     if (numVisibleCasters === 1) {
-                        visibleSceneAabb.copy(meshInstance.aabb);
+                        cascadeAabb.copy(meshInstance.aabb);
                     } else {
-                        visibleSceneAabb.add(meshInstance.aabb);
+                        cascadeAabb.add(meshInstance.aabb);
                     }
                 }
             }
@@ -186,16 +201,58 @@ class ShadowRendererDirectional {
                 visibleCasters.length = numVisibleCasters;
             }
 
-            // calculate depth range of the caster's AABB from the point of view of the shadow camera
-            shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
-            const depthRange = getDepthRange(shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax());
+            _cascadeAabbValid[cascade] = numVisibleCasters > 0;
+            _cascadeRadii[cascade] = radius;
+            numActiveCascades++;
+        }
 
-            // adjust shadow camera's near and far plane to the depth range of casters to maximize precision
-            // of values stored in the shadow map. Make it slightly larger to avoid clipping on near / far plane.
+        // For PCSS, build a stable union AABB across all valid cascades. The shader reads
+        // cascade-0's near/far as `depthRange`, so if cascade 0 swings 10x as a single mesh
+        // straddles its cull boundary, the whole scene's PCSS softness jumps. Tightening every
+        // cascade against the union eliminates the binning-driven jumps. Non-PCSS shadow types
+        // skip this — they don't use depthRange in the shader and benefit from per-cascade
+        // tightening for depth precision.
+        let useUnion = false;
+        if (light._isPcss) {
+            for (let cascade = 0; cascade < numActiveCascades; cascade++) {
+                if (!_cascadeAabbValid[cascade]) continue;
+                if (!useUnion) {
+                    _unionSceneAabb.copy(_cascadeAabbs[cascade]);
+                    useUnion = true;
+                } else {
+                    _unionSceneAabb.add(_cascadeAabbs[cascade]);
+                }
+            }
+        }
+
+        // PASS 2: depth-range tightening per cascade. PCSS uses the cross-cascade union AABB
+        // (cascade-stable; tightens every cascade including ones with no own casters, so that
+        // cascade 0's near/far — which the shader reads via cameraParams — is always sensible).
+        // Non-PCSS uses the per-cascade AABB and skips cascades with no casters (nothing to render).
+        for (let cascade = 0; cascade < numActiveCascades; cascade++) {
+            let aabbSource;
+            if (useUnion) {
+                aabbSource = _unionSceneAabb;
+            } else if (_cascadeAabbValid[cascade]) {
+                aabbSource = _cascadeAabbs[cascade];
+            } else {
+                continue;
+            }
+
+            const lightRenderData = light.getRenderData(camera, cascade);
+            const shadowCam = lightRenderData.shadowCamera;
+            const shadowCamNode = shadowCam._node;
+
+            // calculate depth range of the chosen AABB from the point of view of the shadow camera
+            shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
+            const depthRange = getDepthRange(shadowCamView, aabbSource.getMin(), aabbSource.getMax());
+
+            // adjust shadow camera's near and far plane to the depth range. Made slightly larger
+            // to avoid clipping on near / far plane.
             shadowCamNode.translateLocal(0, 0, depthRange.max + 0.1);
             shadowCam.farClip = depthRange.max - depthRange.min + 0.2;
 
-            lightRenderData.projectionCompensation = radius;
+            lightRenderData.projectionCompensation = _cascadeRadii[cascade];
         }
     }
 

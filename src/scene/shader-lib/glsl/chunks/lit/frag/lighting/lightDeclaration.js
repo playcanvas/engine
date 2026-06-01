@@ -60,6 +60,8 @@ export default /* glsl */`
             uniform vec4 light{i}_cameraParams;
             #if LIGHT{i}TYPE == DIRECTIONAL
                 uniform vec4 light{i}_softShadowParams;
+                // per-cascade ortho radii packed into a vec4 (max 4 cascades)
+                uniform vec4 light{i}_shadowCascadeRadii;
             #endif
         #endif
 

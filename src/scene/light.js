@@ -263,6 +263,10 @@ class Light {
         this._shadowRenderParams = [];
         this._shadowCameraParams = [];
 
+        // per-cascade ortho radii for directional PCSS, packed into a vec4 (max 4 cascades).
+        // lazily allocated by the renderer only for directional lights that use PCSS.
+        this._shadowCascadeRadii = null;
+
         // Shadow mapping properties
         this.shadowDistance = 40;
         this._shadowResolution = 1024;
@@ -273,6 +277,7 @@ class Light {
         this.shadowUpdateOverrides = null;
         this._isVsm = false;
         this._isPcf = true;
+        this._isPcss = false;
 
         this._softShadowParams = new Float32Array(4);
         this.shadowSamples = 16;
@@ -516,6 +521,7 @@ class Light {
         shadowInfo = shadowTypeInfo.get(value);
         this._isVsm = shadowInfo?.vsm ?? false;
         this._isPcf = shadowInfo?.pcf ?? false;
+        this._isPcss = shadowInfo?.pcss ?? false;
 
         this._shadowType = value;
         this._destroyShadowMap();

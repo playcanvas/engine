@@ -60,6 +60,8 @@ const _localCamPos = new Vec3();
 const _closestPt = new Vec3();
 const tempOctreesTicked = new Set();
 const _queuedSplats = new Set();
+const _meshInstanceAabb = new BoundingBox();
+const _tempPlacementAabb = new BoundingBox();
 
 const _lodColorsRaw = [
     [1, 0, 0],  // red
@@ -1571,6 +1573,9 @@ class GSplatManager {
         const fogParams = this.scene.gsplat.useFog ? (this.cameraNode.camera.fogParams ?? this.scene.fog) : null;
         this.renderer.frameUpdate(this.scene.gsplat, this.scene.exposure, fogParams);
 
+        // keep the shared mesh-instance's AABB in sync with the actual splat placements
+        this._updateMeshInstanceAabb();
+
         // camera tracking only after first sort
         if (sortedState?.sortedBefore) {
             this.updateColorCameraTracking();
@@ -1601,6 +1606,38 @@ class GSplatManager {
 
         // return the number of active splats for stats
         return sortedState ? sortedState.totalActiveSplats : 0;
+    }
+
+    _accumulatePlacementAabb(placement, initialized) {
+        const a = placement.aabb;
+        if (!a) return initialized;
+        _tempPlacementAabb.setFromTransformedAabb(a, placement.node.getWorldTransform());
+        if (initialized) {
+            _meshInstanceAabb.add(_tempPlacementAabb);
+        } else {
+            _meshInstanceAabb.copy(_tempPlacementAabb);
+        }
+        return true;
+    }
+
+    /**
+     * Computes the world-space union of all placement AABBs and applies it as the shared
+     * mesh-instance's customAabb.
+     */
+    _updateMeshInstanceAabb() {
+        const meshInstance = this.renderer?.meshInstance;
+        if (!meshInstance) return;
+
+        let initialized = false;
+        const layerPlacements = this.layerPlacements;
+        for (let i = 0; i < layerPlacements.length; i++) {
+            initialized = this._accumulatePlacementAabb(layerPlacements[i], initialized);
+        }
+        for (const [, inst] of this.octreeInstances) {
+            initialized = this._accumulatePlacementAabb(inst.placement, initialized);
+        }
+
+        meshInstance.setCustomAabb(initialized ? _meshInstanceAabb : null);
     }
 
     /**

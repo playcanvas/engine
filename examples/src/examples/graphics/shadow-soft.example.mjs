@@ -59,7 +59,7 @@ assetListLoader.load(() => {
         light: {
             soft: true,
             shadowResolution: 2048,
-            penumbraSize: 20,
+            penumbraSize: 0.03,
             penumbraFalloff: 4,
             shadowSamples: 16,
             shadowBlockerSamples: 16

@@ -72,7 +72,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #elif SHADOW_PASS
 
-        output.color = vec4f(0.0, 0.0, 0.0, 1.0);
+        output.color = vec4f(input.position.z, 0.0, 0.0, 1.0);
 
     #elif PREPASS_PASS
 
