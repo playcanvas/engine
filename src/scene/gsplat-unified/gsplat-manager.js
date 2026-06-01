@@ -1715,7 +1715,8 @@ class GSplatManager {
             viewportHeight,
             flipY: !!cameraNode.camera.renderTarget?.flipY,
             pickMode,
-            fisheyeProj
+            fisheyeProj,
+            antiAlias: gsplat.antiAlias
         });
 
         projector.writeIndirectArgs(

@@ -180,6 +180,7 @@ assetListLoader.load(() => {
     data.set('data', {
         skydome: false,
         compact: false,
+        antialias: false,
         orientation: 180,
         tonemapping: pc.TONEMAP_LINEAR,
         grading: {
@@ -251,6 +252,8 @@ assetListLoader.load(() => {
             applySkydome();
         } else if (path === 'data.compact') {
             app.scene.gsplat.dataFormat = data.get('data.compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
+        } else if (path === 'data.antialias') {
+            app.scene.gsplat.antiAlias = data.get('data.antialias');
         } else if (path === 'data.orientation') {
             // Apply orientation to splat entity
             if (splatEntity) {
@@ -325,8 +328,7 @@ assetListLoader.load(() => {
             // Create gsplat entity
             entity = new pc.Entity(metaFile.name);
             entity.addComponent('gsplat', {
-                asset: asset,
-                unified: true
+                asset: asset
             });
             entity.setLocalEulerAngles(180, 0, 0);
             app.root.addChild(entity);
@@ -361,8 +363,7 @@ assetListLoader.load(() => {
             // Create gsplat entity
             entity = new pc.Entity(file.name);
             entity.addComponent('gsplat', {
-                asset: asset,
-                unified: true
+                asset: asset
             });
             entity.setLocalEulerAngles(180, 0, 0);
             app.root.addChild(entity);

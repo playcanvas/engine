@@ -31,11 +31,11 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  * // Set bounding box
  * container.aabb = new pc.BoundingBox();
  *
- * // fill centers only if you need CPU sorting or non-unified rendering
+ * // fill centers only if you need CPU sorting
  * container.centers.set([x0, y0, z0, x1, y1, z1, ...]);  // xyz per splat
  *
  * // Add to scene
- * entity.addComponent('gsplat', { resource: container, unified: true });
+ * entity.addComponent('gsplat', { resource: container });
  *
  * @example
  * // Example 2: Using a custom format
@@ -114,8 +114,8 @@ class GSplatContainer extends GSplatResourceBase {
     }
 
     /**
-     * CPU-side xyz per splat. Allocated lazily on first read; GPU-only unified rendering can omit
-     * touching this property to avoid the extra buffer.
+     * CPU-side xyz per splat. Allocated lazily on first read; GPU-only rendering can omit touching
+     * this property to avoid the extra buffer.
      *
      * @type {Float32Array}
      */

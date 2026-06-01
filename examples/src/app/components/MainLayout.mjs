@@ -8,6 +8,7 @@ import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
+import { patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
 
 const MOBILE_DOCK_HEIGHT = 48;
@@ -27,6 +28,15 @@ const MOBILE_CANVAS_MIN_WIDTH = 300;
 const getMobileOrientation = () => {
     const win = window.top ?? window;
     return win.innerWidth > win.innerHeight ? 'landscape' : 'portrait';
+};
+
+/**
+ * @param {'mobile'|'desktop'} layout - Current layout.
+ * @param {null|'examples'|'code'|'controls'|'description'} mobilePanel - Active mobile panel.
+ * @returns {null|'examples'|'code'|'controls'|'description'} Initial mobile panel.
+ */
+const getInitialMobilePanel = (layout, mobilePanel) => {
+    return layout === 'mobile' && mobilePanel ? mobilePanel : null;
 };
 
 function getMobilePanelHeight(height = window.innerHeight * MOBILE_PANEL_DEFAULT_SCALE) {
@@ -78,14 +88,22 @@ const TypedComponent = Component;
 
 class MainLayout extends TypedComponent {
     /** @type {State} */
-    state = {
-        layout: getLayout(),
-        mobileOrientation: getMobileOrientation(),
-        mobilePanel: null,
-        mobilePanelHeight: getDefaultMobilePanelHeight(),
-        mobilePanelWidth: getDefaultMobilePanelWidth(),
-        showCredits: localStorage.getItem('showCredits') !== 'false'
-    };
+    state = (() => {
+        const layout = getLayout();
+        const ui = readState().ui ?? {};
+        const panel = ui.mobilePanel === 'examples' || ui.mobilePanel === 'code' ||
+            ui.mobilePanel === 'controls' || ui.mobilePanel === 'description' ? ui.mobilePanel : null;
+        const height = typeof ui.mobilePanelHeight === 'number' ? ui.mobilePanelHeight : getDefaultMobilePanelHeight();
+        const width = typeof ui.mobilePanelWidth === 'number' ? ui.mobilePanelWidth : getDefaultMobilePanelWidth();
+        return {
+            layout,
+            mobileOrientation: getMobileOrientation(),
+            mobilePanel: getInitialMobilePanel(layout, panel),
+            mobilePanelHeight: getMobilePanelHeight(height),
+            mobilePanelWidth: getMobilePanelWidth(width),
+            showCredits: localStorage.getItem('showCredits') !== 'false'
+        };
+    })();
 
     /** @type {{ axis: 'x'|'y', position: number, size: number } | null} */
     _mobilePanelDrag = null;
@@ -106,7 +124,10 @@ class MainLayout extends TypedComponent {
             mobilePanel: layout === 'mobile' ? prevState.mobilePanel : null,
             mobilePanelHeight: getMobilePanelHeight(prevState.mobilePanelHeight),
             mobilePanelWidth: getMobilePanelWidth(prevState.mobilePanelWidth)
-        }), this.resizeIframe);
+        }), () => {
+            this.resizeIframe();
+            this.updateUrlState();
+        });
     }
 
     resizeIframe = () => {
@@ -119,22 +140,42 @@ class MainLayout extends TypedComponent {
     setMobilePanel = (mobilePanel) => {
         this.setState(prevState => ({
             mobilePanel: prevState.mobilePanel === mobilePanel ? null : mobilePanel
-        }), this.resizeIframe);
+        }), () => {
+            this.resizeIframe();
+            this.updateUrlState();
+        });
     };
 
     /**
      * @param {number} height - Mobile panel height.
      */
     setMobilePanelHeight = (height) => {
-        this.setState({ mobilePanelHeight: getMobilePanelHeight(height) }, this.resizeIframe);
+        this.setState({ mobilePanelHeight: getMobilePanelHeight(height) }, () => {
+            this.resizeIframe();
+            this.updateUrlState();
+        });
     };
 
     /**
      * @param {number} width - Mobile panel width.
      */
     setMobilePanelWidth = (width) => {
-        this.setState({ mobilePanelWidth: getMobilePanelWidth(width) }, this.resizeIframe);
+        this.setState({ mobilePanelWidth: getMobilePanelWidth(width) }, () => {
+            this.resizeIframe();
+            this.updateUrlState();
+        });
     };
+
+    updateUrlState() {
+        const { layout, mobilePanel, mobilePanelHeight, mobilePanelWidth } = this.state;
+        patchState({
+            ui: {
+                mobilePanel: layout === 'mobile' ? mobilePanel : null,
+                mobilePanelHeight,
+                mobilePanelWidth
+            }
+        });
+    }
 
     /**
      * @param {PointerEvent} event - Pointer event.

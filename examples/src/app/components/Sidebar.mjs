@@ -8,6 +8,7 @@ import { VERSION } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
+import { getHashPath, patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
 
 /** @import { ReactElement } from 'react' */
@@ -60,22 +61,74 @@ function getDefaultExampleFiles() {
     return categories;
 }
 
-class SideBar extends TypedComponent {
-    /** @type {State} */
-    state = {
-        defaultCategories: getDefaultExampleFiles(),
-        filteredCategories: null,
-        filterText: '',
-        observer: new Observer({ largeThumbnails: false }),
-        collapsed: localStorage.getItem('sideBarCollapsed') === 'true' || getLayout() === 'mobile',
+/**
+ * @param {Record<string, Record<string, any>>} defaultCategories - Default categories.
+ * @param {string} filter - Filter string.
+ * @returns {Record<string, Record<string, any>> | null} Filtered categories.
+ */
+function filterCategories(defaultCategories, filter) {
+    const query = filter.replace(/\s/g, '.*');
+    const reg = query && query.length > 0 ? new RegExp(query, 'i') : null;
+    if (!reg) {
+        return null;
+    }
+
+    /** @type {Record<string, Record<string, any>>} */
+    const updatedCategories = {};
+    Object.keys(defaultCategories).forEach((category) => {
+        if (category.search(reg) !== -1) {
+            updatedCategories[category] = defaultCategories[category];
+            return null;
+        }
+        Object.keys(defaultCategories[category].examples).forEach((example) => {
+            const title = defaultCategories[category].examples[example];
+            if (title.search(reg) !== -1) {
+                if (!updatedCategories[category]) {
+                    updatedCategories[category] = {
+                        name: defaultCategories[category].name,
+                        examples: {
+                            [example]: title
+                        }
+                    };
+                } else {
+                    updatedCategories[category].examples[example] = title;
+                }
+            }
+        });
+    });
+    return updatedCategories;
+}
+
+const createState = () => {
+    const ui = readState().ui ?? {};
+    const filter = typeof ui.filter === 'string' ? ui.filter : '';
+    const largeThumbnails = typeof ui.largeThumbnails === 'boolean' ? ui.largeThumbnails : false;
+    const collapsed = typeof ui.sideBarCollapsed === 'boolean' ?
+        ui.sideBarCollapsed :
+        localStorage.getItem('sideBarCollapsed') === 'true' || getLayout() === 'mobile';
+    const defaultCategories = getDefaultExampleFiles();
+    return {
+        defaultCategories,
+        filteredCategories: filterCategories(defaultCategories, filter),
+        filterText: filter,
+        observer: new Observer({ largeThumbnails }),
+        collapsed,
         layout: getLayout()
     };
+};
+
+class SideBar extends TypedComponent {
+    /** @type {State} */
+    state = createState();
 
     /** @type {HTMLElement | null} */
     _sideBar = null;
 
     /** @type {string} */
     _sideBarLayout = '';
+
+    /** @type {{ unbind: () => void } | null} */
+    _largeThumbnailsHandle = null;
 
     /**
      * @param {Props} props - Component properties.
@@ -110,7 +163,7 @@ class SideBar extends TypedComponent {
     }
 
     componentDidMount() {
-        this.state.observer.on('largeThumbnails:set', this._onLargeThumbnailsSet);
+        this._largeThumbnailsHandle = this.state.observer.on('largeThumbnails:set', this._onLargeThumbnailsSet);
         this.setupSideBar();
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('orientationchange', this._onLayoutChange);
@@ -121,11 +174,14 @@ class SideBar extends TypedComponent {
     }
 
     componentWillUnmount() {
+        this._largeThumbnailsHandle?.unbind();
+        this._largeThumbnailsHandle = null;
         window.removeEventListener('resize', this._onLayoutChange);
         window.removeEventListener('orientationchange', this._onLayoutChange);
     }
 
     _onLargeThumbnailsSet() {
+        patchState({ ui: { largeThumbnails: this.state.observer.get('largeThumbnails') === true } });
         const sideBar = document.getElementById('sideBar');
         if (!sideBar) {
             return;
@@ -157,7 +213,7 @@ class SideBar extends TypedComponent {
         // when first opening the examples browser via a specific example, scroll it into view
         // @ts-ignore
         if (!window._scrolledToExample) {
-            const examplePath = location.hash.split('/');
+            const examplePath = getHashPath().split('/');
             document.getElementById(`link-${examplePath[1]}-${examplePath[2]}`)?.scrollIntoView();
             // @ts-ignore
             window._scrolledToExample = true;
@@ -177,6 +233,7 @@ class SideBar extends TypedComponent {
         const { collapsed } = this.state;
         localStorage.setItem('sideBarCollapsed', `${!collapsed}`);
         this.mergeState({ collapsed: !collapsed });
+        patchState({ ui: { sideBarCollapsed: !collapsed } });
     }
 
     _onLayoutChange() {
@@ -187,42 +244,12 @@ class SideBar extends TypedComponent {
      * @param {string} filter - The filter string.
      */
     onChangeFilter(filter) {
-        this.mergeState({ filterText: filter });
         const { defaultCategories } = this.state;
-        // Turn a filter like 'mes dec' (for mesh decals) into 'mes.*dec', because the examples
-        // show "MESH DECALS" but internally it's just "MeshDecals".
-        filter = filter.replace(/\s/g, '.*');
-        const reg = filter && filter.length > 0 ? new RegExp(filter, 'i') : null;
-        if (!reg) {
-            this.mergeState({ filteredCategories: defaultCategories });
-            return;
-        }
-        /** @type {Record<string, Record<string, object>>} */
-        const updatedCategories = {};
-        Object.keys(defaultCategories).forEach((category) => {
-            if (category.search(reg) !== -1) {
-                updatedCategories[category] = defaultCategories[category];
-                return null;
-            }
-            Object.keys(defaultCategories[category].examples).forEach((example) => {
-                // @ts-ignore
-                const title = defaultCategories[category].examples[example];
-                if (title.search(reg) !== -1) {
-                    if (!updatedCategories[category]) {
-                        updatedCategories[category] = {
-                            name: defaultCategories[category].name,
-                            examples: {
-                                [example]: title
-                            }
-                        };
-                    } else {
-                        // @ts-ignore
-                        updatedCategories[category].examples[example] = title;
-                    }
-                }
-            });
+        this.mergeState({
+            filterText: filter,
+            filteredCategories: filterCategories(defaultCategories, filter)
         });
-        this.mergeState({ filteredCategories: updatedCategories });
+        patchState({ ui: { filter } });
     }
 
     clearFilter() {
@@ -308,12 +335,13 @@ class SideBar extends TypedComponent {
     render() {
         const { observer, collapsed } = this.state;
         const layout = this.props.layout ?? this.state.layout;
+        const smallThumbnails = observer.get('largeThumbnails') !== true;
         const panelOptions = {
             headerText: `EXAMPLES - v${VERSION}`,
             collapsible: true,
             collapsed: false,
             id: 'sideBar',
-            class: ['small-thumbnails', ...(collapsed ? ['collapsed'] : [])]
+            class: [...(smallThumbnails ? ['small-thumbnails'] : []), ...(collapsed ? ['collapsed'] : [])]
         };
         if (layout === 'mobile') {
             if (this.props.mobilePanel !== 'examples') {

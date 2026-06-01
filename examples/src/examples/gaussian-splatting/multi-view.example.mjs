@@ -79,8 +79,7 @@ assetListLoader.load(() => {
     // create a splat entity and place it in the world
     const logoEntity1 = new pc.Entity();
     logoEntity1.addComponent('gsplat', {
-        asset: assets.logo,
-        unified: true
+        asset: assets.logo
     });
     logoEntity1.setLocalPosition(0, 0.05, 0);
     logoEntity1.setLocalEulerAngles(180, 90, 0);
@@ -90,8 +89,7 @@ assetListLoader.load(() => {
     // create another splat entity and place it in the world
     const logoEntity2 = new pc.Entity();
     logoEntity2.addComponent('gsplat', {
-        asset: assets.logo,
-        unified: true
+        asset: assets.logo
     });
     logoEntity2.setLocalPosition(0, -0.5, 0);
     logoEntity2.setLocalEulerAngles(-90, -90, 0);

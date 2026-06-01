@@ -164,7 +164,7 @@ assetListLoader.load(() => {
     // Creates a paintable gsplat entity with position, rotation, scale, and sets up processing
     const createPaintableSplat = (name, asset, position, rotation, scale) => {
         const entity = new pc.Entity(name);
-        const gsplatComponent = entity.addComponent('gsplat', { asset, unified: true });
+        const gsplatComponent = entity.addComponent('gsplat', { asset });
         entity.setLocalPosition(...position);
         entity.setLocalEulerAngles(...rotation);
         entity.setLocalScale(...scale);

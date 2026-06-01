@@ -233,14 +233,13 @@ assetListLoader.load(() => {
     // create grid of instances centered around origin on XZ plane
     const half = (GRID_SIZE - 1) * 0.5;
 
-    // Create a grid of playbot instances using unified gsplat component
+    // Create a grid of playbot instances
     let componentIndex = 0;
     for (let z = 0; z < GRID_SIZE; z++) {
         for (let x = 0; x < GRID_SIZE; x++) {
             const entity = new pc.Entity(`playbot-${x}-${z}`);
             entity.addComponent('gsplat', {
-                asset: assets.playbot,
-                unified: true
+                asset: assets.playbot
             });
             const px = (x - half) * GRID_SPACING;
             const pz = (z - half) * GRID_SPACING;

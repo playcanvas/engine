@@ -25,6 +25,9 @@ struct SplatCov2D {
     c: f32,
     viewDepth: f32,
     valid: bool,
+    #if GSPLAT_AA
+        aaFactor: f32,
+    #endif
 }
 
 fn computeSplatCov(
@@ -149,14 +152,24 @@ fn computeSplatCov(
     let b0 = M * tt0;
     let b1 = M * tt1;
 
-    let a = dot(b0, b0) + 0.3;
+    let aRaw = dot(b0, b0);
     let b = dot(b0, b1);
-    let c = dot(b1, b1) + 0.3;
+    let cRaw = dot(b1, b1);
+
+    let a = aRaw + 0.3;
+    let c = cRaw + 0.3;
 
     let det = a * c - b * b;
     if (det <= 0.0) {
         return result;
     }
+
+    #if GSPLAT_AA
+        // AA compensation: ratio of pre-blur to post-blur determinant. Matches the
+        // quad renderer's GSPLAT_AA branch in gsplatCorner.js initCornerCov.
+        let detOrig = aRaw * cRaw - b * b;
+        result.aaFactor = sqrt(max(detOrig / det, 0.0));
+    #endif
 
     // Rejects splats whose total visual contribution (opacity * projected area) is
     // negligible. Near the camera, projected areas are large so contributions naturally

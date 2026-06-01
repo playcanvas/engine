@@ -181,7 +181,6 @@ assetListLoader.load(() => {
         for (let i = 1; i < 4; i++) {
             const cloneCloud = new pc.Entity(`GsplatCloud-${srcIndex}-${i}`);
             cloneCloud.addComponent('gsplat', {
-                unified: true,
                 resource: container
             });
             cloudParent.addChild(cloneCloud);

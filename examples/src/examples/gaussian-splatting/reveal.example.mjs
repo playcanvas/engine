@@ -74,11 +74,10 @@ assetListLoader.load(() => {
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('effect', 'radial');
 
-    // Create hotel gsplat with unified set to true
+    // Create hotel gsplat
     const hotel = new pc.Entity('hotel');
     hotel.addComponent('gsplat', {
-        asset: assets.hotel,
-        unified: true
+        asset: assets.hotel
     });
     hotel.setLocalEulerAngles(180, 0, 0);
     app.root.addChild(hotel);
