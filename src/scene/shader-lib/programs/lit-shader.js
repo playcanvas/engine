@@ -191,6 +191,22 @@ class LitShader {
     }
 
     /**
+     * Helper function to define a value in both the vertex and fragment shaders. This is used for
+     * object / mesh level defines (derived from {@link MeshInstance} shader defines), which describe
+     * properties of the rendered mesh and so are made available to both shader stages.
+     *
+     * @param {boolean} condition - The define is added if the condition is true.
+     * @param {string} name - The define name.
+     * @param {string} [value] - The define value.
+     */
+    sharedDefineSet(condition, name, value = '') {
+        if (condition) {
+            this.vDefines.set(name, value);
+            this.fDefines.set(name, value);
+        }
+    }
+
+    /**
      * The function generates defines for the lit vertex shader, and handles required attributes and
      * varyings. The source code of the shader is supplied by litMainVS chunk. This vertex shader is
      * used for all render passes.
@@ -303,13 +319,13 @@ class LitShader {
             vDefines.set('MSDF', true);
         }
 
-        // morphing
+        // morphing - object level define, exposed to both vertex and fragment shaders
         if (options.useMorphPosition || options.useMorphNormal) {
 
-            vDefines.set('MORPHING', true);
-            if (options.useMorphTextureBasedInt) vDefines.set('MORPHING_INT', true);
-            if (options.useMorphPosition) vDefines.set('MORPHING_POSITION', true);
-            if (options.useMorphNormal) vDefines.set('MORPHING_NORMAL', true);
+            this.sharedDefineSet(true, 'MORPHING', true);
+            this.sharedDefineSet(options.useMorphTextureBasedInt, 'MORPHING_INT', true);
+            this.sharedDefineSet(options.useMorphPosition, 'MORPHING_POSITION', true);
+            this.sharedDefineSet(options.useMorphNormal, 'MORPHING_NORMAL', true);
 
             // vertex ids attributes
             attributes.morph_vertex_id = SEMANTIC_ATTR15;
@@ -319,16 +335,20 @@ class LitShader {
 
             attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
 
+            // skinning / batching - object level define, exposed to both vertex and fragment shaders
             if (options.batch) {
-                vDefines.set('BATCH', true);
+                this.sharedDefineSet(true, 'BATCH', true);
             } else {
                 attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
-                vDefines.set('SKIN', true);
+                this.sharedDefineSet(true, 'SKIN', true);
             }
         }
 
-        if (options.useInstancing) vDefines.set('INSTANCING', true);
-        if (options.screenSpace) vDefines.set('SCREENSPACE', true);
+        // object level defines, exposed to both vertex and fragment shaders
+        this.sharedDefineSet(options.useInstancing, 'INSTANCING', true);
+        this.sharedDefineSet(options.screenSpace, 'SCREENSPACE', true);
+
+        // vertex transform only define
         if (options.pixelSnap) vDefines.set('PIXELSNAP', true);
 
         // generate varyings code
