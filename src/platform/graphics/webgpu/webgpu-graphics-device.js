@@ -584,16 +584,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     createBackbuffer() {
         this.supportsStencil = this.initOptions.stencil;
 
-        // transient (memoryless) attachments, gated on capability so we never request it unsupported
-        const transient = this.supportsTransientAttachments;
+        // transient (memoryless) attachment requests - RenderTarget gates these on device support
         this.backBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: this.initOptions.depth,
             stencil: this.supportsStencil,
             samples: this.samples,
-            transientColor: transient && this.initOptions.transientColor,
-            transientDepth: transient && this.initOptions.transientDepth
+            transientColor: this.initOptions.transientColor,
+            transientDepth: this.initOptions.transientDepth
         });
         this.backBuffer.impl.isBackbuffer = true;
     }
@@ -1511,8 +1510,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const sourceRT = source ? source : this.renderTarget;
 
             // a transient (memoryless) depth buffer cannot be sampled or copied out (it has neither
-            // TEXTURE_BINDING nor COPY_SRC), so a depth grab is not possible
-            if (sourceRT.transientDepth) {
+            // TEXTURE_BINDING nor COPY_SRC), so a depth grab is not possible. Check the actual
+            // allocation state on the attachment rather than the requested RT flag.
+            if (sourceRT.impl.depthAttachment?.transient) {
                 Debug.errorOnce(`copyRenderTarget cannot copy depth from render target '${sourceRT.name}' because its depth is a transient (memoryless) attachment. Disable transientDepth to allow depth grab / copy.`);
                 DebugGraphics.popGpuMarker(this);
                 return false;
@@ -1521,7 +1521,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
             const sourceMipLevel = sourceRT.mipLevel;
 
-            if (source.samples > 1) {
+            if (sourceRT.samples > 1) {
 
                 // resolve the depth to a color buffer of destination render target
                 const destTexture = dest.colorBuffer.impl.gpuTexture;

@@ -328,8 +328,8 @@ class WebgpuRenderTarget {
                 };
 
                 // transient (memoryless) depth - keep the contents on-chip only, which precludes
-                // sampling (resolve) or copying (grab) it. Gated on capability + the RT flag.
-                const transientDepth = device.supportsTransientAttachments && renderTarget.transientDepth;
+                // sampling (resolve) or copying (grab) it. The RT flag is already gated on device support.
+                const transientDepth = renderTarget.transientDepth;
 
                 if (transientDepth) {
                     // memoryless attachment: RENDER_ATTACHMENT only, never sampled or copied
@@ -472,8 +472,8 @@ class WebgpuRenderTarget {
 
             // transient (memoryless) color - the multi-sampled buffer is only ever rendered to and
             // resolved into the single-sampled target, never stored, sampled or copied, so it can be
-            // kept on-chip. Gated on capability + the RT flag (which is already MSAA-only).
-            const transientColor = device.supportsTransientAttachments && renderTarget.transientColor;
+            // kept on-chip. The RT flag is already gated on device support and MSAA.
+            const transientColor = renderTarget.transientColor;
 
             /** @type {GPUTextureDescriptor} */
             const multisampledTextureDesc = {

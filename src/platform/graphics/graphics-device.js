@@ -441,6 +441,18 @@ class GraphicsDevice extends EventHandler {
     supportsClipDistances = false;
 
     /**
+     * True if the device supports transient ("memoryless") render target attachments (WebGPU only).
+     * When supported, attachments that are only used within a single render pass (cleared on load
+     * and discarded on store) can be allocated as memoryless, allowing tile-based GPUs to keep their
+     * contents in on-chip memory and avoid VRAM allocation. See the `transientColor` /
+     * `transientDepth` options of {@link RenderTarget} and {@link createGraphicsDevice}.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsTransientAttachments = false;
+
+    /**
      * True if the device supports WebGPU texture format tier 1 capabilities. When enabled, a wider
      * set of normalized texture formats can be used as render targets and storage textures.
      *

@@ -262,10 +262,19 @@ class RenderTarget {
             this.name = 'Untitled';
         }
 
-        // transient (memoryless) attachments (WebGPU only). Silently ignored where not applicable
-        // (matching device creation): transient color needs MSAA, transient depth needs engine-owned depth.
-        this._transientColor = (options.transientColor ?? false) && this._samples > 1;
-        this._transientDepth = (options.transientDepth ?? false) && !this._depthBuffer;
+        // transient (memoryless) attachments (WebGPU only). Gated on device support, so they are
+        // silently ignored when the device does not support transient attachments. Transient color
+        // additionally requires MSAA (single-sampled color is always stored), also silently ignored.
+        const transientSupported = !!this._device.supportsTransientAttachments;
+        this._transientColor = (options.transientColor ?? false) && transientSupported && this._samples > 1;
+        this._transientDepth = (options.transientDepth ?? false) && transientSupported && !this._depthBuffer;
+
+        // transient depth applies to the engine-allocated depth buffer only. Requesting it together
+        // with a user-provided depthBuffer is invalid API usage (that buffer's contents must persist),
+        // so warn rather than silently ignore it - unlike the unsupported-device case above.
+        if ((options.transientDepth ?? false) && this._depthBuffer) {
+            Debug.warnOnce(`RenderTarget '${this.name}' was created with both transientDepth and a depthBuffer. Transient depth applies to the engine-allocated depth buffer only and cannot be used with a provided depthBuffer; the transientDepth flag is ignored.`);
+        }
 
         // render image flipped in Y
         this.flipY = options.flipY ?? false;
