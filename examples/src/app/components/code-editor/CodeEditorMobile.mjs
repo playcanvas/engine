@@ -27,13 +27,6 @@ const sourceName = (example, file) => `${example}.${file}`;
  */
 const sourceUrl = (category, example, file) => `${GITHUB_ROOT}/examples/src/examples/${category}/${sourceName(example, file)}`;
 
-/**
- * @param {string} file - File suffix.
- * @param {string} source - File source.
- * @returns {boolean} True if the file is the empty controls template.
- */
-const isDefaultControls = (file, source) => file === 'controls.mjs' && /\breturn\s+fragment\(\s*\)\s*;/.test(source);
-
 class CodeEditorMobile extends CodeEditorBase {
     /**
      * @param {Props} props - Component properties.
@@ -48,7 +41,7 @@ class CodeEditorMobile extends CodeEditorBase {
     render() {
         const { category, example } = this.props;
         const files = this.props.files ?? this.state.files;
-        const names = Object.keys(files).filter(name => !isDefaultControls(name, files[name]));
+        const names = Object.keys(files);
 
         return jsx(
             Container,

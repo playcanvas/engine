@@ -1,6 +1,6 @@
 export const jsRules = {
     jsdoc: [
-        [/@\w+/, 'keyword'],
+        [/@\w+(?![\w/])/, 'keyword'],
         [/(\})([^-]+)(?=-)/, ['comment.doc', 'identifier']],
         [/\{/, 'comment.doc', '@jsdocBrackets'],
         [/\*\//, 'comment.doc', '@pop'],

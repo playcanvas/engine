@@ -2,11 +2,14 @@
     "extends": "./tsconfig.base.json",
     "compilerOptions": {
         "checkJs": false,
+        "jsx": "react-jsx",
+        "jsxImportSource": "react",
         "outDir": "dist"
     },
     "include": [
         "src/**/*.mjs",
         "src/**/*.js",
+        "src/**/*.jsx",
         "src/**/*.d.ts",
         "iframe/**/*.mjs",
         "iframe/**/*.js",

@@ -1,11 +1,14 @@
 {
     "extends": "./tsconfig.base.json",
     "compilerOptions": {
-        "checkJs": false
+        "checkJs": false,
+        "jsx": "react-jsx",
+        "jsxImportSource": "react"
     },
     "include": [
         "src/examples/**/*.example.mjs",
         "src/examples/**/*.controls.mjs",
+        "src/examples/**/*.controls.jsx",
         "src/app/**/*.d.ts"
     ],
     "exclude": [

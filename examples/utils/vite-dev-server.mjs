@@ -424,7 +424,7 @@ const serveExampleFile = async (url, res) => {
     if (source === null) {
         return false;
     }
-    const code = file === 'example.mjs' || file === 'controls.mjs' ? transformSource(source) : source;
+    const code = file === 'example.mjs' ? transformSource(source) : source;
     sendText(res, code, 'text/javascript; charset=utf-8');
     return true;
 };
