@@ -134,9 +134,6 @@ class ForwardRenderer extends Renderer {
         this.shadowCascadeBlendId = [];
         this.shadowCascadeRadiiId = [];
 
-        // scratch buffer for the per-cascade directional PCSS ortho radii (max 4 cascades)
-        this.shadowCascadeRadii = new Float32Array(4);
-
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
 
@@ -312,7 +309,10 @@ class ForwardRenderer extends Renderer {
                     // shader overrides cameraParams.x with the radius of the cascade a fragment
                     // samples from, so far cascades don't inherit cascade 0's much smaller radius
                     // (which would over-soften them). Packed into a single vec4 (max 4 cascades).
-                    const radii = this.shadowCascadeRadii;
+                    // Stored per-light (setValue keeps the reference, read at draw time) so
+                    // multiple directional PCSS lights don't alias one shared buffer. Allocated
+                    // lazily here so only directional PCSS lights ever create it.
+                    const radii = directional._shadowCascadeRadii ??= new Float32Array(4);
                     for (let c = 0; c < 4; c++) {
                         const r = c < directional.numCascades ? directional.getRenderData(camera, c).projectionCompensation : 0;
                         // fall back to cascade 0's radius for unused / not-yet-culled cascades to
