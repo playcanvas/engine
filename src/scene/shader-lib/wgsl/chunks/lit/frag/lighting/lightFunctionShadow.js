@@ -108,7 +108,13 @@ export default /* wgsl */`
                     let shadowSearchArea = vec2f(length(uniform.light{i}_halfWidth), length(uniform.light{i}_halfHeight)) * uniform.light{i}_shadowSearchArea;
                     return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, shadowSearchArea, lightDirW_in);
                 #else
-                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, uniform.light{i}_softShadowParams, lightDirW_in);
+                    // override the ortho radius with the radius of the cascade this fragment samples
+                    var pcssCameraParams: vec4f = uniform.light{i}_cameraParams;
+                    #ifdef LIGHT{i}_SHADOW_CASCADES
+                        var cascadeRadii: vec4f = uniform.light{i}_shadowCascadeRadii;
+                        pcssCameraParams.x = cascadeRadii[cascadeIndex];
+                    #endif
+                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, pcssCameraParams, uniform.light{i}_softShadowParams, lightDirW_in);
                 #endif
 
             #endif

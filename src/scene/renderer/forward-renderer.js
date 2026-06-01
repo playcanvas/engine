@@ -132,6 +132,10 @@ class ForwardRenderer extends Renderer {
         this.shadowCascadeDistancesId = [];
         this.shadowCascadeCountId = [];
         this.shadowCascadeBlendId = [];
+        this.shadowCascadeRadiiId = [];
+
+        // scratch buffer for the per-cascade directional PCSS ortho radii (max 4 cascades)
+        this.shadowCascadeRadii = new Float32Array(4);
 
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
@@ -210,6 +214,7 @@ class ForwardRenderer extends Renderer {
         this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances`);
         this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
         this.shadowCascadeBlendId[i] = scope.resolve(`${light}_shadowCascadeBlend`);
+        this.shadowCascadeRadiiId[i] = scope.resolve(`${light}_shadowCascadeRadii`);
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -281,20 +286,41 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.shadowCascadeBlendId[cnt].setValue(1 - directional.cascadeBlend);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
-                this.lightSoftShadowParamsId[cnt].setValue(directional._softShadowParams);
 
-                const shadowRT = lightRenderData.shadowCamera.renderTarget;
-                if (shadowRT) {
-                    this.lightShadowSearchAreaId[cnt].setValue(directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width * lightRenderData.projectionCompensation);
+                // PCSS-only uniforms — skipped for the common PCF / VSM paths, which don't
+                // declare or read them in the shader.
+                if (directional._isPcss) {
+
+                    this.lightSoftShadowParamsId[cnt].setValue(directional._softShadowParams);
+
+                    const shadowRT = lightRenderData.shadowCamera.renderTarget;
+                    if (shadowRT) {
+                        this.lightShadowSearchAreaId[cnt].setValue(directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width * lightRenderData.projectionCompensation);
+                    }
+
+                    const cameraParams = directional._shadowCameraParams;
+                    cameraParams.length = 4;
+                    // ortho radius (world half-extent of the directional shadow camera) — consumed by world-space PCSS
+                    cameraParams[0] = lightRenderData.projectionCompensation;
+                    cameraParams[1] = lightRenderData.shadowCamera._farClip;
+                    cameraParams[2] = lightRenderData.shadowCamera._nearClip;
+                    cameraParams[3] = 1;
+                    this.lightCameraParamsId[cnt].setValue(cameraParams);
+
+                    // Per-cascade ortho radii. Only cameraParams.x (the ortho radius) varies per
+                    // cascade — the depth range is cascade-stable thanks to the union AABB. The
+                    // shader overrides cameraParams.x with the radius of the cascade a fragment
+                    // samples from, so far cascades don't inherit cascade 0's much smaller radius
+                    // (which would over-soften them). Packed into a single vec4 (max 4 cascades).
+                    const radii = this.shadowCascadeRadii;
+                    for (let c = 0; c < 4; c++) {
+                        const r = c < directional.numCascades ? directional.getRenderData(camera, c).projectionCompensation : 0;
+                        // fall back to cascade 0's radius for unused / not-yet-culled cascades to
+                        // avoid a zero ortho radius (which would divide-by-zero in the shader)
+                        radii[c] = r > 0 ? r : lightRenderData.projectionCompensation;
+                    }
+                    this.shadowCascadeRadiiId[cnt].setValue(radii);
                 }
-
-                const cameraParams = directional._shadowCameraParams;
-                cameraParams.length = 4;
-                cameraParams[0] = 0; // unused
-                cameraParams[1] = lightRenderData.shadowCamera._farClip;
-                cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-                cameraParams[3] = 1;
-                this.lightCameraParamsId[cnt].setValue(cameraParams);
 
                 const params = directional._shadowRenderParams;
                 params.length = 4;

@@ -60,6 +60,8 @@ export default /* wgsl */`
             uniform light{i}_cameraParams: vec4f;
             #if LIGHT{i}TYPE == DIRECTIONAL
                 uniform light{i}_softShadowParams: vec4f;
+                // per-cascade ortho radii packed into a vec4 (max 4 cascades)
+                uniform light{i}_shadowCascadeRadii: vec4f;
             #endif
         #endif
 

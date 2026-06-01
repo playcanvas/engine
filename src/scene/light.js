@@ -273,6 +273,7 @@ class Light {
         this.shadowUpdateOverrides = null;
         this._isVsm = false;
         this._isPcf = true;
+        this._isPcss = false;
 
         this._softShadowParams = new Float32Array(4);
         this.shadowSamples = 16;
@@ -516,6 +517,7 @@ class Light {
         shadowInfo = shadowTypeInfo.get(value);
         this._isVsm = shadowInfo?.vsm ?? false;
         this._isPcf = shadowInfo?.pcf ?? false;
+        this._isPcss = shadowInfo?.pcss ?? false;
 
         this._shadowType = value;
         this._destroyShadowMap();

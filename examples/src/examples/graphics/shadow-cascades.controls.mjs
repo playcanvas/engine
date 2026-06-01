@@ -94,6 +94,28 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 25,
                     precision: 0
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'PCSS Penumbra' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.penumbraSize' },
+                    min: 0,
+                    max: 0.2,
+                    precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'PCSS Falloff' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.penumbraFalloff' },
+                    min: 1,
+                    max: 10,
+                    precision: 1
+                })
             )
         )
     );
