@@ -619,6 +619,7 @@ class Example extends TypedComponent {
             ' by ',
             jsx('span', { className: 'example-credit-author' }, credit.author)
         );
+        /** @type {(string | ReactElement)[]} */
         const children = [source ? this.renderCreditLink(source[1], label) : label];
         if (!source && credit.source) {
             children.push(' \u00b7 ', credit.source);

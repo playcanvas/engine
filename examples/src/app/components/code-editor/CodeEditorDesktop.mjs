@@ -4,6 +4,7 @@ import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import { CodeEditorBase } from './CodeEditorBase.mjs';
 import { iframe } from '../../iframe.mjs';
 import { jsx } from '../../jsx.mjs';
+import { scriptsPath } from '../../paths.mjs';
 import { removeRedundantSpaces } from '../../strings.mjs';
 import { getHashPath, getSelectedFile, patchState, readState } from '../../url-state.mjs';
 
@@ -44,6 +45,20 @@ const FILE_TYPE_LANGUAGES = {
     txt: 'text'
 };
 
+// script files share one virtual dir so relative imports between them (`./gizmo-handler.mjs`)
+// resolve to real models; assets go in a separate dir so `import './x.vert'` instead falls through
+// to the *.vert ambient module rather than resolving to an unparseable glsl/wgsl model.
+const EXAMPLE_MODEL_DIR = 'inmemory://example/';
+const ASSET_MODEL_DIR = 'inmemory://asset/';
+const SCRIPT_EXTENSIONS = new Set(['mjs', 'js', 'jsx', 'tsx']);
+
+const isScript = (/** @type {string} */ name) => SCRIPT_EXTENSIONS.has(name.split('.').pop() ?? '');
+const modelPath = (/** @type {string} */ name) => `${isScript(name) ? EXAMPLE_MODEL_DIR : ASSET_MODEL_DIR}${name}`;
+
+// `import ... from 'playcanvas/scripts/esm/foo.mjs'` and a script's own relative `./bar.mjs` deps
+const SCRIPT_IMPORT = /from\s+['"](playcanvas\/scripts\/[^'"]+)['"]/g;
+const RELATIVE_IMPORT = /from\s+['"](\.\/[^'"]+\.mjs)['"]/g;
+
 /**
  * @type {editor.IStandaloneCodeEditor}
  */
@@ -65,6 +80,15 @@ class CodeEditorDesktop extends CodeEditorBase {
 
     /** @type {Map<string, editor.IModelDeltaDecoration[]>} */
     _decoratorMap = new Map();
+
+    /** @type {{ name: string, target: any } | null} - definition to reveal after a cross-file jump. */
+    _pendingReveal = null;
+
+    /** @type {import('monaco-editor').IDisposable[]} */
+    _navDisposables = [];
+
+    /** @type {Set<string>} - playcanvas/scripts specifiers already fetched and modelled. */
+    _scriptsLoaded = new Set();
 
     /**
      * @param {Props} props - Component properties.
@@ -172,6 +196,127 @@ class CodeEditorDesktop extends CodeEditorBase {
         window.removeEventListener('exampleHotReload', this._handleExampleHotReload);
         window.removeEventListener('exampleError', this._handleExampleError);
         window.removeEventListener('requestedFiles', this._handleRequestedFiles);
+        this._navDisposables.forEach(d => d.dispose());
+        this._navDisposables = [];
+        this._disposeModels();
+    }
+
+    /**
+     * @param {Props} prevProps - Previous props.
+     * @param {State} prevState - Previous state.
+     */
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.files !== this.state.files) {
+            this._syncModels();
+            this._loadScripts();
+        }
+    }
+
+    // give every inactive script file its own model so sibling imports resolve before its tab is
+    // opened; the selected file's model is owned by the editor itself. also drop models left over
+    // from a previously-loaded example.
+    _syncModels() {
+        const monaco = window.monaco;
+        if (!monaco) {
+            return;
+        }
+        const { files, selectedFile } = this.state;
+        for (const name in files) {
+            if (name === selectedFile || !isScript(name)) {
+                continue;
+            }
+            const uri = monaco.Uri.parse(modelPath(name));
+            const model = monaco.editor.getModel(uri);
+            if (model) {
+                if (model.getValue() !== files[name]) {
+                    model.setValue(files[name]);
+                }
+            } else {
+                monaco.editor.createModel(files[name], 'javascript', uri);
+            }
+        }
+        for (const model of monaco.editor.getModels()) {
+            const uri = model.uri.toString();
+            const dir = uri.startsWith(EXAMPLE_MODEL_DIR) ? EXAMPLE_MODEL_DIR :
+                uri.startsWith(ASSET_MODEL_DIR) ? ASSET_MODEL_DIR : null;
+            if (!dir) {
+                continue;
+            }
+            // only example/asset files are direct children; engine-script models live in a nested
+            // playcanvas/scripts/ subtree and are cached separately, so leave those alone
+            const rest = uri.slice(dir.length);
+            if (!rest.includes('/') && !files[rest]) {
+                model.dispose();
+            }
+        }
+    }
+
+    // fetch the real source of any `playcanvas/scripts/*` a file imports and model it (plus its own
+    // relative deps) so those imports resolve to real types instead of the `any` wildcard fallback
+    async _loadScripts() {
+        const monaco = window.monaco;
+        if (!monaco) {
+            return;
+        }
+        const loaded = this._scriptsLoaded;
+        const { files } = this.state;
+        /** @type {string[]} */
+        const queue = [];
+        for (const name in files) {
+            for (const match of files[name].matchAll(SCRIPT_IMPORT)) {
+                queue.push(match[1]);
+            }
+        }
+        while (queue.length) {
+            const spec = queue.shift();
+            if (!spec || loaded.has(spec)) {
+                continue;
+            }
+            loaded.add(spec);
+            const rel = spec.replace('playcanvas/scripts/', '');
+            // eslint-disable-next-line no-await-in-loop
+            const src = await fetch(`${scriptsPath}${rel}`).then(r => (r.ok ? r.text() : null), () => null);
+            if (src === null) {
+                continue;
+            }
+            const uri = monaco.Uri.parse(`${EXAMPLE_MODEL_DIR}${spec}`);
+            if (!monaco.editor.getModel(uri)) {
+                monaco.editor.createModel(src, 'javascript', uri);
+            }
+            const dir = spec.slice(0, spec.lastIndexOf('/') + 1);
+            for (const match of src.matchAll(RELATIVE_IMPORT)) {
+                queue.push(`${dir}${match[1].slice(2)}`);
+            }
+        }
+    }
+
+    // move the caret to a definition (a range or a position) in the now-active model and scroll to it
+    _revealTarget(/** @type {any} */ target) {
+        if (!target || !monacoEditor) {
+            return;
+        }
+        const range = target.startLineNumber !== undefined ? target : {
+            startLineNumber: target.lineNumber,
+            startColumn: target.column,
+            endLineNumber: target.lineNumber,
+            endColumn: target.column
+        };
+        monacoEditor.setSelection(range);
+        monacoEditor.revealRangeInCenterIfOutsideViewport(range);
+        monacoEditor.focus();
+    }
+
+    _disposeModels() {
+        const monaco = window.monaco;
+        if (!monaco) {
+            return;
+        }
+        for (const model of monaco.editor.getModels()) {
+            const uri = model.uri.toString();
+            if (uri.startsWith(EXAMPLE_MODEL_DIR) || uri.startsWith(ASSET_MODEL_DIR)) {
+                model.dispose();
+            }
+        }
     }
 
     /**
@@ -185,6 +330,46 @@ class CodeEditorDesktop extends CodeEditorBase {
         monacoEditor = editor;
         // @ts-ignore
         const monaco = window.monaco;
+
+        // model the example's other files so cross-file imports resolve from the start
+        this._syncModels();
+        this._loadScripts();
+
+        // make "go to definition" across the example's files switch tabs and reveal the target;
+        // the model swap is async (driven by selectFile -> render), so defer the reveal until it lands
+        this._navDisposables.push(
+            monaco.editor.registerEditorOpener({
+                openCodeEditor: (source, resource, selectionOrPosition) => {
+                    const uri = resource.toString();
+                    const name = uri.slice(uri.lastIndexOf('/') + 1);
+                    // an editable example file -> open its tab and reveal the definition
+                    if (this.state.files[name]) {
+                        if (name === this.state.selectedFile) {
+                            this._revealTarget(selectionOrPosition);
+                        } else {
+                            this._pendingReveal = { name, target: selectionOrPosition };
+                            this.selectFile(name);
+                        }
+                        return true;
+                    }
+                    // read-only source (an engine script or the playcanvas typings) -> preview it
+                    // inline with a peek widget rather than trying to open it as a tab
+                    source.trigger('preview', 'editor.action.peekDefinition', {});
+                    return true;
+                }
+            }),
+            editor.onDidChangeModel(() => {
+                const model = editor.getModel();
+                if (!this._pendingReveal || !model) {
+                    return;
+                }
+                const uri = model.uri.toString();
+                if (uri.slice(uri.lastIndexOf('/') + 1) === this._pendingReveal.name) {
+                    this._revealTarget(this._pendingReveal.target);
+                    this._pendingReveal = null;
+                }
+            })
+        );
 
         // Hot reload code via Shift + Enter
         editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
@@ -288,6 +473,8 @@ class CodeEditorDesktop extends CodeEditorBase {
         const options = {
             value,
             language,
+            path: modelPath(selectedFile),
+            keepCurrentModel: true,
             theme: 'playcanvas',
             loading: null,
             beforeMount: this.beforeMount.bind(this),
