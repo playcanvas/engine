@@ -50,6 +50,36 @@ class WebgpuShader {
     _computeKey;
 
     /**
+     * Caller-provided bind group format (compute, group 0), or null if none was supplied.
+     *
+     * @type {import('../bind-group-format.js').BindGroupFormat|null}
+     */
+    computeBindGroupFormat = null;
+
+    /**
+     * Bind group format for resources auto-reflected from the compute shader source. Lives at
+     * {@link computeReflectedGroupIndex}. Null when there is nothing to reflect.
+     *
+     * @type {import('../bind-group-format.js').BindGroupFormat|null}
+     */
+    computeReflectedBindGroupFormat = null;
+
+    /**
+     * Generated uniform buffer format holding the reflected loose uniforms, bound inside the
+     * reflected bind group. Null when the shader declares no loose uniforms.
+     *
+     * @type {import('../uniform-buffer-format.js').UniformBufferFormat|null}
+     */
+    computeReflectedUniformBufferFormat = null;
+
+    /**
+     * Bind group index of the reflected resources (0 when no caller format, otherwise 1).
+     *
+     * @type {number}
+     */
+    computeReflectedGroupIndex = 0;
+
+    /**
      * Name of the vertex entry point function.
      */
     vertexEntryPoint = 'main';
@@ -78,12 +108,11 @@ class WebgpuShader {
 
             if (definition.cshader) {
 
-                this._computeCode = definition.cshader ?? null;
-                this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
-                this.computeBindGroupFormat = definition.computeBindGroupFormat;
                 if (definition.computeEntryPoint) {
                     this.computeEntryPoint = definition.computeEntryPoint;
                 }
+
+                this.processComputeWGSL();
 
             } else {
 
@@ -179,6 +208,36 @@ class WebgpuShader {
         shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
         shader.meshBindGroupFormat = processed.meshBindGroupFormat;
         shader.attributes = processed.attributes;
+    }
+
+    processComputeWGSL() {
+        const shader = this.shader;
+        const definition = shader.definition;
+
+        // a caller-provided bind group format occupies group 0; otherwise reflected resources
+        // start at group 0 (WebGPU pipeline layouts cannot have gaps)
+        const callerBindGroupFormat = definition.computeBindGroupFormat ?? null;
+        const reflectedGroupIndex = callerBindGroupFormat ? 1 : 0;
+
+        // reflect simplified-syntax declarations into a separate bind group, leaving any
+        // explicitly-bound resources (and the caller-provided format) untouched
+        const processed = WebgpuShaderProcessorWGSL.runCompute(shader.device, definition.cshader, definition, shader, reflectedGroupIndex);
+
+        // keep reference to processed shader in debug mode
+        Debug.call(() => {
+            this.processed = processed;
+        });
+
+        this._computeCode = processed.cshader;
+
+        // caller-provided (group 0) resources
+        this.computeBindGroupFormat = callerBindGroupFormat;
+        this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
+
+        // reflected (engine-managed) resources and their generated uniform buffer
+        this.computeReflectedGroupIndex = reflectedGroupIndex;
+        this.computeReflectedBindGroupFormat = processed.computeBindGroupFormat;
+        this.computeReflectedUniformBufferFormat = processed.computeUniformBufferFormat;
     }
 
     processWGSL() {

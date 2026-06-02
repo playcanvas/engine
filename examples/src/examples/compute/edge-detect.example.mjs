@@ -173,18 +173,13 @@ assetListLoader.load(() => {
     const createComputeShader = () => {
         if (!device.supportsCompute) return null;
 
+        // No computeBindGroupFormat is provided - the input texture (+ sampler) and the output
+        // storage texture use the simplified WGSL syntax and are reflected automatically by the
+        // engine from the shader source.
         return new pc.Shader(device, {
             name: 'EdgeDetect-Shader',
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: computeShaderWgsl,
-
-            // Format of a bind group for the compute shader
-            computeBindGroupFormat: new pc.BindGroupFormat(device, [
-                // Input texture with sampler (sampler takes binding slot+1 automatically)
-                new pc.BindTextureFormat('inputTexture', pc.SHADERSTAGE_COMPUTE, undefined, undefined, true),
-                // Output storage texture
-                new pc.BindStorageTextureFormat('outputTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
-            ])
+            cshader: computeShaderWgsl
         });
     };
 

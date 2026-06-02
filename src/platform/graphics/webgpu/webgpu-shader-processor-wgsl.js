@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import {
     BINDGROUP_MESH, semanticToLocation,
-    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
+    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE,
     SAMPLETYPE_FLOAT,
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
     TEXTUREDIMENSION_1D, TEXTUREDIMENSION_CUBE_ARRAY,
@@ -15,7 +15,8 @@ import {
     TYPE_FLOAT32, TYPE_FLOAT16, TYPE_INT8, TYPE_INT16, TYPE_INT32
 } from '../constants.js';
 import { UniformFormat, UniformBufferFormat } from '../uniform-buffer-format.js';
-import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat } from '../bind-group-format.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindTextureFormat, BindUniformBufferFormat } from '../bind-group-format.js';
+import { gpuTextureFormats } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../graphics-device.js'
@@ -173,6 +174,19 @@ const getTextureDeclarationType = (viewDimension, sampleType) => {
     return `${baseTypeString}<${coreFormatString}>`;
 };
 
+// reverse of gpuTextureFormats: WGSL/GPU storage format string -> PIXELFORMAT. Built once, used to
+// reflect storage texture declarations. Several PIXELFORMATs can map to the same string (e.g. RGB8
+// and RGBA8 both -> 'rgba8unorm'); last-wins so the canonical/most-common format wins (RGBA8 over
+// RGB8 with the current table). This matches what callers pass to a hand-authored
+// BindStorageTextureFormat, avoiding a needless split of the bind group layout / pipeline cache
+// (whose key uses the numeric PIXELFORMAT, even though the GPUTextureFormat string is identical).
+const gpuFormatToPixelFormat = new Map();
+gpuTextureFormats.forEach((str, pixelFormat) => {
+    if (str) {
+        gpuFormatToPixelFormat.set(str, pixelFormat);
+    }
+});
+
 const wrappedArrayTypes = {
     'f32': 'WrappedF32',
     'i32': 'WrappedI32',
@@ -252,8 +266,9 @@ class UniformLine {
 const TEXTURE_REGEX = /^\s*var\s+(\w+)\s*:\s*(texture_\w+)(?:<(\w+)>)?;\s*$/;
 // eslint-disable-next-line
 const STORAGE_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*(texture_storage_2d|texture_storage_2d_array)<([\w\d_]+),\s*(\w+)>\s*;\s*$/;
+// storage buffers only support 'read' and 'read_write' access in WGSL (no write-only form)
 // eslint-disable-next-line
-const STORAGE_BUFFER_REGEX = /^\s*var\s*<storage,\s*(read|write)?>\s*([\w\d_]+)\s*:\s*(.*)\s*;\s*$/;
+const STORAGE_BUFFER_REGEX = /^\s*var\s*<storage,\s*(read_write|read)?>\s*([\w\d_]+)\s*:\s*(.*)\s*;\s*$/;
 // eslint-disable-next-line
 const EXTERNAL_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*texture_external;\s*$/;
 // eslint-disable-next-line
@@ -445,6 +460,80 @@ class WebgpuShaderProcessorWGSL {
         };
     }
 
+    /**
+     * Process a compute shader: reflect its simplified-syntax declarations (loose `uniform`s,
+     * textures/samplers, storage buffers, storage textures) into a single bind group at
+     * `reflectedGroupIndex`, leaving
+     * any explicitly-bound (`@group/@binding`) declarations untouched. The loose uniforms are
+     * collapsed into one generated uniform buffer (`ub_compute`) placed inside that same group.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {string} source - The fully-preprocessed compute shader source (includes/defines resolved).
+     * @param {object} shaderDefinition - The shader definition.
+     * @param {Shader} shader - The shader.
+     * @param {number} reflectedGroupIndex - The bind group index the reflected resources are placed
+     * in (0 when no caller format is supplied, otherwise 1).
+     * @returns {object} - `{ cshader, computeBindGroupFormat, computeUniformBufferFormat }`. The
+     * formats are null when there is nothing to reflect (strictly additive - behavior is then
+     * identical to a fully hand-authored compute shader).
+     */
+    static runCompute(device, source, shaderDefinition, shader, reflectedGroupIndex) {
+
+        // pull simplified-syntax declarations out of the source (explicit @group/@binding lines,
+        // which start with '@' rather than 'var'/'uniform', are not matched and pass through)
+        const extracted = WebgpuShaderProcessorWGSL.extract(source);
+
+        // parse loose uniforms - all of them go into the single generated compute uniform buffer
+        const parsedUniforms = extracted.uniforms.map(line => new UniformLine(line, shader));
+        const meshUniforms = [];
+        parsedUniforms.forEach((uniform) => {
+            uniform.ubName = 'ub_compute';
+            const uniformType = uniformTypeToNameMapWGSL.get(uniform.type);
+            Debug.assert(uniformType !== undefined, `Uniform type ${uniform.type} is not recognised on line [${uniform.line}]`);
+            meshUniforms.push(new UniformFormat(uniform.name, uniformType, uniform.arraySize));
+        });
+        // do not synthesize a dummy uniform when empty - reflection must stay strictly additive
+        const computeUniformBufferFormat = meshUniforms.length > 0 ? new UniformBufferFormat(device, meshUniforms) : null;
+
+        // parse resource lines (no vertex/fragment merge for compute)
+        const parsedResources = WebgpuShaderProcessorWGSL.mergeResources(extracted.resources, [], shader);
+        const resourceFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(parsedResources, SHADERSTAGE_COMPUTE, shader);
+
+        // the generated uniform buffer is a binding inside the same reflected group, appended last
+        const ubBindFormat = computeUniformBufferFormat ? new BindUniformBufferFormat('ub_compute', SHADERSTAGE_COMPUTE) : null;
+        const allFormats = ubBindFormat ? [...resourceFormats, ubBindFormat] : resourceFormats;
+
+        // when there is nothing to reflect, leave the source and bindings exactly as the caller
+        // provided them (strictly additive); otherwise build the single reflected bind group format
+        // (this assigns the slots), generate the declarations and inject them into the source
+        let cshader = source;
+        let computeBindGroupFormat = null;
+        if (allFormats.length > 0) {
+
+            computeBindGroupFormat = new BindGroupFormat(device, allFormats);
+
+            // generate declarations using the assigned slots
+            let code = WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(computeBindGroupFormat, reflectedGroupIndex);
+            if (computeUniformBufferFormat) {
+                code += WebgpuShaderProcessorWGSL.getUniformShaderDeclaration(computeUniformBufferFormat, reflectedGroupIndex, ubBindFormat.slot, 'compute');
+            }
+
+            // rewrite `uniform.x` references to `ub_compute.x`
+            const src = WebgpuShaderProcessorWGSL.renameUniformAccess(extracted.src, parsedUniforms);
+
+            // insert the generated declarations at the marker (or prepend if there was no marker)
+            cshader = src.includes(MARKER) ? src.replace(MARKER, code) : `${code}\n${src}`;
+        }
+
+        // computeUniformBufferFormat is already null unless loose uniforms were reflected (in which
+        // case computeBindGroupFormat is non-null too), so the result stays consistent
+        return {
+            cshader,
+            computeBindGroupFormat,
+            computeUniformBufferFormat
+        };
+    }
+
     // Extract required information from the shader source code.
     static extract(src) {
         // collected data
@@ -612,10 +701,21 @@ class WebgpuShaderProcessorWGSL {
         return resources;
     }
 
-    static processResources(device, resources, processingOptions, shader) {
+    /**
+     * Converts parsed resource lines (textures, samplers, storage buffers, storage textures) into an
+     * array of bind formats. Shared by the vertex/fragment path ({@link processResources}) and the
+     * compute path ({@link runCompute}); only the shader-stage visibility differs.
+     *
+     * @param {Array<ResourceLine>} resources - The parsed resource lines.
+     * @param {number} visibility - Shader stage visibility bit-flags for the created formats.
+     * @param {Shader} shader - The shader (for error reporting).
+     * @returns {Array<BindTextureFormat|BindStorageBufferFormat|BindStorageTextureFormat>} - The bind
+     * formats, in declaration order (a texture with a sampler consumes the following sampler line).
+     * @private
+     */
+    static buildResourceFormats(resources, visibility, shader) {
 
-        // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding
-        const textureFormats = [];
+        const formats = [];
         for (let i = 0; i < resources.length; i++) {
 
             const resource = resources[i];
@@ -631,7 +731,7 @@ class WebgpuShaderProcessorWGSL {
                 const dimension = resource.textureDimension;
 
                 // TODO: we could optimize visibility to only stages that use any of the data
-                textureFormats.push(new BindTextureFormat(resource.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, dimension, sampleType, hasSampler, hasSampler ? sampler.name : null));
+                formats.push(new BindTextureFormat(resource.name, visibility, dimension, sampleType, hasSampler, hasSampler ? sampler.name : null));
 
                 // following sampler was already handled
                 if (hasSampler) i++;
@@ -640,28 +740,47 @@ class WebgpuShaderProcessorWGSL {
             if (resource.isStorageBuffer) {
 
                 const readOnly = resource.accessMode !== 'read_write';
-                const bufferFormat = new BindStorageBufferFormat(resource.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, readOnly);
+                const bufferFormat = new BindStorageBufferFormat(resource.name, visibility, readOnly);
                 bufferFormat.format = resource.type;
-                textureFormats.push(bufferFormat);
+                formats.push(bufferFormat);
+            }
+
+            if (resource.isStorageTexture) {
+
+                // storage textures are compute-only (BindStorageTextureFormat hardcodes
+                // SHADERSTAGE_COMPUTE); the `visibility` param does not apply here
+                const dimension = resource.textureType === 'texture_storage_2d_array' ? TEXTUREDIMENSION_2D_ARRAY : TEXTUREDIMENSION_2D;
+                const pixelFormat = gpuFormatToPixelFormat.get(resource.format);
+                Debug.assert(pixelFormat !== undefined, `Unsupported storage texture format '${resource.format}' on line [${resource.originalLine}]`);
+                const write = resource.access === 'write' || resource.access === 'read_write';
+                const read = resource.access === 'read' || resource.access === 'read_write';
+                formats.push(new BindStorageTextureFormat(resource.name, pixelFormat, dimension, write, read));
             }
 
             Debug.assert(!resource.isSampler, `Sampler uniform needs to follow a texture uniform, but does not on line [${resource.originalLine}]`);
-            Debug.assert(!resource.isStorageTexture, 'TODO: add support for storage textures here');
             Debug.assert(!resource.externalTexture, 'TODO: add support for external textures here');
         }
+
+        return formats;
+    }
+
+    static processResources(device, resources, processingOptions, shader, visibility = SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, bindGroupIndex = BINDGROUP_MESH) {
+
+        // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding
+        const textureFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(resources, visibility, shader);
 
         const meshBindGroupFormat = new BindGroupFormat(device, textureFormats);
 
         // generate code for textures
         let code = '';
-        processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {
+        processingOptions?.bindGroupFormats?.forEach((format, index) => {
             if (format) {
-                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, bindGroupIndex);
+                code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(format, index);
             }
         });
 
         // and also for generated mesh format
-        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, BINDGROUP_MESH);
+        code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, bindGroupIndex);
 
         return {
             code,
@@ -679,12 +798,14 @@ class WebgpuShaderProcessorWGSL {
      * @param {UniformBufferFormat} ubFormat - Format of the uniform buffer.
      * @param {number} bindGroup - The bind group index.
      * @param {number} bindIndex - The bind index.
+     * @param {string} [name] - The name used for the struct and uniform buffer variable
+     * (`struct_ub_<name>` / `ub_<name>`). Defaults to the bind group name. The compute path passes
+     * an explicit name as its reflected group index does not map to a meaningful bindGroupNames entry.
      * @returns {string} - The shader code for the uniform buffer.
      * @private
      */
-    static getUniformShaderDeclaration(ubFormat, bindGroup, bindIndex) {
+    static getUniformShaderDeclaration(ubFormat, bindGroup, bindIndex, name = bindGroupNames[bindGroup]) {
 
-        const name = bindGroupNames[bindGroup];
         const structName = `struct_ub_${name}`;
         let code = `struct ${structName} {\n`;
 
@@ -749,7 +870,15 @@ class WebgpuShaderProcessorWGSL {
 
         });
 
-        Debug.assert(format.storageTextureFormats.length === 0, 'Implement support for storage textures here');
+        format.storageTextureFormats.forEach((format) => {
+
+            const storageType = format.textureDimension === TEXTUREDIMENSION_2D_ARRAY ? 'texture_storage_2d_array' : 'texture_storage_2d';
+            const fmtString = gpuTextureFormats[format.format];
+            const access = format.read ? (format.write ? 'read_write' : 'read') : 'write';
+            code += `@group(${bindGroup}) @binding(${format.slot}) var ${format.name}: ${storageType}<${fmtString}, ${access}>;\n`;
+
+        });
+
         // TODO: also add external texture support here
 
         return code;
