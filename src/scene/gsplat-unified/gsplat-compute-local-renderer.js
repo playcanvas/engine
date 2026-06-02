@@ -40,6 +40,7 @@ import { GSplatTileComposite } from './gsplat-tile-composite.js';
 import { GSplatLocalDispatchSet } from './gsplat-local-dispatch-set.js';
 import { ALPHA_VISIBILITY_THRESHOLD, CACHE_STRIDE } from './constants.js';
 import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
+import gsplatModifyDefaultSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatModify.js';
 
 /**
  * @import { GraphNode } from '../graph-node.js'
@@ -1281,6 +1282,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
         cincludes.set('gsplatComputeSplatCS', computeSplatSource);
         cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(fixedBindings.length));
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
+        // default (no-op) modify hooks required by projectSplatCommon; the compute renderer does not
+        // expose render-stage customization, so the dummy chunk is sufficient (no gsplatHelpersVS).
+        cincludes.set('gsplatModifyVS', gsplatModifyDefaultSource);
         cincludes.set('gsplatProjectCommonCS', computeGsplatProjectCommonSource);
 
         const cdefines = new Map();
