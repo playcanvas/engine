@@ -298,11 +298,33 @@ const importOrder = ['error', {
     alphabetize: { order: 'asc', caseInsensitive: true }
 }];
 
+// minimal jsx-uses-vars: mark JSX-referenced identifiers as used so no-unused-vars sees imported
+// components (e.g. <Panel/>) as used. Avoids pulling in eslint-plugin-react just for this.
+const jsxUsesVars = {
+    meta: { type: 'problem' },
+    create(context) {
+        return {
+            JSXOpeningElement(node) {
+                let name = node.name;
+                while (name.type === 'JSXMemberExpression') {
+                    name = name.object;
+                }
+                if (name.type === 'JSXIdentifier') {
+                    context.sourceCode.markVariableAsUsed(name.name, name);
+                }
+            }
+        };
+    }
+};
+
 export default [
     ...playcanvasConfig,
     {
-        files: ['**/*.js', '**/*.mjs'],
+        files: ['**/*.js', '**/*.mjs', '**/*.jsx'],
         languageOptions: {
+            parserOptions: {
+                ecmaFeatures: { jsx: true }
+            },
             globals: {
                 ...globals.browser,
                 ...globals.node,
@@ -313,6 +335,26 @@ export default [
         rules: {
             'import/order': importOrder,
             'import/no-unresolved': 'off'
+        }
+    },
+    {
+        files: ['**/*.jsx'],
+        plugins: {
+            jsx: {
+                rules: {
+                    'uses-vars': jsxUsesVars
+                }
+            }
+        },
+        rules: {
+            'jsx/uses-vars': 'error',
+            'max-len': ['error', {
+                code: 100,
+                ignoreUrls: true,
+                ignoreStrings: true,
+                ignoreTemplateLiterals: true,
+                ignoreRegExpLiterals: true
+            }]
         }
     },
     {

@@ -2,6 +2,7 @@ import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
+import * as ReactJsxRuntime from 'react/jsx-runtime';
 import { useParams } from 'react-router-dom';
 
 import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
@@ -82,11 +83,31 @@ const diffLeaves = (baseline, current, prefix, out) => {
     }
 };
 
-const PC_IMPORT = /^[ \t]*import[\s\w*{},]+["']playcanvas["'];?[ \t]*(?:\r?\n|$)/gm;
 const CONTROLS_REACT_PCUI = /** @satisfies {typeof ReactPCUI} */ ({
     ...ReactPCUI,
     SelectInput: OverlaySelectInput
 });
+/**
+ * Maps the bare specifiers a controls module imports to the app's own instances, so the compiled
+ * (CommonJS) controls resolve them via require() — shared React/PCUI singletons and the SelectInput
+ * override, without bundling or a global.
+ *
+ * @param {string} spec - The module specifier.
+ * @returns {any} The resolved module.
+ */
+const controlsRequire = (spec) => {
+    switch (spec) {
+        case 'react': return React;
+        case 'react/jsx-runtime': return ReactJsxRuntime;
+        case '@playcanvas/pcui/react': return CONTROLS_REACT_PCUI;
+        case '@playcanvas/pcui': return PCUI;
+        case 'playcanvas': return /** @type {any} */ (window).pc;
+    }
+    throw new Error(`Unknown module: ${spec}`);
+};
+
+/** @type {Promise<any> | undefined} - lazily-loaded @babel/standalone, for transpiling controls JSX in the browser */
+let babelPromise;
 const URL_IN_TEXT_PATTERN = /(https?:\/\/[^\s)]+)/;
 
 /**
@@ -258,26 +279,28 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {string} src - The source string.
-     * @returns {Promise<Control>} - The controls jsx object.
+     * @param {string} src - The controls JSX source.
+     * @returns {Promise<Control>} - The controls component.
      */
     async _buildControls(src) {
-        const runtime = src.replace(PC_IMPORT, 'const pc = window.pc;\n');
-        const blob = new Blob([runtime], { type: 'text/javascript' });
-        if (this._controlsUrl) {
-            URL.revokeObjectURL(this._controlsUrl);
-        }
-        this._controlsUrl = URL.createObjectURL(blob);
-        /** @type {Control} */
-        let controls;
+        // transpile the (possibly edited) JSX in the browser to CommonJS, then run it with the
+        // require() shim so it shares the app's React/PCUI/pc instances (and the SelectInput
+        // override). Babel is lazy-loaded so it only costs anything the first time controls build.
+        const mod = { exports: /** @type {any} */ ({}) };
         try {
-            // eslint-disable-next-line jsdoc/no-bad-blocks
-            const module = await import(/* @vite-ignore */ this._controlsUrl);
-            controls = module.controls;
+            // @ts-ignore - @babel/standalone ships no type declarations
+            babelPromise ??= import('@babel/standalone');
+            const babel = await babelPromise;
+            const { code } = (babel.default ?? babel).transform(src, {
+                presets: [['react', { runtime: 'automatic' }]],
+                plugins: ['transform-modules-commonjs']
+            });
+            // eslint-disable-next-line no-new-func
+            new Function('require', 'module', 'exports', code)(controlsRequire, mod, mod.exports);
+            return mod.exports.Controls ?? mod.exports.controls;
         } catch (e) {
-            controls = () => jsx('pre', null, /** @type {any} */ (e).message);
+            return () => jsx('pre', null, /** @type {any} */ (e).message);
         }
-        return controls;
     }
 
     /**
@@ -318,7 +341,7 @@ class Example extends TypedComponent {
     async _handleExampleLoad(event) {
         const path = this.iframePath;
         const { files, observer, description, credits = [] } = event.detail;
-        const controlsSrc = files['controls.mjs'];
+        const controlsSrc = files['controls.jsx'];
         if (!description && !credits.length && this.props.mobilePanel === 'description') {
             this.props.setMobilePanel?.(null);
         }
@@ -393,8 +416,8 @@ class Example extends TypedComponent {
     async _handleUpdateFiles(event) {
         const path = this.iframePath;
         const { files, observer, description, credits = [] } = event.detail;
-        const controlsSrc = files['controls.mjs'] ?? '';
-        if (!files['controls.mjs']) {
+        const controlsSrc = files['controls.jsx'] ?? '';
+        if (!files['controls.jsx']) {
             this.mergeState({
                 exampleLoaded: true,
                 loadedPath: path,

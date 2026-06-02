@@ -33,6 +33,8 @@ const FILE_TYPE_LANGUAGES = {
     javascript: 'javascript',
     js: 'javascript',
     mjs: 'javascript',
+    jsx: 'javascript',
+    tsx: 'javascript',
     html: 'html',
     css: 'css',
     shader: 'glsl',

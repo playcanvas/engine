@@ -184,11 +184,7 @@ export const getExample = (name) => {
  * @returns {string} source file path.
  */
 export const getExamplePath = (item, file) => {
-    const input = path.join(item.path, `${item.exampleNameKebab}.${file}`);
-    if (fs.existsSync(input)) {
-        return input;
-    }
-    return file === 'controls.mjs' ? 'templates/controls.mjs' : input;
+    return path.join(item.path, `${item.exampleNameKebab}.${file}`);
 };
 
 /**
@@ -197,13 +193,9 @@ export const getExamplePath = (item, file) => {
  */
 export const getFiles = ({ path: dir, exampleNameKebab }) => {
     const prefix = `${exampleNameKebab}.`;
-    const files = fs.readdirSync(dir)
+    return fs.readdirSync(dir)
     .filter(file => file.startsWith(prefix))
     .map(file => file.replace(prefix, ''));
-    if (!files.includes('controls.mjs')) {
-        files.push('controls.mjs');
-    }
-    return files;
 };
 
 /**
@@ -322,7 +314,7 @@ export const getExampleTargets = () => {
                 assets.push({ src: input, dest: output });
                 continue;
             }
-            if (file === 'example.mjs' || file === 'controls.mjs') {
+            if (file === 'example.mjs') {
                 sources.push({ src: input, dest: output });
                 continue;
             }
