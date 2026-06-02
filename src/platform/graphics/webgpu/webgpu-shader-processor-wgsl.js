@@ -176,12 +176,13 @@ const getTextureDeclarationType = (viewDimension, sampleType) => {
 
 // reverse of gpuTextureFormats: WGSL/GPU storage format string -> PIXELFORMAT. Built once, used to
 // reflect storage texture declarations. Several PIXELFORMATs can map to the same string (e.g. RGB8
-// and RGBA8 both -> 'rgba8unorm'); first-wins is fine as the chosen PIXELFORMAT only needs to
-// round-trip back to the same string via gpuTextureFormats[...], which is what the bind group
-// layout (and WebGPU validation) uses.
+// and RGBA8 both -> 'rgba8unorm'); last-wins so the canonical/most-common format wins (RGBA8 over
+// RGB8 with the current table). This matches what callers pass to a hand-authored
+// BindStorageTextureFormat, avoiding a needless split of the bind group layout / pipeline cache
+// (whose key uses the numeric PIXELFORMAT, even though the GPUTextureFormat string is identical).
 const gpuFormatToPixelFormat = new Map();
 gpuTextureFormats.forEach((str, pixelFormat) => {
-    if (str && !gpuFormatToPixelFormat.has(str)) {
+    if (str) {
         gpuFormatToPixelFormat.set(str, pixelFormat);
     }
 });
@@ -265,8 +266,9 @@ class UniformLine {
 const TEXTURE_REGEX = /^\s*var\s+(\w+)\s*:\s*(texture_\w+)(?:<(\w+)>)?;\s*$/;
 // eslint-disable-next-line
 const STORAGE_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*(texture_storage_2d|texture_storage_2d_array)<([\w\d_]+),\s*(\w+)>\s*;\s*$/;
+// storage buffers only support 'read' and 'read_write' access in WGSL (no write-only form)
 // eslint-disable-next-line
-const STORAGE_BUFFER_REGEX = /^\s*var\s*<storage,\s*(read_write|read|write)?>\s*([\w\d_]+)\s*:\s*(.*)\s*;\s*$/;
+const STORAGE_BUFFER_REGEX = /^\s*var\s*<storage,\s*(read_write|read)?>\s*([\w\d_]+)\s*:\s*(.*)\s*;\s*$/;
 // eslint-disable-next-line
 const EXTERNAL_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*texture_external;\s*$/;
 // eslint-disable-next-line
@@ -460,7 +462,8 @@ class WebgpuShaderProcessorWGSL {
 
     /**
      * Process a compute shader: reflect its simplified-syntax declarations (loose `uniform`s,
-     * textures/samplers, storage buffers) into a single bind group at `reflectedGroupIndex`, leaving
+     * textures/samplers, storage buffers, storage textures) into a single bind group at
+     * `reflectedGroupIndex`, leaving
      * any explicitly-bound (`@group/@binding`) declarations untouched. The loose uniforms are
      * collapsed into one generated uniform buffer (`ub_compute`) placed inside that same group.
      *
@@ -699,15 +702,15 @@ class WebgpuShaderProcessorWGSL {
     }
 
     /**
-     * Converts parsed resource lines (textures, samplers, storage buffers) into an array of bind
-     * formats. Shared by the vertex/fragment path ({@link processResources}) and the compute path
-     * ({@link runCompute}); only the shader-stage visibility differs.
+     * Converts parsed resource lines (textures, samplers, storage buffers, storage textures) into an
+     * array of bind formats. Shared by the vertex/fragment path ({@link processResources}) and the
+     * compute path ({@link runCompute}); only the shader-stage visibility differs.
      *
      * @param {Array<ResourceLine>} resources - The parsed resource lines.
      * @param {number} visibility - Shader stage visibility bit-flags for the created formats.
      * @param {Shader} shader - The shader (for error reporting).
-     * @returns {Array<BindTextureFormat|BindStorageBufferFormat>} - The bind formats, in declaration
-     * order (a texture with a sampler consumes the following sampler line).
+     * @returns {Array<BindTextureFormat|BindStorageBufferFormat|BindStorageTextureFormat>} - The bind
+     * formats, in declaration order (a texture with a sampler consumes the following sampler line).
      * @private
      */
     static buildResourceFormats(resources, visibility, shader) {
