@@ -77,6 +77,7 @@ struct Uniforms {
 #include "gsplatComputeSplatCS"
 #include "gsplatFormatDeclCS"
 #include "gsplatFormatReadCS"
+#include "gsplatModifyVS"
 #include "gsplatProjectCommonCS"
 
 // NOTE on tile entry cap: if a tile exceeds MAX_TILE_ENTRIES (65535), the atomicAdd

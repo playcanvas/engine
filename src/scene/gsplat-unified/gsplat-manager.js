@@ -1753,7 +1753,8 @@ class GSplatManager {
             flipY: !!cameraNode.camera.renderTarget?.flipY,
             pickMode,
             fisheyeProj,
-            antiAlias: gsplat.antiAlias
+            antiAlias: gsplat.antiAlias,
+            material: gsplat.material
         });
 
         projector.writeIndirectArgs(

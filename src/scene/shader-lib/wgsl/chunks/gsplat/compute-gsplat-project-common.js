@@ -54,17 +54,26 @@ fn projectSplatCommon(
     let splatId = compactedSplatIds[threadIdx];
     setSplat(splatId);
 
-    let center = getCenter();
+    // read the world-space center and apply the render-stage center modifier before projection
+    // (matches the quad renderer's gsplatVS, which calls modifySplatCenter on the model center)
+    let originalCenter = getCenter();
+    var center = originalCenter;
+    modifySplatCenter(&center);
+
     let opacity = getOpacity();
     if (opacity <= alphaClip) {
         return invalidProjectedSplatCommon();
     }
 
-    let rotation = half4(getRotation());
-    let scale = half3(getScale());
+    // apply the render-stage rotation/scale modifier (e.g. scale-to-zero for reveal/hide effects).
+    // getRotation() is (w,x,y,z); the modify hook contract is (x,y,z,w) and computeSplatCov expects
+    // (w,x,y,z) - this mirrors gsplatCorner.js in the quad renderer.
+    var rotation: vec4f = getRotation().yzwx;
+    var scale: vec3f = getScale();
+    modifySplatRotationScale(originalCenter, center, &rotation, &scale);
 
     let proj = computeSplatCov(
-        center, rotation, scale,
+        center, half4(rotation.wxyz), half3(scale),
         viewMatrix, viewProj,
         focal, viewportWidth, viewportHeight,
         nearClip, farClip, opacity, minPixelSize,
