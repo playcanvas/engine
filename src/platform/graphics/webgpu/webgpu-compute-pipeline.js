@@ -43,7 +43,7 @@ class WebgpuComputePipeline extends WebgpuPipeline {
      * @param {import('../shader.js').Shader} shader - The compute shader.
      * @param {import('../bind-group-format.js').BindGroupFormat[]} bindGroupFormats - The bind group
      * formats, in bind group index order (dense, no gaps).
-     * @returns {GPUComputePipeline} - The compute pipeline.
+     * @returns {object} - The compute pipeline (GPUComputePipeline).
      */
     get(shader, bindGroupFormats) {
 
