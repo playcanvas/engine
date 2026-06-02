@@ -43,7 +43,7 @@ class Selector extends pc.EventHandler {
         this._scene = app.scene;
         const device = app.graphicsDevice;
         // depth enabled so we can also recover the world point + surface normal at the click
-        this._picker = new pc.Picker(app, device.canvas.width, device.canvas.height, true);
+        this._picker = new pc.Picker(app, device.canvas.width, device.canvas.height, true, true);
         this._layers = layers;
 
         this._onPointerDown = this._onPointerDown.bind(this);

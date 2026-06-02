@@ -9,7 +9,7 @@ import {
 import {
     LIGHTSHAPE_PUNCTUAL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_PICK,
+    SHADER_PICK, SHADER_NORMAL_PICK,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
@@ -166,6 +166,9 @@ class LitShader {
             (options.clusteredLightingEnabled && !this.shadowPass) ||
             options.useClearCoatNormals;
         this.needsNormal = this.needsNormal && !this.shadowPass;
+        // the normal-pick pass writes the world-space surface normal (dNormalW) to an MRT target,
+        // so the frontend must compute it even though this pass does no lighting
+        this.needsNormal = this.needsNormal || options.pass === SHADER_NORMAL_PICK;
         this.needsSceneColor = options.useDynamicRefraction;
         this.needsScreenSize = options.useDynamicRefraction;
         this.needsTransforms = options.useDynamicRefraction;

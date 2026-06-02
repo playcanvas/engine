@@ -127,6 +127,23 @@ class Picker {
     renderTargetDepth = null;
 
     /**
+     * Optional buffer holding the world-space surface normal (RGBA8, encoded as n*0.5+0.5) for
+     * normal picking.
+     *
+     * @type {Texture|null}
+     * @private
+     */
+    normalBuffer = null;
+
+    /**
+     * Internal render target for reading the normal buffer.
+     *
+     * @type {RenderTarget|null}
+     * @private
+     */
+    renderTargetNormal = null;
+
+    /**
      * Mapping table from ids to MeshInstances or GSplatComponents.
      *
      * @type {Map<number, MeshInstance | GSplatComponent>}
@@ -149,8 +166,12 @@ class Picker {
      * @param {number} height - The height of the pick buffer in pixels.
      * @param {boolean} [depth] - Whether to enable depth picking. When enabled, depth
      * information is captured alongside mesh IDs using MRT. Defaults to false.
+     * @param {boolean} [normals] - Whether to enable normal picking. When enabled, the world-space
+     * surface normal is captured alongside mesh IDs and depth using MRT, letting
+     * {@link Picker#getWorldPointAndNormalAsync} read the normal directly instead of
+     * reconstructing it from neighboring depths. Implies depth. Defaults to false.
      */
-    constructor(app, width, height, depth = false) {
+    constructor(app, width, height, depth = false, normals = false) {
         // Note: The only reason this class needs the app is to access the renderer. Ideally we remove this dependency and move
         // the Picker from framework to the scene level, or even the extras.
         Debug.assert(app);
@@ -158,7 +179,9 @@ class Picker {
 
         this.renderPass = new RenderPassPicker(this.device, app.renderer);
 
-        this.depth = depth;
+        this.normals = normals;
+        // normal picking captures depth too (needed to reconstruct the world point)
+        this.depth = depth || normals;
         this.width = 0;
         this.height = 0;
         this.resize(width, height);
@@ -308,18 +331,15 @@ class Picker {
     }
 
     /**
-     * Return the world position and a derived surface normal at the specified screen coordinates.
-     * The normal is computed from depth-buffer neighbors via a cross product of two screen-aligned
-     * world-space tangent vectors — it is a faceted (per-pixel) normal, not an interpolated vertex
-     * normal. Internally a single 2x2 depth readback is used and {@link Picker#prepare} auto-pads
-     * any supplied scissor rect by 1 pixel so the neighbor samples are inside the rasterized
-     * region, so callers do not need to widen the scissor themselves.
+     * Return the world position and surface normal at the specified screen coordinates. Requires
+     * the picker to have been created with `normals: true`: the world-space surface normal is read
+     * directly from its dedicated MRT attachment (a single-pixel read), and the world point is
+     * reconstructed from the depth attachment at the same pixel.
      *
      * @param {number} x - The x coordinate of the pixel to pick.
      * @param {number} y - The y coordinate of the pixel to pick.
-     * @returns {Promise<{point: Vec3, normal: Vec3}|null>} Promise resolving to the world point
-     * and a unit normal facing the camera, or null if depth picking is not enabled or any of the
-     * required neighbor pixels did not hit an object.
+     * @returns {Promise<{point: Vec3, normal: Vec3}|null>} Promise resolving to the world point and
+     * a unit world-space normal, or null if normal picking is not enabled or nothing was picked.
      * @example
      * picker.prepare(camera, scene, layers, { x: px, y: py, width: 1, height: 1 });
      * picker.getWorldPointAndNormalAsync(px, py).then((hit) => {
@@ -329,7 +349,7 @@ class Picker {
      * });
      */
     async getWorldPointAndNormalAsync(x, y) {
-        if (!this.depthBuffer) {
+        if (!this.normalBuffer) {
             return null;
         }
         const state = this._captureCameraState();
@@ -337,57 +357,19 @@ class Picker {
             return null;
         }
 
-        // one 2x2 readback covering (x,y), (x+1,y), (x,y+1), (x+1,y+1)
-        const pixels = await this._readTexture(this.depthBuffer, x, y, 2, 2, /** @type {RenderTarget} */ (this.renderTargetDepth));
-
-        // decode 4 RGBA8 pixels → 4 linear depths (null if cleared)
-        /** @type {(number|null)[]} */
-        const depths = [null, null, null, null];
-        for (let i = 0; i < 4; i++) {
-            const o = i * 4;
-            const intBits = ((pixels[o] << 24) | (pixels[o + 1] << 16) | (pixels[o + 2] << 8) | pixels[o + 3]) >>> 0;
-            if (intBits !== 0xFFFFFFFF) {
-                _int32View[0] = intBits;
-                depths[i] = _floatView[0];
-            }
-        }
-
-        // map array indices to screen positions. WebGPU returns rows top-down; WebGL2 returns
-        // them bottom-up of the (already Y-flipped) read region — which means row 0 corresponds
-        // to the BOTTOM screen row of the original (top-left origin) request.
-        let dCenter, dRight, dDown;
-        if (this.device.isWebGPU) {
-            // pixels[0]=(x,y), [1]=(x+1,y), [2]=(x,y+1), [3]=(x+1,y+1)
-            dCenter = depths[0];
-            dRight = depths[1];
-            dDown = depths[2];
-        } else {
-            // pixels[0]=(x,y+1), [1]=(x+1,y+1), [2]=(x,y), [3]=(x+1,y)
-            dDown = depths[0];
-            dCenter = depths[2];
-            dRight = depths[3];
-        }
-        if (dCenter === null || dRight === null || dDown === null) {
+        // depth gates the hit: the normal buffer is cleared to white, which would otherwise decode
+        // to a valid-looking normal, so a null depth means "nothing picked here".
+        const depth = await this.getPointDepthAsync(x, y);
+        if (depth === null) {
             return null;
         }
 
-        const pCenter = this._unprojectDepth(x, y, dCenter, state);
-        const pRight = this._unprojectDepth(x + 1, y, dRight, state);
-        const pDown = this._unprojectDepth(x, y + 1, dDown, state);
-
-        // tangent vectors along screen +x and screen +y, then face normal via cross product
-        const vRight = new Vec3().sub2(pRight, pCenter);
-        const vDown = new Vec3().sub2(pDown, pCenter);
-        const normal = new Vec3().cross(vRight, vDown).normalize();
-
-        // ensure the normal points back toward the camera
-        const camPos = state.cameraPos;
-        const toCam = new Vec3().sub2(camPos, pCenter);
-        if (normal.dot(toCam) < 0) {
-            normal.mulScalar(-1);
+        const normal = await this._readNormalAt(x, y);
+        if (!normal) {
+            return null;
         }
 
-        return { point: pCenter, normal: normal };
+        return { point: this._unprojectDepth(x, y, depth, state), normal };
     }
 
     /**
@@ -449,6 +431,7 @@ class Picker {
      * @ignore
      */
     async getPointDepthAsync(x, y) {
+
         if (!this.depthBuffer) {
             return null;
         }
@@ -466,6 +449,39 @@ class Picker {
         // reinterpret bits as float
         _int32View[0] = intBits;
         return _floatView[0];
+    }
+
+    /**
+     * Read and decode the world-space surface normal at the given pick-buffer pixel from the
+     * normal attachment (RGBA8, encoded as n*0.5+0.5). Callers should gate on a valid depth at the
+     * same pixel, since the buffer is cleared to white and a cleared pixel decodes to a non-null
+     * (but meaningless) normal.
+     *
+     * @param {number} x - Pick-buffer x in pixels, top-left origin.
+     * @param {number} y - Pick-buffer y in pixels, top-left origin.
+     * @returns {Promise<Vec3|null>} The unit world-space normal, or null if normal picking is not
+     * enabled or the sample is degenerate.
+     * @private
+     */
+    async _readNormalAt(x, y) {
+        if (!this.normalBuffer) {
+            return null;
+        }
+
+        const pixels = await this._readTexture(this.normalBuffer, x, y, 1, 1, /** @type {RenderTarget} */ (this.renderTargetNormal));
+
+        // decode RGBA8 (n*0.5+0.5) back to a world-space vector in [-1, 1]
+        const normal = new Vec3(
+            (pixels[0] / 255) * 2 - 1,
+            (pixels[1] / 255) * 2 - 1,
+            (pixels[2] / 255) * 2 - 1
+        );
+
+        const len = normal.length();
+        if (len < 1e-4) {
+            return null;
+        }
+        return normal.mulScalar(1 / len);
     }
 
     // sanitize the rectangle to make sure it's inside the texture and does not use fractions
@@ -537,6 +553,18 @@ class Picker {
             });
         }
 
+        if (this.normals) {
+            // create normal buffer for MRT (attachment 2, matches pcFragColor2)
+            this.normalBuffer = this.createTexture('pick-normal');
+            colorBuffers.push(this.normalBuffer);
+
+            // create a render target for reading the normal buffer
+            this.renderTargetNormal = new RenderTarget({
+                colorBuffer: this.normalBuffer,
+                depth: false
+            });
+        }
+
         this.renderTarget = new RenderTarget({
             colorBuffers: colorBuffers,
             depth: true
@@ -551,8 +579,12 @@ class Picker {
         this.renderTargetDepth?.destroy();
         this.renderTargetDepth = null;
 
+        this.renderTargetNormal?.destroy();
+        this.renderTargetNormal = null;
+
         this.colorBuffer = null;
         this.depthBuffer = null;
+        this.normalBuffer = null;
     }
 
     /**
@@ -580,6 +612,7 @@ class Picker {
         // make the render target the right size
         this.renderTarget?.resize(this.width, this.height);
         this.renderTargetDepth?.resize(this.width, this.height);
+        this.renderTargetNormal?.resize(this.width, this.height);
 
         // clear registered meshes mapping
         this.mapping.clear();
@@ -591,22 +624,23 @@ class Picker {
         renderPass.setClearColor(Color.WHITE);
         renderPass.depthStencilOps.clearDepth = true;
 
-        // optional scissor rect — sanitize and flip top-left → bottom-left for device.setScissor.
-        // Pad width/height by 1 so neighbor pixels needed by getWorldPointAndNormalAsync
-        // (which reads a 2x2 depth block) stay inside the rasterized region.
+        // optional scissor rect — sanitize and flip top-left → bottom-left for device.setScissor
         let scissorRect = null;
         if (options && this.renderTarget) {
             const w = options.width ?? 0;
             const h = options.height ?? 0;
             if (w > 0 && h > 0) {
-                const r = this.sanitizeRect(options.x ?? 0, options.y ?? 0, w + 1, h + 1);
+                const r = this.sanitizeRect(options.x ?? 0, options.y ?? 0, w, h);
                 const flippedY = this.renderTarget.height - (r.y + r.w);
                 scissorRect = new Vec4(r.x, flippedY, r.z, r.w);
             }
         }
 
+        const writeDepth = this.depth;
+        const writeNormals = this.normals;
+
         // render the pass to update the render target
-        renderPass.update(camera, scene, layers, this.mapping, this.depth, scissorRect);
+        renderPass.update(camera, scene, layers, this.mapping, writeDepth, writeNormals, scissorRect);
         renderPass.render();
     }
 

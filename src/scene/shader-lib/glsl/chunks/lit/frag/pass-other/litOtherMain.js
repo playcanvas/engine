@@ -20,6 +20,13 @@ void main(void) {
         #ifdef DEPTH_PICK_PASS
             pcFragColor1 = getPickDepth();
         #endif
+        #ifdef NORMAL_PICK_PASS
+            // world-space interpolated vertex normal. The normal-pick pass forces needsNormal,
+            // so the NORMALS varying (vNormalW) is always generated. getPickNormal normalizes,
+            // so the raw interpolated value is fine. Note: this is the geometric surface normal,
+            // not the normal-mapped one - sufficient for pick-point orientation.
+            pcFragColor2 = getPickNormal(vNormalW);
+        #endif
     #endif
 
     #ifdef PREPASS_PASS

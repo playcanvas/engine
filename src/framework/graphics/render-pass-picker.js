@@ -1,7 +1,7 @@
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
+import { SHADER_PICK, SHADER_DEPTH_PICK, SHADER_NORMAL_PICK } from '../../scene/constants.js';
 
 /**
  * @import { BindGroup } from '../../platform/graphics/bind-group.js'
@@ -44,6 +44,9 @@ class RenderPassPicker extends RenderPass {
     /** @type {boolean} */
     depth;
 
+    /** @type {boolean} */
+    normals;
+
     /** @type {Vec4|null} Optional scissor rect in render-target pixel coords, bottom-left origin. */
     scissorRect = null;
 
@@ -72,16 +75,18 @@ class RenderPassPicker extends RenderPass {
      * @param {Layer[]} layers - The layers to pick from.
      * @param {Map<number, MeshInstance | GSplatComponent>} mapping - Map to store ID to object mappings.
      * @param {boolean} depth - Whether to render depth information.
+     * @param {boolean} normals - Whether to render the world-space surface normal (implies depth).
      * @param {Vec4|null} [scissorRect] - Optional scissor rect in render-target pixel coords,
      * bottom-left origin (x, y, w, h). If set, only fragments inside the rect are rasterized;
      * outside the rect the cleared "no selection" value (white) remains.
      */
-    update(camera, scene, layers, mapping, depth, scissorRect = null) {
+    update(camera, scene, layers, mapping, depth, normals, scissorRect = null) {
         this.camera = camera;
         this.scene = scene;
         this.layers = layers;
         this.mapping = mapping;
         this.depth = depth;
+        this.normals = normals;
         this.scissorRect = scissorRect;
 
         if (scene.clusteredLightingEnabled) {
@@ -207,7 +212,7 @@ class RenderPassPicker extends RenderPass {
                     renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, null);
                 }
 
-                const shaderPass = this.depth ? SHADER_DEPTH_PICK : SHADER_PICK;
+                const shaderPass = this.normals ? SHADER_NORMAL_PICK : (this.depth ? SHADER_DEPTH_PICK : SHADER_PICK);
                 renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, shaderPass, (meshInstance) => {
                     device.setBlendState(this.blendState);
                 });
