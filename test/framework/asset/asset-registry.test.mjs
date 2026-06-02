@@ -239,7 +239,7 @@ describe('AssetRegistry', function () {
 
     describe('#loadFromUrl', function () {
 
-        const assetPath = 'http://localhost:3000/test/assets/';
+        const assetPath = '/test/assets/';
 
         it('loads binary assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', (err, asset) => {

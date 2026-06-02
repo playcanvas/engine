@@ -10,7 +10,7 @@ export const jsdomSetup = () => {
     jsdom = new JSDOM(html, {
         resources: 'usable',         // Allow the engine to load assets
         runScripts: 'dangerously',   // Allow the engine to run scripts
-        url: 'http://localhost:3000' // Set the URL of the document
+        url: 'http://localhost:3210' // Set the URL of the document
     });
 
     // Copy the window and document to global scope

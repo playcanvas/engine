@@ -20,7 +20,7 @@ describe('Http', function () {
     describe('#get()', function () {
 
         it('returns resource', (done) => {
-            http.get('http://localhost:3000/test/assets/test.json', (err, data) => {
+            http.get('/test/assets/test.json', (err, data) => {
                 expect(err).to.equal(null);
                 expect(data).to.deep.equal({
                     a: 1,
@@ -33,7 +33,7 @@ describe('Http', function () {
 
         it('does not retry if retry is false', (done) => {
             spy(http, 'request');
-            http.get('http://localhost:3000/someurl.json', (err, data) => {
+            http.get('/someurl.json', (err, data) => {
                 expect(err).to.equal(404);
                 expect(http.request.callCount).to.equal(1);
                 done();
@@ -42,7 +42,7 @@ describe('Http', function () {
 
         it('retries resource and returns 404 in the end if not found', (done) => {
             spy(http, 'request');
-            http.get('http://localhost:3000/someurl.json', {
+            http.get('/someurl.json', {
                 retry: true,
                 maxRetries: 2
             }, (err) => {
@@ -54,7 +54,7 @@ describe('Http', function () {
 
         it('retries resource 5 times by default', (done) => {
             spy(http, 'request');
-            http.get('http://localhost:3000/someurl.json', {
+            http.get('/someurl.json', {
                 retry: true
             }, (err) => {
                 expect(http.request.callCount).to.equal(6);

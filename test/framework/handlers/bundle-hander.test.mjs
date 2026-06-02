@@ -52,7 +52,7 @@ describe('BundleHandler', function () {
         // the bundle asset (created by calling tar in the root folder of the repo):
         // tar cvf test.tar test\assets\test.bin test\assets\test.css test\assets\test.glb test\assets\test.glsl test\assets\test.html test\assets\test.json test\assets\test.txt
         bundleAsset = new Asset('bundle asset', 'bundle', {
-            url: 'http://localhost:3000/test/assets/test.tar',
+            url: 'http://localhost:3210/test/assets/test.tar',
             size: 9728
         }, {
             assets: assets.map(function (asset) {
@@ -195,7 +195,7 @@ describe('BundleHandler', function () {
 
     it('asset loading should prefer smallest bundle', function (done) {
         const bundleAsset2 = new Asset('bundle asset 2', 'bundle', {
-            url: 'http://localhost:3000/test/assets/test.tar',
+            url: 'http://localhost:3210/test/assets/test.tar',
             size: 9728 + 1
         }, {
             assets: assets.map(function (asset) {
@@ -219,7 +219,7 @@ describe('BundleHandler', function () {
 
     it('asset loading with bundlesFilter', function (done) {
         const bundleAsset2 = new Asset('bundle asset 2', 'bundle', {
-            url: 'http://localhost:3000/test/assets/test.tar',
+            url: 'http://localhost:3210/test/assets/test.tar',
             size: 133632 + 1
         }, {
             assets: assets.map(function (asset) {

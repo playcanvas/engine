@@ -13,15 +13,15 @@ describe('ParticleSystemComponent', function () {
     const loadAssets = function (cb) {
         const assetList = [
             new Asset('Box', 'model', {
-                url: 'http://localhost:3000/test/assets/cube/cube.json'
+                url: '/test/assets/cube/cube.json'
             }),
             new Asset('ColorMap', 'texture', {
-                url: 'http://localhost:3000/test/assets/test.png'
+                url: '/test/assets/test.png'
             }, {
                 srgb: true
             }),
             new Asset('NormalMap', 'texture', {
-                url: 'http://localhost:3000/test/assets/test.png'
+                url: '/test/assets/test.png'
             })
         ];
         const loader = new AssetListLoader(assetList, app.assets);

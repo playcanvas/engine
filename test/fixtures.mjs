@@ -16,8 +16,8 @@ export const mochaGlobalSetup = () => {
         return handler(request, response);
     });
 
-    server.listen(3000, () => {
-        console.log('Server started at http://localhost:3000');
+    server.listen(3210, () => {
+        console.log('Server started at http://localhost:3210');
     });
 };
 
