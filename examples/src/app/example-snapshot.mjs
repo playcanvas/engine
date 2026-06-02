@@ -7,6 +7,7 @@
  * @property {string} category - Kebab category.
  * @property {string} example - Kebab example name.
  * @property {object} data - The example's current control state (flattened dot-path values).
+ * @property {{ title: string, author: string, source?: string, license?: string }[]} credits - Parsed @credit attribution.
  */
 
 /** @type {(() => ExampleSnapshot) | null} */

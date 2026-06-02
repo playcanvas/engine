@@ -24,6 +24,11 @@ const PC_RANGE = 'latest';
 const OBSERVER_VERSION = '1.7.1';
 const VITE_VERSION = '8.0.14';
 
+// folder-level license files whose terms require the file to ship alongside the assets. attribution
+// is preserved generally via @credit -> CREDITS.md; this co-locates the actual file only when its
+// assets are bundled (spine is the only such case today), avoiding any blanket sidecar probing.
+const COLOCATED_LICENSES = ['/assets/spine/license.txt'];
+
 /**
  * @param {string} spec - Import specifier.
  * @param {Set<string>} vendored - Collects relative asset-module paths to vendor (e.g. 'assets/scripts/misc/x.mjs').
@@ -193,6 +198,27 @@ The example's current control values are captured in \`src/data.json\` and appli
 };
 
 /**
+ * Renders the author-written `@credit` attribution into a standalone CREDITS.md.
+ *
+ * @param {{ title: string, author: string, source?: string, license?: string }[]} credits - Parsed @credit entries.
+ * @returns {string} The CREDITS.md contents.
+ */
+const renderCredits = credits => `# Credits
+
+Third-party assets used by this example:
+
+${credits.map((c) => {
+        const lines = [`## ${c.title}`, `- **Author:** ${c.author}`];
+        if (c.source) {
+            lines.push(`- **Source:** ${c.source}`);
+        }
+        if (c.license) {
+            lines.push(`- **License:** ${c.license}`);
+        }
+        return lines.join('\n');
+    }).join('\n\n')}\n`;
+
+/**
  * Builds a standalone, runnable Vite project for a single example and returns the zip bytes.
  *
  * @param {object} opts - Options.
@@ -201,9 +227,10 @@ The example's current control values are captured in \`src/data.json\` and appli
  * @param {string} opts.exampleName - Kebab example name.
  * @param {string} opts.deviceType - Graphics device type to hardcode in the shim.
  * @param {object} opts.data - The example's current control state, replayed after it loads.
+ * @param {{ title: string, author: string, source?: string, license?: string }[]} [opts.credits] - Parsed @credit attribution, written to CREDITS.md.
  * @returns {Promise<Uint8Array>} The zip archive bytes.
  */
-export const buildProjectZip = async ({ files, category, exampleName, deviceType, data }) => {
+export const buildProjectZip = async ({ files, category, exampleName, deviceType, data, credits }) => {
     const root = `${category}-${exampleName}`;
     const title = `${category} / ${exampleName}`;
     /** @type {Record<string, Uint8Array>} */
@@ -279,25 +306,15 @@ export const buildProjectZip = async ({ files, category, exampleName, deviceType
         out[`${root}/public${u}`] = new Uint8Array(await res.arrayBuffer());
     }));
 
-    // cc license/attribution files ship as text sidecars next to assets but aren't referenced in
-    // source, so the scanner misses them. for each bundled asset try its '<name>.txt' sibling and
-    // a 'license.txt' in the same dir; co-locate any that exist to preserve attribution.
-    const licenses = new Set();
-    for (const u of urls) {
-        const slash = u.lastIndexOf('/');
-        const dot = u.lastIndexOf('.');
-        if (dot > slash) {
-            licenses.add(`${u.slice(0, dot)}.txt`);
+    // co-locate folder-level license files whose terms require shipping the file with the assets
+    await Promise.all(COLOCATED_LICENSES.map(async (lic) => {
+        const dir = lic.slice(0, lic.lastIndexOf('/') + 1);
+        if (!urls.some(u => u.startsWith(dir))) {
+            return;
         }
-        licenses.add(`${u.slice(0, slash)}/license.txt`);
-    }
-    for (const u of urls) {
-        licenses.delete(u);
-    }
-    await Promise.all([...licenses].map(async (u) => {
-        const res = await fetch(`${STATIC_BASE}${u}`);
+        const res = await fetch(`${STATIC_BASE}${lic}`);
         if (res.ok) {
-            out[`${root}/public${u}`] = new Uint8Array(await res.arrayBuffer());
+            out[`${root}/public${lic}`] = new Uint8Array(await res.arrayBuffer());
         }
     }));
 
@@ -309,6 +326,11 @@ export const buildProjectZip = async ({ files, category, exampleName, deviceType
     }
 
     add('README.md', renderReadme(title, dynamic, failed));
+
+    // preserve author-written attribution (@credit blocks) as a dedicated CREDITS.md
+    if (credits?.length) {
+        add('CREDITS.md', renderCredits(credits));
+    }
 
     return zipSync(out, { level: 0 });
 };
@@ -330,7 +352,8 @@ export const downloadExampleProject = async () => {
         category: snap.category,
         exampleName: snap.example,
         deviceType,
-        data: snap.data
+        data: snap.data,
+        credits: snap.credits
     });
     const part = /** @type {BlobPart} */ (bytes);
     const url = URL.createObjectURL(new Blob([part], { type: 'application/zip' }));

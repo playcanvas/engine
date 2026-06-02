@@ -516,7 +516,8 @@ class Example extends TypedComponent {
             files: this.state.files,
             category: this.props.match.params.category,
             example: this.props.match.params.example,
-            data: this._captureControls()
+            data: this._captureControls(),
+            credits: this.state.credits
         }));
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('requestedFiles', this._handleRequestedFiles);
