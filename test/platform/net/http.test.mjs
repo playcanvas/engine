@@ -3,11 +3,17 @@ import nise from 'nise';
 import { restore, spy } from 'sinon';
 
 import { http, Http } from '../../../src/platform/net/http.js';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Http', function () {
     let retryDelay;
 
     beforeEach(function () {
+        // Set up a JSDOM document so global.XMLHttpRequest exists and root-relative
+        // request URLs resolve against the fixture server's origin, independent of
+        // whether any other test file ran jsdomSetup() first.
+        jsdomSetup();
+
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
     });
@@ -15,6 +21,7 @@ describe('Http', function () {
     afterEach(function () {
         Http.retryDelay = retryDelay;
         restore();
+        jsdomTeardown();
     });
 
     describe('#get()', function () {
