@@ -22,11 +22,11 @@ describe('SpriteHandler', function () {
     it('loads from filesystem', function (done) {
 
         const atlasAsset = new Asset('Red Atlas', 'textureatlas', {
-            url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
+            url: '/test/assets/sprites/red-atlas.json'
         });
 
         const spriteAsset = new Asset('Red Sprite', 'sprite', {
-            url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
+            url: '/test/assets/sprites/red-sprite.json'
         });
 
         app.assets.add(atlasAsset);
@@ -62,7 +62,7 @@ describe('SpriteHandler', function () {
 
     it('loads from asset data', function (done) {
         const atlasAsset = new Asset('Red Atlas', 'textureatlas', {
-            url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
+            url: '/test/assets/sprites/red-atlas.json'
         });
 
         const spriteAsset = new Asset('Red Sprite', 'sprite', null, {

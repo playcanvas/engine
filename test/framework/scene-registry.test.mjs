@@ -114,7 +114,7 @@ describe('SceneRegistry', function () {
 
     describe('#loadSceneData', function () {
 
-        const assetPath = 'http://localhost:3000/test/assets/';
+        const assetPath = '/test/assets/';
 
         it('load and cache, check data is valid, unload data, check data is removed with SceneItem', async () => {
             const registry = new SceneRegistry(app);

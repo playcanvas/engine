@@ -23,15 +23,15 @@ describe('SpriteComponent', function () {
         };
 
         atlasAsset = new Asset('red-atlas', 'textureatlas', {
-            url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
+            url: '/test/assets/sprites/red-atlas.json'
         });
 
         spriteAsset = new Asset('red-sprite', 'sprite', {
-            url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
+            url: '/test/assets/sprites/red-sprite.json'
         });
 
         spriteAsset2 = new Asset('red-sprite-2', 'sprite', {
-            url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
+            url: '/test/assets/sprites/red-sprite.json'
         });
 
         app.assets.add(atlasAsset);
