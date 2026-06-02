@@ -279,6 +279,28 @@ export const buildProjectZip = async ({ files, category, exampleName, deviceType
         out[`${root}/public${u}`] = new Uint8Array(await res.arrayBuffer());
     }));
 
+    // cc license/attribution files ship as text sidecars next to assets but aren't referenced in
+    // source, so the scanner misses them. for each bundled asset try its '<name>.txt' sibling and
+    // a 'license.txt' in the same dir; co-locate any that exist to preserve attribution.
+    const licenses = new Set();
+    for (const u of urls) {
+        const slash = u.lastIndexOf('/');
+        const dot = u.lastIndexOf('.');
+        if (dot > slash) {
+            licenses.add(`${u.slice(0, dot)}.txt`);
+        }
+        licenses.add(`${u.slice(0, slash)}/license.txt`);
+    }
+    for (const u of urls) {
+        licenses.delete(u);
+    }
+    await Promise.all([...licenses].map(async (u) => {
+        const res = await fetch(`${STATIC_BASE}${u}`);
+        if (res.ok) {
+            out[`${root}/public${u}`] = new Uint8Array(await res.arrayBuffer());
+        }
+    }));
+
     if (dynamic.length) {
         console.warn('[download] dynamic asset prefixes not bundled:', dynamic);
     }
