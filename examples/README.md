@@ -214,31 +214,35 @@ However, depending on external URLs is maybe not what you want as it breaks your
 
 Legacy non-module scripts should define any loading helper they need inside the example.
 
-### `<exampleName>.controls.mjs`
+### `<exampleName>.controls.jsx`
 
-This file allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
+This file defines a PCUI based control panel — a React component used to display stats from your example or to give users a way of controlling it. It is a real `.jsx` file: import the components you need from `@playcanvas/pcui/react` and write JSX. The component must be named `Controls` and its only prop is the [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/).
 
-```js
+```jsx
+import { Button } from '@playcanvas/pcui/react';
+
 /**
- * @param {import('../../../app/Example.mjs').ControlOptions} options - The options.
- * @returns {JSX.Element} The returned JSX Element.
+ * @import { Observer } from '@playcanvas/observer'
+ * @import { ReactElement } from 'react'
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { Button } = ReactPCUI;
-    return fragment(
-        jsx(Button, {
-            text: 'Flash',
-            onClick: () => {
-                observer.set('flash', !observer.get('flash'));
-            }
-        })
+
+/**
+ * @param {{ observer: Observer }} props - The control panel props.
+ * @returns {ReactElement} The control panel.
+ */
+export function Controls({ observer }) {
+    return (
+        <Button
+            text='Flash'
+            onClick={() => observer.set('flash', !observer.get('flash'))}
+        />
     );
 }
 ```
 
-The controls function takes a [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/) as its parameter and returns a set of PCUI components. Check this [link](https://playcanvas.github.io/pcui/examples/todo/) for an example of how to create and use PCUI.
+Bind PCUI inputs to the observer with `binding={new BindingTwoWay()}` and `link={{ observer, path: 'some.path' }}`. Check this [link](https://playcanvas.github.io/pcui/examples/todo/) for an example of how to create and use PCUI. React hooks (`useState`, `useEffect`, …) can be imported from `react` if you need local state.
 
-The data observer used in the `controls` function will be made available as an import from `examples/context` to use in the example file:
+The same observer is made available as an import from `examples/context` to use in the example file:
 
 ```js
 import { data } from 'examples/context';
