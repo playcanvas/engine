@@ -286,6 +286,11 @@ class Picker {
      * @private
      */
     _readTexture(texture, x, y, width, height, renderTarget) {
+        // Floor before the WebGL2 Y-flip so the flipped row matches prepare()'s scissor, which
+        // floors (via sanitizeRect) before flipping. With fractional pick coordinates, flipping
+        // first and flooring after lands the read one row off the rasterized pixel.
+        x = Math.floor(x);
+        y = Math.floor(y);
         if (this.device?.isWebGL2) {
             y = renderTarget.height - (y + height);
         }
