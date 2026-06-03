@@ -545,7 +545,9 @@ class WebgpuTexture {
         Debug.trace(TRACEID_RENDER_QUEUE, `ELEMENT-TO-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
 
         // scale the element's rendered image to the mip level's dimensions
-        device.wgpu.queue.copyElementImageToTexture(element, width, height, dst);
+        const source = { source: element };
+        const destination = { destination: dst, width, height };
+        device.wgpu.queue.copyElementImageToTexture(source, destination);
     }
 
     uploadTypedArrayData(device, data, mipLevel, index) {
