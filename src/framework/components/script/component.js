@@ -725,6 +725,13 @@ class ScriptComponent extends Component {
                 scriptType.__name = getScriptRegistryName(scriptType);
             }
             scriptName = scriptType.__name;
+
+            // bail out rather than index the script under an `undefined`/empty name (which would
+            // attach it as `this.undefined` and could mask other scripts)
+            if (!scriptName) {
+                Debug.error(`The script class could not be added to entity '${this.entity.name}' because its name could not be resolved. Add a static "scriptName" property to the class.`);
+                return null;
+            }
         }
 
         if (scriptType) {

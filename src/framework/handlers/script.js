@@ -145,6 +145,13 @@ class ScriptHandler extends ResourceHandler {
 
                     const scriptName = getScriptRegistryName(scriptClass);
 
+                    // skip exports whose name cannot be resolved rather than registering under an
+                    // invalid key
+                    if (!scriptName) {
+                        Debug.error(`Script class exported as '${key}' from '${url}' has no resolvable name and was skipped. Add a static "scriptName" property.`);
+                        continue;
+                    }
+
                     // Register the script name
                     registerScript(scriptClass, scriptName);
 

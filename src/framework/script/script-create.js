@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { AppBase } from '../app-base.js';
 import { ScriptAttributes } from './script-attributes.js';
@@ -133,6 +134,11 @@ function registerScript(script, name, app) {
     // class itself (own `__name`, own `scriptName`, or lowerCamelCase class name). Only own
     // properties are considered, so a subclass never inherits (and overwrites) its base's name.
     name = name || getScriptRegistryName(script);
+
+    if (!name) {
+        Debug.error(`script class '${script.name || script}' has no name and cannot be registered. Add a static "scriptName" property or pass an explicit name.`);
+        return;
+    }
 
     if (reservedScriptNames.has(name)) {
         throw new Error(`script name: '${name}' is reserved, please change script name`);

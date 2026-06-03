@@ -365,12 +365,13 @@ export class Script extends EventHandler {
 const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
 
 /**
- * Converts the first character of a string to lower case.
+ * Converts the first character of a string to lower case. Returns the input unchanged if it is
+ * empty or not a non-empty string (avoids throwing on e.g. an anonymous class's empty name).
  *
  * @param {string} str - The string to convert.
  * @returns {string} The converted string.
  */
-export const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
+export const toLowerCamelCase = str => (str ? str[0].toLowerCase() + str.substring(1) : str);
 
 /**
  * Returns the intrinsic (display) name of a script class - either a `scriptName` declared on the

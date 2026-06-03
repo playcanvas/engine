@@ -68,6 +68,18 @@ describe('ScriptRegistry', function () {
             expect(added).to.equal(false);
         });
 
+        it('registerScript fails fast (no throw, not registered) when no name can be resolved', function () {
+            // an anonymous class with neither scriptName nor an inferable name
+            const Anonymous = (() => class extends Script {})();
+            Object.defineProperty(Anonymous, 'name', { value: '' });
+
+            const before = app.scripts.list().length;
+            expect(() => registerScript(Anonymous, undefined, app)).to.not.throw();
+
+            expect(Anonymous.__name == null).to.equal(true);
+            expect(app.scripts.list().length).to.equal(before);
+        });
+
         it('registerScript and direct add resolve to the same name', function () {
             class ViaRegister extends Script {
                 static scriptName = 'viaRegister';

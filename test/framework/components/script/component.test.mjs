@@ -2962,6 +2962,20 @@ describe('ScriptComponent', function () {
         expect(a.script.has('myTestScript')).to.equal(false);
     });
 
+    it('returns null and does not index the script when its name cannot be resolved', function () {
+        // an anonymous class with neither scriptName nor an inferable name
+        const Anonymous = (() => class extends Script {})();
+        Object.defineProperty(Anonymous, 'name', { value: '' });
+
+        const a = new Entity();
+        a.addComponent('script', { enabled: true });
+        const instance = a.script.create(Anonymous);
+
+        expect(instance).to.equal(null);
+        expect(a.script.undefined).to.equal(undefined);
+        expect(a.script._scriptsIndex.undefined).to.equal(undefined);
+    });
+
     it('does not warn when a ScriptType is used', function () {
         Debug._loggedMessages.clear();
         createScript('nullScript');
