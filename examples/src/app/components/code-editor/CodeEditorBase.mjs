@@ -63,6 +63,7 @@ function getShowMinimap() {
  * @property {Record<string, string>} files - The example files.
  * @property {string} selectedFile - The selected file.
  * @property {boolean} showMinimap - The state of showing the Minimap
+ * @property {boolean} [downloading] - True while a standalone Vite project is being built.
  */
 
 /** @type {typeof Component<Props, State>} */

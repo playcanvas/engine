@@ -2,6 +2,7 @@ import MonacoEditor, { loader } from '@monaco-editor/react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 
 import { CodeEditorBase } from './CodeEditorBase.mjs';
+import { downloadExampleProject } from '../../download-project.mjs';
 import { iframe } from '../../iframe.mjs';
 import { jsx } from '../../jsx.mjs';
 import { scriptsPath } from '../../paths.mjs';
@@ -17,6 +18,18 @@ import { getHashPath, getSelectedFile, patchState, readState } from '../../url-s
  */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
+
+/**
+ * @param {() => Promise<any>} task - Async task.
+ * @returns {Promise<[any, any]>} Error and result tuple.
+ */
+const tryCatchAsync = async (task) => {
+    try {
+        return [null, await task()];
+    } catch (err) {
+        return [err, null];
+    }
+};
 
 function getShowMinimap() {
     let showMinimap = true;
@@ -98,6 +111,19 @@ class CodeEditorDesktop extends CodeEditorBase {
         this._handleExampleHotReload = this._handleExampleHotReload.bind(this);
         this._handleExampleError = this._handleExampleError.bind(this);
         this._handleRequestedFiles = this._handleRequestedFiles.bind(this);
+        this._onDownload = this._onDownload.bind(this);
+    }
+
+    async _onDownload() {
+        if (this.state.downloading) {
+            return;
+        }
+        this.setState({ downloading: true });
+        const [err] = await tryCatchAsync(downloadExampleProject);
+        if (err) {
+            console.error('Failed to download Vite project', err);
+        }
+        this.setState({ downloading: false });
     }
 
     /**
@@ -535,7 +561,29 @@ class CodeEditorDesktop extends CodeEditorBase {
                                 `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.example.mjs`
                             );
                         }
-                    })
+                    }),
+                    jsx('button', {
+                        type: 'button',
+                        className: 'pcui-button code-editor-download',
+                        'aria-label': 'Download as Vite project',
+                        disabled: this.state.downloading,
+                        onClick: this._onDownload
+                    }, jsx('svg', {
+                        viewBox: '0 0 24 24',
+                        fill: 'none',
+                        stroke: 'currentColor',
+                        strokeWidth: 2,
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        width: 14,
+                        height: 14
+                    },
+                    jsx('path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }),
+                    jsx('polyline', { points: '7 10 12 15 17 10' }),
+                    jsx('line', { x1: 12, y1: 15, x2: 12, y2: 3 })
+                    ), jsx('span', {
+                        className: 'code-editor-download-label'
+                    }, this.state.downloading ? 'Preparing…' : 'Download'))
                 ),
                 jsx(
                     Container,

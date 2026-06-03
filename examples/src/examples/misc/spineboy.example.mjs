@@ -1,3 +1,10 @@
+// @config
+// @credit
+// title: Spineboy
+// author: Esoteric Software
+// source: https://esotericsoftware.com/
+// license: (c) 2013 Esoteric Software, non-commercial use only
+
 import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';
