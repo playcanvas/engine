@@ -246,10 +246,10 @@ assetListLoader.load(() => {
             }
         ];
 
-        // compute the union bounding rect of all query areas (in pick-buffer pixels) and use it
-        // as the picker scissor so the GPU only rasterizes fragments that will actually be read.
-        // include any pending click point so getWorldPointAsync can still read a valid pixel.
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        // compute the union bounding rect of all query areas (in canvas pixels) and then scale it
+        // to pick-buffer pixels for the picker scissor so the GPU only rasterizes fragments that
+        // will actually be read. Include any pending click point so getWorldPointAsync can still
+        // read a valid pixel.
         for (let a = 0; a < areas.length; a++) {
             const ap = areas[a].pos;
             const asz = areas[a].size;
