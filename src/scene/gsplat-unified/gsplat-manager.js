@@ -1567,10 +1567,6 @@ class GSplatManager {
             gpuSortedThisFrame = true;
         }
 
-        // renderer per-frame update (material syncing, deferred setup)
-        const fogParams = this.scene.gsplat.useFog ? (this.cameraNode.camera.fogParams ?? this.scene.fog) : null;
-        this.renderer.frameUpdate(this.scene.gsplat, this.scene.exposure, fogParams);
-
         // camera tracking only after first sort
         if (sortedState?.sortedBefore) {
             this.updateColorCameraTracking();
@@ -1598,6 +1594,12 @@ class GSplatManager {
                 inst.needsLodUpdate = true;
             }
         }
+
+        // Renderer per-frame update (material syncing, deferred setup). Must run after
+        // fireFrameReadyEvent(): listeners may change material state (e.g. antiAlias), and
+        // syncing here applies it this same frame before frameEnd() clears the dirty flag.
+        const fogParams = this.scene.gsplat.useFog ? (this.cameraNode.camera.fogParams ?? this.scene.fog) : null;
+        this.renderer.frameUpdate(this.scene.gsplat, this.scene.exposure, fogParams);
 
         // return the number of active splats for stats
         return sortedState ? sortedState.totalActiveSplats : 0;
