@@ -4,19 +4,8 @@ import { AppBase } from '../app-base.js';
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
 import { ScriptTypes } from './script-types.js';
+import { reservedScriptNames } from './constants.js';
 import { Script, getScriptRegistryName } from './script.js';
-
-const reservedScriptNames = new Set([
-    'system', 'entity', 'create', 'destroy', 'swap', 'move', 'data',
-    'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
-    'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
-    '_onSetEnabled', '_checkState', '_onBeforeRemove',
-    '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
-    '_onUpdate', '_onPostUpdate',
-    '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent',
-    // 'worker' is reserved to prevent users from overwriting the native Worker constructor
-    'worker'
-]);
 
 function getReservedScriptNames() {
     return reservedScriptNames;
