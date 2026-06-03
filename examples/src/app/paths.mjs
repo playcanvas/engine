@@ -4,6 +4,8 @@ const root = url.pathname.replace(/\/([^/]+\.html)?$/g, '');
 
 export const assetPath = `${root}/static/assets/`;
 
+export const scriptsPath = `${root}/static/scripts/`;
+
 export const pcTypes = `${root}/playcanvas.d.ts`;
 
 export const iframePath = `${root}/iframe/`;
