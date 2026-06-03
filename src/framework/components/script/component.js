@@ -8,14 +8,12 @@ import {
     SCRIPT_POST_UPDATE, SCRIPT_SWAP
 } from '../../script/constants.js';
 import { ScriptType } from '../../script/script-type.js';
-import { getScriptName } from '../../script/script.js';
+import { getScriptName, getScriptRegistryName, toLowerCamelCase } from '../../script/script.js';
 
 /**
  * @import { ScriptComponentSystem } from './system.js'
  * @import { Script } from '../../script/script.js'
  */
-
-const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
 /**
  * The ScriptComponent enables an {@link Entity} to have custom behavior by attaching scripts
@@ -714,14 +712,26 @@ class ScriptComponent extends Component {
         } else if (scriptType) {
 
             const inferredScriptName = getScriptName(scriptType);
-            const lowerInferredScriptName = toLowerCamelCase(inferredScriptName);
 
-            if (!(scriptType.prototype instanceof ScriptType) && !scriptType.scriptName) {
-                Debug.warnOnce(`The Script class "${inferredScriptName}" must have a static "scriptName" property: \`${inferredScriptName}.scriptName = "${lowerInferredScriptName}";\`. This will be an error in future versions of PlayCanvas.`);
+            // a `scriptName` declared on THIS class; an inherited one would belong to a base class
+            const ownScriptName = Object.prototype.hasOwnProperty.call(scriptType, 'scriptName') && scriptType.scriptName;
+
+            if (!(scriptType.prototype instanceof ScriptType) && !ownScriptName) {
+                Debug.warnOnce(`The Script class "${inferredScriptName}" must have a static "scriptName" property: \`${inferredScriptName}.scriptName = "${toLowerCamelCase(inferredScriptName)}";\`. This will be an error in future versions of PlayCanvas.`);
             }
 
-            scriptType.__name ??= scriptType.scriptName ?? lowerInferredScriptName;
+            // assign an own `__name` so this class is never confused with a base class's name
+            if (!Object.prototype.hasOwnProperty.call(scriptType, '__name')) {
+                scriptType.__name = getScriptRegistryName(scriptType);
+            }
             scriptName = scriptType.__name;
+
+            // bail out rather than index the script under an `undefined`/empty name (which would
+            // attach it as `this.undefined` and could mask other scripts)
+            if (!scriptName) {
+                Debug.error(`The script class could not be added to entity '${this.entity.name}' because its name could not be resolved. Add a static "scriptName" property to the class.`);
+                return null;
+            }
         }
 
         if (scriptType) {

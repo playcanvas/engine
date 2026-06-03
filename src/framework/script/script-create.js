@@ -1,9 +1,10 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { AppBase } from '../app-base.js';
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
 import { ScriptTypes } from './script-types.js';
-import { Script } from './script.js';
+import { Script, getScriptRegistryName } from './script.js';
 
 const reservedScriptNames = new Set([
     'system', 'entity', 'create', 'destroy', 'swap', 'move', 'data',
@@ -129,7 +130,15 @@ function registerScript(script, name, app) {
         throw new Error(`script class: '${ScriptType.__getScriptName(script)}' does not extend pc.Script.`);
     }
 
-    name = name || script.__name || ScriptType.__getScriptName(script);
+    // Resolve the name: an explicit `name` argument wins, otherwise the name is derived from the
+    // class itself (own `__name`, own `scriptName`, or lowerCamelCase class name). Only own
+    // properties are considered, so a subclass never inherits (and overwrites) its base's name.
+    name = name || getScriptRegistryName(script);
+
+    if (!name) {
+        Debug.error(`script class '${script.name || script}' has no name and cannot be registered. Add a static "scriptName" property or pass an explicit name.`);
+        return;
+    }
 
     if (reservedScriptNames.has(name)) {
         throw new Error(`script name: '${name}' is reserved, please change script name`);
