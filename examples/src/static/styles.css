@@ -1591,9 +1591,37 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
 }
 
 .code-editor-menu-container {
-    width: 110px;
-    min-width: 110px;
+    width: auto;
+    min-width: 0;
     margin-right: 0px;
+}
+
+.code-editor-menu-container > .pcui-button.code-editor-download {
+    flex: 0 0 auto;
+    width: auto;
+    gap: 6px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    color: #fff;
+    background-color: #f60;
+}
+
+.code-editor-menu-container > .pcui-button.code-editor-download:hover {
+    background-color: #ff7a1f;
+}
+
+.code-editor-menu-container > .pcui-button.code-editor-download:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.code-editor-download-label {
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 600;
 }
 
 .tabs-container {
@@ -1610,13 +1638,28 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
 }
 
 .code-editor-menu-container > .pcui-button {
+    flex: 0 0 auto;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #fff;
     background-color: #2c393c;
     margin-right: 4px;
 }
 
+.code-editor-menu-container > .pcui-button:not(.code-editor-download)::before {
+    margin-top: 2px;
+}
+
 .code-editor-menu-container > .pcui-button:last-child {
     margin-right: 0px;
+}
+
+.tabs-container > .pcui-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tabs-container > .pcui-button.selected {
