@@ -436,7 +436,13 @@ class WebgpuTexture {
 
                     } else { // 2d texture
 
-                        if (this.isExternalImage(mipObject)) {
+                        if (device._isHTMLElementInterface(mipObject) && device.supportsHtmlTextures) {
+
+                            // generic HTML element via the HTML-in-Canvas API
+                            this.uploadElementImage(device, mipObject, mipLevel, 0);
+                            anyUploads = true;
+
+                        } else if (this.isExternalImage(mipObject)) {
 
                             this.uploadExternalImage(device, mipObject, mipLevel, 0);
                             anyUploads = true;
@@ -514,6 +520,34 @@ class WebgpuTexture {
 
         Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
+    }
+
+    // upload a generic HTML element via the HTML-in-Canvas API (copyElementImageToTexture)
+    uploadElementImage(device, element, mipLevel, index) {
+
+        Debug.assert(mipLevel < this.desc.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`, this);
+
+        const dst = {
+            texture: this.gpuTexture,
+            mipLevel: mipLevel,
+            origin: [0, 0, index],
+            aspect: 'all',  // can be: "all", "stencil-only", "depth-only"
+            premultipliedAlpha: this.texture._premultiplyAlpha
+        };
+
+        // texture dimensions at the specified mip level
+        const width = TextureUtils.calcLevelDimension(this.texture.width, mipLevel);
+        const height = TextureUtils.calcLevelDimension(this.texture.height, mipLevel);
+
+        // submit existing scheduled commands to the queue before copying to preserve the order
+        device.submit();
+
+        Debug.trace(TRACEID_RENDER_QUEUE, `ELEMENT-TO-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
+
+        // scale the element's rendered image to the mip level's dimensions
+        const source = { source: element };
+        const destination = { destination: dst, width, height };
+        device.wgpu.queue.copyElementImageToTexture(source, destination);
     }
 
     uploadTypedArrayData(device, data, mipLevel, index) {

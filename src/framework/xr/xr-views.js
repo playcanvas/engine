@@ -212,7 +212,7 @@ class XrViews extends EventHandler {
 
     /**
      * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
-     * @param {XRView} xrView - XRView from WebXR API.
+     * @param {XRView[]} xrViews - XRViews from the WebXR API.
      * @ignore
      */
     update(frame, xrViews) {

@@ -1,14 +1,14 @@
 // @config
 //
-// 3D product configurator with an HTML UI panel rendered as a WebGL texture via
-// the {accent:HTML-in-Canvas} API. Uses {accent:getElementTransform} for
-// interactive hit testing — clicks and hovers on the 3D panel are handled by
-// the browser's native DOM event system. {accent:Click} to switch shoe
-// material variants.
+// 3D product configurator with an HTML UI panel rendered as a GPU texture via
+// the {accent:HTML-in-Canvas} API, supported on both {accent:WebGL} and
+// {accent:WebGPU}. Uses {accent:getElementTransform} for interactive hit
+// testing — clicks and hovers on the 3D panel are handled by the browser's
+// native DOM event system. {accent:Click} to switch shoe material variants.
 
 //
 // This example demonstrates a 3D product configurator where an interactive HTML
-// panel (styled with CSS glassmorphism) is rendered as a WebGL texture on a 3D
+// panel (styled with CSS glassmorphism) is rendered as a GPU texture on a 3D
 // plane next to a shoe model with glTF KHR_materials_variants. The HtmlSync
 // class keeps the DOM element's CSS transform in sync with the 3D projection so
 // the browser can hit-test clicks and hovers on the HTML buttons.
@@ -160,7 +160,7 @@ window.addEventListener('resize', resize);
 
 // --- HTML UI Panel ---
 // The UI panel is a regular HTML <div> styled with CSS. When HTML-in-Canvas is
-// supported it gets appended to the canvas (so it's composited into the WebGL
+// supported it gets appended to the canvas (so it's composited into the GPU
 // surface and can be used as a texture). Otherwise it falls back to a fixed DOM
 // overlay on top of the canvas.
 const PANEL_WIDTH = 280;
@@ -262,9 +262,10 @@ const updatePanel = () => {
 };
 updatePanel();
 
-// --- HTML-to-WebGL texture pipeline ---
+// --- HTML-to-GPU texture pipeline ---
 // When HTML-in-Canvas is available, the HTML panel is appended as a child of
-// the canvas and captured into a WebGL texture via texElementImage2D. The
+// the canvas and captured into a GPU texture (texElementImage2D on WebGL,
+// copyElementImageToTexture on WebGPU). The
 // browser fires a "paint" event whenever the panel's visual content changes;
 // we respond by re-uploading the texture. The first paint uses setSource() to
 // bind the element, subsequent paints just call upload().

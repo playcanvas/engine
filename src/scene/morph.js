@@ -283,8 +283,8 @@ class Morph extends RefCountedObject {
      *
      * @param {string} name - The name of the texture.
      * @param {number} format - The format of the texture.
-     * @param {Array} [levels] - The levels of the texture.
      * @param {number} [arrayLength] - The length of the texture array.
+     * @param {Array} [levels] - The levels of the texture.
      * @returns {Texture} The created texture.
      * @private
      */

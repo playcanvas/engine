@@ -459,6 +459,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
 
+        // HTML-in-Canvas support (copyElementImageToTexture)
+        this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
+
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
 
