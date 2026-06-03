@@ -1,5 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
+import { reservedScriptNames } from './constants.js';
 import { getScriptRegistryName } from './script.js';
 
 /**
@@ -18,10 +19,14 @@ import { getScriptRegistryName } from './script.js';
  */
 class ScriptRegistry extends EventHandler {
     /**
-     * @type {Object<string, typeof ScriptType>}
+     * A Map of script names to script classes. A Map is used (rather than a plain object) so that
+     * script names which collide with `Object.prototype` members - e.g. `hasOwnProperty`,
+     * `toString`, `__proto__` - are stored and looked up safely.
+     *
+     * @type {Map<string, typeof ScriptType>}
      * @private
      */
-    _scripts = {};
+    _scripts = new Map();
 
     /**
      * @type {typeof ScriptType[]}
@@ -116,16 +121,24 @@ class ScriptRegistry extends EventHandler {
             return false;
         }
 
+        // Reject names that would clash with ScriptComponent/EventHandler members. This is also
+        // checked (and thrown) by `registerScript`/`createScript`, but is enforced here too so the
+        // direct `app.scripts.add()` path is guarded.
+        if (reservedScriptNames.has(scriptName)) {
+            Debug.error(`script name '${scriptName}' is reserved and cannot be added to the script registry.`);
+            return false;
+        }
+
         script.__name = scriptName;
 
-        if (this._scripts.hasOwnProperty(scriptName)) {
+        if (this._scripts.has(scriptName)) {
             setTimeout(() => {
                 if (script.prototype.swap) {
                     // swapping
-                    const old = this._scripts[scriptName];
+                    const old = this._scripts.get(scriptName);
                     const ind = this._list.indexOf(old);
                     this._list[ind] = script;
-                    this._scripts[scriptName] = script;
+                    this._scripts.set(scriptName, script);
 
                     this.fire('swap', scriptName, script);
                     this.fire(`swap:${scriptName}`, script);
@@ -136,7 +149,7 @@ class ScriptRegistry extends EventHandler {
             return false;
         }
 
-        this._scripts[scriptName] = script;
+        this._scripts.set(scriptName, script);
         this._list.push(script);
 
         this.fire('add', scriptName, script);
@@ -145,7 +158,7 @@ class ScriptRegistry extends EventHandler {
         // for all components awaiting Script Type
         // create script instance
         setTimeout(() => {
-            if (!this._scripts.hasOwnProperty(scriptName)) {
+            if (!this._scripts.has(scriptName)) {
                 return;
             }
 
@@ -239,7 +252,7 @@ class ScriptRegistry extends EventHandler {
             return false;
         }
 
-        delete this._scripts[scriptName];
+        this._scripts.delete(scriptName);
         const ind = this._list.indexOf(scriptType);
         this._list.splice(ind, 1);
 
@@ -259,7 +272,7 @@ class ScriptRegistry extends EventHandler {
      * var PlayerController = app.scripts.get('playerController');
      */
     get(name) {
-        return this._scripts[name] || null;
+        return this._scripts.get(name) || null;
     }
 
     /**
@@ -275,12 +288,12 @@ class ScriptRegistry extends EventHandler {
      */
     has(nameOrType) {
         if (typeof nameOrType === 'string') {
-            return this._scripts.hasOwnProperty(nameOrType);
+            return this._scripts.has(nameOrType);
         }
 
         if (!nameOrType) return false;
         const scriptName = nameOrType.__name;
-        return this._scripts[scriptName] === nameOrType;
+        return this._scripts.get(scriptName) === nameOrType;
     }
 
     /**
