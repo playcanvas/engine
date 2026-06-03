@@ -709,10 +709,7 @@ class WebglTexture {
 
                         gl.texElementImage2D(
                             gl.TEXTURE_2D,
-                            mipLevel,
                             this._glInternalFormat,
-                            this._glFormat,
-                            this._glPixelType,
                             mipObject
                         );
 

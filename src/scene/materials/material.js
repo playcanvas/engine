@@ -109,7 +109,9 @@ class Material {
     variants = new Map();
 
     /**
-     * The set of defines used to generate the shader variants.
+     * The set of defines used to generate the shader variants. Mutate this only via
+     * {@link Material#setDefine} (or {@link Material#copy}); direct mutation bypasses the cached
+     * {@link Material#definesKey}.
      *
      * @type {Map<string, string>}
      * @ignore
@@ -117,6 +119,15 @@ class Material {
     defines = new Map();
 
     _definesDirty = false;
+
+    /**
+     * Cached content key for {@link Material#defines}, or null when it needs recomputing. An empty
+     * defines set caches as '', so null unambiguously means "dirty".
+     *
+     * @type {string|null}
+     * @private
+     */
+    _definesKey = null;
 
     parameters = {};
 
@@ -661,6 +672,7 @@ class Material {
         // defines
         this.defines.clear();
         source.defines.forEach((value, key) => this.defines.set(key, value));
+        this._definesKey = null;
 
         // shader chunks
         this._shaderChunks = source.hasShaderChunks ? new ShaderChunks() : null;
@@ -867,6 +879,26 @@ class Material {
         }
 
         this._definesDirty ||= modified;
+        if (modified) {
+            this._definesKey = null;
+        }
+    }
+
+    /**
+     * A cached content key for the material defines, rebuilt lazily only when the defines change.
+     * Useful to cheaply detect define changes without scanning the map every frame.
+     *
+     * @type {string}
+     * @ignore
+     */
+    get definesKey() {
+        if (this._definesKey === null) {
+            this._definesKey = Array.from(this.defines)
+            .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+            .map(([k, v]) => `${k}=${v}`)
+            .join(',');
+        }
+        return this._definesKey;
     }
 
     /**

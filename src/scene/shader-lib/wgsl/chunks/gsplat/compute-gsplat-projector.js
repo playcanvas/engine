@@ -69,6 +69,8 @@ struct ProjectorUniforms {
 #include "gsplatComputeSplatCS"
 #include "gsplatFormatDeclCS"
 #include "gsplatFormatReadCS"
+#include "gsplatHelpersVS"
+#include "gsplatModifyVS"
 #include "gsplatProjectCommonCS"
 
 // One global atomicAdd per workgroup (256 threads) — drastically lowers contention
@@ -184,19 +186,25 @@ fn main(
         let binFrac = binFloat - f32(bin);
         sortKey = u32(binWeights[bin].base + binWeights[bin].divider * binFrac);
 
+        // assemble (rgb, a) and run the render-stage color modifier on the modified center,
+        // matching the quad renderer's gsplatVS (modifySplatColor after AA compensation).
         #ifdef PICK_MODE
+            // picking does not apply AA opacity compensation (it only gates on a binary
+            // opacity threshold), but the modifier may still adjust alpha.
+            var clr = vec4f(getColor(), opacity);
+            modifySplatColor(center, &clr);
             pcId = loadPcId().r;
-            alpha = opacity;
+            alpha = clr.a;
         #else
-            let color = getColor();
-            rgb = max(color, vec3f(0.0));
+            var clr = vec4f(getColor(), opacity);
             #if GSPLAT_AA
                 // Bake the AA opacity compensation into the cached alpha (the hybrid VS
                 // reads it pre-modulated). Only compiled for the non-pick variant.
-                alpha = opacity * proj.aaFactor;
-            #else
-                alpha = opacity;
+                clr.a = clr.a * proj.aaFactor;
             #endif
+            modifySplatColor(center, &clr);
+            rgb = max(clr.rgb, vec3f(0.0));
+            alpha = clr.a;
         #endif
 
         valid = true;

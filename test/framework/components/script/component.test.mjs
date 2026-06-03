@@ -21,14 +21,14 @@ describe('ScriptComponent', function () {
         window.initializeCalls = [];
 
         const assets = scripts.map(script => new Asset(`${script}.js`, 'script', {
-            url: `http://localhost:3000/test/assets/scripts/${script}.js`
+            url: `/test/assets/scripts/${script}.js`
         }));
         assets.forEach((asset) => {
             asset.preload = asset.name !== 'loadedLater.js';
             app.assets.add(asset);
         });
         app.preload(function () {
-            app.scenes.loadScene('http://localhost:3000/test/assets/scenes/scene1.json', function () {
+            app.scenes.loadScene('/test/assets/scenes/scene1.json', function () {
                 app.start();
                 done();
             });
@@ -783,7 +783,7 @@ describe('ScriptComponent', function () {
             expect(app.root.findByName(name)).to.not.exist;
         });
 
-        app.loadSceneHierarchy('http://localhost:3000/test/assets/scenes/scene1.json', function () {
+        app.loadSceneHierarchy('/test/assets/scenes/scene1.json', function () {
 
             // verify entities are loaded
             names.forEach(function (name) {
@@ -1662,7 +1662,7 @@ describe('ScriptComponent', function () {
         app.root.children[0].destroy();
 
         window.initializeCalls.length = 0;
-        app.scenes.loadScene('http://localhost:3000/test/assets/scenes/scene2.json', function () {
+        app.scenes.loadScene('/test/assets/scenes/scene2.json', function () {
             const e = app.root.findByName('A');
             const other = app.root.findByName('B');
 
@@ -1782,7 +1782,7 @@ describe('ScriptComponent', function () {
         app.root.children[0].destroy();
 
         // load scene
-        app.loadSceneHierarchy('http://localhost:3000/test/assets/scenes/scene3.json', function () {
+        app.loadSceneHierarchy('/test/assets/scenes/scene3.json', function () {
             window.initializeCalls.length = 0;
             app.update();
 

@@ -19,6 +19,32 @@ loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
 const EDITOR_DIRTY_EVENT = 'editorDirty';
 
+// the playcanvas defs declare `export as namespace pc`, which only exposes `pc` as a global in
+// script files. examples are modules (`import * as pc from 'playcanvas'`), so the bare specifier
+// must resolve to that namespace for autocomplete to work — this ambient module makes it resolve.
+const PC_MODULE_SHIM = 'declare module \'playcanvas\' {\n    export = pc;\n}\n';
+
+// the other specifiers examples import: `examples/context` is injected by the runtime (see
+// iframe/context.mjs), `playcanvas/scripts/*` are engine scripts that ship no types (exports fall
+// back to `any`), and the asset wildcards mirror src/app/types.d.ts so relative `./shader.vert`
+// etc. resolve to their default string export. without these the imports stay unresolved.
+const EXAMPLE_MODULE_SHIM = [
+    'declare module \'examples/context\' {',
+    '    export const deviceType: \'webgpu\' | \'webgpu:bare\' | \'webgl2\' | \'null\';',
+    '    export const data: any;',
+    '    export const win: Window;',
+    '}',
+    'declare module \'playcanvas/scripts/*\';',
+    'declare module \'*.json\' { const data: any; export default data; }',
+    'declare module \'*.vert\' { const data: string; export default data; }',
+    'declare module \'*.frag\' { const data: string; export default data; }',
+    'declare module \'*.glsl\' { const data: string; export default data; }',
+    'declare module \'*.wgsl\' { const data: string; export default data; }',
+    'declare module \'*.html\' { const data: string; export default data; }',
+    'declare module \'*.css\' { const data: string; export default data; }',
+    'declare module \'*.txt\' { const data: string; export default data; }'
+].join('\n');
+
 function getShowMinimap() {
     let showMinimap = true;
     if (localStorage.getItem('showMinimap')) {
@@ -37,6 +63,7 @@ function getShowMinimap() {
  * @property {Record<string, string>} files - The example files.
  * @property {string} selectedFile - The selected file.
  * @property {boolean} showMinimap - The state of showing the Minimap
+ * @property {boolean} [downloading] - True while a standalone Vite project is being built.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -131,11 +158,27 @@ class CodeEditorBase extends TypedComponent {
             // set types
             typescript.typescriptDefaults.addExtraLib(
                 playcanvasDefs,
-                '@playcanvas/playcanvas.d.ts'
+                'file:///playcanvas.d.ts'
             );
             typescript.javascriptDefaults.addExtraLib(
                 playcanvasDefs,
-                '@playcanvas/playcanvas.d.ts'
+                'file:///playcanvas.d.ts'
+            );
+            typescript.typescriptDefaults.addExtraLib(
+                PC_MODULE_SHIM,
+                'file:///playcanvas-types.d.ts'
+            );
+            typescript.javascriptDefaults.addExtraLib(
+                PC_MODULE_SHIM,
+                'file:///playcanvas-types.d.ts'
+            );
+            typescript.typescriptDefaults.addExtraLib(
+                EXAMPLE_MODULE_SHIM,
+                'file:///examples-modules.d.ts'
+            );
+            typescript.javascriptDefaults.addExtraLib(
+                EXAMPLE_MODULE_SHIM,
+                'file:///examples-modules.d.ts'
             );
         });
     }

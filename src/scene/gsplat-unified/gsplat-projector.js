@@ -37,6 +37,8 @@ import { computeGsplatProjectCommonSource } from '../shader-lib/wgsl/chunks/gspl
 import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-common.js';
 import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
+import gsplatModifyDefaultSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatModify.js';
+import gsplatHelpersSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatHelpers.js';
 
 /**
  * @import { GraphNode } from '../graph-node.js'
@@ -46,6 +48,13 @@ import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComp
 
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
 const PROJECTOR_WORKGROUP_SIZE = 256;
+
+// Defines owned by the projector itself - user render-stage material defines that collide with
+// these are ignored when merged into the projector compute, so user customization can't clobber
+// the projector's own variant/format configuration.
+const PROJECTOR_INTERNAL_DEFINES = new Set([
+    '{CACHE_STRIDE}', 'RADIAL_SORT', 'PICK_MODE', 'GSPLAT_FISHEYE', 'GSPLAT_AA', 'GSPLAT_COLOR_FLOAT'
+]);
 
 const _cameraDir = new Vec3();
 const _dispatchSize = new Vec2();
@@ -147,6 +156,28 @@ class GSplatProjector {
      * compute (its bind group format is derived from the work-buffer format).
      */
     _formatVersion = -1;
+
+    /**
+     * Change-detection key for the render-stage customization (user `gsplatModifyVS` chunk +
+     * material defines). When it changes, the compiled projector variants are rebuilt.
+     *
+     * @type {string}
+     */
+    _materialKey = '';
+
+    /**
+     * The user's WGSL `gsplatModifyVS` chunk source, or null to use the default no-op chunk.
+     *
+     * @type {string|null}
+     */
+    _userModifySource = null;
+
+    /**
+     * Reference to the user material's defines map (read at compute-build time), or null.
+     *
+     * @type {Map<string, string>|null}
+     */
+    _userDefines = null;
 
     /** @type {number} */
     _allocatedCacheCount = 0;
@@ -351,6 +382,13 @@ class GSplatProjector {
         cincludes.set('gsplatComputeSplatCS', computeSplatSource);
         cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(fixedBindings.length));
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
+        // splat helper functions (gsplatGetSizeFromScale / gsplatMakeSpherical) that user modify
+        // chunks may call - matches the helpers available in the quad renderer's vertex path.
+        cincludes.set('gsplatHelpersVS', gsplatHelpersSource);
+        // render-stage modify hooks: the user's override (from app.scene.gsplat.material) or the
+        // default no-op chunk. Any uniforms/textures it declares are reflected into a separate
+        // bind group automatically (see compute WGSL reflection).
+        cincludes.set('gsplatModifyVS', this._userModifySource ?? gsplatModifyDefaultSource);
         cincludes.set('gsplatProjectCommonCS', computeGsplatProjectCommonSource);
 
         const cdefines = new Map();
@@ -374,6 +412,16 @@ class GSplatProjector {
             cdefines.set('GSPLAT_COLOR_FLOAT', '');
         }
 
+        // merge user render-stage material defines (skipping the projector's own), so the modify
+        // chunk can branch on them - mirrors GSplatQuadRenderer.copyMaterialSettings.
+        if (this._userDefines) {
+            this._userDefines.forEach((value, key) => {
+                if (!PROJECTOR_INTERNAL_DEFINES.has(key)) {
+                    cdefines.set(key, value);
+                }
+            });
+        }
+
         const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}${antiAlias ? 'Aa' : ''}`;
 
         const ubFormat = fisheyeMode ?
@@ -388,6 +436,31 @@ class GSplatProjector {
             cdefines: cdefines,
             computeBindGroupFormat: this._projectorBindGroupFormat,
             computeUniformBufferFormats: { uniforms: ubFormat }
+        });
+
+        // Debug-only: warn if a user modify-chunk resource/uniform (reflected into the projector's
+        // auto-generated bind group) collides with a projector-internal binding name - its value is
+        // shadowed by the projector and won't reach the shader, so the author should rename it.
+        // Engine render parameters (alphaClip etc.) are not reflected, so they don't trigger this.
+        Debug.call(() => {
+            const reserved = new Set();
+            const bgf = this._projectorBindGroupFormat;
+            bgf?.textureFormats.forEach(f => reserved.add(f.name));
+            bgf?.storageBufferFormats.forEach(f => reserved.add(f.name));
+            bgf?.storageTextureFormats.forEach(f => reserved.add(f.name));
+            bgf?.uniformBufferFormats.forEach(f => reserved.add(f.name));
+            this._projectorUniformBufferFormatFisheye?.uniforms.forEach(u => reserved.add(u.name));
+
+            const impl = shader.impl;
+            const checkName = (n) => {
+                if (reserved.has(n)) {
+                    Debug.errorOnce(`GSplatProjector: render-stage modify resource '${n}' collides with a projector-internal binding and is overridden by the projector. Rename it in your gsplatModifyVS chunk.`);
+                }
+            };
+            impl.computeReflectedBindGroupFormat?.textureFormats.forEach(f => checkName(f.name));
+            impl.computeReflectedBindGroupFormat?.storageBufferFormats.forEach(f => checkName(f.name));
+            impl.computeReflectedBindGroupFormat?.storageTextureFormats.forEach(f => checkName(f.name));
+            impl.computeReflectedUniformBufferFormat?.uniforms.forEach(u => checkName(u.name));
         });
 
         return new Compute(device, shader, name);
@@ -420,6 +493,37 @@ class GSplatProjector {
             this._projectorComputes.set(key, compute);
         }
         return compute;
+    }
+
+    /**
+     * Syncs the render-stage customization from `app.scene.gsplat.material`: the user-overridable
+     * `gsplatModifyVS` chunk and the material defines are injected into the projector compute. A
+     * change is detected via the material's shader-chunks key plus its defines, and rebuilds the
+     * compiled variants. Call before {@link GSplatProjector#_getProjectorCompute}.
+     *
+     * @param {import('../materials/shader-material.js').ShaderMaterial|undefined} material - The
+     * gsplat render material (carries the user modify chunk, defines and parameters).
+     * @private
+     */
+    _updateMaterial(material) {
+
+        // Both keys are cached on the material and only recompute when its chunks / defines actually
+        // change, so this stays cheap to call every frame. (definesKey covers all defines; the
+        // projector's own defines are still filtered out when merged in _createProjectorCompute.)
+        const chunksKey = material?.shaderChunks?.key ?? '';
+        const definesKey = material?.definesKey ?? '';
+        const materialKey = `${chunksKey}|${definesKey}`;
+
+        if (materialKey !== this._materialKey) {
+            this._materialKey = materialKey;
+            this._userDefines = material?.defines ?? null;
+            const wgslChunks = material?.getShaderChunks?.(SHADERLANGUAGE_WGSL);
+            this._userModifySource = wgslChunks?.get('gsplatModifyVS') ?? null;
+
+            // customization changed - drop compiled variants so they rebuild with the new
+            // chunk source and defines on the next _getProjectorCompute call
+            this._destroyProjectorComputes();
+        }
     }
 
     /**
@@ -481,7 +585,8 @@ class GSplatProjector {
             viewportWidth, viewportHeight, flipY,
             pickMode = false,
             fisheyeProj,
-            antiAlias = false
+            antiAlias = false,
+            material
         } = params;
 
         const fisheyeMode = !!fisheyeProj?.enabled;
@@ -489,6 +594,10 @@ class GSplatProjector {
         // AA only matters for the forward color path; skip it for picking to avoid
         // doubling the projector variant count.
         const aaMode = antiAlias && !pickMode;
+
+        // sync render-stage customization (modify chunk + defines) before fetching the compute,
+        // so a change rebuilds the variant with the new source/defines
+        this._updateMaterial(material);
 
         this._ensureCapacity(totalCapacity);
 
@@ -498,6 +607,19 @@ class GSplatProjector {
         this.renderCounter.clear();
 
         const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, aaMode);
+
+        // Forward the user render-stage material parameters (uniforms/textures referenced by the
+        // modify chunk, reflected into the projector's auto-generated bind group, matched by name).
+        // Done BEFORE the projector sets its own parameters below, so the projector's bindings
+        // always win on a name collision and can never be clobbered by a user parameter.
+        if (material) {
+            const srcParams = material.parameters;
+            for (const name in srcParams) {
+                if (srcParams.hasOwnProperty(name)) {
+                    compute.setParameter(name, srcParams[name].data);
+                }
+            }
+        }
 
         // Camera position / forward (camera Z basis, matching cpu-sort path).
         const cameraPos = cameraNode.getPosition();

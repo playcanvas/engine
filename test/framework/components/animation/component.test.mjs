@@ -29,10 +29,10 @@ describe('AnimationComponent', function () {
     const loadAssets = function (cb) {
         const assetlist = [
             new Asset('cube.json', 'model', {
-                url: 'http://localhost:3000/test/assets/cube/cube.json'
+                url: '/test/assets/cube/cube.json'
             }),
             new Asset('cube.animation.json', 'animation', {
-                url: 'http://localhost:3000/test/assets/cube/cube.animation.json'
+                url: '/test/assets/cube/cube.animation.json'
             })
         ];
         assets.model = assetlist[0];
