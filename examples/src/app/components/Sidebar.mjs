@@ -62,38 +62,65 @@ function getDefaultExampleFiles() {
 }
 
 /**
+ * Split a filter string into exact-match `category:`/`example:` tags and fuzzy free-text terms.
+ *
+ * @param {string} filter - Filter string.
+ * @returns {{ cats: string[], exs: string[], text: string }} Parsed tags and joined free text.
+ */
+function parseFilter(filter) {
+    /** @type {string[]} */
+    const cats = [];
+    /** @type {string[]} */
+    const exs = [];
+    /** @type {string[]} */
+    const terms = [];
+    filter.trim().split(/\s+/).forEach((tok) => {
+        const tag = /^(category|example):(.+)$/i.exec(tok);
+        if (!tag) {
+            if (tok) {
+                terms.push(tok);
+            }
+            return;
+        }
+        (tag[1].toLowerCase() === 'category' ? cats : exs).push(tag[2].toLowerCase());
+    });
+    // whitespace between free-text terms stays fuzzy, preserving the old behavior
+    return { cats, exs, text: terms.join('.*') };
+}
+
+/**
  * @param {Record<string, Record<string, any>>} defaultCategories - Default categories.
  * @param {string} filter - Filter string.
  * @returns {Record<string, Record<string, any>> | null} Filtered categories.
  */
 function filterCategories(defaultCategories, filter) {
-    const query = filter.replace(/\s/g, '.*');
-    const reg = query && query.length > 0 ? new RegExp(query, 'i') : null;
-    if (!reg) {
+    const { cats, exs, text } = parseFilter(filter);
+    if (!cats.length && !exs.length && !text) {
         return null;
     }
+    const reg = text ? new RegExp(text, 'i') : null;
 
     /** @type {Record<string, Record<string, any>>} */
     const updatedCategories = {};
     Object.keys(defaultCategories).forEach((category) => {
-        if (category.search(reg) !== -1) {
-            updatedCategories[category] = defaultCategories[category];
-            return null;
+        // category: tags require an exact (case-insensitive) category name
+        if (cats.length && !cats.includes(category.toLowerCase())) {
+            return;
         }
         Object.keys(defaultCategories[category].examples).forEach((example) => {
             const title = defaultCategories[category].examples[example];
-            if (title.search(reg) !== -1) {
-                if (!updatedCategories[category]) {
-                    updatedCategories[category] = {
-                        name: defaultCategories[category].name,
-                        examples: {
-                            [example]: title
-                        }
-                    };
-                } else {
-                    updatedCategories[category].examples[example] = title;
-                }
+            // example: tags require an exact (case-insensitive) example name
+            if (exs.length && !exs.includes(example.toLowerCase())) {
+                return;
             }
+            // any remaining free text fuzzy-matches the category or example name
+            if (reg && category.search(reg) === -1 && title.search(reg) === -1) {
+                return;
+            }
+            if (!updatedCategories[category]) {
+                updatedCategories[category] = { ...defaultCategories[category], examples: {} };
+            }
+            updatedCategories[category].examples[example] = title;
         });
     });
     return updatedCategories;
@@ -362,7 +389,7 @@ class SideBar extends TypedComponent {
                 jsx(/** @type {any} */ (TextInput), {
                     class: 'filter-input',
                     keyChange: true,
-                    placeholder: 'Filter...',
+                    placeholder: 'Filter, category:, example:',
                     value: this.state.filterText,
                     onChange: this.onChangeFilter.bind(this)
                 }),
