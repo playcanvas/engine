@@ -90,6 +90,41 @@ describe('ScriptRegistry', function () {
             expect(app.scripts.get('viaRegister')).to.equal(ViaRegister);
         });
 
+        it('safely handles script names that collide with Object.prototype members', function () {
+            const names = ['hasOwnProperty', 'toString', 'constructor', '__proto__', 'valueOf'];
+            const classes = names.map((name) => {
+                class Collider extends Script {}
+                Collider.scriptName = name;
+                return Collider;
+            });
+
+            classes.forEach((cls, i) => {
+                expect(app.scripts.add(cls), names[i]).to.equal(true);
+            });
+
+            // each is stored and retrievable by its (collision-prone) name
+            names.forEach((name, i) => {
+                expect(app.scripts.has(name), name).to.equal(true);
+                expect(app.scripts.get(name), name).to.equal(classes[i]);
+            });
+
+            // and they all appear in the list without clobbering each other
+            names.forEach((name, i) => {
+                expect(app.scripts.list().includes(classes[i]), name).to.equal(true);
+            });
+        });
+
+        it('rejects a reserved script name via add()', function () {
+            class Reserved extends Script {
+                static scriptName = 'destroy';
+            }
+
+            const added = app.scripts.add(Reserved);
+
+            expect(added).to.equal(false);
+            expect(app.scripts.has('destroy')).to.equal(false);
+        });
+
     });
 
     // a subclass must register under its own name, not inherit (and overwrite) its base's name
