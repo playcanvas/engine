@@ -164,26 +164,46 @@ describe('ScriptRegistry', function () {
             expect(app.scripts.get('derivedScript2')).to.equal(Derived);
         });
 
-        it('a subclass without an explicit name resolves to its own class name (camelCase)', function () {
+        it('a subclass without an explicit name registers under its own (verbatim) class name', function () {
             class ParentScript extends Script {}
             class ChildScript extends ParentScript {}
 
             registerScript(ParentScript, undefined, app);
             registerScript(ChildScript, undefined, app);
 
-            // nameless scripts fall back to the lowerCamelCase class name, consistently across paths
-            expect(app.scripts.get('parentScript')).to.equal(ParentScript);
-            expect(app.scripts.get('childScript')).to.equal(ChildScript);
-            expect(ParentScript.__name).to.not.equal(ChildScript.__name);
+            // registerScript falls back to the verbatim class name; each subclass uses its own name
+            // and never inherits (and overwrites) its base's
+            expect(app.scripts.get('ParentScript')).to.equal(ParentScript);
+            expect(app.scripts.get('ChildScript')).to.equal(ChildScript);
+            expect(ParentScript.__name).to.equal('ParentScript');
+            expect(ChildScript.__name).to.equal('ChildScript');
         });
 
-        it('resolves a nameless script to the same camelCase name via registerScript and create', function () {
+        it('registers a nameless script via registerScript under its verbatim class name', function () {
             class FreeScript extends Script {}
             registerScript(FreeScript, undefined, app);
 
-            // matches the camelCase fallback used by ScriptComponent.create and the asset loader
-            expect(app.scripts.has('freeScript')).to.equal(true);
-            expect(app.scripts.has('FreeScript')).to.equal(false);
+            // registerScript uses the verbatim class name (pre-2.19.3 behaviour), so projects that
+            // reference the script by its class name keep resolving it
+            expect(FreeScript.__name).to.equal('FreeScript');
+            expect(app.scripts.has('FreeScript')).to.equal(true);
+            expect(app.scripts.get('FreeScript')).to.equal(FreeScript);
+            expect(app.scripts.has('freeScript')).to.equal(false);
+        });
+
+        it('attaches a script referenced by its class name after a nameless registerScript', function () {
+            // the pre-2.19.3 pattern that regressed in 2.19.3: register an ES6 class with no
+            // explicit name, then reference it on an entity by its (verbatim) class name
+            class PlayerController extends Script {}
+            registerScript(PlayerController, undefined, app);
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('script');
+
+            const instance = e.script.create('PlayerController');
+            expect(instance).to.be.an.instanceof(PlayerController);
+            expect(e.script.PlayerController).to.equal(instance);
         });
 
         it('an explicit name passed to registerScript still wins for a subclass', function () {
