@@ -5,7 +5,7 @@ import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
 import { ScriptTypes } from './script-types.js';
 import { reservedScriptNames } from './constants.js';
-import { Script, getScriptRegistryName } from './script.js';
+import { Script, getScriptName } from './script.js';
 
 function getReservedScriptNames() {
     return reservedScriptNames;
@@ -120,9 +120,15 @@ function registerScript(script, name, app) {
     }
 
     // Resolve the name: an explicit `name` argument wins, otherwise the name is derived from the
-    // class itself (own `__name`, own `scriptName`, or lowerCamelCase class name). Only own
-    // properties are considered, so a subclass never inherits (and overwrites) its base's name.
-    name = name || getScriptRegistryName(script);
+    // class itself - its own `__name`, its own `scriptName`, or, as a fallback, its verbatim class
+    // name. Only own properties are considered, so a subclass never inherits (and overwrites) its
+    // base's name. The verbatim class-name fallback (rather than the lowerCamelCase form used by
+    // `ScriptComponent.create` and the asset loader) preserves the pre-2.19.3 registration name, so
+    // projects that register ES6 classes via `registerScript(Class)` and reference them by their
+    // class name keep working.
+    name = name ||
+        (Object.prototype.hasOwnProperty.call(script, '__name') && script.__name) ||
+        getScriptName(script);
 
     if (!name) {
         Debug.error(`script class '${script.name || script}' has no name and cannot be registered. Add a static "scriptName" property or pass an explicit name.`);
