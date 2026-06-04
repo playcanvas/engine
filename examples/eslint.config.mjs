@@ -1,4 +1,5 @@
-import playcanvasConfig from '@playcanvas/eslint-config';
+import javascriptConfig from '@playcanvas/eslint-config/javascript';
+import reactConfig from '@playcanvas/eslint-config/react';
 import globals from 'globals';
 
 import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from './utils/inline-markdown.mjs';
@@ -298,27 +299,9 @@ const importOrder = ['error', {
     alphabetize: { order: 'asc', caseInsensitive: true }
 }];
 
-// minimal jsx-uses-vars: mark JSX-referenced identifiers as used so no-unused-vars sees imported
-// components (e.g. <Panel/>) as used. Avoids pulling in eslint-plugin-react just for this.
-const jsxUsesVars = {
-    meta: { type: 'problem' },
-    create(context) {
-        return {
-            JSXOpeningElement(node) {
-                let name = node.name;
-                while (name.type === 'JSXMemberExpression') {
-                    name = name.object;
-                }
-                if (name.type === 'JSXIdentifier') {
-                    context.sourceCode.markVariableAsUsed(name.name, name);
-                }
-            }
-        };
-    }
-};
-
 export default [
-    ...playcanvasConfig,
+    ...javascriptConfig,
+    ...reactConfig,
     {
         files: ['**/*.js', '**/*.mjs', '**/*.jsx'],
         languageOptions: {
@@ -339,15 +322,7 @@ export default [
     },
     {
         files: ['**/*.jsx'],
-        plugins: {
-            jsx: {
-                rules: {
-                    'uses-vars': jsxUsesVars
-                }
-            }
-        },
         rules: {
-            'jsx/uses-vars': 'error',
             'max-len': ['error', {
                 code: 100,
                 ignoreUrls: true,
