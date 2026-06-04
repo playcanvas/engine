@@ -140,13 +140,13 @@ const getUmdFooter = () => {
     //     snapshot each getter to its load-time value, leaving `pc.app` permanently null
     //     (see https://github.com/playcanvas/engine/issues/8836).
     //   - keeps the property writable, so consumers can still override members of `pc` (e.g. the
-    //     Editor's classic-script worker reassigns `pc.createScript`). A bare descriptor copy makes
-    //     the export getter-only and breaks such overrides
-    //     (see https://github.com/playcanvas/engine/issues/8836).
+    //     Editor's classic-script worker reassigns `pc.createScript`). The getter-only descriptor
+    //     copy introduced in #8837 breaks such overrides
+    //     (see https://github.com/playcanvas/engine/pull/8837).
     return /* js */ `for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(pc))) {
 \tObject.defineProperty(exports, key, descriptor.get ? {
 \t\tget: descriptor.get,
-\t\tset: (value) => Object.defineProperty(exports, key, { value, writable: true, enumerable: true, configurable: true }),
+\t\tset: (value) => Object.defineProperty(exports, key, { value, writable: true, enumerable: descriptor.enumerable, configurable: true }),
 \t\tenumerable: descriptor.enumerable,
 \t\tconfigurable: true
 \t} : descriptor);
