@@ -153,12 +153,18 @@ class ScriptRegistry extends EventHandler {
 
                     // keep the class-name alias pointing at the swapped-in script
                     const oldAlias = getScriptName(old);
-                    if (oldAlias && this._scripts.get(oldAlias) === old) {
+                    const aliasSwapped = oldAlias && this._scripts.get(oldAlias) === old;
+                    if (aliasSwapped) {
                         this._scripts.set(oldAlias, script);
                     }
 
                     this.fire('swap', scriptName, script);
                     this.fire(`swap:${scriptName}`, script);
+
+                    // notify listeners (e.g. components attached via the alias) keyed by the alias
+                    if (aliasSwapped && oldAlias !== scriptName) {
+                        this.fire(`swap:${oldAlias}`, script);
+                    }
                 } else {
                     console.warn(`script registry already has '${scriptName}' script, define 'swap' method for new script type to enable code hot swapping`);
                 }
@@ -205,7 +211,6 @@ class ScriptRegistry extends EventHandler {
      */
     _createAwaitingInstances(scriptName) {
         const components = this.app.systems.script._components;
-        let attributes;
         const scriptInstances = [];
         const scriptInstancesInitialized = [];
 
@@ -213,9 +218,8 @@ class ScriptRegistry extends EventHandler {
             const component = components.items[components.loopIndex];
             // check if awaiting for script
             if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
-                if (component._scriptsData && component._scriptsData[scriptName]) {
-                    attributes = component._scriptsData[scriptName].attributes;
-                }
+                // resolve per component so attributes never leak from a previous iteration
+                const attributes = component._scriptsData?.[scriptName]?.attributes;
 
                 const scriptInstance = component.create(scriptName, {
                     preloading: true,
@@ -289,7 +293,8 @@ class ScriptRegistry extends EventHandler {
         this._scripts.delete(canonicalName);
 
         const className = getScriptName(scriptType);
-        if (className && this._scripts.get(className) === scriptType) {
+        const aliasRemoved = className && className !== canonicalName && this._scripts.get(className) === scriptType;
+        if (aliasRemoved) {
             this._scripts.delete(className);
         }
 
@@ -298,6 +303,11 @@ class ScriptRegistry extends EventHandler {
 
         this.fire('remove', canonicalName, scriptType);
         this.fire(`remove:${canonicalName}`, scriptType);
+
+        // mirror the alias `add:`/`remove:` events for listeners keyed by the class-name alias
+        if (aliasRemoved) {
+            this.fire(`remove:${className}`, scriptType);
+        }
 
         return true;
     }

@@ -238,6 +238,31 @@ describe('ScriptRegistry', function () {
             expect(e.script.PlayerController).to.equal(instance);
         });
 
+        it('fires a swap event under the class-name alias when a nameless script is re-registered', function (done) {
+            class PlayerController extends Script {}
+            PlayerController.prototype.swap = function () {};
+            registerScript(PlayerController, undefined, app);
+
+            // a new class with the same class name re-registers under the same canonical name + alias
+            const NewPlayerController = class PlayerController extends Script {};
+            NewPlayerController.prototype.swap = function () {};
+
+            let canonicalSwap = false;
+            app.scripts.on('swap:playerController', () => {
+                canonicalSwap = true;
+            });
+            app.scripts.on('swap:PlayerController', (script) => {
+                // components attached via the alias subscribe to `swap:PlayerController`
+                expect(canonicalSwap).to.equal(true);
+                expect(script).to.equal(NewPlayerController);
+                expect(app.scripts.get('PlayerController')).to.equal(NewPlayerController);
+                expect(app.scripts.get('playerController')).to.equal(NewPlayerController);
+                done();
+            });
+
+            registerScript(NewPlayerController, undefined, app);
+        });
+
         it('an explicit name passed to registerScript still wins for a subclass', function () {
             class Base extends Script {
                 static scriptName = 'baseExplicit';
