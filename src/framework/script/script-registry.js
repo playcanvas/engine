@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { reservedScriptNames } from './constants.js';
-import { getScriptRegistryName } from './script.js';
+import { getScriptName, getScriptRegistryName, toLowerCamelCase } from './script.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -131,6 +131,17 @@ class ScriptRegistry extends EventHandler {
 
         script.__name = scriptName;
 
+        // Back-compat alias. Before #8831 (2.19.3), a script registered without an explicit name
+        // was keyed by its verbatim class name (e.g. `PlayerController`); since then the registry
+        // name is the lowerCamelCase form (`playerController`). Projects reference scripts by the
+        // original name, so when the registry name was derived from the class name, also expose the
+        // script under that class name - provided it differs, is not reserved, and is not already
+        // taken by another script. See https://github.com/playcanvas/engine/pull/8831
+        const className = getScriptName(script);
+        const aliasName = (className && className !== scriptName &&
+            toLowerCamelCase(className) === scriptName &&
+            !reservedScriptNames.has(className) && !this._scripts.has(className)) ? className : null;
+
         if (this._scripts.has(scriptName)) {
             setTimeout(() => {
                 if (script.prototype.swap) {
@@ -139,6 +150,12 @@ class ScriptRegistry extends EventHandler {
                     const ind = this._list.indexOf(old);
                     this._list[ind] = script;
                     this._scripts.set(scriptName, script);
+
+                    // keep the class-name alias pointing at the swapped-in script
+                    const oldAlias = getScriptName(old);
+                    if (oldAlias && this._scripts.get(oldAlias) === old) {
+                        this._scripts.set(oldAlias, script);
+                    }
 
                     this.fire('swap', scriptName, script);
                     this.fire(`swap:${scriptName}`, script);
@@ -150,10 +167,12 @@ class ScriptRegistry extends EventHandler {
         }
 
         this._scripts.set(scriptName, script);
+        if (aliasName) this._scripts.set(aliasName, script);
         this._list.push(script);
 
         this.fire('add', scriptName, script);
         this.fire(`add:${scriptName}`, script);
+        if (aliasName) this.fire(`add:${aliasName}`, script);
 
         // for all components awaiting Script Type
         // create script instance
@@ -169,64 +188,77 @@ class ScriptRegistry extends EventHandler {
                 return;
             }
 
-            const components = this.app.systems.script._components;
-            let attributes;
-            const scriptInstances = [];
-            const scriptInstancesInitialized = [];
-
-            for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
-                const component = components.items[components.loopIndex];
-                // check if awaiting for script
-                if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
-                    if (component._scriptsData && component._scriptsData[scriptName]) {
-                        attributes = component._scriptsData[scriptName].attributes;
-                    }
-
-                    const scriptInstance = component.create(scriptName, {
-                        preloading: true,
-                        ind: component._scriptsIndex[scriptName].ind,
-                        attributes: attributes
-                    });
-
-                    if (scriptInstance) {
-                        scriptInstances.push(scriptInstance);
-                    }
-
-                    // initialize attributes
-                    for (const script of component.scripts) {
-                        component.initializeAttributes(script);
-                    }
-                }
-            }
-
-            // call initialize()
-            for (let i = 0; i < scriptInstances.length; i++) {
-                if (scriptInstances[i].enabled) {
-                    scriptInstances[i]._initialized = true;
-
-                    scriptInstancesInitialized.push(scriptInstances[i]);
-
-                    if (scriptInstances[i].initialize) {
-                        scriptInstances[i].initialize();
-                    }
-                }
-            }
-
-            // call postInitialize()
-            for (let i = 0; i < scriptInstancesInitialized.length; i++) {
-                if (!scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
-                    continue;
-                }
-
-                scriptInstancesInitialized[i]._postInitialized = true;
-
-                if (scriptInstancesInitialized[i].postInitialize) {
-                    scriptInstancesInitialized[i].postInitialize();
-                }
-            }
+            // instantiate on components awaiting either the registry name or the class-name alias
+            this._createAwaitingInstances(scriptName);
+            if (aliasName) this._createAwaitingInstances(aliasName);
         });
 
         return true;
+    }
+
+    /**
+     * Instantiate the just-added script on any script components that were awaiting it under the
+     * given name (the registry name or a back-compat class-name alias).
+     *
+     * @param {string} scriptName - The name components may be awaiting the script under.
+     * @private
+     */
+    _createAwaitingInstances(scriptName) {
+        const components = this.app.systems.script._components;
+        let attributes;
+        const scriptInstances = [];
+        const scriptInstancesInitialized = [];
+
+        for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
+            const component = components.items[components.loopIndex];
+            // check if awaiting for script
+            if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
+                if (component._scriptsData && component._scriptsData[scriptName]) {
+                    attributes = component._scriptsData[scriptName].attributes;
+                }
+
+                const scriptInstance = component.create(scriptName, {
+                    preloading: true,
+                    ind: component._scriptsIndex[scriptName].ind,
+                    attributes: attributes
+                });
+
+                if (scriptInstance) {
+                    scriptInstances.push(scriptInstance);
+                }
+
+                // initialize attributes
+                for (const script of component.scripts) {
+                    component.initializeAttributes(script);
+                }
+            }
+        }
+
+        // call initialize()
+        for (let i = 0; i < scriptInstances.length; i++) {
+            if (scriptInstances[i].enabled) {
+                scriptInstances[i]._initialized = true;
+
+                scriptInstancesInitialized.push(scriptInstances[i]);
+
+                if (scriptInstances[i].initialize) {
+                    scriptInstances[i].initialize();
+                }
+            }
+        }
+
+        // call postInitialize()
+        for (let i = 0; i < scriptInstancesInitialized.length; i++) {
+            if (!scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
+                continue;
+            }
+
+            scriptInstancesInitialized[i]._postInitialized = true;
+
+            if (scriptInstancesInitialized[i].postInitialize) {
+                scriptInstancesInitialized[i].postInitialize();
+            }
+        }
     }
 
     /**
@@ -252,12 +284,20 @@ class ScriptRegistry extends EventHandler {
             return false;
         }
 
-        this._scripts.delete(scriptName);
+        // delete the canonical registry name and any class-name alias that points at this script
+        const canonicalName = scriptType.__name;
+        this._scripts.delete(canonicalName);
+
+        const className = getScriptName(scriptType);
+        if (className && this._scripts.get(className) === scriptType) {
+            this._scripts.delete(className);
+        }
+
         const ind = this._list.indexOf(scriptType);
         this._list.splice(ind, 1);
 
-        this.fire('remove', scriptName, scriptType);
-        this.fire(`remove:${scriptName}`, scriptType);
+        this.fire('remove', canonicalName, scriptType);
+        this.fire(`remove:${canonicalName}`, scriptType);
 
         return true;
     }

@@ -177,13 +177,65 @@ describe('ScriptRegistry', function () {
             expect(ParentScript.__name).to.not.equal(ChildScript.__name);
         });
 
-        it('resolves a nameless script to the same camelCase name via registerScript and create', function () {
+        it('registers a nameless script under its camelCase name and a class-name alias', function () {
             class FreeScript extends Script {}
             registerScript(FreeScript, undefined, app);
 
-            // matches the camelCase fallback used by ScriptComponent.create and the asset loader
+            // canonical registry name is the lowerCamelCase class name, matching
+            // ScriptComponent.create and the asset loader
+            expect(FreeScript.__name).to.equal('freeScript');
             expect(app.scripts.has('freeScript')).to.equal(true);
+            expect(app.scripts.get('freeScript')).to.equal(FreeScript);
+
+            // a back-compat alias under the verbatim class name keeps pre-2.19.3 references working
+            expect(app.scripts.has('FreeScript')).to.equal(true);
+            expect(app.scripts.get('FreeScript')).to.equal(FreeScript);
+        });
+
+        it('does not create a class-name alias when an explicit name is given', function () {
+            class PlayerController extends Script {}
+            registerScript(PlayerController, 'customName', app);
+
+            expect(PlayerController.__name).to.equal('customName');
+            expect(app.scripts.has('customName')).to.equal(true);
+            // an explicitly named script is registered only under that name (pre-2.19.3 behavior)
+            expect(app.scripts.has('PlayerController')).to.equal(false);
+            expect(app.scripts.has('playerController')).to.equal(false);
+        });
+
+        it('does not let a class-name alias overwrite an existing registration', function () {
+            class First extends Script {}
+            registerScript(First, 'PlayerController', app); // occupies 'PlayerController'
+
+            class PlayerController extends Script {}
+            registerScript(PlayerController, undefined, app); // alias 'PlayerController' is taken
+
+            expect(app.scripts.get('PlayerController')).to.equal(First);
+            expect(app.scripts.get('playerController')).to.equal(PlayerController);
+        });
+
+        it('remove() clears both the canonical name and the class-name alias', function () {
+            class FreeScript extends Script {}
+            registerScript(FreeScript, undefined, app);
+
+            expect(app.scripts.remove('FreeScript')).to.equal(true);
+            expect(app.scripts.has('freeScript')).to.equal(false);
             expect(app.scripts.has('FreeScript')).to.equal(false);
+        });
+
+        it('attaches a nameless script to an entity referenced by its class name', function () {
+            // mirrors the pre-2.19.3 pattern: register an ES6 class with no explicit name, then
+            // reference it on an entity by its (PascalCase) class name
+            class PlayerController extends Script {}
+            registerScript(PlayerController, undefined, app);
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('script');
+
+            const instance = e.script.create('PlayerController');
+            expect(instance).to.be.an.instanceof(PlayerController);
+            expect(e.script.PlayerController).to.equal(instance);
         });
 
         it('an explicit name passed to registerScript still wins for a subclass', function () {
