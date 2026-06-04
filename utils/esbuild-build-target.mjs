@@ -133,7 +133,11 @@ const getUmdBanner = (banner) => {
 };
 
 const getUmdFooter = () => {
-    return /* js */ `Object.assign(exports, pc);
+    // Copy the property descriptors rather than the values, so that live bindings of mutable
+    // exports (e.g. `app`, which is null until an application is created) are preserved on the
+    // UMD namespace. `Object.assign` would snapshot each getter to its load-time value, leaving
+    // `pc.app` permanently null. See https://github.com/playcanvas/engine/issues/8836
+    return /* js */ `Object.defineProperties(exports, Object.getOwnPropertyDescriptors(pc));
 }));`;
 };
 
