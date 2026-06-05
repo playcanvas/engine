@@ -365,8 +365,9 @@ class XrNavigation extends Script {
         if (!this.cameraEntity) return;
 
         for (const inputSource of this.inputSources) {
-            // Only process controllers with gamepads
-            if (!inputSource.gamepad) continue;
+            // Require a gamepad with thumbstick axes (axes[2]/[3]). Hand-tracking sources
+            // (e.g. Apple Vision Pro) report a gamepad with no axes, which would read as NaN.
+            if (!inputSource.gamepad || inputSource.gamepad.axes.length < 4) continue;
 
             // Left controller - movement
             if (inputSource.handedness === 'left') {
@@ -465,7 +466,8 @@ class XrNavigation extends Script {
         let rightController = null;
 
         for (const inputSource of this.inputSources) {
-            if (!inputSource.gamepad) continue;
+            // Require a gamepad with thumbstick axes — see handleSmoothLocomotion.
+            if (!inputSource.gamepad || inputSource.gamepad.axes.length < 4) continue;
             if (inputSource.handedness === 'right') {
                 rightController = inputSource;
                 break;
