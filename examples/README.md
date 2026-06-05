@@ -200,6 +200,7 @@ Examples can also contain comments which allow you to define the default configu
 // @flag NO_MINISTATS
 // @flag WEBGPU_DISABLED
 // @flag WEBGL_DISABLED
+// @flag PREFERRED_DEVICE webgpu
 import * as pc from 'playcanvas';
 ...
 ```
