@@ -16,11 +16,20 @@ function refreshContext() {
 }
 
 /**
- * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGPU_BARE_DISABLED: boolean; }} config - The configuration object.
+ * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGPU_BARE_DISABLED: boolean; PREFERRED_DEVICE?: string }} config - The configuration object.
  */
 function updateDeviceType(config) {
-    const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
-    deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
+    // Resolution order: stored user preference > example PREFERRED_DEVICE > 'webgl2'. We have
+    // to distinguish "no stored preference" from "user picked webgl2", which `?? 'webgl2'`
+    // collapses — so we check the raw localStorage value for null instead.
+    const savedDevice = localStorage.getItem('preferredGraphicsDevice');
+    if (savedDevice && DEVICE_TYPES.includes(savedDevice)) {
+        deviceType = savedDevice;
+    } else if (config.PREFERRED_DEVICE && DEVICE_TYPES.includes(config.PREFERRED_DEVICE)) {
+        deviceType = config.PREFERRED_DEVICE;
+    } else {
+        deviceType = 'webgl2';
+    }
 
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
         console.warn('Overriding default device: ', params.deviceType);

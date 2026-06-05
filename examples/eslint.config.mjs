@@ -19,6 +19,7 @@ const booleanFlags = new Set([
     'WEBGL_DISABLED'
 ]);
 const engineTypes = new Set(['development', 'performance', 'debug']);
+const preferredDeviceTypes = new Set(['webgpu', 'webgl2']);
 const creditFields = ['title', 'author', 'source', 'license'];
 const requiredCreditFields = ['title', 'author'];
 const creditFieldSet = new Set(creditFields);
@@ -166,6 +167,21 @@ const configBlockShape = {
                         if (!value) {
                             report(line, 'missingFlagValue', { name });
                         } else if (!engineTypes.has(value)) {
+                            report(line, 'invalidFlagValue', { name, value });
+                        }
+                        return;
+                    }
+
+                    if (name === 'PREFERRED_DEVICE') {
+                        if (flags.has(name)) {
+                            report(line, 'duplicateFlag', { name });
+                        } else {
+                            flags.add(name);
+                        }
+
+                        if (!value) {
+                            report(line, 'missingFlagValue', { name });
+                        } else if (!preferredDeviceTypes.has(value)) {
                             report(line, 'invalidFlagValue', { name, value });
                         }
                         return;
