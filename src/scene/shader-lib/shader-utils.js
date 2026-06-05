@@ -143,6 +143,12 @@ class ShaderUtils {
         const defines = new Map(material.defines);
         params.cameraShaderParams.defines.forEach((value, key) => defines.set(key, value));
 
+        // cameraShaderParams.defines cannot emit SCENE_DEPTHMAP_FLOAT as it has no device
+        // reference, so add the screenDepth chunk defines here. This ensures screenDepthPS
+        // decodes the scene depth in the format the depth prepass allocated (R32F when the
+        // device is textureFloatRenderable, packed RGBA8 otherwise).
+        ShaderUtils.addScreenDepthChunkDefines(params.device, params.cameraShaderParams, defines);
+
         // add pass defines
         const shaderPassInfo = ShaderPass.get(params.device).getByIndex(params.pass);
         shaderPassInfo.defines.forEach((value, key) => defines.set(key, value));
