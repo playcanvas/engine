@@ -545,6 +545,12 @@ class ForwardRenderer extends Renderer {
             /** @type {MeshInstance} */
             const drawCall = drawCalls[i];
 
+            // skip mesh instances that are not rendered in this shader pass (inlined bit test to
+            // avoid a function call in this hot loop)
+            if ((drawCall.shaderPassMask & (1 << pass)) === 0) {
+                continue;
+            }
+
             // #if _PROFILER
             if (camera === ForwardRenderer.skipRenderCamera) {
                 if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter) {
