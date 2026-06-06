@@ -6,6 +6,11 @@
 // proxy mesh.
 //
 // @flag PREFERRED_DEVICE=webgpu
+//
+// @credit
+// title: Ice Cave
+// author: SpAItial AI
+// source: https://spaitial.ai/
 
 import * as pc from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
