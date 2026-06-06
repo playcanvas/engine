@@ -96,6 +96,9 @@ assetListLoader.load(() => {
 
     app.systems.rigidbody?.gravity.set(0, -10, 0);
 
+    // cap the number of rendered splats - lower on mobile to keep performance up
+    app.scene.gsplat.splatBudget = (pc.platform.mobile ? 1 : 3) * 1000000;
+
     // ------ Content root ------
     // The splat and the proxy / collision meshes share the same coordinate space, so we parent
     // them to a single entity to keep them aligned.
