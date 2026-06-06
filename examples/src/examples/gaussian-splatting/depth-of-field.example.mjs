@@ -4,6 +4,8 @@
 //
 // A Gaussian Splatting scene using Depth of Field post-processing, where the depth is based on a
 // proxy mesh.
+//
+// @flag PREFERRED_DEVICE=webgpu
 
 import * as pc from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
@@ -95,6 +97,14 @@ assetListLoader.load(() => {
     app.start();
 
     app.systems.rigidbody?.gravity.set(0, -10, 0);
+
+    // cap the number of rendered splats - lower on mobile to keep performance up
+    app.scene.gsplat.splatBudget = (pc.platform.mobile ? 1 : 3) * 1000000;
+
+    // use the GPU-sort raster renderer on WebGPU, CPU-sort on WebGL
+    app.scene.gsplat.renderer = device.isWebGPU ?
+        pc.GSPLAT_RENDERER_RASTER_GPU_SORT :
+        pc.GSPLAT_RENDERER_RASTER_CPU_SORT;
 
     // ------ Content root ------
     // The splat and the proxy / collision meshes share the same coordinate space, so we parent
