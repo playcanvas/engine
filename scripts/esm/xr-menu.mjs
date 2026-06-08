@@ -480,6 +480,21 @@ class XrMenu extends Script {
     }
 
     /**
+     * Sets the overall menu scale at runtime, re-applying it to the menu screen immediately.
+     * Useful for compensating text readability when the XR framebuffer resolution is reduced
+     * (scale the menu up so it covers more framebuffer pixels).
+     *
+     * @param {number} value - New overall scale multiplier for the whole menu.
+     */
+    setMenuScale(value) {
+        this.menuScale = value;
+        if (this._screenEntity) {
+            const scale = this._uiScale * value;
+            this._screenEntity.setLocalScale(scale, scale, scale);
+        }
+    }
+
+    /**
      * @param {XrInputSource} inputSource - The input source that was added.
      * @private
      */

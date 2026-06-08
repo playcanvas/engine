@@ -110,6 +110,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('PICK_CUSTOM_ID');
         this._internalDefines.add('GSPLAT_OVERDRAW');
         this._internalDefines.add('GSPLAT_NO_FOG');
+        this._internalDefines.add('GSPLAT_XR');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -165,6 +166,22 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
         this._material.depthWrite = !!dither;
         this._material.update();
+    }
+
+    /**
+     * Toggles the XR stereo (GSPLAT_XR) variant of the forward material. The vertex shader then
+     * reads the per-eye stereo projection-cache layout and selects the eye via `view_index`. Only
+     * recompiles when the stereo state changes, so it is cheap to call every frame. Must stay in
+     * sync with the projector's stereo variant (both driven by the same isStereo value).
+     *
+     * @param {boolean} enabled - Whether stereo (2-view) rendering is active.
+     */
+    setStereo(enabled) {
+        // The material is the single source of truth; only recompile when the state actually changes.
+        if (this._material.getDefine('GSPLAT_XR') !== enabled) {
+            this._material.setDefine('GSPLAT_XR', enabled);
+            this._material.update();
+        }
     }
 
     update(count, textureSize) {

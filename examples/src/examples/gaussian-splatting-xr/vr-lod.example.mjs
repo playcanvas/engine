@@ -12,6 +12,7 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
 import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -36,10 +37,23 @@ createOptions.componentSystems = [
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
     pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    pc.GSplatComponentSystem,
+    // UI systems required by the in-XR HUD (XrMenu builds screen/element/button components).
+    pc.ScreenComponentSystem,
+    pc.ElementComponentSystem,
+    pc.ButtonComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [
+    pc.TextureHandler,
+    pc.ContainerHandler,
+    pc.ScriptHandler,
+    pc.GSplatHandler,
+    // Required to load the HUD font asset.
+    pc.FontHandler
+];
 createOptions.xr = pc.XrManager;
+// Enables element click events (desktop fallback); XR ray/finger picking is handled inside XrMenu.
+createOptions.elementInput = new pc.ElementInput(canvas);
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -96,7 +110,9 @@ const LOD_PRESETS = {
 const lodPresetKey = pc.platform.mobile ? 'mobile' : 'desktop';
 
 const assets = {
-    church: new pc.Asset('gsplat', 'gsplat', { url: config.url })
+    church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
+    // Monospace font for the in-XR debug HUD (XrMenu) text rendering.
+    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 /**
@@ -177,6 +193,8 @@ assetListLoader.load(() => {
 
     data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
     data.set('splatBudget', 1);
+    // XR framebuffer scale factor (applied only when starting an XR session; does not affect 2D).
+    data.set('framebufferScaleFactor', 1);
     data.set('data.stats.gsplats', '—');
     data.set('data.stats.resolution', '—');
 
@@ -226,6 +244,44 @@ assetListLoader.load(() => {
             turnMode: 'smooth',
             smoothTurnSpeed: 90
         }
+    });
+
+    // In-XR debug HUD: an always-visible, camera-following menu. Label-only rows (no eventName)
+    // act as live readouts updated each frame via setItemLabel. Starting with FPS.
+    // Base scale at full framebuffer resolution; scaled up at lower resolutions for readability.
+    const HUD_BASE_SCALE = 1.2;
+    const menuEntity = new pc.Entity('XrHud');
+    menuEntity.addComponent('script');
+    menuEntity.script.create(XrMenu, {
+        properties: {
+            menuItems: [
+                { label: 'FPS: --' },          // [0] label-only readout (updated each frame)
+                { label: 'RES: --' },          // [1] label-only readout (updated each frame)
+                { label: 'FOVEATION: OFF', eventName: 'xrhud:foveation' }, // [2] toggle (off by default)
+                { label: 'EXIT XR', eventName: 'xr:end' } // [3] interactive: ends the XR session
+            ],
+            fontAsset: assets.font,
+            alwaysVisible: true,
+            followDistance: 0.6,
+            followOffset: new pc.Vec2(0.1, -0.1),
+            menuScale: HUD_BASE_SCALE,
+            buttonWidth: 0.13
+        }
+    });
+    app.root.addChild(menuEntity);
+    const xrHud = /** @type {any} */ (menuEntity.script).xrMenu;
+
+    // Fixed foveation toggle, driven from the in-XR HUD. Off by default. fixedFoveation can only be
+    // set during an active session and is ignored unless anti-aliasing is off (it is here).
+    let foveationEnabled = false;
+    const FOVEATION_LEVEL = 1; // highest foveation when enabled
+    const applyFoveation = () => {
+        app.xr.fixedFoveation = foveationEnabled ? FOVEATION_LEVEL : 0;
+        xrHud?.setItemLabel(2, `FOVEATION: ${foveationEnabled ? 'ON' : 'OFF'}`);
+    };
+    app.on('xrhud:foveation', () => {
+        foveationEnabled = !foveationEnabled;
+        applyFoveation();
     });
 
     /** @type {pc.Entity|null} */
@@ -316,7 +372,16 @@ assetListLoader.load(() => {
             // local-floor: WebXR puts the local-space origin at the floor below the viewer at
             // session start, so the camera (child of the rig) ends up at rig + ~1.6 m on Y.
             // `local` would put the head at rig.y, sinking the viewpoint into the scene floor.
-            app.fire('vr:start', pc.XRSPACE_LOCALFLOOR);
+            //
+            // Start XR directly (rather than firing 'vr:start') so we can pass framebufferScaleFactor
+            // from the controls — it is read-only once a session is running. XrSession still performs
+            // its rig setup, as that is bound to the xr 'start' event, not the start call.
+            camera.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
+                framebufferScaleFactor: data.get('framebufferScaleFactor'),
+                callback: (err) => {
+                    if (err) setMessage(`Failed to start VR: ${err.message}`);
+                }
+            });
         } else {
             setMessage('Immersive VR is not available');
         }
@@ -345,6 +410,13 @@ assetListLoader.load(() => {
         app.xr.on('start', () => {
             setCameraControlsForXr();
             updateEnterVrButton();
+            // Fixed foveation is per-session (new layer each session); start disabled and sync the HUD.
+            foveationEnabled = false;
+            applyFoveation();
+            // Scale the HUD up inversely with the framebuffer scale so text stays readable at lower
+            // resolutions (e.g. 0.5x scale -> 2x larger menu). Full resolution keeps the base size.
+            const scaleFactor = data.get('framebufferScaleFactor') || 1;
+            xrHud?.setMenuScale(HUD_BASE_SCALE / scaleFactor);
             setMessage('VR active — left thumbstick: move, right: turn; tap to exit');
         });
         app.xr.on('end', () => {
@@ -376,5 +448,9 @@ assetListLoader.load(() => {
         data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
         const bb = app.graphicsDevice.backBufferSize;
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
+
+        // Live readouts in the in-XR HUD (app.stats.frame.fps is recomputed once per second).
+        xrHud?.setItemLabel(0, `FPS: ${app.stats.frame.fps}`);
+        xrHud?.setItemLabel(1, `RES: ${bb.x} x ${bb.y}`);
     });
 });
