@@ -38,7 +38,7 @@ float delinearizeDepth(float linearDepth) {
 // Retrieves rendered linear camera depth by UV
 float getLinearScreenDepth(vec2 uv) {
     #ifdef SCENE_DEPTHMAP_LINEAR
-        #ifdef SCENE_DEPTHMAP_FLOAT
+        #ifdef CAPS_TEXTURE_FLOAT_RENDERABLE
             return texture2D(uSceneDepthMap, uv).r;
         #else
 
