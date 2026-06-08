@@ -23,8 +23,10 @@ export default /* glsl */`
             float cocNear = coc.g;
             if (cocNear > 0.0001) {
 
-                ivec2 nearTextureSize = textureSize(nearTexture, 0);
-                vec2 step = cocNear * blurRadiusNear / vec2(nearTextureSize);
+                // blur radius as a fraction of frame height, aspect-corrected so the kernel stays
+                // circular in screen pixels - this makes the effect resolution-independent
+                vec2 nearTextureSize = vec2(textureSize(nearTexture, 0));
+                vec2 step = cocNear * blurRadiusNear * vec2(nearTextureSize.y / nearTextureSize.x, 1.0);
 
                 for (int i = 0; i < {KERNEL_COUNT}; i++) {
                     vec2 uv = uv0 + step * kernel[i];
@@ -39,8 +41,8 @@ export default /* glsl */`
             
             if (cocFar > 0.0001) { // far blur
 
-            ivec2 farTextureSize = textureSize(farTexture, 0);
-            vec2 step = cocFar * blurRadiusFar / vec2(farTextureSize);
+            vec2 farTextureSize = vec2(textureSize(farTexture, 0));
+            vec2 step = cocFar * blurRadiusFar * vec2(farTextureSize.y / farTextureSize.x, 1.0);
 
             float sumCoC = 0.0; 
             for (int i = 0; i < {KERNEL_COUNT}; i++) {
