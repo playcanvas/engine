@@ -1661,13 +1661,23 @@ class GSplatManager {
         const viewportWidth = Math.floor((xrView ? xrView.viewport.z : (rt ? rt.width : this.device.width)) * rect.z);
         const viewportHeight = Math.floor((xrView ? xrView.viewport.w : (rt ? rt.height : this.device.height)) * rect.w);
 
+        // Stereo XR: project both eyes in a single projector pass (GSPLAT_XR variant). Requires
+        // exactly 2 parallel-axis views. Keep the VS define in sync with the projector variant.
+        const xrViewCount = sceneCam.xr?.session ? sceneCam.xr.views.list.length : 0;
+        if (xrViewCount > 2) {
+            Debug.errorOnce(`GSplatManager: the hybrid GPU-sort renderer supports at most 2 XR views (stereo), but the session has ${xrViewCount}. Additional views will not render correctly.`);
+        }
+        const isStereo = xrViewCount === 2;
+        this.renderer.setStereo?.(isStereo);
+
         const sortedIndices = this.sortGpuHybridForCamera(
             worldState,
             this.cameraNode,
             viewportWidth,
             viewportHeight,
             Math.max(ALPHA_VISIBILITY_THRESHOLD, this.scene.gsplat.alphaClipForward),
-            false
+            false,
+            isStereo
         );
 
         if (sortedIndices) {
@@ -1684,10 +1694,12 @@ class GSplatManager {
      * @param {number} viewportHeight - Projection viewport height in pixels.
      * @param {number} alphaClip - Projector producer alpha threshold.
      * @param {boolean} pickMode - Whether projector writes pcId into the cache.
+     * @param {boolean} [isStereo] - Whether to project both XR eyes in one pass (forward path only;
+     * picking stays mono).
      * @returns {StorageBuffer|null} The sorted cache indices, or null if no work was dispatched.
      * @private
      */
-    sortGpuHybridForCamera(worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, pickMode) {
+    sortGpuHybridForCamera(worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, pickMode, isStereo = false) {
         const gpuSorter = this.gpuSorter;
         const projector = this.projector;
         Debug.assert(gpuSorter && projector, 'Hybrid GPU sort not initialized');
@@ -1756,6 +1768,7 @@ class GSplatManager {
             pickMode,
             fisheyeProj,
             antiAlias: gsplat.antiAlias,
+            isStereo,
             material: gsplat.material
         });
 
@@ -1888,7 +1901,8 @@ class GSplatManager {
 
         const gsplat = this.scene.gsplat;
         const fp = this.renderer.fisheyeProj;
-        fp.update(gsplat.fisheye, cam.fov, cam.projectionMatrix);
+        // XR does not support fisheye in any renderer; resolveFisheye forces it off (and warns once).
+        fp.update(this.renderer.resolveFisheye(gsplat.fisheye), cam.fov, cam.projectionMatrix);
 
         if (fp.enabled) {
             this.workBuffer.frustumCuller.setFisheyeData(

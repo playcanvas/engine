@@ -57,6 +57,11 @@ struct ProjectorUniforms {
     minContribution: f32,
     minDist: f32,
     invRange: f32,
+    #ifdef GSPLAT_XR
+        // Eye-1 view-projection (raw XR projViewOffMat). Eye 0 uses viewProj above.
+        // Appended only for the stereo variant - matches the conditional CPU UBO field.
+        viewProj1: mat4x4f,
+    #endif
     #ifdef GSPLAT_FISHEYE
         fisheye_k: f32,
         fisheye_inv_k: f32,
@@ -102,6 +107,10 @@ fn main(
     var alpha: f32 = 0.0;
     var pcId: u32 = 0u;
     var sortKey: u32 = 0u;
+    #ifdef GSPLAT_XR
+        // Eye-1 NDC (eye 0 NDC is derived from clipPos in the write below).
+        var ndc1: vec2f = vec2f(0.0);
+    #endif
 
     let projected = projectSplatCommon(
         threadIdx,
@@ -171,6 +180,13 @@ fn main(
             clipPos.z = clamp(clipPos.z, 0.0, abs(clipPos.w));
         #endif
 
+        // Stereo: project the same world center through eye 1 to get its screen position.
+        // Everything else (covariance/eigenvectors, depth w, color, sort key) is shared from eye 0.
+        #ifdef GSPLAT_XR
+            let clip1 = uniforms.viewProj1 * vec4f(center, 1.0);
+            ndc1 = clip1.xy / clip1.w;
+        #endif
+
         // Sort key — shared depth-bin weighting (same as CPU worker).
         #ifdef RADIAL_SORT
             let delta = center - uniforms.cameraPosition;
@@ -228,19 +244,33 @@ fn main(
         let dst = wgBase + localDst;
         let base = dst * {CACHE_STRIDE}u;
 
-        projCache[base + 0u] = bitcast<u32>(clipPos.x);
-        projCache[base + 1u] = bitcast<u32>(clipPos.y);
-        projCache[base + 2u] = bitcast<u32>(clipPos.z);
-        projCache[base + 3u] = bitcast<u32>(clipPos.w);
-        projCache[base + 4u] = pack2x16float(v1);
-        projCache[base + 5u] = pack2x16float(v2);
-
-        #ifdef PICK_MODE
-            projCache[base + 6u] = pcId;
-            projCache[base + 7u] = pack2x16float(vec2f(0.0, alpha));
+        #ifdef GSPLAT_XR
+            // Stereo layout: per-eye NDC in [0..3], shared w/v1/v2/color in [4..7].
+            // clip.z is not stored — the hybrid VS reconstructs it from w (perspective only).
+            let ndc0 = clipPos.xy / clipPos.w;
+            projCache[base + 0u] = bitcast<u32>(ndc0.x);
+            projCache[base + 1u] = bitcast<u32>(ndc0.y);
+            projCache[base + 2u] = bitcast<u32>(ndc1.x);
+            projCache[base + 3u] = bitcast<u32>(ndc1.y);
+            projCache[base + 4u] = bitcast<u32>(clipPos.w);
+            projCache[base + 5u] = pack2x16float(v1);
+            projCache[base + 6u] = pack2x16float(v2);
+            projCache[base + 7u] = pack4x8unorm(vec4f(rgb, alpha));
         #else
-            projCache[base + 6u] = pack2x16float(vec2f(rgb.x, rgb.y));
-            projCache[base + 7u] = pack2x16float(vec2f(rgb.z, alpha));
+            projCache[base + 0u] = bitcast<u32>(clipPos.x);
+            projCache[base + 1u] = bitcast<u32>(clipPos.y);
+            projCache[base + 2u] = bitcast<u32>(clipPos.z);
+            projCache[base + 3u] = bitcast<u32>(clipPos.w);
+            projCache[base + 4u] = pack2x16float(v1);
+            projCache[base + 5u] = pack2x16float(v2);
+
+            #ifdef PICK_MODE
+                projCache[base + 6u] = pcId;
+                projCache[base + 7u] = pack2x16float(vec2f(0.0, alpha));
+            #else
+                projCache[base + 6u] = pack2x16float(vec2f(rgb.x, rgb.y));
+                projCache[base + 7u] = pack2x16float(vec2f(rgb.z, alpha));
+            #endif
         #endif
 
         sortKeys[dst] = sortKey;

@@ -53,13 +53,14 @@ const PROJECTOR_WORKGROUP_SIZE = 256;
 // these are ignored when merged into the projector compute, so user customization can't clobber
 // the projector's own variant/format configuration.
 const PROJECTOR_INTERNAL_DEFINES = new Set([
-    '{CACHE_STRIDE}', 'RADIAL_SORT', 'PICK_MODE', 'GSPLAT_FISHEYE', 'GSPLAT_AA', 'GSPLAT_COLOR_FLOAT'
+    '{CACHE_STRIDE}', 'RADIAL_SORT', 'PICK_MODE', 'GSPLAT_FISHEYE', 'GSPLAT_AA', 'GSPLAT_COLOR_FLOAT', 'GSPLAT_XR'
 ]);
 
 const _cameraDir = new Vec3();
 const _dispatchSize = new Vec2();
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
+const _viewProj1Data = new Float32Array(16);
 const _viewData = new Float32Array(16);
 const _shaderProjMat = new Mat4();
 
@@ -141,6 +142,14 @@ class GSplatProjector {
      * @type {UniformBufferFormat|null}
      */
     _projectorUniformBufferFormatFisheye = null;
+
+    /**
+     * Uniform buffer format for the XR stereo projector variant. Adds the eye-1
+     * view-projection matrix after the shared fields.
+     *
+     * @type {UniformBufferFormat|null}
+     */
+    _projectorUniformBufferFormatStereo = null;
 
     /** @type {Compute|null} */
     _writeIndirectArgsCompute = null;
@@ -233,6 +242,7 @@ class GSplatProjector {
         this._projectorBindGroupFormat = null;
         this._projectorUniformBufferFormat = null;
         this._projectorUniformBufferFormatFisheye = null;
+        this._projectorUniformBufferFormatStereo = null;
         this._writeIndirectArgsCompute = null;
         this._writeArgsBindGroupFormat = null;
         this._writeArgsUniformBufferFormat = null;
@@ -274,6 +284,13 @@ class GSplatProjector {
             new UniformFormat('fisheye_inv_k', UNIFORMTYPE_FLOAT),
             new UniformFormat('fisheye_projMat00', UNIFORMTYPE_FLOAT),
             new UniformFormat('fisheye_projMat11', UNIFORMTYPE_FLOAT)
+        ]);
+
+        // Stereo variant appends the eye-1 view-projection matrix (matches the GSPLAT_XR
+        // ifdef'd field in compute-gsplat-projector.js). Mutually exclusive with fisheye.
+        this._projectorUniformBufferFormatStereo = new UniformBufferFormat(device, [
+            ...baseFields.map(f => new UniformFormat(f.name, f.type)),
+            new UniformFormat('viewProj1', UNIFORMTYPE_MAT4)
         ]);
 
         this._writeArgsUniformBufferFormat = new UniformBufferFormat(device, [
@@ -336,11 +353,12 @@ class GSplatProjector {
      * @param {boolean} pickMode - Pick output mode.
      * @param {boolean} fisheyeMode - Fisheye projection mode.
      * @param {boolean} antiAlias - Anti-aliasing opacity compensation mode.
+     * @param {boolean} stereo - XR stereo (2-view) projection mode.
      * @returns {string} The cache key.
      * @private
      */
-    _projectorKey(radialSort, pickMode, fisheyeMode, antiAlias) {
-        return `${radialSort ? 'r' : 'l'}${pickMode ? 'p' : ''}${fisheyeMode ? 'f' : ''}${antiAlias ? 'a' : ''}`;
+    _projectorKey(radialSort, pickMode, fisheyeMode, antiAlias, stereo) {
+        return `${radialSort ? 'r' : 'l'}${pickMode ? 'p' : ''}${fisheyeMode ? 'f' : ''}${antiAlias ? 'a' : ''}${stereo ? 's' : ''}`;
     }
 
     /**
@@ -352,10 +370,11 @@ class GSplatProjector {
      * @param {boolean} fisheyeMode - Whether to compile the GSPLAT_FISHEYE variant.
      * @param {boolean} antiAlias - Whether to compile the GSPLAT_AA variant (bakes the
      * anti-aliasing opacity compensation into the cached alpha).
+     * @param {boolean} stereo - Whether to compile the GSPLAT_XR (2-view stereo) variant.
      * @returns {Compute} The created compute instance.
      * @private
      */
-    _createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias) {
+    _createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias, stereo) {
         const device = this.device;
         const wbFormat = workBuffer.format;
 
@@ -405,6 +424,9 @@ class GSplatProjector {
         if (antiAlias) {
             cdefines.set('GSPLAT_AA', '');
         }
+        if (stereo) {
+            cdefines.set('GSPLAT_XR', '');
+        }
 
         // Format-specific defines mirroring the compute renderer (compute-gsplat-local-renderer.js).
         const colorStream = wbFormat.getStream('dataColor');
@@ -422,11 +444,13 @@ class GSplatProjector {
             });
         }
 
-        const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}${antiAlias ? 'Aa' : ''}`;
+        const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}${antiAlias ? 'Aa' : ''}${stereo ? 'Stereo' : ''}`;
 
-        const ubFormat = fisheyeMode ?
-            this._projectorUniformBufferFormatFisheye :
-            this._projectorUniformBufferFormat;
+        const ubFormat = stereo ?
+            this._projectorUniformBufferFormatStereo :
+            fisheyeMode ?
+                this._projectorUniformBufferFormatFisheye :
+                this._projectorUniformBufferFormat;
 
         const shader = new Shader(device, {
             name: name,
@@ -476,20 +500,21 @@ class GSplatProjector {
      * @param {boolean} [pickMode] - Whether to use the pick-output variant.
      * @param {boolean} [fisheyeMode] - Whether to use the fisheye projection variant.
      * @param {boolean} [antiAlias] - Whether to use the anti-aliasing variant.
+     * @param {boolean} [stereo] - Whether to use the XR stereo (2-view) variant.
      * @returns {Compute} The projector compute instance.
      * @private
      */
-    _getProjectorCompute(workBuffer, radialSort, pickMode = false, fisheyeMode = false, antiAlias = false) {
+    _getProjectorCompute(workBuffer, radialSort, pickMode = false, fisheyeMode = false, antiAlias = false, stereo = false) {
         const wbFormat = workBuffer.format;
         if (this._formatVersion !== wbFormat.extraStreamsVersion) {
             this._destroyProjectorComputes();
             this._formatVersion = wbFormat.extraStreamsVersion;
         }
 
-        const key = this._projectorKey(radialSort, pickMode, fisheyeMode, antiAlias);
+        const key = this._projectorKey(radialSort, pickMode, fisheyeMode, antiAlias, stereo);
         let compute = this._projectorComputes.get(key);
         if (!compute) {
-            compute = this._createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias);
+            compute = this._createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias, stereo);
             this._projectorComputes.set(key, compute);
         }
         return compute;
@@ -576,6 +601,9 @@ class GSplatProjector {
      * @param {boolean} [params.antiAlias] - Whether to bake anti-aliasing opacity
      * compensation into the cached alpha. Ignored in pick mode (picking only gates on a
      * binary opacity threshold), which keeps the projector variant count down.
+     * @param {boolean} [params.isStereo] - Whether to project both XR eyes in a single pass
+     * (GSPLAT_XR variant). Requires `cameraNode.camera.camera.xr.views.list` to have 2 views.
+     * Mutually exclusive with pick and fisheye.
      */
     dispatch(params) {
         const {
@@ -586,10 +614,14 @@ class GSplatProjector {
             pickMode = false,
             fisheyeProj,
             antiAlias = false,
+            isStereo = false,
             material
         } = params;
 
         const fisheyeMode = !!fisheyeProj?.enabled;
+
+        // Stereo is XR perspective-only; never combined with pick (mono) or fisheye.
+        const stereoMode = !!isStereo && !pickMode && !fisheyeMode;
 
         // AA only matters for the forward color path; skip it for picking to avoid
         // doubling the projector variant count.
@@ -606,7 +638,7 @@ class GSplatProjector {
         // workgroups run their atomicAdds.
         this.renderCounter.clear();
 
-        const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, aaMode);
+        const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, aaMode, stereoMode);
 
         // Forward the user render-stage material parameters (uniforms/textures referenced by the
         // modify chunk, reflected into the projector's auto-generated bind group, matched by name).
@@ -654,13 +686,29 @@ class GSplatProjector {
         // (gsplat-compute-local-renderer.js) for math parity.
         const cameraComponent = cameraNode.camera;
         const cam = cameraComponent.camera;
-        const view = cam.viewMatrix;
         const webgpu = this.device.isWebGPU;
-        _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu), view);
-        _viewProjData.set(_viewProjMat.data);
-        _viewData.set(view.data);
-
-        const focal = viewportWidth * _shaderProjMat.data[0];
+        let focal;
+        if (stereoMode) {
+            // XR stereo: use the per-eye matrices the forward path uses (raw projViewOffMat — NO
+            // applyShaderProjectionTransform). Eye 0 drives the shared covariance/depth/sort; eye 1
+            // contributes only its screen position. The per-eye "off" matrices are refreshed at
+            // render time by setCameraUniforms, which runs AFTER this dispatch, so refresh them here.
+            const views = cam.xr.views.list;
+            const parent = cameraNode.parent?.getWorldTransform() ?? null;
+            views[0].updateTransforms(parent);
+            views[1].updateTransforms(parent);
+            _viewProjData.set(views[0].projViewOffMat.data);
+            _viewProj1Data.set(views[1].projViewOffMat.data);
+            _viewData.set(views[0].viewOffMat.data);
+            // raw eye-0 projection x-scale; both eyes share it in standard stereo.
+            focal = viewportWidth * views[0].projMat.data[0];
+        } else {
+            const view = cam.viewMatrix;
+            _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu), view);
+            _viewProjData.set(_viewProjMat.data);
+            _viewData.set(view.data);
+            focal = viewportWidth * _shaderProjMat.data[0];
+        }
 
         this.cameraPositionData[0] = cameraPos.x;
         this.cameraPositionData[1] = cameraPos.y;
@@ -674,6 +722,9 @@ class GSplatProjector {
 
         compute.setParameter('viewMatrix', _viewData);
         compute.setParameter('viewProj', _viewProjData);
+        if (stereoMode) {
+            compute.setParameter('viewProj1', _viewProj1Data);
+        }
 
         compute.setParameter('focal', focal);
         compute.setParameter('viewportWidth', viewportWidth);

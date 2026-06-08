@@ -664,8 +664,9 @@ class GSplatComputeLocalRenderer extends GSplatRenderer {
 
         const alphaClip = pickMode ? this._alphaClip : Math.max(ALPHA_VISIBILITY_THRESHOLD, this._alphaClipForward);
 
-        // Ensure fisheyeProj is up-to-date (culling may not have run this frame)
-        this.fisheyeProj.update(this._fisheye, camera.fov, cam.projectionMatrix);
+        // Ensure fisheyeProj is up-to-date (culling may not have run this frame).
+        // Forced off in XR — see GSplatRenderer.resolveFisheye.
+        this.fisheyeProj.update(this.resolveFisheye(this._fisheye), camera.fov, cam.projectionMatrix);
 
         const fisheyeEnabled = this.fisheyeProj.enabled;
         const createCountShader = (pick, fisheye) => this._createCountShaderAndFormat(pick, fisheye);
