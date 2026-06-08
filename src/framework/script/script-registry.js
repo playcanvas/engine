@@ -1,8 +1,12 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
+import { reservedScriptNames } from './constants.js';
+import { getScriptRegistryName } from './script.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
  * @import { AttributeSchema } from './script-attributes.js'
+ * @import { Script } from './script.js'
  * @import { ScriptType } from './script-type.js'
  */
 
@@ -15,10 +19,14 @@ import { EventHandler } from '../../core/event-handler.js';
  */
 class ScriptRegistry extends EventHandler {
     /**
-     * @type {Object<string, typeof ScriptType>}
+     * A Map of script names to script classes. A Map is used (rather than a plain object) so that
+     * script names which collide with `Object.prototype` members - e.g. `hasOwnProperty`,
+     * `toString`, `__proto__` - are stored and looked up safely.
+     *
+     * @type {Map<string, typeof ScriptType>}
      * @private
      */
-    _scripts = {};
+    _scripts = new Map();
 
     /**
      * @type {typeof ScriptType[]}
@@ -72,30 +80,65 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
-     * Add {@link ScriptType} to registry. Note: when {@link createScript} is called, it will add
-     * the {@link ScriptType} to the registry automatically. If a script already exists in
-     * registry, and the new script has a `swap` method defined, it will perform code hot swapping
-     * automatically in async manner.
+     * Add a script to the registry, keyed by its name. The name is taken from the script's static
+     * `scriptName` property (for {@link Script} classes), or assigned by {@link createScript} /
+     * {@link registerScript}. Note: when {@link createScript} or {@link registerScript} is called,
+     * the script is added to the registry automatically, so calling this method directly is only
+     * required when registering a {@link Script} class manually (e.g. in an engine-only project).
      *
-     * @param {typeof ScriptType} script - Script Type that is created
-     * using {@link createScript}.
-     * @returns {boolean} True if added for the first time or false if script already exists.
+     * If a script with the same name already exists in the registry, and the new script has a
+     * `swap` method defined, it will perform code hot swapping automatically in an async manner.
+     *
+     * @param {typeof Script | typeof ScriptType} script - The script class to add. Must have a
+     * resolvable name (a static `scriptName`, an assigned `__name`, or an inferable class name).
+     * @returns {boolean} True if the script was added for the first time. False if a script with
+     * the same name already exists, or if the script has no resolvable name.
      * @example
      * var PlayerController = pc.createScript('playerController');
      * // playerController Script Type will be added to pc.ScriptRegistry automatically
      * console.log(app.scripts.has('playerController')); // outputs true
+     * @example
+     * // engine-only: register an ESM Script class manually
+     * class Rotator extends pc.Script {
+     *     static scriptName = 'rotator';
+     * }
+     * app.scripts.add(Rotator);
+     * console.log(app.scripts.has('rotator')); // outputs true
      */
     add(script) {
-        const scriptName = script.__name;
+        // Resolve the script name from the class itself, considering only own properties. This
+        // handles two cases:
+        // - ESM scripts declare their name with a static `scriptName` field. Being a class field,
+        //   it shadows the inherited `scriptName` accessor with [[Define]] semantics, so the setter
+        //   that would assign `__name` never runs and `__name` is left unset.
+        // - A subclass must not inherit (and then overwrite in the registry) the name of its base
+        //   class, which would happen if `__name`/`scriptName` were read through the prototype chain.
+        // The result is persisted as an own `__name` so subsequent lookups resolve correctly.
+        const scriptName = getScriptRegistryName(script);
 
-        if (this._scripts.hasOwnProperty(scriptName)) {
+        if (!scriptName) {
+            Debug.error(`script class '${script?.name ?? script}' has no name and cannot be added to the script registry.`);
+            return false;
+        }
+
+        // Reject names that would clash with ScriptComponent/EventHandler members. This is also
+        // checked (and thrown) by `registerScript`/`createScript`, but is enforced here too so the
+        // direct `app.scripts.add()` path is guarded.
+        if (reservedScriptNames.has(scriptName)) {
+            Debug.error(`script name '${scriptName}' is reserved and cannot be added to the script registry.`);
+            return false;
+        }
+
+        script.__name = scriptName;
+
+        if (this._scripts.has(scriptName)) {
             setTimeout(() => {
                 if (script.prototype.swap) {
                     // swapping
-                    const old = this._scripts[scriptName];
+                    const old = this._scripts.get(scriptName);
                     const ind = this._list.indexOf(old);
                     this._list[ind] = script;
-                    this._scripts[scriptName] = script;
+                    this._scripts.set(scriptName, script);
 
                     this.fire('swap', scriptName, script);
                     this.fire(`swap:${scriptName}`, script);
@@ -106,7 +149,7 @@ class ScriptRegistry extends EventHandler {
             return false;
         }
 
-        this._scripts[scriptName] = script;
+        this._scripts.set(scriptName, script);
         this._list.push(script);
 
         this.fire('add', scriptName, script);
@@ -115,7 +158,7 @@ class ScriptRegistry extends EventHandler {
         // for all components awaiting Script Type
         // create script instance
         setTimeout(() => {
-            if (!this._scripts.hasOwnProperty(scriptName)) {
+            if (!this._scripts.has(scriptName)) {
                 return;
             }
 
@@ -209,7 +252,7 @@ class ScriptRegistry extends EventHandler {
             return false;
         }
 
-        delete this._scripts[scriptName];
+        this._scripts.delete(scriptName);
         const ind = this._list.indexOf(scriptType);
         this._list.splice(ind, 1);
 
@@ -229,7 +272,7 @@ class ScriptRegistry extends EventHandler {
      * var PlayerController = app.scripts.get('playerController');
      */
     get(name) {
-        return this._scripts[name] || null;
+        return this._scripts.get(name) || null;
     }
 
     /**
@@ -245,12 +288,12 @@ class ScriptRegistry extends EventHandler {
      */
     has(nameOrType) {
         if (typeof nameOrType === 'string') {
-            return this._scripts.hasOwnProperty(nameOrType);
+            return this._scripts.has(nameOrType);
         }
 
         if (!nameOrType) return false;
         const scriptName = nameOrType.__name;
-        return this._scripts[scriptName] === nameOrType;
+        return this._scripts.get(scriptName) === nameOrType;
     }
 
     /**

@@ -242,7 +242,7 @@ class ColorLUT {
 
     /**
      * Optional secondary LUT texture. When set, both LUTs are sampled and the two graded
-     * results are crossfaded according to {@link ColorLUT#blend}.
+     * results are crossfaded according to the blend factor.
      *
      * @attribute
      * @type {Asset}

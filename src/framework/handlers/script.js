@@ -5,13 +5,11 @@ import { ScriptTypes } from '../script/script-types.js';
 import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
 import { ResourceHandler } from './handler.js';
-import { Script } from '../script/script.js';
+import { Script, getScriptRegistryName, toLowerCamelCase } from '../script/script.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
  */
-
-const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
 /**
  * Resource handler for loading JavaScript files dynamically. Two types of JavaScript files can be
@@ -138,13 +136,21 @@ class ScriptHandler extends ResourceHandler {
 
                 if (extendsScriptType) {
 
-                    const lowerCamelCaseName = toLowerCamelCase(scriptClass.name);
+                    // a `scriptName` declared on THIS class; an inherited one belongs to a base
+                    const ownScriptName = Object.prototype.hasOwnProperty.call(scriptClass, 'scriptName') && scriptClass.scriptName;
 
-                    if (!scriptClass.scriptName) {
-                        Debug.warnOnce(`The Script class "${scriptClass.name}" must have a static "scriptName" property: \`${scriptClass.name}.scriptName = "${lowerCamelCaseName}";\`. This will be an error in future versions of PlayCanvas.`);
+                    if (!ownScriptName) {
+                        Debug.warnOnce(`The Script class "${scriptClass.name}" must have a static "scriptName" property: \`${scriptClass.name}.scriptName = "${toLowerCamelCase(scriptClass.name)}";\`. This will be an error in future versions of PlayCanvas.`);
                     }
 
-                    const scriptName = scriptClass.scriptName ?? lowerCamelCaseName;
+                    const scriptName = getScriptRegistryName(scriptClass);
+
+                    // skip exports whose name cannot be resolved rather than registering under an
+                    // invalid key
+                    if (!scriptName) {
+                        Debug.error(`Script class exported as '${key}' from '${url}' has no resolvable name and was skipped. Add a static "scriptName" property.`);
+                        continue;
+                    }
 
                     // Register the script name
                     registerScript(scriptClass, scriptName);

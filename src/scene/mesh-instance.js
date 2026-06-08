@@ -288,6 +288,36 @@ class MeshInstance {
     visible = true;
 
     /**
+     * A bitmask controlling which shader passes this mesh instance is rendered in. Bit N
+     * corresponds to the shader pass with index N: the built-in forward pass is
+     * {@link SHADER_FORWARD}, and indices for custom shader passes are obtained from
+     * {@link CameraComponent#setShaderPass}. Defaults to `0xFFFFFFFF` (all passes). For example,
+     * clearing the forward pass bit keeps the mesh in the other passes (such as the camera depth
+     * prepass that feeds Depth of Field) while making it invisible in the rendered color image.
+     *
+     * @type {number}
+     * @example
+     * // clear the forward (color) pass bit, leaving all other pass bits set: the mesh is no longer
+     * // drawn in the color image, but still takes part in the other passes (such as the prepass)
+     * meshInstance.shaderPassMask &= ~(1 << pc.SHADER_FORWARD);
+     * @example
+     * // set the forward (color) pass bit, leaving all other pass bits unchanged
+     * meshInstance.shaderPassMask |= (1 << pc.SHADER_FORWARD);
+     * @example
+     * // exclude the mesh from a custom shader pass set up on the camera (see
+     * // CameraComponent#setShaderPass), leaving all other pass bits set
+     * const customPass = cameraComponent.setShaderPass('custom_rendering');
+     * meshInstance.shaderPassMask &= ~(1 << customPass);
+     * @example
+     * // test whether the forward (color) pass bit is set
+     * const forwardBitSet = (meshInstance.shaderPassMask & (1 << pc.SHADER_FORWARD)) !== 0;
+     * @example
+     * // set every pass bit (the default value)
+     * meshInstance.shaderPassMask = 0xFFFFFFFF;
+     */
+    shaderPassMask = 0xFFFFFFFF;
+
+    /**
      * Read this value in the {@link Scene.EVENT_POSTCULL} event to determine if the object is
      * actually going to be rendered.
      */

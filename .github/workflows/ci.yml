@@ -38,6 +38,9 @@ jobs:
       - name: Run Publint
         run: npm run publint
 
+      - name: Run Post-build tests
+        run: npm run test:build
+
   docs:
     name: Docs
     runs-on: ubuntu-latest

@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
@@ -88,6 +89,15 @@ class GSplatIntervalCompaction {
 
     /** @type {Compute|null} */
     _scatterCompute = null;
+
+    /**
+     * Reused 2D dispatch size for the scatter pass. The scatter pass dispatches one workgroup per
+     * interval; when the interval count exceeds the device's per-dimension workgroup limit it is
+     * tiled across X and Y (see {@link Compute.calcDispatchSize}).
+     *
+     * @type {Vec2}
+     */
+    _scatterDispatchSize = new Vec2(1, 1);
 
     /** @type {Compute|null} */
     _writeIndirectArgsCompute = null;
@@ -449,8 +459,12 @@ class GSplatIntervalCompaction {
         scatterCompute.setParameter('pad1', 0);
         scatterCompute.setParameter('pad2', 0);
 
-        // One workgroup per interval (1D dispatch; numIntervals is always well below 65535)
-        scatterCompute.setupDispatch(numIntervals);
+        // One workgroup per interval. The interval count can exceed the device's per-dimension
+        // workgroup limit (e.g. many instances across the full LOD range), so tile the dispatch
+        // across X and Y. The shader reconstructs the linear interval index from (x, y) and
+        // discards any over-dispatched workgroups via its numIntervals bounds check.
+        Compute.calcDispatchSize(numIntervals, this._scatterDispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        scatterCompute.setupDispatch(this._scatterDispatchSize.x, this._scatterDispatchSize.y, 1);
         this.device.computeDispatch([scatterCompute], 'GSplatIntervalScatter');
     }
 
