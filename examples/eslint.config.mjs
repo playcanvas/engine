@@ -310,8 +310,7 @@ const importOrder = ['error', {
         }
     ],
     pathGroupsExcludedImportTypes: ['builtin', 'object'],
-    'newlines-between': 'always',
-    alphabetize: { order: 'asc', caseInsensitive: true }
+    'newlines-between': 'always'
 }];
 
 // minimal jsx-uses-vars: mark JSX-referenced identifiers as used so no-unused-vars sees imported
