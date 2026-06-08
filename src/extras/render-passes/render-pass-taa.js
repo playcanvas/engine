@@ -57,7 +57,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
         defines.set('QUALITY_HIGH', true);
 
         // add defines needed for correct use of screenDepthPS chunk
-        ShaderUtils.addScreenDepthChunkDefines(device, cameraComponent.shaderParams, defines);
+        ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
 
         this.shader = ShaderUtils.createShader(device, {
             uniqueName: 'TaaResolveShader',
