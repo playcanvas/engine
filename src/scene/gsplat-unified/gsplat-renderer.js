@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import gsplatOutputVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatOutput.js';
 import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { FisheyeProjection } from '../graphics/fisheye-projection.js';
@@ -72,6 +73,23 @@ class GSplatRenderer {
     }
 
     destroy() {
+    }
+
+    /**
+     * Resolves the effective fisheye strength for this renderer's camera. Fisheye is not supported
+     * in XR by any renderer (it overrides the per-eye perspective projection), so it is forced off
+     * while an XR session is active. Warns once when a non-zero value is suppressed.
+     *
+     * @param {number} fisheye - Requested fisheye strength (typically `scene.gsplat.fisheye`).
+     * @returns {number} The fisheye strength to use (0 while in XR, otherwise `fisheye`).
+     */
+    resolveFisheye(fisheye) {
+        const xrActive = !!this.cameraNode.camera?.camera?.xr?.session;
+        if (xrActive && fisheye > 0) {
+            Debug.warnOnce('GSplat: fisheye projection is not supported in XR; disabling it.');
+            return 0;
+        }
+        return fisheye;
     }
 
     /**

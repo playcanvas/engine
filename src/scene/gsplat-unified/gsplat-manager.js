@@ -1901,7 +1901,8 @@ class GSplatManager {
 
         const gsplat = this.scene.gsplat;
         const fp = this.renderer.fisheyeProj;
-        fp.update(gsplat.fisheye, cam.fov, cam.projectionMatrix);
+        // XR does not support fisheye in any renderer; resolveFisheye forces it off (and warns once).
+        fp.update(this.renderer.resolveFisheye(gsplat.fisheye), cam.fov, cam.projectionMatrix);
 
         if (fp.enabled) {
             this.workBuffer.frustumCuller.setFisheyeData(
