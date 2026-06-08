@@ -183,9 +183,10 @@ class FramePassDof extends FramePass {
         this.cocPass.focusDistance = this.focusDistance;
         this.cocPass.focusRange = this.focusRange;
 
-        // adjust blur sizes to give us the same results regardless of the quality (resolution)
+        // blur radius is normalized against the blur pass reference height, so the effect is now
+        // resolution- and quality-independent and needs no per-quality compensation
         this.blurPass.blurRadiusNear = this.blurRadius;
-        this.blurPass.blurRadiusFar = this.blurRadius * (this.highQuality ? 1 : 0.5);
+        this.blurPass.blurRadiusFar = this.blurRadius;
 
         this.blurPass.blurRings = this.blurRings;
         this.blurPass.blurRingPoints = this.blurRingPoints;
