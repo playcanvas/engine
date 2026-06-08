@@ -3,7 +3,7 @@ name: API Report
 # Builds a full-signature view of the public API for the PR head and its base, sourced from
 # TypeDoc's --json model — so it follows the docs' public-API rules (excludeNotDocumented, @ignore,
 # @private, the typedoc plugin) and never reports internal/ignored symbols. Diffs the two and
-# posts/updates a sticky PR comment. Informative only; never fails the build.
+# posts/updates/removes a sticky PR comment. Informative only; never fails the build.
 #
 # Note: comments directly, so on fork PRs (read-only token) the comment step can't post; it is
 # marked continue-on-error so those runs stay green (just without a comment).
@@ -76,25 +76,28 @@ jobs:
             const adds = lines.filter(l => l.startsWith('+')).length;
             const dels = lines.filter(l => l.startsWith('-')).length;
 
-            let body;
-            if (!lines.length) {
-              body = `${MARKER}\n### Public API report\n\n✅ No public API changes in this PR.`;
-            } else {
-              // ~~~ fence (not ```), so backticks in PR-controlled content can't break out
-              let diff = lines.join('\n');
-              const LIMIT = 60000;
-              const note = diff.length > LIMIT ? '\n… (diff truncated)' : '';
-              if (note) diff = diff.slice(0, LIMIT);
-              body = `${MARKER}\n### Public API report\n\n`
-                + `This PR changes the public API surface (**+${adds} / −${dels}**), per the docs' rules `
-                + `(@ignore / @private / undocumented are excluded).\n\n`
-                + `<details><summary>Show API diff</summary>\n\n~~~diff\n${diff}${note}\n~~~\n\n</details>\n\n`
-                + `_Informational only — this never fails the build._`;
-            }
-
             const { owner, repo } = context.repo;
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: prNumber });
             const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            if (!lines.length) {
+              if (existing) {
+                await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+              }
+              return;
+            }
+
+            // ~~~ fence (not ```), so backticks in PR-controlled content can't break out
+            let diff = lines.join('\n');
+            const LIMIT = 60000;
+            const note = diff.length > LIMIT ? '\n… (diff truncated)' : '';
+            if (note) diff = diff.slice(0, LIMIT);
+            const body = `${MARKER}\n### Public API report\n\n`
+              + `This PR changes the public API surface (**+${adds} / −${dels}**), per the docs' rules `
+              + `(@ignore / @private / undocumented are excluded).\n\n`
+              + `<details><summary>Show API diff</summary>\n\n~~~diff\n${diff}${note}\n~~~\n\n</details>\n\n`
+              + `_Informational only — this never fails the build._`;
+
             if (existing) {
               await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
             } else {
