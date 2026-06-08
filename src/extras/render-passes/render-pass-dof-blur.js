@@ -120,7 +120,9 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
         this.kernelCountId.setValue(this.kernel.length >> 1);
 
         // express the blur radius as a fraction of the reference height, so the effect is
-        // resolution-independent (the shader then aspect-corrects it to stay circular in pixels)
+        // guard against an invalid reference height to avoid Infinity/NaN blur radii
+        const referenceHeight = this.referenceHeight > 0 ? this.referenceHeight : 540;
+        const invReferenceHeight = 1 / referenceHeight;
         const invReferenceHeight = 1 / this.referenceHeight;
         this.blurRadiusNearId.setValue(this.blurRadiusNear * invReferenceHeight);
         this.blurRadiusFarId.setValue(this.blurRadiusFar * invReferenceHeight);
