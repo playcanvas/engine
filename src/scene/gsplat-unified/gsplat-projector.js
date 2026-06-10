@@ -271,7 +271,9 @@ class GSplatProjector {
             new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT),
             new UniformFormat('minContribution', UNIFORMTYPE_FLOAT),
             new UniformFormat('minDist', UNIFORMTYPE_FLOAT),
-            new UniformFormat('invRange', UNIFORMTYPE_FLOAT)
+            new UniformFormat('invRange', UNIFORMTYPE_FLOAT),
+            new UniformFormat('foveationStrength', UNIFORMTYPE_FLOAT),
+            new UniformFormat('foveationCenter', UNIFORMTYPE_FLOAT)
         ];
 
         this._projectorUniformBufferFormat = new UniformBufferFormat(device, baseFields);
@@ -590,6 +592,10 @@ class GSplatProjector {
      * @param {number} params.alphaClip - Alpha cull threshold.
      * @param {number} params.minPixelSize - Minimum on-screen pixel size before culling.
      * @param {number} params.minContribution - Minimum total contribution before culling.
+     * @param {number} params.foveationStrength - Foveated culling strength added to
+     * `minContribution` toward the screen edges (0 disables).
+     * @param {number} params.foveationCenter - Protected centre radius (NDC units) within which
+     * foveated culling has no effect.
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
      * @param {boolean} params.flipY - Whether the active render target uses `flipY` (must match
@@ -610,6 +616,7 @@ class GSplatProjector {
             workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
             totalCapacity, radialSort, numBits, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
+            foveationStrength = 0, foveationCenter = 0.3,
             viewportWidth, viewportHeight, flipY,
             pickMode = false,
             fisheyeProj,
@@ -734,6 +741,8 @@ class GSplatProjector {
         compute.setParameter('alphaClip', alphaClip);
         compute.setParameter('minPixelSize', minPixelSize);
         compute.setParameter('minContribution', minContribution);
+        compute.setParameter('foveationStrength', foveationStrength);
+        compute.setParameter('foveationCenter', foveationCenter);
         compute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
         compute.setParameter('splatTextureSize', workBuffer.textureSize);
         compute.setParameter('numBins', GSplatSortBinWeights.NUM_BINS);
