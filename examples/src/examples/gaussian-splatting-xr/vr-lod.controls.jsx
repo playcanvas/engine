@@ -38,10 +38,10 @@ export function Controls({ observer }) {
                     <SliderInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'splatBudget' }}
-                        min={0.1}
-                        max={3}
-                        precision={2}
-                        step={0.05}
+                        min={0.5}
+                        max={4}
+                        precision={1}
+                        step={0.5}
                     />
                 </LabelGroup>
                 <LabelGroup text='XR Res Scale'>

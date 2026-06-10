@@ -6,6 +6,22 @@
 // title: Roman Parish
 // author: Andrii Shramko
 // source: https://www.linkedin.com/in/andrii-shramko/
+//
+// @credit
+// title: Ice Cave
+// author: SpAItial AI
+// source: https://spaitial.ai/
+//
+// @credit
+// title: SA3D_R&D_XP47
+// author: Stephane Agullo
+// source: https://superspl.at/view?id=cdcec084
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Skatepark
+// author: Christoph Schindelar
+// source: https://superspl.at/user?id=schindelar3d
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -25,6 +41,10 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+
+// Enable GPU timing (timestamp queries) so the HUD can show total GPU time per frame
+// (sum of all compute + render passes), same source MiniStats uses.
+device.gpuProfiler.enabled = true;
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -191,8 +211,9 @@ assetListLoader.load(() => {
         }
     });
 
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('splatBudget', 1);
+    // Pick the renderer per backend: GPU-sort (compute) on WebGPU, CPU-sort raster on WebGL.
+    data.set('renderer', device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT);
+    data.set('splatBudget', 2);
     // XR framebuffer scale factor (applied only when starting an XR session; does not affect 2D).
     data.set('framebufferScaleFactor', 1);
     data.set('data.stats.gsplats', '—');
@@ -236,15 +257,15 @@ assetListLoader.load(() => {
             endEvent: 'xr:end'
         }
     });
-    cameraRig.script.create(XrNavigation, {
+    const xrNavigation = /** @type {any} */ (cameraRig.script.create(XrNavigation, {
         properties: {
-            enableTeleport: false,
+            enableTeleport: true,
             enableSnapVertical: false,
             movementThreshold: 0,
             turnMode: 'smooth',
             smoothTurnSpeed: 90
         }
-    });
+    }));
 
     // In-XR debug HUD: an always-visible, camera-following menu. Label-only rows (no eventName)
     // act as live readouts updated each frame via setItemLabel. Starting with FPS.
@@ -256,9 +277,18 @@ assetListLoader.load(() => {
         properties: {
             menuItems: [
                 { label: 'FPS: --' },          // [0] label-only readout (updated each frame)
-                { label: 'RES: --' },          // [1] label-only readout (updated each frame)
-                { label: 'FOVEATION: OFF', eventName: 'xrhud:foveation' }, // [2] toggle (off by default)
-                { label: 'EXIT XR', eventName: 'xr:end' } // [3] interactive: ends the XR session
+                { label: 'GPU: --' },          // [1] total GPU time per frame (updated each frame)
+                { label: 'RES: --' },          // [2] label-only readout (updated each frame)
+                { label: 'FOVEATION: OFF', eventName: 'xrhud:foveation' }, // [3] toggle (off by default)
+                // [4] number row: splat budget, +/- 0.5M (0.5..4M)
+                { type: 'number', label: 'BUDGET', value: '2.0M', decEvent: 'budget:dec', incEvent: 'budget:inc' },
+                // [5] number row: scene index (0 = original, 1 = cave, 2 = skatepark)
+                { type: 'number', label: 'SCENE', value: '0', decEvent: 'scene:dec', incEvent: 'scene:inc' },
+                // [6] number row: minContribution, +/- 2 (1..20)
+                { type: 'number', label: 'Contribution', value: '5', decEvent: 'contribution:dec', incEvent: 'contribution:inc' },
+                // [7] number row: alphaClipForward, stepped 1/255 .. 1/2
+                { type: 'number', label: 'AlphaClip', value: '1/16', decEvent: 'alphaclip:dec', incEvent: 'alphaclip:inc' },
+                { label: 'EXIT XR', eventName: 'xr:end' } // [8] interactive: ends the XR session
             ],
             fontAsset: assets.font,
             alwaysVisible: true,
@@ -271,18 +301,91 @@ assetListLoader.load(() => {
     app.root.addChild(menuEntity);
     const xrHud = /** @type {any} */ (menuEntity.script).xrMenu;
 
+    // Replace the engine's ray-to-ground teleport with a fixed-step "dash" in the direction the user
+    // is looking. The ray-to-ground jump behaves badly near floor level (a near-horizontal ray hits
+    // the ground far away, throwing you outside the scene), and AVP has no thumbstick for smooth
+    // locomotion. A pinch moves a fixed distance along the head's horizontal forward, keeping the
+    // current elevation (XZ only). The menu veto is preserved so pinches on the HUD just click.
+    const MOVE_STEP = 1.5; // metres per pinch
+    const moveDir = new pc.Vec3();
+    xrNavigation.tryTeleport = () => {
+        if (xrHud?.isPointerOverMenu) return;
+
+        moveDir.copy(camera.forward);
+        moveDir.y = 0; // flatten to the ground plane — never change elevation
+        if (moveDir.lengthSq() < 1e-6) return; // looking straight up/down: no horizontal direction
+        moveDir.normalize().mulScalar(MOVE_STEP);
+
+        cameraRig.translate(moveDir.x, 0, moveDir.z);
+    };
+
     // Fixed foveation toggle, driven from the in-XR HUD. Off by default. fixedFoveation can only be
     // set during an active session and is ignored unless anti-aliasing is off (it is here).
     let foveationEnabled = false;
     const FOVEATION_LEVEL = 1; // highest foveation when enabled
     const applyFoveation = () => {
         app.xr.fixedFoveation = foveationEnabled ? FOVEATION_LEVEL : 0;
-        xrHud?.setItemLabel(2, `FOVEATION: ${foveationEnabled ? 'ON' : 'OFF'}`);
+        xrHud?.setItemLabel(3, `FOVEATION: ${foveationEnabled ? 'ON' : 'OFF'}`);
     };
     app.on('xrhud:foveation', () => {
         foveationEnabled = !foveationEnabled;
         applyFoveation();
     });
+
+    // In-XR splat budget control (number row [4]). +/- 0.5M, clamped to 0.5..4M. Writes the same
+    // 'splatBudget' observer the 2D slider uses, so both stay in sync.
+    const BUDGET_ROW = 4;
+    let budgetM = data.get('splatBudget') ?? 2;
+    const applyBudget = () => {
+        data.set('splatBudget', budgetM);
+        xrHud?.setItemValue(BUDGET_ROW, `${budgetM.toFixed(1)}M`);
+    };
+    app.on('budget:dec', () => {
+        budgetM = Math.max(0.5, Math.round((budgetM - 0.5) * 2) / 2);
+        applyBudget();
+    });
+    app.on('budget:inc', () => {
+        budgetM = Math.min(4, Math.round((budgetM + 0.5) * 2) / 2);
+        applyBudget();
+    });
+    applyBudget(); // seed the readout
+
+    // In-XR minContribution control (number row [6]). +/- 2, clamped to 1..20 (default 5).
+    const CONTRIB_ROW = 6;
+    let contribution = 5;
+    const applyContribution = () => {
+        app.scene.gsplat.minContribution = contribution;
+        xrHud?.setItemValue(CONTRIB_ROW, `${contribution}`);
+    };
+    app.on('contribution:dec', () => {
+        contribution = Math.max(1, contribution - 2);
+        applyContribution();
+    });
+    app.on('contribution:inc', () => {
+        contribution = Math.min(20, contribution + 2);
+        applyContribution();
+    });
+    applyContribution(); // seed the readout
+
+    // In-XR alphaClipForward control (number row [7]). Stepped through nice reciprocals from the
+    // current default 1/255 up to 1/2 (10 steps); displayed as "1/N". '+' raises the alpha floor.
+    const ALPHACLIP_ROW = 7;
+    const ALPHACLIP_DENOMS = [255, 128, 64, 48, 32, 24, 16, 8, 4, 2];
+    let alphaClipIndex = 6; // 1/16
+    const applyAlphaClip = () => {
+        const denom = ALPHACLIP_DENOMS[alphaClipIndex];
+        app.scene.gsplat.alphaClipForward = 1 / denom;
+        xrHud?.setItemValue(ALPHACLIP_ROW, `1/${denom}`);
+    };
+    app.on('alphaclip:dec', () => {
+        alphaClipIndex = Math.max(0, alphaClipIndex - 1);
+        applyAlphaClip();
+    });
+    app.on('alphaclip:inc', () => {
+        alphaClipIndex = Math.min(ALPHACLIP_DENOMS.length - 1, alphaClipIndex + 1);
+        applyAlphaClip();
+    });
+    applyAlphaClip(); // seed the readout
 
     /** @type {pc.Entity|null} */
     let gsplatEntity = null;
@@ -299,14 +402,14 @@ assetListLoader.load(() => {
         }
     };
 
-    const loadGsplat = () => {
+    const loadGsplat = (scene) => {
         if (gsplatEntity) {
             gsplatEntity.destroy();
             gsplatEntity = null;
             gsplatGs = null;
         }
 
-        const asset = assets.church;
+        const asset = scene.asset;
 
         gsplatEntity = new pc.Entity(config.name || 'gsplat');
         gsplatEntity.addComponent('gsplat', {
@@ -314,7 +417,7 @@ assetListLoader.load(() => {
             unified: true
         });
         gsplatEntity.setLocalPosition(0, 0, 0);
-        gsplatEntity.setLocalEulerAngles(270, 0, 0);
+        gsplatEntity.setLocalEulerAngles(scene.euler[0], scene.euler[1], scene.euler[2]);
         gsplatEntity.setLocalScale(1, 1, 1);
         app.root.addChild(gsplatEntity);
         gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
@@ -341,8 +444,8 @@ assetListLoader.load(() => {
         gsplatEntity.addComponent('script');
         const revealScript = gsplatEntity.script?.create(GsplatRevealRadial);
         if (revealScript) {
-            revealScript.center.set(focusX, focusY, focusZ);
-            revealScript.speed = 5;
+            revealScript.center.set(scene.focus[0], scene.focus[1], scene.focus[2]);
+            revealScript.speed = 10;
             revealScript.acceleration = 0;
             revealScript.delay = 3;
             revealScript.oscillationIntensity = 0.2;
@@ -350,7 +453,84 @@ assetListLoader.load(() => {
         }
     };
 
-    loadGsplat();
+    // Selectable scenes via the in-XR SCENE number row: 0 = original, 1 = the cave from the
+    // gaussian-splatting/depth-of-field example. The cave splat is unrotated (its proxy is what's
+    // flipped in that example), whereas the original needs a 180° flip.
+    const caveAsset = new pc.Asset('gsplat-cave', 'gsplat', {
+        url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_cave_01/lod-meta.json'
+    });
+    app.assets.add(caveAsset);
+
+    const skateparkAsset = new pc.Asset('gsplat-skatepark', 'gsplat', {
+        url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json'
+    });
+    app.assets.add(skateparkAsset);
+
+    const apartmentAsset = new pc.Asset('gsplat-apartment', 'gsplat', {
+        url: './assets/splats/apartment.sog'
+    });
+    app.assets.add(apartmentAsset);
+
+    const SCENES = [
+        // 0: original Roman Parish church — rig at the configured start, looking at the focus point
+        { asset: assets.church, euler: [270, 0, 0], pos: config.cameraPosition, focus: config.focusPoint || [0, 0.6, 0] },
+        // 1: cave — small interior; viewpoint roughly matches the depth-of-field example
+        { asset: caveAsset, euler: [0, 0, 0], pos: [0.1, -0.1, 0.06], focus: [1.2, -0.4, 1.0] },
+        // 2: apartment (.sog) — start at the editor/paint "biker1" spot, transformed into this
+        // scene's frame (apartment at origin, euler 180, scale 1), looking toward the interior
+        { asset: apartmentAsset, euler: [180, 0, 0], pos: [-3.8, -0.1, 7.2], focus: [0, -0.1, 0] },
+        // 3: skatepark — viewpoint from the lod-streaming-sh example
+        { asset: skateparkAsset, euler: [-90, 0, 0], pos: [32, 2, 2], focus: [0, 0.6, 0] }
+    ];
+    const SCENE_ROW = 5;
+    let sceneIndex = 0;
+
+    // Place the XR rig for a scene: stand on the scene ground (y = 0, mirroring what XrSession does
+    // at session start) and face the focus horizontally. In XR the headset supplies eye height and
+    // pitch, so we keep yaw only — using the full desktop pos.y here would lift the viewer metres off
+    // the ground (the "giant" effect), and keeping the previous yaw would leave you facing the wrong
+    // way after a scene switch.
+    const placeForSceneXr = (scene) => {
+        const p = scene.pos;
+        const f = scene.focus;
+        // Stand on the ground (y = 0) by default; per-scene `xrY` lifts the spawn for scenes whose
+        // floor sits below the origin.
+        cameraRig.setLocalPosition(p[0], scene.xrY ?? 0, p[2]);
+        cameraRig.lookAt(f[0], f[1], f[2]);
+        const yaw = cameraRig.getLocalEulerAngles().y;
+        cameraRig.setLocalEulerAngles(0, yaw, 0);
+    };
+
+    const setScene = (index) => {
+        sceneIndex = pc.math.clamp(index, 0, SCENES.length - 1);
+        xrHud?.setItemValue(SCENE_ROW, `${sceneIndex}`);
+        const scene = SCENES[sceneIndex];
+
+        // Position the viewpoint for this scene. On desktop the fly camera (cc) owns the pose; in
+        // XR the rig is the floor-level navigation root and the headset supplies height/pitch.
+        if (app.xr.active) {
+            placeForSceneXr(scene);
+        } else {
+            const p = scene.pos;
+            const f = scene.focus;
+            cameraRig.setLocalPosition(p[0], p[1], p[2]);
+            cc.reset(new pc.Vec3(f[0], f[1], f[2]), new pc.Vec3(p[0], p[1], p[2]));
+        }
+
+        if (scene.asset.loaded) {
+            loadGsplat(scene);
+        } else {
+            // load on demand; guard against a newer selection completing first
+            scene.asset.once('load', () => {
+                if (SCENES[sceneIndex] === scene) loadGsplat(scene);
+            });
+            app.assets.load(scene.asset);
+        }
+    };
+    app.on('scene:dec', () => setScene(sceneIndex - 1));
+    app.on('scene:inc', () => setScene(sceneIndex + 1));
+
+    setScene(0);
 
     const applySplatBudget = () => {
         const millions = data.get('splatBudget');
@@ -417,6 +597,10 @@ assetListLoader.load(() => {
             // resolutions (e.g. 0.5x scale -> 2x larger menu). Full resolution keeps the base size.
             const scaleFactor = data.get('framebufferScaleFactor') || 1;
             xrHud?.setMenuScale(HUD_BASE_SCALE / scaleFactor);
+            // Stand on the ground facing the focus for the current scene. XrSession's own 'start'
+            // handler runs first (registered earlier) and derives the rig from the desktop camera —
+            // re-place here so the XR viewpoint is ground-level and correctly oriented.
+            placeForSceneXr(SCENES[sceneIndex]);
             setMessage('VR active — left thumbstick: move, right: turn; tap to exit');
         });
         app.xr.on('end', () => {
@@ -444,13 +628,20 @@ assetListLoader.load(() => {
         setMessage('WebXR is not supported');
     }
 
-    app.on('update', () => {
-        data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
+    // Refresh the readouts at ~2 Hz so the numbers are readable rather than flickering every frame.
+    let hudTimer = 0;
+    app.on('update', (dt) => {
+        hudTimer += dt;
+        if (hudTimer < 0.5) return;
+        hudTimer = 0;
+
         const bb = app.graphicsDevice.backBufferSize;
+        data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 
-        // Live readouts in the in-XR HUD (app.stats.frame.fps is recomputed once per second).
+        // GPU time is the sum of all compute + render pass timings (device.gpuProfiler).
         xrHud?.setItemLabel(0, `FPS: ${app.stats.frame.fps}`);
-        xrHud?.setItemLabel(1, `RES: ${bb.x} x ${bb.y}`);
+        xrHud?.setItemLabel(1, `GPU: ${(device.gpuProfiler?._frameTime ?? 0).toFixed(1)}ms`);
+        xrHud?.setItemLabel(2, `RES: ${bb.x} x ${bb.y}`);
     });
 });

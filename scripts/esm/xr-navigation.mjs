@@ -284,7 +284,12 @@ class XrNavigation extends Script {
 
             const handleSelectEnd = () => {
                 this.activePointers.set(inputSource, false);
-                this.tryTeleport(inputSource);
+                // Only teleport when teleportation is enabled. Otherwise a select/pinch gesture
+                // (e.g. used to click a UI element) would still snap the rig to the floor point
+                // under the ray.
+                if (this.enableTeleport) {
+                    this.tryTeleport(inputSource);
+                }
             };
 
             // Attach the handlers
