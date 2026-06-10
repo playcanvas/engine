@@ -83,7 +83,7 @@ app.on('destroy', () => {
 // capture storing Y as "down"; otherwise the world arrives upside-down.
 const config = {
     name: 'Poland-village',
-    url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_poland_02/lod-meta.json',
+    url: 'https://code.playcanvas.com/examples_data/example_poland_02/lod-meta.json',
     // Camera-movement threshold (world units) that retriggers LOD evaluation. Each instance
     // footprint is hundreds of units across, so re-evaluating every 0.5 units was overkill —
     // 32 still updates well before the camera crosses a meaningful fraction of a tile.

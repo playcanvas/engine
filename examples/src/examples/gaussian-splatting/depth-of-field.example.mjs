@@ -92,7 +92,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    island: new pc.Asset('gsplat', 'gsplat', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_cave_01/lod-meta.json' }),
+    island: new pc.Asset('gsplat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_cave_01/lod-meta.json' }),
     proxy: new pc.Asset('proxy', 'container', { url: './assets/models/cave.glb' }),
     collision: new pc.Asset('collision', 'container', { url: './assets/models/cave-collision.glb' })
 };
