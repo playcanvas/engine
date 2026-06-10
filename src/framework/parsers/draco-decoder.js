@@ -81,7 +81,21 @@ class JobQueue {
         }
     }
 
+    // mark the queue as failed: notify pending jobs and fail any future ones
+    fail(error) {
+        this.error = error;
+        this.jobQueue.length = 0;
+        const callbacks = this.jobCallbacks;
+        this.jobCallbacks = new Map();
+        callbacks.forEach(callback => callback(error));
+    }
+
     enqueueJob(buffer, callback) {
+        if (this.error) {
+            callback(this.error);
+            return;
+        }
+
         const job = {
             jobId: this.jobId++,
             buffer: buffer
@@ -203,6 +217,10 @@ const initializeWorkers = (config) => {
             workers.push(worker);
         }
         jobQueue.init(workers);
+    })
+    .catch((err) => {
+        Debug.warnOnce(`Failed to load the Draco decoder (${config.jsUrl}, ${config.wasmUrl}): ${err}. Draco compressed meshes will not load.`);
+        jobQueue.fail(err instanceof Error ? err : new Error(err));
     });
 
     return true;
