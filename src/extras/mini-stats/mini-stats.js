@@ -1,7 +1,6 @@
 import { math } from '../../core/math/math.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { ADDRESS_REPEAT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
-import { LAYERID_UI } from '../../scene/constants.js';
 import { CpuTimer } from './cpu-timer.js';
 import { GpuTimer } from './gpu-timer.js';
 import { StatsTimer } from './stats-timer.js';
@@ -11,6 +10,7 @@ import { Render2d } from './render2d.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
+ * @import { FrameGraph } from '../../scene/frame-graph.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
@@ -157,9 +157,9 @@ class MiniStats {
         device.on('resizecanvas', this.updateDiv, this);
         device.on('losecontext', this.loseContext, this);
         app.on('postrender', this.postRender, this);
+        app.on('framegraphbuild', this._frameGraphBuild, this);
 
         this.app = app;
-        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
         this.device = device;
         this.render2d = new Render2d(device);
         this.div = div;
@@ -201,6 +201,7 @@ class MiniStats {
         this.device.off('resizecanvas', this.updateDiv, this);
         this.device.off('losecontext', this.loseContext, this);
         this.app.off('postrender', this.postRender, this);
+        this.app.off('framegraphbuild', this._frameGraphBuild, this);
 
         this.graphs.forEach(graph => graph.destroy());
         this.gpuPassGraphs.clear();
@@ -208,6 +209,7 @@ class MiniStats {
         this.vramGraphs.clear();
         this.wordAtlas.destroy();
         this.texture.destroy();
+        this.render2d.destroy();
         this.div.remove();
     }
 
@@ -550,7 +552,21 @@ class MiniStats {
             }
         }
 
-        render2d.render(this.app, this.drawLayer, this.texture, this.wordAtlas.texture, this.clr, height);
+        render2d.render(this.texture, this.wordAtlas.texture, this.clr);
+    }
+
+    /**
+     * Called when the frame graph has been built, to add the overlay render pass at the end of the
+     * frame. This keeps the overlay independent of cameras and layers, rendering it over the whole
+     * backbuffer.
+     *
+     * @param {FrameGraph} frameGraph - The frame graph.
+     * @private
+     */
+    _frameGraphBuild(frameGraph) {
+        if (this._enabled && this.render2d.prim.count > 0) {
+            frameGraph.addRenderPass(this.render2d.renderPass);
+        }
     }
 
     /**

@@ -1,4 +1,5 @@
 import {
+    BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW,
     BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_ONE,
     BUFFER_STATIC,
     BUFFER_STREAM,
@@ -12,13 +13,14 @@ import {
 import { Debug } from '../../core/debug.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { GraphNode } from '../../scene/graph-node.js';
-import { MeshInstance } from '../../scene/mesh-instance.js';
-import { Mesh } from '../../scene/mesh.js';
+import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { ShaderMaterial } from '../../scene/materials/shader-material.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 // Graph colors for MiniStats
 const graphColorDefault = '1.0, 0.412, 0.380';  // Pastel Red
@@ -154,6 +156,26 @@ const fragmentShaderWGSL = /* wgsl */ `
     }
 `;
 
+const dynamicBindGroup = new DynamicBindGroup();
+
+// render pass drawing the overlay quads directly to the backbuffer, after the frame has rendered.
+// This makes the overlay independent of cameras and layers, with a full-canvas viewport.
+class RenderPassMiniStats extends RenderPass {
+    constructor(device, render2d) {
+        super(device);
+        this.render2d = render2d;
+
+        // render to the backbuffer, preserving its content
+        this.init(null);
+        this.colorOps.clear = false;
+        this.depthStencilOps.clearDepth = false;
+    }
+
+    execute() {
+        this.render2d.draw();
+    }
+}
+
 // render 2d textured quads
 class Render2d {
     constructor(device, maxQuads = 2048) {
@@ -189,30 +211,33 @@ class Render2d {
         };
         this.quads = 0;
 
-        this.mesh = new Mesh(device);
-        this.mesh.vertexBuffer = this.buffer;
-        this.mesh.indexBuffer[0] = this.indexBuffer;
-        this.mesh.primitive = [this.prim];
-
-        const material = new ShaderMaterial({
+        let shader = ShaderUtils.createShader(device, {
             uniqueName: 'MiniStats',
-            vertexGLSL: vertexShaderGLSL,
-            fragmentGLSL: fragmentShaderGLSL,
-            vertexWGSL: vertexShaderWGSL,
-            fragmentWGSL: fragmentShaderWGSL,
             attributes: {
                 vertex_position: SEMANTIC_POSITION,
                 vertex_texCoord0: SEMANTIC_TEXCOORD0
-            }
+            },
+            vertexGLSL: vertexShaderGLSL,
+            fragmentGLSL: fragmentShaderGLSL,
+            vertexWGSL: vertexShaderWGSL,
+            fragmentWGSL: fragmentShaderWGSL
         });
-        this.material = material;
-        material.cull = CULLFACE_NONE;
-        material.depthState = DepthState.NODEPTH;
-        material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
-            BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
-        material.update();
 
-        this.meshInstance = new MeshInstance(this.mesh, material, new GraphNode('MiniStatsMesh'));
+        // devices using uniform buffers need the shader processed and bind groups set up
+        if (device.supportsUniformBuffers) {
+            shader = ShaderUtils.processShader(shader, new ShaderProcessorOptions());
+            const ubFormat = shader.meshUniformBufferFormat;
+            if (ubFormat) {
+                this.uniformBuffer = new UniformBuffer(device, ubFormat, false);
+            }
+            this.bindGroup = new BindGroup(device, shader.meshBindGroupFormat);
+        }
+        this.shader = shader;
+
+        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+            BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
+
+        this.renderPass = new RenderPassMiniStats(device, this);
 
         this.uniforms = {
             clr: new Float32Array(4)
@@ -222,6 +247,14 @@ class Render2d {
             width: device.width,
             height: device.height
         };
+    }
+
+    destroy() {
+        this.renderPass.destroy();
+        this.uniformBuffer?.destroy();
+        this.bindGroup?.destroy();
+        this.buffer.destroy();
+        this.indexBuffer.destroy();
     }
 
     quad(x, y, w, h, u, v, uw, uh, texture, wordFlag = 0) {
@@ -264,19 +297,54 @@ class Render2d {
         this.targetSize.height = this.device.canvas.scrollHeight;
     }
 
-    render(app, layer, graphTexture, wordsTexture, clr, height) {
+    render(graphTexture, wordsTexture, clr) {
 
         // set vertex data (swap storage)
         this.buffer.setData(this.data.buffer);
 
         this.uniforms.clr.set(clr, 0);
+        this.graphTexture = graphTexture;
+        this.wordsTexture = wordsTexture;
+    }
 
-        // material params
-        this.material.setParameter('clr', this.uniforms.clr);
-        this.material.setParameter('graphTex', graphTexture);
-        this.material.setParameter('wordsTex', wordsTexture);
+    // called by the render pass to draw the prepared quads
+    draw() {
+        const { device, prim } = this;
+        if (!prim.count) {
+            return;
+        }
 
-        app.drawMeshInstance(this.meshInstance, layer);
+        // full backbuffer viewport, as a viewport of a previous camera can be active when the
+        // frame graph merges this pass into the previous one
+        const { width, height } = device;
+        device.setViewport(0, 0, width, height);
+        device.setScissor(0, 0, width, height);
+
+        device.setDrawStates(this.blendState, DepthState.NODEPTH, CULLFACE_NONE);
+
+        const scope = device.scope;
+        scope.resolve('clr').setValue(this.uniforms.clr);
+        scope.resolve('graphTex').setValue(this.graphTexture);
+        scope.resolve('wordsTex').setValue(this.wordsTexture);
+
+        device.setVertexBuffer(this.buffer);
+        device.setShader(this.shader);
+
+        if (device.supportsUniformBuffers) {
+            device.setBindGroup(BINDGROUP_VIEW, device.emptyBindGroup);
+
+            this.bindGroup.update();
+            device.setBindGroup(BINDGROUP_MESH, this.bindGroup);
+
+            if (this.uniformBuffer) {
+                this.uniformBuffer.update(dynamicBindGroup);
+                device.setBindGroup(BINDGROUP_MESH_UB, dynamicBindGroup.bindGroup, dynamicBindGroup.offsets);
+            } else {
+                device.setBindGroup(BINDGROUP_MESH_UB, device.emptyBindGroup);
+            }
+        }
+
+        device.draw(prim, this.indexBuffer);
     }
 }
 

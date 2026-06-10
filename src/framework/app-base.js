@@ -1156,6 +1156,10 @@ class AppBase extends EventHandler {
         this.renderer.update(layerComposition);
 
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
+
+        // allow render passes to be added to the frame graph before it renders
+        this.fire('framegraphbuild', this.frameGraph);
+
         this.frameGraph.render(this.graphicsDevice);
     }
 
