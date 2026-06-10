@@ -138,8 +138,8 @@ for (const { key, file } of LUT_CATALOG) {
 }
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
+    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
+    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
     ...lutAssets
 };
 

@@ -457,7 +457,7 @@ assetListLoader.load(() => {
     // gaussian-splatting/depth-of-field example. The cave splat is unrotated (its proxy is what's
     // flipped in that example), whereas the original needs a 180° flip.
     const caveAsset = new pc.Asset('gsplat-cave', 'gsplat', {
-        url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_cave_01/lod-meta.json'
+        url: 'https://code.playcanvas.com/examples_data/example_cave_01/lod-meta.json'
     });
     app.assets.add(caveAsset);
 

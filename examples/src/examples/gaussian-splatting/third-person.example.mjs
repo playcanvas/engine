@@ -88,8 +88,8 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
+    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
+    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
     character: new pc.Asset('character', 'container', { url: './assets/models/bitmoji.glb' }),
     idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
     walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
