@@ -79,10 +79,10 @@ const config = {
     // The capture was split into 4 balanced pieces, each built as a multi-LOD streamed SOG bundle.
     // All pieces share the original world coordinates, so they load at the origin and reassemble.
     urls: [
-        'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/downtown_01/ssog0/lod-meta.json',
-        'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/downtown_01/ssog1/lod-meta.json',
-        'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/downtown_01/ssog2/lod-meta.json',
-        'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/downtown_01/ssog3/lod-meta.json'
+        'https://code.playcanvas.com/examples_data/downtown_01/ssog0/lod-meta.json',
+        'https://code.playcanvas.com/examples_data/downtown_01/ssog1/lod-meta.json',
+        'https://code.playcanvas.com/examples_data/downtown_01/ssog2/lod-meta.json',
+        'https://code.playcanvas.com/examples_data/downtown_01/ssog3/lod-meta.json'
     ],
     // Whole-scene orientation (euler degrees). The capture stores height on Z; this rotates it to
     // be Y-up for the fly camera. VERIFY/ADJUST once the real data is loaded.
