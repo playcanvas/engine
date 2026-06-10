@@ -640,7 +640,7 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
     promises.push(new Promise((resolve, reject) => {
         // decode draco data
         const dracoExt = primitive.extensions.KHR_draco_mesh_compression;
-        dracoDecode(bufferViews[dracoExt.bufferView].slice().buffer, (err, decompressedData) => {
+        const initialized = dracoDecode(bufferViews[dracoExt.bufferView].slice().buffer, (err, decompressedData) => {
             if (err) {
                 console.log(err);
                 reject(err);
@@ -716,6 +716,12 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                 resolve();
             }
         });
+
+        if (!initialized) {
+            const message = 'glTF file contains Draco compressed meshes, but the Draco decoder is not configured. Call dracoInitialize() or WasmModule.setConfig(\'DracoDecoderModule\', ...) before loading the asset.';
+            Debug.warnOnce(message);
+            reject(new Error(message));
+        }
     }));
 
     // handle material variants
