@@ -1762,6 +1762,8 @@ class GSplatManager {
             alphaClip,
             minPixelSize: gsplat.minPixelSize * 0.5,
             minContribution: gsplat.minContribution,
+            foveationStrength: gsplat.foveationStrength,
+            foveationCenter: gsplat.foveationCenter,
             viewportWidth,
             viewportHeight,
             flipY: !!cameraNode.camera.renderTarget?.flipY,

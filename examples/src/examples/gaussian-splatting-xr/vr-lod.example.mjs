@@ -216,6 +216,8 @@ assetListLoader.load(() => {
     data.set('splatBudget', 2);
     // XR framebuffer scale factor (applied only when starting an XR session; does not affect 2D).
     data.set('framebufferScaleFactor', 1);
+    // Foveated contribution culling strength (GPU-sort renderer only; 0 = off).
+    data.set('foveationStrength', 0);
     data.set('data.stats.gsplats', '—');
     data.set('data.stats.resolution', '—');
 
@@ -288,7 +290,9 @@ assetListLoader.load(() => {
                 { type: 'number', label: 'Contribution', value: '5', decEvent: 'contribution:dec', incEvent: 'contribution:inc' },
                 // [7] number row: alphaClipForward, stepped 1/255 .. 1/2
                 { type: 'number', label: 'AlphaClip', value: '1/16', decEvent: 'alphaclip:dec', incEvent: 'alphaclip:inc' },
-                { label: 'EXIT XR', eventName: 'xr:end' } // [8] interactive: ends the XR session
+                // [8] number row: foveated contribution culling strength (GPU-sort renderer only)
+                { type: 'number', label: 'FovCull', value: '0.0', decEvent: 'fovcull:dec', incEvent: 'fovcull:inc' },
+                { label: 'EXIT XR', eventName: 'xr:end' } // [9] interactive: ends the XR session
             ],
             fontAsset: assets.font,
             alwaysVisible: true,
@@ -386,6 +390,23 @@ assetListLoader.load(() => {
         applyAlphaClip();
     });
     applyAlphaClip(); // seed the readout
+
+    // Foveated contribution culling strength (number row [8]). +/- 5, clamped to 0..50
+    // (default 0 = off). Only affects the GPU-sort (hybrid) renderer.
+    const FOVCULL_ROW = 8;
+    const applyFovCull = () => {
+        const v = data.get('foveationStrength') ?? 0;
+        app.scene.gsplat.foveationStrength = v;
+        xrHud?.setItemValue(FOVCULL_ROW, v.toFixed(1));
+    };
+    data.on('foveationStrength:set', applyFovCull);
+    app.on('fovcull:dec', () => {
+        data.set('foveationStrength', Math.max(0, (data.get('foveationStrength') ?? 0) - 5));
+    });
+    app.on('fovcull:inc', () => {
+        data.set('foveationStrength', Math.min(50, (data.get('foveationStrength') ?? 0) + 5));
+    });
+    applyFovCull(); // seed the engine value and readout
 
     /** @type {pc.Entity|null} */
     let gsplatEntity = null;

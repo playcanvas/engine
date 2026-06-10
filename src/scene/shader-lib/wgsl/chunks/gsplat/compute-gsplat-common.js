@@ -46,6 +46,8 @@ fn computeSplatCov(
     isOrtho: u32,
     alphaClip: f32,
     minContribution: f32,
+    foveationStrength: f32,
+    foveationCenter: f32,
     #ifdef GSPLAT_FISHEYE
         fisheye_k: f32,
         fisheye_inv_k: f32,
@@ -174,8 +176,18 @@ fn computeSplatCov(
     // Rejects splats whose total visual contribution (opacity * projected area) is
     // negligible. Near the camera, projected areas are large so contributions naturally
     // exceed the threshold; at distance, areas shrink and low-impact splats are culled.
+    //
+    // Foveation: the threshold is raised radially from the screen centre. Within
+    // foveationCenter (NDC radius) there is no effect; the boost ramps with a smoothstep
+    // to full foveationStrength at the screen edge (r = 1) and beyond (corners). With
+    // strength 0 this is an exact no-op.
+    let fovNdc = screen * vec2f(2.0 / viewportWidth, 2.0 / viewportHeight) - vec2f(1.0);
+    // manual smoothstep with a guard so foveationCenter near 1.0 cannot divide by zero
+    let fovT = saturate((length(fovNdc) - foveationCenter) / max(1.0 - foveationCenter, 1e-4));
+    let effMinContribution = minContribution + foveationStrength * fovT * fovT * (3.0 - 2.0 * fovT);
+
     let totalContribution = opacity * 6.283185 * sqrt(det);
-    if (totalContribution < minContribution) {
+    if (totalContribution < effMinContribution) {
         return result;
     }
 

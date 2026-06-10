@@ -57,6 +57,8 @@ struct ProjectorUniforms {
     minContribution: f32,
     minDist: f32,
     invRange: f32,
+    foveationStrength: f32,
+    foveationCenter: f32,
     #ifdef GSPLAT_XR
         // Eye-1 view-projection (raw XR projViewOffMat). Eye 0 uses viewProj above.
         // Appended only for the stereo variant - matches the conditional CPU UBO field.
@@ -118,6 +120,8 @@ fn main(
         uniforms.alphaClip,
         uniforms.minPixelSize,
         uniforms.minContribution,
+        uniforms.foveationStrength,
+        uniforms.foveationCenter,
         uniforms.viewMatrix,
         uniforms.viewProj,
         uniforms.focal,

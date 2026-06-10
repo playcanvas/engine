@@ -72,6 +72,8 @@ class GSplatParams {
         this._material.setParameter('alphaClipForward', 1.0 / 255.0);
         this._material.setParameter('minPixelSize', 2.0);
         this._material.setParameter('minContribution', 3.0);
+        this._material.setParameter('foveationStrength', 0);
+        this._material.setParameter('foveationCenter', 0.3);
     }
 
     /**
@@ -656,6 +658,53 @@ class GSplatParams {
      */
     get minContribution() {
         return this._material.getParameter('minContribution')?.data ?? 3.0;
+    }
+
+    /**
+     * Sets the foveated contribution culling strength. Only used by the
+     * {@link GSPLAT_RENDERER_RASTER_GPU_SORT} renderer. When greater than zero, the contribution
+     * culling threshold is raised radially from the screen centre: the effective threshold is
+     * `minContribution + foveationStrength * smoothstep(foveationCenter, 1, length(ndc))`, so the
+     * centre of the screen is unaffected and low-contribution splats are culled increasingly
+     * toward the edges, reaching full strength at the screen edge and beyond (corners). Set to 0
+     * to disable. Defaults to 0.
+     *
+     * @type {number}
+     */
+    set foveationStrength(value) {
+        this._material.setParameter('foveationStrength', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the foveated contribution culling strength.
+     *
+     * @type {number}
+     */
+    get foveationStrength() {
+        return this._material.getParameter('foveationStrength')?.data ?? 0;
+    }
+
+    /**
+     * Sets the protected centre radius for foveated contribution culling. Only used by the
+     * {@link GSPLAT_RENDERER_RASTER_GPU_SORT} renderer. Expressed in NDC radius units (0 at the
+     * screen centre, 1 at the edge): within this radius {@link foveationStrength} has no effect,
+     * and the falloff ramps smoothly from this radius to the screen edge. Defaults to 0.3.
+     *
+     * @type {number}
+     */
+    set foveationCenter(value) {
+        this._material.setParameter('foveationCenter', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the protected centre radius for foveated contribution culling.
+     *
+     * @type {number}
+     */
+    get foveationCenter() {
+        return this._material.getParameter('foveationCenter')?.data ?? 0.3;
     }
 
     /**

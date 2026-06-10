@@ -101,6 +101,8 @@ fn main(
         uniforms.alphaClip,
         uniforms.minPixelSize,
         uniforms.minContribution,
+        // foveated culling is not supported by the compute-local renderer (strength 0 = off)
+        0.0, 0.3,
         uniforms.viewMatrix,
         uniforms.viewProj,
         uniforms.focal,
