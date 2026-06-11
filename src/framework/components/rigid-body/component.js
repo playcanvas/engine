@@ -1094,8 +1094,8 @@ class RigidBodyComponent extends Component {
 
                 const component = entity.collision;
                 if (component && component._hasOffset) {
-                    const lo = component.data.linearOffset;
-                    const ao = component.data.angularOffset;
+                    const lo = component.linearOffset;
+                    const ao = component.angularOffset;
 
                     // Un-rotate the angular offset and then use the new rotation to
                     // un-translate the linear offset in local space

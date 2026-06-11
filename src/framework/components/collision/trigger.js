@@ -2,7 +2,7 @@ import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BOD
 
 /**
  * @import { AppBase } from '../../app-base.js'
- * @import { Component } from '../component.js'
+ * @import { CollisionComponent } from './component.js'
  */
 
 let _ammoVec1, _ammoQuat, _ammoTransform;
@@ -16,10 +16,9 @@ class Trigger {
      * Create a new Trigger instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.
-     * @param {Component} component - The component for which the trigger will be created.
-     * @param {object} data - The data for the component.
+     * @param {CollisionComponent} component - The component for which the trigger will be created.
      */
-    constructor(app, component, data) {
+    constructor(app, component) {
         this.entity = component.entity;
         this.component = component;
         this.app = app;
@@ -30,12 +29,12 @@ class Trigger {
             _ammoTransform = new Ammo.btTransform();
         }
 
-        this.initialize(data);
+        this.initialize();
     }
 
-    initialize(data) {
+    initialize() {
         const entity = this.entity;
-        const shape = data.shape;
+        const shape = this.component.shape;
 
         if (shape && typeof Ammo !== 'undefined') {
             if (entity.trigger) {

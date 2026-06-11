@@ -122,6 +122,60 @@ class CollisionComponent extends Component {
     static EVENT_TRIGGERLEAVE = 'triggerleave';
 
     /** @private */
+    _type = 'box';
+
+    /** @private */
+    _halfExtents = new Vec3(0.5, 0.5, 0.5);
+
+    /** @private */
+    _linearOffset = new Vec3();
+
+    /** @private */
+    _angularOffset = new Quat();
+
+    /** @private */
+    _radius = 0.5;
+
+    /** @private */
+    _axis = 1;
+
+    /** @private */
+    _height = 2;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _asset = null;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _renderAsset = null;
+
+    /** @private */
+    _convexHull = false;
+
+    /** @private */
+    _shape = null;
+
+    /**
+     * @type {Model|null}
+     * @private
+     */
+    _model = null;
+
+    /** @private */
+    _render = null;
+
+    /** @private */
+    _checkVertexDuplicates = true;
+
+    /** @private */
+    _initialized = false;
+
+    /** @private */
     _compoundParent = null;
 
     /** @private */
@@ -137,37 +191,6 @@ class CollisionComponent extends Component {
         super(system, entity);
 
         this.entity.on('insert', this._onInsert, this);
-
-        this.on('set_type', this.onSetType, this);
-        this.on('set_convexHull', this.onSetModel, this);
-        this.on('set_halfExtents', this.onSetHalfExtents, this);
-        this.on('set_linearOffset', this.onSetOffset, this);
-        this.on('set_angularOffset', this.onSetOffset, this);
-        this.on('set_radius', this.onSetRadius, this);
-        this.on('set_height', this.onSetHeight, this);
-        this.on('set_axis', this.onSetAxis, this);
-        this.on('set_asset', this.onSetAsset, this);
-        this.on('set_renderAsset', this.onSetRenderAsset, this);
-        this.on('set_model', this.onSetModel, this);
-        this.on('set_render', this.onSetRender, this);
-    }
-
-    /**
-     * Sets the enabled state of the component.
-     *
-     * @type {boolean}
-     */
-    set enabled(arg) {
-        this._setValue('enabled', arg);
-    }
-
-    /**
-     * Gets the enabled state of the component.
-     *
-     * @type {boolean}
-     */
-    get enabled() {
-        return this.data.enabled;
     }
 
     /**
@@ -187,7 +210,13 @@ class CollisionComponent extends Component {
      * @type {string}
      */
     set type(arg) {
-        this._setValue('type', arg);
+        if (this._type === arg) {
+            return;
+        }
+
+        const previous = this._type;
+        this._type = arg;
+        this.system.changeType(this, previous, arg);
     }
 
     /**
@@ -196,7 +225,7 @@ class CollisionComponent extends Component {
      * @type {string}
      */
     get type() {
-        return this.data.type;
+        return this._type;
     }
 
     /**
@@ -206,7 +235,15 @@ class CollisionComponent extends Component {
      * @type {Vec3}
      */
     set halfExtents(arg) {
-        this._setValue('halfExtents', arg);
+        if (arg instanceof Vec3) {
+            this._halfExtents.copy(arg);
+        } else {
+            this._halfExtents.set(arg[0], arg[1], arg[2]);
+        }
+
+        if (this._initialized && this._type === 'box') {
+            this.system.recreatePhysicalShapes(this);
+        }
     }
 
     /**
@@ -215,7 +252,7 @@ class CollisionComponent extends Component {
      * @type {Vec3}
      */
     get halfExtents() {
-        return this.data.halfExtents;
+        return this._halfExtents;
     }
 
     /**
@@ -225,7 +262,17 @@ class CollisionComponent extends Component {
      * @type {Vec3}
      */
     set linearOffset(arg) {
-        this._setValue('linearOffset', arg);
+        if (arg instanceof Vec3) {
+            this._linearOffset.copy(arg);
+        } else {
+            this._linearOffset.set(arg[0], arg[1], arg[2]);
+        }
+
+        this._updateHasOffset();
+
+        if (this._initialized) {
+            this.system.recreatePhysicalShapes(this);
+        }
     }
 
     /**
@@ -235,7 +282,7 @@ class CollisionComponent extends Component {
      * @type {Vec3}
      */
     get linearOffset() {
-        return this.data.linearOffset;
+        return this._linearOffset;
     }
 
     /**
@@ -245,7 +292,20 @@ class CollisionComponent extends Component {
      * @type {Quat}
      */
     set angularOffset(arg) {
-        this._setValue('angularOffset', arg);
+        if (arg instanceof Quat) {
+            this._angularOffset.copy(arg);
+        } else if (arg.length === 3) {
+            // allow for euler angles to be passed as a 3 length array
+            this._angularOffset.setFromEulerAngles(arg[0], arg[1], arg[2]);
+        } else {
+            this._angularOffset.set(arg[0], arg[1], arg[2], arg[3]);
+        }
+
+        this._updateHasOffset();
+
+        if (this._initialized) {
+            this.system.recreatePhysicalShapes(this);
+        }
     }
 
     /**
@@ -254,7 +314,7 @@ class CollisionComponent extends Component {
      * @type {Quat}
      */
     get angularOffset() {
-        return this.data.angularOffset;
+        return this._angularOffset;
     }
 
     /**
@@ -264,7 +324,12 @@ class CollisionComponent extends Component {
      * @type {number}
      */
     set radius(arg) {
-        this._setValue('radius', arg);
+        this._radius = arg;
+
+        const t = this._type;
+        if (this._initialized && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
+            this.system.recreatePhysicalShapes(this);
+        }
     }
 
     /**
@@ -273,7 +338,7 @@ class CollisionComponent extends Component {
      * @type {number}
      */
     get radius() {
-        return this.data.radius;
+        return this._radius;
     }
 
     /**
@@ -283,7 +348,12 @@ class CollisionComponent extends Component {
      * @type {number}
      */
     set axis(arg) {
-        this._setValue('axis', arg);
+        this._axis = arg;
+
+        const t = this._type;
+        if (this._initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
+            this.system.recreatePhysicalShapes(this);
+        }
     }
 
     /**
@@ -293,7 +363,7 @@ class CollisionComponent extends Component {
      * @type {number}
      */
     get axis() {
-        return this.data.axis;
+        return this._axis;
     }
 
     /**
@@ -303,7 +373,12 @@ class CollisionComponent extends Component {
      * @type {number}
      */
     set height(arg) {
-        this._setValue('height', arg);
+        this._height = arg;
+
+        const t = this._type;
+        if (this._initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
+            this.system.recreatePhysicalShapes(this);
+        }
     }
 
     /**
@@ -313,7 +388,7 @@ class CollisionComponent extends Component {
      * @type {number}
      */
     get height() {
-        return this.data.height;
+        return this._height;
     }
 
     /**
@@ -322,7 +397,36 @@ class CollisionComponent extends Component {
      * @type {Asset|number|null}
      */
     set asset(arg) {
-        this._setValue('asset', arg);
+        const assets = this.system.app.assets;
+
+        if (this._asset) {
+            // remove the listener registered on the previous asset
+            const asset = assets.get(this._asset);
+            if (asset) {
+                asset.off('remove', this.onAssetRemoved, this);
+            }
+        }
+
+        this._asset = arg instanceof Asset ? arg.id : arg;
+
+        if (arg) {
+            const asset = assets.get(this._asset);
+            if (asset) {
+                // make sure we don't subscribe twice
+                asset.off('remove', this.onAssetRemoved, this);
+                asset.on('remove', this.onAssetRemoved, this);
+            }
+        }
+
+        if (this._initialized && this._type === 'mesh') {
+            if (!arg) {
+                // if asset is null set model to null so that the shape is
+                // removed from the simulation - write the private field so
+                // recreatePhysicalShapes below performs the single rebuild
+                this._model = null;
+            }
+            this.system.recreatePhysicalShapes(this);
+        }
     }
 
     /**
@@ -331,7 +435,7 @@ class CollisionComponent extends Component {
      * @type {Asset|number|null}
      */
     get asset() {
-        return this.data.asset;
+        return this._asset;
     }
 
     /**
@@ -341,7 +445,36 @@ class CollisionComponent extends Component {
      * @type {Asset|number|null}
      */
     set renderAsset(arg) {
-        this._setValue('renderAsset', arg);
+        const assets = this.system.app.assets;
+
+        if (this._renderAsset) {
+            // remove the listener registered on the previous asset
+            const asset = assets.get(this._renderAsset);
+            if (asset) {
+                asset.off('remove', this.onRenderAssetRemoved, this);
+            }
+        }
+
+        this._renderAsset = arg instanceof Asset ? arg.id : arg;
+
+        if (arg) {
+            const asset = assets.get(this._renderAsset);
+            if (asset) {
+                // make sure we don't subscribe twice
+                asset.off('remove', this.onRenderAssetRemoved, this);
+                asset.on('remove', this.onRenderAssetRemoved, this);
+            }
+        }
+
+        if (this._initialized && this._type === 'mesh') {
+            if (!arg) {
+                // if render asset is null set render to null so that the
+                // shape is removed from the simulation - write the private
+                // field so recreatePhysicalShapes performs the single rebuild
+                this._render = null;
+            }
+            this.system.recreatePhysicalShapes(this);
+        }
     }
 
     /**
@@ -350,7 +483,7 @@ class CollisionComponent extends Component {
      * @type {Asset|number|null}
      */
     get renderAsset() {
-        return this.data.renderAsset;
+        return this._renderAsset;
     }
 
     /**
@@ -361,7 +494,11 @@ class CollisionComponent extends Component {
      * @type {boolean}
      */
     set convexHull(arg) {
-        this._setValue('convexHull', arg);
+        this._convexHull = arg;
+
+        if (this._initialized && this._type === 'mesh') {
+            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+        }
     }
 
     /**
@@ -370,15 +507,15 @@ class CollisionComponent extends Component {
      * @type {boolean}
      */
     get convexHull() {
-        return this.data.convexHull;
+        return this._convexHull;
     }
 
     set shape(arg) {
-        this._setValue('shape', arg);
+        this._shape = arg;
     }
 
     get shape() {
-        return this.data.shape;
+        return this._shape;
     }
 
     /**
@@ -387,7 +524,14 @@ class CollisionComponent extends Component {
      * @type {Model | null}
      */
     set model(arg) {
-        this._setValue('model', arg);
+        this._model = arg;
+
+        if (this._initialized && this._type === 'mesh') {
+            // recreate physical shapes skipping loading the model
+            // from the 'asset' as the model passed in might
+            // have been created procedurally
+            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+        }
     }
 
     /**
@@ -396,15 +540,21 @@ class CollisionComponent extends Component {
      * @type {Model | null}
      */
     get model() {
-        return this.data.model;
+        return this._model;
     }
 
     set render(arg) {
-        this._setValue('render', arg);
+        this._render = arg;
+
+        if (this._initialized && this._type === 'mesh') {
+            // recreate physical shapes skipping loading the render asset
+            // as the render passed in might have been created procedurally
+            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+        }
     }
 
     get render() {
-        return this.data.render;
+        return this._render;
     }
 
     /**
@@ -413,7 +563,7 @@ class CollisionComponent extends Component {
      * @type {boolean}
      */
     set checkVertexDuplicates(arg) {
-        this._setValue('checkVertexDuplicates', arg);
+        this._checkVertexDuplicates = arg;
     }
 
     /**
@@ -422,200 +572,14 @@ class CollisionComponent extends Component {
      * @type {boolean}
      */
     get checkVertexDuplicates() {
-        return this.data.checkVertexDuplicates;
+        return this._checkVertexDuplicates;
     }
 
-    /** @ignore */
-    _setValue(name, value) {
-        const data = this.data;
-        const oldValue = data[name];
-        data[name] = value;
-        this.fire('set', name, oldValue, value);
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetType(name, oldValue, newValue) {
-        if (oldValue !== newValue) {
-            this.system.changeType(this, oldValue, newValue);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetHalfExtents(name, oldValue, newValue) {
-        const t = this.data.type;
-        if (this.data.initialized && t === 'box') {
-            this.system.recreatePhysicalShapes(this);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetOffset(name, oldValue, newValue) {
+    /** @private */
+    _updateHasOffset() {
         this._hasOffset =
-            !this.data.linearOffset.equals(Vec3.ZERO) ||
-            !this.data.angularOffset.equals(Quat.IDENTITY);
-
-        if (this.data.initialized) {
-            this.system.recreatePhysicalShapes(this);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetRadius(name, oldValue, newValue) {
-        const t = this.data.type;
-        if (this.data.initialized && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
-            this.system.recreatePhysicalShapes(this);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetHeight(name, oldValue, newValue) {
-        const t = this.data.type;
-        if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
-            this.system.recreatePhysicalShapes(this);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetAxis(name, oldValue, newValue) {
-        const t = this.data.type;
-        if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
-            this.system.recreatePhysicalShapes(this);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetAsset(name, oldValue, newValue) {
-        const assets = this.system.app.assets;
-
-        if (oldValue) {
-            // Remove old listeners
-            const asset = assets.get(oldValue);
-            if (asset) {
-                asset.off('remove', this.onAssetRemoved, this);
-            }
-        }
-
-        if (newValue) {
-            if (newValue instanceof Asset) {
-                this.data.asset = newValue.id;
-            }
-
-            const asset = assets.get(this.data.asset);
-            if (asset) {
-                // make sure we don't subscribe twice
-                asset.off('remove', this.onAssetRemoved, this);
-                asset.on('remove', this.onAssetRemoved, this);
-            }
-        }
-
-        if (this.data.initialized && this.data.type === 'mesh') {
-            if (!newValue) {
-                // if asset is null set model to null
-                // so that it's going to be removed from the simulation
-                this.data.model = null;
-            }
-            this.system.recreatePhysicalShapes(this);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetRenderAsset(name, oldValue, newValue) {
-        const assets = this.system.app.assets;
-
-        if (oldValue) {
-            // Remove old listeners
-            const asset = assets.get(oldValue);
-            if (asset) {
-                asset.off('remove', this.onRenderAssetRemoved, this);
-            }
-        }
-
-        if (newValue) {
-            if (newValue instanceof Asset) {
-                this.data.renderAsset = newValue.id;
-            }
-
-            const asset = assets.get(this.data.renderAsset);
-            if (asset) {
-                // make sure we don't subscribe twice
-                asset.off('remove', this.onRenderAssetRemoved, this);
-                asset.on('remove', this.onRenderAssetRemoved, this);
-            }
-        }
-
-        if (this.data.initialized && this.data.type === 'mesh') {
-            if (!newValue) {
-                // if render asset is null set render to null
-                // so that it's going to be removed from the simulation
-                this.data.render = null;
-            }
-            this.system.recreatePhysicalShapes(this);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetModel(name, oldValue, newValue) {
-        if (this.data.initialized && this.data.type === 'mesh') {
-            // recreate physical shapes skipping loading the model
-            // from the 'asset' as the model passed in newValue might
-            // have been created procedurally
-            this.system.implementations.mesh.doRecreatePhysicalShape(this);
-        }
-    }
-
-    /**
-     * @param {string} name - Property name.
-     * @param {*} oldValue - Previous value of the property.
-     * @param {*} newValue - New value of the property.
-     * @private
-     */
-    onSetRender(name, oldValue, newValue) {
-        this.onSetModel(name, oldValue, newValue);
+            !this._linearOffset.equals(Vec3.ZERO) ||
+            !this._angularOffset.equals(Quat.IDENTITY);
     }
 
     /**
@@ -624,7 +588,7 @@ class CollisionComponent extends Component {
      */
     onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
-        if (this.data.asset === asset.id) {
+        if (this._asset === asset.id) {
             this.asset = null;
         }
     }
@@ -635,7 +599,7 @@ class CollisionComponent extends Component {
      */
     onRenderAssetRemoved(asset) {
         asset.off('remove', this.onRenderAssetRemoved, this);
-        if (this.data.renderAsset === asset.id) {
+        if (this._renderAsset === asset.id) {
             this.renderAsset = null;
         }
     }
@@ -646,7 +610,7 @@ class CollisionComponent extends Component {
      * @private
      */
     getCompoundChildShapeIndex(shape) {
-        const compound = this.data.shape;
+        const compound = this._shape;
         const shapes = compound.getNumChildShapes();
 
         for (let i = 0; i < shapes; i++) {
@@ -730,7 +694,7 @@ class CollisionComponent extends Component {
 
         if (this._hasOffset) {
             const rot = this.entity.getRotation();
-            const lo = this.data.linearOffset;
+            const lo = this._linearOffset;
 
             _quat.copy(rot).transformVector(lo, _vec3);
             return _vec3.add(pos);
@@ -748,18 +712,18 @@ class CollisionComponent extends Component {
         const rot = this.entity.getRotation();
 
         if (this._hasOffset) {
-            return _quat.copy(rot).mul(this.data.angularOffset);
+            return _quat.copy(rot).mul(this._angularOffset);
         }
 
         return rot;
     }
 
     onEnable() {
-        if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
-            const asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
+        if (this._type === 'mesh' && (this._asset || this._renderAsset) && this._initialized) {
+            const asset = this.system.app.assets.get(this._asset || this._renderAsset);
             // recreate the collision shape if the model asset is not loaded
             // or the shape does not exist
-            if (asset && (!asset.resource || !this.data.shape)) {
+            if (asset && (!asset.resource || !this._shape)) {
                 this.system.recreatePhysicalShapes(this);
                 return;
             }
@@ -774,7 +738,7 @@ class CollisionComponent extends Component {
                 this.system.recreatePhysicalShapes(this._compoundParent);
             } else {
                 const transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
-                this._compoundParent.shape.addChildShape(transform, this.data.shape);
+                this._compoundParent.shape.addChildShape(transform, this._shape);
                 Ammo.destroy(transform);
 
                 if (this._compoundParent.entity.rigidbody) {
@@ -791,7 +755,7 @@ class CollisionComponent extends Component {
             this.entity.rigidbody.disableSimulation();
         } else if (this._compoundParent && this !== this._compoundParent) {
             if (!this._compoundParent.entity._destroying) {
-                this.system._removeCompoundChild(this._compoundParent, this.data.shape);
+                this.system._removeCompoundChild(this._compoundParent, this._shape);
 
                 if (this._compoundParent.entity.rigidbody) {
                     this._compoundParent.entity.rigidbody.activate();
