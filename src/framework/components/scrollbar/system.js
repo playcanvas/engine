@@ -43,13 +43,17 @@ class ScrollbarComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const c = entity.scrollbar;
-        return this.addComponent(clone, {
-            enabled: c.enabled,
-            orientation: c.orientation,
-            value: c.value,
-            handleSize: c.handleSize,
-            handleEntity: c.handleEntity
-        });
+
+        const data = {
+            enabled: c.enabled
+        };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            data[property] = c[property];
+        }
+
+        return this.addComponent(clone, data);
     }
 
     _onAddComponent(entity) {

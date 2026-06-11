@@ -68,23 +68,17 @@ class ScrollViewComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const c = entity.scrollview;
-        return this.addComponent(clone, {
-            enabled: c.enabled,
-            horizontal: c.horizontal,
-            vertical: c.vertical,
-            scrollMode: c.scrollMode,
-            bounceAmount: c.bounceAmount,
-            friction: c.friction,
-            dragThreshold: c.dragThreshold,
-            useMouseWheel: c.useMouseWheel,
-            mouseWheelSensitivity: c.mouseWheelSensitivity,
-            horizontalScrollbarVisibility: c.horizontalScrollbarVisibility,
-            verticalScrollbarVisibility: c.verticalScrollbarVisibility,
-            viewportEntity: c.viewportEntity,
-            contentEntity: c.contentEntity,
-            horizontalScrollbarEntity: c.horizontalScrollbarEntity,
-            verticalScrollbarEntity: c.verticalScrollbarEntity
-        });
+
+        const data = {
+            enabled: c.enabled
+        };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            data[property] = c[property];
+        }
+
+        return this.addComponent(clone, data);
     }
 
     onUpdate(dt) {

@@ -62,23 +62,17 @@ class ButtonComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const c = entity.button;
-        return this.addComponent(clone, {
-            enabled: c.enabled,
-            active: c.active,
-            imageEntity: c.imageEntity,
-            hitPadding: c.hitPadding,
-            transitionMode: c.transitionMode,
-            hoverTint: c.hoverTint,
-            pressedTint: c.pressedTint,
-            inactiveTint: c.inactiveTint,
-            fadeDuration: c.fadeDuration,
-            hoverSpriteAsset: c.hoverSpriteAsset,
-            hoverSpriteFrame: c.hoverSpriteFrame,
-            pressedSpriteAsset: c.pressedSpriteAsset,
-            pressedSpriteFrame: c.pressedSpriteFrame,
-            inactiveSpriteAsset: c.inactiveSpriteAsset,
-            inactiveSpriteFrame: c.inactiveSpriteFrame
-        });
+
+        const data = {
+            enabled: c.enabled
+        };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            data[property] = c[property];
+        }
+
+        return this.addComponent(clone, data);
     }
 
     onUpdate(dt) {
