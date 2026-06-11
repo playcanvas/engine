@@ -5,6 +5,7 @@
  */
 
 export { MiniStats } from './mini-stats/mini-stats.js';
+export { attachRuntimeTools } from './runtime-tools/runtime-tools.js';
 
 // RENDERERS
 export { OutlineRenderer } from './renderers/outline-renderer.js';
