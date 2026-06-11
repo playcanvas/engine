@@ -44,9 +44,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
     let A: half = dot(gaussianUV, gaussianUV);
+
+    // note: no early return after the discard - it would make the control flow non-uniform,
+    // preventing user gsplatModifyPS chunks from using derivatives (fwidth etc.)
     if (A > half(1.0)) {
         discard;
-        return output;
     }
 
     // evaluate alpha
@@ -84,7 +86,6 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         if (alpha < half(uniform.alphaClipForward)) {
             discard;
-            return output;
         }
 
         #ifndef DITHER_NONE
