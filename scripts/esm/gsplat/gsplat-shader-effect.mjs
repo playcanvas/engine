@@ -21,9 +21,9 @@ import { Script } from 'playcanvas';
  * When enabled, the shader effect is applied and effectTime starts tracking from 0.
  * When disabled, the custom shader is removed and materials revert to default rendering.
  *
- * Subclasses must implement:
- * - getShaderGLSL(): Return GLSL shader string
- * - getShaderWGSL(): Return WGSL shader string
+ * Subclasses override some of:
+ * - getShaderGLSL() / getShaderWGSL(): Return the gsplatModifyVS vertex chunk string
+ * - getFragmentShaderGLSL() / getFragmentShaderWGSL(): Return the gsplatModifyPS fragment chunk string
  * - updateEffect(effectTime, dt): Update effect each frame
  *
  * @abstract
@@ -101,7 +101,9 @@ class GsplatShaderEffect extends Script {
         const device = this.app.graphicsDevice;
         const shaderLanguage = device?.isWebGPU ? 'wgsl' : 'glsl';
 
-        this.material.getShaderChunks(shaderLanguage).delete('gsplatModifyVS');
+        const chunks = this.material.getShaderChunks(shaderLanguage);
+        chunks.delete('gsplatModifyVS');
+        chunks.delete('gsplatModifyPS');
         this.material.update();
         this.material = null;
     }
@@ -137,9 +139,18 @@ class GsplatShaderEffect extends Script {
     applyShaderToMaterial(material) {
         const device = this.app.graphicsDevice;
         const shaderLanguage = device?.isWebGPU ? 'wgsl' : 'glsl';
-        const customShader = shaderLanguage === 'wgsl' ? this.getShaderWGSL() : this.getShaderGLSL();
+        const chunks = material.getShaderChunks(shaderLanguage);
 
-        material.getShaderChunks(shaderLanguage).set('gsplatModifyVS', customShader);
+        const vertexShader = shaderLanguage === 'wgsl' ? this.getShaderWGSL() : this.getShaderGLSL();
+        if (vertexShader) {
+            chunks.set('gsplatModifyVS', vertexShader);
+        }
+
+        const fragmentShader = shaderLanguage === 'wgsl' ? this.getFragmentShaderWGSL() : this.getFragmentShaderGLSL();
+        if (fragmentShader) {
+            chunks.set('gsplatModifyPS', fragmentShader);
+        }
+
         material.update();
     }
 
@@ -184,23 +195,39 @@ class GsplatShaderEffect extends Script {
     }
 
     /**
-     * Get the GLSL shader string.
-     * Must be implemented by subclasses.
-     * @returns {string} GLSL shader code
-     * @abstract
+     * Get the GLSL shader string for the gsplatModifyVS vertex chunk, or null to leave the
+     * default chunk in place.
+     * @returns {string|null} GLSL shader code
      */
     getShaderGLSL() {
-        throw new Error(`${this.constructor.name} must implement getShaderGLSL()`);
+        return null;
     }
 
     /**
-     * Get the WGSL shader string.
-     * Must be implemented by subclasses.
-     * @returns {string} WGSL shader code
-     * @abstract
+     * Get the WGSL shader string for the gsplatModifyVS vertex chunk, or null to leave the
+     * default chunk in place.
+     * @returns {string|null} WGSL shader code
      */
     getShaderWGSL() {
-        throw new Error(`${this.constructor.name} must implement getShaderWGSL()`);
+        return null;
+    }
+
+    /**
+     * Get the GLSL shader string for the gsplatModifyPS fragment chunk, or null to leave the
+     * default chunk in place.
+     * @returns {string|null} GLSL shader code
+     */
+    getFragmentShaderGLSL() {
+        return null;
+    }
+
+    /**
+     * Get the WGSL shader string for the gsplatModifyPS fragment chunk, or null to leave the
+     * default chunk in place.
+     * @returns {string|null} WGSL shader code
+     */
+    getFragmentShaderWGSL() {
+        return null;
     }
 
     /**

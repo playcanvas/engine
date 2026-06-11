@@ -30,6 +30,8 @@ varying mediump vec4 gaussianColor;
     #include "pickPS"
 #endif
 
+#include "gsplatModifyPS"
+
 const float EXP4 = exp(-4.0);
 const float INV_EXP4 = 1.0 / (1.0 - EXP4);
 
@@ -81,7 +83,9 @@ void main(void) {
             opacityDither(alpha, id * 0.013);
         #endif
 
-        gl_FragColor = vec4(gaussianColor.xyz * alpha, alpha);
+        vec4 fragColor = vec4(gaussianColor.xyz, alpha);
+        modifySplatColor(gaussianUV, fragColor);
+        gl_FragColor = vec4(fragColor.xyz * fragColor.a, fragColor.a);
     #endif
 }
 `;
