@@ -189,6 +189,18 @@ describe('ParticleSystemComponent', function () {
         expect(c.alphaGraph).to.be.null;
     });
 
+    it('Accepts explicit null for curve properties', function () {
+        const e = new Entity();
+
+        e.addComponent('particlesystem', {
+            alphaGraph: null,
+            colorGraph: null
+        });
+
+        expect(e.particlesystem.alphaGraph).to.be.null;
+        expect(e.particlesystem.colorGraph).to.be.null;
+    });
+
     it('Initializes from Vec3 and Curve instances', function () {
         const extents = new Vec3(1, 2, 3);
         const alphaGraph = new Curve([0, 0, 1, 1]);

@@ -81,7 +81,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         }
 
         for (const prop in data) {
-            if (data[prop] === undefined) continue;
+            if (data[prop] === undefined || data[prop] === null) continue;
 
             const type = _propertyTypes[prop];
             if (type === 'vec3') {

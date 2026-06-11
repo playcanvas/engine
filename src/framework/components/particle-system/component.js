@@ -1036,9 +1036,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Sets the {@link Asset} used to set the colorMap.
+     * Sets the {@link Asset} (or asset id) used to set the colorMap.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     set colorMapAsset(arg) {
         const assets = this.system.app.assets;
@@ -1070,18 +1070,18 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Gets the {@link Asset} used to set the colorMap.
+     * Gets the id of the {@link Asset} used to set the colorMap.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     get colorMapAsset() {
         return this._colorMapAsset;
     }
 
     /**
-     * Sets the {@link Asset} used to set the normalMap.
+     * Sets the {@link Asset} (or asset id) used to set the normalMap.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     set normalMapAsset(arg) {
         const assets = this.system.app.assets;
@@ -1113,9 +1113,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Gets the {@link Asset} used to set the normalMap.
+     * Gets the id of the {@link Asset} used to set the normalMap.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     get normalMapAsset() {
         return this._normalMapAsset;
@@ -1147,9 +1147,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Sets the {@link Asset} used to set the mesh.
+     * Sets the {@link Asset} (or asset id) used to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     set meshAsset(arg) {
         const assets = this.system.app.assets;
@@ -1177,18 +1177,18 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Gets the {@link Asset} used to set the mesh.
+     * Gets the id of the {@link Asset} used to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     get meshAsset() {
         return this._meshAsset;
     }
 
     /**
-     * Sets the Render {@link Asset} used to set the mesh.
+     * Sets the Render {@link Asset} (or asset id) used to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     set renderAsset(arg) {
         const assets = this.system.app.assets;
@@ -1216,9 +1216,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Gets the Render {@link Asset} used to set the mesh.
+     * Gets the id of the Render {@link Asset} used to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     get renderAsset() {
         return this._renderAsset;
