@@ -1,13 +1,9 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ScrollbarComponent } from './component.js';
-import { ScrollbarComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 const _properties = ['orientation', 'value', 'handleSize', 'handleEntity'];
 
@@ -29,9 +25,6 @@ class ScrollbarComponentSystem extends ComponentSystem {
         this.id = 'scrollbar';
 
         this.ComponentType = ScrollbarComponent;
-        this.DataType = ScrollbarComponentData;
-
-        this.schema = _schema;
 
         this.on('add', this._onAddComponent, this);
         this.on('beforeremove', this._onRemoveComponent, this);
@@ -45,7 +38,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
@@ -67,7 +60,5 @@ class ScrollbarComponentSystem extends ComponentSystem {
         component.onRemove();
     }
 }
-
-Component._buildAccessors(ScrollbarComponent.prototype, _schema);
 
 export { ScrollbarComponentSystem };

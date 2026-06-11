@@ -1,7 +1,6 @@
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 import { ComponentSystem } from '../system.js';
 import { ScriptComponent } from './component.js';
-import { ScriptComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -37,7 +36,6 @@ class ScriptComponentSystem extends ComponentSystem {
         this.id = 'script';
 
         this.ComponentType = ScriptComponent;
-        this.DataType = ScriptComponentData;
 
         // list of all entities script components
         // we are using pc.SortedLoopArray because it is

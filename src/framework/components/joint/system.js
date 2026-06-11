@@ -1,13 +1,9 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { JointComponent } from './component.js';
-import { JointComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Creates and manages physics joint components.
@@ -27,18 +23,19 @@ class JointComponentSystem extends ComponentSystem {
         this.app = app;
 
         this.ComponentType = JointComponent;
-        this.DataType = JointComponentData;
-
-        this.schema = _schema;
     }
 
     initializeComponentData(component, data, properties) {
         component.initFromData(data);
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
+    }
+
+    cloneComponent(entity, clone) {
+        return this.addComponent(clone, {
+            enabled: entity.joint.enabled
+        });
     }
 }
-
-Component._buildAccessors(JointComponent.prototype, _schema);
 
 export { JointComponentSystem };

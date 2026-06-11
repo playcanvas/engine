@@ -1,15 +1,11 @@
 import { Debug } from '../../../core/debug.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
-import { SoundComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { SoundManager } from '../../../platform/sound/manager.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Manages creation of {@link SoundComponent}s.
@@ -29,9 +25,6 @@ class SoundComponentSystem extends ComponentSystem {
         this.id = 'sound';
 
         this.ComponentType = SoundComponent;
-        this.DataType = SoundComponentData;
-
-        this.schema = _schema;
 
         /**
          * Gets / sets the sound manager.
@@ -92,7 +85,7 @@ class SoundComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
@@ -175,7 +168,5 @@ class SoundComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(SoundComponent.prototype, _schema);
 
 export { SoundComponentSystem };

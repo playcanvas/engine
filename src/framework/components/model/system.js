@@ -3,16 +3,12 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 import { Asset } from '../../asset/asset.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ModelComponent } from './component.js';
-import { ModelComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Allows an Entity to render a model or a primitive shape like a box, capsule, sphere, cylinder,
@@ -33,9 +29,7 @@ class ModelComponentSystem extends ComponentSystem {
         this.id = 'model';
 
         this.ComponentType = ModelComponent;
-        this.DataType = ModelComponentData;
 
-        this.schema = _schema;
         this.defaultMaterial = getDefaultMaterial(app.graphicsDevice);
 
         this.on('beforeremove', this.onRemove, this);
@@ -78,7 +72,7 @@ class ModelComponentSystem extends ComponentSystem {
             component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
-        super.initializeComponentData(component, _data, ['enabled']);
+        super.initializeComponentData(component, _data);
     }
 
     cloneComponent(entity, clone) {
@@ -150,7 +144,5 @@ class ModelComponentSystem extends ComponentSystem {
         component.onRemove();
     }
 }
-
-Component._buildAccessors(ModelComponent.prototype, _schema);
 
 export { ModelComponentSystem };

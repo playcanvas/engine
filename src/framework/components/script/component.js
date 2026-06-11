@@ -203,10 +203,6 @@ class ScriptComponent extends Component {
         this._scriptsData = null;
         this._oldState = true;
 
-        // override default 'enabled' property of base pc.Component
-        // because this is faster
-        this._enabled = true;
-
         // whether this component is currently being enabled
         this._beingEnabled = false;
         // if true then we are currently looping through
@@ -283,16 +279,6 @@ class ScriptComponent extends Component {
      */
     get scripts() {
         return this._scripts;
-    }
-
-    set enabled(value) {
-        const oldValue = this._enabled;
-        this._enabled = value;
-        this.fire('set', 'enabled', oldValue, value);
-    }
-
-    get enabled() {
-        return this._enabled;
     }
 
     onEnable() {

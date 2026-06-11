@@ -5,10 +5,8 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { CollisionComponent } from './component.js';
-import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
 /**
@@ -20,8 +18,6 @@ const p1 = new Vec3();
 const p2 = new Vec3();
 const quat = new Quat();
 const tempGraphNode = new GraphNode();
-
-const _schema = ['enabled'];
 
 const _properties = [
     'halfExtents',
@@ -633,9 +629,6 @@ class CollisionComponentSystem extends ComponentSystem {
         this.id = 'collision';
 
         this.ComponentType = CollisionComponent;
-        this.DataType = CollisionComponentData;
-
-        this.schema = _schema;
 
         this.implementations = { };
 
@@ -680,7 +673,7 @@ class CollisionComponentSystem extends ComponentSystem {
         const impl = this._createImplementation(component._type);
         impl.beforeInitialize(component);
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
 
         impl.afterInitialize(component);
     }
@@ -874,7 +867,5 @@ class CollisionComponentSystem extends ComponentSystem {
         super.destroy();
     }
 }
-
-Component._buildAccessors(CollisionComponent.prototype, _schema);
 
 export { CollisionComponentSystem };

@@ -1,16 +1,12 @@
 import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
-import { CameraComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Used to add and remove {@link CameraComponent}s from Entities. It also holds an array of all
@@ -38,9 +34,6 @@ class CameraComponentSystem extends ComponentSystem {
         this.id = 'camera';
 
         this.ComponentType = CameraComponent;
-        this.DataType = CameraComponentData;
-
-        this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);
@@ -108,7 +101,7 @@ class CameraComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
@@ -178,7 +171,5 @@ class CameraComponentSystem extends ComponentSystem {
         super.destroy();
     }
 }
-
-Component._buildAccessors(CameraComponent.prototype, _schema);
 
 export { CameraComponentSystem };

@@ -2,10 +2,8 @@ import { Curve } from '../../../core/math/curve.js';
 import { CurveSet } from '../../../core/math/curve-set.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Asset } from '../../asset/asset.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { _properties, ParticleSystemComponent } from './component.js';
-import { ParticleSystemComponentData } from './data.js';
 import { particleChunksGLSL } from '../../../scene/shader-lib/glsl/collections/particle-chunks-glsl.js';
 import { particleChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/particle-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
@@ -14,8 +12,6 @@ import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 const _propertyTypes = {
     emitterExtents: 'vec3',
@@ -56,9 +52,6 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         this.id = 'particlesystem';
 
         this.ComponentType = ParticleSystemComponent;
-        this.DataType = ParticleSystemComponentData;
-
-        this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('update', this.onUpdate, this);
@@ -110,9 +103,10 @@ class ParticleSystemComponentSystem extends ComponentSystem {
 
         // store the enabled state before applying the other properties, so that
         // initialization-time side effects in their setters (e.g. asset loading)
-        // respect the intended enabled state
+        // respect the intended enabled state. Written to the backing field directly
+        // to avoid firing enable/disable events before initialization completes.
         if (data.enabled !== undefined) {
-            component.data.enabled = data.enabled;
+            component._enabled = data.enabled;
         }
 
         for (let i = 0; i < _properties.length; i++) {
@@ -122,7 +116,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
@@ -210,7 +204,5 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(ParticleSystemComponent.prototype, _schema);
 
 export { ParticleSystemComponentSystem };

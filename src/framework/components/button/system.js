@@ -1,13 +1,9 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
-import { ButtonComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 const _properties = [
     'imageEntity',
@@ -44,9 +40,6 @@ class ButtonComponentSystem extends ComponentSystem {
         this.id = 'button';
 
         this.ComponentType = ButtonComponent;
-        this.DataType = ButtonComponentData;
-
-        this.schema = _schema;
 
         this.on('beforeremove', this._onRemoveComponent, this);
 
@@ -64,7 +57,7 @@ class ButtonComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
@@ -110,7 +103,5 @@ class ButtonComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(ButtonComponent.prototype, _schema);
 
 export { ButtonComponentSystem };

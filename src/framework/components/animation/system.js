@@ -1,16 +1,10 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { AnimationComponent } from './component.js';
-import { AnimationComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { Entity } from '../../entity.js'
  */
-
-const _schema = [
-    'enabled'
-];
 
 /**
  * The AnimationComponentSystem manages creating and deleting AnimationComponents.
@@ -30,9 +24,6 @@ class AnimationComponentSystem extends ComponentSystem {
         this.id = 'animation';
 
         this.ComponentType = AnimationComponent;
-        this.DataType = AnimationComponentData;
-
-        this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('update', this.onUpdate, this);
@@ -60,7 +51,7 @@ class AnimationComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
     }
 
     /**
@@ -119,10 +110,10 @@ class AnimationComponentSystem extends ComponentSystem {
 
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                const component = components[id];
+                const { entity } = components[id];
 
-                if (component.data.enabled && component.entity.enabled) {
-                    component.entity.animation.update(dt);
+                if (entity.animation.enabled && entity.enabled) {
+                    entity.animation.update(dt);
                 }
             }
         }
@@ -134,7 +125,5 @@ class AnimationComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(AnimationComponent.prototype, _schema);
 
 export { AnimationComponentSystem };

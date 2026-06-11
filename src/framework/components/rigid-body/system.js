@@ -2,11 +2,9 @@ import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
-import { RigidBodyComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -334,8 +332,6 @@ class ContactResult {
     }
 }
 
-const _schema = ['enabled'];
-
 /**
  * The RigidBodyComponentSystem manages the physics simulation for all rigid body components
  * in the application. It creates and maintains the underlying Ammo.js physics world, handles
@@ -424,13 +420,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this._stats = app.stats.frame;
 
         this.ComponentType = RigidBodyComponent;
-        this.DataType = RigidBodyComponentData;
 
         this.contactPointPool = null;
         this.contactResultPool = null;
         this.singleContactResultPool = null;
-
-        this.schema = _schema;
 
         this.collisions = {};
         this.frameCollisions = {};
@@ -501,7 +494,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
@@ -1122,7 +1115,5 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
     }
 }
-
-Component._buildAccessors(RigidBodyComponent.prototype, _schema);
 
 export { ContactPoint, ContactResult, RaycastResult, RigidBodyComponentSystem, SingleContactResult };

@@ -36,6 +36,14 @@ class Component extends EventHandler {
     entity;
 
     /**
+     * The enabled state of the component.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
      * Base constructor for a Component.
      *
      * @param {ComponentSystem} system - The ComponentSystem used to create this component.
@@ -47,7 +55,9 @@ class Component extends EventHandler {
         this.system = system;
         this.entity = entity;
 
-        if (this.system.schema && !this._accessorsBuilt) {
+        // Legacy path for external components (e.g. playcanvas-spine) that define a schema on
+        // their system: build data-backed instance accessors for each schema property
+        if (this.system.schema?.length && !this._accessorsBuilt) {
             this.buildAccessors(this.system.schema);
         }
 
@@ -58,7 +68,12 @@ class Component extends EventHandler {
         this.on('set_enabled', this.onSetEnabled, this);
     }
 
-    /** @ignore */
+    /**
+     * Legacy path for external components (e.g. playcanvas-spine) that store their properties in
+     * a ComponentData object: creates data-backed accessors for each schema property.
+     *
+     * @ignore
+     */
     static _buildAccessors(obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
         schema.forEach((descriptor) => {
@@ -115,7 +130,9 @@ class Component extends EventHandler {
 
     /**
      * Access the component data directly. Usually you should access the data properties via the
-     * individual properties as modifying this data directly will not fire 'set' events.
+     * individual properties as modifying this data directly will not fire 'set' events. This is a
+     * legacy path for external components that still store their properties in a ComponentData
+     * object - engine components no longer store any data here.
      *
      * @type {*}
      * @ignore
@@ -130,7 +147,10 @@ class Component extends EventHandler {
      *
      * @type {boolean}
      */
-    set enabled(arg) {
+    set enabled(value) {
+        const oldValue = this._enabled;
+        this._enabled = value;
+        this.fire('set', 'enabled', oldValue, value);
     }
 
     /**
@@ -139,7 +159,7 @@ class Component extends EventHandler {
      * @type {boolean}
      */
     get enabled() {
-        return true;
+        return this._enabled;
     }
 }
 

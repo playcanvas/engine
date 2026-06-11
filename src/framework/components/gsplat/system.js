@@ -2,10 +2,8 @@ import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
-import { GSplatComponentData } from './data.js';
 import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
 import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
@@ -24,10 +22,6 @@ Debug.call(() => {
  * @import { Layer } from '../../../scene/layer.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  */
-
-const _schema = [
-    'enabled'
-];
 
 // order matters here
 const _properties = [
@@ -113,9 +107,6 @@ class GSplatComponentSystem extends ComponentSystem {
         this.id = 'gsplat';
 
         this.ComponentType = GSplatComponent;
-        this.DataType = GSplatComponentData;
-
-        this.schema = _schema;
 
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
 
@@ -142,7 +133,7 @@ class GSplatComponentSystem extends ComponentSystem {
             component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
-        super.initializeComponentData(component, _data, _schema);
+        super.initializeComponentData(component, _data);
     }
 
     cloneComponent(entity, clone) {
@@ -209,7 +200,5 @@ class GSplatComponentSystem extends ComponentSystem {
         return this.getMaterial(camera, layer);
     }
 }
-
-Component._buildAccessors(GSplatComponent.prototype, _schema);
 
 export { GSplatComponentSystem };
