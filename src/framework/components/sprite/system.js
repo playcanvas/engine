@@ -6,16 +6,12 @@ import {
 import { Texture } from '../../../platform/graphics/texture.js';
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
-import { SpriteComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Manages creation of {@link SpriteComponent}s.
@@ -35,9 +31,6 @@ class SpriteComponentSystem extends ComponentSystem {
         this.id = 'sprite';
 
         this.ComponentType = SpriteComponent;
-        this.DataType = SpriteComponentData;
-
-        this.schema = _schema;
 
         // default texture - make white so we can tint it with emissive color
         this._defaultTexture = null;
@@ -242,10 +235,10 @@ class SpriteComponentSystem extends ComponentSystem {
 
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                const component = components[id];
+                const { entity } = components[id];
                 // if sprite component is enabled advance its current clip
-                if (component.data.enabled && component.entity.enabled) {
-                    const sprite = component.entity.sprite;
+                if (entity.sprite.enabled && entity.enabled) {
+                    const sprite = entity.sprite;
                     if (sprite._currentClip) {
                         sprite._currentClip._update(dt);
                     }
@@ -258,7 +251,5 @@ class SpriteComponentSystem extends ComponentSystem {
         component.onDestroy();
     }
 }
-
-Component._buildAccessors(SpriteComponent.prototype, _schema);
 
 export { SpriteComponentSystem };

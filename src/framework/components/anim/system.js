@@ -1,16 +1,10 @@
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { AnimComponent } from './component.js';
-import { AnimComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = [
-    'enabled'
-];
 
 /**
  * The AnimComponentSystem manages creating and deleting AnimComponents.
@@ -30,16 +24,13 @@ class AnimComponentSystem extends ComponentSystem {
         this.id = 'anim';
 
         this.ComponentType = AnimComponent;
-        this.DataType = AnimComponentData;
-
-        this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('animationUpdate', this.onAnimationUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data, ['enabled']);
         const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
         Object.keys(data).forEach((key) => {
             // these properties will be initialized manually below
@@ -93,9 +84,8 @@ class AnimComponentSystem extends ComponentSystem {
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
                 const component = components[id].entity.anim;
-                const componentData = component.data;
 
-                if (componentData.enabled && component.entity.enabled && component.playing) {
+                if (component.enabled && component.entity.enabled && component.playing) {
                     component.update(dt);
                 }
             }
@@ -150,7 +140,5 @@ class AnimComponentSystem extends ComponentSystem {
         this.app.systems.off('animationUpdate', this.onAnimationUpdate, this);
     }
 }
-
-Component._buildAccessors(AnimComponent.prototype, _schema);
 
 export { AnimComponentSystem };

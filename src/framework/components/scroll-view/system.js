@@ -1,13 +1,9 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
-import { ScrollViewComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 // Order matters: scalars/booleans/visibility flags must precede the four entity refs.
 // Assigning a scrollbar entity triggers _onHorizontalScrollbarGain / _onVerticalScrollbarGain,
@@ -48,9 +44,6 @@ class ScrollViewComponentSystem extends ComponentSystem {
         this.id = 'scrollview';
 
         this.ComponentType = ScrollViewComponent;
-        this.DataType = ScrollViewComponentData;
-
-        this.schema = _schema;
 
         this.on('beforeremove', this._onRemoveComponent, this);
 
@@ -70,7 +63,7 @@ class ScrollViewComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data, ['enabled']);
     }
 
     cloneComponent(entity, clone) {
@@ -117,7 +110,5 @@ class ScrollViewComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(ScrollViewComponent.prototype, _schema);
 
 export { ScrollViewComponentSystem };

@@ -1,15 +1,11 @@
 import { IndexedList } from '../../../core/indexed-list.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ScreenComponent } from './component.js';
-import { ScreenComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Manages creation of {@link ScreenComponent}s.
@@ -29,9 +25,6 @@ class ScreenComponentSystem extends ComponentSystem {
         this.id = 'screen';
 
         this.ComponentType = ScreenComponent;
-        this.DataType = ScreenComponentData;
-
-        this.schema = _schema;
 
         this.windowResolution = new Vec2();
 
@@ -74,7 +67,7 @@ class ScreenComponentSystem extends ComponentSystem {
 
         // queue up a draw order sync
         component.syncDrawOrder();
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data, ['enabled']);
     }
 
     _updateDescendantElements(entity, screenEntity) {
@@ -154,7 +147,5 @@ class ScreenComponentSystem extends ComponentSystem {
         }
     }
 }
-
-Component._buildAccessors(ScreenComponent.prototype, _schema);
 
 export { ScreenComponentSystem };

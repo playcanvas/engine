@@ -18,7 +18,7 @@ const properties = [
     'angularMotionX', 'angularMotionY', 'angularMotionZ',
     'angularSpringX', 'angularSpringY', 'angularSpringZ',
     'angularStiffnessX', 'angularStiffnessY', 'angularStiffnessZ',
-    'breakForce', 'enableCollision', 'enabled', 'entityA', 'entityB',
+    'breakForce', 'enableCollision', 'entityA', 'entityB',
     'linearDampingX', 'linearDampingY', 'linearDampingZ',
     'linearEquilibriumX', 'linearEquilibriumY', 'linearEquilibriumZ',
     'linearLimitsX', 'linearLimitsY', 'linearLimitsZ',

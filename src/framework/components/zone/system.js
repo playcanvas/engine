@@ -1,14 +1,10 @@
 import { Vec3 } from '../../../core/math/vec3.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ZoneComponent } from './component.js';
-import { ZoneComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Creates and manages {@link ZoneComponent} instances.
@@ -28,9 +24,6 @@ class ZoneComponentSystem extends ComponentSystem {
         this.id = 'zone';
 
         this.ComponentType = ZoneComponent;
-        this.DataType = ZoneComponentData;
-
-        this.schema = _schema;
 
         this.on('beforeremove', this._onBeforeRemove, this);
     }
@@ -60,7 +53,5 @@ class ZoneComponentSystem extends ComponentSystem {
         component._onBeforeRemove();
     }
 }
-
-Component._buildAccessors(ZoneComponent.prototype, _schema);
 
 export { ZoneComponentSystem };

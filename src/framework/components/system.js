@@ -52,7 +52,10 @@ class ComponentSystem extends EventHandler {
      */
     addComponent(entity, data = {}) {
         const component = new this.ComponentType(this, entity);
-        const componentData = new this.DataType();
+
+        // Engine components no longer define a DataType - the empty object is stored so that
+        // legacy paths (the `data` getter, default cloneComponent) keep working
+        const componentData = this.DataType ? new this.DataType() : {};
 
         this.store[entity.guid] = {
             entity: entity,
@@ -146,7 +149,9 @@ class ComponentSystem extends EventHandler {
                 }
 
                 component[name] = value;
-            } else {
+            } else if (component.data && name in component.data) {
+                // Legacy path for external components that define a DataType: apply the
+                // default value from the component data
                 component[name] = component.data[name];
             }
         }
