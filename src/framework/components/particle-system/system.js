@@ -108,6 +108,13 @@ class ParticleSystemComponentSystem extends ComponentSystem {
             data.layers = data.layers.slice(0);
         }
 
+        // store the enabled state before applying the other properties, so that
+        // initialization-time side effects in their setters (e.g. asset loading)
+        // respect the intended enabled state
+        if (data.enabled !== undefined) {
+            component.data.enabled = data.enabled;
+        }
+
         for (let i = 0; i < _properties.length; i++) {
             const property = _properties[i];
             if (data[property] !== undefined) {

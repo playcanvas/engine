@@ -235,6 +235,33 @@ describe('ParticleSystemComponent', function () {
         expect(e.particlesystem.colorMapAsset).to.equal(assets.colorMap.id);
     });
 
+    it('Does not trigger asset loads when initialized disabled', function () {
+        const asset = new Asset('Unloaded', 'texture', {
+            url: '/test/assets/test.png'
+        });
+        app.assets.add(asset);
+
+        const e = new Entity();
+        app.root.addChild(e);
+        e.addComponent('particlesystem', {
+            enabled: false,
+            colorMapAsset: asset.id
+        });
+
+        expect(e.particlesystem.enabled).to.be.false;
+        expect(asset.loading).to.be.false;
+        expect(asset.loaded).to.be.false;
+
+        // the same data on an enabled component does trigger the load
+        const e2 = new Entity();
+        app.root.addChild(e2);
+        e2.addComponent('particlesystem', {
+            colorMapAsset: asset.id
+        });
+
+        expect(asset.loading || asset.loaded).to.be.true;
+    });
+
     it('Clones a particlesystem component', function () {
         const e = new Entity();
         e.addComponent('particlesystem', {
