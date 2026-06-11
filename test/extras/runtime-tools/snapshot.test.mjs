@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+
 import { expect } from 'chai';
 
 import { RingBuffer } from '../../../src/extras/runtime-tools/ring-buffer.js';
@@ -73,5 +75,16 @@ describe('runtime-tools snapshot', function () {
     it('is JSON-serializable and round-trips losslessly', function () {
         const snap = buildSnapshot(entry);
         expect(JSON.parse(JSON.stringify(snap))).to.deep.equal(snap);
+    });
+
+    it('matches the checked-in protocol v1 schema top-level shape', function () {
+        const schemaUrl = new URL(
+            '../../../src/extras/runtime-tools/protocol-v1.schema.json', import.meta.url);
+        const schema = JSON.parse(readFileSync(schemaUrl, 'utf8'));
+        const snap = buildSnapshot(entry);
+        expect(Object.keys(snap).sort()).to.deep.equal(Object.keys(schema.properties).sort());
+        schema.required.forEach((key) => {
+            expect(snap).to.have.property(key);
+        });
     });
 });
