@@ -332,6 +332,20 @@ class ContactResult {
     }
 }
 
+const _properties = [
+    'mass',
+    'linearDamping',
+    'angularDamping',
+    'linearFactor',
+    'angularFactor',
+    'friction',
+    'rollingFriction',
+    'restitution',
+    'type',
+    'group',
+    'mask'
+];
+
 /**
  * The RigidBodyComponentSystem manages the physics simulation for all rigid body components
  * in the application. It creates and maintains the underlying Ammo.js physics world, handles
@@ -468,22 +482,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
     }
 
-    initializeComponentData(component, data, properties) {
-        const props = [
-            'mass',
-            'linearDamping',
-            'angularDamping',
-            'linearFactor',
-            'angularFactor',
-            'friction',
-            'rollingFriction',
-            'restitution',
-            'type',
-            'group',
-            'mask'
-        ];
-
-        for (const property of props) {
+    initializeComponentData(component, data) {
+        for (const property of _properties) {
             if (data.hasOwnProperty(property)) {
                 const value = data[property];
                 if (Array.isArray(value)) {
@@ -498,22 +498,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        // create new data block for clone
-        const rigidbody = entity.rigidbody;
+        const c = entity.rigidbody;
+
         const data = {
-            enabled: rigidbody.enabled,
-            mass: rigidbody.mass,
-            linearDamping: rigidbody.linearDamping,
-            angularDamping: rigidbody.angularDamping,
-            linearFactor: [rigidbody.linearFactor.x, rigidbody.linearFactor.y, rigidbody.linearFactor.z],
-            angularFactor: [rigidbody.angularFactor.x, rigidbody.angularFactor.y, rigidbody.angularFactor.z],
-            friction: rigidbody.friction,
-            rollingFriction: rigidbody.rollingFriction,
-            restitution: rigidbody.restitution,
-            type: rigidbody.type,
-            group: rigidbody.group,
-            mask: rigidbody.mask
+            enabled: c.enabled
         };
+
+        for (const property of _properties) {
+            data[property] = c[property];
+        }
 
         return this.addComponent(clone, data);
     }

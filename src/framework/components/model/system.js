@@ -10,6 +10,23 @@ import { ModelComponent } from './component.js';
  * @import { AppBase } from '../../app-base.js'
  */
 
+// order matters here
+const _properties = [
+    'material',
+    'materialAsset',
+    'asset',
+    'castShadows',
+    'receiveShadows',
+    'castShadowsLightmap',
+    'lightmapped',
+    'lightmapSizeMultiplier',
+    'type',
+    'mapping',
+    'layers',
+    'isStatic',
+    'batchGroupId'
+];
+
 /**
  * Allows an Entity to render a model or a primitive shape like a box, capsule, sphere, cylinder,
  * cone etc.
@@ -35,24 +52,7 @@ class ModelComponentSystem extends ComponentSystem {
         this.on('beforeremove', this.onRemove, this);
     }
 
-    initializeComponentData(component, _data, properties) {
-        // order matters here
-        properties = [
-            'material',
-            'materialAsset',
-            'asset',
-            'castShadows',
-            'receiveShadows',
-            'castShadowsLightmap',
-            'lightmapped',
-            'lightmapSizeMultiplier',
-            'type',
-            'mapping',
-            'layers',
-            'isStatic',
-            'batchGroupId'
-        ];
-
+    initializeComponentData(component, _data) {
         if (_data.batchGroupId === null || _data.batchGroupId === undefined) {
             _data.batchGroupId = -1;
         }
@@ -62,9 +62,9 @@ class ModelComponentSystem extends ComponentSystem {
             _data.layers = _data.layers.slice(0);
         }
 
-        for (let i = 0; i < properties.length; i++) {
-            if (_data.hasOwnProperty(properties[i])) {
-                component[properties[i]] = _data[properties[i]];
+        for (let i = 0; i < _properties.length; i++) {
+            if (_data.hasOwnProperty(_properties[i])) {
+                component[_properties[i]] = _data[_properties[i]];
             }
         }
 
@@ -77,19 +77,25 @@ class ModelComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const data = {
-            type: entity.model.type,
-            asset: entity.model.asset,
-            castShadows: entity.model.castShadows,
-            receiveShadows: entity.model.receiveShadows,
-            castShadowsLightmap: entity.model.castShadowsLightmap,
-            lightmapped: entity.model.lightmapped,
-            lightmapSizeMultiplier: entity.model.lightmapSizeMultiplier,
-            isStatic: entity.model.isStatic,
-            enabled: entity.model.enabled,
-            layers: entity.model.layers,
-            batchGroupId: entity.model.batchGroupId,
-            mapping: extend({}, entity.model.mapping)
+            enabled: entity.model.enabled
         };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            switch (property) {
+                // material and materialAsset are handled below, after the
+                // appropriate one to clone has been determined
+                case 'material':
+                case 'materialAsset':
+                    break;
+                case 'mapping':
+                    data.mapping = extend({}, entity.model.mapping);
+                    break;
+                default:
+                    data[property] = entity.model[property];
+                    break;
+            }
+        }
 
         // if original has a different material
         // than the assigned materialAsset then make sure we
