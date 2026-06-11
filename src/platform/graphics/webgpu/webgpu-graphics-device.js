@@ -383,6 +383,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
+        // Imagination PowerVR GPUs (Pixel 10 / Tensor G5) have buggy WebGPU drivers (broken
+        // compute, shader miscompiles), so fail device creation here to let createGraphicsDevice
+        // fall back to WebGL2. Remove when fixed: https://github.com/playcanvas/engine/issues/8874
+        if (this.gpuAdapter?.info?.vendor === 'img-tec') {
+            Debug.warn('WebGPU is disabled on Imagination PowerVR GPUs due to driver issues, falling back to WebGL2. See https://github.com/playcanvas/engine/issues/8874');
+            return null;
+        }
+
         const featureLevel = this.initOptions.featureLevel;
         const bare = featureLevel === 'bare';
 
