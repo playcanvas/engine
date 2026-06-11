@@ -716,22 +716,22 @@ class CollisionComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const c = entity.collision;
-        return this.addComponent(clone, {
+
+        // type is initialized outside the property list; shape is created by the type's
+        // implementation during initialization and must not be shared with the clone
+        const data = {
             enabled: c.enabled,
-            type: c.type,
-            halfExtents: c.halfExtents,
-            linearOffset: c.linearOffset,
-            angularOffset: c.angularOffset,
-            radius: c.radius,
-            axis: c.axis,
-            height: c.height,
-            convexHull: c.convexHull,
-            asset: c.asset,
-            renderAsset: c.renderAsset,
-            model: c.model,
-            render: c.render,
-            checkVertexDuplicates: c.checkVertexDuplicates
-        });
+            type: c.type
+        };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            if (property !== 'shape') {
+                data[property] = c[property];
+            }
+        }
+
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {
