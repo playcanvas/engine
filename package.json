@@ -62,6 +62,11 @@
       "import": "./build/playcanvas.prf/src/index.js",
       "require": "./build/playcanvas.prf.js"
     },
+    "./tools": {
+      "types": "./build/playcanvas.d.ts",
+      "import": "./build/playcanvas/src/extras/runtime-tools/runtime-tools.js",
+      "require": "./build/playcanvas.js"
+    },
     "./build/*": "./build/*",
     "./scripts/*": "./scripts/*"
   },
