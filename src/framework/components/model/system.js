@@ -49,7 +49,7 @@ class ModelComponentSystem extends ComponentSystem {
 
         this.defaultMaterial = getDefaultMaterial(app.graphicsDevice);
 
-        this.on('beforeremove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, _data) {
@@ -146,7 +146,7 @@ class ModelComponentSystem extends ComponentSystem {
         return component;
     }
 
-    onRemove(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 }

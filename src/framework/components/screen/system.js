@@ -35,7 +35,7 @@ class ScreenComponentSystem extends ComponentSystem {
 
         this.app.systems.on('update', this._onUpdate, this);
 
-        this.on('beforeremove', this.onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -118,7 +118,7 @@ class ScreenComponentSystem extends ComponentSystem {
         });
     }
 
-    onRemoveComponent(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 

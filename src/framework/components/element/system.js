@@ -71,7 +71,7 @@ class ElementComponentSystem extends ComponentSystem {
         this.defaultImageMaterials = [];
 
         this.on('add', this.onAddComponent, this);
-        this.on('beforeremove', this.onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     destroy() {
@@ -268,7 +268,7 @@ class ElementComponentSystem extends ComponentSystem {
         entity.fire('element:add');
     }
 
-    onRemoveComponent(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 

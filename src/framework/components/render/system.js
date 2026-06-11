@@ -49,7 +49,7 @@ class RenderComponentSystem extends ComponentSystem {
 
         this.defaultMaterial = getDefaultMaterial(app.graphicsDevice);
 
-        this.on('beforeremove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, _data, properties) {
@@ -107,7 +107,7 @@ class RenderComponentSystem extends ComponentSystem {
         return component;
     }
 
-    onRemove(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 }

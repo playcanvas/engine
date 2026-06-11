@@ -26,7 +26,7 @@ class LightComponentSystem extends ComponentSystem {
 
         this.ComponentType = LightComponent;
 
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, _data) {
@@ -64,7 +64,7 @@ class LightComponentSystem extends ComponentSystem {
         super.initializeComponentData(component, data);
     }
 
-    _onRemoveComponent(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 

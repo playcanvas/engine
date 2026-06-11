@@ -57,7 +57,7 @@ class ScriptComponentSystem extends ComponentSystem {
         // if true then we are currently preloading scripts
         this.preloading = true;
 
-        this.on('beforeremove', this._onBeforeRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('initialize', this._onInitialize, this);
         this.app.systems.on('postInitialize', this._onPostInitialize, this);
         this.app.systems.on('update', this._onUpdate, this);
@@ -182,7 +182,7 @@ class ScriptComponentSystem extends ComponentSystem {
         this._enabledComponents.remove(component);
     }
 
-    _onBeforeRemove(entity, component) {
+    onBeforeRemove(entity, component) {
         const ind = this._components.items.indexOf(component);
         if (ind >= 0) {
             component._onBeforeRemove();
