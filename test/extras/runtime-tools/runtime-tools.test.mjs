@@ -128,6 +128,16 @@ describe('attachRuntimeTools', function () {
             expect(result.frame).to.equal(0);
         });
 
+        it('detach rejects pending waits', async function () {
+            const detach = attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitForFrame();
+            detach();
+            await p.then(
+                () => expect.fail('expected rejection'),
+                err => expect(err.message).to.match(/detached/)
+            );
+        });
+
         it('waitForSettled resolves after N settled frames once started', async function () {
             attachRuntimeTools(app);
             const p = globalThis.__PLAYCANVAS_TOOLS__.waitForSettled(undefined, { frames: 3, timeout: 1000 });

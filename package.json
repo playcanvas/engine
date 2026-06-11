@@ -63,9 +63,23 @@
       "require": "./build/playcanvas.prf.js"
     },
     "./tools": {
-      "types": "./build/playcanvas.d.ts",
-      "import": "./build/playcanvas/src/extras/runtime-tools/runtime-tools.js",
-      "require": "./build/playcanvas.js"
+      "types": "./build/playcanvas/src/extras/runtime-tools/runtime-tools.d.ts",
+      "development": {
+        "import": "./build/playcanvas.dbg/src/extras/runtime-tools/runtime-tools.js",
+        "require": "./build/playcanvas.dbg.js"
+      },
+      "profiler": {
+        "import": "./build/playcanvas.prf/src/extras/runtime-tools/runtime-tools.js",
+        "require": "./build/playcanvas.prf.js"
+      },
+      "production": {
+        "import": "./build/playcanvas/src/extras/runtime-tools/runtime-tools.js",
+        "require": "./build/playcanvas.js"
+      },
+      "default": {
+        "import": "./build/playcanvas/src/extras/runtime-tools/runtime-tools.js",
+        "require": "./build/playcanvas.js"
+      }
     },
     "./build/*": "./build/*",
     "./scripts/*": "./scripts/*"
