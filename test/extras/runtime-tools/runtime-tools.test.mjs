@@ -52,6 +52,15 @@ describe('attachRuntimeTools', function () {
         second.destroy();
     });
 
+    it('is idempotent when attaching the same app twice', function () {
+        const d1 = attachRuntimeTools(app);
+        const d2 = attachRuntimeTools(app);
+        expect(globalThis.__PLAYCANVAS_TOOLS__.apps()).to.have.length(1);
+        d2();
+        expect(globalThis.__PLAYCANVAS_TOOLS__).to.be.undefined;
+        d1();
+    });
+
     it('snapshot() resolves the single attached app implicitly', function () {
         attachRuntimeTools(app);
         const snap = globalThis.__PLAYCANVAS_TOOLS__.snapshot();
@@ -76,6 +85,17 @@ describe('attachRuntimeTools', function () {
         expect(diag.errors[0].kind).to.equal('asset');
         expect(diag.errors[0].message).to.equal('Error: 404');
         expect(diag.missingAssets).to.deep.equal(['missing.png']);
+    });
+
+    it('captures asset errors fired without an error argument', function () {
+        attachRuntimeTools(app);
+        const asset = new Asset('cube.png', 'cubemap', { url: 'cube.png' });
+        app.assets.add(asset);
+        app.assets.fire('error', asset);
+        const diag = globalThis.__PLAYCANVAS_TOOLS__.diagnostics();
+        expect(diag.errors).to.have.length(1);
+        expect(diag.errors[0].assetId).to.equal(asset.id);
+        expect(diag.errors[0].url).to.equal('cube.png');
     });
 
     it('detach removes the app and deletes the global when none remain', function () {
@@ -119,6 +139,16 @@ describe('attachRuntimeTools', function () {
             expect(result.settledFrames).to.equal(3);
         });
 
+        it('waitForSettled counts frames as started when attached after app.start', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitForSettled(undefined, { frames: 2, timeout: 1000 });
+            app.fire('frameupdate', 16);
+            app.fire('frameend');
+            app.fire('frameend');
+            const result = await p;
+            expect(result.settledFrames).to.equal(2);
+        });
+
         it('waitForSettled resets the count while assets are loading', async function () {
             attachRuntimeTools(app);
             const asset = new Asset('slow.png', 'texture', { url: 'slow.png' });
@@ -140,6 +170,28 @@ describe('attachRuntimeTools', function () {
             await p.then(
                 () => expect.fail('expected rejection'),
                 err => expect(err.message).to.match(/timed out after 30ms.*started=false/)
+            );
+        });
+
+        it('waitForFrame rejects when the app is destroyed', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitForFrame();
+            app.destroy();
+            app = null;
+            await p.then(
+                () => expect.fail('expected rejection'),
+                err => expect(err.message).to.match(/destroyed/)
+            );
+        });
+
+        it('waitForSettled rejects when the app is destroyed', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitForSettled(undefined, { frames: 3, timeout: 5000 });
+            app.destroy();
+            app = null;
+            await p.then(
+                () => expect.fail('expected rejection'),
+                err => expect(err.message).to.match(/destroyed/)
             );
         });
     });
