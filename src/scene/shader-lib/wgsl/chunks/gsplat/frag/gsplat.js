@@ -37,6 +37,8 @@ varying gaussianColor: half4;
     #include "pickPS"
 #endif
 
+#include "gsplatModifyPS"
+
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
@@ -89,7 +91,9 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             opacityDither(f32(alpha), id * 0.013);
         #endif
 
-        output.color = vec4f(vec3f(gaussianColor.xyz * alpha), f32(alpha));
+        var fragColor: vec4f = vec4f(vec3f(gaussianColor.xyz), f32(alpha));
+        modifySplatColor(vec2f(gaussianUV), &fragColor);
+        output.color = vec4f(fragColor.xyz * fragColor.a, fragColor.a);
     #endif
 
     return output;
