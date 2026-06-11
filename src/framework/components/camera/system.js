@@ -8,6 +8,40 @@ import { CameraComponent } from './component.js';
  * @import { AppBase } from '../../app-base.js'
  */
 
+const _properties = [
+    'aspectRatio',
+    'aspectRatioMode',
+    'calculateProjection',
+    'calculateTransform',
+    'clearColor',
+    'clearColorBuffer',
+    'clearDepth',
+    'clearDepthBuffer',
+    'clearStencilBuffer',
+    'renderSceneColorMap',
+    'renderSceneDepthMap',
+    'cullFaces',
+    'farClip',
+    'flipFaces',
+    'fog',
+    'fov',
+    'frustumCulling',
+    'horizontalFov',
+    'layers',
+    'renderTarget',
+    'nearClip',
+    'orthoHeight',
+    'projection',
+    'priority',
+    'rect',
+    'scissorRect',
+    'aperture',
+    'shutter',
+    'sensitivity',
+    'gammaCorrection',
+    'toneMapping'
+];
+
 /**
  * Used to add and remove {@link CameraComponent}s from Entities. It also holds an array of all
  * active cameras.
@@ -39,43 +73,9 @@ class CameraComponentSystem extends ComponentSystem {
         this.app.on('prerender', this.onAppPrerender, this);
     }
 
-    initializeComponentData(component, data, properties) {
-        properties = [
-            'aspectRatio',
-            'aspectRatioMode',
-            'calculateProjection',
-            'calculateTransform',
-            'clearColor',
-            'clearColorBuffer',
-            'clearDepth',
-            'clearDepthBuffer',
-            'clearStencilBuffer',
-            'renderSceneColorMap',
-            'renderSceneDepthMap',
-            'cullFaces',
-            'farClip',
-            'flipFaces',
-            'fog',
-            'fov',
-            'frustumCulling',
-            'horizontalFov',
-            'layers',
-            'renderTarget',
-            'nearClip',
-            'orthoHeight',
-            'projection',
-            'priority',
-            'rect',
-            'scissorRect',
-            'aperture',
-            'shutter',
-            'sensitivity',
-            'gammaCorrection',
-            'toneMapping'
-        ];
-
-        for (let i = 0; i < properties.length; i++) {
-            const property = properties[i];
+    initializeComponentData(component, data) {
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
             if (data.hasOwnProperty(property)) {
                 const value = data[property];
                 switch (property) {
@@ -106,38 +106,17 @@ class CameraComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const c = entity.camera;
-        return this.addComponent(clone, {
-            aspectRatio: c.aspectRatio,
-            aspectRatioMode: c.aspectRatioMode,
-            calculateProjection: c.calculateProjection,
-            calculateTransform: c.calculateTransform,
-            clearColor: c.clearColor,
-            clearColorBuffer: c.clearColorBuffer,
-            clearDepthBuffer: c.clearDepthBuffer,
-            clearStencilBuffer: c.clearStencilBuffer,
-            renderSceneDepthMap: c.renderSceneDepthMap,
-            renderSceneColorMap: c.renderSceneColorMap,
-            cullFaces: c.cullFaces,
-            enabled: c.enabled,
-            farClip: c.farClip,
-            flipFaces: c.flipFaces,
-            fov: c.fov,
-            frustumCulling: c.frustumCulling,
-            horizontalFov: c.horizontalFov,
-            layers: c.layers,
-            renderTarget: c.renderTarget,
-            nearClip: c.nearClip,
-            orthoHeight: c.orthoHeight,
-            projection: c.projection,
-            priority: c.priority,
-            rect: c.rect,
-            scissorRect: c.scissorRect,
-            aperture: c.aperture,
-            sensitivity: c.sensitivity,
-            shutter: c.shutter,
-            gammaCorrection: c.gammaCorrection,
-            toneMapping: c.toneMapping
-        });
+
+        const data = {
+            enabled: c.enabled
+        };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            data[property] = c[property];
+        }
+
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {
