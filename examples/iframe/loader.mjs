@@ -225,6 +225,11 @@ class ExampleLoader {
             const module = await importModule('example.mjs');
             this._app = module.app ?? window.pc?.AppBase.getApplication('application-canvas');
 
+            // expose the runtime introspection protocol for harnesses
+            if (this._app) {
+                window.pc?.attachRuntimeTools?.(this._app);
+            }
+
             // additional destroy handler for non-app resources
             if (typeof module.destroy === 'function') {
                 this.destroyHandlers.push(module.destroy);
