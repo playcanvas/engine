@@ -20,7 +20,6 @@ class JointComponentSystem extends ComponentSystem {
         super(app);
 
         this.id = 'joint';
-        this.app = app;
 
         this.ComponentType = JointComponent;
     }

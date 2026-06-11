@@ -41,7 +41,7 @@ class ButtonComponentSystem extends ComponentSystem {
 
         this.ComponentType = ButtonComponent;
 
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
 
         this.app.systems.on('update', this.onUpdate, this);
     }
@@ -87,7 +87,7 @@ class ButtonComponentSystem extends ComponentSystem {
         }
     }
 
-    _onRemoveComponent(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 

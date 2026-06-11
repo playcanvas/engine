@@ -30,7 +30,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
 
         this._reflowQueue = [];
 
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
 
         // Perform reflow when running in the engine
         this.app.systems.on('postUpdate', this._onPostUpdate, this);
@@ -117,7 +117,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         }
     }
 
-    _onRemoveComponent(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 

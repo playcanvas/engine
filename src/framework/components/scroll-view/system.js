@@ -45,7 +45,7 @@ class ScrollViewComponentSystem extends ComponentSystem {
 
         this.ComponentType = ScrollViewComponent;
 
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
 
         this.app.systems.on('update', this.onUpdate, this);
     }
@@ -94,7 +94,7 @@ class ScrollViewComponentSystem extends ComponentSystem {
         }
     }
 
-    _onRemoveComponent(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 

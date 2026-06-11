@@ -114,7 +114,7 @@ class GSplatComponentSystem extends ComponentSystem {
         ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);
         ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_WGSL).add(gsplatChunksWGSL);
 
-        this.on('beforeremove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, _data, properties) {
@@ -164,7 +164,7 @@ class GSplatComponentSystem extends ComponentSystem {
         return component;
     }
 
-    onRemove(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 

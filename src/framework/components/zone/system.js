@@ -25,7 +25,7 @@ class ZoneComponentSystem extends ComponentSystem {
 
         this.ComponentType = ZoneComponent;
 
-        this.on('beforeremove', this._onBeforeRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -49,7 +49,7 @@ class ZoneComponentSystem extends ComponentSystem {
         return this.addComponent(clone, data);
     }
 
-    _onBeforeRemove(entity, component) {
+    onBeforeRemove(entity, component) {
         component._onBeforeRemove();
     }
 }

@@ -27,7 +27,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
         this.ComponentType = ScrollbarComponent;
 
         this.on('add', this._onAddComponent, this);
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -60,7 +60,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
         entity.fire('scrollbar:add');
     }
 
-    _onRemoveComponent(entity, component) {
+    onBeforeRemove(entity, component) {
         component.onRemove();
     }
 }
