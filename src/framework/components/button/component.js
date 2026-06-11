@@ -766,7 +766,7 @@ class ButtonComponent extends Component {
      * Sets one of the state sprite asset/frame fields, reapplying the visual state on change.
      *
      * @param {string} name - The name of the private field to set.
-     * @param {*} arg - The new value.
+     * @param {Asset|number|null} arg - The new value.
      * @private
      */
     _setTransitionValue(name, arg) {
