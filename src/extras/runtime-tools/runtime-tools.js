@@ -49,8 +49,17 @@ const createGlobal = () => {
         },
         waitForFrame(appId) {
             const entry = resolve(appId);
-            return new Promise((res) => {
-                entry.app.once('frameend', () => res({ frame: entry.app.frame }));
+            return new Promise((res, rej) => {
+                const frameend = { handle: null };
+                const destroy = { handle: null };
+                frameend.handle = entry.app.once('frameend', () => {
+                    destroy.handle.off();
+                    res({ frame: entry.app.frame });
+                });
+                destroy.handle = entry.app.once('destroy', () => {
+                    frameend.handle.off();
+                    rej(new Error('waitForFrame failed: app destroyed'));
+                });
             });
         },
         waitForSettled(appId, { frames = 3, timeout = 30000 } = {}) {
@@ -58,22 +67,30 @@ const createGlobal = () => {
             return new Promise((res, rej) => {
                 let settled = 0;
                 const timer = { id: null };
+                const frameend = { handle: null };
+                const destroy = { handle: null };
+                const done = (settle, value) => {
+                    clearTimeout(timer.id);
+                    frameend.handle.off();
+                    destroy.handle.off();
+                    settle(value);
+                };
                 const onFrame = () => {
                     const loading = entry.app.assets.list().some(a => a.loading);
                     settled = (entry.started && !loading) ? settled + 1 : 0;
                     if (settled >= frames) {
-                        clearTimeout(timer.id);
-                        entry.app.off('frameend', onFrame);
-                        res({ frame: entry.app.frame, settledFrames: settled });
+                        done(res, { frame: entry.app.frame, settledFrames: settled });
                     }
                 };
                 timer.id = setTimeout(() => {
-                    entry.app.off('frameend', onFrame);
                     const pending = entry.app.assets.list().filter(a => a.loading).length;
-                    rej(new Error(`waitForSettled timed out after ${timeout}ms: ` +
+                    done(rej, new Error(`waitForSettled timed out after ${timeout}ms: ` +
                         `started=${entry.started}, pending assets=${pending}`));
                 }, timeout);
-                entry.app.on('frameend', onFrame);
+                frameend.handle = entry.app.on('frameend', onFrame);
+                destroy.handle = entry.app.once('destroy', () => {
+                    done(rej, new Error('waitForSettled failed: app destroyed'));
+                });
             });
         }
     };
@@ -94,31 +111,45 @@ const createGlobal = () => {
  * attachRuntimeTools(app);
  */
 const attachRuntimeTools = (app) => {
+    for (const e of registry.values()) {
+        if (e.app === app) {
+            return e.detach;
+        }
+    }
+
     const canvasId = app.graphicsDevice.canvas.id;
-    const id = canvasId || `pc-app-${idCounter++}`;
+    let id = canvasId || `pc-app-${idCounter++}`;
+    while (registry.has(id)) {
+        id = `${id}-${idCounter++}`;
+    }
 
     const entry = {
         app,
         id,
         started: app.frame > 0,
         destroyed: false,
+        detached: false,
         timeMs: 0,
         errors: new RingBuffer(MAX_DIAGNOSTICS)
     };
+    const destroy = { handle: null };
 
     const onStart = () => {
         entry.started = true;
     };
     const onFrameUpdate = (ms) => {
+        entry.started = true;
         entry.timeMs += ms;
     };
     const onAssetError = (err, asset) => {
+        // some handlers (e.g. cubemap) fire 'error' with only the asset
+        const a = asset ?? ((err && typeof err === 'object' && 'id' in err) ? err : null);
         entry.errors.push({
             kind: 'asset',
-            message: String(err),
-            assetId: asset.id,
-            name: asset.name,
-            url: asset.file?.url ?? null,
+            message: a === err ? 'asset load error' : String(err),
+            assetId: a?.id ?? null,
+            name: a?.name ?? null,
+            url: a?.file?.url ?? null,
             frame: app.frame
         });
     };
@@ -128,19 +159,24 @@ const attachRuntimeTools = (app) => {
     app.assets.on('error', onAssetError);
 
     const detach = () => {
-        if (!registry.has(id)) {
+        if (entry.detached) {
             return;
         }
-        registry.delete(id);
+        entry.detached = true;
         app.off('start', onStart);
         app.off('frameupdate', onFrameUpdate);
         app.assets?.off('error', onAssetError);
+        destroy.handle.off();
+        if (registry.get(id) === entry) {
+            registry.delete(id);
+        }
         if (registry.size === 0) {
             delete globalThis.__PLAYCANVAS_TOOLS__;
         }
     };
+    entry.detach = detach;
 
-    app.once('destroy', () => {
+    destroy.handle = app.once('destroy', () => {
         entry.destroyed = true;
         detach();
     });
