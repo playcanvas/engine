@@ -74,6 +74,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
     /** @type {boolean} */
     forceCopyMaterial = true;
 
+    /** @type {string} */
+    _lastSourceChunksKey = '';
+
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GraphNode} node - The graph node.
@@ -348,6 +351,64 @@ class GSplatHybridRenderer extends GSplatRenderer {
             this._material.setDefine('GSPLAT_NO_FOG', noFog);
             this._material.update();
         }
+
+        // Copy material settings from params.material if dirty or on first update
+        if (this.forceCopyMaterial || params.material.dirty) {
+            this.copyMaterialSettings(params.material);
+            this.forceCopyMaterial = false;
+        }
+    }
+
+    /**
+     * Copies material settings from a source material to the internal material.
+     * Preserves internal defines while copying user defines, parameters, and shader chunks.
+     * This delivers user customizations (e.g. the `gsplatModifyPS` fragment chunk and its
+     * parameters) set on `app.scene.gsplat.material` to the hybrid render material. Note that
+     * the `gsplatModifyVS` chunk is handled by the projector compute instead, and even when
+     * copied here it is not referenced by the hybrid vertex shader.
+     *
+     * @param {ShaderMaterial} sourceMaterial - The source material to copy settings from.
+     * @private
+     */
+    copyMaterialSettings(sourceMaterial) {
+        // Sync defines via setDefine so _definesDirty tracks real changes. Only delete keys the
+        // source no longer has (and that aren't internal). Deleting all user defines and re-adding
+        // them every frame would force _definesDirty true forever and trigger clearVariants on
+        // every frame.
+        const keysToDelete = [];
+        this._material.defines.forEach((value, key) => {
+            if (!this._internalDefines.has(key) && !sourceMaterial.defines.has(key)) {
+                keysToDelete.push(key);
+            }
+        });
+        keysToDelete.forEach(key => this._material.setDefine(key, undefined));
+
+        // Add/update defines from the source. setDefine is conditional — it only flips
+        // _definesDirty when the value actually changed, so unchanged entries stay cheap.
+        sourceMaterial.defines.forEach((value, key) => {
+            this._material.setDefine(key, value);
+        });
+
+        // Copy parameters
+        const srcParams = sourceMaterial.parameters;
+        for (const paramName in srcParams) {
+            if (srcParams.hasOwnProperty(paramName)) {
+                this._material.setParameter(paramName, srcParams[paramName].data);
+            }
+        }
+
+        // Copy shader chunks only when they actually changed on the source (chunks.key is a
+        // stable content hash), to avoid marking chunks dirty every frame and forcing a
+        // per-frame clearVariants.
+        if (sourceMaterial.hasShaderChunks) {
+            const sourceChunksKey = sourceMaterial.shaderChunks.key;
+            if (sourceChunksKey !== this._lastSourceChunksKey) {
+                this._material.shaderChunks.copy(sourceMaterial.shaderChunks);
+                this._lastSourceChunksKey = sourceChunksKey;
+            }
+        }
+
+        this._material.update();
     }
 
     /**
