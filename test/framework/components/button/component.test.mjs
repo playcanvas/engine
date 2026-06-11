@@ -19,7 +19,7 @@ function createButton(data = {}) {
     const button = new Entity('button');
     button.addChild(image);
     button.addComponent('element', { type: ELEMENTTYPE_IMAGE, useInput: true });
-    button.addComponent('button', { imageEntity: image, ...data });
+    button.addComponent('button', { ...data, imageEntity: image });
 
     return { image, button };
 }

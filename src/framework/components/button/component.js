@@ -490,7 +490,7 @@ class ButtonComponent extends Component {
      */
     set hitPadding(arg) {
         // Mirror the old schema-driven `type: 'vec4'` conversion in
-        // ComponentSystem.convertValue: pass null/undefined through untouched (the
+        // ComponentSystem.convertValue: pass falsy values through untouched (the
         // falsy fallback in ElementInput.buildHitCorners relies on this), clone a
         // Vec4 input so caller mutations do not leak into component state, and
         // treat anything else as indexable to support `[x, y, z, w]` arrays from
@@ -731,7 +731,7 @@ class ButtonComponent extends Component {
 
     /**
      * Sets one of the state tint fields, mirroring the old schema-driven `type: 'rgba'`
-     * conversion in ComponentSystem.convertValue: pass null/undefined through untouched, clone a
+     * conversion in ComponentSystem.convertValue: pass falsy values through untouched, clone a
      * Color input (so caller mutations do not leak into component state), and treat anything else
      * as indexable to support `[r, g, b, a]` arrays from JSON-loaded scenes. The visual state is
      * only reapplied when the tint actually changes in value, as reapplying cancels any in-flight
