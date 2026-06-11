@@ -51,7 +51,7 @@ class AnimationComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
     /**

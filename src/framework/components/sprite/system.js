@@ -203,7 +203,8 @@ class SpriteComponentSystem extends ComponentSystem {
 
         component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
-        super.initializeComponentData(component, data, properties);
+        // pass an empty properties list as the enabled state is initialized above
+        super.initializeComponentData(component, data, []);
     }
 
     cloneComponent(entity, clone) {

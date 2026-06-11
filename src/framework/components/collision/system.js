@@ -673,7 +673,7 @@ class CollisionComponentSystem extends ComponentSystem {
         const impl = this._createImplementation(component._type);
         impl.beforeInitialize(component);
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
 
         impl.afterInitialize(component);
     }

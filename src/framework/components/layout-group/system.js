@@ -54,7 +54,8 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
         if (data.wrap !== undefined) component.wrap = data.wrap;
 
-        super.initializeComponentData(component, data, properties);
+        // pass an empty properties list as the enabled state is initialized above
+        super.initializeComponentData(component, data, []);
     }
 
     cloneComponent(entity, clone) {

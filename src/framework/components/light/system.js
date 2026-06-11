@@ -61,7 +61,7 @@ class LightComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
     _onRemoveComponent(entity, component) {

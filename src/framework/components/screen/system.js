@@ -67,7 +67,7 @@ class ScreenComponentSystem extends ComponentSystem {
 
         // queue up a draw order sync
         component.syncDrawOrder();
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
     _updateDescendantElements(entity, screenEntity) {

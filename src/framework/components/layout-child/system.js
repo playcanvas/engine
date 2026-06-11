@@ -35,7 +35,8 @@ class LayoutChildComponentSystem extends ComponentSystem {
         if (data.fitHeightProportion !== undefined) component.fitHeightProportion = data.fitHeightProportion;
         if (data.excludeFromLayout !== undefined) component.excludeFromLayout = data.excludeFromLayout;
 
-        super.initializeComponentData(component, data, properties);
+        // pass an empty properties list as the enabled state is initialized above
+        super.initializeComponentData(component, data, []);
     }
 
     cloneComponent(entity, clone) {

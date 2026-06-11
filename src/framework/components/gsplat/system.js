@@ -133,7 +133,7 @@ class GSplatComponentSystem extends ComponentSystem {
             component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
-        super.initializeComponentData(component, _data, ['enabled']);
+        super.initializeComponentData(component, _data);
     }
 
     cloneComponent(entity, clone) {

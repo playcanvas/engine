@@ -28,7 +28,7 @@ class JointComponentSystem extends ComponentSystem {
     initializeComponentData(component, data, properties) {
         component.initFromData(data);
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {

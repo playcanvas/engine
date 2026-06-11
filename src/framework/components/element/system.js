@@ -254,7 +254,8 @@ class ElementComponentSystem extends ComponentSystem {
             component._updateScreen(result.screen);
         }
 
-        super.initializeComponentData(component, data, properties);
+        // pass an empty properties list as the enabled state is initialized above
+        super.initializeComponentData(component, data, []);
 
         component._beingInitialized = false;
 

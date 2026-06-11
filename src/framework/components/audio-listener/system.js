@@ -33,12 +33,6 @@ class AudioListenerComponentSystem extends ComponentSystem {
         this.app.systems.on('update', this.onUpdate, this);
     }
 
-    initializeComponentData(component, data, properties) {
-        properties = ['enabled'];
-
-        super.initializeComponentData(component, data, properties);
-    }
-
     cloneComponent(entity, clone) {
         return this.addComponent(clone, {
             enabled: entity.audiolistener.enabled

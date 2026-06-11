@@ -30,7 +30,7 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
         const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
         Object.keys(data).forEach((key) => {
             // these properties will be initialized manually below
