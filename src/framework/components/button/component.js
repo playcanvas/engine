@@ -277,10 +277,7 @@ class ButtonComponent extends Component {
     /** @private */
     _active = true;
 
-    /**
-     * @type {Vec4}
-     * @private
-     */
+    /** @private */
     _hitPadding = new Vec4();
 
     /** @private */
