@@ -24,7 +24,6 @@ const tempGraphNode = new GraphNode();
 const _schema = ['enabled'];
 
 const _properties = [
-    'type',
     'halfExtents',
     'radius',
     'axis',
@@ -647,10 +646,11 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        // resolve the type first, writing the private field directly so the
-        // type setter does not fire changeType before the component is
-        // initialized
-        if (data.type !== undefined) {
+        // resolve the type first - falsy values fall back to the current
+        // type, matching the old initializer, and the private field is
+        // written directly so the type setter does not fire changeType
+        // before the component is initialized
+        if (data.type) {
             component._type = data.type;
         }
 
@@ -669,8 +669,7 @@ class CollisionComponentSystem extends ComponentSystem {
         }
 
         // apply the user-supplied properties through the public setters - all
-        // side effects are gated on _initialized, which is still false here,
-        // and the type setter early-returns on the value applied above
+        // side effects are gated on _initialized, which is still false here
         for (let i = 0; i < properties.length; i++) {
             const property = properties[i];
             if (data[property] !== undefined) {

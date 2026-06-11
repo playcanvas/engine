@@ -126,6 +126,14 @@ describe('CollisionComponent', function () {
             expect(e.collision.radius).to.equal(0.5);
         });
 
+        it('falls back to the default type for falsy type values', function () {
+            const e = new Entity();
+            e.addComponent('collision', { type: null });
+
+            expect(e.collision.type).to.equal('box');
+            expect(app.systems.collision.implementations.box).to.exist;
+        });
+
         it('copies Vec3 inputs so caller mutations do not leak into component state', function () {
             const source = new Vec3(1, 2, 3);
 
