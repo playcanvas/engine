@@ -174,6 +174,21 @@ describe('ParticleSystemComponent', function () {
         expect(c.colorGraph.type).to.equal(CURVE_SPLINE);
     });
 
+    it('Preserves defaults for properties initialized with undefined', function () {
+        const e = new Entity();
+
+        e.addComponent('particlesystem', {
+            numParticles: undefined,
+            emitterExtents: undefined,
+            alphaGraph: undefined
+        });
+
+        const c = e.particlesystem;
+        expect(c.numParticles).to.equal(1);
+        expect(c.emitterExtents.equals(new Vec3())).to.be.true;
+        expect(c.alphaGraph).to.be.null;
+    });
+
     it('Initializes from Vec3 and Curve instances', function () {
         const extents = new Vec3(1, 2, 3);
         const alphaGraph = new Curve([0, 0, 1, 1]);
@@ -243,6 +258,15 @@ describe('ParticleSystemComponent', function () {
 
         e.particlesystem.pause();
 
+        expect(e.particlesystem.isPlaying()).to.be.false;
+    });
+
+    it('isPlaying() returns false when no emitter exists', function () {
+        const e = new Entity();
+        e.addComponent('particlesystem');
+        app.root.addChild(e);
+
+        // NullGraphicsDevice disables particle systems, so no emitter is created
         expect(e.particlesystem.isPlaying()).to.be.false;
     });
 

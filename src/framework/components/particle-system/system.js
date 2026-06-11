@@ -81,6 +81,8 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         }
 
         for (const prop in data) {
+            if (data[prop] === undefined) continue;
+
             const type = _propertyTypes[prop];
             if (type === 'vec3') {
                 if (Array.isArray(data[prop])) {
@@ -108,7 +110,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
 
         for (let i = 0; i < _properties.length; i++) {
             const property = _properties[i];
-            if (data.hasOwnProperty(property)) {
+            if (data[property] !== undefined) {
                 component[property] = data[property];
             }
         }

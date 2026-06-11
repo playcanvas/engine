@@ -2302,10 +2302,10 @@ class ParticleSystemComponent extends Component {
      * @returns {boolean} True if the particle system is currently playing and false otherwise.
      */
     isPlaying() {
-        if (this._paused) {
+        if (this._paused || !this.emitter) {
             return false;
         }
-        if (this.emitter && this.emitter.loop) {
+        if (this.emitter.loop) {
             return true;
         }
 
