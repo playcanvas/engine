@@ -5,6 +5,8 @@ const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
 const CAPABILITIES = ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled'];
 const MAX_DIAGNOSTICS = 100;
+const WAIT_FRAME_CANCELLED = 'app detached or destroyed while waiting for frame';
+const WAIT_SETTLED_CANCELLED = 'app detached or destroyed while waiting to settle';
 
 let idCounter = 0;
 const registry = new Map();
@@ -51,15 +53,15 @@ const createGlobal = () => {
             const entry = resolve(appId);
             return new Promise((res, rej) => {
                 const frameend = { handle: null };
-                const destroy = { handle: null };
+                const cancel = () => {
+                    frameend.handle.off();
+                    rej(new Error(WAIT_FRAME_CANCELLED));
+                };
                 frameend.handle = entry.app.once('frameend', () => {
-                    destroy.handle.off();
+                    entry.waits.delete(cancel);
                     res({ frame: entry.app.frame });
                 });
-                destroy.handle = entry.app.once('destroy', () => {
-                    frameend.handle.off();
-                    rej(new Error('waitForFrame failed: app destroyed'));
-                });
+                entry.waits.add(cancel);
             });
         },
         waitForSettled(appId, { frames = 3, timeout = 30000 } = {}) {
@@ -68,29 +70,29 @@ const createGlobal = () => {
                 let settled = 0;
                 const timer = { id: null };
                 const frameend = { handle: null };
-                const destroy = { handle: null };
-                const done = (settle, value) => {
+                const done = (settle, value, cancel) => {
+                    entry.waits.delete(cancel);
                     clearTimeout(timer.id);
                     frameend.handle.off();
-                    destroy.handle.off();
                     settle(value);
+                };
+                const cancel = () => {
+                    done(rej, new Error(WAIT_SETTLED_CANCELLED), cancel);
                 };
                 const onFrame = () => {
                     const loading = entry.app.assets.list().some(a => a.loading);
                     settled = (entry.started && !loading) ? settled + 1 : 0;
                     if (settled >= frames) {
-                        done(res, { frame: entry.app.frame, settledFrames: settled });
+                        done(res, { frame: entry.app.frame, settledFrames: settled }, cancel);
                     }
                 };
                 timer.id = setTimeout(() => {
                     const pending = entry.app.assets.list().filter(a => a.loading).length;
                     done(rej, new Error(`waitForSettled timed out after ${timeout}ms: ` +
-                        `started=${entry.started}, pending assets=${pending}`));
+                        `started=${entry.started}, pending assets=${pending}`), cancel);
                 }, timeout);
                 frameend.handle = entry.app.on('frameend', onFrame);
-                destroy.handle = entry.app.once('destroy', () => {
-                    done(rej, new Error('waitForSettled failed: app destroyed'));
-                });
+                entry.waits.add(cancel);
             });
         }
     };
@@ -106,8 +108,9 @@ const createGlobal = () => {
  * @returns {() => void} A function that detaches the app again. Detaching the last app
  * removes the global. Apps also detach automatically on destroy.
  * @example
- * import { attachRuntimeTools } from 'playcanvas';
- * const app = new pc.Application(canvas);
+ * import { Application, attachRuntimeTools } from 'playcanvas';
+ *
+ * const app = new Application(canvas);
  * attachRuntimeTools(app);
  */
 const attachRuntimeTools = (app) => {
@@ -130,6 +133,7 @@ const attachRuntimeTools = (app) => {
         destroyed: false,
         detached: false,
         timeMs: 0,
+        waits: new Set(),
         errors: new RingBuffer(MAX_DIAGNOSTICS)
     };
     const destroy = { handle: null };
@@ -167,6 +171,10 @@ const attachRuntimeTools = (app) => {
         app.off('frameupdate', onFrameUpdate);
         app.assets?.off('error', onAssetError);
         destroy.handle.off();
+        for (const cancel of [...entry.waits]) {
+            cancel();
+        }
+        entry.waits.clear();
         if (registry.get(id) === entry) {
             registry.delete(id);
         }
