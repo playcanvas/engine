@@ -624,7 +624,7 @@ class ButtonComponent extends Component {
     /**
      * Sets the sprite to be used as the button image when the user hovers over it.
      *
-     * @type {Asset|number|null}
+     * @type {Asset|null}
      */
     set hoverSpriteAsset(arg) {
         this._setTransitionValue('_hoverSpriteAsset', arg);
@@ -633,7 +633,7 @@ class ButtonComponent extends Component {
     /**
      * Gets the sprite to be used as the button image when the user hovers over it.
      *
-     * @type {Asset|number|null}
+     * @type {Asset|null}
      */
     get hoverSpriteAsset() {
         return this._hoverSpriteAsset;
@@ -660,7 +660,7 @@ class ButtonComponent extends Component {
     /**
      * Sets the sprite to be used as the button image when the user presses it.
      *
-     * @type {Asset|number|null}
+     * @type {Asset|null}
      */
     set pressedSpriteAsset(arg) {
         this._setTransitionValue('_pressedSpriteAsset', arg);
@@ -669,7 +669,7 @@ class ButtonComponent extends Component {
     /**
      * Gets the sprite to be used as the button image when the user presses it.
      *
-     * @type {Asset|number|null}
+     * @type {Asset|null}
      */
     get pressedSpriteAsset() {
         return this._pressedSpriteAsset;
@@ -696,7 +696,7 @@ class ButtonComponent extends Component {
     /**
      * Sets the sprite to be used as the button image when the button is not interactive.
      *
-     * @type {Asset|number|null}
+     * @type {Asset|null}
      */
     set inactiveSpriteAsset(arg) {
         this._setTransitionValue('_inactiveSpriteAsset', arg);
@@ -705,7 +705,7 @@ class ButtonComponent extends Component {
     /**
      * Gets the sprite to be used as the button image when the button is not interactive.
      *
-     * @type {Asset|number|null}
+     * @type {Asset|null}
      */
     get inactiveSpriteAsset() {
         return this._inactiveSpriteAsset;
