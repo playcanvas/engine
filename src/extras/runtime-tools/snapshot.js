@@ -24,8 +24,9 @@ const countNodes = (root) => {
 };
 
 /**
- * Builds a protocol v1 snapshot for an attached app. Profiler-gated stats are null in
- * release builds; `engine.buildVariant` tells consumers why.
+ * Builds a protocol v1 snapshot for an attached app. Profiler-gated stats (triangles, cpuMs)
+ * are null in release builds — `engine.buildVariant` tells consumers why; gpuMs depends on
+ * device timestamp-query support, not build variant.
  *
  * @param {object} entry - Registry entry: { app, id, started, destroyed, timeMs, errors }.
  * @returns {object} A JSON-serializable snapshot.
@@ -81,7 +82,14 @@ const buildSnapshot = (entry) => {
                 failed: assetErrors.length,
                 preloadPending: assets.filter(a => a.preload && !a.loaded).length
             },
-            failures: assetErrors.slice(-20)
+            failures: assetErrors.slice(-20).map(e => ({
+                kind: 'asset',
+                message: e.message ?? null,
+                assetId: e.assetId ?? null,
+                name: e.name ?? null,
+                url: e.url ?? null,
+                frame: e.frame ?? null
+            }))
         },
         render: {
             drawCalls: stats.drawCalls.total,
