@@ -11,6 +11,12 @@
 // title: Roman Parish
 // author: Andrii Shramko
 // source: https://www.linkedin.com/in/andrii-shramko/
+//
+// @credit
+// title: HDRI Environments
+// author: Poly Haven
+// source: https://polyhaven.com
+// license: CC0
 
 import * as pc from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -567,32 +573,6 @@ assetListLoader.load(async () => {
         }
     });
 
-    // Poly Haven credit overlay (shown when an HDRI is active)
-    const phCredit = document.createElement('a');
-    phCredit.href = 'https://polyhaven.com';
-    phCredit.target = '_blank';
-    phCredit.rel = 'noopener';
-    phCredit.textContent = 'HDRI by Poly Haven';
-    Object.assign(phCredit.style, {
-        position: 'fixed',
-        bottom: '6px',
-        right: '10px',
-        zIndex: '11',
-        font: '400 16px/1 sans-serif',
-        color: 'rgba(255,255,255,0.25)',
-        textDecoration: 'none',
-        pointerEvents: 'auto',
-        display: 'none'
-    });
-    phCredit.onmouseenter = () => {
-        phCredit.style.color = 'rgba(255,255,255,0.5)';
-    };
-    phCredit.onmouseleave = () => {
-        phCredit.style.color = 'rgba(255,255,255,0.25)';
-    };
-    document.body.appendChild(phCredit);
-    app.on('destroy', () => phCredit.remove());
-
     // HDRI environment loading
     /** @type {Map<string, { skybox: pc.Texture, envAtlas: pc.Texture }>} */
     const hdriCache = new Map();
@@ -603,7 +583,6 @@ assetListLoader.load(async () => {
             app.scene.skybox = null;
             // restore the default environment used to light the proxy mesh
             app.scene.envAtlas = assets.envatlas.resource;
-            phCredit.style.display = 'none';
             return;
         }
 
@@ -631,7 +610,6 @@ assetListLoader.load(async () => {
         app.scene.skybox = cached.skybox;
         app.scene.envAtlas = cached.envAtlas;
         app.scene.sky.type = pc.SKYTYPE_INFINITE;
-        phCredit.style.display = 'block';
     };
 
     data.on('environment:set', () => {
