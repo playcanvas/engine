@@ -6,9 +6,11 @@ import { Entity } from '../../../../src/framework/entity.js';
 import {
     ASPECT_MANUAL,
     FOG_LINEAR,
+    GAMMA_NONE,
     LAYERID_UI,
     PROJECTION_ORTHOGRAPHIC,
-    PROJECTION_PERSPECTIVE
+    PROJECTION_PERSPECTIVE,
+    TONEMAP_ACES
 } from '../../../../src/scene/constants.js';
 import { FogParams } from '../../../../src/scene/fog-params.js';
 import { createApp } from '../../../app.mjs';
@@ -57,10 +59,15 @@ describe('CameraComponent', function () {
             fog.start = 10;
             fog.end = 100;
 
+            const calculateProjection = () => {};
+            const calculateTransform = () => {};
+
             const e = new Entity();
             e.addComponent('camera', {
                 aspectRatioMode: ASPECT_MANUAL,
                 aspectRatio: 2,
+                calculateProjection: calculateProjection,
+                calculateTransform: calculateTransform,
                 clearColor: new Color(0.1, 0.2, 0.3, 0.4),
                 clearColorBuffer: false,
                 clearDepth: 0.5,
@@ -82,7 +89,9 @@ describe('CameraComponent', function () {
                 scissorRect: new Vec4(0.2, 0.2, 0.6, 0.6),
                 aperture: 8,
                 shutter: 1 / 500,
-                sensitivity: 400
+                sensitivity: 400,
+                gammaCorrection: GAMMA_NONE,
+                toneMapping: TONEMAP_ACES
             });
 
             const clone = e.clone();
@@ -92,6 +101,8 @@ describe('CameraComponent', function () {
             expect(c.enabled).to.equal(true);
             expect(c.aspectRatioMode).to.equal(ASPECT_MANUAL);
             expect(c.aspectRatio).to.equal(2);
+            expect(c.calculateProjection).to.equal(calculateProjection);
+            expect(c.calculateTransform).to.equal(calculateTransform);
             expect(c.clearColor.equals(new Color(0.1, 0.2, 0.3, 0.4))).to.equal(true);
             expect(c.clearColorBuffer).to.equal(false);
             expect(c.clearDepth).to.equal(0.5);
@@ -114,6 +125,8 @@ describe('CameraComponent', function () {
             expect(c.aperture).to.equal(8);
             expect(c.shutter).to.equal(1 / 500);
             expect(c.sensitivity).to.equal(400);
+            expect(c.gammaCorrection).to.equal(GAMMA_NONE);
+            expect(c.toneMapping).to.equal(TONEMAP_ACES);
         });
 
         it('copies the enabled state to the clone', function () {
