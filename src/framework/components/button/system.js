@@ -1,3 +1,4 @@
+import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
 import { ButtonComponentData } from './data.js';
@@ -6,14 +7,16 @@ import { ButtonComponentData } from './data.js';
  * @import { AppBase } from '../../app-base.js'
  */
 
-const _schema = [
-    'enabled',
+const _schema = ['enabled'];
+
+const _properties = [
+    'imageEntity',
     'active',
-    { name: 'hitPadding', type: 'vec4' },
+    'hitPadding',
     'transitionMode',
-    { name: 'hoverTint', type: 'rgba' },
-    { name: 'pressedTint', type: 'rgba' },
-    { name: 'inactiveTint', type: 'rgba' },
+    'hoverTint',
+    'pressedTint',
+    'inactiveTint',
     'fadeDuration',
     'hoverSpriteAsset',
     'hoverSpriteFrame',
@@ -51,8 +54,38 @@ class ButtonComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        component.imageEntity = data.imageEntity;
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            // Guard on `undefined` rather than `hasOwnProperty` so that explicitly
+            // passing `{ hoverTint: undefined }` does not clobber the class-field
+            // default, matching the base initializer's behavior
+            if (data[property] !== undefined) {
+                component[property] = data[property];
+            }
+        }
+
         super.initializeComponentData(component, data, _schema);
+    }
+
+    cloneComponent(entity, clone) {
+        const c = entity.button;
+        return this.addComponent(clone, {
+            enabled: c.enabled,
+            active: c.active,
+            imageEntity: c.imageEntity,
+            hitPadding: c.hitPadding,
+            transitionMode: c.transitionMode,
+            hoverTint: c.hoverTint,
+            pressedTint: c.pressedTint,
+            inactiveTint: c.inactiveTint,
+            fadeDuration: c.fadeDuration,
+            hoverSpriteAsset: c.hoverSpriteAsset,
+            hoverSpriteFrame: c.hoverSpriteFrame,
+            pressedSpriteAsset: c.pressedSpriteAsset,
+            pressedSpriteFrame: c.pressedSpriteFrame,
+            inactiveSpriteAsset: c.inactiveSpriteAsset,
+            inactiveSpriteFrame: c.inactiveSpriteFrame
+        });
     }
 
     onUpdate(dt) {
@@ -77,5 +110,7 @@ class ButtonComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
+
+Component._buildAccessors(ButtonComponent.prototype, _schema);
 
 export { ButtonComponentSystem };
