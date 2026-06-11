@@ -67,11 +67,9 @@ class AnimationComponentSystem extends ComponentSystem {
         const data = {};
 
         for (const property of _properties) {
-            data[property] = c[property];
+            // copy the assets array so the clone does not share it with the source
+            data[property] = property === 'assets' ? c.assets.slice() : c[property];
         }
-
-        // copy the assets array so the clone does not share it with the source
-        data.assets = c.assets.slice();
 
         const component = this.addComponent(clone, data);
 
