@@ -6,8 +6,7 @@ import {
     Panel,
     SelectInput,
     SliderInput,
-    Label,
-    VectorInput
+    Label
 } from '@playcanvas/pcui/react';
 
 /**
@@ -122,13 +121,6 @@ export function Controls({ observer }) {
                         max={15}
                         precision={2}
                         step={0.05}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Rotation'>
-                    <VectorInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lightRotation' }}
-                        dimensions={2}
                     />
                 </LabelGroup>
                 <LabelGroup text='Color'>

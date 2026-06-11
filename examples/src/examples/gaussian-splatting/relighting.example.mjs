@@ -226,7 +226,6 @@ assetListLoader.load(async () => {
         textureScale: 1,
         debugRt: false,
         lightIntensity: 3,
-        lightRotation: [-20, 30],
         lightColor: [1, 1, 1],
         shadows: true,
         omniRadius: 12.9,
@@ -308,27 +307,36 @@ assetListLoader.load(async () => {
         shadowSamples: 16,
         shadowBlockerSamples: 16
     });
-    const [lightElevation, lightAzimuth] = data.get('lightRotation');
-    light.setEulerAngles(lightElevation, lightAzimuth, 0);
+    light.setLocalPosition(0, 1, 0);
+    light.setEulerAngles(-20, 30, 0);
     light.enabled = data.get('lightIntensity') > 0;
     app.root.addChild(light);
+
+    const gizmoLayer = pc.Gizmo.createLayer(app);
+
+    // rotation gizmo to orient the directional light; disable camera controls while dragging it
+    const lightGizmo = new pc.RotateGizmo(camera.camera, gizmoLayer);
+    lightGizmo.size = 0.5;
+    lightGizmo.attach(light);
+    lightGizmo.on('pointer:down', (/** @type {number} */ _x, /** @type {number} */ _y, /** @type {pc.MeshInstance} */ meshInstance) => {
+        if (meshInstance) cc.enabled = false;
+    });
+    lightGizmo.on('pointer:up', () => {
+        cc.enabled = true;
+    });
 
     data.on('lightIntensity:set', () => {
         const intensity = data.get('lightIntensity');
         light.light.intensity = intensity;
 
-        // disable the light completely when intensity is 0
+        // disable the light completely when intensity is 0, including its gizmo
         light.enabled = intensity > 0;
+        if (intensity > 0) {
+            lightGizmo.attach(light);
+        } else {
+            lightGizmo.detach();
+        }
     });
-
-    // VectorInput fires per-component events, so listen to those as well
-    const applyLightRotation = () => {
-        const [elevation, azimuth] = data.get('lightRotation');
-        light.setEulerAngles(elevation, azimuth, 0);
-    };
-    data.on('lightRotation:set', applyLightRotation);
-    data.on('lightRotation.0:set', applyLightRotation);
-    data.on('lightRotation.1:set', applyLightRotation);
 
     data.on('lightColor:set', () => {
         const c = data.get('lightColor');
@@ -348,8 +356,6 @@ assetListLoader.load(async () => {
         { position: [4.22, 4.80, 13.69], radius: 12.9, intensity: 3.67, color: [0.97, 0.72, 0.72] },
         { position: [-6.58, 0.52, -7.01], radius: 12.9, intensity: 3.67, color: [0.97, 0.72, 0.72] }
     ];
-
-    const gizmoLayer = pc.Gizmo.createLayer(app);
 
     /** @type {pc.Entity[]} */
     const omniLights = [];
