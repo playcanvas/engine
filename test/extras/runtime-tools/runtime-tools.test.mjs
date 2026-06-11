@@ -97,4 +97,50 @@ describe('attachRuntimeTools', function () {
         delete global.CustomEvent;
         expect(detail).to.deep.equal({ protocol: 'playcanvas.runtime-tools', version: 1 });
     });
+
+    describe('readiness', function () {
+
+        it('waitForFrame resolves on the next frameend', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitForFrame();
+            app.fire('frameend');
+            const result = await p;
+            expect(result.frame).to.equal(0);
+        });
+
+        it('waitForSettled resolves after N settled frames once started', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitForSettled(undefined, { frames: 3, timeout: 1000 });
+            app.fire('start');
+            app.fire('frameend');
+            app.fire('frameend');
+            app.fire('frameend');
+            const result = await p;
+            expect(result.settledFrames).to.equal(3);
+        });
+
+        it('waitForSettled resets the count while assets are loading', async function () {
+            attachRuntimeTools(app);
+            const asset = new Asset('slow.png', 'texture', { url: 'slow.png' });
+            asset.loading = true;
+            app.assets.add(asset);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitForSettled(undefined, { frames: 2, timeout: 1000 });
+            app.fire('start');
+            app.fire('frameend'); // loading -> resets
+            asset.loading = false;
+            app.fire('frameend');
+            app.fire('frameend');
+            const result = await p;
+            expect(result.settledFrames).to.equal(2);
+        });
+
+        it('waitForSettled rejects with a diagnosis on timeout', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitForSettled(undefined, { frames: 3, timeout: 30 });
+            await p.then(
+                () => expect.fail('expected rejection'),
+                err => expect(err.message).to.match(/timed out after 30ms.*started=false/)
+            );
+        });
+    });
 });

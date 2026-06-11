@@ -46,6 +46,35 @@ const createGlobal = () => {
                 failedRequests: [],
                 missingAssets: errors.filter(e => e.kind === 'asset' && e.url).map(e => e.url)
             };
+        },
+        waitForFrame(appId) {
+            const entry = resolve(appId);
+            return new Promise((res) => {
+                entry.app.once('frameend', () => res({ frame: entry.app.frame }));
+            });
+        },
+        waitForSettled(appId, { frames = 3, timeout = 30000 } = {}) {
+            const entry = resolve(appId);
+            return new Promise((res, rej) => {
+                let settled = 0;
+                const timer = { id: null };
+                const onFrame = () => {
+                    const loading = entry.app.assets.list().some(a => a.loading);
+                    settled = (entry.started && !loading) ? settled + 1 : 0;
+                    if (settled >= frames) {
+                        clearTimeout(timer.id);
+                        entry.app.off('frameend', onFrame);
+                        res({ frame: entry.app.frame, settledFrames: settled });
+                    }
+                };
+                timer.id = setTimeout(() => {
+                    entry.app.off('frameend', onFrame);
+                    const pending = entry.app.assets.list().filter(a => a.loading).length;
+                    rej(new Error(`waitForSettled timed out after ${timeout}ms: ` +
+                        `started=${entry.started}, pending assets=${pending}`));
+                }, timeout);
+                entry.app.on('frameend', onFrame);
+            });
         }
     };
 };
