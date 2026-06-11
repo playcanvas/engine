@@ -1,0 +1,100 @@
+import { expect } from 'chai';
+
+import { attachRuntimeTools } from '../../../src/extras/runtime-tools/runtime-tools.js';
+import { Application } from '../../../src/framework/application.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
+
+describe('attachRuntimeTools', function () {
+
+    let app;
+
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+    });
+
+    afterEach(function () {
+        // destroy detaches and removes the global when no apps remain
+        app?.destroy();
+        app = null;
+        expect(globalThis.__PLAYCANVAS_TOOLS__).to.be.undefined;
+        jsdomTeardown();
+    });
+
+    it('creates the global with protocol identity and capabilities', function () {
+        attachRuntimeTools(app);
+        const tools = globalThis.__PLAYCANVAS_TOOLS__;
+        expect(tools.protocol).to.equal('playcanvas.runtime-tools');
+        expect(tools.version).to.equal(1);
+        expect(tools.capabilities).to.deep.equal(
+            ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled']);
+    });
+
+    it('lists attached apps with a generated id when canvas has no id', function () {
+        attachRuntimeTools(app);
+        const apps = globalThis.__PLAYCANVAS_TOOLS__.apps();
+        expect(apps).to.have.length(1);
+        expect(apps[0].id).to.match(/^pc-app-\d+$/);
+        expect(apps[0].frame).to.equal(0);
+        expect(apps[0].running).to.be.false;
+    });
+
+    it('uses canvas.id as appId when present', function () {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'my-canvas';
+        const second = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        const detach = attachRuntimeTools(second);
+        expect(globalThis.__PLAYCANVAS_TOOLS__.apps()[0].id).to.equal('my-canvas');
+        detach();
+        second.destroy();
+    });
+
+    it('snapshot() resolves the single attached app implicitly', function () {
+        attachRuntimeTools(app);
+        const snap = globalThis.__PLAYCANVAS_TOOLS__.snapshot();
+        expect(snap.version).to.equal(1);
+        expect(snap.app.id).to.match(/^pc-app-\d+$/);
+    });
+
+    it('throws an actionable error for unknown appId', function () {
+        attachRuntimeTools(app);
+        expect(() => {
+            globalThis.__PLAYCANVAS_TOOLS__.snapshot('nope');
+        }).to.throw(/unknown appId 'nope'/);
+    });
+
+    it('captures asset registry errors into diagnostics', function () {
+        attachRuntimeTools(app);
+        const asset = new Asset('missing.png', 'texture', { url: 'missing.png' });
+        app.assets.add(asset);
+        app.assets.fire('error', 'Error: 404', asset);
+        const diag = globalThis.__PLAYCANVAS_TOOLS__.diagnostics();
+        expect(diag.errors).to.have.length(1);
+        expect(diag.errors[0].kind).to.equal('asset');
+        expect(diag.errors[0].message).to.equal('Error: 404');
+        expect(diag.missingAssets).to.deep.equal(['missing.png']);
+    });
+
+    it('detach removes the app and deletes the global when none remain', function () {
+        const detach = attachRuntimeTools(app);
+        detach();
+        expect(globalThis.__PLAYCANVAS_TOOLS__).to.be.undefined;
+    });
+
+    it('dispatches the ready event when a DOM is present', function () {
+        // node has no globalThis.dispatchEvent; forward to the jsdom window
+        global.CustomEvent = window.CustomEvent;
+        global.dispatchEvent = e => window.dispatchEvent(e);
+        let detail = null;
+        window.addEventListener('playcanvas:tools-ready', (e) => {
+            detail = e.detail;
+        });
+        attachRuntimeTools(app);
+        delete global.dispatchEvent;
+        delete global.CustomEvent;
+        expect(detail).to.deep.equal({ protocol: 'playcanvas.runtime-tools', version: 1 });
+    });
+});
