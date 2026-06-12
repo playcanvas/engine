@@ -770,7 +770,7 @@ class GSplatComponent extends Component {
         }
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this.destroyInstance();
 
         this.asset = null;

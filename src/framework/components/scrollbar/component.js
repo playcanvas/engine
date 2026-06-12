@@ -355,7 +355,7 @@ class ScrollbarComponent extends Component {
         }
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this._destroyDragHelper();
     }
 

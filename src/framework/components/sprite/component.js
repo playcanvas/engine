@@ -804,7 +804,7 @@ class SpriteComponent extends Component {
         }
     }
 
-    onDestroy() {
+    onBeforeRemove() {
         this._currentClip = null;
 
         if (this._defaultClip) {

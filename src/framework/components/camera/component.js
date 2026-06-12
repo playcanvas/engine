@@ -1238,7 +1238,7 @@ class CameraComponent extends Component {
         this.system.removeCamera(this);
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this.onDisable();
         this.off();
 

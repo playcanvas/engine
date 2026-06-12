@@ -185,7 +185,7 @@ class ScriptComponentSystem extends ComponentSystem {
     onBeforeRemove(entity, component) {
         const ind = this._components.items.indexOf(component);
         if (ind >= 0) {
-            component._onBeforeRemove();
+            component.onBeforeRemove();
         }
 
         this._removeComponentFromEnabled(component);
