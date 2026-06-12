@@ -2,6 +2,8 @@ import { Vec3, Color } from 'playcanvas';
 import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
+uniform vec3 uAabbMin;
+uniform vec3 uAabbMax;
 uniform float uProgress;
 uniform float uEdgeWidth;
 uniform float uNoiseFrequency;
@@ -46,6 +48,12 @@ float dissolveFbm(vec3 p) {
 }
 
 void modifySplatCenter(inout vec3 center) {
+    // Only affect splats inside the AABB
+    g_burn = 0.0;
+    if (any(lessThan(center, uAabbMin)) || any(greaterThan(center, uAabbMax))) {
+        return;
+    }
+
     float n = dissolveFbm(center * uNoiseFrequency);
     g_burn = clamp((uProgress * (1.0 + uEdgeWidth) - n) / uEdgeWidth, 0.0, 1.0);
 
@@ -88,6 +96,8 @@ void modifySplatColor(vec3 center, inout vec4 color) {
 `;
 
 const shaderWGSL = /* wgsl */`
+uniform uAabbMin: vec3f;
+uniform uAabbMax: vec3f;
 uniform uProgress: f32;
 uniform uEdgeWidth: f32;
 uniform uNoiseFrequency: f32;
@@ -133,6 +143,12 @@ fn dissolveFbm(pIn: vec3f) -> f32 {
 }
 
 fn modifySplatCenter(center: ptr<function, vec3f>) {
+    // Only affect splats inside the AABB
+    g_burn = 0.0;
+    if (any((*center) < uniform.uAabbMin) || any((*center) > uniform.uAabbMax)) {
+        return;
+    }
+
     let n = dissolveFbm((*center) * uniform.uNoiseFrequency);
     g_burn = clamp((uniform.uProgress * (1.0 + uniform.uEdgeWidth) - n) / uniform.uEdgeWidth, 0.0, 1.0);
 
@@ -178,7 +194,8 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
 /**
  * Dissolve shader effect for gaussian splats.
  *
- * Drives a noise threshold through the splats: splats below the threshold are hidden, while
+ * Drives a noise threshold through the splats inside an AABB (splats outside the AABB are not
+ * affected): splats below the threshold are hidden, while
  * splats within the edge band glow with an HDR edge color and fly off along a lift direction
  * with a sine-wave sway, shrinking and fading as they go - each splat acts as a particle of
  * the dissolve. Running the effect with {@link dissolve} set to false reverses the animation,
@@ -195,12 +212,28 @@ class GsplatDissolveShaderEffect extends GsplatShaderEffect {
     static scriptName = 'gsplatDissolveShaderEffect';
 
     // Reusable arrays for uniform updates
+    _aabbMinArray = [0, 0, 0];
+
+    _aabbMaxArray = [0, 0, 0];
+
     _edgeColorArray = [0, 0, 0];
 
     _liftDirectionArray = [0, 0, 0];
 
     // Reusable Vec3 for lift direction normalization
     _liftDir = new Vec3();
+
+    /**
+     * Minimum corner of AABB the effect is constrained to - splats outside are not affected
+     * @attribute
+     */
+    aabbMin = new Vec3(-0.5, -0.5, -0.5);
+
+    /**
+     * Maximum corner of AABB the effect is constrained to - splats outside are not affected
+     * @attribute
+     */
+    aabbMax = new Vec3(0.5, 0.5, 0.5);
 
     /**
      * Duration of the dissolve animation in seconds
@@ -270,6 +303,16 @@ class GsplatDissolveShaderEffect extends GsplatShaderEffect {
         if (!this.dissolve) {
             progress = 1 - progress;
         }
+        this._aabbMinArray[0] = this.aabbMin.x;
+        this._aabbMinArray[1] = this.aabbMin.y;
+        this._aabbMinArray[2] = this.aabbMin.z;
+        this.setUniform('uAabbMin', this._aabbMinArray);
+
+        this._aabbMaxArray[0] = this.aabbMax.x;
+        this._aabbMaxArray[1] = this.aabbMax.y;
+        this._aabbMaxArray[2] = this.aabbMax.z;
+        this.setUniform('uAabbMax', this._aabbMaxArray);
+
         this.setUniform('uProgress', progress);
         this.setUniform('uEdgeWidth', Math.max(this.edgeWidth, 0.001));
         this.setUniform('uNoiseFrequency', this.noiseFrequency);

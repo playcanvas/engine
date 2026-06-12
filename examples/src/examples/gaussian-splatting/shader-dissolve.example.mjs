@@ -62,6 +62,8 @@ assetListLoader.load(() => {
     // Style configurations for the dissolve effect
     const styleConfigs = {
         ember: {
+            aabbMin: new pc.Vec3(-1, -1.6, -1),
+            aabbMax: new pc.Vec3(1, 2, 1),
             duration: 2.5,
             noiseFrequency: 2.2,
             edgeWidth: 0.12,
@@ -72,6 +74,8 @@ assetListLoader.load(() => {
             waveFrequency: 6
         },
         plasma: {
+            aabbMin: new pc.Vec3(-1, -1.6, -1),
+            aabbMax: new pc.Vec3(1, 2, 1),
             duration: 3.0,
             noiseFrequency: 5.0,
             edgeWidth: 0.08,
@@ -82,6 +86,8 @@ assetListLoader.load(() => {
             waveFrequency: 10
         },
         mist: {
+            aabbMin: new pc.Vec3(-1, -1.6, -1),
+            aabbMax: new pc.Vec3(1, 2, 1),
             duration: 3.5,
             noiseFrequency: 1.2,
             edgeWidth: 0.35,
@@ -128,6 +134,8 @@ assetListLoader.load(() => {
     const applyStyleConfig = (config) => {
         if (!dissolveScript) return;
 
+        dissolveScript.aabbMin.copy(config.aabbMin);
+        dissolveScript.aabbMax.copy(config.aabbMax);
         dissolveScript.duration = config.duration;
         dissolveScript.noiseFrequency = config.noiseFrequency;
         dissolveScript.edgeWidth = config.edgeWidth;
