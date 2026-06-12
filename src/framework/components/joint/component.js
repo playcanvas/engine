@@ -472,7 +472,7 @@ class JointComponent extends Component {
     _onSetEnabled(prop, old, value) {
     }
 
-    _onBeforeRemove() {
+    onBeforeRemove() {
         this.fire('remove');
     }
 }

@@ -5,6 +5,7 @@ import {
 } from '../../platform/graphics/constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
+import { GSplatVaryings } from './gsplat-varyings.js';
 import {
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
@@ -67,6 +68,7 @@ class GSplatParams {
     constructor(device) {
         this._device = device;
         this._format = this._createFormat(GSPLATDATA_COMPACT);
+        this._varyings = new GSplatVaryings(device);
 
         this._material.setParameter('alphaClip', 0.3);
         this._material.setParameter('alphaClipForward', 1.0 / 255.0);
@@ -887,6 +889,39 @@ class GSplatParams {
     }
 
     /**
+     * @type {GSplatVaryings}
+     * @private
+     */
+    _varyings;
+
+    /**
+     * The varyings version last applied to the material.
+     *
+     * @type {number}
+     * @private
+     */
+    _appliedVaryingsVersion = 0;
+
+    /**
+     * Custom varying streams for the gsplat render customization: per-splat values written by
+     * the `gsplatModifyVS` shader chunk and read per fragment by the `gsplatModifyPS` shader
+     * chunk. See {@link GSplatVaryings}.
+     *
+     * @type {GSplatVaryings}
+     * @example
+     * // Add a per-splat flag, written once per splat in gsplatModifyVS using setFlag(value),
+     * // and read per fragment in gsplatModifyPS using getFlag()
+     * app.scene.gsplat.varyings.add([{
+     *     name: 'flag',
+     *     type: pc.TYPE_UINT32,
+     *     components: 1
+     * }]);
+     */
+    get varyings() {
+        return this._varyings;
+    }
+
+    /**
      * Called at the end of the frame to clear dirty flags.
      *
      * @ignore
@@ -894,6 +929,19 @@ class GSplatParams {
     frameEnd() {
         this._material.dirty = false;
         this.dirty = false;
+    }
+
+    /**
+     * Called at the start of the frame, before the renderers synchronize the material, to apply
+     * pending changes.
+     *
+     * @ignore
+     */
+    frameUpdate() {
+        if (this._appliedVaryingsVersion !== this._varyings.version) {
+            this._appliedVaryingsVersion = this._varyings.version;
+            this._varyings.apply(this._material);
+        }
     }
 }
 

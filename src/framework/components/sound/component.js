@@ -433,7 +433,7 @@ class SoundComponent extends Component {
         this._playingBeforeDisable = playingBeforeDisable;
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this.off();
     }
 
