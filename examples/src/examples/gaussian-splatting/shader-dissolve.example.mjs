@@ -112,6 +112,7 @@ assetListLoader.load(() => {
     data.set('enabled', true);
     data.set('style', 'ember');
     data.set('loop', true);
+    data.set('wholeRoom', false);
 
     // Create hotel gsplat
     const hotel = new pc.Entity('hotel');
@@ -153,6 +154,24 @@ assetListLoader.load(() => {
     data.on('edgeColor:set', updateEdgeColor);
     data.on('glow:set', updateEdgeColor);
 
+    // Room-sized bounds used when the whole-room toggle is on
+    const roomAabbMin = new pc.Vec3(-50, -5, -50);
+    const roomAabbMax = new pc.Vec3(50, 5, 50);
+
+    // Apply either the style's statue AABB or the room AABB based on the toggle
+    const applyAabb = () => {
+        const config = styleConfigs[/** @type {keyof typeof styleConfigs} */ (data.get('style'))];
+        if (!dissolveScript || !config) return;
+
+        if (data.get('wholeRoom')) {
+            dissolveScript.aabbMin.copy(roomAabbMin);
+            dissolveScript.aabbMax.copy(roomAabbMax);
+        } else {
+            dissolveScript.aabbMin.copy(config.aabbMin);
+            dissolveScript.aabbMax.copy(config.aabbMax);
+        }
+    };
+
     // Helper function to apply style configuration - pushes values into the observer so the
     // control panel reflects them, which in turn updates the script via the handlers above
     /**
@@ -162,8 +181,7 @@ assetListLoader.load(() => {
         if (!dissolveScript) return;
 
         // Not exposed in controls - set directly
-        dissolveScript.aabbMin.copy(config.aabbMin);
-        dissolveScript.aabbMax.copy(config.aabbMax);
+        applyAabb();
         dissolveScript.liftDirection.copy(config.liftDirection);
 
         // Split HDR edge color into normalized color and glow intensity
@@ -196,6 +214,15 @@ assetListLoader.load(() => {
         const config = styleConfigs[/** @type {keyof typeof styleConfigs} */ (data.get('style'))];
         if (dissolveScript && config) {
             applyStyleConfig(config);
+            dissolveScript.dissolve = true;
+            restartEffect();
+        }
+    });
+
+    // Handle whole-room toggle - swap AABB and restart from a dissolve
+    data.on('wholeRoom:set', () => {
+        if (dissolveScript) {
+            applyAabb();
             dissolveScript.dissolve = true;
             restartEffect();
         }

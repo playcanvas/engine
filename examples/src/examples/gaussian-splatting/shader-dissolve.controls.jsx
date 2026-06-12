@@ -38,6 +38,13 @@ export function Controls({ observer }) {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Effect'>
+                <LabelGroup text='Whole Room'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'wholeRoom' }}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Style'>
                     <SelectInput
                         options={[
