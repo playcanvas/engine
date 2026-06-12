@@ -108,7 +108,7 @@ class RenderComponentSystem extends ComponentSystem {
     }
 
     onBeforeRemove(entity, component) {
-        component.onRemove();
+        component.onBeforeRemove();
     }
 }
 

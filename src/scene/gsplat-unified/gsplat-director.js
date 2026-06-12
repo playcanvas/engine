@@ -243,6 +243,10 @@ class GSplatDirector {
      */
     update(comp) {
 
+        // apply pending gsplat params changes (e.g. varying streams) before the managers
+        // synchronize the material
+        this.scene.gsplat.frameUpdate();
+
         // Process any pending resource destructions
         GSplatResourceCleanup.process(this.device);
 

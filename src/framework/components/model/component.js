@@ -812,7 +812,7 @@ class ModelComponent extends Component {
         }
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this.asset = null;
         this.model = null;
         this.materialAsset = null;

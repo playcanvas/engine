@@ -1,4 +1,7 @@
 export default /* glsl */`
+#ifdef GSPLAT_USER_VARYINGS
+    #include "gsplatUserVaryingsVS"
+#endif
 #include "gsplatCommonVS"
 
 varying mediump vec2 gaussianUV;

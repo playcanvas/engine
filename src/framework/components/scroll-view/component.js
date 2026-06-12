@@ -1325,7 +1325,7 @@ class ScrollViewComponent extends Component {
         this._setContentDraggingEnabled(false);
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this._evtElementAdd?.off();
         this._evtElementAdd = null;
 

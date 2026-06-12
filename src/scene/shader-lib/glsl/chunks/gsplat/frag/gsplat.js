@@ -30,6 +30,9 @@ varying mediump vec4 gaussianColor;
     #include "pickPS"
 #endif
 
+#ifdef GSPLAT_USER_VARYINGS
+    #include "gsplatUserVaryingsPS"
+#endif
 #include "gsplatModifyPS"
 
 const float EXP4 = exp(-4.0);
