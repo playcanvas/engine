@@ -139,6 +139,9 @@ fn main(
             uniforms.fisheye_projMat00,
             uniforms.fisheye_projMat11,
         #endif
+        #ifdef GSPLAT_XR
+            uniforms.viewProj1,
+        #endif
     );
 
     if (projected.valid) {
@@ -187,11 +190,11 @@ fn main(
             clipPos.z = clamp(clipPos.z, 0.0, abs(clipPos.w));
         #endif
 
-        // Stereo: project the same world center through eye 1 to get its screen position.
-        // Everything else (covariance/eigenvectors, depth w, color, sort key) is shared from eye 0.
+        // Stereo: eye-1 NDC was already computed by computeSplatCov for the union visibility
+        // test; reuse it for the cache write. Everything else (covariance/eigenvectors, depth w,
+        // color, sort key) is shared from eye 0.
         #ifdef GSPLAT_XR
-            let clip1 = uniforms.viewProj1 * vec4f(center, 1.0);
-            ndc1 = clip1.xy / clip1.w;
+            ndc1 = proj.ndc1;
         #endif
 
         // Sort key — shared depth-bin weighting (same as CPU worker).

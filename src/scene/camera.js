@@ -26,6 +26,8 @@ const _deviceCoord = new Vec3();
 const _halfSize = new Vec3();
 const _point = new Vec3();
 const _invViewProjMat = new Mat4();
+const _xrViewProjMat = new Mat4();
+const _xrViewFrustum = new Frustum();
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 /**
@@ -628,6 +630,36 @@ class Camera {
             this._viewProjMat.mul2(this.projectionMatrix, this.viewMatrix);
             this._viewProjMatDirty = false;
         }
+    }
+
+    /**
+     * Updates {@link Camera#frustum} to the combined volume of all XR views, to avoid culling
+     * objects visible in any view (e.g. the right edge of the right eye in stereo rendering).
+     * The views are merged conservatively via {@link Frustum#add}, which handles the asymmetric
+     * per-eye projections real headsets report (matching planes of the two eyes have different
+     * normals, so a simple outermost-plane selection would over-cull at a distance).
+     *
+     * @returns {boolean} True when XR views were present and the frustum was updated, false
+     * otherwise (the caller should fall back to the mono frustum path).
+     * @ignore
+     */
+    updateXrFrustum() {
+        const views = this.xr?.views.list;
+        if (!views?.length) {
+            return false;
+        }
+
+        // first view establishes the base frustum
+        _xrViewProjMat.mul2(views[0].projMat, views[0].viewOffMat);
+        this.frustum.setFromMat4(_xrViewProjMat);
+
+        // for additional views, expand the frustum to encompass all views
+        for (let v = 1; v < views.length; v++) {
+            _xrViewProjMat.mul2(views[v].projMat, views[v].viewOffMat);
+            _xrViewFrustum.setFromMat4(_xrViewProjMat);
+            this.frustum.add(_xrViewFrustum);
+        }
+        return true;
     }
 
     /**
