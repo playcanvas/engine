@@ -48,6 +48,9 @@ fn projectSplatCommon(
         fisheye_projMat00: f32,
         fisheye_projMat11: f32,
     #endif
+    #ifdef GSPLAT_XR
+        viewProj1: mat4x4f,
+    #endif
 ) -> ProjectedSplatCommon {
     if (threadIdx >= numVisible) {
         return invalidProjectedSplatCommon();
@@ -84,6 +87,9 @@ fn projectSplatCommon(
         #ifdef GSPLAT_FISHEYE
             fisheye_k, fisheye_inv_k,
             fisheye_projMat00, fisheye_projMat11,
+        #endif
+        #ifdef GSPLAT_XR
+            viewProj1,
         #endif
     );
 

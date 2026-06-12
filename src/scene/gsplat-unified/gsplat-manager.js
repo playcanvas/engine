@@ -1900,7 +1900,22 @@ class GSplatManager {
         this.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
 
         const cam = cameraNode.camera;
-        this.workBuffer.frustumCuller.computeFrustumPlanes(cam.projectionMatrix, cam.viewMatrix);
+        const sceneCamera = cam.camera;
+        const xrViews = sceneCamera.xr?.views.list;
+        if (xrViews?.length) {
+            // XR: cull against the combined frustum of all views, so splats visible only near
+            // one eye's edge (e.g. the right edge of the right eye) are not dropped. The per-view
+            // "off" matrices are refreshed at render time by setCameraUniforms, which runs AFTER
+            // this culling, so refresh them here (mirrors the projector dispatch).
+            const parent = cameraNode.parent?.getWorldTransform() ?? null;
+            for (let v = 0; v < xrViews.length; v++) {
+                xrViews[v].updateTransforms(parent);
+            }
+            sceneCamera.updateXrFrustum();
+            this.workBuffer.frustumCuller.setFrustumPlanes(sceneCamera.frustum);
+        } else {
+            this.workBuffer.frustumCuller.computeFrustumPlanes(cam.projectionMatrix, cam.viewMatrix);
+        }
 
         const gsplat = this.scene.gsplat;
         const fp = this.renderer.fisheyeProj;
