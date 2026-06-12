@@ -605,9 +605,9 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @param {*} shape - Ammo shape.
+     * @param {object} shape - The Ammo collision shape to find.
      * @returns {number|null} The shape's index in the child array of the compound shape.
-     * @private
+     * @ignore
      */
     getCompoundChildShapeIndex(shape) {
         const compound = this._shape;
