@@ -226,6 +226,7 @@ export { GSplatFormat } from './scene/gsplat/gsplat-format.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 export { GSplatProcessor } from './framework/gsplat/gsplat-processor.js';
 export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
+export { GSplatVaryings } from './scene/gsplat-unified/gsplat-varyings.js';
 export { GSplatResourceBase } from './scene/gsplat/gsplat-resource-base.js';
 export { GSplatSogData } from './scene/gsplat/gsplat-sog-data.js';
 export { GSplatSogResource } from './scene/gsplat/gsplat-sog-resource.js';

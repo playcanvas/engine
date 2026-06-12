@@ -182,14 +182,35 @@ class GSplatProjector {
     _userModifySource = null;
 
     /**
+     * Generated user varying streams chunks (declarations / set functions and projection cache
+     * writes), or null when no varying streams are defined.
+     *
+     * @type {string|null}
+     */
+    _userVaryingsSource = null;
+
+    /** @type {string|null} */
+    _userCacheWriteSource = null;
+
+    /**
      * Reference to the user material's defines map (read at compute-build time), or null.
      *
      * @type {Map<string, string>|null}
      */
     _userDefines = null;
 
+    /**
+     * Number of u32 words user varying streams add to the per-splat projection cache.
+     *
+     * @type {number}
+     */
+    _userCacheWords = 0;
+
     /** @type {number} */
     _allocatedCacheCount = 0;
+
+    /** @type {number} */
+    _allocatedCacheStride = 0;
 
     /** @type {Float32Array} */
     cameraPositionData = new Float32Array(3);
@@ -410,10 +431,13 @@ class GSplatProjector {
         // default no-op chunk. Any uniforms/textures it declares are reflected into a separate
         // bind group automatically (see compute WGSL reflection).
         cincludes.set('gsplatModifyVS', this._userModifySource ?? gsplatModifyDefaultSource);
+        // user varying streams: declarations / set functions and projection cache writes
+        cincludes.set('gsplatUserVaryingsCS', this._userVaryingsSource ?? '');
+        cincludes.set('gsplatUserCacheWriteCS', this._userCacheWriteSource ?? '');
         cincludes.set('gsplatProjectCommonCS', computeGsplatProjectCommonSource);
 
         const cdefines = new Map();
-        cdefines.set('{CACHE_STRIDE}', CACHE_STRIDE.toString());
+        cdefines.set('{CACHE_STRIDE}', (CACHE_STRIDE + this._userCacheWords).toString());
         if (radialSort) {
             cdefines.set('RADIAL_SORT', '');
         }
@@ -532,20 +556,23 @@ class GSplatProjector {
      * gsplat render material (carries the user modify chunk, defines and parameters).
      * @private
      */
-    _updateMaterial(material) {
+    _updateMaterial(material, userCacheWords = 0) {
 
         // Both keys are cached on the material and only recompute when its chunks / defines actually
         // change, so this stays cheap to call every frame. (definesKey covers all defines; the
         // projector's own defines are still filtered out when merged in _createProjectorCompute.)
         const chunksKey = material?.shaderChunks?.key ?? '';
         const definesKey = material?.definesKey ?? '';
-        const materialKey = `${chunksKey}|${definesKey}`;
+        const materialKey = `${chunksKey}|${definesKey}|${userCacheWords}`;
 
         if (materialKey !== this._materialKey) {
             this._materialKey = materialKey;
             this._userDefines = material?.defines ?? null;
+            this._userCacheWords = userCacheWords;
             const wgslChunks = material?.getShaderChunks?.(SHADERLANGUAGE_WGSL);
             this._userModifySource = wgslChunks?.get('gsplatModifyVS') ?? null;
+            this._userVaryingsSource = wgslChunks?.get('gsplatUserVaryingsCS') ?? null;
+            this._userCacheWriteSource = wgslChunks?.get('gsplatUserCacheWriteCS') ?? null;
 
             // customization changed - drop compiled variants so they rebuild with the new
             // chunk source and defines on the next _getProjectorCompute call
@@ -562,11 +589,13 @@ class GSplatProjector {
      * @private
      */
     _ensureCapacity(capacity) {
-        if (capacity > this._allocatedCacheCount) {
+        const cacheStride = CACHE_STRIDE + this._userCacheWords;
+        if (capacity > this._allocatedCacheCount || cacheStride !== this._allocatedCacheStride) {
             this.projCache?.destroy();
             this.sortKeys?.destroy();
             this._allocatedCacheCount = capacity;
-            this.projCache = new StorageBuffer(this.device, capacity * CACHE_STRIDE * 4);
+            this._allocatedCacheStride = cacheStride;
+            this.projCache = new StorageBuffer(this.device, capacity * cacheStride * 4);
             this.sortKeys = new StorageBuffer(this.device, capacity * 4, BUFFERUSAGE_COPY_SRC);
             DebugHelper.setName(this.projCache, 'GsplatProjector.projCache');
             DebugHelper.setName(this.sortKeys, 'GsplatProjector.sortKeys');
@@ -622,7 +651,8 @@ class GSplatProjector {
             fisheyeProj,
             antiAlias = false,
             isStereo = false,
-            material
+            material,
+            userCacheWords = 0
         } = params;
 
         const fisheyeMode = !!fisheyeProj?.enabled;
@@ -636,7 +666,7 @@ class GSplatProjector {
 
         // sync render-stage customization (modify chunk + defines) before fetching the compute,
         // so a change rebuilds the variant with the new source/defines
-        this._updateMaterial(material);
+        this._updateMaterial(material, userCacheWords);
 
         this._ensureCapacity(totalCapacity);
 
