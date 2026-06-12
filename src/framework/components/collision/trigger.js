@@ -43,21 +43,7 @@ class Trigger {
 
             const mass = 1;
 
-            const component = this.component;
-            if (component) {
-                const bodyPos = component.getShapePosition();
-                const bodyRot = component.getShapeRotation();
-                _ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
-                _ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
-            } else {
-                const pos = entity.getPosition();
-                const rot = entity.getRotation();
-                _ammoVec1.setValue(pos.x, pos.y, pos.z);
-                _ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-            }
-
-            _ammoTransform.setOrigin(_ammoVec1);
-            _ammoTransform.setRotation(_ammoQuat);
+            this._getEntityTransform(_ammoTransform);
 
             const body = this.app.systems.rigidbody.createBody(mass, shape, _ammoTransform);
 
@@ -89,18 +75,10 @@ class Trigger {
     }
 
     _getEntityTransform(transform) {
-        const component = this.component;
-        if (component) {
-            const bodyPos = component.getShapePosition();
-            const bodyRot = component.getShapeRotation();
-            _ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
-            _ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
-        } else {
-            const pos = this.entity.getPosition();
-            const rot = this.entity.getRotation();
-            _ammoVec1.setValue(pos.x, pos.y, pos.z);
-            _ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-        }
+        const bodyPos = this.component.getShapePosition();
+        const bodyRot = this.component.getShapeRotation();
+        _ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
+        _ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
 
         transform.setOrigin(_ammoVec1);
         transform.setRotation(_ammoQuat);

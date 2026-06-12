@@ -181,7 +181,7 @@ class CollisionBoxSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, component) {
         if (typeof Ammo !== 'undefined') {
             const he = component.halfExtents;
-            const ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
+            const ammoHe = new Ammo.btVector3(he.x, he.y, he.z);
             const shape = new Ammo.btBoxShape(ammoHe);
             Ammo.destroy(ammoHe);
             return shape;
@@ -203,9 +203,9 @@ class CollisionSphereSystemImpl extends CollisionSystemImpl {
 // Capsule Collision System
 class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, component) {
-        const axis = component.axis ?? 1;
-        const radius = component.radius ?? 0.5;
-        const height = Math.max((component.height ?? 2) - 2 * radius, 0);
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = Math.max(component.height - 2 * radius, 0);
 
         let shape = null;
 
@@ -230,9 +230,9 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
 // Cylinder Collision System
 class CollisionCylinderSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, component) {
-        const axis = component.axis ?? 1;
-        const radius = component.radius ?? 0.5;
-        const height = component.height ?? 1;
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = component.height;
 
         let halfExtents = null;
         let shape = null;
@@ -265,9 +265,9 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
 // Cone Collision System
 class CollisionConeSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, component) {
-        const axis = component.axis ?? 1;
-        const radius = component.radius ?? 0.5;
-        const height = component.height ?? 1;
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = component.height;
 
         let shape = null;
 
