@@ -766,7 +766,6 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
     onBeforeRemove() {
         if (this.asset) {
             this.asset = null;
