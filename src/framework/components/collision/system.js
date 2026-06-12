@@ -124,19 +124,29 @@ class CollisionSystemImpl {
             }
 
             if (entity.rigidbody) {
-                entity.rigidbody.disableSimulation();
-                entity.rigidbody.createBody();
-
-                if (entity.enabled && entity.rigidbody.enabled) {
-                    entity.rigidbody.enableSimulation();
-                }
+                this._recreateBody(entity);
             } else if (!component._compoundParent) {
-                if (!entity.trigger) {
-                    entity.trigger = new Trigger(this.system.app, component);
-                } else {
-                    entity.trigger.initialize();
-                }
+                this._recreateTrigger(entity, component);
             }
+        }
+    }
+
+    // Re-creates the entity's rigid body after the collision shape changed
+    _recreateBody(entity) {
+        entity.rigidbody.disableSimulation();
+        entity.rigidbody.createBody();
+
+        if (entity.enabled && entity.rigidbody.enabled) {
+            entity.rigidbody.enableSimulation();
+        }
+    }
+
+    // Creates the entity's trigger, or re-initializes an existing one
+    _recreateTrigger(entity, component) {
+        if (!entity.trigger) {
+            entity.trigger = new Trigger(this.system.app, component);
+        } else {
+            entity.trigger.initialize();
         }
     }
 
@@ -514,18 +524,11 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             component._shape = this.createPhysicalShape(entity, component);
 
             if (entity.rigidbody) {
-                entity.rigidbody.disableSimulation();
-                entity.rigidbody.createBody();
-
-                if (entity.enabled && entity.rigidbody.enabled) {
-                    entity.rigidbody.enableSimulation();
-                }
+                this._recreateBody(entity);
             } else {
-                if (!entity.trigger) {
-                    entity.trigger = new Trigger(this.system.app, component);
-                } else {
-                    entity.trigger.initialize();
-                }
+                // note: unlike the base implementation, the trigger is
+                // created even when the component is a compound child
+                this._recreateTrigger(entity, component);
             }
         } else {
             this.beforeRemove(entity, component);
