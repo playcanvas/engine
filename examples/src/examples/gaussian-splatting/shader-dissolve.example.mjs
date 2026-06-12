@@ -127,23 +127,57 @@ assetListLoader.load(() => {
     // Create the dissolve effect script
     const dissolveScript = hotel.script?.create(GsplatDissolveShaderEffect);
 
-    // Helper function to apply style configuration to script
+    // Wire up parameter sliders - each updates the script live
+    /** @type {Record<string, (value: any) => void>} */
+    const paramHandlers = {
+        duration: v => dissolveScript && (dissolveScript.duration = v),
+        noiseFrequency: v => dissolveScript && (dissolveScript.noiseFrequency = v),
+        edgeWidth: v => dissolveScript && (dissolveScript.edgeWidth = v),
+        liftDistance: v => dissolveScript && (dissolveScript.liftDistance = v),
+        waveAmplitude: v => dissolveScript && (dissolveScript.waveAmplitude = v),
+        waveFrequency: v => dissolveScript && (dissolveScript.waveFrequency = v)
+    };
+    Object.keys(paramHandlers).forEach((key) => {
+        data.on(`${key}:set`, () => paramHandlers[key](data.get(key)));
+    });
+
+    // Edge color is exposed as a normalized color picker plus a glow intensity multiplier,
+    // combined into the HDR edge color
+    const updateEdgeColor = () => {
+        const c = data.get('edgeColor');
+        const glow = data.get('glow');
+        if (dissolveScript && c && glow) {
+            dissolveScript.edgeColor.set(c[0] * glow, c[1] * glow, c[2] * glow);
+        }
+    };
+    data.on('edgeColor:set', updateEdgeColor);
+    data.on('glow:set', updateEdgeColor);
+
+    // Helper function to apply style configuration - pushes values into the observer so the
+    // control panel reflects them, which in turn updates the script via the handlers above
     /**
      * @param {any} config - The style configuration object
      */
     const applyStyleConfig = (config) => {
         if (!dissolveScript) return;
 
+        // Not exposed in controls - set directly
         dissolveScript.aabbMin.copy(config.aabbMin);
         dissolveScript.aabbMax.copy(config.aabbMax);
-        dissolveScript.duration = config.duration;
-        dissolveScript.noiseFrequency = config.noiseFrequency;
-        dissolveScript.edgeWidth = config.edgeWidth;
-        dissolveScript.edgeColor.copy(config.edgeColor);
         dissolveScript.liftDirection.copy(config.liftDirection);
-        dissolveScript.liftDistance = config.liftDistance;
-        dissolveScript.waveAmplitude = config.waveAmplitude;
-        dissolveScript.waveFrequency = config.waveFrequency;
+
+        // Split HDR edge color into normalized color and glow intensity
+        const { r, g, b } = config.edgeColor;
+        const glow = Math.max(r, g, b, 1);
+        data.set('edgeColor', [r / glow, g / glow, b / glow]);
+        data.set('glow', glow);
+
+        data.set('duration', config.duration);
+        data.set('noiseFrequency', config.noiseFrequency);
+        data.set('edgeWidth', config.edgeWidth);
+        data.set('liftDistance', config.liftDistance);
+        data.set('waveAmplitude', config.waveAmplitude);
+        data.set('waveFrequency', config.waveFrequency);
     };
 
     // Helper function to restart the effect (resets effectTime)
