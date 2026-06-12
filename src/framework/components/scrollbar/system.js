@@ -61,7 +61,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
     }
 
     onBeforeRemove(entity, component) {
-        component.onRemove();
+        component.onBeforeRemove();
     }
 }
 

@@ -249,7 +249,7 @@ class SpriteComponentSystem extends ComponentSystem {
     }
 
     onBeforeRemove(entity, component) {
-        component.onDestroy();
+        component.onBeforeRemove();
     }
 }
 

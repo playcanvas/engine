@@ -50,7 +50,7 @@ class ZoneComponentSystem extends ComponentSystem {
     }
 
     onBeforeRemove(entity, component) {
-        component._onBeforeRemove();
+        component.onBeforeRemove();
     }
 }
 

@@ -122,7 +122,7 @@ class CameraComponentSystem extends ComponentSystem {
     onBeforeRemove(entity, component) {
         this.removeCamera(component);
 
-        component.onRemove();
+        component.onBeforeRemove();
     }
 
     onAppPrerender() {

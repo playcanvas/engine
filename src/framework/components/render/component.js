@@ -810,7 +810,7 @@ class RenderComponent extends Component {
         }
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this.destroyMeshInstances();
 
         this.asset = null;

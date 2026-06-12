@@ -65,7 +65,7 @@ class LightComponentSystem extends ComponentSystem {
     }
 
     onBeforeRemove(entity, component) {
-        component.onRemove();
+        component.onBeforeRemove();
     }
 
     cloneComponent(entity, clone) {

@@ -370,7 +370,7 @@ class ScriptComponent extends Component {
         this._endLooping(wasLooping);
     }
 
-    _onBeforeRemove() {
+    onBeforeRemove() {
         this.fire('remove');
 
         const wasLooping = this._beginLooping();
