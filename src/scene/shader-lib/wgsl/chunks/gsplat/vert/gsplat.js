@@ -1,4 +1,7 @@
 export default /* wgsl */`
+#ifdef GSPLAT_USER_VARYINGS
+    #include "gsplatUserVaryingsVS"
+#endif
 #include "gsplatCommonVS"
 
 varying gaussianUV: half2;
@@ -110,6 +113,11 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         output.position = center.proj + vec4f(corner.offset.xyz, 0.0);
     #endif
     output.gaussianUV = corner.uv;
+
+    // copy user varying values (written by the modify functions) to the outputs
+    #ifdef GSPLAT_USER_VARYINGS
+        #include "gsplatUserVaryingsFlushVS"
+    #endif
 
     #ifdef GSPLAT_OVERDRAW
         // Overdraw visualization mode: color by elevation

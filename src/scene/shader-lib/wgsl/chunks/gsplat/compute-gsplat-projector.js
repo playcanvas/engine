@@ -77,6 +77,9 @@ struct ProjectorUniforms {
 #include "gsplatFormatDeclCS"
 #include "gsplatFormatReadCS"
 #include "gsplatHelpersVS"
+#ifdef GSPLAT_USER_VARYINGS
+    #include "gsplatUserVaryingsCS"
+#endif
 #include "gsplatModifyVS"
 #include "gsplatProjectCommonCS"
 
@@ -275,6 +278,11 @@ fn main(
                 projCache[base + 6u] = pack2x16float(vec2f(rgb.x, rgb.y));
                 projCache[base + 7u] = pack2x16float(vec2f(rgb.z, alpha));
             #endif
+        #endif
+
+        // append user varying values (written by the modify functions) to the cache
+        #ifdef GSPLAT_USER_VARYINGS
+            #include "gsplatUserCacheWriteCS"
         #endif
 
         sortKeys[dst] = sortKey;

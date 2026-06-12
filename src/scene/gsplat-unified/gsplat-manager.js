@@ -1771,7 +1771,8 @@ class GSplatManager {
             fisheyeProj,
             antiAlias: gsplat.antiAlias,
             isStereo,
-            material: gsplat.material
+            material: gsplat.material,
+            userCacheWords: gsplat.varyings.words
         });
 
         projector.writeIndirectArgs(
