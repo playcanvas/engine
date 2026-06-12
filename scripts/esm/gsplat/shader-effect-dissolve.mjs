@@ -4,6 +4,9 @@ import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
 const shaderGLSL = /* glsl */`
 uniform vec3 uAabbMin;
 uniform vec3 uAabbMax;
+uniform vec3 uCropMin;
+uniform vec3 uCropMax;
+uniform float uCropEnabled;
 uniform float uProgress;
 uniform float uEdgeWidth;
 uniform float uNoiseFrequency;
@@ -16,6 +19,9 @@ uniform float uTime;
 
 // Global state for shader - burn factor: 0 = intact, (0,1) = burning edge, 1 = dissolved
 float g_burn;
+
+// Global state for shader - splat is outside the crop AABB and always hidden
+bool g_cropped;
 
 float dissolveHash(vec3 p) {
     p = fract(p * vec3(443.8975, 397.2973, 491.1871));
@@ -48,8 +54,15 @@ float dissolveFbm(vec3 p) {
 }
 
 void modifySplatCenter(inout vec3 center) {
-    // Only affect splats inside the AABB
     g_burn = 0.0;
+
+    // Splats outside the crop AABB are always hidden
+    g_cropped = uCropEnabled > 0.5 && (any(lessThan(center, uCropMin)) || any(greaterThan(center, uCropMax)));
+    if (g_cropped) {
+        return;
+    }
+
+    // Only affect splats inside the AABB
     if (any(lessThan(center, uAabbMin)) || any(greaterThan(center, uAabbMax))) {
         return;
     }
@@ -74,6 +87,11 @@ void modifySplatCenter(inout vec3 center) {
 }
 
 void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {
+    if (g_cropped) {
+        scale = vec3(0.0);
+        return;
+    }
+
     if (g_burn <= 0.0) return;
 
     if (g_burn >= 1.0) {
@@ -102,6 +120,9 @@ void modifySplatColor(vec3 center, inout vec4 color) {
 const shaderWGSL = /* wgsl */`
 uniform uAabbMin: vec3f;
 uniform uAabbMax: vec3f;
+uniform uCropMin: vec3f;
+uniform uCropMax: vec3f;
+uniform uCropEnabled: f32;
 uniform uProgress: f32;
 uniform uEdgeWidth: f32;
 uniform uNoiseFrequency: f32;
@@ -114,6 +135,9 @@ uniform uTime: f32;
 
 // Global state for shader - burn factor: 0 = intact, (0,1) = burning edge, 1 = dissolved
 var<private> g_burn: f32;
+
+// Global state for shader - splat is outside the crop AABB and always hidden
+var<private> g_cropped: bool;
 
 fn dissolveHash(pIn: vec3f) -> f32 {
     var p = fract(pIn * vec3f(443.8975, 397.2973, 491.1871));
@@ -147,8 +171,15 @@ fn dissolveFbm(pIn: vec3f) -> f32 {
 }
 
 fn modifySplatCenter(center: ptr<function, vec3f>) {
-    // Only affect splats inside the AABB
     g_burn = 0.0;
+
+    // Splats outside the crop AABB are always hidden
+    g_cropped = uniform.uCropEnabled > 0.5 && (any((*center) < uniform.uCropMin) || any((*center) > uniform.uCropMax));
+    if (g_cropped) {
+        return;
+    }
+
+    // Only affect splats inside the AABB
     if (any((*center) < uniform.uAabbMin) || any((*center) > uniform.uAabbMax)) {
         return;
     }
@@ -173,6 +204,11 @@ fn modifySplatCenter(center: ptr<function, vec3f>) {
 }
 
 fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {
+    if (g_cropped) {
+        *scale = vec3f(0.0);
+        return;
+    }
+
     if (g_burn <= 0.0) { return; }
 
     if (g_burn >= 1.0) {
@@ -224,6 +260,10 @@ class GsplatDissolveShaderEffect extends GsplatShaderEffect {
 
     _aabbMaxArray = [0, 0, 0];
 
+    _cropMinArray = [0, 0, 0];
+
+    _cropMaxArray = [0, 0, 0];
+
     _edgeColorArray = [0, 0, 0];
 
     _liftDirectionArray = [0, 0, 0];
@@ -242,6 +282,24 @@ class GsplatDissolveShaderEffect extends GsplatShaderEffect {
      * @attribute
      */
     aabbMax = new Vec3(0.5, 0.5, 0.5);
+
+    /**
+     * Permanently hide splats outside the crop AABB (e.g. a skydome shell around a scan)
+     * @attribute
+     */
+    cropEnabled = false;
+
+    /**
+     * Minimum corner of crop AABB in world space
+     * @attribute
+     */
+    cropAabbMin = new Vec3(-100, -100, -100);
+
+    /**
+     * Maximum corner of crop AABB in world space
+     * @attribute
+     */
+    cropAabbMax = new Vec3(100, 100, 100);
 
     /**
      * Duration of the dissolve animation in seconds
@@ -320,6 +378,18 @@ class GsplatDissolveShaderEffect extends GsplatShaderEffect {
         this._aabbMaxArray[1] = this.aabbMax.y;
         this._aabbMaxArray[2] = this.aabbMax.z;
         this.setUniform('uAabbMax', this._aabbMaxArray);
+
+        this._cropMinArray[0] = this.cropAabbMin.x;
+        this._cropMinArray[1] = this.cropAabbMin.y;
+        this._cropMinArray[2] = this.cropAabbMin.z;
+        this.setUniform('uCropMin', this._cropMinArray);
+
+        this._cropMaxArray[0] = this.cropAabbMax.x;
+        this._cropMaxArray[1] = this.cropAabbMax.y;
+        this._cropMaxArray[2] = this.cropAabbMax.z;
+        this.setUniform('uCropMax', this._cropMaxArray);
+
+        this.setUniform('uCropEnabled', this.cropEnabled ? 1 : 0);
 
         this.setUniform('uProgress', progress);
         this.setUniform('uEdgeWidth', Math.max(this.edgeWidth, 0.001));

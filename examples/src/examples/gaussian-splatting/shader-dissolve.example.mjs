@@ -96,6 +96,18 @@ assetListLoader.load(() => {
             liftDistance: 1.2,
             waveAmplitude: 0.15,
             waveFrequency: 3
+        },
+        smooth: {
+            aabbMin: new pc.Vec3(-1, -1.6, -1),
+            aabbMax: new pc.Vec3(1, 2, 1),
+            duration: 3.0,
+            noiseFrequency: 0.2,                        // very low - one smooth sweep
+            edgeWidth: 0.25,
+            edgeColor: new pc.Color(1.5, 6, 2),         // green
+            liftDirection: new pc.Vec3(0, 1, 0),
+            liftDistance: 0.8,
+            waveAmplitude: 0.1,
+            waveFrequency: 4
         }
     };
 
@@ -157,6 +169,14 @@ assetListLoader.load(() => {
     // Room-sized bounds used when the whole-room toggle is on
     const roomAabbMin = new pc.Vec3(-50, -5, -50);
     const roomAabbMax = new pc.Vec3(50, 5, 50);
+
+    // Crop away the fuzzy skydome shell around the scan, so dissolving the room reveals a
+    // clear background instead of distant blurry splats
+    if (dissolveScript) {
+        dissolveScript.cropEnabled = true;
+        dissolveScript.cropAabbMin.copy(roomAabbMin);
+        dissolveScript.cropAabbMax.copy(roomAabbMax);
+    }
 
     // Apply either the style's statue AABB or the room AABB based on the toggle
     const applyAabb = () => {

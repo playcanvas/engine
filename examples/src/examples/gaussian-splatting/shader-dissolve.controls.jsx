@@ -50,7 +50,8 @@ export function Controls({ observer }) {
                         options={[
                             { v: 'ember', t: 'Ember' },
                             { v: 'plasma', t: 'Plasma' },
-                            { v: 'mist', t: 'Mist' }
+                            { v: 'mist', t: 'Mist' },
+                            { v: 'smooth', t: 'Smooth' }
                         ]}
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'style' }}
@@ -91,7 +92,7 @@ export function Controls({ observer }) {
                     <SliderInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'noiseFrequency' }}
-                        min={0.5}
+                        min={0.1}
                         max={10}
                         precision={1}
                     />
