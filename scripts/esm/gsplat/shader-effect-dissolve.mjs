@@ -82,6 +82,10 @@ void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout ve
         return;
     }
 
+    // round burning splats into spherical particles to avoid elongated streaks
+    float size = gsplatGetSizeFromScale(scale);
+    scale = mix(scale, vec3(size), min(g_burn * 3.0, 1.0));
+
     // shrink particles as they burn away
     scale *= (1.0 - g_burn);
 }
@@ -176,6 +180,10 @@ fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotati
         *scale = vec3f(0.0);
         return;
     }
+
+    // round burning splats into spherical particles to avoid elongated streaks
+    let size = gsplatGetSizeFromScale(*scale);
+    *scale = mix(*scale, vec3f(size), min(g_burn * 3.0, 1.0));
 
     // shrink particles as they burn away
     *scale = (*scale) * (1.0 - g_burn);
