@@ -705,6 +705,10 @@ class RigidBodyComponent extends Component {
                 body.activate();
 
                 this._simulationEnabled = true;
+
+                // internal event consumed by the joint system to (re)create constraints
+                // against bodies that are present in the dynamics world
+                this.fire('simulationenabled');
             }
         }
     }
@@ -741,6 +745,10 @@ class RigidBodyComponent extends Component {
             body.forceActivationState(BODYSTATE_DISABLE_SIMULATION);
 
             this._simulationEnabled = false;
+
+            // internal event consumed by the joint system to destroy constraints before
+            // the body they reference is removed from the dynamics world or destroyed
+            this.fire('simulationdisabled');
         }
     }
 
