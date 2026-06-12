@@ -1447,7 +1447,7 @@ class LightComponent extends Component {
         this.removeLightFromLayers();
     }
 
-    onRemove() {
+    onBeforeRemove() {
         // remove from layers
         this.onDisable();
 

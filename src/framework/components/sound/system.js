@@ -156,7 +156,7 @@ class SoundComponentSystem extends ComponentSystem {
             }
         }
 
-        component.onRemove();
+        component.onBeforeRemove();
     }
 
     destroy() {

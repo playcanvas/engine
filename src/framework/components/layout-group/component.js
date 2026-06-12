@@ -431,7 +431,7 @@ class LayoutGroupComponent extends Component {
         this._scheduleReflow();
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this.entity.off('childinsert', this._onChildInsert, this);
         this.entity.off('childremove', this._onChildRemove, this);
 

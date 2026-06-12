@@ -19,13 +19,14 @@ const p2 = new Vec3();
 const quat = new Quat();
 const tempGraphNode = new GraphNode();
 
+// Note that `shape` is deliberately absent from this list - it is runtime
+// state created and owned by the type implementation, not component data
 const _properties = [
     'halfExtents',
     'radius',
     'axis',
     'height',
     'convexHull',
-    'shape',
     'model',
     'asset',
     'render',
@@ -191,7 +192,7 @@ class CollisionBoxSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, component) {
         if (typeof Ammo !== 'undefined') {
             const he = component.halfExtents;
-            const ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
+            const ammoHe = new Ammo.btVector3(he.x, he.y, he.z);
             const shape = new Ammo.btBoxShape(ammoHe);
             Ammo.destroy(ammoHe);
             return shape;
@@ -213,9 +214,9 @@ class CollisionSphereSystemImpl extends CollisionSystemImpl {
 // Capsule Collision System
 class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, component) {
-        const axis = component.axis ?? 1;
-        const radius = component.radius ?? 0.5;
-        const height = Math.max((component.height ?? 2) - 2 * radius, 0);
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = Math.max(component.height - 2 * radius, 0);
 
         let shape = null;
 
@@ -240,9 +241,9 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
 // Cylinder Collision System
 class CollisionCylinderSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, component) {
-        const axis = component.axis ?? 1;
-        const radius = component.radius ?? 0.5;
-        const height = component.height ?? 1;
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = component.height;
 
         let halfExtents = null;
         let shape = null;
@@ -275,9 +276,9 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
 // Cone Collision System
 class CollisionConeSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, component) {
-        const axis = component.axis ?? 1;
-        const radius = component.radius ?? 0.5;
-        const height = component.height ?? 1;
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = component.height;
 
         let shape = null;
 
@@ -641,7 +642,7 @@ class CollisionComponentSystem extends ComponentSystem {
         this.on('remove', this.onRemove, this);
     }
 
-    initializeComponentData(component, data, properties) {
+    initializeComponentData(component, data) {
         // resolve the type first - falsy values fall back to the current
         // type, matching the old initializer, and the private field is
         // written directly so the type setter does not fire changeType
@@ -652,22 +653,16 @@ class CollisionComponentSystem extends ComponentSystem {
 
         // asset takes priority over model and render but they are all trying
         // to change the mesh, so remove the conflicting inputs
-        properties = _properties.slice();
-        let idx;
+        let properties = _properties;
         if (data.asset !== undefined) {
-            idx = properties.indexOf('model');
-            properties.splice(idx, 1);
-            idx = properties.indexOf('render');
-            properties.splice(idx, 1);
+            properties = properties.filter(p => p !== 'model' && p !== 'render');
         } else if (data.model !== undefined) {
-            idx = properties.indexOf('asset');
-            properties.splice(idx, 1);
+            properties = properties.filter(p => p !== 'asset');
         }
 
         // apply the user-supplied properties through the public setters - all
         // side effects are gated on _initialized, which is still false here
-        for (let i = 0; i < properties.length; i++) {
-            const property = properties[i];
+        for (const property of properties) {
             if (data[property] !== undefined) {
                 component[property] = data[property];
             }
@@ -720,18 +715,15 @@ class CollisionComponentSystem extends ComponentSystem {
     cloneComponent(entity, clone) {
         const c = entity.collision;
 
-        // type is initialized outside the property list; shape is created by the type's
-        // implementation during initialization and must not be shared with the clone
+        // type drives the implementation selection so it is handled outside
+        // the shared property list
         const data = {
             enabled: c.enabled,
             type: c.type
         };
 
-        for (let i = 0; i < _properties.length; i++) {
-            const property = _properties[i];
-            if (property !== 'shape') {
-                data[property] = c[property];
-            }
+        for (const property of _properties) {
+            data[property] = c[property];
         }
 
         return this.addComponent(clone, data);

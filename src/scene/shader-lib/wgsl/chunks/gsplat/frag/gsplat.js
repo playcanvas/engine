@@ -37,6 +37,9 @@ varying gaussianColor: half4;
     #include "pickPS"
 #endif
 
+#ifdef GSPLAT_USER_VARYINGS
+    #include "gsplatUserVaryingsPS"
+#endif
 #include "gsplatModifyPS"
 
 @fragment

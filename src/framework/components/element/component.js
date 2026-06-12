@@ -2574,7 +2574,7 @@ class ElementComponent extends Component {
         this.fire('disableelement');
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this.entity.off('insert', this._onInsert, this);
         this._unpatch();
         if (this._image) {

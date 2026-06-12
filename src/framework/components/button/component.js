@@ -1242,7 +1242,7 @@ class ButtonComponent extends Component {
         this._resetToDefaultVisualState(this.transitionMode);
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this._imageEntityUnsubscribe();
 
         this._evtElementAdd?.off();

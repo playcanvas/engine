@@ -24,6 +24,10 @@ export default /* wgsl */`
 #include "gsplatHelpersVS"
 #include "gsplatOutputVS"
 
+#ifdef GSPLAT_USER_VARYINGS
+    #include "gsplatUserVaryingsVS"
+#endif
+
 attribute vertex_position: vec3f;
 
 uniform viewport_size: vec4f;
@@ -164,6 +168,11 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
     output.position = proj + vec4f(clipOffset, 0.0, 0.0);
     output.gaussianUV = half2(cornerClipped);
+
+    // read user varying values from the projection cache and pass them to the outputs
+    #ifdef GSPLAT_USER_VARYINGS
+        #include "gsplatUserCacheReadVS"
+    #endif
 
     // Reconstruct linear view depth from clip via the per-camera clipToViewZ
     // uniform = -inverse(matrix_projection)[row 2]. For perspective this
