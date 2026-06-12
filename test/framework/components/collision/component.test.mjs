@@ -146,6 +146,20 @@ describe('CollisionComponent', function () {
             expect(e.collision.halfExtents.x).to.equal(1);
         });
 
+        it('ignores shape passed via the data argument', function () {
+            const e = new Entity();
+            e.addComponent('collision', { shape: {} });
+
+            expect(e.collision.shape).to.equal(null);
+        });
+
+        it('ignores shape on a mesh component without throwing', function () {
+            const e = new Entity();
+
+            expect(() => e.addComponent('collision', { type: 'mesh', shape: {} })).to.not.throw();
+            expect(e.collision.shape).to.equal(null);
+        });
+
         it('ignores model and render when an asset is also supplied', function () {
             const model = new Model();
 
@@ -414,6 +428,7 @@ describe('CollisionComponent', function () {
             expect(c.asset).to.equal(42);
             expect(c.renderAsset).to.equal(43);
             expect(c.checkVertexDuplicates).to.equal(false);
+            expect(c.shape).to.equal(null);
         });
 
     });
