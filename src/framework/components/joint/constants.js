@@ -2,6 +2,7 @@
  * Joint rigidly locks all degrees of freedom, welding the two bodies together.
  *
  * @category Physics
+ * @alpha
  */
 export const JOINTTYPE_FIXED = 'fixed';
 
@@ -10,6 +11,7 @@ export const JOINTTYPE_FIXED = 'fixed';
  * limits constrain the swing (cone) and twist angles.
  *
  * @category Physics
+ * @alpha
  */
 export const JOINTTYPE_BALL = 'ball';
 
@@ -18,6 +20,7 @@ export const JOINTTYPE_BALL = 'ball';
  * axle. Supports optional rotation limits and a motor.
  *
  * @category Physics
+ * @alpha
  */
 export const JOINTTYPE_HINGE = 'hinge';
 
@@ -26,6 +29,7 @@ export const JOINTTYPE_HINGE = 'hinge';
  * runner or a piston. Supports optional travel limits and a motor.
  *
  * @category Physics
+ * @alpha
  */
 export const JOINTTYPE_SLIDER = 'slider';
 
@@ -34,6 +38,7 @@ export const JOINTTYPE_SLIDER = 'slider';
  * limited or free, with optional springs.
  *
  * @category Physics
+ * @alpha
  */
 export const JOINTTYPE_6DOF = '6dof';
 
@@ -41,6 +46,7 @@ export const JOINTTYPE_6DOF = '6dof';
  * Specified degree of freedom has free movement.
  *
  * @category Physics
+ * @alpha
  */
 export const MOTION_FREE = 'free';
 
@@ -48,6 +54,7 @@ export const MOTION_FREE = 'free';
  * Specified degree of freedom has limited movement.
  *
  * @category Physics
+ * @alpha
  */
 export const MOTION_LIMITED = 'limited';
 
@@ -55,5 +62,6 @@ export const MOTION_LIMITED = 'limited';
  * Specified degree of freedom is locked and allows no movement.
  *
  * @category Physics
+ * @alpha
  */
 export const MOTION_LOCKED = 'locked';

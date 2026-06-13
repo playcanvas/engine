@@ -24,6 +24,7 @@ const _properties = [
  * Manages creation of {@link JointComponent}s.
  *
  * @category Physics
+ * @alpha
  */
 class JointComponentSystem extends ComponentSystem {
     /**

@@ -296,6 +296,7 @@ const jointImpls = {
  *
  * @hideconstructor
  * @category Physics
+ * @alpha
  */
 class JointComponent extends Component {
     /**
