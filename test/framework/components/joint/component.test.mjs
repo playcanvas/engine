@@ -353,16 +353,27 @@ describe('JointComponent', function () {
 
     describe('lifecycle', function () {
 
-        it('survives a disable and enable round trip', function () {
+        it('leaves and rejoins the pending set across a disable and enable round trip', function () {
+            const target = new Entity('target');
+            app.root.addChild(target);
+
             const e = new Entity();
             app.root.addChild(e);
-            e.addComponent('joint');
+            // entityA has no rigidbody, so the joint cannot create its constraint yet and parks
+            // itself in the system's pending set to await a body. (Constraint creation and
+            // teardown themselves require Ammo and are exercised by the joints example.)
+            e.addComponent('joint', { entityA: target });
+
+            const system = app.systems.joint;
+            expect(system._pending.has(e.joint)).to.equal(true);
 
             e.joint.enabled = false;
             expect(e.joint.enabled).to.equal(false);
+            expect(system._pending.has(e.joint)).to.equal(false);
 
             e.joint.enabled = true;
             expect(e.joint.enabled).to.equal(true);
+            expect(system._pending.has(e.joint)).to.equal(true);
         });
 
         it('detaches entity listeners when the component is removed', function () {
