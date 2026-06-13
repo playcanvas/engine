@@ -992,6 +992,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         gl.enable(gl.SCISSOR_TEST);
 
+        this.textureUnit = 0;
+        gl.activeTexture(gl.TEXTURE0);
+
         gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
 
         this.unpackFlipY = false;
