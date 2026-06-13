@@ -43,7 +43,7 @@ class JointComponentSystem extends ComponentSystem {
     _breakable = new Set();
 
     /**
-     * Shared static Ammo body that world-pinned joints attach to - see {@link _getFixedBody}.
+     * Shared static Ammo body that world-pinned joints attach to - see {@link getFixedBody}.
      *
      * @type {object|null}
      * @private
@@ -82,7 +82,7 @@ class JointComponentSystem extends ComponentSystem {
      * @returns {object} The shared static Ammo body.
      * @ignore
      */
-    _getFixedBody() {
+    getFixedBody() {
         if (!this._fixedBody) {
             const transform = new Ammo.btTransform();
             transform.setIdentity();
