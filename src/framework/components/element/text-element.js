@@ -348,6 +348,35 @@ class TextElement {
             this._symbols = [' '];
         }
 
+        // A grapheme cluster (e.g. a Devanagari syllable) is rendered as a single glyph only if
+        // the font actually contains it - which is the case for a CanvasFont, as it rasterizes
+        // whole clusters using the browser's text shaper. For fonts whose atlas is keyed by
+        // individual code points (e.g. a bitmap/MSDF font), expand any missing cluster back into
+        // its code points so they are still rendered individually rather than dropped.
+        const fontChars = this._font?.data?.chars;
+        if (fontChars) {
+            let expanded = null;
+            for (let i = 0; i < this._symbols.length; i++) {
+                const symbol = this._symbols[i];
+                if (symbol.length === 1 || fontChars[symbol]) {
+                    expanded?.push(symbol);
+                    continue;
+                }
+                const codePoints = string.getCodePoints(symbol);
+                if (codePoints.length === 1) {
+                    expanded?.push(symbol);
+                    continue;
+                }
+                expanded = expanded ?? this._symbols.slice(0, i);
+                for (let j = 0; j < codePoints.length; j++) {
+                    expanded.push(string.fromCodePoint(codePoints[j]));
+                }
+            }
+            if (expanded) {
+                this._symbols = expanded;
+            }
+        }
+
         // extract markup
         if (this._enableMarkup) {
             const results = Markup.evaluate(this._symbols);

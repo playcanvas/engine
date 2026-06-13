@@ -6,6 +6,7 @@ const HIGH_SURROGATE_BEGIN = 0xD800;
 const HIGH_SURROGATE_END = 0xDBFF;
 const LOW_SURROGATE_BEGIN = 0xDC00;
 const LOW_SURROGATE_END = 0xDFFF;
+const ZERO_WIDTH_NON_JOINER = 0x200C;
 const ZERO_WIDTH_JOINER = 0x200D;
 
 // Flag emoji
@@ -16,13 +17,31 @@ const REGIONAL_INDICATOR_END = 0x1F1FF;
 const FITZPATRICK_MODIFIER_BEGIN = 0x1F3FB;
 const FITZPATRICK_MODIFIER_END = 0x1F3FF;
 
-// Accent characters
-const DIACRITICAL_MARKS_BEGIN = 0x20D0;
-const DIACRITICAL_MARKS_END = 0x20FF;
-
 // Special emoji joins
 const VARIATION_MODIFIER_BEGIN = 0xFE00;
 const VARIATION_MODIFIER_END = 0xFE0F;
+
+// Matches a single combining mark (Unicode general category Mark: Mn, Mc, Me). This covers
+// accents, Indic vowel signs and viramas, variation selectors, enclosing keycaps, etc.
+const COMBINING_MARK = /\p{M}/u;
+
+// Brahmic viramas/halants. A virama is itself a combining mark, but it also combines the
+// preceding consonant with the following one to form a conjunct (e.g. Devanagari क + ् + ष =>
+// क्ष), so the consonant after it must be pulled into the same grapheme cluster.
+const VIRAMAS = new Set([
+    0x094D, // Devanagari
+    0x09CD, // Bengali
+    0x0A4D, // Gurmukhi
+    0x0ACD, // Gujarati
+    0x0B4D, // Oriya
+    0x0BCD, // Tamil
+    0x0C4D, // Telugu
+    0x0CCD, // Kannada
+    0x0D4D, // Malayalam
+    0x0DCA, // Sinhala
+    0x1039, // Myanmar
+    0x17D2  // Khmer
+]);
 
 function getCodePointData(string, i = 0) {
     const size = string.length;
@@ -176,8 +195,9 @@ const string = {
 
     /**
      * Gets an array of all grapheme clusters (visible symbols) in a string. This is needed because
-     * some symbols (such as emoji or accented characters) are actually made up of multiple
-     * character codes. See {@link https://mathiasbynens.be/notes/javascript-unicode here} for more
+     * some symbols (such as emoji, accented characters, or complex scripts like Devanagari) are
+     * actually made up of multiple character codes - a base character followed by combining marks
+     * and/or joiners. See {@link https://mathiasbynens.be/notes/javascript-unicode here} for more
      * info.
      *
      * @param {string} string - The string to break into symbols.
@@ -195,20 +215,31 @@ const string = {
         while (index < length) {
             take += numCharsToTakeForNextSymbol(string, index + take);
             ch = string[index + take];
-            // Handle special cases
-            if (isCodeBetween(ch, DIACRITICAL_MARKS_BEGIN, DIACRITICAL_MARKS_END)) {
-                ch = string[index + (take++)];
+
+            // Absorb any following combining marks and joiners so that a base character together
+            // with its marks forms a single grapheme cluster. This keeps complex scripts (e.g.
+            // Devanagari vowel signs and conjuncts), accented characters and emoji sequences
+            // together as one symbol instead of splitting them into separately-rendered glyphs.
+            while (ch) {
+                const code = ch.charCodeAt(0);
+                const isJoiner = code === ZERO_WIDTH_JOINER || code === ZERO_WIDTH_NON_JOINER;
+
+                if (!isJoiner && !COMBINING_MARK.test(ch)) {
+                    break;
+                }
+
+                take++;
+
+                // Joiners and viramas link to the following base character (emoji ZWJ sequences
+                // and Indic conjuncts), so pull that base into the same cluster too.
+                if ((isJoiner || VIRAMAS.has(code)) && index + take < length) {
+                    take += numCharsToTakeForNextSymbol(string, index + take);
+                }
+
+                ch = string[index + take];
             }
-            if (isCodeBetween(ch, VARIATION_MODIFIER_BEGIN, VARIATION_MODIFIER_END)) {
-                ch = string[index + (take++)];
-            }
-            if (ch && ch.charCodeAt(0) === ZERO_WIDTH_JOINER) {
-                ch = string[index + (take++)];
-                // Not a complete char yet
-                continue;
-            }
-            const char = string.substring(index, index + take);
-            output.push(char);
+
+            output.push(string.substring(index, index + take));
             index += take;
             take = 0;
         }

@@ -40,6 +40,28 @@ describe('string', function () {
             expect(string.getSymbols('🏴‍☠️').length).to.equal(1);
         });
 
+        it('keeps a base character and its combining marks together', function () {
+            // 'a' + combining acute accent (U+0301)
+            expect(string.getSymbols('á')).to.deep.equal(['á']);
+            // multiple stacked marks stay with their base
+            expect(string.getSymbols('ế')).to.deep.equal(['ế']);
+        });
+
+        it('clusters Devanagari vowel signs with their consonant', function () {
+            // क (ka) + ि (vowel sign i) => one cluster (the vowel sign is reordered before the
+            // consonant when shaped, so it must not be split into a separate symbol)
+            expect(string.getSymbols('कि')).to.deep.equal(['कि']);
+            // हिंदी => हिं (ha + i + anusvara) and दी (da + ii)
+            expect(string.getSymbols('हिंदी')).to.deep.equal(['हिं', 'दी']);
+        });
+
+        it('clusters Devanagari conjuncts joined by a virama', function () {
+            // क + ् (virama) + ष => single conjunct cluster क्ष
+            expect(string.getSymbols('क्ष')).to.deep.equal(['क्ष']);
+            // नमस्ते => न, म, स्ते (s + virama + t + e)
+            expect(string.getSymbols('नमस्ते')).to.deep.equal(['न', 'म', 'स्ते']);
+        });
+
     });
 
     describe('#fromCodePoint', function () {
