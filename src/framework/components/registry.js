@@ -109,7 +109,7 @@ class ComponentSystemRegistry extends EventHandler {
      *
      * @type {JointComponentSystem|undefined}
      * @readonly
-     * @ignore
+     * @alpha
      */
     joint;
 

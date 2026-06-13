@@ -804,6 +804,11 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
             newEntity.button.resolveDuplicatedEntityReferenceProperties(components.button, duplicatedIdsMap);
         }
 
+        // Handle entity joint attributes
+        if (components.joint) {
+            newEntity.joint.resolveDuplicatedEntityReferenceProperties(components.joint, duplicatedIdsMap);
+        }
+
         // Handle entity scrollview attributes
         if (components.scrollview) {
             newEntity.scrollview.resolveDuplicatedEntityReferenceProperties(components.scrollview, duplicatedIdsMap);
