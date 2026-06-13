@@ -8,7 +8,7 @@ import { JointComponent } from './component.js';
 const _properties = [
     'type',
     'enableCollision', 'breakImpulse',
-    'enableLimits', 'limits', 'enableMotor', 'motorSpeed', 'maxMotorForce',
+    'enableLimits', 'limits', 'motorSpeed', 'maxMotorForce',
     'swingLimitY', 'swingLimitZ', 'twistLimit',
     'linearMotionX', 'linearMotionY', 'linearMotionZ',
     'linearLimitsX', 'linearLimitsY', 'linearLimitsZ',

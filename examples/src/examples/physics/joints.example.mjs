@@ -177,7 +177,6 @@ createJoint('windmill-hinge', new pc.Vec3(-5.5, 4, 0.3), new pc.Vec3(0, -90, 0),
     type: pc.JOINTTYPE_HINGE,
     entityA: rotor,
     entityB: pole,
-    enableMotor: true,
     motorSpeed: 90,
     maxMotorForce: 100
 });
@@ -221,13 +220,12 @@ app.root.addChild(rail);
 const platform = createBox('platform', new pc.Vec3(0.8, 0.25, 0.6), new pc.Vec3(1.5, 0.85, 0), green, 'dynamic', 10);
 
 // the slider is pinned to the world (entityB is null) - the platform can only translate along
-// the joint's X axis, driven back and forth by the motor
+// the joint's X axis, driven back and forth by the motor (active because maxMotorForce > 0)
 const sliderJoint = createJoint('slider', new pc.Vec3(1.5, 0.85, 0), new pc.Vec3(0, 0, 0), {
     type: pc.JOINTTYPE_SLIDER,
     entityA: platform,
     enableLimits: true,
     limits: new pc.Vec2(-2, 2),
-    enableMotor: true,
     motorSpeed: 1.5,
     maxMotorForce: 400
 });

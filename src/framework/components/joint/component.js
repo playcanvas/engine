@@ -128,7 +128,7 @@ const hingeJoint = {
         // bullet's hinge motor clamp is an impulse per simulation step, so scale the torque by
         // the fixed timestep
         const maxImpulse = joint.maxMotorForce * joint.system.app.systems.rigidbody.fixedTimeStep;
-        joint._constraint.enableAngularMotor(joint.enableMotor, joint.motorSpeed * math.DEG_TO_RAD, maxImpulse);
+        joint._constraint.enableAngularMotor(joint.maxMotorForce > 0, joint.motorSpeed * math.DEG_TO_RAD, maxImpulse);
     }
 };
 
@@ -157,7 +157,7 @@ const sliderJoint = {
 
     updateMotor(joint) {
         const constraint = joint._constraint;
-        constraint.setPoweredLinMotor(joint.enableMotor);
+        constraint.setPoweredLinMotor(joint.maxMotorForce > 0);
         constraint.setTargetLinMotorVelocity(joint.motorSpeed);
         constraint.setMaxLinMotorForce(joint.maxMotorForce);
     }
@@ -351,9 +351,6 @@ class JointComponent extends Component {
 
     /** @private */
     _limits = new Vec2(-45, 45);
-
-    /** @private */
-    _enableMotor = false;
 
     /** @private */
     _motorSpeed = 0;
@@ -680,32 +677,11 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets whether the joint's motor is enabled. The motor drives a hinge joint's rotation or a
-     * slider joint's translation towards {@link motorSpeed}, applying up to
-     * {@link maxMotorForce}. Not used by other joint types. Defaults to false.
-     *
-     * @type {boolean}
-     */
-    set enableMotor(arg) {
-        if (this._enableMotor !== arg) {
-            this._enableMotor = arg;
-            this._updateMotor();
-        }
-    }
-
-    /**
-     * Gets whether the joint's motor is enabled.
-     *
-     * @type {boolean}
-     */
-    get enableMotor() {
-        return this._enableMotor;
-    }
-
-    /**
-     * Sets the target speed of the joint's motor. For hinge joints, this is an angular speed in
-     * degrees per second. For slider joints, this is a linear speed in meters per second. Only
-     * used when {@link enableMotor} is true. Defaults to 0.
+     * Sets the target speed the motor drives towards. For hinge joints, this is an angular speed
+     * in degrees per second; for slider joints, a linear speed in meters per second. The motor is
+     * active only while {@link maxMotorForce} is greater than 0; with a target speed of 0 and a
+     * positive force the motor acts as a brake, holding the joint at rest. Only used by hinge and
+     * slider joints. Defaults to 0.
      *
      * @type {number}
      */
@@ -717,7 +693,7 @@ class JointComponent extends Component {
     }
 
     /**
-     * Gets the target speed of the joint's motor.
+     * Gets the target speed the motor drives towards.
      *
      * @type {number}
      */
@@ -726,9 +702,10 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets the maximum force the joint's motor can apply to reach {@link motorSpeed}. For hinge
-     * joints, this is a torque in Newton meters. For slider joints, this is a force in Newtons.
-     * Only used when {@link enableMotor} is true. Defaults to 0.
+     * Sets the maximum force the motor can apply to reach {@link motorSpeed}. For hinge joints,
+     * this is a torque in Newton meters; for slider joints, a force in Newtons. The motor is
+     * disabled while this is 0, so set it greater than 0 to engage the motor. Only used by hinge
+     * and slider joints. Defaults to 0.
      *
      * @type {number}
      */

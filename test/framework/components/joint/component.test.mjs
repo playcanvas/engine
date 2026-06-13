@@ -39,7 +39,6 @@ describe('JointComponent', function () {
             breakImpulse: 500,
             enableLimits: true,
             limits: new Vec2(-10, 80),
-            enableMotor: true,
             motorSpeed: 90,
             maxMotorForce: 12,
             swingLimitY: 30,
@@ -75,7 +74,6 @@ describe('JointComponent', function () {
         expect(c.breakImpulse).to.equal(500);
         expect(c.enableLimits).to.equal(true);
         expect(c.limits.equals(new Vec2(-10, 80))).to.equal(true);
-        expect(c.enableMotor).to.equal(true);
         expect(c.motorSpeed).to.equal(90);
         expect(c.maxMotorForce).to.equal(12);
         expect(c.swingLimitY).to.equal(30);
@@ -119,7 +117,6 @@ describe('JointComponent', function () {
             expect(c.isBroken).to.equal(false);
             expect(c.enableLimits).to.equal(false);
             expect(c.limits.equals(new Vec2(-45, 45))).to.equal(true);
-            expect(c.enableMotor).to.equal(false);
             expect(c.motorSpeed).to.equal(0);
             expect(c.maxMotorForce).to.equal(0);
             expect(c.swingLimitY).to.equal(45);
