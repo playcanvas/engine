@@ -746,8 +746,10 @@ class RigidBodyComponent extends Component {
 
             this._simulationEnabled = false;
 
-            // internal event consumed by the joint system to destroy constraints before
-            // the body they reference is removed from the dynamics world or destroyed
+            // internal event consumed by the joint system to destroy constraints that reference
+            // this body. The body has just been removed from the dynamics world above and is now
+            // inert, but is still a valid object - tearing the constraints down here keeps them
+            // from referencing the body once it is later destroyed or rebuilt.
             this.fire('simulationdisabled');
         }
     }

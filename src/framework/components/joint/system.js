@@ -43,7 +43,7 @@ class JointComponentSystem extends ComponentSystem {
     _breakable = new Set();
 
     /**
-     * Shared static Ammo body that world-pinned joints attach to - see getFixedBody.
+     * Shared static Ammo body that world-pinned joints attach to - see {@link _getFixedBody}.
      *
      * @type {object|null}
      * @private
@@ -72,12 +72,17 @@ class JointComponentSystem extends ComponentSystem {
         this.app.systems.on('postUpdate', this.onPostUpdate, this);
     }
 
-    // returns a shared static body, lazily created and never added to the dynamics world, that
-    // world-pinned joints (entityB of null) attach to. Its transform is identity, so the frame a
-    // joint computes against it is simply the joint's world frame. This mirrors bullet's own
-    // getFixedBody pattern and avoids the single-body constraint constructors, some of which do
-    // not transform their frame to world space (notably btConeTwistConstraint).
-    getFixedBody() {
+    /**
+     * Returns a shared static body, lazily created and never added to the dynamics world, that
+     * world-pinned joints (entityB of null) attach to. Its transform is identity, so the frame a
+     * joint computes against it is simply the joint's world frame. This mirrors Bullet's own
+     * getFixedBody pattern and avoids the single-body constraint constructors, some of which do
+     * not transform their frame to world space (notably btConeTwistConstraint).
+     *
+     * @returns {object} The shared static Ammo body.
+     * @ignore
+     */
+    _getFixedBody() {
         if (!this._fixedBody) {
             const transform = new Ammo.btTransform();
             transform.setIdentity();

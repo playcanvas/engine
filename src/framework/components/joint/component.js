@@ -1401,7 +1401,7 @@ class JointComponent extends Component {
         const bodyA = rigidbodyA.body;
 
         // world-pinned joints attach to a shared static body with an identity transform
-        const bodyB = rigidbodyB ? rigidbodyB.body : this.system.getFixedBody();
+        const bodyB = rigidbodyB ? rigidbodyB.body : this.system._getFixedBody();
 
         Debug.call(() => {
             if (rigidbodyA.type !== BODYTYPE_DYNAMIC && (!rigidbodyB || rigidbodyB.type !== BODYTYPE_DYNAMIC)) {
