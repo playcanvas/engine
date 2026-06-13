@@ -272,6 +272,10 @@ const jointImpls = {
  * re-capture the frames from the current world transforms. Entity scale is ignored, matching the
  * behavior of rigid bodies.
  *
+ * Many properties apply only to specific joint types; each one documents the types it affects,
+ * and properties without such a note (for example {@link entityA}, {@link enableCollision} and
+ * {@link breakImpulse}) apply to all types.
+ *
  * To add a JointComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
@@ -655,9 +659,11 @@ class JointComponent extends Component {
 
     /**
      * Sets the lower and upper limit of the joint's primary degree of freedom. For hinge joints,
-     * these are angles of rotation about the joint's X axis, in degrees. For slider joints, these
-     * are distances along the joint's X axis, in meters. Only used when {@link enableLimits} is
-     * true. Defaults to `[-45, 45]`.
+     * these are angles of rotation about the joint's X axis, in degrees; for slider joints,
+     * distances along the joint's X axis, in meters. Only used by hinge and slider joints, when
+     * {@link enableLimits} is true. (Ball joints limit motion with {@link swingLimitY},
+     * {@link swingLimitZ} and {@link twistLimit}; 6dof joints use {@link linearLimitsX} and
+     * {@link angularLimitsX} etc.) Defaults to `[-45, 45]`.
      *
      * @type {Vec2}
      */
