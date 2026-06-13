@@ -608,11 +608,13 @@ class JointComponent extends Component {
     }
 
     /**
-     * Gets the underlying Ammo (Bullet) constraint, or null if it has not been created or has
-     * broken. Use this to access native constraint functionality that is not exposed by the
-     * component.
+     * The underlying Ammo (Bullet) constraint, or null if it has not been created or has broken.
+     * An unsupported escape hatch for native functionality the component does not yet expose - it
+     * is deliberately kept off the public, backend-agnostic API surface, mirroring
+     * {@link RigidBodyComponent#body}.
      *
      * @type {object|null}
+     * @ignore
      */
     get constraint() {
         return this._constraint;
