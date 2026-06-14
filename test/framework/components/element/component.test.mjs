@@ -157,6 +157,28 @@ describe('ElementComponent', function () {
         expect(screen.screen._elements).to.not.include(e.element);
     });
 
+    it('can be reparented after its screen has been destroyed (#1151)', function () {
+        const screen = new Entity();
+        screen.addComponent('screen');
+        app.root.addChild(screen);
+
+        const e = new Entity();
+        e.addComponent('element');
+        screen.addChild(e);
+
+        // detach the element for later reuse, then destroy its screen (e.g. on scene unload)
+        e.reparent(null);
+        screen.destroy();
+
+        // the dangling screen reference should have been cleared
+        expect(e.element.screen).to.equal(null);
+
+        // reparenting the element again should not throw
+        const newParent = new Entity();
+        app.root.addChild(newParent);
+        expect(() => newParent.addChild(e)).to.not.throw();
+    });
+
     describe('#type', function () {
 
         it('adds model to layers when type is set to image after entity is in hierarchy', function () {
