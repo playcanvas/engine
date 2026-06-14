@@ -542,6 +542,20 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
+     * Removes any stored collision keyed to the given entity. Called when a collision component is
+     * removed so the persistent collisions map does not retain a destroyed entity. A new entity
+     * that later reuses the same GUID (for example after reloading the same scene) would otherwise
+     * inherit the stale entry and never fire `triggerleave` / `collisionend`, because the cached
+     * entity no longer has a trigger or body.
+     *
+     * @param {Entity} entity - The entity whose stored collision should be removed.
+     * @ignore
+     */
+    clearEntityCollisions(entity) {
+        delete this.collisions[entity.guid];
+    }
+
+    /**
      * Returns true if the entity has a contact event attached and false otherwise.
      *
      * @param {Entity} entity - Entity to test.

@@ -732,6 +732,12 @@ class CollisionComponentSystem extends ComponentSystem {
     onBeforeRemove(entity, component) {
         this.implementations[component.type].beforeRemove(entity, component);
         component.onBeforeRemove();
+
+        // discard any stored collisions keyed to this entity so a later entity that reuses the
+        // same GUID (e.g. after reloading the same scene) does not inherit stale tracking
+        if (this.app.systems.rigidbody) {
+            this.app.systems.rigidbody.clearEntityCollisions(entity);
+        }
     }
 
     onRemove(entity) {
