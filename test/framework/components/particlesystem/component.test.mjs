@@ -309,6 +309,53 @@ describe('ParticleSystemComponent', function () {
         expect(e.particlesystem.isPlaying()).to.be.false;
     });
 
+    it('isPlaying() tracks the emitter simulation clock for a non-looping system', function () {
+        const e = new Entity();
+        e.addComponent('particlesystem');
+        app.root.addChild(e);
+        const c = e.particlesystem;
+
+        // NullGraphicsDevice creates no emitter, so stub one to exercise the time logic
+        c.emitter = { loop: false, simTimeTotal: 0, endTime: 5 };
+
+        expect(c.isPlaying()).to.be.true;       // within the window
+
+        c.emitter.simTimeTotal = 5;
+        expect(c.isPlaying()).to.be.true;       // boundary is still playing
+
+        c.emitter.simTimeTotal = 5.001;
+        expect(c.isPlaying()).to.be.false;      // simulation has passed endTime
+
+        c.emitter = null;                       // drop the stub before teardown
+    });
+
+    it('isPlaying() is true for a looping emitter regardless of elapsed time', function () {
+        const e = new Entity();
+        e.addComponent('particlesystem');
+        app.root.addChild(e);
+        const c = e.particlesystem;
+
+        c.emitter = { loop: true, simTimeTotal: 1e6, endTime: 0 };
+
+        expect(c.isPlaying()).to.be.true;
+
+        c.emitter = null;                       // drop the stub before teardown
+    });
+
+    it('isPlaying() is false while paused even within the end time', function () {
+        const e = new Entity();
+        e.addComponent('particlesystem');
+        app.root.addChild(e);
+        const c = e.particlesystem;
+
+        c.emitter = { loop: false, simTimeTotal: 0, endTime: 5 };
+        c.pause();
+
+        expect(c.isPlaying()).to.be.false;
+
+        c.emitter = null;                       // drop the stub before teardown
+    });
+
     it('ColorMap Asset unbinds on destroy', function () {
         const e = new Entity();
         app.root.addChild(e);

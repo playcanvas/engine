@@ -568,7 +568,7 @@ class ParticleSystemComponent extends Component {
         this._loop = arg;
         if (this.emitter) {
             this.emitter.loop = arg;
-            this.emitter.resetTime();
+            this.emitter.resetTime(arg ? undefined : this.emitter.lifetime);
             this.emitter.resetMaterial();
         }
     }
@@ -2265,7 +2265,7 @@ class ParticleSystemComponent extends Component {
     stop() {
         if (this.emitter) {
             this.emitter.loop = false;
-            this.emitter.resetTime();
+            this.emitter.resetTime(this.emitter.lifetime);
             this.emitter.addTime(0, true);
         }
     }
@@ -2309,9 +2309,7 @@ class ParticleSystemComponent extends Component {
             return true;
         }
 
-        // possible bug here what happens if the non looping emitter
-        // was paused in the meantime?
-        return Date.now() <= this.emitter.endTime;
+        return this.emitter.simTimeTotal <= this.emitter.endTime;
     }
 
     /**

@@ -170,9 +170,10 @@ function packTexture2Floats(qA, qB) {
     return colors;
 }
 
-function calcEndTime(emitter) {
-    const interval = (Math.max(emitter.rate, emitter.rate2) * emitter.numParticles + emitter.lifetime);
-    return Date.now() + interval * 1000;
+// Estimated seconds for a non-looping emitter to spawn every particle and for the last one to
+// reach the end of its life.
+function calcSpawnDuration(emitter) {
+    return Math.max(emitter.rate, emitter.rate2) * emitter.numParticles + emitter.lifetime;
 }
 
 function subGraph(A, B) {
@@ -1061,8 +1062,10 @@ class ParticleEmitter {
         }
     }
 
-    resetTime() {
-        this.endTime = calcEndTime(this);
+    resetTime(duration = calcSpawnDuration(this)) {
+        // measured against the emitter's own simulation clock (simTimeTotal) so that pausing,
+        // time scaling and frame drops keep the finished state in sync with the particles
+        this.endTime = this.simTimeTotal + duration;
     }
 
     finishFrame() {
@@ -1139,7 +1142,7 @@ class ParticleEmitter {
         }
 
         if (!this.loop) {
-            if (Date.now() > this.endTime) {
+            if (this.simTimeTotal > this.endTime) {
                 if (this.onFinished) this.onFinished();
                 this.meshInstance.visible = false;
             }
