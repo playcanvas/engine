@@ -282,8 +282,12 @@ export { PostEffectQueue } from './framework/components/camera/post-effect-queue
 export { RenderComponent } from './framework/components/render/component.js';
 export { RenderComponentSystem } from './framework/components/render/system.js';
 export * from './framework/components/rigid-body/constants.js';
+export { ContactPoint } from './framework/components/rigid-body/contact-point.js';
+export { ContactResult } from './framework/components/rigid-body/contact-result.js';
+export { RaycastResult } from './framework/components/rigid-body/raycast-result.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
-export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
+export { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
+export { SingleContactResult } from './framework/components/rigid-body/single-contact-result.js';
 export { SceneRegistry } from './framework/scene-registry.js';
 export { SceneRegistryItem } from './framework/scene-registry-item.js';
 export * from './framework/components/screen/constants.js';
