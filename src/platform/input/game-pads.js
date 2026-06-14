@@ -816,14 +816,6 @@ class GamePads extends EventHandler {
     current = [];
 
     /**
-     * The list of previous buttons states
-     *
-     * @type {boolean[][]}
-     * @private
-     */
-    _previous = [];
-
-    /**
      * @type {(event: GamepadEvent) => void}
      * @private
      */
@@ -870,32 +862,6 @@ class GamePads extends EventHandler {
      */
     get deadZone() {
         return deadZone;
-    }
-
-    /**
-     * Gets the list of previous button states.
-     *
-     * @type {boolean[][]}
-     * @ignore
-     */
-    get previous() {
-        const current = this.current;
-
-        for (let i = 0, l = current.length; i < l; i++) {
-            const buttons = current[i]._buttons;
-
-            if (!this._previous[i]) {
-                this._previous[i] = [];
-            }
-
-            for (let j = 0, m = buttons.length; j < m; j++) {
-                const button = buttons[i];
-                this.previous[i][j] = button ? !button.wasPressed && button.pressed || button.wasReleased : false;
-            }
-        }
-
-        this._previous.length = this.current.length;
-        return this._previous;
     }
 
     /**
