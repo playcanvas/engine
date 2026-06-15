@@ -208,9 +208,10 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const viewMat = _viewMat.copy(viewInvMat).invert();
         device.scope.resolve('matrix_view').setValue(viewMat.data);
 
-        // work-buffer-sourced geometry inputs for color-only (SH) updates
-        // (used by shaders compiled with GSPLAT_WORKBUFFER_GEOMETRY)
-        if (this.colorOnly) {
+        // work-buffer-sourced geometry inputs for color-only (SH) updates. These are consumed
+        // only by shaders compiled with GSPLAT_WORKBUFFER_GEOMETRY, so skip the setup unless a
+        // splat in this pass opts in (see GSplatResourceBase#supportsWorkBufferGeometry).
+        if (this.colorOnly && splats.some(s => s.resource.supportsWorkBufferGeometry)) {
             device.scope.resolve('uWorkBufferTransformA').setValue(this.workBuffer.getTexture('dataTransformA'));
             device.scope.resolve('uWorkBufferTransformB').setValue(this.workBuffer.getTexture('dataTransformB'));
 
@@ -299,8 +300,8 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         scope.resolve('model_rotation').setValue(this._modelRotationData);
 
         // inverse model matrix, used by GSPLAT_WORKBUFFER_GEOMETRY shaders to convert stored
-        // world-space data back to local space
-        if (this.colorOnly) {
+        // world-space data back to local space (only resources that opt in compile that path)
+        if (this.colorOnly && resource.supportsWorkBufferGeometry) {
             _invModelMat.copy(worldTransform).invert();
             scope.resolve('matrix_model_inverse').setValue(_invModelMat.data);
         }
