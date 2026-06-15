@@ -73,15 +73,17 @@ const startStream = (app, entry, url, opts = {}) => {
 
     let settledCount = 0;
     let settledEmitted = false;
+    let prevLoading = false;
     const onFrameEnd = () => {
         const loading = app.assets.list().some(a => a.loading);
+        if (loading && !prevLoading) {
+            settledEmitted = false; // new loading burst -> allow another settled
+        }
+        prevLoading = loading;
         settledCount = (entry.started && !loading) ? settledCount + 1 : 0;
         if (settledCount >= settleFrames && !settledEmitted) {
             settledEmitted = true;
             event('settled', { frame: app.frame });
-        }
-        if (loading) {
-            settledEmitted = false;
         }
     };
 
@@ -111,14 +113,21 @@ const startStream = (app, entry, url, opts = {}) => {
         if (frameMs <= 0 || now() - lastFrame < frameMs) {
             return;
         }
-        lastFrame = now();
+        if (canvas.width === 0 || canvas.height === 0) {
+            return;
+        }
         const scale = Math.min(1, FRAME_MAX_EDGE / Math.max(canvas.width, canvas.height));
         const w = Math.max(1, Math.round(canvas.width * scale));
         const h = Math.max(1, Math.round(canvas.height * scale));
         const off = document.createElement('canvas');
         off.width = w;
         off.height = h;
-        off.getContext('2d').drawImage(canvas, 0, 0, w, h);
+        const ctx = off.getContext('2d');
+        if (!ctx) {
+            return;
+        }
+        ctx.drawImage(canvas, 0, 0, w, h);
+        lastFrame = now();
         send({ t: 'frame', dataUrl: off.toDataURL('image/jpeg', 0.6), w, h, ts: now() });
     };
     if (frameMs > 0) {
