@@ -17,6 +17,7 @@ import { TextureUtils } from '../../platform/graphics/texture-utils.js';
  */
 
 const _viewMat = new Mat4();
+const _invModelMat = new Mat4();
 const _modelScale = new Vec3();
 const _modelRotation = new Quat();
 const _tmpSize = new Vec2();
@@ -57,6 +58,9 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
     /** @type {Float32Array} */
     _modelRotationData = new Float32Array(4);
+
+    /** @type {Float32Array} */
+    _cameraPositionData = new Float32Array(3);
 
     /** @type {Int32Array} */
     _textureSize = new Int32Array(2);
@@ -204,6 +208,19 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const viewMat = _viewMat.copy(viewInvMat).invert();
         device.scope.resolve('matrix_view').setValue(viewMat.data);
 
+        // work-buffer-sourced geometry inputs for color-only (SH) updates
+        // (used by shaders compiled with GSPLAT_WORKBUFFER_GEOMETRY)
+        if (this.colorOnly) {
+            device.scope.resolve('uWorkBufferTransformA').setValue(this.workBuffer.getTexture('dataTransformA'));
+            device.scope.resolve('uWorkBufferTransformB').setValue(this.workBuffer.getTexture('dataTransformB'));
+
+            const cameraPos = cameraNode.getPosition();
+            this._cameraPositionData[0] = cameraPos.x;
+            this._cameraPositionData[1] = cameraPos.y;
+            this._cameraPositionData[2] = cameraPos.z;
+            device.scope.resolve('uCameraPosition').setValue(this._cameraPositionData);
+        }
+
         // render each splat info
         for (let i = 0; i < splats.length; i++) {
             const count = _partialData[i * 2 + 1];
@@ -280,6 +297,13 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         scope.resolve('matrix_model').setValue(worldTransform.data);
         scope.resolve('model_scale').setValue(this._modelScaleData);
         scope.resolve('model_rotation').setValue(this._modelRotationData);
+
+        // inverse model matrix, used by GSPLAT_WORKBUFFER_GEOMETRY shaders to convert stored
+        // world-space data back to local space
+        if (this.colorOnly) {
+            _invModelMat.copy(worldTransform).invert();
+            scope.resolve('matrix_model_inverse').setValue(_invModelMat.data);
+        }
 
         // Set placement ID for picking (unconditionally - cheap even if shader doesn't use it)
         scope.resolve('uId').setValue(splatInfo.placementId);

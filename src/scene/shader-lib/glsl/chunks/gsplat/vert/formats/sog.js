@@ -24,6 +24,9 @@ const float norm = sqrt(2.0);
     float lutShN(int b)    { return texelFetch(sogCodebook, ivec2(b, 0), 0).b; }
 #endif
 
+// geometry getters are provided by gsplatWorkBufferGeometryPS when sourcing from the work buffer
+#ifndef GSPLAT_WORKBUFFER_GEOMETRY
+
 // read the model-space center of the gaussian (16-bit per-axis, low + high byte)
 vec3 getCenter() {
     vec3 l = texelFetch(means_l, splat.uv, 0).xyz;
@@ -54,6 +57,8 @@ vec3 getScale() {
     #endif
     return exp(logS);
 }
+
+#endif
 
 vec4 getColor() {
     vec4 c = texelFetch(sh0, splat.uv, 0);
