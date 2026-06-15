@@ -1,5 +1,6 @@
 import { RingBuffer } from './ring-buffer.js';
 import { buildSnapshot } from './snapshot.js';
+import { startStream } from './stream.js';
 
 const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
@@ -105,6 +106,7 @@ const createGlobal = () => {
  * is JSON-serializable; no live engine objects escape.
  *
  * @param {import('../../framework/app-base.js').AppBase} app - The application to expose.
+ * @param {object} [opts] - Options. opts.stream (a ws:// URL) opts into dev-only realtime streaming.
  * @returns {() => void} A function that detaches the app again. Detaching the last app
  * removes the global. Apps also detach automatically on destroy.
  * @example
@@ -113,7 +115,7 @@ const createGlobal = () => {
  * const app = new Application(canvas);
  * attachRuntimeTools(app);
  */
-const attachRuntimeTools = (app) => {
+const attachRuntimeTools = (app, opts = {}) => {
     for (const e of registry.values()) {
         if (e.app === app) {
             return e.detach;
@@ -170,6 +172,7 @@ const attachRuntimeTools = (app) => {
         app.off('start', onStart);
         app.off('frameupdate', onFrameUpdate);
         app.assets?.off('error', onAssetError);
+        entry.stopStream?.();
         destroy.handle.off();
         for (const cancel of [...entry.waits]) {
             cancel();
@@ -193,6 +196,10 @@ const attachRuntimeTools = (app) => {
 
     if (!globalThis.__PLAYCANVAS_TOOLS__) {
         createGlobal();
+    }
+
+    if (opts.stream) {
+        entry.stopStream = startStream(app, entry, opts.stream, opts.streamOpts);
     }
 
     if (typeof globalThis.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
