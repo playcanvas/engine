@@ -53,6 +53,15 @@ class GSplatWorkBufferRenderPass extends RenderPass {
     /** @type {boolean} */
     colorOnly;
 
+    /**
+     * True when any splat in the current pass sources geometry from the work buffer (see
+     * GSplatResourceBase#supportsWorkBufferGeometry). Computed in update(); gates the
+     * work-buffer-geometry uniform setup in execute() so non-opted-in passes skip it.
+     *
+     * @type {boolean}
+     */
+    _usesWorkBufferGeometry = false;
+
     /** @type {Float32Array} */
     _modelScaleData = new Float32Array(3);
 
@@ -184,12 +193,16 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         }
 
         // Lazily create per-splat sub-draw textures only for splats that will use them
-        // (those not using the shared partial texture, i.e. _partialData count === 0).
+        // (those not using the shared partial texture, i.e. _partialData count === 0). Also
+        // record whether any splat sources geometry from the work buffer (used by execute()).
+        let usesWorkBufferGeometry = false;
         for (let i = 0; i < this.splats.length; i++) {
             if (this._partialData[i * 2 + 1] === 0) {
                 this.splats[i].ensureSubDrawTexture(textureWidth);
             }
+            usesWorkBufferGeometry ||= this.splats[i].resource.supportsWorkBufferGeometry;
         }
+        this._usesWorkBufferGeometry = usesWorkBufferGeometry;
 
         this.cameraNode = cameraNode;
         return this.splats.length > 0;
@@ -211,7 +224,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // work-buffer-sourced geometry inputs for color-only (SH) updates. These are consumed
         // only by shaders compiled with GSPLAT_WORKBUFFER_GEOMETRY, so skip the setup unless a
         // splat in this pass opts in (see GSplatResourceBase#supportsWorkBufferGeometry).
-        if (this.colorOnly && splats.some(s => s.resource.supportsWorkBufferGeometry)) {
+        if (this.colorOnly && this._usesWorkBufferGeometry) {
             device.scope.resolve('uWorkBufferTransformA').setValue(this.workBuffer.getTexture('dataTransformA'));
             device.scope.resolve('uWorkBufferTransformB').setValue(this.workBuffer.getTexture('dataTransformB'));
 
