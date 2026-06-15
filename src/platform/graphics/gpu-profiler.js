@@ -130,7 +130,7 @@ class GpuProfiler {
         return parsedName;
     }
 
-    report(renderVersion, timings) {
+    report(renderVersion, timings, frameTime) {
 
         if (timings) {
             const allocations = this.pastFrameAllocations.get(renderVersion);
@@ -139,9 +139,13 @@ class GpuProfiler {
             }
             Debug.assert(allocations.length === timings.length);
 
-            // store frame duration
+            // Store frame duration. When the caller supplies an explicit frameTime (the WebGPU
+            // profiler passes the span from the first begin to the last end timestamp), use it -
+            // per-pass timestamp intervals can overlap on pipelined GPUs, so their sum overestimates
+            // the real cost. Otherwise fall back to summing per-pass timings (WebGL measures the
+            // whole frame with a single query, so its timings do not overlap).
             if (timings.length > 0) {
-                this._frameTime = timings.reduce((sum, t) => sum + t, 0);
+                this._frameTime = frameTime ?? timings.reduce((sum, t) => sum + t, 0);
             }
 
             // clear old pass timings
