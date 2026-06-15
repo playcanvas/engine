@@ -207,14 +207,18 @@ assetListLoader.load(() => {
     // Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some
     // nearby detail, then open up to the full range once the first frame's data is ready.
     const worstLod = lodLevels - 1;
-    app.scene.gsplat.lodRangeMin = Math.max(0, worstLod - 3);
-    app.scene.gsplat.lodRangeMax = worstLod;
+    gsInstances.forEach((gs) => {
+        gs.lodRangeMin = Math.max(0, worstLod - 3);
+        gs.lodRangeMax = worstLod;
+    });
     const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
     const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
         if (ready && loadingCount === 0) {
             gsplatSystem.off('frame:ready', onFrameReady);
-            app.scene.gsplat.lodRangeMin = 0;
-            app.scene.gsplat.lodRangeMax = worstLod;
+            gsInstances.forEach((gs) => {
+                gs.lodRangeMin = 0;
+                gs.lodRangeMax = worstLod;
+            });
             // reveal the backdrop and sweep the splats in, together, now that the scene is ready
             app.scene.skybox = skyboxCubemap;
             revealStarted = true;

@@ -141,9 +141,6 @@ assetListLoader.load(() => {
     const preset = pc.platform.mobile ? 'mobile' : 'desktop';
     const presetData = LOD_PRESETS[preset];
 
-    app.scene.gsplat.lodRangeMin = presetData.range[0];
-    app.scene.gsplat.lodRangeMax = presetData.range[1];
-
     // Create skatepark entity
     const skatepark = new pc.Entity('Skatepark');
     skatepark.addComponent('gsplat', {
@@ -157,6 +154,8 @@ assetListLoader.load(() => {
 
     // Apply LOD distances to skatepark
     const gs = /** @type {any} */ (skatepark.gsplat);
+    gs.lodRangeMin = presetData.range[0];
+    gs.lodRangeMax = presetData.range[1];
     gs.lodBaseDistance = presetData.lodBaseDistance;
     gs.lodMultiplier = 4;
 

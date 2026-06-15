@@ -240,12 +240,10 @@ class StreamedGsplat extends Script {
         const range = this._getCurrentLodRange();
         if (!range) return;
 
-        const app = this.app;
-        app.scene.gsplat.lodRangeMin = range[0];
-        app.scene.gsplat.lodRangeMax = range[1];
-
         // Apply to main streaming asset only (environment doesn't support these settings)
         if (this.entity.gsplat) {
+            this.entity.gsplat.lodRangeMin = range[0];
+            this.entity.gsplat.lodRangeMax = range[1];
             this.entity.gsplat.lodBaseDistance = this._getCurrentLodBaseDistance();
             this.entity.gsplat.lodMultiplier = this._getCurrentLodMultiplier();
         }

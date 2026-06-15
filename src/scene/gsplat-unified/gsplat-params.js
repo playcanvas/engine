@@ -379,52 +379,42 @@ class GSplatParams {
         return this._lodBehindPenalty;
     }
 
-    /** @private */
-    _lodRangeMin = 0;
-
     /**
-     * Minimum allowed LOD index (inclusive). Defaults to 0.
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMin} on the gsplat component instead.
+     * @ignore
      */
     set lodRangeMin(value) {
-        if (this._lodRangeMin !== value) {
-            this._lodRangeMin = value;
-            this.dirty = true;
-        }
+        Debug.warnOnce('GSplatParams#lodRangeMin is deprecated. Use lodRangeMin on the GSplatComponent instead.');
     }
 
     /**
-     * Gets minimum allowed LOD index (inclusive).
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMin} on the gsplat component instead.
+     * @ignore
      */
     get lodRangeMin() {
-        return this._lodRangeMin;
+        Debug.warnOnce('GSplatParams#lodRangeMin is deprecated. Use lodRangeMin on the GSplatComponent instead.');
+        return 0;
     }
 
-    /** @private */
-    _lodRangeMax = 10;
-
     /**
-     * Maximum allowed LOD index (inclusive). Defaults to 10.
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMax} on the gsplat component instead.
+     * @ignore
      */
     set lodRangeMax(value) {
-        if (this._lodRangeMax !== value) {
-            this._lodRangeMax = value;
-            this.dirty = true;
-        }
+        Debug.warnOnce('GSplatParams#lodRangeMax is deprecated. Use lodRangeMax on the GSplatComponent instead.');
     }
 
     /**
-     * Gets maximum allowed LOD index (inclusive).
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMax} on the gsplat component instead.
+     * @ignore
      */
     get lodRangeMax() {
-        return this._lodRangeMax;
+        Debug.warnOnce('GSplatParams#lodRangeMax is deprecated. Use lodRangeMax on the GSplatComponent instead.');
+        return 99;
     }
 
     /** @private */
