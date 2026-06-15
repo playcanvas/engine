@@ -118,6 +118,34 @@ describe('attachRuntimeTools', function () {
         expect(detail).to.deep.equal({ protocol: 'playcanvas.runtime-tools', version: 1 });
     });
 
+    it('opens a stream when opts.stream is set and stops it on detach', async function () {
+        const sent = [];
+        class MockWS {
+            constructor(url) {
+                this.url = url;
+                this.readyState = 1;
+                MockWS.last = this;
+                setTimeout(() => this.onopen?.(), 0);
+            }
+
+            send(d) {
+                sent.push(JSON.parse(d));
+            }
+
+            close() {
+                this.readyState = 3;
+                this.onclose?.({});
+            }
+        }
+        const detach = attachRuntimeTools(app, { stream: 'ws://localhost:5570', streamOpts: { WebSocketImpl: MockWS, frameMs: 0, summaryMs: 0 } });
+        expect(MockWS.last.url).to.equal('ws://localhost:5570');
+        await new Promise((r) => {
+            setTimeout(r, 0);
+        });
+        detach();
+        expect(MockWS.last.readyState).to.equal(3);
+    });
+
     describe('readiness', function () {
 
         it('waitForFrame resolves on the next frameend', async function () {
