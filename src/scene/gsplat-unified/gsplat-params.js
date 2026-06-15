@@ -120,6 +120,7 @@ class GSplatParams {
         }
 
         format.allowStreamRemoval = true;
+        format.dataFormat = dataFormat;
         return format;
     }
 
