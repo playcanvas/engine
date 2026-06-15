@@ -7,6 +7,7 @@ import { TextureView } from './texture-view.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { DynamicBuffer } from './dynamic-buffer.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { StorageBuffer } from './storage-buffer.js'
  * @import { Texture } from './texture.js'
@@ -57,7 +58,7 @@ class BindGroup {
      * last built against. Used to detect when such a buffer is re-allocated into a different
      * dynamic buffer (which requires the bind group to be rebuilt).
      *
-     * @type {object[]}
+     * @type {DynamicBuffer[]}
      * @private
      */
     _uniformBufferContainers = [];
