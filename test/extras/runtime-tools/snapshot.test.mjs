@@ -79,7 +79,7 @@ describe('runtime-tools snapshot', function () {
 
     it('matches the checked-in protocol v1 schema top-level shape', function () {
         const schemaUrl = new URL(
-            '../../../src/extras/runtime-tools/protocol-v1.schema.json', import.meta.url);
+            '../../../src/extras/runtime-tools/schemas/v1/snapshot.schema.json', import.meta.url);
         const schema = JSON.parse(readFileSync(schemaUrl, 'utf8'));
         const snap = buildSnapshot(entry);
         expect(Object.keys(snap).sort()).to.deep.equal(Object.keys(schema.properties).sort());

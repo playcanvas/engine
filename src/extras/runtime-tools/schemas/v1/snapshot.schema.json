@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://playcanvas.com/schemas/runtime-tools/protocol-v1.schema.json",
+    "$id": "https://playcanvas.com/schemas/runtime-tools/v1/snapshot.schema.json",
     "title": "PlayCanvas runtime-tools protocol v1 snapshot",
     "type": "object",
     "required": ["version", "engine", "app", "scene", "assets", "render", "diagnostics", "perf"],
