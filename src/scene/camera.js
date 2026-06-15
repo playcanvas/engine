@@ -522,7 +522,6 @@ class Camera {
      * null when not rendering an XR session. Set by the XR manager.
      *
      * @param {RenderView[]|null} value - The per-view list, or null when not in XR.
-     * @ignore
      */
     set xrViews(value) {
         // the projection source switches between XR and non-XR when XR activeness changes, so the
@@ -535,7 +534,6 @@ class Camera {
 
     /**
      * @type {RenderView[]|null}
-     * @ignore
      */
     get xrViews() {
         return this._xrViews;
@@ -545,7 +543,6 @@ class Camera {
      * True while an XR session owns this camera (equivalent to {@link Camera#xrViews} being set).
      *
      * @type {boolean}
-     * @ignore
      */
     get xrActive() {
         return this._xrViews !== null;
@@ -670,8 +667,6 @@ class Camera {
      * `device.renderVersion` (as {@link Camera#_storeShaderMatrices} does) - left as a future
      * optimization, as it needs checking against cameras that render multiple times per frame
      * (e.g. multiple render targets).
-     *
-     * @ignore
      */
     updateViewTransforms() {
         const views = this.xrViews;
