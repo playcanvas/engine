@@ -38,7 +38,7 @@ class WebgpuGpuProfiler extends GpuProfiler {
             // request results
             const renderVersion = this.device.renderVersion;
             this.timestampQueriesSet?.request(this.slotCount, renderVersion).then((results) => {
-                this.report(results.renderVersion, results.timings);
+                this.report(results.renderVersion, results.timings, results.frameTime);
             });
 
             super.request(renderVersion);
