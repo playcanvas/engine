@@ -913,6 +913,38 @@ class GSplatParams {
     }
 
     /**
+     * Applies serialized scene settings (e.g. from the Editor) to the gsplat parameters. Reads
+     * flat `gsplat`-prefixed keys off the `render` settings object; missing keys leave the current
+     * value unchanged.
+     *
+     * @param {object} render - The render settings object.
+     * @ignore
+     */
+    applySettings(render) {
+        this.radialSorting = render.gsplatRadialSorting ?? this.radialSorting;
+
+        this.lodUpdateDistance = render.gsplatLodUpdateDistance ?? this.lodUpdateDistance;
+        this.lodUpdateAngle = render.gsplatLodUpdateAngle ?? this.lodUpdateAngle;
+        this.lodBehindPenalty = render.gsplatLodBehindPenalty ?? this.lodBehindPenalty;
+        this.lodUnderfillLimit = render.gsplatLodUnderfillLimit ?? this.lodUnderfillLimit;
+        this.splatBudget = render.gsplatSplatBudget ?? this.splatBudget;
+
+        this.alphaClip = render.gsplatAlphaClip ?? this.alphaClip;
+        this.alphaClipForward = render.gsplatAlphaClipForward ?? this.alphaClipForward;
+        this.minPixelSize = render.gsplatMinPixelSize ?? this.minPixelSize;
+        this.minContribution = render.gsplatMinContribution ?? this.minContribution;
+        this.foveationStrength = render.gsplatFoveationStrength ?? this.foveationStrength;
+        this.foveationCenter = render.gsplatFoveationCenter ?? this.foveationCenter;
+
+        this.antiAlias = render.gsplatAntiAlias ?? this.antiAlias;
+        this.useFog = render.gsplatUseFog ?? this.useFog;
+        this.colorUpdateAngle = render.gsplatColorUpdateAngle ?? this.colorUpdateAngle;
+        this.cooldownTicks = render.gsplatCooldownTicks ?? this.cooldownTicks;
+        this.dataFormat = render.gsplatDataFormat ?? this.dataFormat;
+        this.enableIds = render.gsplatEnableIds ?? this.enableIds;
+    }
+
+    /**
      * Called at the end of the frame to clear dirty flags.
      *
      * @ignore
