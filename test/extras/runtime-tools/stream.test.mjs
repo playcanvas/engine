@@ -53,4 +53,32 @@ describe('runtime-tools stream', function () {
         expect(ws.sent[1].t).to.equal('snapshot');
         expect(ws.sent[1].snapshot.version).to.equal(1);
     });
+
+    it('pushes an asset-error event', function () {
+        startStream(app, entry, 'ws://x', { WebSocketImpl: MockWebSocket, frameMs: 0, summaryMs: 0 });
+        const ws = MockWebSocket.instances[0];
+        ws.open();
+        app.assets.fire('error', 'Error: 404', { id: 7, name: 'a.png', file: { url: 'a.png' } });
+        const ev = ws.sent.find(m => m.t === 'event' && m.kind === 'asset-error');
+        expect(ev.payload.url).to.equal('a.png');
+    });
+
+    it('emits a settled event once after N quiet frames', function () {
+        startStream(app, entry, 'ws://x', { WebSocketImpl: MockWebSocket, frameMs: 0, summaryMs: 0, settleFrames: 2 });
+        const ws = MockWebSocket.instances[0];
+        ws.open();
+        app.fire('frameend');
+        app.fire('frameend');
+        app.fire('frameend');
+        const settled = ws.sent.filter(m => m.t === 'event' && m.kind === 'settled');
+        expect(settled).to.have.length(1);
+    });
+
+    it('pushes device-lost from the canvas webglcontextlost event', function () {
+        startStream(app, entry, 'ws://x', { WebSocketImpl: MockWebSocket, frameMs: 0, summaryMs: 0 });
+        const ws = MockWebSocket.instances[0];
+        ws.open();
+        app.graphicsDevice.canvas.dispatchEvent(new window.Event('webglcontextlost'));
+        expect(ws.sent.some(m => m.t === 'event' && m.kind === 'device-lost')).to.equal(true);
+    });
 });
