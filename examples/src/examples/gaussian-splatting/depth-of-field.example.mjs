@@ -130,15 +130,15 @@ assetListLoader.load(() => {
     // streams in) and enable Depth of Field at the same time.
     const lodLevels = splat.gsplat.resource?.octree?.lodLevels;
     if (lodLevels) {
-        app.scene.gsplat.lodRangeMin = lodLevels - 1;
-        app.scene.gsplat.lodRangeMax = lodLevels - 1;
+        splat.gsplat.lodRangeMin = lodLevels - 1;
+        splat.gsplat.lodRangeMax = lodLevels - 1;
     }
     const onFrameReady = (camera, layer, ready, loadingCount) => {
         if (ready && loadingCount === 0) {
             app.systems.gsplat.off('frame:ready', onFrameReady);
             if (lodLevels) {
-                app.scene.gsplat.lodRangeMin = 0;
-                app.scene.gsplat.lodRangeMax = lodLevels - 1;
+                splat.gsplat.lodRangeMin = 0;
+                splat.gsplat.lodRangeMax = lodLevels - 1;
             }
             data.set('data.dof.enabled', true);
         }

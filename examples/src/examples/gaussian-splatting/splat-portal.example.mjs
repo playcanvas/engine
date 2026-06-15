@@ -104,10 +104,6 @@ assetListLoader.load(() => {
     app.scene.gsplat.lodUnderfillLimit = 5;
     app.scene.gsplat.splatBudget = pc.platform.mobile ? 500000 : 1500000;
 
-    // start with the lowest LOD until the first frame settles, then unlock the full range
-    app.scene.gsplat.lodRangeMin = 4;
-    app.scene.gsplat.lodRangeMax = 5;
-
     // ---------- Layer setup ----------
     // Each splat scene has its own dedicated layer (outsideLayer for Parish,
     // insideLayer for Skatepark). The data on each layer never changes - we
@@ -373,6 +369,9 @@ assetListLoader.load(() => {
         const gs = /** @type {any} */ (entity.gsplat);
         gs.lodBaseDistance = config.lodBaseDistance;
         gs.lodMultiplier = config.lodMultiplier;
+        // start with the lowest LOD until the first frame settles, then unlock the full range
+        gs.lodRangeMin = 4;
+        gs.lodRangeMax = 5;
 
         sceneStates.set(config.layer, { entity, fromTransform, throughTransform });
     });
@@ -665,8 +664,11 @@ assetListLoader.load(() => {
     const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
         if (ready && loadingCount === 0) {
             gsplatSystem.off('frame:ready', onFrameReady);
-            app.scene.gsplat.lodRangeMin = 0;
-            app.scene.gsplat.lodRangeMax = 5;
+            for (const { entity } of sceneStates.values()) {
+                const gs = /** @type {any} */ (entity.gsplat);
+                gs.lodRangeMin = 0;
+                gs.lodRangeMax = 5;
+            }
         }
     };
     gsplatSystem.on('frame:ready', onFrameReady);

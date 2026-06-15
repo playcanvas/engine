@@ -151,8 +151,8 @@ assetListLoader.load(() => {
     const applyPreset = () => {
         const preset = data.get('lodPreset');
         const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
-        app.scene.gsplat.lodRangeMin = presetData.range[0];
-        app.scene.gsplat.lodRangeMax = presetData.range[1];
+        gs.lodRangeMin = presetData.range[0];
+        gs.lodRangeMax = presetData.range[1];
         gs.lodBaseDistance = presetData.lodBaseDistance;
         data.set('lodBaseDistance', presetData.lodBaseDistance);
     };
