@@ -1657,13 +1657,13 @@ class GSplatManager {
         // Match Renderer#setCameraUniforms: in stereo XR the XR session reports the per-eye
         // viewport directly, which is correct for both side-by-side single-texture and
         // multi-pass per-eye-view layouts — preferred over inferring from target.width.
-        const xrView = sceneCam.xr?.session ? sceneCam.xr.views.list[0] : null;
+        const xrView = sceneCam.xrActive ? (sceneCam.xrViews[0] ?? null) : null;
         const viewportWidth = Math.floor((xrView ? xrView.viewport.z : (rt ? rt.width : this.device.width)) * rect.z);
         const viewportHeight = Math.floor((xrView ? xrView.viewport.w : (rt ? rt.height : this.device.height)) * rect.w);
 
         // Stereo XR: project both eyes in a single projector pass (GSPLAT_XR variant). Requires
         // exactly 2 parallel-axis views. Keep the VS define in sync with the projector variant.
-        const xrViewCount = sceneCam.xr?.session ? sceneCam.xr.views.list.length : 0;
+        const xrViewCount = sceneCam.xrActive ? sceneCam.xrViews.length : 0;
         if (xrViewCount > 2) {
             Debug.errorOnce(`GSplatManager: the hybrid GPU-sort renderer supports at most 2 XR views (stereo), but the session has ${xrViewCount}. Additional views will not render correctly.`);
         }
@@ -1901,16 +1901,13 @@ class GSplatManager {
 
         const cam = cameraNode.camera;
         const sceneCamera = cam.camera;
-        const xrViews = sceneCamera.xr?.views.list;
+        const xrViews = sceneCamera.xrViews;
         if (xrViews?.length) {
             // XR: cull against the combined frustum of all views, so splats visible only near
             // one eye's edge (e.g. the right edge of the right eye) are not dropped. The per-view
             // "off" matrices are refreshed at render time by setCameraUniforms, which runs AFTER
             // this culling, so refresh them here (mirrors the projector dispatch).
-            const parent = cameraNode.parent?.getWorldTransform() ?? null;
-            for (let v = 0; v < xrViews.length; v++) {
-                xrViews[v].updateTransforms(parent);
-            }
+            sceneCamera.updateViewTransforms();
             sceneCamera.updateXrFrustum();
             this.workBuffer.frustumCuller.setFrustumPlanes(sceneCamera.frustum);
         } else {

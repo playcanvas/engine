@@ -203,27 +203,18 @@ assetListLoader.load(() => {
     const numViews = 4;
     const viewsList = [];
     for (let i = 0; i < numViews; i++) {
-        viewsList.push({
-            updateTransforms(transform) {
-            },
-            viewport: new pc.Vec4(),
-            projMat: new pc.Mat4(),
-            viewOffMat: new pc.Mat4(),
-            viewInvOffMat: new pc.Mat4(),
-            viewMat3: new pc.Mat3(),
-            projViewOffMat: new pc.Mat4(),
-            viewInvMat: new pc.Mat4(),
-            positionData: [0, 0, 0],
-            viewIndex: i
-        });
+        viewsList.push(new pc.RenderView());
     }
 
-    camera.camera.camera.xr = {
-        session: true,
-        views: {
-            list: viewsList
-        }
-    };
+    // simulate an active XR session by handing the camera the per-view array directly. On a real
+    // headset the XrManager populates xrViews (and the per-eye device projection); here we build
+    // each eye's projection from the camera's settings, captured before the session is activated
+    // (once active, the fov/clip getters report XR-session values instead).
+    const projFov = camera.camera.fov;
+    const projNearClip = camera.camera.nearClip;
+    const projFarClip = camera.camera.farClip;
+    const projHorizontalFov = camera.camera.horizontalFov;
+    camera.camera.camera.xrViews = viewsList;
 
     // ----------------------------------------------------------------------------------------
     // WebGPU-only setup: drive FramePassMultiView via a fake bridge - we provide the per-view
@@ -266,53 +257,47 @@ assetListLoader.load(() => {
         compositeCamera.camera.framePasses = [compositePass];
     }
 
-    const cameraComponent = camera.camera;
+    // reused each frame; setView/setViewport copy the data into each view
+    const projMat = new pc.Mat4();
+    const viewInvMat = new pc.Mat4();
+
     app.on('update', (/** @type {number} */ dt) => {
 
         const width = canvas.width;
         const height = canvas.height;
         const isWebgpu = device.isWebGPU;
 
-        // update all views - supply some matrices to make pre view rendering possible
-        // note that this is not complete set up, view frustum does not get updated and so
-        // culling does not work well
-        viewsList.forEach((/** @type {XrView} */ view) => {
-            view.projMat.copy(cameraComponent.projectionMatrix);
+        // all views share the projection; the renderer derives the per-view matrices from setView
+        projMat.setPerspective(projFov, width / height, projNearClip, projFarClip, projHorizontalFov);
 
+        // update all views - supply projection, pose and viewport for each
+        viewsList.forEach((view, viewIndex) => {
             const pos = camera.getPosition();
             const rot = camera.getRotation();
 
-            const viewInvMat = new pc.Mat4();
-
             // Rotate each view by 10 degrees * view index around UP axis
-            const angle = 10 * view.viewIndex;
+            const angle = 10 * viewIndex;
             const upRotation = new pc.Quat().setFromAxisAngle(pc.Vec3.UP, angle);
             const combinedRot = new pc.Quat().mul2(upRotation, rot);
             viewInvMat.setTRS(pos, combinedRot, pc.Vec3.ONE);
 
-            const viewMat = new pc.Mat4();
-            viewMat.copy(viewInvMat).invert();
+            // supply the view's projection and pose; the renderer derives the rest each frame
+            view.setView(projMat.data, viewInvMat.data);
 
-            view.viewMat3.setFromMat4(viewMat);
-
-            view.projViewOffMat.mul2(view.projMat, viewMat);
-
-            const viewport = view.viewport;
             if (isWebgpu) {
                 // each view writes into its own array layer at full size; the composite pass
                 // arranges the four layers into a 2x2 grid on the canvas
-                viewport.x = 0;
-                viewport.y = 0;
-                viewport.z = width;
-                viewport.w = height;
+                view.setViewport(0, 0, width, height);
             } else {
                 // WebGL: 4 sub-viewports of a single canvas-sized backbuffer (2x2 grid).
                 // WebGL viewport y=0 is the bottom of the canvas, so views 0,1 go in the top
                 // row (y = height/2) to match the WebGPU composite's top-down layout.
-                viewport.x = (view.viewIndex % 2 === 0) ? 0 : width / 2;
-                viewport.y = (view.viewIndex < 2) ? height / 2 : 0;
-                viewport.z = width / 2;
-                viewport.w = height / 2;
+                view.setViewport(
+                    (viewIndex % 2 === 0) ? 0 : width / 2,
+                    (viewIndex < 2) ? height / 2 : 0,
+                    width / 2,
+                    height / 2
+                );
             }
         });
 
