@@ -2,7 +2,6 @@ import { buildSnapshot } from './snapshot.js';
 
 const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
-// eslint-disable-next-line no-unused-vars -- used by follow-up streaming tasks
 const FRAME_MAX_EDGE = 512;
 const RECONNECT_MS = 1000;
 
@@ -21,9 +20,7 @@ const now = () => Date.now();
  */
 const startStream = (app, entry, url, opts = {}) => {
     const WS = opts.WebSocketImpl ?? globalThis.WebSocket;
-    // eslint-disable-next-line no-unused-vars -- used by follow-up streaming tasks
     const summaryMs = opts.summaryMs ?? 1000;
-    // eslint-disable-next-line no-unused-vars -- used by follow-up streaming tasks
     const frameMs = opts.frameMs ?? 500;
 
     let socket = null;
@@ -98,6 +95,36 @@ const startStream = (app, entry, url, opts = {}) => {
     canvas.addEventListener('webglcontextlost', onLost);
     canvas.addEventListener('webglcontextrestored', onRestored);
 
+    let summaryTimer = null;
+    if (summaryMs > 0) {
+        summaryTimer = setInterval(() => {
+            const f = app.stats.frame;
+            send({ t: 'summary', fps: f.fps, frameMs: f.ms, drawCalls: app.stats.drawCalls.total, ts: now() });
+        }, summaryMs);
+        summaryTimer.unref?.();
+    }
+
+    // frame capture: requires the device created with preserveDrawingBuffer (WebGL reads back
+    // blank otherwise). disabled when frameMs<=0 (jsdom unit tests). browser-tested in Part C.
+    let lastFrame = 0;
+    const onFrameCapture = () => {
+        if (frameMs <= 0 || now() - lastFrame < frameMs) {
+            return;
+        }
+        lastFrame = now();
+        const scale = Math.min(1, FRAME_MAX_EDGE / Math.max(canvas.width, canvas.height));
+        const w = Math.max(1, Math.round(canvas.width * scale));
+        const h = Math.max(1, Math.round(canvas.height * scale));
+        const off = document.createElement('canvas');
+        off.width = w;
+        off.height = h;
+        off.getContext('2d').drawImage(canvas, 0, 0, w, h);
+        send({ t: 'frame', dataUrl: off.toDataURL('image/jpeg', 0.6), w, h, ts: now() });
+    };
+    if (frameMs > 0) {
+        app.on('frameend', onFrameCapture);
+    }
+
     const stop = () => {
         stopped = true;
         clearTimeout(reconnectTimer);
@@ -107,6 +134,10 @@ const startStream = (app, entry, url, opts = {}) => {
         app.off('frameend', onFrameEnd);
         canvas.removeEventListener('webglcontextlost', onLost);
         canvas.removeEventListener('webglcontextrestored', onRestored);
+        clearInterval(summaryTimer);
+        if (frameMs > 0) {
+            app.off('frameend', onFrameCapture);
+        }
         socket?.close();
     };
 

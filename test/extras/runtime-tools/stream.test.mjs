@@ -81,4 +81,15 @@ describe('runtime-tools stream', function () {
         app.graphicsDevice.canvas.dispatchEvent(new window.Event('webglcontextlost'));
         expect(ws.sent.some(m => m.t === 'event' && m.kind === 'device-lost')).to.equal(true);
     });
+
+    it('sends a summary on the summary interval', async function () {
+        startStream(app, entry, 'ws://x', { WebSocketImpl: MockWebSocket, frameMs: 0, summaryMs: 10 });
+        const ws = MockWebSocket.instances[0];
+        ws.open();
+        await new Promise((r) => {
+            setTimeout(r, 25);
+        });
+        const summary = ws.sent.find(m => m.t === 'summary');
+        expect(summary).to.have.keys('t', 'fps', 'frameMs', 'drawCalls', 'ts');
+    });
 });
