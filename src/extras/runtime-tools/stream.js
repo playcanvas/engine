@@ -6,7 +6,6 @@ const PROTOCOL_VERSION = 1;
 const FRAME_MAX_EDGE = 512;
 const RECONNECT_MS = 1000;
 
-// eslint-disable-next-line no-unused-vars -- used by follow-up streaming tasks
 const now = () => Date.now();
 
 /**
@@ -61,10 +60,53 @@ const startStream = (app, entry, url, opts = {}) => {
 
     connect();
 
+    const settleFrames = opts.settleFrames ?? 3;
+    const event = (kind, payload) => send({ t: 'event', kind, payload, frame: app.frame, ts: now() });
+
+    const onAssetError = (err, asset) => {
+        const a = asset ?? ((err && typeof err === 'object' && 'id' in err) ? err : null);
+        event('asset-error', {
+            message: a === err ? 'asset load error' : String(err),
+            assetId: a?.id ?? null,
+            name: a?.name ?? null,
+            url: a?.file?.url ?? null
+        });
+    };
+    const onStart = () => event('lifecycle', { phase: 'start' });
+
+    let settledCount = 0;
+    let settledEmitted = false;
+    const onFrameEnd = () => {
+        const loading = app.assets.list().some(a => a.loading);
+        settledCount = (entry.started && !loading) ? settledCount + 1 : 0;
+        if (settledCount >= settleFrames && !settledEmitted) {
+            settledEmitted = true;
+            event('settled', { frame: app.frame });
+        }
+        if (loading) {
+            settledEmitted = false;
+        }
+    };
+
+    const canvas = app.graphicsDevice.canvas;
+    const onLost = () => event('device-lost', { restored: false });
+    const onRestored = () => event('device-lost', { restored: true });
+
+    app.assets.on('error', onAssetError);
+    app.on('start', onStart);
+    app.on('frameend', onFrameEnd);
+    canvas.addEventListener('webglcontextlost', onLost);
+    canvas.addEventListener('webglcontextrestored', onRestored);
+
     const stop = () => {
         stopped = true;
         clearTimeout(reconnectTimer);
         send({ t: 'bye', appId: entry.id });
+        app.assets?.off('error', onAssetError);
+        app.off('start', onStart);
+        app.off('frameend', onFrameEnd);
+        canvas.removeEventListener('webglcontextlost', onLost);
+        canvas.removeEventListener('webglcontextrestored', onRestored);
         socket?.close();
     };
 
