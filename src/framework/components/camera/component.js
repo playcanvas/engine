@@ -1349,12 +1349,13 @@ class CameraComponent extends Component {
      * });
      */
     endXr(callback) {
-        if (!this._camera.xr) {
+        const xr = this.system.app.xr;
+        if (xr?.camera !== this.entity) {
             if (callback) callback(new Error('Camera is not in XR'));
             return;
         }
 
-        this._camera.xr.end(callback);
+        xr.end(callback);
     }
 
     /**

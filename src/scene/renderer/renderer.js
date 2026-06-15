@@ -313,16 +313,11 @@ class Renderer {
         const flipY = target?.flipY;
 
         let viewList = null;
-        if (camera.xr && camera.xr.session) {
-            const transform = camera._node?.parent?.getWorldTransform() || null;
-            const views = camera.xr.views;
-            viewList = views.list;
+        if (camera.xrActive) {
+            viewList = camera.xrViews;
 
-            // update transforms for all views
-            for (let v = 0; v < viewList.length; v++) {
-                const view = viewList[v];
-                view.updateTransforms(transform);
-            }
+            // refresh the derived per-view matrices for all views
+            camera.updateViewTransforms();
         } else {
 
             // Projection Matrix
@@ -419,7 +414,7 @@ class Renderer {
         // viewport size. In stereo XR the XR session reports the per-eye viewport directly,
         // which is correct for both side-by-side single-texture and multi-pass per-eye-view
         // layouts — preferred over inferring from target.width.
-        const xrView = camera.xr?.session ? camera.xr.views.list[0] : null;
+        const xrView = camera.xrActive ? (camera.xrViews[0] ?? null) : null;
         let viewportWidth = xrView ? xrView.viewport.z : (target ? target.width : this.device.width);
         let viewportHeight = xrView ? xrView.viewport.w : (target ? target.height : this.device.height);
         viewportWidth *= camera.rect.z;
