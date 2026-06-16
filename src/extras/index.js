@@ -4,6 +4,11 @@
  * profiling and advanced post-processing effects.
  */
 
+// #if _DEBUG
+// dev-only: self-installs runtime-tools auto-wiring (no-op unless the dev config global is set)
+import './runtime-tools/auto.js';
+// #endif
+
 export { MiniStats } from './mini-stats/mini-stats.js';
 export { attachRuntimeTools } from './runtime-tools/runtime-tools.js';
 
