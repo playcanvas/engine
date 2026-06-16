@@ -7,6 +7,26 @@ const RECONNECT_MS = 1000;
 
 const now = () => Date.now();
 
+// dev-only: synthesize a DOM input event from a server 'input' message so the running app's
+// pc.Keyboard / pc.Mouse (and any canvas/window listeners) react. dispatched on the canvas with
+// bubbles, so it reaches devices attached to the canvas, document, or window.
+const injectInput = (canvas, msg) => {
+    if (msg.kind === 'key') {
+        canvas.dispatchEvent(new KeyboardEvent(msg.action, { code: msg.code, key: msg.key ?? '', bubbles: true, cancelable: true }));
+    } else if (msg.kind === 'mouse') {
+        canvas.dispatchEvent(new MouseEvent(msg.action, {
+            clientX: msg.x ?? 0,
+            clientY: msg.y ?? 0,
+            movementX: msg.dx ?? 0,
+            movementY: msg.dy ?? 0,
+            button: msg.button ?? 0,
+            buttons: msg.buttons ?? 0,
+            bubbles: true,
+            cancelable: true
+        }));
+    }
+};
+
 /**
  * Opens a dev-only WebSocket and pushes live state/events/frames to a runtime-tools server.
  * Opt-in: only called when `attachRuntimeTools(app, { stream })` is used.
@@ -47,6 +67,8 @@ const startStream = (app, entry, url, opts = {}) => {
             const msg = typeof e.data === 'string' ? JSON.parse(e.data) : null;
             if (msg?.t === 'request-snapshot') {
                 send({ t: 'snapshot', snapshot: buildSnapshot(entry) });
+            } else if (msg?.t === 'input') {
+                injectInput(app.graphicsDevice.canvas, msg);
             }
         };
         socket.onclose = () => {
