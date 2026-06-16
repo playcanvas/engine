@@ -1075,12 +1075,14 @@ class RigidBodyComponent extends Component {
                     motionState.setWorldTransform(_ammoTransform);
                 }
             } else if (this._type === BODYTYPE_DYNAMIC && body.setInterpolationWorldTransform) {
-                // Keep the interpolation state in sync so the transform read back by
-                // _updateDynamic is correct on frames that run zero fixed sub-steps (high
-                // refresh rates). Guarded: older ammo builds lack these bindings.
+                // Sync the interpolation state so the transform read back by _updateDynamic is
+                // the teleport target on frames that run zero fixed sub-steps (high refresh
+                // rates); zero the interpolation velocities so it is exact, not extrapolated.
+                // Guarded: older ammo builds lack these bindings.
                 body.setInterpolationWorldTransform(_ammoTransform);
-                body.setInterpolationLinearVelocity(body.getLinearVelocity());
-                body.setInterpolationAngularVelocity(body.getAngularVelocity());
+                _ammoVec1.setValue(0, 0, 0);
+                body.setInterpolationLinearVelocity(_ammoVec1);
+                body.setInterpolationAngularVelocity(_ammoVec1);
             }
             body.activate();
         }
