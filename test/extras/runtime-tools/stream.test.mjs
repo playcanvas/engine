@@ -97,6 +97,30 @@ describe('runtime-tools stream', function () {
         expect(summary).to.have.keys('t', 'fps', 'frameMs', 'drawCalls', 'ts');
     });
 
+    it('injects a synthetic key event from an inbound input message', function () {
+        stops.push(startStream(app, entry, 'ws://x', { WebSocketImpl: MockWebSocket, frameMs: 0, summaryMs: 0 }));
+        const ws = MockWebSocket.instances[0];
+        ws.open();
+        let code = null;
+        app.graphicsDevice.canvas.addEventListener('keydown', (e) => {
+            code = e.code;
+        });
+        ws.onmessage({ data: JSON.stringify({ t: 'input', kind: 'key', action: 'keydown', code: 'KeyW' }) });
+        expect(code).to.equal('KeyW');
+    });
+
+    it('injects a synthetic mouse event from an inbound input message', function () {
+        stops.push(startStream(app, entry, 'ws://x', { WebSocketImpl: MockWebSocket, frameMs: 0, summaryMs: 0 }));
+        const ws = MockWebSocket.instances[0];
+        ws.open();
+        let x = null;
+        app.graphicsDevice.canvas.addEventListener('mousemove', (e) => {
+            x = e.clientX;
+        });
+        ws.onmessage({ data: JSON.stringify({ t: 'input', kind: 'mouse', action: 'mousemove', x: 42 }) });
+        expect(x).to.equal(42);
+    });
+
     it('logs connecting then connected, and reconnecting on a drop (vite-style)', function () {
         const lines = [];
         stops.push(startStream(app, entry, 'ws://x', { WebSocketImpl: MockWebSocket, frameMs: 0, summaryMs: 0, log: m => lines.push(m) }));
