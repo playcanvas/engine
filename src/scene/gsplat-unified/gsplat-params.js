@@ -120,6 +120,7 @@ class GSplatParams {
         }
 
         format.allowStreamRemoval = true;
+        format.dataFormat = dataFormat;
         return format;
     }
 
@@ -378,52 +379,42 @@ class GSplatParams {
         return this._lodBehindPenalty;
     }
 
-    /** @private */
-    _lodRangeMin = 0;
-
     /**
-     * Minimum allowed LOD index (inclusive). Defaults to 0.
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMin} on the gsplat component instead.
+     * @ignore
      */
     set lodRangeMin(value) {
-        if (this._lodRangeMin !== value) {
-            this._lodRangeMin = value;
-            this.dirty = true;
-        }
+        Debug.warnOnce('GSplatParams#lodRangeMin is deprecated. Use lodRangeMin on the GSplatComponent instead.');
     }
 
     /**
-     * Gets minimum allowed LOD index (inclusive).
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMin} on the gsplat component instead.
+     * @ignore
      */
     get lodRangeMin() {
-        return this._lodRangeMin;
+        Debug.warnOnce('GSplatParams#lodRangeMin is deprecated. Use lodRangeMin on the GSplatComponent instead.');
+        return 0;
     }
 
-    /** @private */
-    _lodRangeMax = 10;
-
     /**
-     * Maximum allowed LOD index (inclusive). Defaults to 10.
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMax} on the gsplat component instead.
+     * @ignore
      */
     set lodRangeMax(value) {
-        if (this._lodRangeMax !== value) {
-            this._lodRangeMax = value;
-            this.dirty = true;
-        }
+        Debug.warnOnce('GSplatParams#lodRangeMax is deprecated. Use lodRangeMax on the GSplatComponent instead.');
     }
 
     /**
-     * Gets maximum allowed LOD index (inclusive).
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMax} on the gsplat component instead.
+     * @ignore
      */
     get lodRangeMax() {
-        return this._lodRangeMax;
+        Debug.warnOnce('GSplatParams#lodRangeMax is deprecated. Use lodRangeMax on the GSplatComponent instead.');
+        return 99;
     }
 
     /** @private */
@@ -919,6 +910,38 @@ class GSplatParams {
      */
     get varyings() {
         return this._varyings;
+    }
+
+    /**
+     * Applies serialized scene settings (e.g. from the Editor) to the gsplat parameters. Reads
+     * flat `gsplat`-prefixed keys off the `render` settings object; missing keys leave the current
+     * value unchanged.
+     *
+     * @param {object} render - The render settings object.
+     * @ignore
+     */
+    applySettings(render) {
+        this.radialSorting = render.gsplatRadialSorting ?? this.radialSorting;
+
+        this.lodUpdateDistance = render.gsplatLodUpdateDistance ?? this.lodUpdateDistance;
+        this.lodUpdateAngle = render.gsplatLodUpdateAngle ?? this.lodUpdateAngle;
+        this.lodBehindPenalty = render.gsplatLodBehindPenalty ?? this.lodBehindPenalty;
+        this.lodUnderfillLimit = render.gsplatLodUnderfillLimit ?? this.lodUnderfillLimit;
+        this.splatBudget = render.gsplatSplatBudget ?? this.splatBudget;
+
+        this.alphaClip = render.gsplatAlphaClip ?? this.alphaClip;
+        this.alphaClipForward = render.gsplatAlphaClipForward ?? this.alphaClipForward;
+        this.minPixelSize = render.gsplatMinPixelSize ?? this.minPixelSize;
+        this.minContribution = render.gsplatMinContribution ?? this.minContribution;
+        this.foveationStrength = render.gsplatFoveationStrength ?? this.foveationStrength;
+        this.foveationCenter = render.gsplatFoveationCenter ?? this.foveationCenter;
+
+        this.antiAlias = render.gsplatAntiAlias ?? this.antiAlias;
+        this.useFog = render.gsplatUseFog ?? this.useFog;
+        this.colorUpdateAngle = render.gsplatColorUpdateAngle ?? this.colorUpdateAngle;
+        this.cooldownTicks = render.gsplatCooldownTicks ?? this.cooldownTicks;
+        this.dataFormat = render.gsplatDataFormat ?? this.dataFormat;
+        this.enableIds = render.gsplatEnableIds ?? this.enableIds;
     }
 
     /**

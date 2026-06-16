@@ -425,9 +425,9 @@ assetListLoader.load(async () => {
     const applyPreset = () => {
         const preset = data.get('lodPreset');
         const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
-        app.scene.gsplat.lodRangeMin = presetData.range[0];
-        app.scene.gsplat.lodRangeMax = presetData.range[1];
         if (gsplatGs) {
+            gsplatGs.lodRangeMin = presetData.range[0];
+            gsplatGs.lodRangeMax = presetData.range[1];
             gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
             gsplatGs.lodMultiplier = presetData.lodMultiplier;
         }
@@ -484,8 +484,8 @@ assetListLoader.load(async () => {
         const lodLevels = gsplatGs.resource?.octree?.lodLevels;
         if (lodLevels) {
             const worstLod = lodLevels - 1;
-            app.scene.gsplat.lodRangeMin = worstLod;
-            app.scene.gsplat.lodRangeMax = worstLod;
+            gsplatGs.lodRangeMin = worstLod;
+            gsplatGs.lodRangeMax = worstLod;
         }
 
         const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {

@@ -1,7 +1,5 @@
-import { EventHandler } from '../../core/event-handler.js';
+import { RenderView } from '../../scene/render-view.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { Vec4 } from '../../core/math/vec4.js';
-import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
@@ -16,7 +14,7 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8,
  *
  * @category XR
  */
-class XrView extends EventHandler {
+class XrView extends RenderView {
     /**
      * Fired when the depth sensing texture has been resized. The {@link depthUvMatrix} needs
      * to be updated for relevant shaders. The handler is passed the new width and height of the
@@ -41,36 +39,6 @@ class XrView extends EventHandler {
      * @private
      */
     _xrView;
-
-    /**
-     * @type {Float32Array}
-     * @private
-     */
-    _positionData = new Float32Array(3);
-
-    /** @private */
-    _viewport = new Vec4();
-
-    /** @private */
-    _projMat = new Mat4();
-
-    /** @private */
-    _projViewOffMat = new Mat4();
-
-    /** @private */
-    _viewMat = new Mat4();
-
-    /** @private */
-    _viewOffMat = new Mat4();
-
-    /** @private */
-    _viewMat3 = new Mat3();
-
-    /** @private */
-    _viewInvMat = new Mat4();
-
-    /** @private */
-    _viewInvOffMat = new Mat4();
 
     /**
      * @type {XRCamera}
@@ -261,65 +229,6 @@ class XrView extends EventHandler {
     }
 
     /**
-     * A Vec4 (x, y, width, height) that represents a view's viewport. For a monoscopic screen,
-     * it will define fullscreen view. But for stereoscopic views (left/right eye), it will define
-     * a part of a whole screen that view is occupying.
-     *
-     * @type {Vec4}
-     */
-    get viewport() {
-        return this._viewport;
-    }
-
-    /**
-     * @type {Mat4}
-     * @ignore
-     */
-    get projMat() {
-        return this._projMat;
-    }
-
-    /**
-     * @type {Mat4}
-     * @ignore
-     */
-    get projViewOffMat() {
-        return this._projViewOffMat;
-    }
-
-    /**
-     * @type {Mat4}
-     * @ignore
-     */
-    get viewOffMat() {
-        return this._viewOffMat;
-    }
-
-    /**
-     * @type {Mat4}
-     * @ignore
-     */
-    get viewInvOffMat() {
-        return this._viewInvOffMat;
-    }
-
-    /**
-     * @type {Mat3}
-     * @ignore
-     */
-    get viewMat3() {
-        return this._viewMat3;
-    }
-
-    /**
-     * @type {Float32Array}
-     * @ignore
-     */
-    get positionData() {
-        return this._positionData;
-    }
-
-    /**
      * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @param {XRView} xrView - XRView from WebXR API.
      * @ignore
@@ -332,15 +241,15 @@ class XrView extends EventHandler {
 
         // viewport
         const viewport = this._manager.xrBridge.getViewport(frame, this._xrView);
-        this._viewport.x = viewport.x;
-        this._viewport.y = viewport.y;
-        this._viewport.z = viewport.width;
-        this._viewport.w = viewport.height;
+        this.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
-        // matrices
-        this._projMat.set(this._xrView.projectionMatrix);
-        this._viewMat.set(this._xrView.transform.inverse.matrix);
-        this._viewInvMat.set(this._xrView.transform.matrix);
+        // matrices: WebXR provides both the view-to-world (transform.matrix) and world-to-view
+        // (transform.inverse.matrix) matrices, so both are passed to avoid recomputing the inverse
+        this.setView(
+            this._xrView.projectionMatrix,
+            this._xrView.transform.matrix,
+            this._xrView.transform.inverse.matrix
+        );
 
         this._updateTextureColor();
         this._updateDepth(frame);
@@ -423,27 +332,6 @@ class XrView extends EventHandler {
         }
 
         if (resized) this.fire('depth:resize', width, height);
-    }
-
-    /**
-     * @param {Mat4|null} transform - World Transform of a parents GraphNode.
-     * @ignore
-     */
-    updateTransforms(transform) {
-        if (transform) {
-            this._viewInvOffMat.mul2(transform, this._viewInvMat);
-            this.viewOffMat.copy(this._viewInvOffMat).invert();
-        } else {
-            this._viewInvOffMat.copy(this._viewInvMat);
-            this.viewOffMat.copy(this._viewMat);
-        }
-
-        this._viewMat3.setFromMat4(this._viewOffMat);
-        this._projViewOffMat.mul2(this._projMat, this._viewOffMat);
-
-        this._positionData[0] = this._viewInvOffMat.data[12];
-        this._positionData[1] = this._viewInvOffMat.data[13];
-        this._positionData[2] = this._viewInvOffMat.data[14];
     }
 
     _onDeviceLost() {

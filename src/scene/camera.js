@@ -18,6 +18,7 @@ import { CameraShaderParams } from './camera-shader-params.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { FogParams } from './fog-params.js'
+ * @import { RenderView } from './render-view.js'
  * @import { ShaderPassInfo } from './shader-pass.js'
  */
 
@@ -190,8 +191,12 @@ class Camera {
 
         this.frustum = new Frustum();
 
-        // Set by XrManager
-        this._xr = null;
+        // Set by XrManager when an XR session takes over this camera: a reference to the manager's
+        // live per-view array (matrices, viewports, updated each frame), or null when not in XR.
+        // `xrActive` is derived from it. This replaces the previous back-pointer to the XrManager,
+        // keeping the scene layer decoupled from the framework XR module.
+        /** @type {RenderView[]|null} */
+        this._xrViews = null;
         this._xrProperties = {
             horizontalFov: this._horizontalFov,
             fov: this._fov,
@@ -247,7 +252,7 @@ class Camera {
     }
 
     get aspectRatio() {
-        if (this.xr?.active) return this._xrProperties.aspectRatio;
+        if (this.xrActive) return this._xrProperties.aspectRatio;
 
         // in ASPECT_AUTO mode, always recompute from current inputs (render target / backbuffer
         // size and rect). The computation is trivially cheap, and this avoids a few complexities.
@@ -353,7 +358,7 @@ class Camera {
     }
 
     get farClip() {
-        return (this.xr?.active) ? this._xrProperties.farClip : this._farClip;
+        return (this.xrActive) ? this._xrProperties.farClip : this._farClip;
     }
 
     set flipFaces(newValue) {
@@ -372,7 +377,7 @@ class Camera {
     }
 
     get fov() {
-        return (this.xr?.active) ? this._xrProperties.fov : this._fov;
+        return (this.xrActive) ? this._xrProperties.fov : this._fov;
     }
 
     set frustumCulling(newValue) {
@@ -391,7 +396,7 @@ class Camera {
     }
 
     get horizontalFov() {
-        return (this.xr?.active) ? this._xrProperties.horizontalFov : this._horizontalFov;
+        return (this.xrActive) ? this._xrProperties.horizontalFov : this._horizontalFov;
     }
 
     set layers(newValue) {
@@ -415,7 +420,7 @@ class Camera {
     }
 
     get nearClip() {
-        return (this.xr?.active) ? this._xrProperties.nearClip : this._nearClip;
+        return (this.xrActive) ? this._xrProperties.nearClip : this._nearClip;
     }
 
     set node(newValue) {
@@ -512,15 +517,35 @@ class Camera {
         return this._shutter;
     }
 
-    set xr(newValue) {
-        if (this._xr !== newValue) {
-            this._xr = newValue;
+    /**
+     * Sets the list of {@link RenderView}s this camera renders with (one per XR eye/screen), or
+     * null when not rendering an XR session. Set by the XR manager.
+     *
+     * @param {RenderView[]|null} value - The per-view list, or null when not in XR.
+     */
+    set xrViews(value) {
+        // the projection source switches between XR and non-XR when XR activeness changes, so the
+        // cached projection matrix must be invalidated on that transition
+        if ((value !== null) !== (this._xrViews !== null)) {
             this._projMatDirty = true;
         }
+        this._xrViews = value;
     }
 
-    get xr() {
-        return this._xr;
+    /**
+     * @type {RenderView[]|null}
+     */
+    get xrViews() {
+        return this._xrViews;
+    }
+
+    /**
+     * True while an XR session owns this camera (equivalent to {@link Camera#xrViews} being set).
+     *
+     * @type {boolean}
+     */
+    get xrActive() {
+        return this._xrViews !== null;
     }
 
     /**
@@ -633,6 +658,28 @@ class Camera {
     }
 
     /**
+     * Refreshes the derived per-view matrices of all {@link Camera#xrViews}, using this camera's
+     * parent world transform. The renderer (and the gsplat passes, which run earlier in the frame)
+     * call this before reading the per-view matrices.
+     *
+     * Note: this recomputes on every call. Within a frame the parent transform is stable, so the
+     * 2-3 calls/frame could be collapsed to a single recompute by guarding on
+     * `device.renderVersion` (as {@link Camera#_storeShaderMatrices} does) - left as a future
+     * optimization, as it needs checking against cameras that render multiple times per frame
+     * (e.g. multiple render targets).
+     */
+    updateViewTransforms() {
+        const views = this.xrViews;
+        if (!views) {
+            return;
+        }
+        const parentWorldTransform = this._node?.parent?.getWorldTransform() ?? null;
+        for (let i = 0; i < views.length; i++) {
+            views[i].updateTransforms(parentWorldTransform);
+        }
+    }
+
+    /**
      * Updates {@link Camera#frustum} to the combined volume of all XR views, to avoid culling
      * objects visible in any view (e.g. the right edge of the right eye in stereo rendering).
      * The views are merged conservatively via {@link Frustum#add}, which handles the asymmetric
@@ -644,7 +691,7 @@ class Camera {
      * @ignore
      */
     updateXrFrustum() {
-        const views = this.xr?.views.list;
+        const views = this.xrViews;
         if (!views?.length) {
             return false;
         }

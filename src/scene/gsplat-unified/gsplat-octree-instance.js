@@ -464,7 +464,7 @@ class GSplatOctreeInstance {
         const { lodBaseDistance, lodMultiplier } = this.placement;
 
         // Clamp configured LOD range to valid bounds [0, maxLod] and ensure min <= max
-        const { lodRangeMin, lodRangeMax } = params;
+        const { lodRangeMin, lodRangeMax } = this.placement;
         const rangeMin = Math.max(0, Math.min(lodRangeMin ?? 0, maxLod));
         const rangeMax = Math.max(rangeMin, Math.min(lodRangeMax ?? maxLod, maxLod));
 
@@ -661,7 +661,7 @@ class GSplatOctreeInstance {
     evaluateOptimalLods(cameraNode, params, budgetScale = 1, globalMaxDistanceForBuckets = 0) {
         const maxLod = this.octree.lodLevels - 1;
         const { lodBaseDistance, lodMultiplier } = this.placement;
-        const { lodRangeMin, lodRangeMax } = params;
+        const { lodRangeMin, lodRangeMax } = this.placement;
         const rangeMin = Math.max(0, Math.min(lodRangeMin ?? 0, maxLod));
         const rangeMax = Math.max(rangeMin, Math.min(lodRangeMax ?? maxLod, maxLod));
 

@@ -104,6 +104,15 @@ class WebgpuBuffer {
         return device.readStorageBuffer(this, offset, size, data, immediate);
     }
 
+    /**
+     * @param {WebgpuGraphicsDevice} device - Graphics device.
+     * @param {number} bufferOffset - The offset in bytes to start writing to the storage buffer.
+     * @param {ArrayBufferView|ArrayBuffer} data - The data to write to the storage buffer.
+     * @param {number} dataOffset - Offset in data to begin writing from. Given in elements if data
+     * is a TypedArray and bytes otherwise.
+     * @param {number} size - Size of content to write from data to buffer. Given in elements if
+     * data is a TypedArray and bytes otherwise.
+     */
     write(device, bufferOffset, data, dataOffset, size) {
         device.writeStorageBuffer(this, bufferOffset, data, dataOffset, size);
     }

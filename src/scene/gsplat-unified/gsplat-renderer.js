@@ -84,7 +84,7 @@ class GSplatRenderer {
      * @returns {number} The fisheye strength to use (0 while in XR, otherwise `fisheye`).
      */
     resolveFisheye(fisheye) {
-        const xrActive = !!this.cameraNode.camera?.camera?.xr?.session;
+        const xrActive = !!this.cameraNode.camera?.camera?.xrActive;
         if (xrActive && fisheye > 0) {
             Debug.warnOnce('GSplat: fisheye projection is not supported in XR; disabling it.');
             return 0;

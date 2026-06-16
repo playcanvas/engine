@@ -1,5 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { GSPLATDATA_COMPACT } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
@@ -242,6 +243,19 @@ class GSplatResourceBase {
     }
 
     /**
+     * True when this resource's color-only work buffer updates (spherical harmonics refresh) can
+     * source geometry from the work buffer itself instead of re-reading the source textures. The
+     * resource format's read chunk must compile out getCenter/getRotation/getScale when
+     * GSPLAT_WORKBUFFER_GEOMETRY is defined (see gsplatWorkBufferGeometryPS chunk).
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get supportsWorkBufferGeometry() {
+        return false;
+    }
+
+    /**
      * Get or create a QuadRender for rendering to work buffer.
      *
      * @param {boolean} colorOnly - Whether to render only color (not full MRT).
@@ -257,7 +271,17 @@ class GSplatResourceBase {
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
         tempMap.set('GSPLAT_LOD', '');
-        if (colorOnly) tempMap.set('GSPLAT_COLOR_ONLY', '');
+        if (colorOnly) {
+            tempMap.set('GSPLAT_COLOR_ONLY', '');
+
+            // source geometry from the work buffer instead of source textures
+            if (this.supportsWorkBufferGeometry) {
+                tempMap.set('GSPLAT_WORKBUFFER_GEOMETRY', '');
+                if (workBufferFormat.dataFormat === GSPLATDATA_COMPACT) {
+                    tempMap.set('GSPLAT_WORKBUFFER_COMPACT', '');
+                }
+            }
+        }
 
         let definesKey = '';
         for (const [k, v] of tempMap) {

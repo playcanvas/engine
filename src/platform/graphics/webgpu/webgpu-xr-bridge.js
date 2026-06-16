@@ -115,6 +115,11 @@ class WebgpuXrBridge {
         if (first) {
             device.xrColorTexture = first.colorTexture;
             device.xrColorTextureViewFormat = first.viewFormat;
+            // align the engine-level backbuffer format with the runtime's projection-layer format so
+            // sRGB / gamma decisions (RenderTarget#isColorBufferSrgb) and scene color-grab match what
+            // we actually render into; device._clearXrState reverts it to the canvas format at the
+            // start of the next beginFrame and on session teardown
+            device.setXrBackBufferFormat(first.viewFormat);
             this._cachedFramebufferSize.set(first.colorTexture.width, first.colorTexture.height);
         }
     }

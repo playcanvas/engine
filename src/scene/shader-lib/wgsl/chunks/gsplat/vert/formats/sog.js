@@ -24,6 +24,9 @@ const norm: f32 = sqrt(2.0);
     fn lutShN(b: i32) -> f32    { return textureLoad(sogCodebook, vec2i(b, 0), 0).b; }
 #endif
 
+// geometry getters are provided by gsplatWorkBufferGeometryPS when sourcing from the work buffer
+#ifndef GSPLAT_WORKBUFFER_GEOMETRY
+
 // read the model-space center of the gaussian (16-bit per-axis, low + high byte)
 fn getCenter() -> vec3f {
     let l = textureLoad(means_l, splat.uv, 0).xyz;
@@ -64,6 +67,8 @@ fn getScale() -> vec3f {
     #endif
     return exp(logS);
 }
+
+#endif
 
 fn getColor() -> vec4f {
     let c = textureLoad(sh0, splat.uv, 0);

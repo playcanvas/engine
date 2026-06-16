@@ -226,12 +226,6 @@ class UniformBuffer {
     storageUint32;
 
     /**
-     * A render version used to track the last time the properties requiring bind group to be
-     * updated were changed.
-     */
-    renderVersionDirty = 0;
-
-    /**
      * Create a new UniformBuffer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this uniform
@@ -345,7 +339,6 @@ class UniformBuffer {
 
             // allocate memory from dynamic buffer for this frame
             const allocation = this.allocation;
-            const oldGpuBuffer = allocation.gpuBuffer;
             this.device.dynamicBuffers.alloc(allocation, this.format.byteSize);
             this.assignStorage(allocation.storage);
 
@@ -353,11 +346,6 @@ class UniformBuffer {
             if (dynamicBindGroup) {
                 dynamicBindGroup.bindGroup = allocation.gpuBuffer.getBindGroup(this);
                 dynamicBindGroup.offsets[0] = allocation.offset;
-            }
-
-            // buffer has changed, update the render version to force bind group to be updated
-            if (oldGpuBuffer !== allocation.gpuBuffer) {
-                this.renderVersionDirty = this.device.renderVersion;
             }
         }
     }

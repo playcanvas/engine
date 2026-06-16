@@ -101,68 +101,52 @@ assetListLoader.load(() => {
     // Interpupillary distance (~63mm), half for each eye offset from center
     const halfIPD = 0.032;
 
-    // Set up two XR views for stereo rendering (left eye, right eye)
-    const viewsList = [];
-    for (let i = 0; i < 2; i++) {
-        viewsList.push({
-            updateTransforms(transform) {
-            },
-            viewport: new pc.Vec4(),
-            projMat: new pc.Mat4(),
-            viewOffMat: new pc.Mat4(),
-            viewInvOffMat: new pc.Mat4(),
-            viewMat3: new pc.Mat3(),
-            projViewOffMat: new pc.Mat4(),
-            viewInvMat: new pc.Mat4(),
-            positionData: [0, 0, 0],
-            viewIndex: i
-        });
-    }
-
-    camera.camera.camera.xr = {
-        session: true,
-        views: {
-            list: viewsList
-        }
-    };
+    // Set up two RenderViews for stereo rendering (left eye, right eye)
+    const viewsList = [new pc.RenderView(), new pc.RenderView()];
 
     const cameraComponent = camera.camera;
+
+    // simulate an active XR session by handing the camera the per-view array directly. On a real
+    // headset the XrManager populates xrViews (and the per-eye device projection); here we build
+    // each eye's projection from the camera's settings, captured before the session is activated
+    // (once active, the fov/clip getters report XR-session values instead).
+    const projFov = cameraComponent.fov;
+    const projNearClip = cameraComponent.nearClip;
+    const projFarClip = cameraComponent.farClip;
+    const projHorizontalFov = cameraComponent.horizontalFov;
+    cameraComponent.camera.xrViews = viewsList;
+
+    // reused each frame; setView/setViewport copy the data into each view
+    const projMat = new pc.Mat4();
+    const viewInvMat = new pc.Mat4();
+
     app.on('update', (/** @type {number} */ dt) => {
 
         const width = canvas.width;
         const height = canvas.height;
 
-        viewsList.forEach((/** @type {XrView} */ view) => {
-            view.projMat.copy(cameraComponent.projectionMatrix);
+        // both eyes share the projection; the renderer derives the per-view matrices from setView
+        projMat.setPerspective(projFov, width / height, projNearClip, projFarClip, projHorizontalFov);
 
+        viewsList.forEach((view, viewIndex) => {
             const pos = camera.getPosition();
             const rot = camera.getRotation();
 
             // offset each eye along the camera's right vector, converging on the orbit target
-            const eyeSign = view.viewIndex === 0 ? -1 : 1;
+            const eyeSign = viewIndex === 0 ? -1 : 1;
             const offset = data.get('exaggeratedStereo') ? 0.5 : halfIPD;
             const right = new pc.Vec3();
             rot.transformVector(pc.Vec3.RIGHT, right);
             const eyePos = new pc.Vec3().add2(pos, right.mulScalar(eyeSign * offset));
 
             const focusPoint = hotel.getPosition();
-            const viewInvMat = new pc.Mat4().setLookAt(eyePos, focusPoint, pc.Vec3.UP);
-            const viewMat = new pc.Mat4().copy(viewInvMat).invert();
+            viewInvMat.setLookAt(eyePos, focusPoint, pc.Vec3.UP);
 
-            view.viewOffMat.copy(viewMat);
-            view.viewInvOffMat.copy(viewInvMat);
-            view.viewMat3.setFromMat4(viewMat);
-            view.projViewOffMat.mul2(view.projMat, viewMat);
-            view.positionData[0] = eyePos.x;
-            view.positionData[1] = eyePos.y;
-            view.positionData[2] = eyePos.z;
+            // supply the eye's projection and pose; the view matrix is derived from viewInvMat
+            view.setView(projMat.data, viewInvMat.data);
 
             // side-by-side viewports: left eye on left half, right eye on right half
-            const viewport = view.viewport;
-            viewport.x = view.viewIndex * (width / 2);
-            viewport.y = 0;
-            viewport.z = width / 2;
-            viewport.w = height;
+            view.setViewport(viewIndex * (width / 2), 0, width / 2, height);
         });
     });
 });

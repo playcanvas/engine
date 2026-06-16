@@ -112,6 +112,17 @@ class GSplatFormat {
     allowStreamRemoval = false;
 
     /**
+     * Work buffer data layout identifier (one of GSPLATDATA_*), or null for resource formats.
+     * Set by {@link GSplatParams} when creating a work buffer format. Identifies how transform
+     * data is encoded, so consumers (e.g. the work-buffer-sourced spherical harmonics update)
+     * can select the matching decode without inspecting individual stream pixel formats.
+     *
+     * @type {string|null}
+     * @ignore
+     */
+    dataFormat = null;
+
+    /**
      * Extra streams added via addExtraStreams(). For resource formats, streams can only be
      * added, never removed. For work buffer formats (where {@link allowStreamRemoval} is true),
      * streams can also be removed via {@link removeExtraStreams}.
