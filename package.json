@@ -85,7 +85,8 @@
     "./scripts/*": "./scripts/*"
   },
   "sideEffects": [
-    "./build/playcanvas/src/deprecated/deprecated.js"
+    "./build/playcanvas/src/deprecated/deprecated.js",
+    "**/extras/runtime-tools/auto.js"
   ],
   "type": "module",
   "bugs": {
