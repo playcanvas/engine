@@ -1495,14 +1495,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (color) {
 
             // read from supplied render target, or from the framebuffer
-            /** @type {GPUImageCopyTexture} */
+            /** @type {GPUTexelCopyTextureInfo} */
             const copySrc = {
                 texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: source ? source.mipLevel : 0
             };
 
             // write to supplied render target, or to the framebuffer
-            /** @type {GPUImageCopyTexture} */
+            /** @type {GPUTexelCopyTextureInfo} */
             const copyDst = {
                 texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: dest ? dest.mipLevel : 0
@@ -1541,13 +1541,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
                 const destMipLevel = dest ? dest.mipLevel : this.renderTarget.mipLevel;
 
-                /** @type {GPUImageCopyTexture} */
+                /** @type {GPUTexelCopyTextureInfo} */
                 const copySrc = {
                     texture: sourceTexture,
                     mipLevel: sourceMipLevel
                 };
 
-                /** @type {GPUImageCopyTexture} */
+                /** @type {GPUTexelCopyTextureInfo} */
                 const copyDst = {
                     texture: destTexture,
                     mipLevel: destMipLevel
