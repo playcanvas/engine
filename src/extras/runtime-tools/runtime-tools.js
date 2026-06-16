@@ -1,10 +1,11 @@
 import { RingBuffer } from './ring-buffer.js';
 import { buildSnapshot } from './snapshot.js';
 import { startStream } from './stream.js';
+import { injectInput } from './input.js';
 
 const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
-const CAPABILITIES = ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled'];
+const CAPABILITIES = ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input'];
 const MAX_DIAGNOSTICS = 100;
 const WAIT_FRAME_CANCELLED = 'app detached or destroyed while waiting for frame';
 const WAIT_SETTLED_CANCELLED = 'app detached or destroyed while waiting to settle';
@@ -49,6 +50,11 @@ const createGlobal = () => {
                 failedRequests: [],
                 missingAssets: errors.filter(e => e.kind === 'asset' && e.url).map(e => e.url)
             };
+        },
+        // drive a synthetic input event into the app (key/mouse). callable in-page via an eval
+        // bridge (Playwright/CDP); also the path used by the dev server's file/POST input channels.
+        input(msg, appId) {
+            injectInput(resolve(appId).app.graphicsDevice.canvas, msg);
         },
         waitForFrame(appId) {
             const entry = resolve(appId);

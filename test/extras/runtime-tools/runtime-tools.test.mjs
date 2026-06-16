@@ -30,7 +30,7 @@ describe('attachRuntimeTools', function () {
         expect(tools.protocol).to.equal('playcanvas.runtime-tools');
         expect(tools.version).to.equal(1);
         expect(tools.capabilities).to.deep.equal(
-            ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled']);
+            ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input']);
     });
 
     it('lists attached apps with a generated id when canvas has no id', function () {

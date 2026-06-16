@@ -1,4 +1,5 @@
 import { buildSnapshot } from './snapshot.js';
+import { injectInput } from './input.js';
 
 const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
@@ -6,26 +7,6 @@ const FRAME_MAX_EDGE = 512;
 const RECONNECT_MS = 1000;
 
 const now = () => Date.now();
-
-// dev-only: synthesize a DOM input event from a server 'input' message so the running app's
-// pc.Keyboard / pc.Mouse (and any canvas/window listeners) react. dispatched on the canvas with
-// bubbles, so it reaches devices attached to the canvas, document, or window.
-const injectInput = (canvas, msg) => {
-    if (msg.kind === 'key') {
-        canvas.dispatchEvent(new KeyboardEvent(msg.action, { code: msg.code, key: msg.key ?? '', bubbles: true, cancelable: true }));
-    } else if (msg.kind === 'mouse') {
-        canvas.dispatchEvent(new MouseEvent(msg.action, {
-            clientX: msg.x ?? 0,
-            clientY: msg.y ?? 0,
-            movementX: msg.dx ?? 0,
-            movementY: msg.dy ?? 0,
-            button: msg.button ?? 0,
-            buttons: msg.buttons ?? 0,
-            bubbles: true,
-            cancelable: true
-        }));
-    }
-};
 
 /**
  * Opens a dev-only WebSocket and pushes live state/events/frames to a runtime-tools server.
