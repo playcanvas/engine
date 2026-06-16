@@ -111,7 +111,7 @@ class StorageBuffer {
      * Issues a write operation of the provided data into a storage buffer.
      *
      * @param {number} bufferOffset - The offset in bytes to start writing to the storage buffer.
-     * @param {ArrayBufferView} data - The data to write to the storage buffer.
+     * @param {ArrayBufferView|ArrayBuffer} data - The data to write to the storage buffer.
      * @param {number} dataOffset - Offset in data to begin writing from. Given in elements if data
      * is a TypedArray and bytes otherwise.
      * @param {number} size - Size of content to write from data to buffer. Given in elements if
