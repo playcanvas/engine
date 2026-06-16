@@ -96,4 +96,15 @@ describe('runtime-tools stream', function () {
         const summary = ws.sent.find(m => m.t === 'summary');
         expect(summary).to.have.keys('t', 'fps', 'frameMs', 'drawCalls', 'ts');
     });
+
+    it('logs connecting then connected, and reconnecting on a drop (vite-style)', function () {
+        const lines = [];
+        stops.push(startStream(app, entry, 'ws://x', { WebSocketImpl: MockWebSocket, frameMs: 0, summaryMs: 0, log: m => lines.push(m) }));
+        expect(lines).to.include('connecting...');
+        const ws = MockWebSocket.instances[0];
+        ws.open();
+        expect(lines).to.include('connected.');
+        ws.close();
+        expect(lines).to.include('connection lost, reconnecting...');
+    });
 });
