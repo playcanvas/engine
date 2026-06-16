@@ -14,7 +14,7 @@ const now = () => Date.now();
  * @param {import('../../framework/app-base.js').AppBase} app - The application.
  * @param {object} entry - The registry entry from attachRuntimeTools.
  * @param {string} url - ws:// URL of the local dev server.
- * @param {object} [opts] - { WebSocketImpl, summaryMs, frameMs } (test/tuning hooks).
+ * @param {object} [opts] - { WebSocketImpl, summaryMs, frameMs, log } (test/tuning hooks).
  * @returns {() => void} stop() — closes the socket and removes all listeners/timers.
  * @ignore
  */
@@ -22,10 +22,12 @@ const startStream = (app, entry, url, opts = {}) => {
     const WS = opts.WebSocketImpl ?? globalThis.WebSocket;
     const summaryMs = opts.summaryMs ?? 1000;
     const frameMs = opts.frameMs ?? 500;
+    const log = opts.log ?? (msg => console.log(`[playcanvas-runtime-tools] ${msg}`));
 
     let socket = null;
     let stopped = false;
     let reconnectTimer = null;
+    let opened = false;
 
     const send = (msg) => {
         if (socket && socket.readyState === 1) {
@@ -36,6 +38,8 @@ const startStream = (app, entry, url, opts = {}) => {
     const connect = () => {
         socket = new WS(url);
         socket.onopen = () => {
+            opened = true;
+            log('connected.');
             send({ t: 'hello', appId: entry.id, protocol: PROTOCOL, version: PROTOCOL_VERSION });
             send({ t: 'snapshot', snapshot: buildSnapshot(entry) });
         };
@@ -47,6 +51,10 @@ const startStream = (app, entry, url, opts = {}) => {
         };
         socket.onclose = () => {
             if (!stopped) {
+                if (opened) {
+                    log('connection lost, reconnecting...');
+                }
+                opened = false;
                 reconnectTimer = setTimeout(connect, RECONNECT_MS);
             }
         };
@@ -55,6 +63,7 @@ const startStream = (app, entry, url, opts = {}) => {
         };
     };
 
+    log('connecting...');
     connect();
 
     const settleFrames = opts.settleFrames ?? 3;
