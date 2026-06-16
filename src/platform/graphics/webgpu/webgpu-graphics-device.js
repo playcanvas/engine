@@ -299,7 +299,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * Reset all per-frame WebGPU XR render state to its inactive defaults. Called by the XR bridge
-     * at the end of each XR frame and on session teardown, and by the graphics device on destroy.
+     * at the start of each beginFrame and on session teardown, and by the graphics device on destroy.
      *
      * @ignore
      */
