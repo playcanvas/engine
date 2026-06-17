@@ -208,6 +208,24 @@ class GSplatManager {
     _formatResult = { bufferRecreated: false, sortNeeded: false };
 
     /**
+     * Frame token of the last {@link updateStreaming} run, for once-per-frame dedup between the
+     * component-system streaming tick and the render path.
+     *
+     * @type {number}
+     * @private
+     */
+    _lastStreamToken = -1;
+
+    /**
+     * Whether the most recent streaming pass produced new data a render would show (new world-state
+     * version or work-buffer recreation). Used by the director to decide whether to fire frame:request.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _streamAdvanced = false;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatDirector} director - The director.
      * @param {Layer} layer - The layer.
@@ -340,6 +358,16 @@ class GSplatManager {
      */
     get bufferCopyTotal() {
         return this.world.bufferCopyTotal;
+    }
+
+    /**
+     * True when the CPU sorter has a completed sort result waiting to be applied by a render. Used
+     * by the director to request a render so the pending result is applied.
+     *
+     * @type {boolean}
+     */
+    get hasPendingSort() {
+        return !!this.cpuSorter?.pendingSorted;
     }
 
     /**
@@ -548,25 +576,29 @@ class GSplatManager {
         this.director.eventHandler.fire('frame:ready', this.cameraNode.camera, this.renderer.layer, ready, loadingCount);
     }
 
-    update() {
+    /**
+     * CPU streaming pass: work-buffer format sync, renderer-mode transition, and the world's LOD /
+     * octree streaming / world-state creation. Runs every frame from the component system's
+     * framerender tick (even when rendering is skipped), and once from {@link update} on the render
+     * path. Deduped via `token` so it runs at most once per frame. Performs no render-pass / draw
+     * work — only CPU/IO and GPU resource creation.
+     *
+     * @param {number} token - Per-frame token; a repeated token is a no-op (returns the cached result).
+     * @returns {boolean} True if new data was produced that a render would show (new world-state
+     * version or work-buffer recreation).
+     */
+    updateStreaming(token) {
+        if (token === this._lastStreamToken) return this._streamAdvanced;
+        this._lastStreamToken = token;
 
-        // Reset per-frame buffer-copy stats before any bake. Must precede applyPendingSorted (whose
-        // async onSorted may rebuild and accumulate stats).
-        this.world.resetFrameStats();
-
-        // Detect work-buffer format changes (wholesale swap + extra streams). Must run before
-        // applyPendingSorted so the CPU sorter's onSorted rebuilds into the current buffer.
+        // Detect work-buffer format changes (wholesale swap + extra streams) before world.update,
+        // which reads the work buffer.
         this.world.syncFormat(this._formatResult);
         if (this._formatResult.bufferRecreated) this.renderer.setDataSource(this.world.workBuffer);
         if (this._formatResult.sortNeeded) this.sortNeeded = true;
 
         // Check for runtime renderer mode changes and transition if needed.
         this.prepareRendererMode();
-
-        // apply any pending sorted results (CPU path only)
-        if (this.cpuSorter) {
-            this.cpuSorter.applyPendingSorted();
-        }
 
         // GPU sorting is always ready, CPU sorting is ready if not too many jobs in flight. This is
         // the back-pressure gate the world uses to throttle LOD/world-state production.
@@ -577,6 +609,29 @@ class GSplatManager {
         if (this._updateResult.overdrawDirty) this.renderer.updateOverdrawMode(this.scene.gsplat);
         if (this._updateResult.sortNeeded) this.sortNeeded = true;
         if (this._updateResult.newVersion) this._feedCpuSorterCenters();
+
+        // tick cooldowns once per frame per unique octree
+        this.world.tickCooldowns();
+
+        this._streamAdvanced = this._updateResult.newVersion || this._formatResult.bufferRecreated;
+        return this._streamAdvanced;
+    }
+
+    update() {
+
+        // Reset per-frame buffer-copy stats before any bake. Must precede applyPendingSorted (whose
+        // async onSorted may rebuild and accumulate stats).
+        this.world.resetFrameStats();
+
+        // Run the CPU streaming pass. Normally already done this frame by the component system's
+        // framerender tick (deduped via the director's stream token); runs here for the first frame
+        // and for managers created during this render (bootstrap).
+        this.updateStreaming(this.director._streamToken);
+
+        // apply any pending sorted results (CPU path only)
+        if (this.cpuSorter) {
+            this.cpuSorter.applyPendingSorted();
+        }
 
         // check if camera has moved enough to require re-sorting
         if (this.testCameraMovedForSort()) {
@@ -670,9 +725,6 @@ class GSplatManager {
 
         // keep the shared mesh-instance's AABB in sync with the actual splat placements
         this.renderer?.meshInstance?.setCustomAabb(this.world.computeAggregateAabb());
-
-        // tick cooldowns once per frame per unique octree
-        this.world.tickCooldowns();
 
         // fire frame:ready event
         this.fireFrameReadyEvent();
