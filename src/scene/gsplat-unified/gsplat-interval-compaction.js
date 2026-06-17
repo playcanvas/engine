@@ -358,6 +358,15 @@ class GSplatIntervalCompaction {
     }
 
     /**
+     * Forces the next {@link uploadIntervals} call to re-upload interval metadata, even for the
+     * same world-state version. Used after a work-buffer rebuild, where boundsBaseIndex values may
+     * have shifted and the cached upload is stale.
+     */
+    invalidateUpload() {
+        this._uploadedVersion = -1;
+    }
+
+    /**
      * Builds and uploads interval metadata from the world state. Called once per
      * world state change (not every frame).
      *
