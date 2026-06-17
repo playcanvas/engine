@@ -1,0 +1,213 @@
+// @config
+//
+// Basic example showing a simple Gaussian Splat with orbit camera controls, rendered on demand
+// instead of every frame.
+
+import * as pc from 'playcanvas';
+
+import { data, deviceType } from 'examples/context';
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const gfxOptions = {
+    deviceTypes: [deviceType],
+
+    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    antialias: false
+};
+
+const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const createOptions = new pc.AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new pc.Mouse(document.body);
+createOptions.touch = new pc.TouchDevice(document.body);
+
+createOptions.componentSystems = [
+    pc.RenderComponentSystem,
+    pc.CameraComponentSystem,
+    pc.LightComponentSystem,
+    pc.ScriptComponentSystem,
+    pc.GSplatComponentSystem
+];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+
+const app = new pc.AppBase(canvas);
+app.init(createOptions);
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+// Ensure canvas is resized when window changes size
+const resize = () => {
+    app.resizeCanvas();
+    // On-demand rendering (autoRender is set to false once the splat is ready): a resize is a
+    // viewport change the app makes itself — it does not raise 'frame:request' — so request a
+    // render to redraw the scene at the new canvas size.
+    app.renderNextFrame = true;
+};
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+const assets = {
+    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+};
+
+const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+assetListLoader.load(() => {
+    app.start();
+
+    // Switching renderer recreates the work buffer, which raises 'frame:request' on its own — so it
+    // needs no explicit render. The alphaClip / alphaClipForward controls only change material
+    // parameters; that is a draw-state change that does NOT raise 'frame:request', so each requests
+    // a render explicitly for on-demand rendering.
+    data.on('renderer:set', () => {
+        app.scene.gsplat.renderer = data.get('renderer');
+        const current = app.scene.gsplat.currentRenderer;
+        if (current !== data.get('renderer')) {
+            setTimeout(() => data.set('renderer', current), 0);
+        }
+    });
+    data.on('alphaClip:set', () => {
+        app.scene.gsplat.alphaClip = data.get('alphaClip');
+        app.renderNextFrame = true;
+    });
+    data.on('alphaClipForward:set', () => {
+        app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
+        app.renderNextFrame = true;
+    });
+    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+    data.set('alphaClip', 0.4);
+    data.set('alphaClipForward', 1 / 255);
+    app.scene.gsplat.alphaClip = data.get('alphaClip');
+    app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
+
+    // create a splat entity and place it in the world
+    const biker = new pc.Entity();
+    biker.addComponent('gsplat', {
+        asset: assets.biker,
+        castShadows: true
+    });
+    biker.setLocalPosition(-1.5, 0.05, 0);
+    biker.setLocalEulerAngles(180, 90, 0);
+    biker.setLocalScale(0.7, 0.7, 0.7);
+    app.root.addChild(biker);
+
+    const ORBIT_PIVOT = new pc.Vec3().copy(biker.getPosition());
+    ORBIT_PIVOT.y += 1;
+    const ORBIT_DISTANCE = 4;
+    const ORBIT_INITIAL_YAW = 32;
+    const ORBIT_INITIAL_PITCH = -10;
+
+    // Create an Entity with a camera component
+    const camera = new pc.Entity();
+    camera.addComponent('camera', {
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        toneMapping: pc.TONEMAP_ACES
+    });
+    app.root.addChild(camera);
+
+    camera.addComponent('script');
+    const orbitCam = /** @type {any} */ (camera.script.create('orbitCamera', {
+        attributes: {
+            inertiaFactor: 0.2,
+            distanceMax: 60,
+            frameOnStart: false
+        }
+    }));
+    if (orbitCam) {
+        orbitCam.pivotPoint.copy(ORBIT_PIVOT);
+        orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
+        orbitCam._updatePosition();
+    }
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
+
+    // create ground to receive shadows
+    const material = new pc.StandardMaterial();
+    material.diffuse = new pc.Color(0.5, 0.5, 0.4);
+    material.gloss = 0.2;
+    material.metalness = 0.5;
+    material.useMetalness = true;
+    material.update();
+
+    const ground = new pc.Entity();
+    ground.addComponent('render', {
+        type: 'box',
+        material: material,
+        castShadows: false
+    });
+    ground.setLocalScale(10, 1, 10);
+    ground.setLocalPosition(0, -0.45, 0);
+    app.root.addChild(ground);
+
+    // shadow casting directional light
+    // Note: it does not affect gsplat, as lighting is not supported there currently
+    const directionalLight = new pc.Entity();
+    directionalLight.addComponent('light', {
+        type: 'directional',
+        color: pc.Color.WHITE,
+        castShadows: true,
+        intensity: 1,
+        shadowBias: 0.2,
+        normalOffsetBias: 0.05,
+        shadowDistance: 10,
+        shadowIntensity: 0.5,
+        shadowResolution: 2048,
+        shadowType: pc.SHADOW_PCSS_32F,
+        penumbraSize: 0.05,
+        penumbraFalloff: 4,
+        shadowSamples: 16,
+        shadowBlockerSamples: 16
+    });
+    directionalLight.setEulerAngles(55, 0, 20);
+    app.root.addChild(directionalLight);
+
+    // --- On-demand rendering ----------------------------------------------------------------
+    // This splat is a single fixed asset (no LOD streaming), so once it has loaded, sorted and
+    // drawn there is nothing new to show until the camera moves or a setting changes. We render
+    // every frame until the first complete frame is ready, then render only on demand. Even
+    // without streaming, the gsplat system still ticks every frame (e.g. to apply an async CPU
+    // sort result), so background work keeps progressing while the GPU stays idle.
+
+    let renderOnDemand = false;
+    const lastCamPos = new pc.Vec3();
+    const lastCamRot = new pc.Quat();
+
+    // the gsplat system asks for a render when it has new data to show — here, the initial load
+    // and sort, or an async CPU sort result becoming ready to apply after a camera move
+    app.systems.gsplat.on('frame:request', () => {
+        app.renderNextFrame = true;
+    });
+
+    // once the splat has loaded, sorted and drawn its first complete frame, switch to on-demand.
+    // This also guarantees the one render needed to register the camera before going idle.
+    const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
+        if (ready && loadingCount === 0) {
+            app.systems.gsplat.off('frame:ready', onFrameReady);
+            app.autoRender = false;
+            renderOnDemand = true;
+            lastCamPos.copy(camera.getPosition());
+            lastCamRot.copy(camera.getRotation());
+        }
+    };
+    app.systems.gsplat.on('frame:ready', onFrameReady);
+
+    // keep the orbit camera interactive: render when it has moved or rotated this frame
+    app.on('update', () => {
+        if (!renderOnDemand) return;
+        const pos = camera.getPosition();
+        const rot = camera.getRotation();
+        if (!pos.equals(lastCamPos) || !rot.equals(lastCamRot)) {
+            app.renderNextFrame = true;
+            lastCamPos.copy(pos);
+            lastCamRot.copy(rot);
+        }
+    });
+});
