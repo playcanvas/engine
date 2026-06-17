@@ -275,26 +275,34 @@ class GSplatDirector {
         const token = ++this._streamToken;
 
         let needRender = false;
+        let streamed = false;
         this.camerasMap.forEach((cameraData) => {
             cameraData.layersMap.forEach((layerData) => {
                 const manager = layerData.gsplatManager;
                 if (manager) {
                     needRender = manager.updateStreaming(token) || needRender;
                     needRender = manager.hasPendingSort || needRender;
+                    streamed = true;
                 }
                 const shadowManager = layerData.gsplatManagerShadow;
                 if (shadowManager) {
                     needRender = shadowManager.updateStreaming(token) || needRender;
                     needRender = shadowManager.hasPendingSort || needRender;
+                    streamed = true;
                 }
             });
         });
 
-        // Clear the LOD/params dirty flag consumed by world.update above. The material dirty flag is
-        // cleared separately by frameEnd() in update(), after the renderers re-sync the material —
-        // so we must NOT clear it here. This keeps streaming from re-triggering every tick when a
-        // param changed while not rendering.
-        this.scene.gsplat.dirty = false;
+        // Clear the LOD/params dirty flag now that a manager's world.update has consumed it above.
+        // Only clear it when at least one manager actually ran: before the first render (or before
+        // any gsplat component exists) there are no managers in camerasMap to consume it, so leave
+        // it set — otherwise a param change made before the first frame (e.g. overdraw mode) would
+        // be dropped and the first manager created on the render path would miss the dirty-driven
+        // setup. The material dirty flag is cleared separately by frameEnd() in update(), after the
+        // renderers re-sync the material — so we must NOT clear it here.
+        if (streamed) {
+            this.scene.gsplat.dirty = false;
+        }
 
         // request a render when streaming advanced, or a CPU sort result is waiting to be applied
         if (needRender) {
