@@ -43,23 +43,17 @@ const _lodColors = [
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
- * stored and rendered from.
+ * stored and rendered from. It owns the {@link GSplatWorld} (work buffer, world-state versions,
+ * streaming, bake), the world version lifecycle ({@link GSplatWorld#markSorted}/`onSorted`), and —
+ * for the CPU-sort path ({@link GSplatQuadRenderer}) — a web-worker sorter. Each frame it bakes the
+ * render-ready world state and then delegates per-view work to the active renderer:
  *
- * Shared culling + compaction (raster GPU-sort path, WebGPU only):
- *   Interval compaction operates on contiguous intervals of splats (one per octree node).
- *   1. Cull + count (compute): each interval's bounding sphere is tested against frustum
- *      planes (or a fisheye cone). The pass writes the interval's splat count (or 0 if
- *      culled) into a count buffer.
- *   2. Prefix sum: exclusive prefix sum over the count buffer produces output offsets.
- *      The last element gives visibleCount.
- *   3. Scatter (compute): one workgroup per interval expands visible intervals into
- *      compactedSplatIds (flat list of work-buffer pixel indices).
- *
- * Raster renderer — CPU sorting (WebGPU and WebGL, {@link GSplatQuadRenderer}):
- *   1. Sort on worker: camera position and splat centers are sent to a web worker which
- *      performs a counting sort and returns the sorted order as orderBuffer.
- *   2. Render: the vertex shader reads orderBuffer[vertexId] → splatId.
- *      No culling or compaction is used.
+ * - CPU sort (WebGPU + WebGL): the manager sends camera + centers to the worker, which returns a
+ *   sorted order; the quad renderer's vertex shader reads `orderBuffer[vertexId] → splatId`. No
+ *   GPU culling.
+ * - GPU sort ({@link GSplatHybridRenderer}, WebGPU only): the renderer owns the interval cull +
+ *   compaction, projector, and radix sort; the manager just marks the version sorted and calls
+ *   {@link GSplatRenderer#prepareRenderView}.
  *
  * @ignore
  */
@@ -110,12 +104,6 @@ class GSplatManager {
 
     /** @type {Vec3} */
     lastSortCameraFwd = new Vec3(Infinity, Infinity, Infinity);
-
-    /** @type {Vec3} */
-    lastCullingCameraFwd = new Vec3(Infinity, Infinity, Infinity);
-
-    /** @type {Mat4} */
-    lastCullingProjMat = new Mat4();
 
     /** @type {boolean} */
     sortNeeded = true;
@@ -377,17 +365,6 @@ class GSplatManager {
     }
 
     /**
-     * True when frustum culling can run (bounds data available).
-     *
-     * @type {boolean}
-     * @private
-     */
-    get canCull() {
-        return this.renderer.requiresBounds &&
-            this.world.hasBounds;
-    }
-
-    /**
      * Creates the renderer and sort resources for the given mode. Used at init time.
      *
      * @param {number} mode - The GSPLAT_RENDERER_* constant.
@@ -498,27 +475,6 @@ class GSplatManager {
 
         // first run, force update to initialize last orientation
         return true;
-    }
-
-    /**
-     * Tests if the camera frustum has changed since the last sort or compaction. Checks both
-     * projection matrix and camera rotation. Used to trigger re-culling/compaction independently of
-     * sort-key changes.
-     *
-     * @returns {boolean} True if the frustum changed.
-     */
-    testFrustumChanged() {
-        const epsilon = 0.001;
-
-        // Projection changes (window resize, FOV, near/far, custom projection, etc.)
-        if (!this.lastCullingProjMat.equals(this.cameraNode.camera.projectionMatrix)) {
-            return true;
-        }
-
-        // Rotation changes
-        const currentCameraFwd = this.cameraNode.forward;
-        const dot = Math.min(1, Math.max(-1, this.lastCullingCameraFwd.dot(currentCameraFwd)));
-        return Math.acos(dot) > epsilon;
     }
 
     /**
@@ -651,11 +607,9 @@ class GSplatManager {
             if (this.sortNeeded) {
                 this.sortNeeded = false;
 
-                // Update camera tracking for the next sort/cull check.
+                // Update camera tracking for the next CPU re-sort check.
                 this.lastSortCameraPos.copy(this.cameraNode.getPosition());
                 this.lastSortCameraFwd.copy(this.cameraNode.forward);
-                this.lastCullingCameraFwd.copy(this.cameraNode.forward);
-                this.lastCullingProjMat.copy(this.cameraNode.camera.projectionMatrix);
             }
         }
 
