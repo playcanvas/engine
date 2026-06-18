@@ -1394,6 +1394,11 @@ class TextElement {
 
     _onFontLoad(asset) {
         if (this.font !== asset.resource) {
+            // refresh localized text before applying a swapped-in font so it is not
+            // rendered with the previous locale's string
+            if (this._i18nKey) {
+                this._text = this._system.app.i18n.getText(this._i18nKey);
+            }
             this.font = asset.resource;
         }
     }
