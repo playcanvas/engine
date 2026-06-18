@@ -12,6 +12,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
  * @import { GSplatWorld } from './gsplat-world.js'
  * @import { GSplatWorldState } from './gsplat-world-state.js'
+ * @import { GSplatVaryings } from './gsplat-varyings.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { FogParams } from '../fog-params.js'
  */
@@ -34,7 +35,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @property {boolean} antiAlias - Whether antialiasing is enabled.
  * @property {number} fisheye - Fisheye projection strength.
  * @property {ShaderMaterial} material - The scene gsplat template material.
- * @property {import('./gsplat-varyings.js').GSplatVaryings} varyings - User varying streams (provides the cache `words` count).
+ * @property {GSplatVaryings} varyings - User varying streams (provides the cache `words` count).
  * @property {number} [width] - Pick viewport width in pixels (picking only).
  * @property {number} [height] - Pick viewport height in pixels (picking only).
  */
