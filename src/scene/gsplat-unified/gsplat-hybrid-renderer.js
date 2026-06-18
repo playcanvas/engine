@@ -161,6 +161,14 @@ class GSplatHybridRenderer extends GSplatRenderer {
         return this._material;
     }
 
+    get usesGpuSort() {
+        return true;
+    }
+
+    get requiresBounds() {
+        return true;
+    }
+
     onWorkBufferFormatChanged() {
         this.configureMaterial();
     }

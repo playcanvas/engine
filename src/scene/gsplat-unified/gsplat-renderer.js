@@ -102,6 +102,35 @@ class GSplatRenderer {
     }
 
     /**
+     * Whether this renderer runs the GPU sort/projection/cull pipeline itself (true) rather than
+     * relying on the manager's CPU worker sorter (false). Drives the manager's per-frame branching.
+     *
+     * @type {boolean}
+     */
+    get usesGpuSort() {
+        return false;
+    }
+
+    /**
+     * Whether this renderer needs frustum-culling bounds uploaded to the work buffer (the GPU cull
+     * path allocates them; the CPU path does not).
+     *
+     * @type {boolean}
+     */
+    get requiresBounds() {
+        return false;
+    }
+
+    /**
+     * Whether this renderer relies on the manager-owned CPU worker sorter.
+     *
+     * @type {boolean}
+     */
+    get requiresCpuSort() {
+        return !this.usesGpuSort;
+    }
+
+    /**
      * Returns the material used by this renderer, or null if not applicable.
      *
      * @type {ShaderMaterial|null}

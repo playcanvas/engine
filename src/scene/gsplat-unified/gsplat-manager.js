@@ -11,7 +11,7 @@ import { ComputeRadixSort } from '../graphics/radix-sort/compute-radix-sort.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
-    GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSPLAT_DEBUG_AABBS
 } from '../constants.js';
 import { Color } from '../../core/math/color.js';
@@ -368,7 +368,7 @@ class GSplatManager {
      * @returns {import('../mesh-instance.js').MeshInstance|null} The pick mesh instance, or null.
      */
     prepareForPicking(camera, width, height) {
-        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT) {
+        if (this.renderer.usesGpuSort) {
             const sortedState = this.world.getState(this.world.currentVersion);
             if (!sortedState?.sortedBefore || !camera.node) return null;
 
@@ -430,7 +430,7 @@ class GSplatManager {
      * @private
      */
     get canCull() {
-        return this.activeRenderer !== GSPLAT_RENDERER_RASTER_CPU_SORT &&
+        return this.renderer.requiresBounds &&
             this.world.hasBounds;
     }
 
@@ -489,7 +489,7 @@ class GSplatManager {
         // World advances the render-ready version (cleanup + first-sort rebuild) and uploads the
         // sorted order texture; the manager applies the renderer-side reactions. Frustum-culling
         // bounds are only uploaded for non-CPU renderers (the CPU path doesn't allocate them).
-        const updateBounds = this.activeRenderer !== GSPLAT_RENDERER_RASTER_CPU_SORT;
+        const updateBounds = this.renderer.requiresBounds;
         const result = this.world.onSorted(version, count, orderData, this.cameraNode, updateBounds, this._markResult);
         if (result.rebuilt) {
             this.renderer.update(result.count, result.textureSize);
@@ -582,7 +582,7 @@ class GSplatManager {
 
         // GPU sorting is always ready, CPU sorting is ready if not too many jobs in flight. This is
         // the back-pressure gate the world uses to throttle LOD/world-state production.
-        const allowLodUpdate = this.activeRenderer !== GSPLAT_RENDERER_RASTER_CPU_SORT || (this.cpuSorter && this.cpuSorter.jobsInFlight < 3);
+        const allowLodUpdate = !this.renderer.requiresCpuSort || (this.cpuSorter && this.cpuSorter.jobsInFlight < 3);
 
         // World LOD / streaming / world-state creation.
         this.world.update(this.cameraNode, allowLodUpdate, !!this.cpuSorter, this._updateResult);
@@ -657,7 +657,7 @@ class GSplatManager {
         // Materialize the work buffer for the render-ready version (full rebuild or incremental).
         // Skipped internally until the state has been sorted at least once. Frustum-culling bounds
         // are only uploaded for non-CPU renderers (the CPU path doesn't allocate them).
-        const updateBounds = this.activeRenderer !== GSPLAT_RENDERER_RASTER_CPU_SORT;
+        const updateBounds = this.renderer.requiresBounds;
         this.world.bake(this.world.currentVersion, this.cameraNode, updateBounds, this._bakeResult);
         if (this._bakeResult.rebuilt) {
             this.renderer.update(this._bakeResult.count, this._bakeResult.textureSize);
@@ -674,7 +674,7 @@ class GSplatManager {
         // kick off sorting / compaction only if needed
         let gpuSortedThisFrame = false;
         if (this.sortNeeded && lastState) {
-            if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT) {
+            if (this.renderer.usesGpuSort) {
                 this.sortGpuHybrid(lastState);
                 gpuSortedThisFrame = true;
             } else {
@@ -694,7 +694,7 @@ class GSplatManager {
 
         // Raster GPU sort needs projector + radix + fresh indirect args every frame (indirect
         // slots are per-frame; post-projector visible count differs from interval prefix sum).
-        if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT && lastState && !gpuSortedThisFrame) {
+        if (this.renderer.usesGpuSort && lastState && !gpuSortedThisFrame) {
             this.sortGpuHybrid(lastState);
             gpuSortedThisFrame = true;
         }
