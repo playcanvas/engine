@@ -4,9 +4,7 @@ import particleAnimFrameClampVS from '../chunks/particle/vert/particleAnimFrameC
 import particleAnimFrameLoopVS from '../chunks/particle/vert/particleAnimFrameLoop.js';
 import particleAnimTexVS from '../chunks/particle/vert/particleAnimTex.js';
 import particleInputFloatPS from '../chunks/particle/frag/particleInputFloat.js';
-import particleInputRgba8PS from '../chunks/particle/frag/particleInputRgba8.js';
 import particleOutputFloatPS from '../chunks/particle/frag/particleOutputFloat.js';
-import particleOutputRgba8PS from '../chunks/particle/frag/particleOutputRgba8.js';
 import particleUpdaterAABBPS from '../chunks/particle/frag/particleUpdaterAABB.js';
 import particleUpdaterEndPS from '../chunks/particle/frag/particleUpdaterEnd.js';
 import particleUpdaterInitPS from '../chunks/particle/frag/particleUpdaterInit.js';
@@ -49,9 +47,7 @@ export const particleChunksWGSL = {
     particleAnimFrameLoopVS,
     particleAnimTexVS,
     particleInputFloatPS,
-    particleInputRgba8PS,
     particleOutputFloatPS,
-    particleOutputRgba8PS,
     particleUpdaterAABBPS,
     particleUpdaterEndPS,
     particleUpdaterInitPS,

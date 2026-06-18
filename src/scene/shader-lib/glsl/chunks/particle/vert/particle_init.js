@@ -35,8 +35,13 @@ uniform float scaleDivMult;
 uniform float alphaDivMult;
 uniform float seed;
 uniform float delta;
-uniform sampler2D particleTexOUT;
-uniform sampler2D particleTexIN;
+#ifdef CAPS_TEXTURE_FLOAT_RENDERABLE
+    uniform sampler2D particleTexOUT;
+    uniform sampler2D particleTexIN;
+#else
+    uniform highp usampler2D particleTexOUT;
+    uniform highp usampler2D particleTexIN;
+#endif
 
 #ifdef PARTICLE_GPU
     #ifdef WRAP

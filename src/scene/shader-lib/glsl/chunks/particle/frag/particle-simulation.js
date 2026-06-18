@@ -2,12 +2,12 @@
 export default /* glsl */`
     #include "particleUpdaterInitPS"
 
-    #ifdef PACK8
-        #include "particleInputRgba8PS"
-        #include "particleOutputRgba8PS"
-    #else
+    #ifdef CAPS_TEXTURE_FLOAT_RENDERABLE
         #include "particleInputFloatPS"
         #include "particleOutputFloatPS"
+    #else
+        #include "particleInputU32PS"
+        #include "particleOutputU32PS"
     #endif
 
     #ifdef EMITTERSHAPE_BOX
