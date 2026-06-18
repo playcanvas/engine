@@ -1530,6 +1530,50 @@ describe('TextElement', function () {
         app.i18n.locale = 'fr';
     });
 
+    it('does not render the previous locale text when a cached localized font is swapped in on locale change', function (done) {
+        assets.font2 = new Asset('courier.json', 'font', {
+            url: '/test/assets/fonts/courier.json'
+        });
+
+        app.assets.add(assets.font2);
+        app.assets.load(assets.font2);
+
+        assets.font2.on('load', function () {
+            setTimeout(function () {
+                // both the default and localized fonts are now loaded (cached)
+                fontAsset.addLocalizedAssetId('fr', assets.font2.id);
+                addText('en-US', 'key', 'english');
+                addText('fr', 'key', 'french');
+                element.fontAsset = fontAsset;
+                element.key = 'key';
+
+                // switch to the localized font; cached so it is applied synchronously
+                app.i18n.locale = 'fr';
+                expect(element.text).to.equal('french');
+                expect(element.font).to.equal(assets.font2.resource);
+
+                // record the text rendered on every update during the next locale change
+                const textElement = element._text;
+                const updateText = textElement._updateText;
+                const renderedTexts = [];
+                textElement._updateText = function (text) {
+                    renderedTexts.push(text === undefined ? this._text : text);
+                    return updateText.call(this, text);
+                };
+
+                // switching back swaps in the cached default font; it must never be
+                // rendered with the previous (french) string
+                app.i18n.locale = 'en-US';
+                textElement._updateText = updateText;
+
+                expect(renderedTexts).to.not.include('french');
+                expect(element.text).to.equal('english');
+                expect(element.font).to.equal(assets.font.resource);
+                done();
+            });
+        });
+    });
+
     it('text element that does not use localization uses the default font asset not its localized variant', function (done) {
         assets.font2 = new Asset('courier.json', 'font', {
             url: '/test/assets/fonts/courier.json'
