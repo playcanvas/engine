@@ -332,7 +332,16 @@ class WebgpuRenderTarget {
                 const transientDepth = renderTarget.transientDepth;
 
                 if (transientDepth) {
-                    // memoryless attachment: RENDER_ATTACHMENT only, never sampled or copied
+                    // memoryless attachment: RENDER_ATTACHMENT only, never sampled or copied.
+                    //
+                    // Transient-attachment validation invariants, all satisfied here and which must
+                    // be preserved by any future edit:
+                    // - no `viewFormats` on this descriptor (must be an empty array for transient textures);
+                    // - the view below is created with no `usage` override (a view cannot change a
+                    //   transient texture's usage);
+                    // - this texture is only ever a depth render `view`, never a `resolveTarget`
+                    //   (depth resolve/grab is additionally blocked while transient - see
+                    //   WebgpuGraphicsDevice).
                     depthTextureDesc.usage |= GPUTextureUsage.TRANSIENT_ATTACHMENT;
                     this.depthAttachment.transient = true;
                 } else if (samples > 1) {
@@ -473,6 +482,14 @@ class WebgpuRenderTarget {
             // transient (memoryless) color - the multi-sampled buffer is only ever rendered to and
             // resolved into the single-sampled target, never stored, sampled or copied, so it can be
             // kept on-chip. The RT flag is already gated on device support and MSAA.
+            //
+            // Transient-attachment validation invariants, all satisfied here and which must be
+            // preserved by any future edit:
+            // - no `viewFormats` on the descriptor below (must be an empty array for transient textures);
+            // - the multi-sampled view is created with no `usage` override (a view cannot change a
+            //   transient texture's usage);
+            // - this multi-sampled buffer is the render `view`; the single-sampled, non-transient
+            //   buffer is the `resolveTarget` - a transient texture must never be the `resolveTarget`.
             const transientColor = renderTarget.transientColor;
 
             /** @type {GPUTextureDescriptor} */

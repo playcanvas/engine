@@ -68,6 +68,10 @@ applyResolution();
 const resize = () => {
     applyResolution();
     app.resizeCanvas();
+    // With on-demand rendering (autoRender is set to false once the reveal completes), a resize is
+    // a viewport change the app makes itself — it does not raise 'frame:request' — so request a
+    // render to draw the scene at the new canvas size.
+    app.renderNextFrame = true;
 };
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -207,14 +211,18 @@ assetListLoader.load(() => {
     // Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some
     // nearby detail, then open up to the full range once the first frame's data is ready.
     const worstLod = lodLevels - 1;
-    app.scene.gsplat.lodRangeMin = Math.max(0, worstLod - 3);
-    app.scene.gsplat.lodRangeMax = worstLod;
+    gsInstances.forEach((gs) => {
+        gs.lodRangeMin = Math.max(0, worstLod - 3);
+        gs.lodRangeMax = worstLod;
+    });
     const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
     const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
         if (ready && loadingCount === 0) {
             gsplatSystem.off('frame:ready', onFrameReady);
-            app.scene.gsplat.lodRangeMin = 0;
-            app.scene.gsplat.lodRangeMax = worstLod;
+            gsInstances.forEach((gs) => {
+                gs.lodRangeMin = 0;
+                gs.lodRangeMax = worstLod;
+            });
             // reveal the backdrop and sweep the splats in, together, now that the scene is ready
             app.scene.skybox = skyboxCubemap;
             revealStarted = true;
@@ -317,12 +325,57 @@ assetListLoader.load(() => {
     updateQualityButtons();
     data.on('splatBudget:set', updateQualityButtons);
 
-    // --- Stats ---
+    // --- On-demand rendering ----------------------------------------------------------------
+    // Gaussian-splat streaming (LOD evaluation + file loading) runs every frame regardless of
+    // rendering. We render continuously while the scene loads and the reveal animation plays, then
+    // switch to rendering only on demand: when streaming has new data to show (the 'frame:request'
+    // event), when the camera moves, or on a resize / UI change (handled where those occur). This
+    // keeps the GPU idle while the huge city sits still, yet still streams in the background.
+
+    // render whenever streaming produced new data (or a CPU sort result became ready to apply)
+    app.systems.gsplat.on('frame:request', () => {
+        app.renderNextFrame = true;
+    });
+
+    let onDemand = false;
+    const lastCamPos = new pc.Vec3();
+    const lastCamRot = new pc.Quat();
+
+    // --- Stats + on-demand driver ---
     app.on('update', () => {
         // keep the reveal frozen (all splats hidden) until it is released on frame:ready
         if (!revealStarted) reveal.effectTime = -1e6;
+
+        // update HUD stats
         data.set('data.stats.gsplats', toM(app.stats.frame.gsplats));
         const bb = app.graphicsDevice.backBufferSize;
         data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
+
+        if (!onDemand) {
+            // The reveal starts once the first frame is ready and disables itself when its animation
+            // completes. Until then autoRender stays true so the scene streams in and the reveal
+            // animates every frame; once it finishes, switch to on-demand rendering.
+            if (revealStarted && reveal && !reveal.enabled) {
+                onDemand = true;
+                app.autoRender = false;
+
+                // The reveal finishing is a draw-state change (it stops masking the splats), not a
+                // streaming change, so it does not raise 'frame:request'. Render one final frame so
+                // the fully-revealed scene is shown before we go idle.
+                app.renderNextFrame = true;
+
+                lastCamPos.copy(camera.getPosition());
+                lastCamRot.copy(camera.getRotation());
+            }
+        } else {
+            // keep the fly camera interactive: render when it has moved or rotated this frame
+            const pos = camera.getPosition();
+            const rot = camera.getRotation();
+            if (!pos.equals(lastCamPos) || !rot.equals(lastCamRot)) {
+                app.renderNextFrame = true;
+                lastCamPos.copy(pos);
+                lastCamRot.copy(rot);
+            }
+        }
     });
 });

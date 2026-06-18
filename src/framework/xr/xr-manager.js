@@ -430,7 +430,6 @@ class XrManager extends EventHandler {
         }
 
         this._camera = camera;
-        this._camera.camera.xr = this;
         this._type = type;
         this._spaceType = spaceType;
 
@@ -551,7 +550,6 @@ class XrManager extends EventHandler {
         navigator.xr.requestSession(type, options).then((session) => {
             this._onSessionStart(session, spaceType, callback);
         }).catch((ex) => {
-            this._camera.camera.xr = null;
             this._camera = null;
             this._type = null;
             this._spaceType = null;
@@ -703,6 +701,13 @@ class XrManager extends EventHandler {
 
         this._session = session;
 
+        // hand the scene camera the per-view data it needs for rendering, now that the session is
+        // established. `views.list` is a stable array the manager mutates in place each frame, so
+        // the camera tracks it by reference; assigning it marks the camera XR-active (cleared on
+        // session end). Deferred to here rather than start() so the camera stays on the mono path
+        // during the asynchronous session request.
+        this._camera.camera.xrViews = this.views.list;
+
         this.xrBridge = new XrBridge(this.app.graphicsDevice, this);
 
         const onVisibilityChange = () => {
@@ -722,7 +727,7 @@ class XrManager extends EventHandler {
             if (this._camera) {
                 this._camera.off('set_nearClip', onClipPlanesChange);
                 this._camera.off('set_farClip', onClipPlanesChange);
-                this._camera.camera.xr = null;
+                this._camera.camera.xrViews = null;
                 this._camera = null;
             }
 

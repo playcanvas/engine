@@ -555,7 +555,7 @@ class WebgpuTexture {
         const texture = this.texture;
         const wgpu = device.wgpu;
 
-        /** @type {GPUImageCopyTexture} */
+        /** @type {GPUTexelCopyTextureInfo} */
         const dest = {
             texture: this.gpuTexture,
             origin: [0, 0, index],
@@ -574,7 +574,7 @@ class WebgpuTexture {
         const formatInfo = pixelFormatInfo.get(texture.format);
         Debug.assert(formatInfo);
 
-        /** @type {GPUImageDataLayout} */
+        /** @type {GPUTexelCopyBufferLayout} */
         let dataLayout;
         let size;
 

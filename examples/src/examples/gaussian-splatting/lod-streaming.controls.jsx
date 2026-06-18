@@ -156,8 +156,7 @@ export function Controls({ observer }) {
                         options={[
                             { v: 0, t: 'Auto' },
                             { v: 1, t: 'Raster (CPU Sort)' },
-                            { v: 2, t: 'Raster (GPU Sort)' },
-                            { v: 3, t: 'Compute' }
+                            { v: 2, t: 'Raster (GPU Sort)' }
                         ]}
                     />
                 </LabelGroup>
@@ -258,7 +257,6 @@ export function Controls({ observer }) {
                             { v: 0, t: 'None' },
                             { v: 1, t: 'LOD' },
                             { v: 2, t: 'SH Update' },
-                            { v: 3, t: 'Heatmap' },
                             { v: 4, t: 'AABBs' },
                             { v: 5, t: 'Node AABBs' }
                         ]}

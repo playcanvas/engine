@@ -1,0 +1,120 @@
+name: Build Size
+
+# Builds only the minified engine bundles (UMD + ESM) for the PR head and its base, measures their
+# raw / gzip / brotli sizes, diffs the two and posts/updates a sticky PR comment. There is no stored
+# baseline — the base commit is rebuilt fresh in the same run, so the comparison is always "this PR
+# vs the main it targets". Informative only; never fails the build.
+#
+# Only the min bundles are built (not rel/dbg/prf/types) to keep the run fast.
+#
+# Note: comments directly, so on fork PRs (read-only token) the comment step can't post; it is
+# marked continue-on-error so those runs stay green (just without a comment).
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: build-size-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-size:
+    name: Build Size
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Pin the embedded git revision to a constant for both builds; otherwise the differing commit
+    # hashes baked into each bundle show up as a phantom (compressed-)size diff even when no code
+    # changed. Honoured by utils/rollup-version-revision.mjs.
+    env:
+      ENGINE_BUILD_REVISION: ci-build-size
+    steps:
+      - name: Check out base
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Check out PR
+        uses: actions/checkout@v7.0.0
+        with:
+          path: pr
+
+      - name: Setup Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+
+      - name: Build base bundles
+        run: |
+          cp pr/utils/build-size.mjs base/utils/build-size.mjs
+          cp pr/utils/rollup-version-revision.mjs base/utils/rollup-version-revision.mjs
+          cd base
+          npm clean-install --progress=false --no-fund
+          npm run build:min:umd
+          npm run build:min:esm
+          node utils/build-size.mjs > sizes.json
+
+      - name: Build PR bundles
+        run: |
+          cd pr
+          npm clean-install --progress=false --no-fund
+          npm run build:min:umd
+          npm run build:min:esm
+          node utils/build-size.mjs > sizes.json
+
+      - name: Comment on PR
+        continue-on-error: true # fork PRs get a read-only token; don't fail the run if commenting is denied
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const MARKER = '<!-- build-size-bot -->';
+            const prNumber = context.payload.pull_request.number;
+
+            const read = p => fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
+            const base = read('base/sizes.json');
+            const pr = read('pr/sizes.json');
+
+            const kb = n => `${(n / 1024).toFixed(1)} KB`;
+            const cell = (b, p) => {
+              const d = p - b;
+              if (!b) return `${kb(p)} (new)`;
+              if (!d) return `${kb(p)} —`;
+              const sign = d > 0 ? '+' : '−';
+              const pct = (Math.abs(d) / b * 100).toFixed(2);
+              return `${kb(p)} (${sign}${kb(Math.abs(d))}, ${sign}${pct}%)`;
+            };
+
+            const bundles = [...new Set([...Object.keys(base), ...Object.keys(pr)])].sort();
+            const changed = bundles.some(name =>
+              ['raw', 'gzip', 'brotli'].some(m => (base[name]?.[m] ?? 0) !== (pr[name]?.[m] ?? 0)));
+
+            const rows = bundles.map((name) => {
+              const b = base[name] || {}, p = pr[name] || {};
+              return `| \`${name}\` | ${cell(b.raw, p.raw)} | ${cell(b.gzip, p.gzip)} | ${cell(b.brotli, p.brotli)} |`;
+            });
+
+            const headline = changed
+              ? 'This PR changes the size of the minified bundles.'
+              : 'This PR does not change the size of the minified bundles.';
+            const body = `${MARKER}\n### Build size report\n\n`
+              + `${headline}\n\n`
+              + `| Bundle | Minified | Gzip | Brotli |\n`
+              + `| --- | --- | --- | --- |\n`
+              + `${rows.join('\n')}\n`;
+
+            const { owner, repo } = context.repo;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: prNumber });
+            const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
+            }

@@ -2,13 +2,8 @@
 export default /* wgsl */`
     #include "particleUpdaterInitPS"
 
-    #ifdef PACK8
-        #include "particleInputRgba8PS"
-        #include "particleOutputRgba8PS"
-    #else
-        #include "particleInputFloatPS"
-        #include "particleOutputFloatPS"
-    #endif
+    #include "particleInputPS"
+    #include "particleOutputPS"
 
     #ifdef EMITTERSHAPE_BOX
         #include "particleUpdaterAABBPS"

@@ -36,7 +36,6 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         if (options.soft > 0) vDefines.set('SOFT', '');
         if (options.stretch > 0.0) vDefines.set('STRETCH', '');
         if (options.customFace) vDefines.set('CUSTOM_FACE', '');
-        if (options.pack8) vDefines.set('PACK8', '');
         if (options.localSpace) vDefines.set('LOCAL_SPACE', '');
         if (options.animTexLoop) vDefines.set('ANIMTEX_LOOP', '');
         if (options.wrap) vDefines.set('WRAP', '');

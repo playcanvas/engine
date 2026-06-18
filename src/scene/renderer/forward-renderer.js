@@ -614,7 +614,7 @@ class ForwardRenderer extends Renderer {
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
         // multiview xr rendering
-        const viewList = camera.xr?.session && camera.xr.views.list.length ? camera.xr.views.list : null;
+        const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
 
         // when the FramePassMultiView wrapper is iterating XR views, render only the active one
         // (xrCurrentViewIndex === -1 means "no wrapper active": fall back to the default behaviour
@@ -1034,17 +1034,17 @@ class ForwardRenderer extends Renderer {
 
     /**
      * @param {any} camera - The camera component for the current render action. The XR data lives on
-     * the underlying `Camera` (`CameraComponent.camera.xr`), not on the component itself, so we
-     * dereference it before checking.
+     * the underlying `Camera` (`CameraComponent.camera`), as `xrActive` / `xrViews`, not on the
+     * component itself, so we dereference it before checking.
      * @returns {boolean} True if the camera should have its passes replicated per XR view (currently
      * gated to the WebGPU backend; other backends keep the existing single-pass multi-viewport flow).
      * @private
      */
     _isMultiview(camera) {
-        const xr = camera.camera?.xr;
+        const sceneCamera = camera.camera;
         return this.device.isWebGPU &&
-            !!xr?.session &&
-            xr.views.list.length >= 2;
+            !!sceneCamera?.xrActive &&
+            sceneCamera.xrViews.length >= 2;
     }
 
     /**

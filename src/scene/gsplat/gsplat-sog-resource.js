@@ -147,6 +147,12 @@ class GSplatSogResource extends GSplatResourceBase {
             defines.set('SOG_V2', '');
         }
     }
+
+    // SOG geometry getters compile out under GSPLAT_WORKBUFFER_GEOMETRY (see sog.js chunk),
+    // letting color-only (SH) updates skip the means/quats/scales source reads
+    get supportsWorkBufferGeometry() {
+        return true;
+    }
 }
 
 export { GSplatSogResource };

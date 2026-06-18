@@ -809,6 +809,8 @@ class Scene extends EventHandler {
         this.clusteredLightingEnabled = render.clusteredLightingEnabled ?? false;
         this.lighting.applySettings(render);
 
+        this.gsplat.applySettings(render);
+
         // bake settings
         [
             'lightmapFilterEnabled',

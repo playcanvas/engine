@@ -120,6 +120,7 @@ class GSplatParams {
         }
 
         format.allowStreamRemoval = true;
+        format.dataFormat = dataFormat;
         return format;
     }
 
@@ -149,7 +150,6 @@ class GSplatParams {
      *
      * - {@link GSPLAT_RENDERER_AUTO}: Automatically selects the best pipeline for the platform.
      * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
-     * - {@link GSPLAT_RENDERER_COMPUTE}: Full compute pipeline (WebGPU only, experimental).
      * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with GPU-side sorting (WebGPU only,
      * experimental).
      *
@@ -160,14 +160,17 @@ class GSplatParams {
      * @type {number}
      */
     set renderer(value) {
+        if (value === GSPLAT_RENDERER_COMPUTE) {
+            Debug.removed('GSplatParams#renderer: GSPLAT_RENDERER_COMPUTE has been removed. Falling back to GSPLAT_RENDERER_AUTO.');
+            value = GSPLAT_RENDERER_AUTO;
+        }
+
         if (this._renderer !== value) {
             this._renderer = value;
 
             if (value === GSPLAT_RENDERER_AUTO) {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
-            } else if ((value === GSPLAT_RENDERER_COMPUTE ||
-                        value === GSPLAT_RENDERER_RASTER_GPU_SORT) &&
-                !this._device.isWebGPU) {
+            } else if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !this._device.isWebGPU) {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else {
                 this._currentRenderer = value;
@@ -216,8 +219,6 @@ class GSplatParams {
      * - {@link GSPLAT_DEBUG_LOD}: Colorize splats by their selected LOD level.
      * - {@link GSPLAT_DEBUG_SH_UPDATE}: Random color per SH update pass to visualize update
      * frequency.
-     * - {@link GSPLAT_DEBUG_HEATMAP}: Heatmap visualization of average splats processed per
-     * pixel in each tile. Only supported with {@link GSPLAT_RENDERER_COMPUTE}.
      * - {@link GSPLAT_DEBUG_AABBS}: Draw world-space AABBs for each GSplat, colorized by LOD.
      * - {@link GSPLAT_DEBUG_NODE_AABBS}: Draw world-space AABBs for each octree node of
      * streamed GSplats, colorized by the currently selected LOD.
@@ -227,12 +228,16 @@ class GSplatParams {
      * @type {number}
      */
     set debug(value) {
+        if (value === GSPLAT_DEBUG_HEATMAP) {
+            Debug.removed('GSplatParams#debug: GSPLAT_DEBUG_HEATMAP has been removed and is ignored.');
+            return;
+        }
+
         if (this._debug !== value) {
             const prev = this._debug;
             this._debug = value;
 
-            if (value === GSPLAT_DEBUG_LOD || prev === GSPLAT_DEBUG_LOD ||
-                value === GSPLAT_DEBUG_HEATMAP || prev === GSPLAT_DEBUG_HEATMAP) {
+            if (value === GSPLAT_DEBUG_LOD || prev === GSPLAT_DEBUG_LOD) {
                 this.dirty = true;
             }
         }
@@ -378,52 +383,42 @@ class GSplatParams {
         return this._lodBehindPenalty;
     }
 
-    /** @private */
-    _lodRangeMin = 0;
-
     /**
-     * Minimum allowed LOD index (inclusive). Defaults to 0.
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMin} on the gsplat component instead.
+     * @ignore
      */
     set lodRangeMin(value) {
-        if (this._lodRangeMin !== value) {
-            this._lodRangeMin = value;
-            this.dirty = true;
-        }
+        Debug.warnOnce('GSplatParams#lodRangeMin is deprecated. Use lodRangeMin on the GSplatComponent instead.');
     }
 
     /**
-     * Gets minimum allowed LOD index (inclusive).
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMin} on the gsplat component instead.
+     * @ignore
      */
     get lodRangeMin() {
-        return this._lodRangeMin;
+        Debug.warnOnce('GSplatParams#lodRangeMin is deprecated. Use lodRangeMin on the GSplatComponent instead.');
+        return 0;
     }
 
-    /** @private */
-    _lodRangeMax = 10;
-
     /**
-     * Maximum allowed LOD index (inclusive). Defaults to 10.
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMax} on the gsplat component instead.
+     * @ignore
      */
     set lodRangeMax(value) {
-        if (this._lodRangeMax !== value) {
-            this._lodRangeMax = value;
-            this.dirty = true;
-        }
+        Debug.warnOnce('GSplatParams#lodRangeMax is deprecated. Use lodRangeMax on the GSplatComponent instead.');
     }
 
     /**
-     * Gets maximum allowed LOD index (inclusive).
-     *
      * @type {number}
+     * @deprecated Set {@link GSplatComponent#lodRangeMax} on the gsplat component instead.
+     * @ignore
      */
     get lodRangeMax() {
-        return this._lodRangeMax;
+        Debug.warnOnce('GSplatParams#lodRangeMax is deprecated. Use lodRangeMax on the GSplatComponent instead.');
+        return 99;
     }
 
     /** @private */
@@ -641,8 +636,8 @@ class GSplatParams {
     }
 
     /**
-     * Sets the minimum visual contribution threshold for the {@link GSPLAT_RENDERER_COMPUTE} renderer.
-     * Splats whose total screen contribution (opacity * projected area) falls below this value are
+     * Sets the minimum visual contribution threshold for the {@link GSPLAT_RENDERER_RASTER_GPU_SORT}
+     * renderer. Splats whose total screen contribution (opacity * projected area) falls below this value are
      * discarded. Higher values cull more aggressively, improving performance at the cost of quality.
      * Set to 0 to disable contribution culling. Defaults to 3.
      *
@@ -919,6 +914,38 @@ class GSplatParams {
      */
     get varyings() {
         return this._varyings;
+    }
+
+    /**
+     * Applies serialized scene settings (e.g. from the Editor) to the gsplat parameters. Reads
+     * flat `gsplat`-prefixed keys off the `render` settings object; missing keys leave the current
+     * value unchanged.
+     *
+     * @param {object} render - The render settings object.
+     * @ignore
+     */
+    applySettings(render) {
+        this.radialSorting = render.gsplatRadialSorting ?? this.radialSorting;
+
+        this.lodUpdateDistance = render.gsplatLodUpdateDistance ?? this.lodUpdateDistance;
+        this.lodUpdateAngle = render.gsplatLodUpdateAngle ?? this.lodUpdateAngle;
+        this.lodBehindPenalty = render.gsplatLodBehindPenalty ?? this.lodBehindPenalty;
+        this.lodUnderfillLimit = render.gsplatLodUnderfillLimit ?? this.lodUnderfillLimit;
+        this.splatBudget = render.gsplatSplatBudget ?? this.splatBudget;
+
+        this.alphaClip = render.gsplatAlphaClip ?? this.alphaClip;
+        this.alphaClipForward = render.gsplatAlphaClipForward ?? this.alphaClipForward;
+        this.minPixelSize = render.gsplatMinPixelSize ?? this.minPixelSize;
+        this.minContribution = render.gsplatMinContribution ?? this.minContribution;
+        this.foveationStrength = render.gsplatFoveationStrength ?? this.foveationStrength;
+        this.foveationCenter = render.gsplatFoveationCenter ?? this.foveationCenter;
+
+        this.antiAlias = render.gsplatAntiAlias ?? this.antiAlias;
+        this.useFog = render.gsplatUseFog ?? this.useFog;
+        this.colorUpdateAngle = render.gsplatColorUpdateAngle ?? this.colorUpdateAngle;
+        this.cooldownTicks = render.gsplatCooldownTicks ?? this.cooldownTicks;
+        this.dataFormat = render.gsplatDataFormat ?? this.dataFormat;
+        this.enableIds = render.gsplatEnableIds ?? this.enableIds;
     }
 
     /**

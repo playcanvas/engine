@@ -14,14 +14,15 @@ import {
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     INDEXFORMAT_UINT32,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32,
     typedArrayIndexFormats,
     requiresManualGamma,
     PIXELFORMAT_SRGBA8,
-    SEMANTIC_POSITION
+    SEMANTIC_POSITION,
+    isIntegerPixelFormat
 } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
@@ -78,6 +79,10 @@ function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_R
             temp[i] = pixelData[i] * mult8Bit * 255;
         }
         pixelData = temp;
+    } else if (isIntegerPixelFormat(format)) {
+        // integer texture (RGBA32U) - reinterpret the float bit patterns as uint, lossless and
+        // without numeric conversion, to match the float-renderable layout exactly
+        pixelData = new Uint32Array(pixelData.buffer, pixelData.byteOffset, pixelData.length);
     }
 
     pixels.set(pixelData);
@@ -344,7 +349,6 @@ class ParticleEmitter {
         this.useMesh = true;
         this.useCpu = !graphicsDevice.supportsGpuParticles;
 
-        this.pack8 = true;
         this.localBounds = new BoundingBox();
         this.worldBoundsNoTrail = new BoundingBox();
         this.worldBoundsTrail = [new BoundingBox(), new BoundingBox()];
@@ -356,8 +360,6 @@ class ParticleEmitter {
         this.prevWorldBoundsCenter = new Vec3();
         this.prevEmitterExtents = this.emitterExtents;
         this.prevEmitterRadius = this.emitterRadius;
-        this.worldBoundsMul = new Vec3();
-        this.worldBoundsAdd = new Vec3();
         this.timeToSwitchBounds = 0;
 
         // simulation shaders - do not destroy those, as they're cached and shared between emitters
@@ -416,17 +418,6 @@ class ParticleEmitter {
         this.resetMaterial();
     }
 
-    calculateBoundsMad() {
-        this.worldBoundsMul.x = 1.0 / this.worldBoundsSize.x;
-        this.worldBoundsMul.y = 1.0 / this.worldBoundsSize.y;
-        this.worldBoundsMul.z = 1.0 / this.worldBoundsSize.z;
-
-        this.worldBoundsAdd.copy(this.worldBounds.center).mul(this.worldBoundsMul).mulScalar(-1);
-        this.worldBoundsAdd.x += 0.5;
-        this.worldBoundsAdd.y += 0.5;
-        this.worldBoundsAdd.z += 0.5;
-    }
-
     calculateWorldBounds() {
         if (!this.node) return;
 
@@ -475,8 +466,6 @@ class ParticleEmitter {
             this.meshInstance.mesh.aabb.copy(this.worldBounds);
         }
         this.meshInstance._aabbVer = 1 - this.meshInstance._aabbVer;
-
-        if (this.pack8) this.calculateBoundsMad();
     }
 
     resetWorldBounds() {
@@ -576,15 +565,13 @@ class ParticleEmitter {
         this.spawnBounds = this.emitterShape === EMITTERSHAPE_BOX ? this.emitterExtents : this.emitterRadius;
 
         this.useCpu = this.useCpu || this.sort > PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
-        gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
-        gd.fragmentUniformsCount < 64 || // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
         gd.forceCpuParticles;
 
         const wasVisible = this._destroyResources();
 
-        this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
-
-        particleTexHeight = (this.useCpu || this.pack8) ? 4 : 2;
+        // GPU particles use 2 texture rows (RGBA32F, or RGBA32U as a lossless fallback when float
+        // textures are not renderable); CPU particles use 4 rows
+        particleTexHeight = this.useCpu ? 4 : 2;
 
         this.useMesh = !!this.mesh;
 
@@ -603,7 +590,6 @@ class ParticleEmitter {
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).mulScalar(2);
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
-            if (this.pack8) this.calculateBoundsMad();
         }
 
         // Dynamic simulation data
@@ -636,15 +622,12 @@ class ParticleEmitter {
         }
 
         if (!this.useCpu) {
-            if (this.pack8) {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_RGBA8, 1, false);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_RGBA8, 1, false);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, PIXELFORMAT_RGBA8, 1, false);
-            } else {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart);
-            }
+            // use float textures when renderable, otherwise fall back to integer textures storing
+            // the exact float bits (RGBA32U is always renderable on WebGL2 and WebGPU)
+            const particleFormat = gd.textureFloatRenderable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA32U;
+            this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, particleFormat);
+            this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, particleFormat);
+            this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, particleFormat);
 
             this.rtParticleTexIN = new RenderTarget({
                 colorBuffer: this.particleTexIN,
@@ -660,16 +643,17 @@ class ParticleEmitter {
         // create 3 simulation shaders
         const defines = new Map();
         if (this.localSpace) defines.set('LOCAL_SPACE', '');
-        if (this.pack8) defines.set('PACK8', '');
         if (this.emitterShape === EMITTERSHAPE_BOX) defines.set('EMITTERSHAPE_BOX', '');
-        const shaderUniqueId = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
+        const shaderUniqueId = `Shape:${this.emitterShape}-Local:${this.localSpace}`;
 
-        // shader options shared by all 3 shaders
+        // shader options shared by all 3 shaders. The fragment output type matches the particle
+        // state texture - uvec4 for the RGBA32U fallback used when float is not renderable.
         const shaderOptions = {
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
             fragmentChunk: 'particle_simulationPS',
-            fragmentDefines: defines
+            fragmentDefines: defines,
+            fragmentOutputTypes: gd.textureFloatRenderable ? 'vec4' : 'uvec4'
         };
 
         // shader 1
@@ -772,39 +756,6 @@ class ParticleEmitter {
         this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
         this.qRadialSpeedDiv =   divGraphFrom2Curves(this.qRadialSpeed, this.qRadialSpeed2, this.radialSpeedUMax);
 
-        if (this.pack8) {
-            const umax = [0, 0, 0];
-            maxUnsignedGraphValue(this.qVelocity, umax);
-            const umax2 = [0, 0, 0];
-            maxUnsignedGraphValue(this.qVelocity2, umax2);
-
-            const lumax = [0, 0, 0];
-            maxUnsignedGraphValue(this.qLocalVelocity, lumax);
-            const lumax2 = [0, 0, 0];
-            maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
-
-            const rumax = [0];
-            maxUnsignedGraphValue(this.qRadialSpeed, rumax);
-            const rumax2 = [0];
-            maxUnsignedGraphValue(this.qRadialSpeed2, rumax2);
-
-            let maxVel = Math.max(umax[0], umax2[0]);
-            maxVel = Math.max(maxVel, umax[1]);
-            maxVel = Math.max(maxVel, umax2[1]);
-            maxVel = Math.max(maxVel, umax[2]);
-            maxVel = Math.max(maxVel, umax2[2]);
-
-            let lmaxVel = Math.max(lumax[0], lumax2[0]);
-            lmaxVel = Math.max(lmaxVel, lumax[1]);
-            lmaxVel = Math.max(lmaxVel, lumax2[1]);
-            lmaxVel = Math.max(lmaxVel, lumax[2]);
-            lmaxVel = Math.max(lmaxVel, lumax2[2]);
-
-            const maxRad = Math.max(rumax[0], rumax2[0]);
-
-            this.maxVel = maxVel + lmaxVel + maxRad;
-        }
-
         if (!this.useCpu) {
             this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qLocalVelocity, this.qLocalVelocityDiv));
             this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qVelocity, this.qVelocityDiv));
@@ -872,13 +823,6 @@ class ParticleEmitter {
         material.setParameter('graphNumSamples', this.precision);
         material.setParameter('graphSampleSize', 1.0 / this.precision);
         material.setParameter('emitterScale', new Float32Array([1, 1, 1]));
-
-        if (this.pack8) {
-            this._gpuUpdater._setInputBounds();
-            material.setParameter('inBoundsSize', this._gpuUpdater.inBoundsSizeUniform);
-            material.setParameter('inBoundsCenter', this._gpuUpdater.inBoundsCenterUniform);
-            material.setParameter('maxVel', this.maxVel);
-        }
 
         if (this.wrap && this.wrapBounds) {
             this.wrapBoundsUniform[0] = this.wrapBounds.x;

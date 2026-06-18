@@ -1,4 +1,6 @@
 import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Debug } from '../../core/debug.js';
 import { SEMANTIC_POSITION, CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import {
     BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD,
@@ -8,7 +10,11 @@ import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatRenderer } from './gsplat-renderer.js';
+import { GSplatProjector } from './gsplat-projector.js';
+import { GSplatIntervalCompaction } from './gsplat-interval-compaction.js';
+import { ComputeRadixSort } from '../graphics/radix-sort/compute-radix-sort.js';
 import { CACHE_STRIDE } from './gsplat-projector-constants.js';
+import { ALPHA_VISIBILITY_THRESHOLD } from './constants.js';
 import { Camera } from '../camera.js';
 
 // Module-scope scratch matrices used only inside `_computeClipToViewZ`. The output
@@ -18,12 +24,21 @@ import { Camera } from '../camera.js';
 const _invProjMat = new Mat4();
 const _shaderProjMat = new Mat4();
 
+// Module-scope scratch used only inside `computeDistanceRange` (camera world position/direction
+// and a transformed AABB corner). Reused synchronously within a single call.
+const _camPos = new Vec3();
+const _camDir = new Vec3();
+const _tmpV = new Vec3();
+
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
+ * @import { GSplatWorld } from './gsplat-world.js'
+ * @import { GSplatWorldState } from './gsplat-world-state.js'
+ * @import { GSplatRenderViewParams } from './gsplat-renderer.js'
  */
 
 /**
@@ -85,6 +100,49 @@ class GSplatHybridRenderer extends GSplatRenderer {
     _cacheStride = CACHE_STRIDE;
 
     /**
+     * GPU radix sorter for the projected cache indices.
+     *
+     * @type {ComputeRadixSort|null}
+     */
+    gpuSorter = null;
+
+    /**
+     * Compute projector that builds the per-camera projection cache + sort keys.
+     *
+     * @type {GSplatProjector|null}
+     */
+    projector = null;
+
+    /**
+     * Interval-based GPU culling + compaction (lazily created on first sort).
+     *
+     * @type {GSplatIntervalCompaction|null}
+     */
+    intervalCompaction = null;
+
+    /**
+     * Per-frame indirect draw slot index (-1 when unallocated).
+     *
+     * @type {number}
+     */
+    indirectDrawSlot = -1;
+
+    /**
+     * Per-frame indirect dispatch slot index (projector + radix sort passes).
+     *
+     * @type {number}
+     */
+    indirectDispatchSlot = -1;
+
+    /**
+     * Total intervals from the last interval-compaction dispatch (index into the prefix sum
+     * for the visible count).
+     *
+     * @type {number}
+     */
+    lastCompactedNumIntervals = 0;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GraphNode} node - The graph node.
      * @param {GraphNode} cameraNode - The camera node.
@@ -122,6 +180,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_XR');
 
+        // GPU sort pipeline resources (owned by the renderer). Interval compaction is created
+        // lazily on the first sort.
+        this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
+        this.projector = new GSplatProjector(this.device);
+
         this.meshInstance = this.createMeshInstance();
     }
 
@@ -150,6 +213,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
         if (this.renderMode && (this.renderMode & GSPLAT_FORWARD)) {
             this.layer.removeMeshInstances([this.meshInstance], true);
         }
+        this.gpuSorter?.destroy();
+        this.gpuSorter = null;
+        this.projector?.destroy();
+        this.projector = null;
+        this.intervalCompaction?.destroy();
+        this.intervalCompaction = null;
         this._material.destroy();
         this._pickMaterial?.destroy();
         this.meshInstance.destroy();
@@ -159,6 +228,14 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
     get material() {
         return this._material;
+    }
+
+    get usesGpuSort() {
+        return true;
+    }
+
+    get requiresBounds() {
+        return true;
     }
 
     onWorkBufferFormatChanged() {
@@ -201,6 +278,302 @@ class GSplatHybridRenderer extends GSplatRenderer {
             this.meshInstance.instancingCount = 1;
         }
         this.meshInstance.visible = count > 0;
+    }
+
+    invalidateCullUpload() {
+        this.intervalCompaction?.invalidateUpload();
+    }
+
+    /**
+     * Per-frame forward render preparation: derives the viewport (handling stereo XR), runs the
+     * cull + projector + radix sort for the current camera, and binds the result for indirect
+     * drawing. Runs every frame — the indirect args are per-frame and the post-projector visible
+     * count differs from the interval prefix sum.
+     *
+     * @param {GSplatWorld} world - The world providing the work buffer, bounds and states.
+     * @param {GSplatWorldState} worldState - The render-ready world state to draw.
+     * @param {GSplatRenderViewParams} params - Per-call params + camera (see GSplatManager#_fillRenderViewParams).
+     * @returns {boolean} True if a GPU dispatch ran (false when there are no active splats).
+     */
+    prepareRenderView(world, worldState, params) {
+        const cameraNode = params.cameraNode;
+        const cam = cameraNode.camera;
+        const sceneCam = cam.camera;
+        const rt = cam.renderTarget;
+        const rect = cam.rect;
+
+        // Match Renderer#setCameraUniforms: in stereo XR the XR session reports the per-eye
+        // viewport directly, which is correct for both side-by-side single-texture and
+        // multi-pass per-eye-view layouts — preferred over inferring from target.width.
+        const xrView = sceneCam.xrActive ? (sceneCam.xrViews[0] ?? null) : null;
+        const viewportWidth = Math.floor((xrView ? xrView.viewport.z : (rt ? rt.width : this.device.width)) * rect.z);
+        const viewportHeight = Math.floor((xrView ? xrView.viewport.w : (rt ? rt.height : this.device.height)) * rect.w);
+
+        // Stereo XR: project both eyes in a single projector pass (GSPLAT_XR variant). Requires
+        // exactly 2 parallel-axis views. Keep the VS define in sync with the projector variant.
+        const xrViewCount = sceneCam.xrActive ? sceneCam.xrViews.length : 0;
+        if (xrViewCount > 2) {
+            Debug.errorOnce(`GSplatHybridRenderer: the hybrid GPU-sort renderer supports at most 2 XR views (stereo), but the session has ${xrViewCount}. Additional views will not render correctly.`);
+        }
+        const isStereo = xrViewCount === 2;
+        this.setStereo(isStereo);
+
+        const sortedIndices = this.sortAndProjectForCamera(
+            world, worldState, cameraNode, viewportWidth, viewportHeight,
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, params.alphaClipForward), false, isStereo, params
+        );
+
+        if (!sortedIndices) return false;
+
+        this.setHybridSortedRendering(
+            this.indirectDrawSlot,
+            sortedIndices,
+            /** @type {StorageBuffer} */ (this.projector.projCache),
+            /** @type {StorageBuffer} */ (this.intervalCompaction.numSplatsBuffer)
+        );
+        return true;
+    }
+
+    /**
+     * Picker render preparation: runs the cull + projector + radix sort for the picker camera
+     * (pick mode, mono) and returns the configured pick mesh instance.
+     *
+     * @param {GSplatWorld} world - The world providing the work buffer, bounds and states.
+     * @param {GSplatWorldState} worldState - The render-ready world state.
+     * @param {GSplatRenderViewParams} pickParams - Per-call params + picker camera (see GSplatManager#_fillPickParams).
+     * @returns {MeshInstance|null} The pick mesh instance, or null if nothing was dispatched.
+     */
+    preparePickingView(world, worldState, pickParams) {
+        // pickMode writes pcId into the cache only when the work buffer actually carries that stream.
+        const pickMode = !!world.workBuffer.format.getStream('pcId');
+        const sortedIndices = this.sortAndProjectForCamera(
+            world, worldState, pickParams.cameraNode, pickParams.width, pickParams.height,
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, pickParams.alphaClip), pickMode, false, pickParams
+        );
+        if (!sortedIndices) return null;
+
+        return this.prepareForPicking(
+            this.indirectDrawSlot,
+            sortedIndices,
+            /** @type {StorageBuffer} */ (this.projector.projCache),
+            /** @type {StorageBuffer} */ (this.intervalCompaction.numSplatsBuffer),
+            pickParams.alphaClip,
+            pickParams.alphaClipForward,
+            pickParams.cameraNode
+        );
+    }
+
+    /**
+     * Runs interval cull + compaction, the projector, and the indirect radix sort for a specific
+     * camera/view. Shared by the forward render and the picker. Assumes the work buffer is baked and
+     * render-ready (the manager's version lifecycle marks it before delegating).
+     *
+     * @param {GSplatWorld} world - The world providing the work buffer, bounds and states.
+     * @param {GSplatWorldState} worldState - The world state to sort.
+     * @param {GraphNode} cameraNode - Camera node used for projection and sort keys.
+     * @param {number} viewportWidth - Projection viewport width in pixels.
+     * @param {number} viewportHeight - Projection viewport height in pixels.
+     * @param {number} alphaClip - Projector producer alpha threshold.
+     * @param {boolean} pickMode - Whether the projector writes pcId into the cache.
+     * @param {boolean} isStereo - Whether to project both XR eyes in one pass (forward only).
+     * @param {GSplatRenderViewParams} params - Per-call gsplat params.
+     * @returns {StorageBuffer|null} The sorted cache indices, or null if no work was dispatched.
+     * @private
+     */
+    sortAndProjectForCamera(world, worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, pickMode, isStereo, params) {
+        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
+        const projector = /** @type {GSplatProjector} */ (this.projector);
+
+        const elementCount = worldState.totalActiveSplats;
+        if (elementCount === 0) return null;
+
+        if (!this.intervalCompaction) {
+            this.intervalCompaction = new GSplatIntervalCompaction(this.device);
+        }
+
+        this.intervalCompaction.uploadIntervals(worldState);
+
+        if (world.hasBounds) {
+            const state = world.getState(world.currentVersion);
+            if (state) {
+                this._runFrustumCulling(world, state, cameraNode, params);
+            }
+        }
+
+        const fisheyeProj = this.fisheyeProj;
+        const numIntervals = worldState.totalIntervals;
+        const totalActiveSplats = worldState.totalActiveSplats;
+        this.intervalCompaction.dispatchCompact(world.workBuffer.frustumCuller, numIntervals, totalActiveSplats, fisheyeProj.enabled);
+
+        this.allocateAndWriteIntervalIndirectArgs(numIntervals);
+
+        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+        const compactedSplatIds = ic.compactedSplatIds;
+
+        const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
+        const radixBits = gpuSorter.radixBits;
+        const roundedNumBits = Math.ceil(numBits / radixBits) * radixBits;
+
+        const { minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode, params.radialSorting);
+
+        const sortIndirectInfo = gpuSorter.prepareIndirect();
+
+        projector.dispatch({
+            workBuffer: world.workBuffer,
+            cameraNode,
+            compactedSplatIds: /** @type {StorageBuffer} */ (compactedSplatIds),
+            sortElementCountBuffer: /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            totalCapacity: elementCount,
+            radialSort: params.radialSorting,
+            numBits: roundedNumBits,
+            minDist,
+            maxDist,
+            alphaClip,
+            minPixelSize: params.minPixelSize * 0.5,
+            minContribution: params.minContribution,
+            foveationStrength: params.foveationStrength,
+            foveationCenter: params.foveationCenter,
+            viewportWidth,
+            viewportHeight,
+            flipY: !!cameraNode.camera.renderTarget?.flipY,
+            pickMode,
+            fisheyeProj,
+            antiAlias: params.antiAlias,
+            isStereo,
+            material: params.material,
+            userCacheWords: params.varyings.words
+        });
+
+        projector.writeIndirectArgs(
+            this.indirectDrawSlot,
+            this.indirectDispatchSlot + 1,
+            /** @type {StorageBuffer} */ (ic.numSplatsBuffer),
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            sortIndirectInfo
+        );
+
+        return gpuSorter.sortIndirect(
+            /** @type {StorageBuffer} */ (projector.sortKeys),
+            elementCount,
+            roundedNumBits,
+            this.indirectDispatchSlot + 1,
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            undefined,
+            false,
+            true  // destructiveKeys: projector overwrites sortKeys each frame before the sort
+        );
+    }
+
+    /**
+     * Allocates per-frame indirect draw and dispatch slots and writes the interval-compaction
+     * indirect args.
+     *
+     * @param {number} numIntervals - Total interval count (index into prefix sum for visible count).
+     * @private
+     */
+    allocateAndWriteIntervalIndirectArgs(numIntervals) {
+        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
+        const sortInfo = gpuSorter.prepareIndirect();
+        const sortSlotCount = sortInfo[0];
+
+        this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);
+        // Reserve contiguous dispatch slots for the projector + radix sort passes.
+        this.indirectDispatchSlot = this.device.getIndirectDispatchSlot(1 + sortSlotCount);
+        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
+        ic.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot, numIntervals, sortInfo);
+        this.lastCompactedNumIntervals = numIntervals;
+    }
+
+    /**
+     * Prepares frustum culling data: updates the GPU transform buffers and computes frustum planes
+     * from the camera. The actual culling test runs inline in the interval compaction compute shader.
+     *
+     * @param {object} world - The {@link GSplatWorld} owning the frustum culler.
+     * @param {object} worldState - The world state whose splats provide transforms.
+     * @param {GraphNode} cameraNode - Camera node to cull against.
+     * @param {object} params - Per-call gsplat params (for fisheye).
+     * @private
+     */
+    _runFrustumCulling(world, worldState, cameraNode, params) {
+        world.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
+
+        const cam = cameraNode.camera;
+        const sceneCamera = cam.camera;
+        const xrViews = sceneCamera.xrViews;
+        if (xrViews?.length) {
+            // XR: cull against the combined frustum of all views, so splats visible only near
+            // one eye's edge (e.g. the right edge of the right eye) are not dropped. The per-view
+            // "off" matrices are refreshed at render time by setCameraUniforms, which runs AFTER
+            // this culling, so refresh them here (mirrors the projector dispatch).
+            sceneCamera.updateViewTransforms();
+            sceneCamera.updateXrFrustum();
+            world.workBuffer.frustumCuller.setFrustumPlanes(sceneCamera.frustum);
+        } else {
+            world.workBuffer.frustumCuller.computeFrustumPlanes(cam.projectionMatrix, cam.viewMatrix);
+        }
+
+        const fp = this.fisheyeProj;
+        // XR does not support fisheye in any renderer; resolveFisheye forces it off (and warns once).
+        fp.update(this.resolveFisheye(params.fisheye), cam.fov, cam.projectionMatrix);
+
+        if (fp.enabled) {
+            world.workBuffer.frustumCuller.setFisheyeData(
+                cameraNode.getPosition(),
+                cameraNode.forward,
+                fp.maxTheta
+            );
+        }
+    }
+
+    /**
+     * Computes the min/max effective distances for the current world state (radial or linear).
+     *
+     * @param {object} worldState - The world state.
+     * @param {GraphNode} cameraNode - Camera node to measure distances from.
+     * @param {boolean} radialSort - Whether radial sorting is enabled.
+     * @returns {{minDist: number, maxDist: number}} The distance range.
+     * @private
+     */
+    computeDistanceRange(worldState, cameraNode, radialSort) {
+        const cameraMat = cameraNode.getWorldTransform();
+        cameraMat.getTranslation(_camPos);
+        cameraMat.getZ(_camDir).normalize();
+
+        // For radial: minDist is always 0, only track maxDist. For linear: track both along the
+        // camera direction.
+        let minDist = radialSort ? 0 : Infinity;
+        let maxDist = radialSort ? 0 : -Infinity;
+
+        for (const splat of worldState.splats) {
+            const modelMat = splat.node.getWorldTransform();
+            const aabbMin = splat.aabb.getMin();
+            const aabbMax = splat.aabb.getMax();
+
+            // Check all 8 corners of the local-space AABB
+            for (let i = 0; i < 8; i++) {
+                _tmpV.x = (i & 1) ? aabbMax.x : aabbMin.x;
+                _tmpV.y = (i & 2) ? aabbMax.y : aabbMin.y;
+                _tmpV.z = (i & 4) ? aabbMax.z : aabbMin.z;
+
+                modelMat.transformPoint(_tmpV, _tmpV);
+
+                if (radialSort) {
+                    const dist = _tmpV.distance(_camPos);
+                    if (dist > maxDist) maxDist = dist;
+                } else {
+                    const dist = _tmpV.sub(_camPos).dot(_camDir);
+                    if (dist < minDist) minDist = dist;
+                    if (dist > maxDist) maxDist = dist;
+                }
+            }
+        }
+
+        // Handle empty state
+        if (maxDist === 0 || maxDist === -Infinity) {
+            return { minDist: 0, maxDist: 1 };
+        }
+
+        return { minDist, maxDist };
     }
 
     /**

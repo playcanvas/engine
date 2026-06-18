@@ -454,7 +454,7 @@ class GSplatProjector {
             cdefines.set('GSPLAT_XR', '');
         }
 
-        // Format-specific defines mirroring the compute renderer (compute-gsplat-local-renderer.js).
+        // Format-specific defines.
         const colorStream = wbFormat.getStream('dataColor');
         if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
             cdefines.set('GSPLAT_COLOR_FLOAT', '');
@@ -637,7 +637,7 @@ class GSplatProjector {
      * compensation into the cached alpha. Ignored in pick mode (picking only gates on a
      * binary opacity threshold), which keeps the projector variant count down.
      * @param {boolean} [params.isStereo] - Whether to project both XR eyes in a single pass
-     * (GSPLAT_XR variant). Requires `cameraNode.camera.camera.xr.views.list` to have 2 views.
+     * (GSPLAT_XR variant). Requires `cameraNode.camera.camera.xrViews` to have 2 views.
      * Mutually exclusive with pick and fisheye.
      */
     dispatch(params) {
@@ -719,8 +719,7 @@ class GSplatProjector {
             }
         }
 
-        // Camera + projection uniforms. Mirrors the compute renderer's setup
-        // (gsplat-compute-local-renderer.js) for math parity.
+        // Camera + projection uniforms.
         const cameraComponent = cameraNode.camera;
         const cam = cameraComponent.camera;
         const webgpu = this.device.isWebGPU;
@@ -730,10 +729,8 @@ class GSplatProjector {
             // applyShaderProjectionTransform). Eye 0 drives the shared covariance/depth/sort; eye 1
             // contributes only its screen position. The per-eye "off" matrices are refreshed at
             // render time by setCameraUniforms, which runs AFTER this dispatch, so refresh them here.
-            const views = cam.xr.views.list;
-            const parent = cameraNode.parent?.getWorldTransform() ?? null;
-            views[0].updateTransforms(parent);
-            views[1].updateTransforms(parent);
+            const views = cam.xrViews;
+            cam.updateViewTransforms();
             _viewProjData.set(views[0].projViewOffMat.data);
             _viewProj1Data.set(views[1].projViewOffMat.data);
             _viewData.set(views[0].viewOffMat.data);

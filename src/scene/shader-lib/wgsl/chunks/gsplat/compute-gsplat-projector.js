@@ -99,8 +99,7 @@ fn main(
     }
     workgroupBarrier();
 
-    // Match the indirect dispatch linearisation used by compute-gsplat-local-tile-count.js:
-    // a 2D grid expanded into a flat thread index.
+    // Indirect dispatch linearisation: a 2D grid expanded into a flat thread index.
     let threadIdx = gid.y * (numWorkgroups.x * 256u) + gid.x;
     let numVisible = sortElementCount[0];
 
