@@ -45,4 +45,37 @@ describe('runtime-tools input injection', function () {
         expect(ev.clientX).to.equal(42);
         expect(ev.button).to.equal(2);
     });
+
+    it('dispatches touch events with a points list', function () {
+        let ev = null;
+        canvas.addEventListener('touchstart', (e) => {
+            ev = e;
+        });
+        injectInput(canvas, { kind: 'touch', action: 'touchstart', touches: [{ id: 1, x: 30, y: 40 }] });
+        expect(ev.touches.length).to.equal(1);
+        expect(ev.touches[0].identifier).to.equal(1);
+        expect(ev.touches[0].clientX).to.equal(30);
+        expect(ev.changedTouches[0].clientY).to.equal(40);
+    });
+
+    it('accepts a single-point shorthand (x/y without a touches array)', function () {
+        let ev = null;
+        canvas.addEventListener('touchmove', (e) => {
+            ev = e;
+        });
+        injectInput(canvas, { kind: 'touch', action: 'touchmove', x: 12, y: 9 });
+        expect(ev.changedTouches[0].clientX).to.equal(12);
+        expect(ev.changedTouches[0].clientY).to.equal(9);
+    });
+
+    it('empties touches on touchend but keeps the lifted point in changedTouches', function () {
+        let ev = null;
+        canvas.addEventListener('touchend', (e) => {
+            ev = e;
+        });
+        injectInput(canvas, { kind: 'touch', action: 'touchend', touches: [{ id: 0, x: 5, y: 6 }] });
+        expect(ev.touches.length).to.equal(0);
+        expect(ev.changedTouches.length).to.equal(1);
+        expect(ev.changedTouches[0].clientX).to.equal(5);
+    });
 });
