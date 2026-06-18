@@ -22,11 +22,7 @@ export default /* glsl */`
 
         #include "particle_initVS"
 
-        #ifdef CAPS_TEXTURE_FLOAT_RENDERABLE
-            #include  "particleInputFloatPS"    // why are these PS and not VS?
-        #else
-            #include "particleInputU32PS"
-        #endif
+        #include "particleInputPS"    // why is this PS and not VS?
 
         #ifdef SOFT
             #include "screenDepthPS"

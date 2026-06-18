@@ -24,8 +24,7 @@ export default /* wgsl */`
 
         #include "particle_initVS"
 
-        // WebGPU always supports rendering to float textures, so the float path is always used
-        #include "particleInputFloatPS"
+        #include "particleInputPS"
 
         #ifdef SOFT
             #include "screenDepthPS"

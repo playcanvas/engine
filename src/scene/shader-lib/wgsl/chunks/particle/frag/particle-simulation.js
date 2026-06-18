@@ -2,9 +2,8 @@
 export default /* wgsl */`
     #include "particleUpdaterInitPS"
 
-    // WebGPU always supports rendering to float textures, so the float path is always used
-    #include "particleInputFloatPS"
-    #include "particleOutputFloatPS"
+    #include "particleInputPS"
+    #include "particleOutputPS"
 
     #ifdef EMITTERSHAPE_BOX
         #include "particleUpdaterAABBPS"
