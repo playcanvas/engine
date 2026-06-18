@@ -9,10 +9,6 @@ import {
     BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC
 } from './constants.js';
 
-/**
- * @import { Entity } from '../../entity.js'
- */
-
 // Shared math variable to avoid excessive allocation
 let _ammoTransform;
 let _ammoVec1, _ammoVec2, _ammoQuat;
