@@ -213,6 +213,13 @@ class GSplatRenderer {
     }
 
     /**
+     * Invalidates any cached cull/compaction upload state (e.g. after a work-buffer rebuild that
+     * may have moved bounds indices). No-op for renderers without a GPU cull pipeline.
+     */
+    invalidateCullUpload() {
+    }
+
+    /**
      * Populates a cincludes map with tonemapping, gamma, decode and gsplatOutput
      * shader chunks needed by compute tile-count shaders.
      *
