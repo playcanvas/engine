@@ -10,7 +10,33 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @import { GraphNode } from '../graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
+ * @import { GSplatWorld } from './gsplat-world.js'
+ * @import { GSplatWorldState } from './gsplat-world-state.js'
+ * @import { GSplatVaryings } from './gsplat-varyings.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
  * @import { FogParams } from '../fog-params.js'
+ */
+
+/**
+ * Per-call parameters for a renderer view (forward or pick), populated by the manager each frame
+ * from the scene gsplat settings plus the view camera (and pick viewport). Reused per call to avoid
+ * per-frame allocation; the renderer must not retain a reference to it.
+ *
+ * @typedef {object} GSplatRenderViewParams
+ * @property {GraphNode} cameraNode - The camera node for this view.
+ * @property {boolean} radialSorting - Whether radial (vs linear) depth sorting is used.
+ * @property {number} alphaClip - Alpha threshold for shadow/pick/prepass rendering.
+ * @property {number} alphaClipForward - Alpha floor for the forward pass.
+ * @property {number} minPixelSize - Minimum projected splat size.
+ * @property {number} minContribution - Minimum visual contribution threshold.
+ * @property {number} foveationStrength - Foveation strength.
+ * @property {number} foveationCenter - Foveation center.
+ * @property {boolean} antiAlias - Whether antialiasing is enabled.
+ * @property {number} fisheye - Fisheye projection strength.
+ * @property {ShaderMaterial} material - The scene gsplat template material.
+ * @property {GSplatVaryings} varyings - User varying streams (provides the cache `words` count).
+ * @property {number} [width] - Pick viewport width in pixels (picking only).
+ * @property {number} [height] - Pick viewport height in pixels (picking only).
  */
 
 /**
@@ -217,6 +243,33 @@ class GSplatRenderer {
      * may have moved bounds indices). No-op for renderers without a GPU cull pipeline.
      */
     invalidateCullUpload() {
+    }
+
+    /**
+     * Prepares the forward view for rendering. Renderers that run their own GPU pipeline (cull +
+     * projection + sort) do their per-frame work here; CPU-sort renderers rely on the manager's
+     * worker instead and leave this as a no-op.
+     *
+     * @param {GSplatWorld} world - The world providing the work buffer, bounds, and states.
+     * @param {GSplatWorldState} worldState - The render-ready world state to draw.
+     * @param {GSplatRenderViewParams} params - Per-call parameters for this view.
+     * @returns {boolean} True if a GPU dispatch ran this call.
+     */
+    prepareRenderView(world, worldState, params) {
+        return false;
+    }
+
+    /**
+     * Prepares a pick view and returns the configured pick mesh instance. Only meaningful for
+     * renderers with a GPU pipeline; others return null.
+     *
+     * @param {GSplatWorld} world - The world providing the work buffer, bounds, and states.
+     * @param {GSplatWorldState} worldState - The render-ready world state.
+     * @param {GSplatRenderViewParams} pickParams - Per-call parameters for the pick view.
+     * @returns {MeshInstance|null} The pick mesh instance, or null.
+     */
+    preparePickingView(world, worldState, pickParams) {
+        return null;
     }
 
     /**

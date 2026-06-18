@@ -15,13 +15,13 @@ import { Color } from '../../core/math/color.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
  * @import { GSplatWorldState } from './gsplat-world-state.js'
  * @import { Scene } from '../scene.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatDirector } from './gsplat-director.js'
  * @import { GSplatRenderer } from './gsplat-renderer.js'
+ * @import { GSplatRenderViewParams } from './gsplat-renderer.js'
  */
 
 const cameraPosition = new Vec3();
@@ -160,17 +160,19 @@ class GSplatManager {
      * Reused per-call parameter bag passed to the renderer's forward {@link GSplatRenderer#prepareRenderView}.
      * Avoids per-frame allocation and keeps the renderer free of a back-reference to the manager/scene.
      *
+     * @type {GSplatRenderViewParams}
      * @private
      */
-    _renderViewParams = {};
+    _renderViewParams = /** @type {GSplatRenderViewParams} */ ({});
 
     /**
      * Reused per-call parameter bag passed to the renderer's {@link GSplatRenderer#preparePickingView}.
      * Separate from {@link _renderViewParams} so mid-frame picking can't corrupt the forward params.
      *
+     * @type {GSplatRenderViewParams}
      * @private
      */
-    _pickParams = {};
+    _pickParams = /** @type {GSplatRenderViewParams} */ ({});
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -290,7 +292,7 @@ class GSplatManager {
      * Writes the current scene gsplat params into a renderer per-view parameter bag. Lets the
      * renderer run its GPU pipeline without a back-reference to the manager or scene.
      *
-     * @param {object} p - The parameter bag to populate.
+     * @param {GSplatRenderViewParams} p - The parameter bag to populate.
      * @private
      */
     _writeGsplatParams(p) {
@@ -311,7 +313,7 @@ class GSplatManager {
     /**
      * Fills and returns the reused forward-view parameter bag for the manager's camera.
      *
-     * @returns {object} The populated {@link _renderViewParams}.
+     * @returns {GSplatRenderViewParams} The populated {@link _renderViewParams}.
      * @private
      */
     _fillRenderViewParams() {
@@ -327,7 +329,7 @@ class GSplatManager {
      * @param {object} camera - The picker camera.
      * @param {number} width - Pick target width.
      * @param {number} height - Pick target height.
-     * @returns {object} The populated {@link _pickParams}.
+     * @returns {GSplatRenderViewParams} The populated {@link _pickParams}.
      * @private
      */
     _fillPickParams(camera, width, height) {

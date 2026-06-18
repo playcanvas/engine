@@ -36,6 +36,9 @@ const _tmpV = new Vec3();
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
+ * @import { GSplatWorld } from './gsplat-world.js'
+ * @import { GSplatWorldState } from './gsplat-world-state.js'
+ * @import { GSplatRenderViewParams } from './gsplat-renderer.js'
  */
 
 /**
@@ -287,9 +290,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * drawing. Runs every frame — the indirect args are per-frame and the post-projector visible
      * count differs from the interval prefix sum.
      *
-     * @param {object} world - The {@link GSplatWorld} providing the work buffer, bounds and states.
-     * @param {object} worldState - The render-ready world state to draw.
-     * @param {object} params - Per-call gsplat params + camera (see GSplatManager#_fillRenderViewParams).
+     * @param {GSplatWorld} world - The world providing the work buffer, bounds and states.
+     * @param {GSplatWorldState} worldState - The render-ready world state to draw.
+     * @param {GSplatRenderViewParams} params - Per-call params + camera (see GSplatManager#_fillRenderViewParams).
      * @returns {boolean} True if a GPU dispatch ran (false when there are no active splats).
      */
     prepareRenderView(world, worldState, params) {
@@ -335,9 +338,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * Picker render preparation: runs the cull + projector + radix sort for the picker camera
      * (pick mode, mono) and returns the configured pick mesh instance.
      *
-     * @param {object} world - The {@link GSplatWorld}.
-     * @param {object} worldState - The render-ready world state.
-     * @param {object} pickParams - Per-call params + picker camera (see GSplatManager#_fillPickParams).
+     * @param {GSplatWorld} world - The world providing the work buffer, bounds and states.
+     * @param {GSplatWorldState} worldState - The render-ready world state.
+     * @param {GSplatRenderViewParams} pickParams - Per-call params + picker camera (see GSplatManager#_fillPickParams).
      * @returns {MeshInstance|null} The pick mesh instance, or null if nothing was dispatched.
      */
     preparePickingView(world, worldState, pickParams) {
@@ -365,15 +368,15 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * camera/view. Shared by the forward render and the picker. Assumes the work buffer is baked and
      * render-ready (the manager's version lifecycle marks it before delegating).
      *
-     * @param {object} world - The {@link GSplatWorld}.
-     * @param {object} worldState - The world state to sort.
+     * @param {GSplatWorld} world - The world providing the work buffer, bounds and states.
+     * @param {GSplatWorldState} worldState - The world state to sort.
      * @param {GraphNode} cameraNode - Camera node used for projection and sort keys.
      * @param {number} viewportWidth - Projection viewport width in pixels.
      * @param {number} viewportHeight - Projection viewport height in pixels.
      * @param {number} alphaClip - Projector producer alpha threshold.
      * @param {boolean} pickMode - Whether the projector writes pcId into the cache.
      * @param {boolean} isStereo - Whether to project both XR eyes in one pass (forward only).
-     * @param {object} params - Per-call gsplat params.
+     * @param {GSplatRenderViewParams} params - Per-call gsplat params.
      * @returns {StorageBuffer|null} The sorted cache indices, or null if no work was dispatched.
      * @private
      */
