@@ -454,7 +454,7 @@ class GSplatProjector {
             cdefines.set('GSPLAT_XR', '');
         }
 
-        // Format-specific defines mirroring the compute renderer (compute-gsplat-local-renderer.js).
+        // Format-specific defines.
         const colorStream = wbFormat.getStream('dataColor');
         if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
             cdefines.set('GSPLAT_COLOR_FLOAT', '');
@@ -719,8 +719,7 @@ class GSplatProjector {
             }
         }
 
-        // Camera + projection uniforms. Mirrors the compute renderer's setup
-        // (gsplat-compute-local-renderer.js) for math parity.
+        // Camera + projection uniforms.
         const cameraComponent = cameraNode.camera;
         const cam = cameraComponent.camera;
         const webgpu = this.device.isWebGPU;

@@ -5,7 +5,6 @@ import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorld } from './gsplat-world.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
 import { GSplatHybridRenderer } from './gsplat-hybrid-renderer.js';
-import { GSplatComputeLocalRenderer } from './gsplat-compute-local-renderer.js';
 import { GSplatProjector } from './gsplat-projector.js';
 import { GSplatIntervalCompaction } from './gsplat-interval-compaction.js';
 import { ComputeRadixSort } from '../graphics/radix-sort/compute-radix-sort.js';
@@ -13,7 +12,6 @@ import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT,
-    GSPLAT_RENDERER_COMPUTE,
     GSPLAT_DEBUG_AABBS
 } from '../constants.js';
 import { Color } from '../../core/math/color.js';
@@ -36,12 +34,6 @@ const translation = new Vec3();
 const _tempVec3 = new Vec3();
 const invModelMat = new Mat4();
 
-// Sentinel sort-indirect metadata used when there is no active GPU sorter
-// (e.g. the compute local renderer path, which runs interval compaction but
-// no radix sort). slotCount = 0 makes the writeSortIndirectArgs WGSL helper
-// skip all sort-slot writes.
-const NO_SORT_INDIRECT_INFO = new Uint32Array([0, 0, 0, 0]);
-
 // Color instances used by debug wireframe rendering (GSPLAT_DEBUG_AABBS)
 const _lodColors = [
     new Color(1, 0, 0),
@@ -58,7 +50,7 @@ const _lodColors = [
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
  * stored and rendered from.
  *
- * Shared culling + compaction (raster GPU-sort path and compute renderer, WebGPU only):
+ * Shared culling + compaction (raster GPU-sort path, WebGPU only):
  *   Interval compaction operates on contiguous intervals of splats (one per octree node).
  *   1. Cull + count (compute): each interval's bounding sphere is tested against frustum
  *      planes (or a fisheye cone). The pass writes the interval's splat count (or 0 if
@@ -73,11 +65,6 @@ const _lodColors = [
  *      performs a counting sort and returns the sorted order as orderBuffer.
  *   2. Render: the vertex shader reads orderBuffer[vertexId] → splatId.
  *      No culling or compaction is used.
- *
- * Compute tiled renderer (WebGPU only, {@link GSplatComputeLocalRenderer}):
- *   Uses shared steps 1-3 above, then runs a fully compute-based tiled pipeline:
- *   project splats into a cache, bin into screen tiles, sort per-tile by depth, and rasterize
- *   front-to-back. See {@link GSplatComputeLocalRenderer} for the full pass breakdown.
  *
  * @ignore
  */
@@ -372,8 +359,8 @@ class GSplatManager {
 
     /**
      * Dispatches a renderer-specific pick pipeline and returns the configured pick mesh instance.
-     * The local compute renderer renders to pick textures; the hybrid renderer refreshes its
-     * shared projector/sort buffers for the picker camera and returns a transient pick mesh.
+     * The hybrid renderer refreshes its shared projector/sort buffers for the picker camera and
+     * returns a transient pick mesh.
      *
      * @param {object} camera - The camera.
      * @param {number} width - Pick target width.
@@ -408,11 +395,7 @@ class GSplatManager {
             );
         }
 
-        if (this.activeRenderer !== GSPLAT_RENDERER_COMPUTE) return null;
-
-        /** @type {GSplatComputeLocalRenderer} */
-        const localRenderer = /** @type {any} */ (this.renderer);
-        return localRenderer.dispatchPick(camera, width, height);
+        return null;
     }
 
     /**
@@ -459,9 +442,7 @@ class GSplatManager {
      */
     _createRenderer(mode) {
         const workBuffer = this.world.workBuffer;
-        if (mode === GSPLAT_RENDERER_COMPUTE) {
-            this.renderer = new GSplatComputeLocalRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer);
-        } else if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
+        if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
             this.renderer = new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer);
             this.initHybridSorting();
         } else {
@@ -472,9 +453,8 @@ class GSplatManager {
     }
 
     /**
-     * Checks whether the resolved renderer mode has changed and transitions to the new mode.
-     * Handles renderer mode transitions (CPU raster, hybrid, compute)
-     * (quad <-> compute).
+     * Checks whether the resolved renderer mode has changed and transitions to the new mode
+     * (CPU raster quad <-> hybrid GPU sort).
      *
      * @private
      */
@@ -694,11 +674,7 @@ class GSplatManager {
         // kick off sorting / compaction only if needed
         let gpuSortedThisFrame = false;
         if (this.sortNeeded && lastState) {
-            if (this.activeRenderer === GSPLAT_RENDERER_COMPUTE) {
-                // Compute renderer: run compaction only (no key generation or radix sort)
-                this.compactGpu(lastState);
-                gpuSortedThisFrame = true;
-            } else if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT) {
+            if (this.activeRenderer === GSPLAT_RENDERER_RASTER_GPU_SORT) {
                 this.sortGpuHybrid(lastState);
                 gpuSortedThisFrame = true;
             } else {
@@ -929,58 +905,6 @@ class GSplatManager {
     }
 
     /**
-     * Runs frustum culling and interval compaction on the GPU, then passes the compacted
-     * splat ID buffer directly to the local compute renderer (no key generation or radix sort).
-     *
-     * @param {GSplatWorldState} worldState - The world state to compact.
-     * @private
-     */
-    compactGpu(worldState) {
-        if (!this.intervalCompaction) {
-            this.intervalCompaction = new GSplatIntervalCompaction(this.device);
-        }
-
-        const elementCount = worldState.totalActiveSplats;
-        if (elementCount === 0) return;
-
-        if (!worldState.sortedBefore) {
-            // GPU sort / compute renderers always run interval culling, so upload bounds.
-            this.world.markSorted(worldState.version, elementCount, this.cameraNode, true, this._markResult);
-            if (this._markResult.rebuilt) {
-                this.renderer.update(this._markResult.count, this._markResult.textureSize);
-            }
-        }
-
-        this.intervalCompaction.uploadIntervals(worldState);
-
-        if (this.canCull) {
-            const state = this.world.getState(this.world.currentVersion);
-            if (state) {
-                this._runFrustumCulling(state);
-            }
-        }
-
-        const numIntervals = worldState.totalIntervals;
-        const totalActiveSplats = worldState.totalActiveSplats;
-        this.intervalCompaction.dispatchCompact(this.world.workBuffer.frustumCuller, numIntervals, totalActiveSplats, this.renderer.fisheyeProj.enabled);
-
-        // Extract the visible count from the prefix sum into sortElementCountBuffer.
-        // writeIndirectArgs is the only path that does this. The local compute renderer
-        // prepares its own indirect dispatch args in private buffers.
-        this.allocateAndWriteIntervalIndirectArgs(numIntervals);
-
-        const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
-        /** @type {GSplatComputeLocalRenderer} */
-        const localRenderer = /** @type {any} */ (this.renderer);
-        localRenderer.setCompactedData(
-            /** @type {StorageBuffer} */ (ic.compactedSplatIds),
-            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
-            worldState.textureSize,
-            totalActiveSplats
-        );
-    }
-
-    /**
      * Allocates per-frame indirect draw and dispatch slots and runs writeIndirectArgs
      * for interval compaction.
      *
@@ -988,11 +912,8 @@ class GSplatManager {
      * @private
      */
     allocateAndWriteIntervalIndirectArgs(numIntervals) {
-        // The compute local renderer path runs interval compaction without a
-        // radix sort (no gpuSorter), so fall back to the sentinel metadata
-        // which tells the shader to write zero sort slots.
-        const gpuSorter = /** @type {ComputeRadixSort | null} */ (this.gpuSorter);
-        const sortInfo = gpuSorter ? gpuSorter.prepareIndirect() : NO_SORT_INDIRECT_INFO;
+        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
+        const sortInfo = gpuSorter.prepareIndirect();
         const sortSlotCount = sortInfo[0];
 
         this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);

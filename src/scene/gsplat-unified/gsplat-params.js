@@ -150,7 +150,6 @@ class GSplatParams {
      *
      * - {@link GSPLAT_RENDERER_AUTO}: Automatically selects the best pipeline for the platform.
      * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
-     * - {@link GSPLAT_RENDERER_COMPUTE}: Full compute pipeline (WebGPU only, experimental).
      * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with GPU-side sorting (WebGPU only,
      * experimental).
      *
@@ -161,14 +160,17 @@ class GSplatParams {
      * @type {number}
      */
     set renderer(value) {
+        if (value === GSPLAT_RENDERER_COMPUTE) {
+            Debug.removed('GSplatParams#renderer: GSPLAT_RENDERER_COMPUTE has been removed. Falling back to GSPLAT_RENDERER_AUTO.');
+            value = GSPLAT_RENDERER_AUTO;
+        }
+
         if (this._renderer !== value) {
             this._renderer = value;
 
             if (value === GSPLAT_RENDERER_AUTO) {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
-            } else if ((value === GSPLAT_RENDERER_COMPUTE ||
-                        value === GSPLAT_RENDERER_RASTER_GPU_SORT) &&
-                !this._device.isWebGPU) {
+            } else if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !this._device.isWebGPU) {
                 this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
             } else {
                 this._currentRenderer = value;
@@ -217,8 +219,6 @@ class GSplatParams {
      * - {@link GSPLAT_DEBUG_LOD}: Colorize splats by their selected LOD level.
      * - {@link GSPLAT_DEBUG_SH_UPDATE}: Random color per SH update pass to visualize update
      * frequency.
-     * - {@link GSPLAT_DEBUG_HEATMAP}: Heatmap visualization of average splats processed per
-     * pixel in each tile. Only supported with {@link GSPLAT_RENDERER_COMPUTE}.
      * - {@link GSPLAT_DEBUG_AABBS}: Draw world-space AABBs for each GSplat, colorized by LOD.
      * - {@link GSPLAT_DEBUG_NODE_AABBS}: Draw world-space AABBs for each octree node of
      * streamed GSplats, colorized by the currently selected LOD.
@@ -228,12 +228,16 @@ class GSplatParams {
      * @type {number}
      */
     set debug(value) {
+        if (value === GSPLAT_DEBUG_HEATMAP) {
+            Debug.removed('GSplatParams#debug: GSPLAT_DEBUG_HEATMAP has been removed and is ignored.');
+            return;
+        }
+
         if (this._debug !== value) {
             const prev = this._debug;
             this._debug = value;
 
-            if (value === GSPLAT_DEBUG_LOD || prev === GSPLAT_DEBUG_LOD ||
-                value === GSPLAT_DEBUG_HEATMAP || prev === GSPLAT_DEBUG_HEATMAP) {
+            if (value === GSPLAT_DEBUG_LOD || prev === GSPLAT_DEBUG_LOD) {
                 this.dirty = true;
             }
         }
@@ -632,8 +636,8 @@ class GSplatParams {
     }
 
     /**
-     * Sets the minimum visual contribution threshold for the {@link GSPLAT_RENDERER_COMPUTE} renderer.
-     * Splats whose total screen contribution (opacity * projected area) falls below this value are
+     * Sets the minimum visual contribution threshold for the {@link GSPLAT_RENDERER_RASTER_GPU_SORT}
+     * renderer. Splats whose total screen contribution (opacity * projected area) falls below this value are
      * discarded. Higher values cull more aggressively, improving performance at the cost of quality.
      * Set to 0 to disable contribution culling. Defaults to 3.
      *
