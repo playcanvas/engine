@@ -64,7 +64,6 @@ class ParticleMaterial extends Material {
             blend: this.emitter.blendType,
             animTex: this.emitter._isAnimated(),
             animTexLoop: this.emitter.animLoop,
-            pack8: this.emitter.pack8,
             customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
         };
 

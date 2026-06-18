@@ -23,40 +23,12 @@ const particleFinalPos = new Vec3();
 const moveDirVec = new Vec3();
 const tmpVec3 = new Vec3();
 
-function frac(f) {
-    return f - Math.floor(f);
-}
-
 function saturate(x) {
     return Math.max(Math.min(x, 1), 0);
 }
 
 function glMod(x, y) {
     return x - y * Math.floor(x / y);
-}
-
-function encodeFloatRGBA(v) {
-    let encX = frac(v);
-    let encY = frac(255.0 * v);
-    let encZ = frac(65025.0 * v);
-    let encW = frac(160581375.0 * v);
-
-    encX -= encY / 255.0;
-    encY -= encZ / 255.0;
-    encZ -= encW / 255.0;
-    encW -= encW / 255.0;
-
-    return [encX, encY, encZ, encW];
-}
-
-function encodeFloatRG(v) {
-    let encX = frac(v);
-    let encY = frac(255.0 * v);
-
-    encX -= encY / 255.0;
-    encY -= encY / 255.0;
-
-    return [encX, encY];
 }
 
 // Wraps CPU update computations from ParticleEmitter
@@ -113,51 +85,13 @@ class ParticleCPUUpdater {
         }
 
         const particleRate = math.lerp(emitter.rate, emitter.rate2, rX);
-        let startSpawnTime = -particleRate * i;
-        if (emitter.pack8) {
-            const packX = (randomPosTformed.x - emitter.worldBounds.center.x) / emitter.worldBoundsSize.x + 0.5;
-            const packY = (randomPosTformed.y - emitter.worldBounds.center.y) / emitter.worldBoundsSize.y + 0.5;
-            const packZ = (randomPosTformed.z - emitter.worldBounds.center.z) / emitter.worldBoundsSize.z + 0.5;
+        const startSpawnTime = -particleRate * i;
+        particleTex[i * particleTexChannels] =     randomPosTformed.x;
+        particleTex[i * particleTexChannels + 1] = randomPosTformed.y;
+        particleTex[i * particleTexChannels + 2] = randomPosTformed.z;
+        particleTex[i * particleTexChannels + 3] = math.lerp(emitter.startAngle * math.DEG_TO_RAD, emitter.startAngle2 * math.DEG_TO_RAD, rX);
 
-            let packA = math.lerp(emitter.startAngle * math.DEG_TO_RAD, emitter.startAngle2 * math.DEG_TO_RAD, rX);
-            packA = (packA % (Math.PI * 2)) / (Math.PI * 2);
-
-            const rg0 = encodeFloatRG(packX);
-            particleTex[i * particleTexChannels] = rg0[0];
-            particleTex[i * particleTexChannels + 1] = rg0[1];
-
-            const ba0 = encodeFloatRG(packY);
-            particleTex[i * particleTexChannels + 2] = ba0[0];
-            particleTex[i * particleTexChannels + 3] = ba0[1];
-
-            const rg1 = encodeFloatRG(packZ);
-            particleTex[i * particleTexChannels + 0 + emitter.numParticlesPot * particleTexChannels] = rg1[0];
-            particleTex[i * particleTexChannels + 1 + emitter.numParticlesPot * particleTexChannels] = rg1[1];
-
-            const ba1 = encodeFloatRG(packA);
-            particleTex[i * particleTexChannels + 2 + emitter.numParticlesPot * particleTexChannels] = ba1[0];
-            particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] = ba1[1];
-
-            const a2 = 1.0;
-            particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels * 2] = a2;
-
-            const maxNegLife = Math.max(emitter.lifetime, emitter.numParticles * (Math.max(emitter.rate, emitter.rate2)));
-            const maxPosLife = emitter.lifetime + 1.0;
-            startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
-            const rgba3 = encodeFloatRGBA(startSpawnTime);
-            particleTex[i * particleTexChannels + 0 + emitter.numParticlesPot * particleTexChannels * 3] = rgba3[0];
-            particleTex[i * particleTexChannels + 1 + emitter.numParticlesPot * particleTexChannels * 3] = rgba3[1];
-            particleTex[i * particleTexChannels + 2 + emitter.numParticlesPot * particleTexChannels * 3] = rgba3[2];
-            particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels * 3] = rgba3[3];
-
-        } else {
-            particleTex[i * particleTexChannels] =     randomPosTformed.x;
-            particleTex[i * particleTexChannels + 1] = randomPosTformed.y;
-            particleTex[i * particleTexChannels + 2] = randomPosTformed.z;
-            particleTex[i * particleTexChannels + 3] = math.lerp(emitter.startAngle * math.DEG_TO_RAD, emitter.startAngle2 * math.DEG_TO_RAD, rX);
-
-            particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] = startSpawnTime;
-        }
+        particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] = startSpawnTime;
     }
 
     // This should only change emitter state via in-params like data, vbToSort, etc.

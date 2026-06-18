@@ -22,11 +22,7 @@ export default /* glsl */`
 
         #include "particle_initVS"
 
-        #ifdef PACK8
-            #include "particleInputRgba8PS"     // why are these PS and not VS?
-        #else
-            #include  "particleInputFloatPS"    // why are these PS and not VS?
-        #endif
+        #include "particleInputPS"    // why is this PS and not VS?
 
         #ifdef SOFT
             #include "screenDepthPS"
