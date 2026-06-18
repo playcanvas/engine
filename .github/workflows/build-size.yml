@@ -101,14 +101,13 @@ jobs:
             });
 
             const headline = changed
-              ? 'This PR changes the size of the minified bundles:'
+              ? 'This PR changes the size of the minified bundles.'
               : 'This PR does not change the size of the minified bundles.';
             const body = `${MARKER}\n### Build size report\n\n`
-              + `${headline}\n\n`
+              + `${headline} Each cell shows the PR size and the change vs \`main\`. Informational only.\n\n`
               + `| Bundle | Minified | Gzip | Brotli |\n`
               + `| --- | --- | --- | --- |\n`
-              + `${rows.join('\n')}\n\n`
-              + `_Each cell shows the PR size and the change vs \`main\`. Informational only — this never fails the build._`;
+              + `${rows.join('\n')}\n`;
 
             const { owner, repo } = context.repo;
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: prNumber });
