@@ -28,6 +28,11 @@ jobs:
     name: Build Size
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Pin the embedded git revision to a constant for both builds; otherwise the differing commit
+    # hashes baked into each bundle show up as a phantom (compressed-)size diff even when no code
+    # changed. Honoured by utils/rollup-version-revision.mjs.
+    env:
+      ENGINE_BUILD_REVISION: ci-build-size
     steps:
       - name: Check out base
         uses: actions/checkout@v6
@@ -48,6 +53,7 @@ jobs:
       - name: Build base bundles
         run: |
           cp pr/utils/build-size.mjs base/utils/build-size.mjs
+          cp pr/utils/rollup-version-revision.mjs base/utils/rollup-version-revision.mjs
           cd base
           npm clean-install --progress=false --no-fund
           npm run build:min:umd
