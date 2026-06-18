@@ -12,7 +12,6 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
  * @import { GSplatWorld } from './gsplat-world.js'
  * @import { GSplatWorldState } from './gsplat-world-state.js'
- * @import { GSplatVaryings } from './gsplat-varyings.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { FogParams } from '../fog-params.js'
  */
@@ -23,6 +22,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * per-frame allocation; the renderer must not retain a reference to it.
  *
  * @typedef {object} GSplatRenderViewParams
+ * @ignore
  * @property {GraphNode} cameraNode - The camera node for this view.
  * @property {boolean} radialSorting - Whether radial (vs linear) depth sorting is used.
  * @property {number} alphaClip - Alpha threshold for shadow/pick/prepass rendering.
@@ -34,7 +34,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @property {boolean} antiAlias - Whether antialiasing is enabled.
  * @property {number} fisheye - Fisheye projection strength.
  * @property {ShaderMaterial} material - The scene gsplat template material.
- * @property {GSplatVaryings} varyings - User varying streams (provides the cache `words` count).
+ * @property {import('./gsplat-varyings.js').GSplatVaryings} varyings - User varying streams (provides the cache `words` count).
  * @property {number} [width] - Pick viewport width in pixels (picking only).
  * @property {number} [height] - Pick viewport height in pixels (picking only).
  */
