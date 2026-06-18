@@ -104,7 +104,7 @@ jobs:
               ? 'This PR changes the size of the minified bundles.'
               : 'This PR does not change the size of the minified bundles.';
             const body = `${MARKER}\n### Build size report\n\n`
-              + `${headline} Each cell shows the PR size and the change vs \`main\`. Informational only.\n\n`
+              + `${headline}\n\n`
               + `| Bundle | Minified | Gzip | Brotli |\n`
               + `| --- | --- | --- | --- |\n`
               + `${rows.join('\n')}\n`;
