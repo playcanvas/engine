@@ -17,7 +17,7 @@ jobs:
       id-token: write
     steps:
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.0
 
       - name: Set up Node.js 24.x
         uses: actions/setup-node@v6
