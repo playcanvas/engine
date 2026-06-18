@@ -500,6 +500,26 @@ class GSplatManager {
     }
 
     /**
+     * On the first sort of a world-state version, advances the render-ready version (cleanup +
+     * first-sort work-buffer rebuild) and applies the renderer rebuild reaction. The world version
+     * lifecycle is owned by the manager; the GPU pipeline (in the renderer) assumes a baked,
+     * render-ready work buffer. This is the synchronous GPU-sort counterpart of {@link onSorted}
+     * (the async CPU path). No-op once the version has been sorted before.
+     *
+     * @param {GSplatWorldState} worldState - The world state about to be sorted.
+     * @private
+     */
+    _markSortedIfNeeded(worldState) {
+        if (!worldState.sortedBefore) {
+            // GPU sort always runs interval culling, so upload bounds (updateBounds = true).
+            this.world.markSorted(worldState.version, worldState.totalActiveSplats, this.cameraNode, true, this._markResult);
+            if (this._markResult.rebuilt) {
+                this.renderer.update(this._markResult.count, this._markResult.textureSize);
+            }
+        }
+    }
+
+    /**
      * Tests if the camera has moved enough to require re-sorting.
      * - For radial sorting: only position matters (rotation doesn't affect sort order)
      * - For directional sorting: only forward direction matters (position doesn't affect sort order)
@@ -671,32 +691,27 @@ class GSplatManager {
         // an incremental update may have detected moved splats requiring a re-sort
         if (this._bakeResult.sortNeeded) this.sortNeeded = true;
 
-        // kick off sorting / compaction only if needed
-        let gpuSortedThisFrame = false;
-        if (this.sortNeeded && lastState) {
+        // Kick off sorting. The GPU path runs every frame (projector + radix + fresh per-frame
+        // indirect args; the post-projector visible count differs from the interval prefix sum).
+        // The CPU path posts to the worker only when a re-sort is needed. The version lifecycle
+        // (markSorted on the first sort of a version) stays here in the manager.
+        if (lastState) {
             if (this.renderer.usesGpuSort) {
+                this._markSortedIfNeeded(lastState);
                 this.sortGpuHybrid(lastState);
-                gpuSortedThisFrame = true;
-            } else {
-                // CPU sort just posts to the worker — indirect draw still needs updating below
+            } else if (this.sortNeeded) {
                 this.sortCpu(lastState);
             }
-            this.sortNeeded = false;
 
-            // Update camera tracking for next sort check
-            this.lastSortCameraPos.copy(this.cameraNode.getPosition());
-            this.lastSortCameraFwd.copy(this.cameraNode.forward);
+            if (this.sortNeeded) {
+                this.sortNeeded = false;
 
-            // Sort implies culling was also processed, so update culling trackers too
-            this.lastCullingCameraFwd.copy(this.cameraNode.forward);
-            this.lastCullingProjMat.copy(this.cameraNode.camera.projectionMatrix);
-        }
-
-        // Raster GPU sort needs projector + radix + fresh indirect args every frame (indirect
-        // slots are per-frame; post-projector visible count differs from interval prefix sum).
-        if (this.renderer.usesGpuSort && lastState && !gpuSortedThisFrame) {
-            this.sortGpuHybrid(lastState);
-            gpuSortedThisFrame = true;
+                // Update camera tracking for the next sort/cull check.
+                this.lastSortCameraPos.copy(this.cameraNode.getPosition());
+                this.lastSortCameraFwd.copy(this.cameraNode.forward);
+                this.lastCullingCameraFwd.copy(this.cameraNode.forward);
+                this.lastCullingProjMat.copy(this.cameraNode.camera.projectionMatrix);
+            }
         }
 
         // keep the shared mesh-instance's AABB in sync with the actual splat placements
@@ -818,16 +833,6 @@ class GSplatManager {
 
         if (!this.intervalCompaction) {
             this.intervalCompaction = new GSplatIntervalCompaction(this.device);
-        }
-
-        if (!worldState.sortedBefore) {
-            // World advances the render-ready version (cleanup + first-sort rebuild). Uses the
-            // manager's camera for the color bake (matches the prior rebuildWorkBuffer behavior).
-            // GPU sort / compute renderers always run interval culling, so upload bounds.
-            this.world.markSorted(worldState.version, elementCount, this.cameraNode, true, this._markResult);
-            if (this._markResult.rebuilt) {
-                this.renderer.update(this._markResult.count, this._markResult.textureSize);
-            }
         }
 
         this.intervalCompaction.uploadIntervals(worldState);
