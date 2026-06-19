@@ -36,6 +36,9 @@ const matB = new Mat4();
 const matC = new Mat4();
 const matD = new Mat4();
 
+// scratch corners used when computing content bounds for culling
+const tmpCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+
 /**
  * ElementComponents are used to construct user interfaces. The {@link type} property can be
  * configured in 3 main ways: as a text element, as an image element or as a group element. If
@@ -827,32 +830,41 @@ class ElementComponent extends Component {
             return this._screenCorners;
         }
 
-        const parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
-
-        // init corners
-        this._screenCorners[0].set(this._absLeft, this._absBottom, 0);
-        this._screenCorners[1].set(this._absRight, this._absBottom, 0);
-        this._screenCorners[2].set(this._absRight, this._absTop, 0);
-        this._screenCorners[3].set(this._absLeft, this._absTop, 0);
-
-        // transform corners to screen space
-        const screenSpace = this.screen.screen.screenSpace;
-        for (let i = 0; i < 4; i++) {
-            this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
-            if (screenSpace) {
-                this._screenCorners[i].mulScalar(this.screen.screen.scale);
-            }
-
-            if (parentBottomLeft) {
-                this._screenCorners[i].add(parentBottomLeft);
-            }
-        }
+        this._calcScreenCorners(this._absLeft, this._absBottom, this._absRight, this._absTop, this._screenCorners);
 
         this._cornersDirty = false;
         this._canvasCornersDirty = true;
         this._worldCornersDirty = true;
 
         return this._screenCorners;
+    }
+
+    // Transforms an anchor-space rectangle (defined by its left/bottom/right/top edges) into the 4
+    // screen-space corners (bottom left, bottom right, top right, top left), populating and
+    // returning the supplied array. This is the shared logic behind screenCorners.
+    _calcScreenCorners(left, bottom, right, top, corners) {
+        const parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
+
+        // init corners
+        corners[0].set(left, bottom, 0);
+        corners[1].set(right, bottom, 0);
+        corners[2].set(right, top, 0);
+        corners[3].set(left, top, 0);
+
+        // transform corners to screen space
+        const screenSpace = this.screen.screen.screenSpace;
+        for (let i = 0; i < 4; i++) {
+            this._screenTransform.transformPoint(corners[i], corners[i]);
+            if (screenSpace) {
+                corners[i].mulScalar(this.screen.screen.scale);
+            }
+
+            if (parentBottomLeft) {
+                corners[i].add(parentBottomLeft);
+            }
+        }
+
+        return corners;
     }
 
     /**
@@ -2793,7 +2805,27 @@ class ElementComponent extends Component {
             clipB = clipT - cameraHeight;
         }
 
-        const hitCorners = this.screenCorners;
+        // A text element's rendered glyphs can overflow its element box (e.g. wrapped text that is
+        // taller or wider than the configured size), so cull against the actual content bounds
+        // rather than the box - otherwise visible text whose box falls outside the clip region is
+        // wrongly culled (see https://github.com/playcanvas/engine/issues/4615).
+        let hitCorners = this.screenCorners;
+        const text = this._text;
+        if (text) {
+            const overflowX = Math.max(0, text.width - this.calculatedWidth);
+            const overflowY = Math.max(0, text.height - this.calculatedHeight);
+            if (overflowX > 0 || overflowY > 0) {
+                const ha = this.alignment.x;
+                const va = this.alignment.y;
+                hitCorners = this._calcScreenCorners(
+                    this._absLeft - ha * overflowX,
+                    this._absBottom - va * overflowY,
+                    this._absRight + (1 - ha) * overflowX,
+                    this._absTop + (1 - va) * overflowY,
+                    tmpCorners
+                );
+            }
+        }
 
         const left = Math.min(Math.min(hitCorners[0].x, hitCorners[1].x), Math.min(hitCorners[2].x, hitCorners[3].x));
         const right = Math.max(Math.max(hitCorners[0].x, hitCorners[1].x), Math.max(hitCorners[2].x, hitCorners[3].x));
