@@ -1091,6 +1091,11 @@ class ForwardRenderer extends Renderer {
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
+        // Dispatch gsplat directional shadow culls. Runs after cullComposition so each directional
+        // light's shadow-camera frustum has been fitted, and before the frame graph renders the
+        // shadow maps. Only the GPU-sort (hybrid) gsplat path uses this; the CPU-sort path self-casts.
+        this.gsplatDirector?.updateShadows();
+
         // GPU update for visible objects requiring one
         this.gpuUpdate(this.processingMeshInstances);
     }

@@ -34,6 +34,16 @@ export function Controls({ observer }) {
                     precision={2}
                 />
             </LabelGroup>
+            <LabelGroup text='Lights'>
+                <SliderInput
+                    binding={new BindingTwoWay()}
+                    link={{ observer, path: 'numLights' }}
+                    min={0}
+                    max={6}
+                    step={1}
+                    precision={0}
+                />
+            </LabelGroup>
         </>
     );
 }

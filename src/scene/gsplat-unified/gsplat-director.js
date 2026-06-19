@@ -429,6 +429,22 @@ class GSplatDirector {
             comp.layerList[i].gsplatPlacementsDirty = false;
         }
     }
+
+    /**
+     * Post-cull shadow pass. Runs AFTER `cullComposition` (so each directional light's shadow-camera
+     * frustum has been fitted) and before the frame graph renders the shadow maps, dispatching each
+     * manager's per-light gsplat shadow cull. Only managers whose forward renderer is GPU-sort
+     * (which cannot self-cast) hold a shadow renderer; for the rest this is a no-op. The CPU-sort
+     * quad renderer self-casts and is unaffected.
+     */
+    updateShadows() {
+        this.camerasMap.forEach((cameraData) => {
+            cameraData.layersMap.forEach((layerData) => {
+                layerData.gsplatManager?.updateShadows();
+                layerData.gsplatManagerShadow?.updateShadows();
+            });
+        });
+    }
 }
 
 export { GSplatDirector };

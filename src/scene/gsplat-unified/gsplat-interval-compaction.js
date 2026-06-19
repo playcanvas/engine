@@ -21,6 +21,7 @@ import { computeGsplatIntervalScatterSource } from '../shader-lib/wgsl/chunks/gs
 import { computeGsplatWriteIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-write-indirect-args.js';
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
+import { buildGSplatIntervalData, INTERVAL_STRIDE } from './gsplat-interval-data.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -31,9 +32,6 @@ import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 const WORKGROUP_SIZE = 256;
 
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
-
-// 16 bytes per interval: { workBufferBase, splatCount, boundsIndex, pad }
-const INTERVAL_STRIDE = 4;
 
 
 /**
@@ -376,7 +374,6 @@ class GSplatIntervalCompaction {
         if (worldState.version === this._uploadedVersion) return;
         this._uploadedVersion = worldState.version;
 
-        const splats = worldState.splats;
         const numIntervals = worldState.totalIntervals;
 
         if (numIntervals === 0) return;
@@ -389,31 +386,7 @@ class GSplatIntervalCompaction {
             DebugHelper.setName(this.intervalsBuffer, 'GsplatIntervalCompaction.intervals');
         }
 
-        const data = new Uint32Array(numIntervals * INTERVAL_STRIDE);
-        let writeIdx = 0;
-
-        for (let s = 0; s < splats.length; s++) {
-            const splat = splats[s];
-
-            if (splat.intervals.length > 0) {
-                // Octree: each interval has its own offset from per-node allocation
-                const nodeIndices = splat.intervalNodeIndices;
-                for (let i = 0; i < splat.intervals.length; i += 2) {
-                    const count = splat.intervals[i + 1] - splat.intervals[i];
-                    data[writeIdx++] = splat.intervalOffsets[i / 2];
-                    data[writeIdx++] = count;
-                    data[writeIdx++] = splat.boundsBaseIndex + (nodeIndices.length > 0 ? nodeIndices[i / 2] : 0);
-                    data[writeIdx++] = 0;
-                }
-            } else {
-                // Non-octree: single interval covering the entire splat
-                data[writeIdx++] = splat.intervalOffsets[0];
-                data[writeIdx++] = splat.activeSplats;
-                data[writeIdx++] = splat.boundsBaseIndex;
-                data[writeIdx++] = 0;
-            }
-        }
-
+        const data = buildGSplatIntervalData(worldState);
         this.intervalsBuffer.write(0, data, 0, numIntervals * INTERVAL_STRIDE);
     }
 
