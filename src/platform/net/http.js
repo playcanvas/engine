@@ -69,6 +69,69 @@ class Http {
     static retryDelay = 100;
 
     /**
+     * The configured concurrency limit. See {@link Http#maxConcurrentRequests}.
+     *
+     * @type {number}
+     * @private
+     */
+    _maxConcurrentRequests = 128;
+
+    /**
+     * The number of slot-accounted requests currently in flight. Only throttled async requests are
+     * counted - when throttling is disabled (a limit of 0 or Infinity) requests are sent without
+     * accounting and this stays at 0.
+     *
+     * @type {number}
+     * @private
+     */
+    _activeRequests = 0;
+
+    /**
+     * Requests waiting for an in-flight slot to free up. Each entry holds the request's `xhr` and
+     * the deferred `send` thunk. Consumed from `_sendQueueHead` (rather than `Array#shift`) so
+     * draining a large queue stays O(n) overall rather than O(n^2).
+     *
+     * @type {{ xhr: XMLHttpRequest, send: Function }[]}
+     * @private
+     */
+    _sendQueue = [];
+
+    /**
+     * Index of the next entry to dispatch from `_sendQueue`. The array is compacted once drained.
+     *
+     * @type {number}
+     * @private
+     */
+    _sendQueueHead = 0;
+
+    /**
+     * The maximum number of requests allowed to be in flight at the same time. Additional requests
+     * are queued and dispatched as earlier ones complete. This guards against browsers rejecting
+     * requests with `net::ERR_INSUFFICIENT_RESOURCES` when too many are issued at once. Set to `0`
+     * (or `Infinity`) to disable throttling. Defaults to 128.
+     *
+     * This is a process-global limit on the shared {@link http} instance, matching the browser's
+     * per-process resource limit, and applies to all XHR-based requests (most asset loads). Prefer
+     * setting it via {@link ResourceLoader#maxConcurrentRequests}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    set maxConcurrentRequests(value) {
+        this._maxConcurrentRequests = value;
+        // raising the limit may allow queued requests to be sent
+        this._pump();
+    }
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    get maxConcurrentRequests() {
+        return this._maxConcurrentRequests;
+    }
+
+    /**
      * Perform an HTTP GET request to the given url with additional options such as headers,
      * retries, credentials, etc.
      *
@@ -412,15 +475,22 @@ class Http {
             errored = true;
         };
 
-        try {
-            xhr.send(postdata);
-        } catch (e) {
-            // DWE: Don't callback on exceptions as behavior is inconsistent, e.g. cross-domain request errors don't throw an exception.
-            // Error callback should be called by xhr.onerror() callback instead.
-            if (!errored) {
-                options.error(xhr.status, xhr, e);
+        const send = () => {
+            try {
+                xhr.send(postdata);
+            } catch (e) {
+                // a failed send fires no completion event, so free the slot we acquired for it
+                this._releaseSlot(xhr);
+                // DWE: Don't callback on exceptions as behavior is inconsistent, e.g. cross-domain request errors don't throw an exception.
+                // Error callback should be called by xhr.onerror() callback instead.
+                if (!errored && typeof options.error === 'function') {
+                    options.error(xhr.status, xhr, e);
+                }
             }
-        }
+        };
+
+        // throttle the number of concurrent in-flight requests by deferring the actual send
+        this._acquire(xhr, options, send);
 
         // Return the request object as it can be handy for blocking calls
         return xhr;
@@ -499,6 +569,8 @@ class Http {
     }
 
     _onSuccess(method, url, options, xhr) {
+        this._releaseSlot(xhr);
+
         let response;
         let contentType;
         const header = xhr.getResponseHeader('Content-Type');
@@ -530,6 +602,9 @@ class Http {
     }
 
     _onError(method, url, options, xhr) {
+        // the request is no longer in flight; free its slot (a retry below re-acquires one)
+        this._releaseSlot(xhr);
+
         if (options.retrying) {
             return;
         }
@@ -548,6 +623,83 @@ class Http {
         } else {
             // no more retries or not retry so just fail
             options.callback(xhr.status === 0 ? 'Network error' : xhr.status, null);
+        }
+    }
+
+    /**
+     * Send a request immediately if a concurrency slot is free, otherwise queue it. Synchronous
+     * requests and the unthrottled case (a limit of 0 or Infinity) always send immediately and are
+     * not slot-accounted. Slot state is tracked on the `xhr` (not `options`, which callers may
+     * reuse across requests).
+     *
+     * @param {XMLHttpRequest} xhr - The request object (gains a private `_slotHeld` flag).
+     * @param {object} options - The request options.
+     * @param {Function} send - Thunk that performs the actual `xhr.send()`.
+     * @private
+     */
+    _acquire(xhr, options, send) {
+        const limit = this._maxConcurrentRequests;
+        const throttled = limit > 0 && Number.isFinite(limit) && options.async !== false;
+
+        if (!throttled || this._activeRequests < limit) {
+            if (throttled) {
+                this._activeRequests++;
+                xhr._slotHeld = true;
+            }
+            send();
+        } else {
+            this._sendQueue.push({ xhr, send });
+        }
+    }
+
+    /**
+     * Release the concurrency slot held by a completed request (if any) and dispatch any queued
+     * requests that now fit under the limit. Idempotent per request via the `xhr._slotHeld` flag, so
+     * it is safe to call from multiple completion paths (success, error, failed send).
+     *
+     * @param {XMLHttpRequest} xhr - The request object.
+     * @private
+     */
+    _releaseSlot(xhr) {
+        if (xhr._slotHeld) {
+            xhr._slotHeld = false;
+            this._activeRequests--;
+            this._pump();
+        }
+    }
+
+    /**
+     * Dispatch queued requests while there is spare concurrency.
+     *
+     * @private
+     */
+    _pump() {
+        const limit = this._maxConcurrentRequests;
+        const throttled = limit > 0 && Number.isFinite(limit);
+
+        if (!throttled) {
+            // unthrottled (0 or Infinity): send everything immediately, with no slot accounting
+            while (this._sendQueueHead < this._sendQueue.length) {
+                this._sendQueue[this._sendQueueHead++].send();
+            }
+        } else {
+            // throttled: keep the number of in-flight requests under the limit
+            while (this._sendQueueHead < this._sendQueue.length && this._activeRequests < limit) {
+                const { xhr, send } = this._sendQueue[this._sendQueueHead++];
+                this._activeRequests++;
+                xhr._slotHeld = true;
+                send();
+            }
+        }
+
+        // drop already-dispatched entries so the backing array (and the closures it retains) does
+        // not grow without bound during large preloads
+        if (this._sendQueueHead === this._sendQueue.length) {
+            this._sendQueue.length = 0;
+            this._sendQueueHead = 0;
+        } else if (this._sendQueueHead > 256) {
+            this._sendQueue = this._sendQueue.slice(this._sendQueueHead);
+            this._sendQueueHead = 0;
         }
     }
 }
