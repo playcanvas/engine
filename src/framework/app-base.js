@@ -805,6 +805,11 @@ class AppBase extends EventHandler {
             this.loader.enableRetry(props.maxAssetRetries);
         }
 
+        // configure the concurrent request limit - overrides the default (0 is valid, meaning unlimited)
+        if (typeof props.maxConcurrentRequests === 'number' && props.maxConcurrentRequests >= 0) {
+            this.loader.maxConcurrentRequests = props.maxConcurrentRequests;
+        }
+
         // TODO: remove this temporary block after migrating properties
         if (!props.useDevicePixelRatio) {
             props.useDevicePixelRatio = props.use_device_pixel_ratio;
