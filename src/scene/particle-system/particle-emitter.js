@@ -414,10 +414,6 @@ class ParticleEmitter {
         });
     }
 
-    onChangeCamera() {
-        this.resetMaterial();
-    }
-
     calculateWorldBounds() {
         if (!this.node) return;
 
@@ -1043,11 +1039,12 @@ class ParticleEmitter {
             animIndexParams[1] = this.randomizeAnimIndex; // animTexIndexParams.y
         }
 
+        // cache the currently active camera; only the CPU distance sorter consumes it. Nothing in
+        // the material depends on the camera, so no material/shader update is needed when it changes
+        // (the render shader's camera-dependent output gamma/tonemapping is handled at draw time in
+        // ParticleMaterial.getShaderVariant).
         if (this.scene) {
-            if (this.camera !== this.scene._activeCamera) {
-                this.camera = this.scene._activeCamera;
-                this.onChangeCamera();
-            }
+            this.camera = this.scene._activeCamera;
         }
 
         if (this.emitterShape === EMITTERSHAPE_BOX) {
