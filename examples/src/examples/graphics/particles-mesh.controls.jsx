@@ -58,6 +58,13 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'settings.alignToMotion' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Textured'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.textured' }}
+                    />
+                </LabelGroup>
             </Panel>
         </>
     );
