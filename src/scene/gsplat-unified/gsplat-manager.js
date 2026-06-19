@@ -5,10 +5,13 @@ import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorld } from './gsplat-world.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
 import { GSplatHybridRenderer } from './gsplat-hybrid-renderer.js';
+import { GSplatShadowRenderer } from './gsplat-shadow-renderer.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSPLAT_FORWARD,
+    GSPLAT_SHADOW,
     GSPLAT_DEBUG_AABBS
 } from '../constants.js';
 import { Color } from '../../core/math/color.js';
@@ -74,6 +77,15 @@ class GSplatManager {
 
     /** @type {GSplatRenderer} */
     renderer;
+
+    /**
+     * Casts directional shadows for the GPU-sort (hybrid) forward renderer, which cannot self-cast.
+     * Null when the forward renderer is CPU-sort (the quad renderer self-casts) or when this
+     * manager has no shadow render mode. Shares this manager's {@link GSplatWorld}.
+     *
+     * @type {GSplatShadowRenderer|null}
+     */
+    shadowRenderer = null;
 
     /**
      * The currently active renderer mode. Starts as undefined so the first
@@ -206,6 +218,11 @@ class GSplatManager {
 
         // The renderer frees its own GPU sort resources (radix sorter, projector, compaction).
         this.renderer.destroy();
+
+        // The shadow renderer frees its per-light pool (buffers, indirect slots) and unregisters
+        // its cast mesh instances from the layer.
+        this.shadowRenderer?.destroy();
+        this.shadowRenderer = null;
     }
 
     /**
@@ -364,6 +381,26 @@ class GSplatManager {
     setRenderMode(renderMode) {
         this.renderMode = renderMode;
         this.renderer.setRenderMode(renderMode);
+        this._syncShadowRenderer();
+    }
+
+    /**
+     * Creates or destroys {@link shadowRenderer} to match the current render mode and forward
+     * renderer. The GPU-sort (hybrid) renderer cannot self-cast shadows, so when shadow rendering
+     * is requested and the forward renderer uses GPU sort, a dedicated {@link GSplatShadowRenderer}
+     * casts on its behalf (sharing this manager's world). The CPU-sort quad renderer self-casts, so
+     * no shadow renderer is created for it.
+     *
+     * @private
+     */
+    _syncShadowRenderer() {
+        const wantShadow = !!(this.renderMode & GSPLAT_SHADOW) && this.renderer.usesGpuSort;
+        if (wantShadow && !this.shadowRenderer) {
+            this.shadowRenderer = new GSplatShadowRenderer(this.device, this.node, this.cameraNode, this.layer, this.world);
+        } else if (!wantShadow && this.shadowRenderer) {
+            this.shadowRenderer.destroy();
+            this.shadowRenderer = null;
+        }
     }
 
     /**
@@ -404,6 +441,11 @@ class GSplatManager {
         this.renderer.destroy();
         this._createRenderer(requested);
         this.renderer.setRenderMode(this.renderMode);
+
+        // The forward renderer type changed (CPU quad <-> GPU hybrid), which flips whether a
+        // dedicated shadow renderer is needed.
+        this._syncShadowRenderer();
+
         this.world.invalidate({ workBuffer: true });
         this.sortNeeded = true;
     }
@@ -506,7 +548,10 @@ class GSplatManager {
         // Detect work-buffer format changes (wholesale swap + extra streams) before world.update,
         // which reads the work buffer.
         this.world.syncFormat(this._formatResult);
-        if (this._formatResult.bufferRecreated) this.renderer.setDataSource(this.world.workBuffer);
+        if (this._formatResult.bufferRecreated) {
+            this.renderer.setDataSource(this.world.workBuffer);
+            this.shadowRenderer?.setDataSource(this.world.workBuffer);
+        }
         if (this._formatResult.sortNeeded) this.sortNeeded = true;
 
         // Check for runtime renderer mode changes and transition if needed.
@@ -601,7 +646,15 @@ class GSplatManager {
         if (lastState) {
             if (this.renderer.usesGpuSort) {
                 this._markSortedIfNeeded(lastState);
-                this.renderer.prepareRenderView(this.world, lastState, this._fillRenderViewParams());
+
+                // Only run the forward GPU pipeline (projector + radix sort) when this manager
+                // participates in the forward pass. A shadow-only manager (GPU renderer type, no
+                // GSPLAT_FORWARD bit) skips it: its GSplatShadowRenderer culls + draws the shadow
+                // independently, so the forward sorter/projector would be pure waste (and are never
+                // even allocated — see GSplatHybridRenderer._ensureGpuPipeline).
+                if (this.renderMode & GSPLAT_FORWARD) {
+                    this.renderer.prepareRenderView(this.world, lastState, this._fillRenderViewParams());
+                }
             } else if (this.sortNeeded) {
                 this.sortCpu(lastState);
             }
@@ -615,8 +668,18 @@ class GSplatManager {
             }
         }
 
-        // keep the shared mesh-instance's AABB in sync with the actual splat placements
-        this.renderer?.meshInstance?.setCustomAabb(this.world.computeAggregateAabb());
+        // Pre-cull: reconcile the shadow-caster pool against the layer's directional lights, so the
+        // standard shadow-caster culling in cullComposition (which runs after the director's update)
+        // sees the cast mesh instances. The per-light cull dispatch happens later in updateShadows.
+        this.shadowRenderer?.syncLights();
+
+        // Keep the mesh-instance AABBs in sync with the actual splat placements. This world-space
+        // AABB feeds the directional shadow camera's depth range (and thus world-space PCSS penumbra
+        // scaling), so the shadow casters need it too — set it pre-cull, before cullComposition fits
+        // the shadow cameras.
+        const aggregateAabb = this.world.computeAggregateAabb();
+        this.renderer?.meshInstance?.setCustomAabb(aggregateAabb);
+        this.shadowRenderer?.setCastersAabb(aggregateAabb);
 
         // fire frame:ready event
         this.fireFrameReadyEvent();
@@ -635,6 +698,16 @@ class GSplatManager {
         // return the number of active splats for stats
         const sortedState = this.world.getState(this.world.currentVersion);
         return sortedState ? sortedState.totalActiveSplats : 0;
+    }
+
+    /**
+     * Post-cull shadow pass. Called from the director after cullComposition has fitted each
+     * directional light's shadow-camera frustum, and before the frame graph renders the shadow
+     * maps. Dispatches the per-light gsplat shadow cull and binds the results. No-op unless this
+     * manager has a {@link shadowRenderer} (GPU-sort forward path with a shadow render mode).
+     */
+    updateShadows() {
+        this.shadowRenderer?.cull(this.scene.gsplat);
     }
 
     /**

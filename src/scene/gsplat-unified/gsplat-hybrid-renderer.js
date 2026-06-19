@@ -180,11 +180,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_XR');
 
-        // GPU sort pipeline resources (owned by the renderer). Interval compaction is created
-        // lazily on the first sort.
-        this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
-        this.projector = new GSplatProjector(this.device);
-
+        // GPU sort pipeline resources (gpuSorter, projector, intervalCompaction) are created lazily
+        // on the first forward sort (see _ensureGpuPipeline). A hybrid renderer that only exists to
+        // satisfy a shadow-casting manager (no forward pass) never allocates them.
         this.meshInstance = this.createMeshInstance();
     }
 
@@ -285,6 +283,19 @@ class GSplatHybridRenderer extends GSplatRenderer {
     }
 
     /**
+     * Lazily creates the GPU sort pipeline resources on first forward use. Kept out of the
+     * constructor so a hybrid renderer that never renders a forward pass (e.g. one owned by a
+     * shadow-only manager) allocates none of them.
+     *
+     * @private
+     */
+    _ensureGpuPipeline() {
+        if (!this.gpuSorter) this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
+        if (!this.projector) this.projector = new GSplatProjector(this.device);
+        if (!this.intervalCompaction) this.intervalCompaction = new GSplatIntervalCompaction(this.device);
+    }
+
+    /**
      * Per-frame forward render preparation: derives the viewport (handling stereo XR), runs the
      * cull + projector + radix sort for the current camera, and binds the result for indirect
      * drawing. Runs every frame — the indirect args are per-frame and the post-projector visible
@@ -381,15 +392,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @private
      */
     sortAndProjectForCamera(world, worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, pickMode, isStereo, params) {
-        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
-        const projector = /** @type {GSplatProjector} */ (this.projector);
-
         const elementCount = worldState.totalActiveSplats;
         if (elementCount === 0) return null;
 
-        if (!this.intervalCompaction) {
-            this.intervalCompaction = new GSplatIntervalCompaction(this.device);
-        }
+        this._ensureGpuPipeline();
+        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
+        const projector = /** @type {GSplatProjector} */ (this.projector);
 
         this.intervalCompaction.uploadIntervals(worldState);
 
