@@ -870,7 +870,9 @@ class ParticleEmitter {
             // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
             elements.push({ semantic: SEMANTIC_ATTR0, components: 4, type: TYPE_FLOAT32 });
             if (this.useMesh) {
-                elements.push({ semantic: SEMANTIC_ATTR1, components: 2, type: TYPE_FLOAT32 });
+                // mesh UVs - use the TEXCOORD0 semantic so the mesh instance reports SHADERDEF_UV0,
+                // which enables the meshUv shader path and binds particle_uv at the matching location
+                elements.push({ semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 });
             }
         } else {
             elements.push(

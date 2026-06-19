@@ -7,6 +7,7 @@ window.focus();
 
 const assets = {
     torus: new pc.Asset('heart', 'container', { url: './assets/models/torus.glb' }),
+    color: new pc.Asset('color', 'texture', { url: './assets/textures/clouds.jpg' }, { srgb: true }),
     script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
@@ -160,7 +161,10 @@ assetListLoader.load(() => {
         depthWrite: true,
         lighting: true,
         halfLambert: true,
-        alignToMotion: true
+        alignToMotion: true,
+
+        // texture applied to the mesh particles using the mesh UVs
+        colorMap: assets.color.resource
     });
 
     data.set('settings', {
@@ -168,11 +172,20 @@ assetListLoader.load(() => {
         numParticles: 150,
         lighting: true,
         alignToMotion: true,
+        textured: true,
         enabled: true
     });
 
     data.on('*:set', (/** @type {string} */ path, value) => {
         const propertyName = path.split('.')[1];
+
+        // the 'textured' toggle switches the color map on and off (null falls back to the
+        // default white texture), demonstrating mesh UVs are used for texturing
+        if (propertyName === 'textured') {
+            entity.particlesystem.colorMap = value ? assets.color.resource : null;
+            return;
+        }
+
         entity.particlesystem[propertyName] = value;
     });
 });
