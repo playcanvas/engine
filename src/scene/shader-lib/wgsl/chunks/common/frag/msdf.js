@@ -6,13 +6,7 @@ fn median(r: f32, g: f32, b: f32) -> f32 {
     return max(min(r, g), min(max(r, g), b));
 }
 
-fn map(min: f32, max: f32, v: f32) -> f32 {
-    return (v - min) / (max - min);
-}
-
 uniform font_sdfIntensity: f32; // intensity is used to boost the value read from the SDF, 0 is no boost, 1.0 is max boost
-uniform font_pxrange: f32;      // the number of pixels between inside and outside the font in SDF
-uniform font_textureWidth: f32; // the width of the texture atlas
 
 #ifndef LIT_MSDF_TEXT_ATTRIBUTE
     uniform outline_color: vec4f;
@@ -52,29 +46,21 @@ fn applyMsdf(color_in: vec4f) -> vec4f {
 
     // get the signed distance value
     let sigDist: f32 = median(tsample.r, tsample.g, tsample.b);
-    var sigDistShdw: f32 = median(ssample.r, ssample.g, ssample.b);
+    let sigDistShdw: f32 = median(ssample.r, ssample.g, ssample.b);
 
-    // smoothing limit - smaller value makes for sharper but more aliased text, especially on angles
-    // too large value (0.5) creates a dark glow around the letters
-    let smoothingMax: f32 = 0.2;
+    // Coverage threshold. font_sdfIntensity fattens the glyph; 0 renders at the true glyph
+    // edge (median == 0.5). A previous fixed 0.05 erosion biased this to ~0.525, which carved
+    // holes and notches at thin junctions (e.g. the 'f' crossbar and the 'x' crossing).
+    let edge: f32 = 0.5 - 0.5 * uniform.font_sdfIntensity;
 
-    // smoothing depends on size of texture on screen
-    let w: vec2f = abs(dpdx(vUv0)) + abs(dpdy(vUv0));
-    let smoothing: f32 = clamp(w.x * uniform.font_textureWidth / uniform.font_pxrange, 0.0, smoothingMax);
+    // Anti-alias from the gradient of the distance field itself, giving a ~1 pixel coverage
+    // ramp that is correct for edges of any orientation. The previous smoothing was derived
+    // from the horizontal uv derivative only, under-anti-aliasing diagonal and horizontal edges.
+    let aa: f32 = max(abs(dpdx(sigDist)) + abs(dpdy(sigDist)), 1e-4);
 
-    let mapMin: f32 = 0.05;
-    let mapMax: f32 = clamp(1.0 - uniform.font_sdfIntensity, mapMin, 1.0);
-
-    // remap to a smaller range (used on smaller font sizes)
-    let sigDistInner: f32 = map(mapMin, mapMax, sigDist);
-    let sigDistOutline: f32 = map(mapMin, mapMax, sigDist + outline_thicknessValue);
-    sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_thicknessValue);
-
-    let center: f32 = 0.5;
-    // calculate smoothing and use to generate opacity
-    let inside: f32 = smoothstep(center - smoothing, center + smoothing, sigDistInner);
-    let outline: f32 = smoothstep(center - smoothing, center + smoothing, sigDistOutline);
-    let shadow: f32 = smoothstep(center - smoothing, center + smoothing, sigDistShdw);
+    let inside: f32 = clamp((sigDist - edge) / aa + 0.5, 0.0, 1.0);
+    let outline: f32 = clamp((sigDist + outline_thicknessValue - edge) / aa + 0.5, 0.0, 1.0);
+    let shadow: f32 = clamp((sigDistShdw + outline_thicknessValue - edge) / aa + 0.5, 0.0, 1.0);
 
     let tcolor_outline: vec4f = outline * vec4f(outline_colorValue.a * outline_colorValue.rgb, outline_colorValue.a);
     var tcolor: vec4f = select(vec4f(0.0), tcolor_outline, outline > inside);

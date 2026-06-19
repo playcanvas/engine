@@ -5,13 +5,7 @@ float median(float r, float g, float b) {
     return max(min(r, g), min(max(r, g), b));
 }
 
-float map (float min, float max, float v) {
-    return (v - min) / (max - min);
-}
-
 uniform float font_sdfIntensity; // intensity is used to boost the value read from the SDF, 0 is no boost, 1.0 is max boost
-uniform float font_pxrange;      // the number of pixels between inside and outside the font in SDF
-uniform float font_textureWidth; // the width of the texture atlas
 
 #ifndef LIT_MSDF_TEXT_ATTRIBUTE
     uniform vec4 outline_color;
@@ -41,27 +35,19 @@ vec4 applyMsdf(vec4 color) {
     float sigDist = median(tsample.r, tsample.g, tsample.b);
     float sigDistShdw = median(ssample.r, ssample.g, ssample.b);
 
-    // smoothing limit - smaller value makes for sharper but more aliased text, especially on angles
-    // too large value (0.5) creates a dark glow around the letters
-    float smoothingMax = 0.2;
+    // Coverage threshold. font_sdfIntensity fattens the glyph; 0 renders at the true glyph
+    // edge (median == 0.5). A previous fixed 0.05 erosion biased this to ~0.525, which carved
+    // holes and notches at thin junctions (e.g. the 'f' crossbar and the 'x' crossing).
+    float edge = 0.5 - 0.5 * font_sdfIntensity;
 
-    // smoothing depends on size of texture on screen
-    vec2 w = fwidth(vUv0);
-    float smoothing = clamp(w.x * font_textureWidth / font_pxrange, 0.0, smoothingMax);
+    // Anti-alias from the gradient of the distance field itself, giving a ~1 pixel coverage
+    // ramp that is correct for edges of any orientation. The previous smoothing was derived
+    // from the horizontal uv derivative only, under-anti-aliasing diagonal and horizontal edges.
+    float aa = max(fwidth(sigDist), 1e-4);
 
-    float mapMin = 0.05;
-    float mapMax = clamp(1.0 - font_sdfIntensity, mapMin, 1.0);
-
-    // remap to a smaller range (used on smaller font sizes)
-    float sigDistInner = map(mapMin, mapMax, sigDist);
-    float sigDistOutline = map(mapMin, mapMax, sigDist + outline_thickness);
-    sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_thickness);
-
-    float center = 0.5;
-    // calculate smoothing and use to generate opacity
-    float inside = smoothstep(center-smoothing, center+smoothing, sigDistInner);
-    float outline = smoothstep(center-smoothing, center+smoothing, sigDistOutline);
-    float shadow = smoothstep(center-smoothing, center+smoothing, sigDistShdw);
+    float inside = clamp((sigDist - edge) / aa + 0.5, 0.0, 1.0);
+    float outline = clamp((sigDist + outline_thickness - edge) / aa + 0.5, 0.0, 1.0);
+    float shadow = clamp((sigDistShdw + outline_thickness - edge) / aa + 0.5, 0.0, 1.0);
 
     vec4 tcolor = (outline > inside) ? outline * vec4(outline_color.a * outline_color.rgb, outline_color.a) : vec4(0.0);
     tcolor = mix(tcolor, color, inside);
