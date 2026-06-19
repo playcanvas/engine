@@ -43,6 +43,7 @@ const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
  * shadow caster and is visible only for its light's shadow camera.
  *
  * @typedef {object} ShadowLightEntry
+ * @ignore
  * @property {Light} light - The directional light this entry casts for.
  * @property {ShaderMaterial} material - The per-light shadow draw material.
  * @property {MeshInstance} meshInstance - The cast mesh instance (registered as a shadow caster).
