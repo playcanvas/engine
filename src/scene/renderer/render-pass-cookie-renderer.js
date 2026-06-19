@@ -107,8 +107,13 @@ class RenderPassCookieRenderer extends RenderPass {
                 continue;
             }
 
-            // only render cookie when the slot is reassigned (assuming the cookie texture is static)
-            if (!light.atlasSlotUpdated && !this._forceCopy) {
+            // re-render the cookie if its texture content changed since it was last copied into the
+            // atlas - this handles dynamic cookies such as video or procedurally generated textures
+            const cookieUpdated = light.cookie && light.cookie.uploadVersion !== light.cookieRenderVersion;
+
+            // only render cookie when the slot is reassigned, the texture content changed, or a
+            // forced copy is requested (e.g. after the device was restored)
+            if (!light.atlasSlotUpdated && !cookieUpdated && !this._forceCopy) {
                 continue;
             }
 
@@ -181,6 +186,9 @@ class RenderPassCookieRenderer extends RenderPass {
 
             // source texture
             this.blitTextureId.setValue(light.cookie);
+
+            // remember the content version we copied, so subsequent changes trigger a re-render
+            light.cookieRenderVersion = light.cookie.uploadVersion;
 
             // render it to a viewport of the target
             for (let face = 0; face < faceCount; face++) {

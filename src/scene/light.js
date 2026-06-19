@@ -294,6 +294,7 @@ class Light {
         this.atlasVersion = 0;      // version of the atlas for the allocated slot, allows invalidation when atlas recreates slots
         this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
         this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
+        this.cookieRenderVersion = -1;  // cookie texture's uploadVersion last rendered into the atlas, used to re-render dynamic (e.g. video) cookies
 
         this._node = null;
 
