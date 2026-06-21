@@ -15,6 +15,7 @@ import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
 /**
+ * @import { Asset } from '../../asset/asset.js'
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { CanvasFont } from '../../../framework/font/canvas-font.js'
  * @import { Color } from '../../../core/math/color.js'
@@ -1112,7 +1113,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the size of the font. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the size of the font. Measured in the same units as the element's {@link width} and
+     * {@link height}, so its on-screen size depends on whether the element is screen-space or in
+     * world space. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1192,8 +1195,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the maximum number of lines that the Element can wrap to. Returns null for unlimited
-     * lines.
+     * Gets the maximum number of lines that the Element can wrap to. Returns -1 if there is no
+     * limit.
      *
      * @type {number|null}
      */
@@ -1259,7 +1262,8 @@ class ElementComponent extends Component {
 
     /**
      * Sets the color of the image for {@link ELEMENTTYPE_IMAGE} types or the color of the text for
-     * {@link ELEMENTTYPE_TEXT} types.
+     * {@link ELEMENTTYPE_TEXT} types. Only the RGB channels are used; the alpha channel is ignored,
+     * so use {@link opacity} to control transparency.
      *
      * @type {Color}
      */
@@ -1307,10 +1311,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the id of the font asset used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT}
-     * types.
+     * Sets the font asset used for rendering the text, as either an {@link Asset} or an asset id.
+     * Only works for {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {number}
+     * @type {Asset | number}
      */
     set fontAsset(arg) {
         this._setValue('fontAsset', arg);
@@ -1330,7 +1334,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the spacing between the letters of the text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the spacing between the letters of the text, as a multiplier on the default character
+     * advance. 1 is normal spacing, values below 1 tighten the text and values above 1 spread it
+     * out. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1352,7 +1358,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the height of each line of text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the height of each line of text, measured in the same units as {@link fontSize}. This is
+     * independent of {@link fontSize}, so it can be used to tighten or loosen vertical line
+     * spacing. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1396,10 +1404,13 @@ class ElementComponent extends Component {
         return null;
     }
 
-    set lines(arg) {
-        this._setValue('lines', arg);
-    }
-
+    /**
+     * Gets the lines of rendered text, split by line breaks and word wrapping. Only works for
+     * {@link ELEMENTTYPE_TEXT} types, and is populated when the text is laid out, so it reads as
+     * `undefined` until the first update.
+     *
+     * @type {string[]}
+     */
     get lines() {
         if (this._text) {
             return this._text.lines;
@@ -1482,7 +1493,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to reorder the text for RTL languages. The reordering uses a function
-     * registered by `app.systems.element.registerUnicodeConverter`.
+     * registered by `app.systems.element.registerRtlReorder`.
      *
      * @type {boolean}
      */
@@ -1611,9 +1622,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the id of the texture asset to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * Sets the texture asset to render, as either an {@link Asset} or an asset id. Only works for
+     * {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {number}
+     * @type {Asset | number}
      */
     set textureAsset(arg) {
         this._setValue('textureAsset', arg);
@@ -1655,10 +1667,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the id of the material asset to use when rendering an image. Only works for
-     * {@link ELEMENTTYPE_IMAGE} types.
+     * Sets the material asset to use when rendering an image, as either an {@link Asset} or an
+     * asset id. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {number}
+     * @type {Asset | number}
      */
     set materialAsset(arg) {
         this._setValue('materialAsset', arg);
@@ -1701,10 +1713,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the id of the sprite asset to render. Only works for {@link ELEMENTTYPE_IMAGE} types which
-     * can render either a texture or a sprite.
+     * Sets the sprite asset to render, as either an {@link Asset} or an asset id. Only works for
+     * {@link ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
      *
-     * @type {number}
+     * @type {Asset | number}
      */
     set spriteAsset(arg) {
         this._setValue('spriteAsset', arg);
@@ -1747,10 +1759,11 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the number of pixels that map to one PlayCanvas unit. Only works for
-     * {@link ELEMENTTYPE_IMAGE} types who have a sliced sprite assigned.
+     * Sets the number of pixels that map to one PlayCanvas unit. Only affects
+     * {@link ELEMENTTYPE_IMAGE} types with a sliced or tiled sprite assigned. Set to null to use
+     * the sprite's own pixels-per-unit value.
      *
-     * @type {number}
+     * @type {number|null}
      */
     set pixelsPerUnit(arg) {
         this._setValue('pixelsPerUnit', arg);
@@ -1759,7 +1772,7 @@ class ElementComponent extends Component {
     /**
      * Gets the number of pixels that map to one PlayCanvas unit.
      *
-     * @type {number}
+     * @type {number|null}
      */
     get pixelsPerUnit() {
         if (this._image) {
@@ -1864,7 +1877,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the width of the text outline effect. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the width of the text outline effect, ranging from 0 (no outline) to 1 (maximum
+     * thickness). Combine with {@link outlineColor} to style the outline. Only works for
+     * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1908,19 +1923,27 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text shadow effect shift amount from original text. Only works for
-     * {@link ELEMENTTYPE_TEXT} types.
+     * Sets the offset of the text shadow, relative to the text. The shadow is a second copy of the
+     * text, tinted with {@link shadowColor} and displaced by this amount. Each component ranges
+     * from -1 to 1 and is proportional to the font size, so the shadow stays consistent as the text
+     * scales; positive x shifts the shadow right and positive y shifts it up. The shadow is only
+     * drawn where it extends past the glyph, so the default of `[0, 0]` produces no visible shadow
+     * and a non-zero offset is required to display one. Only works for {@link ELEMENTTYPE_TEXT}
+     * types.
      *
-     * @type {number}
+     * @type {Vec2}
+     * @example
+     * // drop shadow, down and to the right of the text
+     * this.entity.element.shadowOffset = new pc.Vec2(0.25, -0.25);
      */
     set shadowOffset(arg) {
         this._setValue('shadowOffset', arg);
     }
 
     /**
-     * Gets the text shadow effect shift amount from original text.
+     * Gets the offset of the text shadow, relative to the text.
      *
-     * @type {number}
+     * @type {Vec2}
      */
     get shadowOffset() {
         if (this._text) {
