@@ -574,10 +574,25 @@ class ElementComponentSystem extends ComponentSystem {
         /* eslint-enable no-else-return */
     }
 
+    /**
+     * Registers a function used to convert text before it is rendered, applied to text elements
+     * that have {@link ElementComponent#unicodeConverter} enabled.
+     *
+     * @param {(text: string) => string} func - Called with the source text; returns the converted
+     * text.
+     */
     registerUnicodeConverter(func) {
         this._unicodeConverter = func;
     }
 
+    /**
+     * Registers a function used to reorder text for right-to-left languages, applied to text
+     * elements that have {@link ElementComponent#rtlReorder} enabled.
+     *
+     * @param {(symbols: string[]) => { rtl: boolean, mapping: number[] }} func - Called with the
+     * array of text symbols; returns whether the text is right-to-left and the reordered symbol
+     * index mapping.
+     */
     registerRtlReorder(func) {
         this._rtlReorder = func;
     }

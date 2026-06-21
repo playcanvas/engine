@@ -1493,7 +1493,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to reorder the text for RTL languages. The reordering uses a function
-     * registered by `app.systems.element.registerRtlReorder`.
+     * registered with {@link ElementComponentSystem#registerRtlReorder}.
      *
      * @type {boolean}
      */
@@ -1516,7 +1516,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to convert unicode characters. This uses a function registered by
-     * `app.systems.element.registerUnicodeConverter`.
+     * {@link ElementComponentSystem#registerUnicodeConverter}.
      *
      * @type {boolean}
      */
