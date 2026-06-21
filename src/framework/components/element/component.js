@@ -870,7 +870,7 @@ class ElementComponent extends Component {
 
     /**
      * Gets the width of the text rendered by the component. Only works for
-     * {@link ELEMENTTYPE_TEXT} types.
+     * {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -880,7 +880,7 @@ class ElementComponent extends Component {
 
     /**
      * Gets the height of the text rendered by the component. Only works for
-     * {@link ELEMENTTYPE_TEXT} types.
+     * {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -995,7 +995,7 @@ class ElementComponent extends Component {
     /**
      * Sets the fit mode of the element. Controls how the content should be fitted and preserve the
      * aspect ratio of the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE}
-     * types. Can be:
+     * elements. Can be:
      *
      * - {@link FITMODE_STRETCH}: Fit the content exactly to Element's bounding box.
      * - {@link FITMODE_CONTAIN}: Fit the content within the Element's bounding box while
@@ -1115,7 +1115,7 @@ class ElementComponent extends Component {
     /**
      * Sets the size of the font. Measured in the same units as the element's {@link width} and
      * {@link height}, so its on-screen size depends on whether the element is screen-space or in
-     * world space. Defaults to 32. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * world space. Defaults to 32. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -1261,8 +1261,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the color of the image for {@link ELEMENTTYPE_IMAGE} types or the color of the text for
-     * {@link ELEMENTTYPE_TEXT} types. Only the RGB channels are used; the alpha channel is ignored,
+     * Sets the color of the image for {@link ELEMENTTYPE_IMAGE} elements or the color of the text for
+     * {@link ELEMENTTYPE_TEXT} elements. Only the RGB channels are used; the alpha channel is ignored,
      * so use {@link opacity} to control transparency.
      *
      * @type {Color}
@@ -1289,7 +1289,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the font used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the font used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Font|CanvasFont}
      */
@@ -1312,7 +1312,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the font asset used for rendering the text, as either an {@link Asset} or an asset id.
-     * Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Asset | number | null}
      */
@@ -1336,7 +1336,7 @@ class ElementComponent extends Component {
     /**
      * Sets the spacing between the letters of the text, as a multiplier on the default character
      * advance, defaulting to 1 (normal spacing). Values below 1 tighten the text and values above 1
-     * spread it out. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * spread it out. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -1360,7 +1360,7 @@ class ElementComponent extends Component {
     /**
      * Sets the height of each line of text, measured in the same units as {@link fontSize}. This is
      * independent of {@link fontSize}, so it can be used to tighten or loosen vertical line
-     * spacing. Defaults to 32. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * spacing. Defaults to 32. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -1383,7 +1383,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to automatically wrap lines based on the element width. Only works for
-     * {@link ELEMENTTYPE_TEXT} types, and when {@link autoWidth} is set to false.
+     * {@link ELEMENTTYPE_TEXT} elements, and when {@link autoWidth} is set to false.
      *
      * @type {boolean}
      */
@@ -1406,7 +1406,7 @@ class ElementComponent extends Component {
 
     /**
      * Gets the lines of rendered text, split by line breaks and word wrapping. Only works for
-     * {@link ELEMENTTYPE_TEXT} types, and is populated when the text is laid out, so it reads as
+     * {@link ELEMENTTYPE_TEXT} elements, and is populated when the text is laid out, so it reads as
      * `undefined` until the first update.
      *
      * @type {string[]}
@@ -1422,7 +1422,7 @@ class ElementComponent extends Component {
     /**
      * Sets the horizontal and vertical alignment of the text. Values range from 0 to 1 where
      * `[0, 0]` is the bottom left and `[1, 1]` is the top right. Only works for
-     * {@link ELEMENTTYPE_TEXT} types.
+     * {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Vec2}
      */
@@ -1445,7 +1445,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to automatically set the width of the component to be the same as the
-     * {@link textWidth}. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * {@link textWidth}. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {boolean}
      */
@@ -1469,7 +1469,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to automatically set the height of the component to be the same as the
-     * {@link textHeight}. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * {@link textHeight}. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {boolean}
      */
@@ -1538,7 +1538,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To override certain
+     * Sets the text to render. Only works for {@link ELEMENTTYPE_TEXT} elements. To override certain
      * text styling properties on a per-character basis, the text can optionally include markup
      * tags contained within square brackets. Supported tags are:
      *
@@ -1578,7 +1578,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the localization key to use to get the localized text from {@link Application#i18n}.
-     * Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {string}
      */
@@ -1600,7 +1600,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the texture to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * Sets the texture to render. Only works for {@link ELEMENTTYPE_IMAGE} elements.
      *
      * @type {Texture}
      */
@@ -1623,7 +1623,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the texture asset to render, as either an {@link Asset} or an asset id. Only works for
-     * {@link ELEMENTTYPE_IMAGE} types.
+     * {@link ELEMENTTYPE_IMAGE} elements.
      *
      * @type {Asset | number | null}
      */
@@ -1645,7 +1645,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the material to use when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * Sets the material to use when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} elements.
      *
      * @type {Material}
      */
@@ -1668,7 +1668,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the material asset to use when rendering an image, as either an {@link Asset} or an
-     * asset id. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * asset id. Only works for {@link ELEMENTTYPE_IMAGE} elements.
      *
      * @type {Asset | number | null}
      */
@@ -1690,7 +1690,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types which can render
+     * Sets the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} elements that can render
      * either a texture or a sprite.
      *
      * @type {Sprite}
@@ -1714,7 +1714,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the sprite asset to render, as either an {@link Asset} or an asset id. Only works for
-     * {@link ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
+     * {@link ELEMENTTYPE_IMAGE} elements that can render either a texture or a sprite.
      *
      * @type {Asset | number | null}
      */
@@ -1736,7 +1736,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the frame of the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types who have a
+     * Sets the frame of the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} elements that have a
      * sprite assigned.
      *
      * @type {number}
@@ -1760,7 +1760,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the number of pixels that map to one PlayCanvas unit. Only affects
-     * {@link ELEMENTTYPE_IMAGE} types with a sliced or tiled sprite assigned. Set to null to use
+     * {@link ELEMENTTYPE_IMAGE} elements with a sliced or tiled sprite assigned. Set to null to use
      * the sprite's own pixels-per-unit value.
      *
      * @type {number|null}
@@ -1784,7 +1784,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the opacity of the element. This works for both {@link ELEMENTTYPE_IMAGE} and
-     * {@link ELEMENTTYPE_TEXT} element types.
+     * {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -1811,7 +1811,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the region of the texture to use in order to render an image. Values range from 0 to 1
-     * and indicate u, v, width, height. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * and indicate u, v, width, height. Only works for {@link ELEMENTTYPE_IMAGE} elements.
      *
      * @type {Vec4}
      */
@@ -1856,7 +1856,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Color}
      */
@@ -1879,7 +1879,7 @@ class ElementComponent extends Component {
     /**
      * Sets the width of the text outline effect, ranging from 0 (no outline) to 1 (maximum
      * thickness). Defaults to 0. Combine with {@link outlineColor} to style the outline. Only works
-     * for {@link ELEMENTTYPE_TEXT} types.
+     * for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -1901,7 +1901,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Color}
      */
@@ -1929,7 +1929,7 @@ class ElementComponent extends Component {
      * scales; positive x shifts the shadow right and positive y shifts it up. The shadow is only
      * drawn where it extends past the glyph, so the default of `[0, 0]` produces no visible shadow
      * and a non-zero offset is required to display one. Only works for {@link ELEMENTTYPE_TEXT}
-     * types.
+     * elements.
      *
      * @type {Vec2}
      * @example
@@ -1955,7 +1955,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether markup processing is enabled for this element. Only works for
-     * {@link ELEMENTTYPE_TEXT} types. Defaults to false.
+     * {@link ELEMENTTYPE_TEXT} elements. Defaults to false.
      *
      * @type {boolean}
      */
@@ -1977,7 +1977,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the index of the first character to render. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the index of the first character to render. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -1999,7 +1999,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the index of the last character to render. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the index of the last character to render. Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
