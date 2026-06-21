@@ -1516,7 +1516,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to convert unicode characters. This uses a function registered by
-     * {@link ElementComponentSystem#registerUnicodeConverter}.
+     * `app.systems.element.registerUnicodeConverter`.
      *
      * @type {boolean}
      */
