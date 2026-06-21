@@ -1314,7 +1314,7 @@ class ElementComponent extends Component {
      * Sets the font asset used for rendering the text, as either an {@link Asset} or an asset id.
      * Only works for {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {Asset | number}
+     * @type {Asset | number | null}
      */
     set fontAsset(arg) {
         this._setValue('fontAsset', arg);
@@ -1323,7 +1323,7 @@ class ElementComponent extends Component {
     /**
      * Gets the id of the font asset used for rendering the text.
      *
-     * @type {number}
+     * @type {Asset | number | null}
      */
     get fontAsset() {
         if (this._text && typeof this._text.fontAsset === 'number') {
@@ -1625,7 +1625,7 @@ class ElementComponent extends Component {
      * Sets the texture asset to render, as either an {@link Asset} or an asset id. Only works for
      * {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {Asset | number}
+     * @type {Asset | number | null}
      */
     set textureAsset(arg) {
         this._setValue('textureAsset', arg);
@@ -1634,7 +1634,7 @@ class ElementComponent extends Component {
     /**
      * Gets the id of the texture asset to render.
      *
-     * @type {number}
+     * @type {Asset | number | null}
      */
     get textureAsset() {
         if (this._image) {
@@ -1670,7 +1670,7 @@ class ElementComponent extends Component {
      * Sets the material asset to use when rendering an image, as either an {@link Asset} or an
      * asset id. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {Asset | number}
+     * @type {Asset | number | null}
      */
     set materialAsset(arg) {
         this._setValue('materialAsset', arg);
@@ -1679,7 +1679,7 @@ class ElementComponent extends Component {
     /**
      * Gets the id of the material asset to use when rendering an image.
      *
-     * @type {number}
+     * @type {Asset | number | null}
      */
     get materialAsset() {
         if (this._image) {
@@ -1716,7 +1716,7 @@ class ElementComponent extends Component {
      * Sets the sprite asset to render, as either an {@link Asset} or an asset id. Only works for
      * {@link ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
      *
-     * @type {Asset | number}
+     * @type {Asset | number | null}
      */
     set spriteAsset(arg) {
         this._setValue('spriteAsset', arg);
@@ -1725,7 +1725,7 @@ class ElementComponent extends Component {
     /**
      * Gets the id of the sprite asset to render.
      *
-     * @type {number}
+     * @type {Asset | number | null}
      */
     get spriteAsset() {
         if (this._image) {
