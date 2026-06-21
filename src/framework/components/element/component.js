@@ -1115,7 +1115,7 @@ class ElementComponent extends Component {
     /**
      * Sets the size of the font. Measured in the same units as the element's {@link width} and
      * {@link height}, so its on-screen size depends on whether the element is screen-space or in
-     * world space. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * world space. Defaults to 32. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1138,7 +1138,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the minimum size that the font can scale to when {@link autoFitWidth} or
-     * {@link autoFitHeight} are true.
+     * {@link autoFitHeight} are true. Defaults to 8.
      *
      * @type {number}
      */
@@ -1162,7 +1162,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the maximum size that the font can scale to when {@link autoFitWidth} or
-     * {@link autoFitHeight} are true.
+     * {@link autoFitHeight} are true. Defaults to 32.
      *
      * @type {number}
      */
@@ -1335,8 +1335,8 @@ class ElementComponent extends Component {
 
     /**
      * Sets the spacing between the letters of the text, as a multiplier on the default character
-     * advance. 1 is normal spacing, values below 1 tighten the text and values above 1 spread it
-     * out. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * advance, defaulting to 1 (normal spacing). Values below 1 tighten the text and values above 1
+     * spread it out. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1360,7 +1360,7 @@ class ElementComponent extends Component {
     /**
      * Sets the height of each line of text, measured in the same units as {@link fontSize}. This is
      * independent of {@link fontSize}, so it can be used to tighten or loosen vertical line
-     * spacing. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * spacing. Defaults to 32. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1878,8 +1878,8 @@ class ElementComponent extends Component {
 
     /**
      * Sets the width of the text outline effect, ranging from 0 (no outline) to 1 (maximum
-     * thickness). Combine with {@link outlineColor} to style the outline. Only works for
-     * {@link ELEMENTTYPE_TEXT} types.
+     * thickness). Defaults to 0. Combine with {@link outlineColor} to style the outline. Only works
+     * for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
