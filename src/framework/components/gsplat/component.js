@@ -97,9 +97,6 @@ class GSplatComponent extends Component {
      */
     _materialTmp = null;
 
-    /** @private */
-    _highQualitySH = true;
-
     /**
      * Base distance for the first LOD transition (LOD 0 to LOD 1).
      *
@@ -322,17 +319,6 @@ class GSplatComponent extends Component {
             return null;
         }
         return this._instance?.material ?? this._materialTmp ?? null;
-    }
-
-    set highQualitySH(value) {
-        if (value !== this._highQualitySH) {
-            this._highQualitySH = value;
-            this._instance?.setHighQualitySH(value);
-        }
-    }
-
-    get highQualitySH() {
-        return this._highQualitySH;
     }
 
     /**
@@ -1030,7 +1016,6 @@ class GSplatComponent extends Component {
             // create new instance
             this.instance = new GSplatInstance(resource, {
                 material: this._materialTmp,
-                highQualitySH: this._highQualitySH,
                 scene: this.system.app.scene
             });
             this._materialTmp = null;
