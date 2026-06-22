@@ -15,6 +15,9 @@ import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslVert from './shader.wgsl.vert';
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -105,6 +108,24 @@ assetListLoader.load(() => {
     });
     data.set('alphaClip', 0.4);
 
+    // Optional custom vertex shader that animates each splat's position (via modifySplatCenter). The
+    // toggle verifies the cast shadow follows the animated position, since the shadow draw uses the
+    // same quad vertex shader as the forward pass.
+    const sceneMat = app.scene.gsplat.material;
+    const applyCustomShader = (enabled) => {
+        if (enabled) {
+            sceneMat.getShaderChunks('glsl').set('gsplatModifyVS', shaderGlslVert);
+            sceneMat.getShaderChunks('wgsl').set('gsplatModifyVS', shaderWgslVert);
+        } else {
+            sceneMat.getShaderChunks('glsl').delete('gsplatModifyVS');
+            sceneMat.getShaderChunks('wgsl').delete('gsplatModifyVS');
+        }
+        sceneMat.update();
+    };
+    data.on('shader:set', () => applyCustomShader(!!data.get('shader')));
+    applyCustomShader(false);
+    data.set('shader', false);
+
     // Create first splat entity
     const biker = new pc.Entity('biker');
     biker.addComponent('gsplat', {
@@ -194,12 +215,21 @@ assetListLoader.load(() => {
     });
     data.set('numLights', 2);
 
-    // Rotate all lights together (same direction), preserving each light's fixed azimuth offset.
+    // Rotate all lights together (same direction), preserving each light's fixed azimuth offset;
+    // also advance the custom-shader animation time.
     let lightAngle = 0;
+    let currentTime = 0;
     app.on('update', (/** @type {number} */ dt) => {
         lightAngle += dt * 20;
         lights.forEach((light, i) => {
             light.setEulerAngles(55, lightBaseAzimuths[i] + lightAngle, 0);
         });
+
+        currentTime += dt;
+        sceneMat.setParameter('uTime', currentTime);
+
+        // re-dirty the scene gsplat material each frame so the per-frame uTime propagates to the
+        // renderer's material copy (the quad renderer only re-copies template params when dirty)
+        sceneMat.update();
     });
 });

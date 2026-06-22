@@ -1,4 +1,4 @@
-import { BindingTwoWay, LabelGroup, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -42,6 +42,13 @@ export function Controls({ observer }) {
                     max={6}
                     step={1}
                     precision={0}
+                />
+            </LabelGroup>
+            <LabelGroup text='Animate'>
+                <BooleanInput
+                    type='toggle'
+                    binding={new BindingTwoWay()}
+                    link={{ observer, path: 'shader' }}
                 />
             </LabelGroup>
         </>

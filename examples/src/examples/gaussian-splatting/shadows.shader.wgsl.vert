@@ -1,0 +1,19 @@
+uniform uTime: f32;
+
+fn modifySplatCenter(center: ptr<function, vec3f>) {
+    // animate the splat position (this must be reflected in the cast shadow too)
+    let heightIntensity = (*center).y * 0.5;
+    (*center).x += sin(uniform.uTime * 5.0 + (*center).y) * 0.3 * heightIntensity;
+}
+
+fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {
+    // no modification
+}
+
+fn modifySplatColor(center: vec3f, clr: ptr<function, vec4f>) {
+    let sineValue = abs(sin(uniform.uTime * 5.0 + center.y));
+
+    let gold = vec3f(1.0, 0.85, 0.0);
+    let blend = smoothstep(0.9, 1.0, sineValue);
+    (*clr) = vec4f(mix((*clr).xyz, gold, blend), (*clr).a);
+}
