@@ -48,14 +48,10 @@ fn applyMsdf(color_in: vec4f) -> vec4f {
     let sigDist: f32 = median(tsample.r, tsample.g, tsample.b);
     let sigDistShdw: f32 = median(ssample.r, ssample.g, ssample.b);
 
-    // Coverage threshold. font_sdfIntensity fattens the glyph; 0 renders at the true glyph
-    // edge (median == 0.5). A previous fixed 0.05 erosion biased this to ~0.525, which carved
-    // holes and notches at thin junctions (e.g. the 'f' crossbar and the 'x' crossing).
+    // coverage threshold (0.5 = glyph edge); font_sdfIntensity fattens the glyph
     let edge: f32 = 0.5 - 0.5 * uniform.font_sdfIntensity;
 
-    // Anti-alias from the gradient of the distance field itself, giving a ~1 pixel coverage
-    // ramp that is correct for edges of any orientation. The previous smoothing was derived
-    // from the horizontal uv derivative only, under-anti-aliasing diagonal and horizontal edges.
+    // anti-aliasing width: distance field change per pixel, clamped above zero
     let aa: f32 = max(abs(dpdx(sigDist)) + abs(dpdy(sigDist)), 1e-4);
 
     let inside: f32 = clamp((sigDist - edge) / aa + 0.5, 0.0, 1.0);
