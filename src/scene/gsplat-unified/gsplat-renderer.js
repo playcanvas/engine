@@ -1,6 +1,4 @@
 import { Debug } from '../../core/debug.js';
-import gsplatOutputVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatOutput.js';
-import { shaderChunksWGSL } from '../shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { FisheyeProjection } from '../graphics/fisheye-projection.js';
 
 /**
@@ -42,7 +40,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
 
 /**
  * Base class for splat renderers. Holds common state shared by all renderer
- * implementations (instanced-quad, compute-based, etc.). Derived classes
+ * implementations (instanced-quad, hybrid GPU-sort, etc.). Derived classes
  * implement the actual rendering strategy.
  *
  * @ignore
@@ -168,8 +166,9 @@ class GSplatRenderer {
 
     /**
      * Sets the data source providing format and texture access. The base implementation updates
-     * the workBuffer and notifies derived classes of the format change. Derived classes (e.g.
-     * the compute renderer) may override this to decouple from the work buffer entirely.
+     * the workBuffer and notifies derived classes of the format change. Derived classes may
+     * override this to react to the source change (e.g. re-pointing materials at the new
+     * work-buffer textures).
      *
      * The source object must provide:
      * - `format` — a {@link GSplatFormat} describing the texture streams and shader read code.
@@ -271,25 +270,6 @@ class GSplatRenderer {
      */
     preparePickingView(world, worldState, pickParams) {
         return null;
-    }
-
-    /**
-     * Populates a cincludes map with tonemapping, gamma, decode and gsplatOutput
-     * shader chunks needed by compute tile-count shaders.
-     *
-     * @param {Map<string, string>} cincludes - The shader includes map to populate.
-     * @protected
-     */
-    _createTonemapIncludes(cincludes) {
-        cincludes.set('gsplatOutputVS', gsplatOutputVS);
-        const chunkNames = [
-            'tonemappingPS', 'tonemappingNonePS', 'tonemappingLinearPS', 'tonemappingFilmicPS',
-            'tonemappingHejlPS', 'tonemappingAcesPS', 'tonemappingAces2PS', 'tonemappingNeutralPS',
-            'decodePS', 'gammaPS'
-        ];
-        for (const name of chunkNames) {
-            cincludes.set(name, shaderChunksWGSL[name]);
-        }
     }
 }
 
