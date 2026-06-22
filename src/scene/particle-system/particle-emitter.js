@@ -904,16 +904,20 @@ class ParticleEmitter {
 
             // Fill the vertex buffer
             const data = new Float32Array(this.vertexBuffer.lock());
-            let meshData, stride, texCoordOffset;
+            let meshData, posOffset, posStride, uvOffset, uvStride;
             if (this.useMesh) {
                 meshData = new Float32Array(this.mesh.vertexBuffer.lock());
-                stride = meshData.length / this.mesh.vertexBuffer.numVertices;
-                for (let elem = 0; elem < this.mesh.vertexBuffer.format.elements.length; elem++) {
-                    if (this.mesh.vertexBuffer.format.elements[elem].name === SEMANTIC_TEXCOORD0) {
-                        texCoordOffset = this.mesh.vertexBuffer.format.elements[elem].offset / 4;
-                        break;
-                    }
-                }
+
+                // Copy positions and UVs using each element's own offset and stride (in floats),
+                // which handles both interleaved and non-interleaved source meshes. Procedurally
+                // generated meshes (e.g. createSphere) are non-interleaved.
+                const elements = this.mesh.vertexBuffer.format.elements;
+                const posElement = elements.find(el => el.name === SEMANTIC_POSITION);
+                const uvElement = elements.find(el => el.name === SEMANTIC_TEXCOORD0);
+                posOffset = posElement.offset / 4;
+                posStride = posElement.stride / 4;
+                uvOffset = uvElement ? uvElement.offset / 4 : -1;
+                uvStride = uvElement ? uvElement.stride / 4 : 0;
             }
 
             for (let i = 0; i < psysVertCount; i++) {
@@ -926,12 +930,19 @@ class ParticleEmitter {
                     data[i * 4 + 3] = id;
                 } else {
                     const vert = i % this.numParticleVerts;
-                    data[i * 6] = meshData[vert * stride];
-                    data[i * 6 + 1] = meshData[vert * stride + 1];
-                    data[i * 6 + 2] = meshData[vert * stride + 2];
+                    const posIndex = vert * posStride + posOffset;
+                    data[i * 6] = meshData[posIndex];
+                    data[i * 6 + 1] = meshData[posIndex + 1];
+                    data[i * 6 + 2] = meshData[posIndex + 2];
                     data[i * 6 + 3] = id;
-                    data[i * 6 + 4] = meshData[vert * stride + texCoordOffset + 0];
-                    data[i * 6 + 5] = 1.0 - meshData[vert * stride + texCoordOffset + 1];
+                    if (uvOffset >= 0) {
+                        const uvIndex = vert * uvStride + uvOffset;
+                        data[i * 6 + 4] = meshData[uvIndex];
+                        data[i * 6 + 5] = 1.0 - meshData[uvIndex + 1];
+                    } else {
+                        data[i * 6 + 4] = 0;
+                        data[i * 6 + 5] = 0;
+                    }
                 }
             }
 
