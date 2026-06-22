@@ -44,14 +44,6 @@ export function Controls({ observer }) {
                         ]}
                     />
                 </LabelGroup>
-                <LabelGroup text='Occluder'>
-                    <BooleanInput
-                        type='toggle'
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'occluder' }}
-                        value={observer.get('occluder') || false}
-                    />
-                </LabelGroup>
                 <LabelGroup text='Environment'>
                     <SelectInput
                         type='string'
