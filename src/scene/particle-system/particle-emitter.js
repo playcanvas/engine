@@ -704,6 +704,9 @@ class ParticleEmitter {
 
         this.addTime(0, false); // fill dynamic textures and constants with initial data
         if (this.preWarm) this.prewarm(this.lifetime);
+
+        // upload the filled CPU vertex buffer now; the component system skips this while paused
+        this.finishFrame();
     }
 
     _isAnimated() {
@@ -993,6 +996,9 @@ class ParticleEmitter {
         if (this.preWarm) {
             this.prewarm(this.lifetime);
         }
+
+        // upload the filled CPU vertex buffer now; the component system skips this while paused
+        this.finishFrame();
     }
 
     prewarm(time) {
