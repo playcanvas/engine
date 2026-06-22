@@ -525,6 +525,10 @@ class Light {
         this._isPcss = shadowInfo?.pcss ?? false;
 
         this._shadowType = value;
+
+        // hardware depth bias is skipped for PCSS, so refresh it now that _isPcss is known
+        this._updateShadowBias();
+
         this._destroyShadowMap();
         this.updateKey();
     }
@@ -1054,7 +1058,13 @@ class Light {
     }
 
     _updateShadowBias() {
-        if (this._type === LIGHTTYPE_OMNI && !this.clusteredLighting) {
+        // No hardware depth bias (polygon offset) is applied for:
+        // - non-clustered omni lights (they store distance, not depth), or
+        // - PCSS shadows of any light type. PCSS stores depth in a color buffer and applies its
+        //   bias in the shader, so the hardware polygon offset is a no-op on WebGL but is applied
+        //   inconsistently on WebGPU (different shadow depth-buffer format), which incorrectly
+        //   removed valid self-shadows. Hardware bias is only meaningful for hardware-compare PCF.
+        if ((this._type === LIGHTTYPE_OMNI && !this.clusteredLighting) || this._isPcss) {
             this.shadowDepthState.depthBias = 0;
             this.shadowDepthState.depthBiasSlope = 0;
         } else {
