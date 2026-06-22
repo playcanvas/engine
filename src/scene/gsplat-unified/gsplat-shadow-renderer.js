@@ -130,6 +130,24 @@ class GSplatShadowRenderer {
      */
     _frustumPlanes = new Float32Array(24);
 
+    /**
+     * Change-detection key for the scene material's shader chunks; when it changes, the user
+     * `gsplatModifyVS` chunk is re-applied to the per-light shadow materials.
+     *
+     * @type {string}
+     * @private
+     */
+    _userChunksKey = '';
+
+    /**
+     * The scene material's user `gsplatModifyVS` WGSL chunk source (or null for the default no-op).
+     * The shadow path is WebGPU-only, so only the WGSL variant is tracked.
+     *
+     * @type {string|null}
+     * @private
+     */
+    _userModifyWgsl = null;
+
     // The cull/args shaders are shared, but each light entry gets its OWN Compute instances
     // (created in _createEntry). A Compute owns a persistent uniform buffer, so a single shared
     // Compute dispatched once per light per frame would have all dispatches read the last-written
@@ -332,6 +350,11 @@ class GSplatShadowRenderer {
         // current here (cheap: one matrix per splat placement, correct for moving splats).
         this.world.workBuffer.frustumCuller.updateTransformsData(worldState.boundsGroups);
 
+        // Apply the scene material's user vertex-modify chunk + forward its parameters to the
+        // per-light shadow materials, so cast shadows follow the same per-vertex animation as the
+        // forward pass (the shadow draw uses the same quad VS).
+        this._syncUserModify(gsplatParams);
+
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
         const textureSize = this.world.workBuffer.textureSize;
@@ -339,6 +362,56 @@ class GSplatShadowRenderer {
         this.entries.forEach((entry) => {
             this._cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams);
         });
+    }
+
+    /**
+     * Applies the scene material's user `gsplatModifyVS` chunk to every per-light shadow material
+     * (recompiling only when the chunk changes) and forwards the scene material's parameters (e.g.
+     * `uTime`) to them each frame. This keeps cast shadows in sync with any forward-pass vertex
+     * animation, since the shadow draw uses the same quad VS + modify hooks.
+     *
+     * @param {GSplatParams} gsplatParams - Scene gsplat params (carries the template material).
+     * @private
+     */
+    _syncUserModify(gsplatParams) {
+        const userMat = gsplatParams.material;
+        if (!userMat) return;
+
+        // re-apply the modify chunk to all entries when the scene material's chunks change
+        const chunksKey = userMat.shaderChunks?.key ?? '';
+        if (chunksKey !== this._userChunksKey) {
+            this._userChunksKey = chunksKey;
+            this._userModifyWgsl = userMat.getShaderChunks?.('wgsl')?.get('gsplatModifyVS') ?? null;
+            this.entries.forEach(entry => this._applyUserModify(entry));
+        }
+
+        // forward user material parameters (e.g. uTime) every frame. The entry's own bindings are
+        // set afterwards in _cullEntry, so they win on any name collision.
+        const params = userMat.parameters;
+        this.entries.forEach((entry) => {
+            for (const name in params) {
+                if (params.hasOwnProperty(name)) {
+                    entry.material.setParameter(name, params[name].data);
+                }
+            }
+        });
+    }
+
+    /**
+     * Sets (or clears) the tracked user `gsplatModifyVS` chunk on one entry's material and rebuilds
+     * its shader. Called when the chunk changes and when a new entry is created.
+     *
+     * @param {ShadowLightEntry} entry - The light entry.
+     * @private
+     */
+    _applyUserModify(entry) {
+        const wgsl = entry.material.shaderChunks.wgsl;
+        if (this._userModifyWgsl) {
+            wgsl.set('gsplatModifyVS', this._userModifyWgsl);
+        } else {
+            wgsl.delete('gsplatModifyVS');
+        }
+        entry.material.update();
     }
 
     /**
@@ -482,7 +555,7 @@ class GSplatShadowRenderer {
         const cullCompute = new Compute(device, this._cullShader, 'GSplatShadowCull');
         const argsCompute = new Compute(device, this._argsShader, 'GSplatShadowIndirectArgs');
 
-        return {
+        const entry = {
             light,
             material,
             meshInstance,
@@ -492,6 +565,11 @@ class GSplatShadowRenderer {
             cullCompute,
             argsCompute
         };
+
+        // apply the current user modify chunk so a newly-added light matches the existing ones
+        this._applyUserModify(entry);
+
+        return entry;
     }
 
     /**
