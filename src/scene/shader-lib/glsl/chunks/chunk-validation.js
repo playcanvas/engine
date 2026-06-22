@@ -57,7 +57,10 @@ const chunkVersions = {
     iridescenceDiffractionPS: '1.65',
     lightmapAddPS: '1.65',
     refractionCubePS: '1.70',
-    refractionDynamicPS: '1.70'
+    refractionDynamicPS: '1.70',
+
+    // text
+    msdfPS: '2.20'
 };
 
 // removed

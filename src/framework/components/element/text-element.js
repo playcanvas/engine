@@ -684,8 +684,6 @@ class TextElement {
                 mi.setParameter('material_emissive', this._colorUniform);
                 mi.setParameter('material_opacity', this._color.a);
                 mi.setParameter('font_sdfIntensity', this._font.intensity);
-                mi.setParameter('font_pxrange', this._getPxRange(this._font));
-                mi.setParameter('font_textureWidth', this._font.data.info.maps[i].width);
 
                 mi.setParameter('outline_color', this._outlineColorUniform);
                 mi.setParameter('outline_thickness', this._outlineThicknessScale * this._outlineThickness);
@@ -1414,8 +1412,6 @@ class TextElement {
                 const mi = this._meshInfo[i].meshInstance;
                 if (mi) {
                     mi.setParameter('font_sdfIntensity', this._font.intensity);
-                    mi.setParameter('font_pxrange', this._getPxRange(this._font));
-                    mi.setParameter('font_textureWidth', this._font.data.info.maps[i].width);
                 }
             }
         }
@@ -1437,18 +1433,6 @@ class TextElement {
                 mi.setParameter('texture_opacityMap', texture);
             }
         }
-    }
-
-    _getPxRange(font) {
-        // calculate pxrange from range and scale properties on a character
-        const keys = Object.keys(this._font.data.chars);
-        for (let i = 0; i < keys.length; i++) {
-            const char = this._font.data.chars[keys[i]];
-            if (char.range) {
-                return (char.scale || 1) * char.range;
-            }
-        }
-        return 2; // default
     }
 
     _getUv(char) {
@@ -1798,8 +1782,6 @@ class TextElement {
                 const mi = this._meshInfo[i].meshInstance;
                 if (mi) {
                     mi.setParameter('font_sdfIntensity', this._font.intensity);
-                    mi.setParameter('font_pxrange', this._getPxRange(this._font));
-                    mi.setParameter('font_textureWidth', this._font.data.info.maps[i].width);
                     this._setTextureParams(mi, this._font.textures[i]);
                 }
             }
