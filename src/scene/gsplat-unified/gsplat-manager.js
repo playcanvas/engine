@@ -5,6 +5,7 @@ import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorld } from './gsplat-world.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
 import { GSplatHybridRenderer } from './gsplat-hybrid-renderer.js';
+import { GSplatHybridRendererScratch } from './gsplat-hybrid-renderer-scratch.js';
 import { GSplatShadowRenderer } from './gsplat-shadow-renderer.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
@@ -86,6 +87,17 @@ class GSplatManager {
      * @type {GSplatShadowRenderer|null}
      */
     shadowRenderer = null;
+
+    /**
+     * Shared GPU scratch for the GPU-sort (hybrid) path, created while a GPU-sort renderer is in use
+     * and injected into both the forward {@link GSplatHybridRenderer} and the
+     * {@link GSplatShadowRenderer} so they share the compaction candidate buffer. Null for the
+     * CPU-sort (quad) renderer.
+     *
+     * @type {GSplatHybridRendererScratch|null}
+     * @private
+     */
+    _hybridScratch = null;
 
     /**
      * The currently active renderer mode. Starts as undefined so the first
@@ -223,6 +235,10 @@ class GSplatManager {
         // its cast mesh instances from the layer.
         this.shadowRenderer?.destroy();
         this.shadowRenderer = null;
+
+        // Free the shared GPU-sort scratch after its borrowers (forward + shadow compactions) are gone.
+        this._hybridScratch?.destroy();
+        this._hybridScratch = null;
     }
 
     /**
@@ -396,10 +412,18 @@ class GSplatManager {
     _syncShadowRenderer() {
         const wantShadow = !!(this.renderMode & GSPLAT_SHADOW) && this.renderer.usesGpuSort;
         if (wantShadow && !this.shadowRenderer) {
-            this.shadowRenderer = new GSplatShadowRenderer(this.device, this.node, this.cameraNode, this.layer, this.world);
+            this.shadowRenderer = new GSplatShadowRenderer(this.device, this.node, this.cameraNode, this.layer, this.world, this._hybridScratch);
         } else if (!wantShadow && this.shadowRenderer) {
             this.shadowRenderer.destroy();
             this.shadowRenderer = null;
+        }
+
+        // Free the shared scratch once no GPU-sort renderer remains (forward switched to CPU-sort).
+        // Runs after the forward renderer (_createRenderer) and shadow renderer above are torn down,
+        // so neither borrower references it anymore.
+        if (!this.renderer.usesGpuSort && this._hybridScratch) {
+            this._hybridScratch.destroy();
+            this._hybridScratch = null;
         }
     }
 
@@ -412,8 +436,12 @@ class GSplatManager {
     _createRenderer(mode) {
         const workBuffer = this.world.workBuffer;
         if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
+            // The GPU-sort path shares one scratch (compaction candidate buffer) across the forward
+            // renderer and the shadow cull; create it here so it exists for both constructors. Freed
+            // in _syncShadowRenderer once no GPU-sort renderer remains (and in destroy()).
+            this._hybridScratch ??= new GSplatHybridRendererScratch(this.device);
             // The hybrid renderer creates its own GPU sort resources (radix sorter, projector).
-            this.renderer = new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer);
+            this.renderer = new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch);
         } else {
             this.renderer = new GSplatQuadRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer);
             this.initCpuSorting();
