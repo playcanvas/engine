@@ -121,6 +121,15 @@ class GSplatHybridRenderer extends GSplatRenderer {
     intervalCompaction = null;
 
     /**
+     * Manager-owned shared scratch injected at construction; forwarded to the interval compaction so
+     * its compacted index list is shared with the directional-shadow cull. Null when not provided.
+     *
+     * @type {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null}
+     * @private
+     */
+    _scratch = null;
+
+    /**
      * Per-frame indirect draw slot index (-1 when unallocated).
      *
      * @type {number}
@@ -149,9 +158,13 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @param {Layer} layer - The layer to add mesh instances to.
      * @param {GSplatWorkBuffer} workBuffer - The work buffer (kept for parent compatibility;
      * the hybrid renderer does not bind work-buffer textures itself).
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch] -
+     * Manager-owned shared scratch; forwarded to the interval compaction (shared with the shadow cull).
      */
-    constructor(device, node, cameraNode, layer, workBuffer) {
+    constructor(device, node, cameraNode, layer, workBuffer, scratch = null) {
         super(device, node, cameraNode, layer, workBuffer);
+
+        this._scratch = scratch;
 
         this._material = new ShaderMaterial({
             uniqueName: 'UnifiedSplatHybridMaterial',
@@ -292,7 +305,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
     _ensureGpuPipeline() {
         if (!this.gpuSorter) this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
         if (!this.projector) this.projector = new GSplatProjector(this.device);
-        if (!this.intervalCompaction) this.intervalCompaction = new GSplatIntervalCompaction(this.device);
+        if (!this.intervalCompaction) this.intervalCompaction = new GSplatIntervalCompaction(this.device, this._scratch);
     }
 
     /**

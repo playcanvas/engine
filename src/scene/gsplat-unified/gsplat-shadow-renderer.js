@@ -12,6 +12,7 @@ import {
     SEMANTIC_POSITION,
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
+    UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_UINT,
     UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
@@ -21,7 +22,10 @@ import { MeshInstance } from '../mesh-instance.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { computeGsplatShadowCullSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-shadow-cull.js';
 import { computeGsplatShadowIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-shadow-indirect-args.js';
-import { buildGSplatIntervalData, INTERVAL_STRIDE } from './gsplat-interval-data.js';
+import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
+import gsplatModifyDefaultSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatModify.js';
+import gsplatHelpersSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatHelpers.js';
+import { GSplatIntervalCompaction } from './gsplat-interval-compaction.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -50,7 +54,10 @@ const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
  * @property {StorageBuffer|null} indexBuffer - Dense visible work-buffer index list (grows with splat count).
  * @property {number} allocatedIndexCount - Capacity of `indexBuffer` in splats.
  * @property {StorageBuffer} countBuffer - Single-element atomic visible counter (also bound as `numSplatsStorage`).
- * @property {Compute} cullCompute - Per-entry cull compute (own uniform buffer/bind group).
+ * @property {Compute|null} cullCompute - Per-entry cull compute (own uniform buffer/bind group),
+ * lazily (re)created against the current cull shader; see {@link ShadowLightEntry.cullComputeGen}.
+ * @property {number} cullComputeGen - Cull-shader generation `cullCompute` was built for; when it no
+ * longer matches the renderer's {@link GSplatShadowRenderer#_cullShaderGen} the compute is rebuilt.
  * @property {Compute} argsCompute - Per-entry indirect-args compute (own uniform buffer/bind group).
  */
 
@@ -105,19 +112,16 @@ class GSplatShadowRenderer {
      */
     _desiredLights = new Set();
 
-    /** @type {StorageBuffer|null} */
-    intervalsBuffer = null;
-
-    /** @type {number} */
-    allocatedIntervalCount = 0;
-
     /**
-     * World-state version the intervals were last uploaded for (intervals are camera/light
-     * independent, so they are shared across all light entries and uploaded once per version).
+     * Pass 1 (coarse): interval compaction run with each light's frustum, producing a dense candidate
+     * list (`compactedSplatIds`) + candidate count (`countBuffer[numIntervals]`). Reused across all
+     * lights — one shared scratch, since lights are culled sequentially (light A's pass 2 consumes the
+     * candidate list before light B's pass 1 overwrites it). The expensive per-splat fine cull (pass
+     * 2) then runs flat over the candidate list, so occupancy is independent of interval count.
      *
-     * @type {number}
+     * @type {GSplatIntervalCompaction|null}
      */
-    _uploadedVersion = -1;
+    _compaction = null;
 
     /** @type {Vec2} */
     _cullDispatchSize = new Vec2(1, 1);
@@ -159,6 +163,33 @@ class GSplatShadowRenderer {
     /** @type {BindGroupFormat|null} */
     _cullBindGroupFormat = null;
 
+    /**
+     * Work-buffer format version the cull shader was last built for. The cull shader reads the work
+     * buffer (texture bindings + read code derived from the format), so a format change rebuilds it.
+     *
+     * @type {number}
+     * @private
+     */
+    _cullFormatVersion = -1;
+
+    /**
+     * The scene material's shader-chunks key the cull shader was last built for. A change means the
+     * user `gsplatModifyVS` chunk changed, so the cull shader is rebuilt to match the shadow draw.
+     *
+     * @type {string|null}
+     * @private
+     */
+    _cullBuiltChunksKey = null;
+
+    /**
+     * Monotonic cull-shader generation, bumped on every (re)build. Per-light cull Computes reference
+     * the shared shader, so they are recreated when this changes (see {@link _cullEntry}).
+     *
+     * @type {number}
+     * @private
+     */
+    _cullShaderGen = 0;
+
     /** @type {Shader|null} */
     _argsShader = null;
 
@@ -172,15 +203,25 @@ class GSplatShadowRenderer {
      * resolve each light's shadow camera via `light.getRenderData(sceneCamera, 0)`.
      * @param {Layer} layer - The layer to register shadow casters on (and read directional lights from).
      * @param {GSplatWorld} world - The shared world (work buffer, cull bounds, world states).
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch] -
+     * Manager-owned shared scratch; forwarded to the pass-1 compaction so its candidate index list is
+     * shared with the forward hybrid renderer (they use it at disjoint points in the frame).
      */
-    constructor(device, node, cameraNode, layer, world) {
+    constructor(device, node, cameraNode, layer, world, scratch = null) {
         this.device = device;
         this.node = node;
         this.cameraNode = cameraNode;
         this.layer = layer;
         this.world = world;
 
-        this._createCullShader();
+        // Pass 1 coarse cull / candidate compaction, shared across all this manager's lights. The
+        // candidate index list is borrowed from the manager-owned shared scratch (also used by the
+        // forward hybrid renderer); the count / prefix-sum / interval buffers stay per-instance.
+        this._compaction = new GSplatIntervalCompaction(device, scratch);
+
+        // the (pass 2) cull shader reads the work buffer (format-dependent), so it is built lazily
+        // once the work buffer + any user modify chunk are known (see _ensureCullShader). The args
+        // shader is format-independent and can be built up front.
         this._createArgsShader();
     }
 
@@ -188,8 +229,8 @@ class GSplatShadowRenderer {
         this.entries.forEach(entry => this._destroyEntry(entry));
         this.entries.clear();
 
-        this.intervalsBuffer?.destroy();
-        this.intervalsBuffer = null;
+        this._compaction?.destroy();
+        this._compaction = null;
 
         this._cullShader?.destroy();
         this._cullBindGroupFormat?.destroy();
@@ -199,32 +240,89 @@ class GSplatShadowRenderer {
         this._argsShader = null;
     }
 
-    /** @private */
-    _createCullShader() {
-        const device = this.device;
+    /**
+     * (Re)builds the shared cull shader when the work-buffer format or the user `gsplatModifyVS`
+     * chunk changes, bumping {@link _cullShaderGen} so per-light Computes are recreated. Must run
+     * after {@link _syncUserModify} (which refreshes the tracked modify chunk) and once the work
+     * buffer is ready.
+     *
+     * @private
+     */
+    _ensureCullShader() {
+        const wbFormat = this.world.workBuffer.format;
+        const version = wbFormat.extraStreamsVersion;
+        if (!this._cullShader || version !== this._cullFormatVersion || this._userChunksKey !== this._cullBuiltChunksKey) {
+            this._cullFormatVersion = version;
+            this._cullBuiltChunksKey = this._userChunksKey;
+            this._buildCullShader();
+        }
+    }
 
-        this._cullBindGroupFormat = new BindGroupFormat(device, [
+    /**
+     * Builds the pass-2 fine-cull shader + bind group format against the current work-buffer format
+     * and the tracked user modify chunk. The fixed bindings (0..4) are followed by the work-buffer
+     * format texture bindings; the shader reads each candidate splat (center/opacity/rotation/scale),
+     * applies the render-stage modifier, and runs the opacity/size/frustum fine tests.
+     *
+     * @private
+     */
+    _buildCullShader() {
+        const device = this.device;
+        const wbFormat = this.world.workBuffer.format;
+
+        // fixed bindings 0..4; work-buffer format texture bindings follow at 5+ (matches the
+        // @binding indices generated by getComputeInputDeclarations(fixedBindings.length)).
+        const fixedBindings = [
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE),
-            new BindStorageBufferFormat('intervals', SHADERSTAGE_COMPUTE, true),
+            // pass-1 outputs (read): the shared candidate list + its count at [numIntervals]
+            new BindStorageBufferFormat('compactedSplatIds', SHADERSTAGE_COMPUTE, true),
+            new BindStorageBufferFormat('candidateCountBuffer', SHADERSTAGE_COMPUTE, true),
+            // per-light outputs (read/write): the final visible list + atomic count
             new BindStorageBufferFormat('outputIndices', SHADERSTAGE_COMPUTE, false),
-            new BindStorageBufferFormat('globalCount', SHADERSTAGE_COMPUTE, false),
-            new BindStorageBufferFormat('boundsBuffer', SHADERSTAGE_COMPUTE, true),
-            new BindStorageBufferFormat('transformsBuffer', SHADERSTAGE_COMPUTE, true)
+            new BindStorageBufferFormat('globalCount', SHADERSTAGE_COMPUTE, false)
+        ];
+
+        this._cullBindGroupFormat?.destroy();
+        this._cullBindGroupFormat = new BindGroupFormat(device, [
+            ...fixedBindings,
+            ...wbFormat.getComputeBindFormats()
         ]);
 
         const uniformBufferFormat = new UniformBufferFormat(device, [
             new UniformFormat('frustumPlanes', UNIFORMTYPE_VEC4, 6),
-            new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
+            new UniformFormat('numIntervals', UNIFORMTYPE_UINT),
+            new UniformFormat('splatTextureSize', UNIFORMTYPE_UINT),
+            new UniformFormat('alphaClip', UNIFORMTYPE_FLOAT),
+            new UniformFormat('worldSizeThreshold', UNIFORMTYPE_FLOAT)
         ]);
 
+        const cincludes = new Map();
+        cincludes.set('gsplatComputeSplatCS', computeSplatSource);
+        cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(fixedBindings.length));
+        cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
+        cincludes.set('gsplatHelpersVS', gsplatHelpersSource);
+        // the user's render-stage modify chunk (or the default no-op), so the cull keeps exactly the
+        // splats the shadow draw renders. Shadow path is WebGPU-only, so only the WGSL variant is used.
+        cincludes.set('gsplatModifyVS', this._userModifyWgsl ?? gsplatModifyDefaultSource);
+
+        const cdefines = new Map([['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]]);
+        const colorStream = wbFormat.getStream('dataColor');
+        if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
+            cdefines.set('GSPLAT_COLOR_FLOAT', '');
+        }
+
+        this._cullShader?.destroy();
         this._cullShader = new Shader(device, {
             name: 'GSplatShadowCull',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatShadowCullSource,
-            cdefines: new Map([['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]]),
+            cincludes: cincludes,
+            cdefines: cdefines,
             computeBindGroupFormat: this._cullBindGroupFormat,
             computeUniformBufferFormats: { uniforms: uniformBufferFormat }
         });
+
+        this._cullShaderGen++;
     }
 
     /** @private */
@@ -262,7 +360,10 @@ class GSplatShadowRenderer {
      */
     setDataSource(workBuffer) {
         // Force a re-upload of intervals; offsets/bounds indices may have shifted.
-        this._uploadedVersion = -1;
+        this._compaction?.invalidateUpload();
+        // Force a cull-shader rebuild against the new work-buffer format (a swapped format object
+        // can reset its version, so don't rely on extraStreamsVersion alone).
+        this._cullFormatVersion = -1;
         this.entries.forEach((entry) => {
             this._configureMaterialWorkBuffer(entry.material);
             entry.material.update();
@@ -326,9 +427,10 @@ class GSplatShadowRenderer {
     }
 
     /**
-     * Post-cull pass: for each light entry run the coarse node-frustum cull + expand and the
-     * indirect-args write, then bind the results to the entry's mesh instance. Runs after
-     * `cullComposition` and before the frame graph renders the shadow maps.
+     * Post-cull pass: for each light entry run the two-pass cull (coarse candidate compaction with
+     * the light frustum, then a flat per-splat fine cull) and the indirect-args write, then bind the
+     * results to the entry's mesh instance. Runs after `cullComposition` and before the frame graph
+     * renders the shadow maps.
      *
      * @param {GSplatParams} gsplatParams - Scene gsplat params (alphaClip etc.).
      */
@@ -343,7 +445,8 @@ class GSplatShadowRenderer {
             return;
         }
 
-        this._ensureIntervals(worldState);
+        // upload interval metadata to the pass-1 compaction (cached per world-state version)
+        this._compaction.uploadIntervals(worldState);
 
         // Refresh the per-node world transforms the coarse cull reads. The forward renderer also
         // does this each frame, but a shadow-only manager has no forward pass — so we keep them
@@ -354,6 +457,10 @@ class GSplatShadowRenderer {
         // per-light shadow materials, so cast shadows follow the same per-vertex animation as the
         // forward pass (the shadow draw uses the same quad VS).
         this._syncUserModify(gsplatParams);
+
+        // (re)build the cull shader if the work-buffer format or the user modify chunk changed, so
+        // the cull reads the current format and culls on the same modified positions as the draw.
+        this._ensureCullShader();
 
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
@@ -427,16 +534,32 @@ class GSplatShadowRenderer {
     _cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams) {
         const device = this.device;
 
-        // resolve the light's shadow-camera frustum (fitted during cullComposition) and the shared
-        // camera-independent cull bounds (populated by the forward renderer's frustum culler).
+        // resolve the light's shadow camera (fitted during cullComposition) and the shared camera-
+        // independent cull bounds (populated by the forward renderer's frustum culler).
         const sceneCamera = this.cameraNode.camera?.camera;
-        const frustum = sceneCamera && entry.light.getRenderData(sceneCamera, 0).shadowCamera?.frustum;
+        const shadowCamera = sceneCamera && entry.light.getRenderData(sceneCamera, 0).shadowCamera;
+        const frustum = shadowCamera && shadowCamera.frustum;
         const frustumCuller = this.world.workBuffer.frustumCuller;
         if (!frustum || !frustumCuller?.boundsBuffer || !frustumCuller?.transformsBuffer) {
             entry.meshInstance.visible = false;
             return;
         }
         this._fillFrustumPlanes(frustum);
+
+        // World-space size threshold for the minPixelSize fine cull. The directional shadow camera
+        // is orthographic, so the projected pixel size is linear in world size: focal = resolution /
+        // orthoHeight (the forward projector's focal = viewportWidth * projMat00, and ortho projMat00
+        // = 1 / orthoHeight). The forward gate is max(radiusX, radiusY) < minPixelSize with the
+        // radius ~ sqrt(2) * focal * extent plus a 0.3 px² variance floor; inverting that to a single
+        // world extent gives sqrt(max(0, minPixelSize²/2 - 0.3)) / focal. The shader compares this to
+        // the max scale axis, an upper bound on the projected extent, so the cull stays conservative
+        // (never drops a splat the forward path keeps). A threshold of 0 disables the size test.
+        const orthoHeight = shadowCamera.orthoHeight;
+        const shadowRes = entry.light._shadowResolution;
+        const minPixelSize = gsplatParams.minPixelSize;
+        const focal = (orthoHeight > 0 && shadowRes > 0) ? shadowRes / orthoHeight : 0;
+        const t2 = minPixelSize * minPixelSize * 0.5 - 0.3;
+        const worldSizeThreshold = (focal > 0 && t2 > 0) ? Math.sqrt(t2) / focal : 0;
 
         // grow the visible-index buffer to hold all active splats (worst case: nothing culled)
         if (totalActiveSplats > entry.allocatedIndexCount) {
@@ -446,20 +569,70 @@ class GSplatShadowRenderer {
             DebugHelper.setName(entry.indexBuffer, 'GSplatShadow.indices');
         }
 
-        // reset the atomic visible counter, then run the cull (coarse node-frustum reject + expand)
+        // PASS 1 (coarse): run the interval compaction with this light's frustum to produce a dense
+        // candidate list of work-buffer indices (splats in nodes intersecting the light frustum) +
+        // the candidate count at countBuffer[numIntervals]. The candidate buffer is shared across all
+        // lights — lights are culled sequentially, so this light's pass 2 consumes it before the next
+        // light's pass 1 overwrites it (compute passes are ordered). bounds/transforms are the shared
+        // camera-independent buffers; only the planes are per-light, passed via a lightweight culler
+        // view so the forward culler's own planes are never mutated.
+        const compaction = this._compaction;
+        compaction.dispatchCompact({
+            boundsBuffer: frustumCuller.boundsBuffer,
+            transformsBuffer: frustumCuller.transformsBuffer,
+            frustumPlanes: this._frustumPlanes
+        }, numIntervals, totalActiveSplats, false);
+
+        // PASS 2 (fine): flat one-thread-per-candidate cull over the candidate list — read + apply the
+        // vertex modify + opacity/size/frustum tests — compacting survivors into this light's final
+        // index buffer + count. Reset the final atomic counter first.
         entry.countBuffer.clear();
 
+        // (re)create the per-entry cull Compute against the current cull-shader generation (the cull
+        // shader is built lazily and rebuilt on work-buffer-format / modify-chunk changes).
+        if (!entry.cullCompute || entry.cullComputeGen !== this._cullShaderGen) {
+            entry.cullCompute?.destroy();
+            entry.cullCompute = new Compute(device, this._cullShader, 'GSplatShadowCull');
+            entry.cullComputeGen = this._cullShaderGen;
+        }
         const cull = entry.cullCompute;
-        cull.setParameter('intervals', this.intervalsBuffer);
+
+        // forward the user render-stage material parameters (e.g. uTime, referenced by the modify
+        // chunk and reflected into the compute's auto-generated bind group) BEFORE the cull's own
+        // bindings, so the cull's bindings win on any name collision (matches the forward projector).
+        const userMat = gsplatParams.material;
+        if (userMat) {
+            const srcParams = userMat.parameters;
+            for (const name in srcParams) {
+                if (srcParams.hasOwnProperty(name)) {
+                    cull.setParameter(name, srcParams[name].data);
+                }
+            }
+        }
+
+        cull.setParameter('compactedSplatIds', compaction.compactedSplatIds);
+        cull.setParameter('candidateCountBuffer', compaction.countBuffer);
         cull.setParameter('outputIndices', entry.indexBuffer);
         cull.setParameter('globalCount', entry.countBuffer);
-        cull.setParameter('boundsBuffer', frustumCuller.boundsBuffer);
-        cull.setParameter('transformsBuffer', frustumCuller.transformsBuffer);
         cull.setParameter('frustumPlanes[0]', this._frustumPlanes);
         cull.setParameter('numIntervals', numIntervals);
+        cull.setParameter('splatTextureSize', textureSize);
+        cull.setParameter('alphaClip', gsplatParams.alphaClip);
+        cull.setParameter('worldSizeThreshold', worldSizeThreshold);
 
-        // one workgroup per interval, tiled across X/Y when over the per-dimension limit
-        Compute.calcDispatchSize(numIntervals, this._cullDispatchSize, device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        // bind the work-buffer textures the fine cull reads (same set the forward projector binds)
+        const workBuffer = this.world.workBuffer;
+        for (const stream of workBuffer.format.resourceStreams) {
+            const texture = workBuffer.getTexture(stream.name);
+            if (texture) {
+                cull.setParameter(stream.name, texture);
+            }
+        }
+
+        // flat dispatch over the work-buffer capacity (a CPU-known upper bound); threads beyond the
+        // candidate count early-out in the shader. Tiled across X/Y over the per-dimension limit.
+        const workgroupCount = Math.ceil(totalActiveSplats / WORKGROUP_SIZE);
+        Compute.calcDispatchSize(workgroupCount, this._cullDispatchSize, device.limits.maxComputeWorkgroupsPerDimension || 65535);
         cull.setupDispatch(this._cullDispatchSize.x, this._cullDispatchSize.y, 1);
         device.computeDispatch([cull], 'GSplatShadowCull');
 
@@ -487,30 +660,6 @@ class GSplatShadowRenderer {
         if (entry.meshInstance.instancingCount <= 0) {
             entry.meshInstance.instancingCount = 1;
         }
-    }
-
-    /**
-     * Uploads interval metadata for the world state (cached per version).
-     *
-     * @param {import('./gsplat-world-state.js').GSplatWorldState} worldState - The world state.
-     * @private
-     */
-    _ensureIntervals(worldState) {
-        if (worldState.version === this._uploadedVersion) return;
-        this._uploadedVersion = worldState.version;
-
-        const numIntervals = worldState.totalIntervals;
-        if (numIntervals === 0) return;
-
-        if (numIntervals > this.allocatedIntervalCount) {
-            this.intervalsBuffer?.destroy();
-            this.allocatedIntervalCount = numIntervals;
-            this.intervalsBuffer = new StorageBuffer(this.device, numIntervals * INTERVAL_STRIDE * 4, BUFFERUSAGE_COPY_DST);
-            DebugHelper.setName(this.intervalsBuffer, 'GSplatShadow.intervals');
-        }
-
-        const data = buildGSplatIntervalData(worldState);
-        this.intervalsBuffer.write(0, data, 0, numIntervals * INTERVAL_STRIDE);
     }
 
     /**
@@ -552,7 +701,8 @@ class GSplatShadowRenderer {
 
         // Per-entry Compute instances (own uniform buffers + bind groups) sharing the renderer's
         // shaders, so per-light dispatches don't alias each other's uniforms (see field comment).
-        const cullCompute = new Compute(device, this._cullShader, 'GSplatShadowCull');
+        // The cull Compute is created lazily in _cullEntry: the cull shader is built lazily (it is
+        // work-buffer-format dependent) and recreated on rebuild, tracked via cullComputeGen.
         const argsCompute = new Compute(device, this._argsShader, 'GSplatShadowIndirectArgs');
 
         const entry = {
@@ -562,7 +712,8 @@ class GSplatShadowRenderer {
             indexBuffer: null,
             allocatedIndexCount: 0,
             countBuffer,
-            cullCompute,
+            cullCompute: null,
+            cullComputeGen: -1,
             argsCompute
         };
 
@@ -584,7 +735,7 @@ class GSplatShadowRenderer {
         entry.material.destroy();
         entry.indexBuffer?.destroy();
         entry.countBuffer.destroy();
-        entry.cullCompute.destroy();
+        entry.cullCompute?.destroy();
         entry.argsCompute.destroy();
     }
 

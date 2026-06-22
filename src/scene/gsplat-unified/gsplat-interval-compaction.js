@@ -46,7 +46,21 @@ class GSplatIntervalCompaction {
     /** @type {GraphicsDevice} */
     device;
 
-    /** @type {StorageBuffer|null} */
+    /**
+     * Manager-owned shared scratch (see {@link GSplatHybridRendererScratch}) the compacted index list
+     * is borrowed from — shared with the directional-shadow cull. The prefix-sum / count / interval
+     * buffers stay per-instance.
+     *
+     * @type {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch}
+     * @private
+     */
+    _scratch;
+
+    /**
+     * Borrowed candidate index list from {@link _scratch}, refreshed each dispatch (not owned here).
+     *
+     * @type {StorageBuffer|null}
+     */
     compactedSplatIds = null;
 
     /** @type {StorageBuffer|null} */
@@ -63,9 +77,6 @@ class GSplatIntervalCompaction {
 
     /** @type {StorageBuffer|null} */
     sortElementCountBuffer = null;
-
-    /** @type {number} */
-    allocatedCompactedCount = 0;
 
     /** @type {number} */
     allocatedIntervalCount = 0;
@@ -120,10 +131,15 @@ class GSplatIntervalCompaction {
 
     /**
      * @param {GraphicsDevice} device - The graphics device (must support compute).
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch} scratch -
+     * Manager-owned shared scratch the compacted index list is borrowed from (shared across the
+     * forward + shadow GPU-sort passes within a manager).
      */
-    constructor(device) {
+    constructor(device, scratch) {
         Debug.assert(device.supportsCompute, 'GSplatIntervalCompaction requires compute shader support (WebGPU)');
+        Debug.assert(scratch, 'GSplatIntervalCompaction requires a shared scratch (GSplatHybridRendererScratch)');
         this.device = device;
+        this._scratch = scratch;
 
         this.numSplatsBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
         this.sortElementCountBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
@@ -137,7 +153,7 @@ class GSplatIntervalCompaction {
     }
 
     destroy() {
-        this.compactedSplatIds?.destroy();
+        // compactedSplatIds is borrowed from the manager-owned scratch — never freed here.
         this.intervalsBuffer?.destroy();
         this.countBuffer?.destroy();
         this.prefixSumKernel?.destroy();
@@ -335,12 +351,9 @@ class GSplatIntervalCompaction {
      * @private
      */
     _ensureCapacity(numIntervals, totalActiveSplats) {
-        if (totalActiveSplats > this.allocatedCompactedCount) {
-            this.compactedSplatIds?.destroy();
-            this.allocatedCompactedCount = totalActiveSplats;
-            this.compactedSplatIds = new StorageBuffer(this.device, totalActiveSplats * 4, BUFFERUSAGE_COPY_SRC);
-            DebugHelper.setName(this.compactedSplatIds, 'GsplatIntervalCompaction.compactedSplatIds');
-        }
+        // borrow the manager-owned shared candidate list (shared with the shadow cull). The scratch
+        // grows monotonically and is freed by the manager, not here.
+        this.compactedSplatIds = this._scratch.ensureCompactedSplatIds(totalActiveSplats);
 
         const requiredCountSize = numIntervals + 1;
         if (requiredCountSize > this.allocatedCountBufferSize) {
