@@ -30,7 +30,6 @@ const _properties = [
     'lodMultiplier',
     'castShadows',
     'material',
-    'highQualitySH',
     'asset',
     'resource',
     'layers'
