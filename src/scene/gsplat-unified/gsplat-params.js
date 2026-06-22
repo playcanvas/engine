@@ -67,6 +67,7 @@ class GSplatParams {
      */
     constructor(device) {
         this._device = device;
+        this._currentRenderer = this._resolveRenderer(this._renderer);
         this._format = this._createFormat(GSPLATDATA_COMPACT);
         this._varyings = new GSplatVaryings(device);
 
@@ -140,18 +141,42 @@ class GSplatParams {
     _renderer = GSPLAT_RENDERER_AUTO;
 
     /**
+     * Resolved renderer in effect; computed from {@link _renderer} and the device in the
+     * constructor and the {@link renderer} setter.
+     *
      * @type {number}
      * @private
      */
     _currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
 
     /**
+     * Resolves a requested renderer mode to the concrete one used on this device.
+     *
+     * @param {number} value - The requested renderer mode.
+     * @returns {number} The resolved renderer mode.
+     * @private
+     */
+    _resolveRenderer(value) {
+        // AUTO picks GPU-side sorting on WebGPU, CPU-side sorting elsewhere.
+        if (value === GSPLAT_RENDERER_AUTO) {
+            return this._device.isWebGPU ?
+                GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
+        }
+        // GPU sort requires WebGPU; fall back to CPU sort on WebGL.
+        if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !this._device.isWebGPU) {
+            return GSPLAT_RENDERER_RASTER_CPU_SORT;
+        }
+        return value;
+    }
+
+    /**
      * Sets the rendering pipeline used for gaussian splatting. Can be:
      *
      * - {@link GSPLAT_RENDERER_AUTO}: Automatically selects the best pipeline for the platform.
+     * Selects {@link GSPLAT_RENDERER_RASTER_GPU_SORT} on WebGPU and
+     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL.
      * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
-     * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with GPU-side sorting (WebGPU only,
-     * experimental).
+     * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with GPU-side sorting (WebGPU only).
      *
      * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
      * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
@@ -167,14 +192,7 @@ class GSplatParams {
 
         if (this._renderer !== value) {
             this._renderer = value;
-
-            if (value === GSPLAT_RENDERER_AUTO) {
-                this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
-            } else if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !this._device.isWebGPU) {
-                this._currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
-            } else {
-                this._currentRenderer = value;
-            }
+            this._currentRenderer = this._resolveRenderer(value);
         }
     }
 
