@@ -1225,12 +1225,10 @@ export const GSPLAT_RENDERER_AUTO = 0;
 export const GSPLAT_RENDERER_RASTER_CPU_SORT = 1;
 
 /**
- * Rasterization-based rendering with GPU-side culling and sorting. WebGPU only. Experimental with
- * limited functionality.
+ * Rasterization-based rendering with GPU-side culling and sorting. WebGPU only.
  *
  * @type {number}
  * @category Graphics
- * @alpha
  */
 export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 
