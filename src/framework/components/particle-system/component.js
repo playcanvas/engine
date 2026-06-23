@@ -1,4 +1,5 @@
-import { LAYERID_DEPTH } from '../../../scene/constants.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_DEPTH, LAYERID_WORLD, PARTICLEORIENTATION_SCREEN } from '../../../scene/constants.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { ParticleEmitter } from '../../../scene/particle-system/particle-emitter.js';
 import { Asset } from '../../asset/asset.js';
@@ -7,46 +8,66 @@ import { Component } from '../component.js';
 /**
  * @import { CurveSet } from '../../../core/math/curve-set.js'
  * @import { Curve } from '../../../core/math/curve.js'
- * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
- * @import { ParticleSystemComponentSystem } from './system.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
- * @import { Vec3 } from '../../../core/math/vec3.js'
  */
 
-// properties that do not need rebuilding the particle system
-const SIMPLE_PROPERTIES = [
-    'emitterExtents',
-    'emitterRadius',
-    'emitterExtentsInner',
-    'emitterRadiusInner',
-    'loop',
-    'initialVelocity',
-    'animSpeed',
-    'normalMap',
-    'particleNormal'
-];
+const ASSET_PROPERTIES = ['colorMapAsset', 'normalMapAsset', 'meshAsset', 'renderAsset'];
 
-// properties that need rebuilding the particle system
-const COMPLEX_PROPERTIES = [
+// properties that the component can be initialized with, in the order they are applied
+const _properties = [
+    'autoPlay',
     'numParticles',
     'lifetime',
     'rate',
     'rate2',
     'startAngle',
     'startAngle2',
+    'loop',
+    'preWarm',
     'lighting',
     'halfLambert',
     'intensity',
-    'wrap',
-    'wrapBounds',
     'depthWrite',
     'noFog',
+    'depthSoftening',
     'sort',
+    'blendType',
     'stretch',
     'alignToMotion',
-    'preWarm',
     'emitterShape',
+    'emitterExtents',
+    'emitterExtentsInner',
+    'emitterRadius',
+    'emitterRadiusInner',
+    'initialVelocity',
+    'wrap',
+    'wrapBounds',
+    'localSpace',
+    'screenSpace',
+    'colorMapAsset',
+    'normalMapAsset',
+    'mesh',
+    'meshAsset',
+    'renderAsset',
+    'orientation',
+    'particleNormal',
+    'localVelocityGraph',
+    'localVelocityGraph2',
+    'velocityGraph',
+    'velocityGraph2',
+    'rotationSpeedGraph',
+    'rotationSpeedGraph2',
+    'radialSpeedGraph',
+    'radialSpeedGraph2',
+    'scaleGraph',
+    'scaleGraph2',
+    'colorGraph',
+    'colorGraph2',
+    'alphaGraph',
+    'alphaGraph2',
+    'colorMap',
+    'normalMap',
     'animTilesX',
     'animTilesY',
     'animStartFrame',
@@ -54,37 +75,10 @@ const COMPLEX_PROPERTIES = [
     'animNumAnimations',
     'animIndex',
     'randomizeAnimIndex',
+    'animSpeed',
     'animLoop',
-    'colorMap',
-    'localSpace',
-    'screenSpace',
-    'orientation'
+    'layers'
 ];
-
-const GRAPH_PROPERTIES = [
-    'scaleGraph',
-    'scaleGraph2',
-
-    'colorGraph',
-    'colorGraph2',
-
-    'alphaGraph',
-    'alphaGraph2',
-
-    'velocityGraph',
-    'velocityGraph2',
-
-    'localVelocityGraph',
-    'localVelocityGraph2',
-
-    'rotationSpeedGraph',
-    'rotationSpeedGraph2',
-
-    'radialSpeedGraph',
-    'radialSpeedGraph2'
-];
-
-const ASSET_PROPERTIES = ['colorMapAsset', 'normalMapAsset', 'meshAsset', 'renderAsset'];
 
 let depthLayer;
 
@@ -138,11 +132,23 @@ let depthLayer;
  * @category Graphics
  */
 class ParticleSystemComponent extends Component {
+    /**
+     * The particle emitter that performs the simulation. Only set while the component is or has
+     * been enabled and the platform supports particle systems.
+     *
+     * @type {ParticleEmitter|null}
+     * @ignore
+     */
+    emitter = null;
+
     /** @private */
     _requestedDepth = false;
 
     /** @private */
     _drawOrder = 0;
+
+    /** @private */
+    _paused = false;
 
     /**
      * @type {EventHandle|null}
@@ -168,55 +174,263 @@ class ParticleSystemComponent extends Component {
      */
     _evtSetMeshes = null;
 
-    /**
-     * Create a new ParticleSystemComponent.
-     *
-     * @param {ParticleSystemComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity this Component is attached to.
-     */
-    constructor(system, entity) {
-        super(system, entity);
+    /** @private */
+    _autoPlay = true;
 
-        this.on('set_colorMapAsset', this.onSetColorMapAsset, this);
-        this.on('set_normalMapAsset', this.onSetNormalMapAsset, this);
-        this.on('set_meshAsset', this.onSetMeshAsset, this);
-        this.on('set_mesh', this.onSetMesh, this);
-        this.on('set_renderAsset', this.onSetRenderAsset, this);
-        this.on('set_loop', this.onSetLoop, this);
-        this.on('set_blendType', this.onSetBlendType, this);
-        this.on('set_depthSoftening', this.onSetDepthSoftening, this);
-        this.on('set_layers', this.onSetLayers, this);
+    /** @private */
+    _numParticles = 1;
 
-        SIMPLE_PROPERTIES.forEach((prop) => {
-            this.on(`set_${prop}`, this.onSetSimpleProperty, this);
-        });
+    /** @private */
+    _lifetime = 50;
 
-        COMPLEX_PROPERTIES.forEach((prop) => {
-            this.on(`set_${prop}`, this.onSetComplexProperty, this);
-        });
-
-        GRAPH_PROPERTIES.forEach((prop) => {
-            this.on(`set_${prop}`, this.onSetGraphProperty, this);
-        });
-    }
+    /** @private */
+    _rate = 1;
 
     /**
-     * Sets the enabled state of the component.
-     *
-     * @type {boolean}
+     * @type {number|null}
+     * @private
      */
-    set enabled(arg) {
-        this._setValue('enabled', arg);
-    }
+    _rate2 = null;
+
+    /** @private */
+    _startAngle = 0;
 
     /**
-     * Gets the enabled state of the component.
-     *
-     * @type {boolean}
+     * @type {number|null}
+     * @private
      */
-    get enabled() {
-        return this.data.enabled;
-    }
+    _startAngle2 = null;
+
+    /** @private */
+    _loop = true;
+
+    /** @private */
+    _preWarm = false;
+
+    /** @private */
+    _lighting = false;
+
+    /** @private */
+    _halfLambert = false;
+
+    /** @private */
+    _intensity = 1;
+
+    /** @private */
+    _depthWrite = false;
+
+    /** @private */
+    _noFog = false;
+
+    /** @private */
+    _depthSoftening = 0;
+
+    /** @private */
+    _sort = 0;
+
+    /** @private */
+    _blendType = BLEND_NORMAL;
+
+    /** @private */
+    _stretch = 0.0;
+
+    /** @private */
+    _alignToMotion = false;
+
+    /** @private */
+    _emitterShape = EMITTERSHAPE_BOX;
+
+    /** @private */
+    _emitterExtents = new Vec3();
+
+    /** @private */
+    _emitterExtentsInner = new Vec3();
+
+    /** @private */
+    _emitterRadius = 0;
+
+    /** @private */
+    _emitterRadiusInner = 0;
+
+    /** @private */
+    _initialVelocity = 0;
+
+    /** @private */
+    _wrap = false;
+
+    /** @private */
+    _wrapBounds = new Vec3();
+
+    /** @private */
+    _localSpace = false;
+
+    /** @private */
+    _screenSpace = false;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _colorMapAsset = null;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _normalMapAsset = null;
+
+    /**
+     * @type {Mesh|null}
+     * @private
+     */
+    _mesh = null;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _meshAsset = null;
+
+    /**
+     * @type {number|null}
+     * @private
+     */
+    _renderAsset = null;
+
+    /** @private */
+    _orientation = PARTICLEORIENTATION_SCREEN;
+
+    /** @private */
+    _particleNormal = new Vec3(0, 1, 0);
+
+    /**
+     * @type {CurveSet|null}
+     * @private
+     */
+    _localVelocityGraph = null;
+
+    /**
+     * @type {CurveSet|null}
+     * @private
+     */
+    _localVelocityGraph2 = null;
+
+    /**
+     * @type {CurveSet|null}
+     * @private
+     */
+    _velocityGraph = null;
+
+    /**
+     * @type {CurveSet|null}
+     * @private
+     */
+    _velocityGraph2 = null;
+
+    /**
+     * @type {Curve|null}
+     * @private
+     */
+    _rotationSpeedGraph = null;
+
+    /**
+     * @type {Curve|null}
+     * @private
+     */
+    _rotationSpeedGraph2 = null;
+
+    /**
+     * @type {Curve|null}
+     * @private
+     */
+    _radialSpeedGraph = null;
+
+    /**
+     * @type {Curve|null}
+     * @private
+     */
+    _radialSpeedGraph2 = null;
+
+    /**
+     * @type {Curve|null}
+     * @private
+     */
+    _scaleGraph = null;
+
+    /**
+     * @type {Curve|null}
+     * @private
+     */
+    _scaleGraph2 = null;
+
+    /**
+     * @type {CurveSet|null}
+     * @private
+     */
+    _colorGraph = null;
+
+    /**
+     * @type {CurveSet|null}
+     * @private
+     */
+    _colorGraph2 = null;
+
+    /**
+     * @type {Curve|null}
+     * @private
+     */
+    _alphaGraph = null;
+
+    /**
+     * @type {Curve|null}
+     * @private
+     */
+    _alphaGraph2 = null;
+
+    /**
+     * @type {Texture|null}
+     * @private
+     */
+    _colorMap = null;
+
+    /**
+     * @type {Texture|null}
+     * @private
+     */
+    _normalMap = null;
+
+    /** @private */
+    _animTilesX = 1;
+
+    /** @private */
+    _animTilesY = 1;
+
+    /** @private */
+    _animStartFrame = 0;
+
+    /** @private */
+    _animNumFrames = 1;
+
+    /** @private */
+    _animNumAnimations = 1;
+
+    /** @private */
+    _animIndex = 0;
+
+    /** @private */
+    _randomizeAnimIndex = false;
+
+    /** @private */
+    _animSpeed = 1;
+
+    /** @private */
+    _animLoop = true;
+
+    /**
+     * @type {number[]}
+     * @private
+     */
+    _layers = [LAYERID_WORLD];
 
     /**
      * Sets whether the particle system plays automatically on creation. If set to false, it is
@@ -225,7 +439,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set autoPlay(arg) {
-        this._setValue('autoPlay', arg);
+        this._autoPlay = arg;
     }
 
     /**
@@ -234,7 +448,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get autoPlay() {
-        return this.data.autoPlay;
+        return this._autoPlay;
     }
 
     /**
@@ -243,7 +457,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set numParticles(arg) {
-        this._setValue('numParticles', arg);
+        this._setComplexProperty('numParticles', arg);
     }
 
     /**
@@ -252,7 +466,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get numParticles() {
-        return this.data.numParticles;
+        return this._numParticles;
     }
 
     /**
@@ -261,7 +475,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set lifetime(arg) {
-        this._setValue('lifetime', arg);
+        this._setComplexProperty('lifetime', arg);
     }
 
     /**
@@ -270,7 +484,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get lifetime() {
-        return this.data.lifetime;
+        return this._lifetime;
     }
 
     /**
@@ -279,7 +493,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set rate(arg) {
-        this._setValue('rate', arg);
+        this._setComplexProperty('rate', arg);
     }
 
     /**
@@ -288,7 +502,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get rate() {
-        return this.data.rate;
+        return this._rate;
     }
 
     /**
@@ -297,7 +511,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set rate2(arg) {
-        this._setValue('rate2', arg);
+        this._setComplexProperty('rate2', arg);
     }
 
     /**
@@ -306,7 +520,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get rate2() {
-        return this.data.rate2;
+        return this._rate2;
     }
 
     /**
@@ -315,7 +529,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set startAngle(arg) {
-        this._setValue('startAngle', arg);
+        this._setComplexProperty('startAngle', arg);
     }
 
     /**
@@ -324,7 +538,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get startAngle() {
-        return this.data.startAngle;
+        return this._startAngle;
     }
 
     /**
@@ -333,7 +547,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set startAngle2(arg) {
-        this._setValue('startAngle2', arg);
+        this._setComplexProperty('startAngle2', arg);
     }
 
     /**
@@ -342,7 +556,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get startAngle2() {
-        return this.data.startAngle2;
+        return this._startAngle2;
     }
 
     /**
@@ -351,7 +565,12 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set loop(arg) {
-        this._setValue('loop', arg);
+        this._loop = arg;
+        if (this.emitter) {
+            this.emitter.loop = arg;
+            this.emitter.resetTime(arg ? undefined : this.emitter.lifetime);
+            this.emitter.resetMaterial();
+        }
     }
 
     /**
@@ -360,7 +579,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get loop() {
-        return this.data.loop;
+        return this._loop;
     }
 
     /**
@@ -370,7 +589,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set preWarm(arg) {
-        this._setValue('preWarm', arg);
+        this._setComplexProperty('preWarm', arg);
     }
 
     /**
@@ -380,7 +599,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get preWarm() {
-        return this.data.preWarm;
+        return this._preWarm;
     }
 
     /**
@@ -389,7 +608,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set lighting(arg) {
-        this._setValue('lighting', arg);
+        this._setComplexProperty('lighting', arg);
     }
 
     /**
@@ -398,7 +617,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get lighting() {
-        return this.data.lighting;
+        return this._lighting;
     }
 
     /**
@@ -409,7 +628,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set halfLambert(arg) {
-        this._setValue('halfLambert', arg);
+        this._setComplexProperty('halfLambert', arg);
     }
 
     /**
@@ -418,7 +637,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get halfLambert() {
-        return this.data.halfLambert;
+        return this._halfLambert;
     }
 
     /**
@@ -427,7 +646,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set intensity(arg) {
-        this._setValue('intensity', arg);
+        this._setComplexProperty('intensity', arg);
     }
 
     /**
@@ -436,7 +655,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get intensity() {
-        return this.data.intensity;
+        return this._intensity;
     }
 
     /**
@@ -447,7 +666,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set depthWrite(arg) {
-        this._setValue('depthWrite', arg);
+        this._setComplexProperty('depthWrite', arg);
     }
 
     /**
@@ -456,7 +675,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get depthWrite() {
-        return this.data.depthWrite;
+        return this._depthWrite;
     }
 
     /**
@@ -465,7 +684,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set noFog(arg) {
-        this._setValue('noFog', arg);
+        this._setComplexProperty('noFog', arg);
     }
 
     /**
@@ -474,7 +693,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get noFog() {
-        return this.data.noFog;
+        return this._noFog;
     }
 
     /**
@@ -486,7 +705,21 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set depthSoftening(arg) {
-        this._setValue('depthSoftening', arg);
+        const oldValue = this._depthSoftening;
+        if (oldValue !== arg) {
+            this._depthSoftening = arg;
+            if (arg) {
+                if (this.enabled && this.entity.enabled) this._requestDepth();
+            } else {
+                if (this.enabled && this.entity.enabled) this._releaseDepth();
+            }
+            if (this.emitter) {
+                this.emitter.depthSoftening = arg;
+                this.reset();
+                this.emitter.resetMaterial();
+                this.rebuild();
+            }
+        }
     }
 
     /**
@@ -495,7 +728,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get depthSoftening() {
-        return this.data.depthSoftening;
+        return this._depthSoftening;
     }
 
     /**
@@ -510,7 +743,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set sort(arg) {
-        this._setValue('sort', arg);
+        this._setComplexProperty('sort', arg);
     }
 
     /**
@@ -519,7 +752,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get sort() {
-        return this.data.sort;
+        return this._sort;
     }
 
     /**
@@ -547,7 +780,13 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set blendType(arg) {
-        this._setValue('blendType', arg);
+        this._blendType = arg;
+        if (this.emitter) {
+            this.emitter.blendType = arg;
+            this.emitter.material.blendType = arg;
+            this.emitter.resetMaterial();
+            this.rebuild();
+        }
     }
 
     /**
@@ -556,7 +795,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get blendType() {
-        return this.data.blendType;
+        return this._blendType;
     }
 
     /**
@@ -567,7 +806,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set stretch(arg) {
-        this._setValue('stretch', arg);
+        this._setComplexProperty('stretch', arg);
     }
 
     /**
@@ -576,7 +815,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get stretch() {
-        return this.data.stretch;
+        return this._stretch;
     }
 
     /**
@@ -585,7 +824,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set alignToMotion(arg) {
-        this._setValue('alignToMotion', arg);
+        this._setComplexProperty('alignToMotion', arg);
     }
 
     /**
@@ -594,7 +833,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get alignToMotion() {
-        return this.data.alignToMotion;
+        return this._alignToMotion;
     }
 
     /**
@@ -609,7 +848,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set emitterShape(arg) {
-        this._setValue('emitterShape', arg);
+        this._setComplexProperty('emitterShape', arg);
     }
 
     /**
@@ -618,7 +857,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get emitterShape() {
-        return this.data.emitterShape;
+        return this._emitterShape;
     }
 
     /**
@@ -628,7 +867,7 @@ class ParticleSystemComponent extends Component {
      * @type {Vec3}
      */
     set emitterExtents(arg) {
-        this._setValue('emitterExtents', arg);
+        this._setSimpleProperty('emitterExtents', arg);
     }
 
     /**
@@ -638,7 +877,7 @@ class ParticleSystemComponent extends Component {
      * @type {Vec3}
      */
     get emitterExtents() {
-        return this.data.emitterExtents;
+        return this._emitterExtents;
     }
 
     /**
@@ -649,7 +888,7 @@ class ParticleSystemComponent extends Component {
      * @type {Vec3}
      */
     set emitterExtentsInner(arg) {
-        this._setValue('emitterExtentsInner', arg);
+        this._setSimpleProperty('emitterExtentsInner', arg);
     }
 
     /**
@@ -659,7 +898,7 @@ class ParticleSystemComponent extends Component {
      * @type {Vec3}
      */
     get emitterExtentsInner() {
-        return this.data.emitterExtentsInner;
+        return this._emitterExtentsInner;
     }
 
     /**
@@ -669,7 +908,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set emitterRadius(arg) {
-        this._setValue('emitterRadius', arg);
+        this._setSimpleProperty('emitterRadius', arg);
     }
 
     /**
@@ -678,7 +917,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get emitterRadius() {
-        return this.data.emitterRadius;
+        return this._emitterRadius;
     }
 
     /**
@@ -688,7 +927,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set emitterRadiusInner(arg) {
-        this._setValue('emitterRadiusInner', arg);
+        this._setSimpleProperty('emitterRadiusInner', arg);
     }
 
     /**
@@ -697,7 +936,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get emitterRadiusInner() {
-        return this.data.emitterRadiusInner;
+        return this._emitterRadiusInner;
     }
 
     /**
@@ -706,7 +945,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set initialVelocity(arg) {
-        this._setValue('initialVelocity', arg);
+        this._setSimpleProperty('initialVelocity', arg);
     }
 
     /**
@@ -715,7 +954,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get initialVelocity() {
-        return this.data.initialVelocity;
+        return this._initialVelocity;
     }
 
     /**
@@ -724,7 +963,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set wrap(arg) {
-        this._setValue('wrap', arg);
+        this._setComplexProperty('wrap', arg);
     }
 
     /**
@@ -733,7 +972,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get wrap() {
-        return this.data.wrap;
+        return this._wrap;
     }
 
     /**
@@ -744,7 +983,7 @@ class ParticleSystemComponent extends Component {
      * @type {Vec3}
      */
     set wrapBounds(arg) {
-        this._setValue('wrapBounds', arg);
+        this._setComplexProperty('wrapBounds', arg);
     }
 
     /**
@@ -753,7 +992,7 @@ class ParticleSystemComponent extends Component {
      * @type {Vec3}
      */
     get wrapBounds() {
-        return this.data.wrapBounds;
+        return this._wrapBounds;
     }
 
     /**
@@ -762,7 +1001,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set localSpace(arg) {
-        this._setValue('localSpace', arg);
+        this._setComplexProperty('localSpace', arg);
     }
 
     /**
@@ -771,7 +1010,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get localSpace() {
-        return this.data.localSpace;
+        return this._localSpace;
     }
 
     /**
@@ -784,7 +1023,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set screenSpace(arg) {
-        this._setValue('screenSpace', arg);
+        this._setComplexProperty('screenSpace', arg);
     }
 
     /**
@@ -793,43 +1032,93 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get screenSpace() {
-        return this.data.screenSpace;
+        return this._screenSpace;
     }
 
     /**
      * Sets the {@link Asset} used to set the colorMap.
      *
-     * @type {Asset}
+     * @type {Asset|null}
      */
     set colorMapAsset(arg) {
-        this._setValue('colorMapAsset', arg);
+        const assets = this.system.app.assets;
+
+        if (this._colorMapAsset) {
+            const asset = assets.get(this._colorMapAsset);
+            if (asset) {
+                this._unbindColorMapAsset(asset);
+            }
+        }
+
+        if (arg instanceof Asset) {
+            arg = arg.id;
+        }
+        this._colorMapAsset = arg;
+
+        if (arg) {
+            const asset = assets.get(arg);
+            if (asset) {
+                this._bindColorMapAsset(asset);
+            } else {
+                assets.once(`add:${arg}`, (asset) => {
+                    this._bindColorMapAsset(asset);
+                });
+            }
+        } else {
+            this.colorMap = null;
+        }
     }
 
     /**
      * Gets the {@link Asset} used to set the colorMap.
      *
-     * @type {Asset}
+     * @type {Asset|null}
      */
     get colorMapAsset() {
-        return this.data.colorMapAsset;
+        return this._colorMapAsset;
     }
 
     /**
      * Sets the {@link Asset} used to set the normalMap.
      *
-     * @type {Asset}
+     * @type {Asset|null}
      */
     set normalMapAsset(arg) {
-        this._setValue('normalMapAsset', arg);
+        const assets = this.system.app.assets;
+
+        if (this._normalMapAsset) {
+            const asset = assets.get(this._normalMapAsset);
+            if (asset) {
+                this._unbindNormalMapAsset(asset);
+            }
+        }
+
+        if (arg instanceof Asset) {
+            arg = arg.id;
+        }
+        this._normalMapAsset = arg;
+
+        if (arg) {
+            const asset = assets.get(arg);
+            if (asset) {
+                this._bindNormalMapAsset(asset);
+            } else {
+                assets.once(`add:${arg}`, (asset) => {
+                    this._bindNormalMapAsset(asset);
+                });
+            }
+        } else {
+            this.normalMap = null;
+        }
     }
 
     /**
      * Gets the {@link Asset} used to set the normalMap.
      *
-     * @type {Asset}
+     * @type {Asset|null}
      */
     get normalMapAsset() {
-        return this.data.normalMapAsset;
+        return this._normalMapAsset;
     }
 
     /**
@@ -839,7 +1128,13 @@ class ParticleSystemComponent extends Component {
      * @type {Mesh}
      */
     set mesh(arg) {
-        this._setValue('mesh', arg);
+        // if the value being set is null, an asset or an asset id, then assume we are
+        // setting the mesh asset, which will in turn update the mesh
+        if (!arg || arg instanceof Asset || typeof arg === 'number') {
+            this.meshAsset = arg;
+        } else {
+            this._onMeshChanged(arg);
+        }
     }
 
     /**
@@ -848,43 +1143,85 @@ class ParticleSystemComponent extends Component {
      * @type {Mesh}
      */
     get mesh() {
-        return this.data.mesh;
+        return this._mesh;
     }
 
     /**
      * Sets the {@link Asset} used to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset|null}
      */
     set meshAsset(arg) {
-        this._setValue('meshAsset', arg);
+        const assets = this.system.app.assets;
+
+        if (this._meshAsset) {
+            const asset = assets.get(this._meshAsset);
+            if (asset) {
+                this._unbindMeshAsset(asset);
+            }
+        }
+
+        if (arg instanceof Asset) {
+            arg = arg.id;
+        }
+        this._meshAsset = arg;
+
+        if (arg) {
+            const asset = assets.get(arg);
+            if (asset) {
+                this._bindMeshAsset(asset);
+            }
+        } else {
+            this._onMeshChanged(null);
+        }
     }
 
     /**
      * Gets the {@link Asset} used to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset|null}
      */
     get meshAsset() {
-        return this.data.meshAsset;
+        return this._meshAsset;
     }
 
     /**
      * Sets the Render {@link Asset} used to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset|null}
      */
     set renderAsset(arg) {
-        this._setValue('renderAsset', arg);
+        const assets = this.system.app.assets;
+
+        if (this._renderAsset) {
+            const asset = assets.get(this._renderAsset);
+            if (asset) {
+                this._unbindRenderAsset(asset);
+            }
+        }
+
+        if (arg instanceof Asset) {
+            arg = arg.id;
+        }
+        this._renderAsset = arg;
+
+        if (arg) {
+            const asset = assets.get(arg);
+            if (asset) {
+                this._bindRenderAsset(asset);
+            }
+        } else {
+            this._onRenderChanged(null);
+        }
     }
 
     /**
      * Gets the Render {@link Asset} used to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset|null}
      */
     get renderAsset() {
-        return this.data.renderAsset;
+        return this._renderAsset;
     }
 
     /**
@@ -899,7 +1236,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set orientation(arg) {
-        this._setValue('orientation', arg);
+        this._setComplexProperty('orientation', arg);
     }
 
     /**
@@ -908,7 +1245,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get orientation() {
-        return this.data.orientation;
+        return this._orientation;
     }
 
     /**
@@ -918,7 +1255,7 @@ class ParticleSystemComponent extends Component {
      * @type {Vec3}
      */
     set particleNormal(arg) {
-        this._setValue('particleNormal', arg);
+        this._setSimpleProperty('particleNormal', arg);
     }
 
     /**
@@ -927,7 +1264,7 @@ class ParticleSystemComponent extends Component {
      * @type {Vec3}
      */
     get particleNormal() {
-        return this.data.particleNormal;
+        return this._particleNormal;
     }
 
     /**
@@ -936,7 +1273,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     set localVelocityGraph(arg) {
-        this._setValue('localVelocityGraph', arg);
+        this._setGraphProperty('localVelocityGraph', arg);
     }
 
     /**
@@ -945,7 +1282,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     get localVelocityGraph() {
-        return this.data.localVelocityGraph;
+        return this._localVelocityGraph;
     }
 
     /**
@@ -955,7 +1292,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     set localVelocityGraph2(arg) {
-        this._setValue('localVelocityGraph2', arg);
+        this._setGraphProperty('localVelocityGraph2', arg);
     }
 
     /**
@@ -964,7 +1301,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     get localVelocityGraph2() {
-        return this.data.localVelocityGraph2;
+        return this._localVelocityGraph2;
     }
 
     /**
@@ -973,7 +1310,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     set velocityGraph(arg) {
-        this._setValue('velocityGraph', arg);
+        this._setGraphProperty('velocityGraph', arg);
     }
 
     /**
@@ -982,7 +1319,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     get velocityGraph() {
-        return this.data.velocityGraph;
+        return this._velocityGraph;
     }
 
     /**
@@ -992,7 +1329,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     set velocityGraph2(arg) {
-        this._setValue('velocityGraph2', arg);
+        this._setGraphProperty('velocityGraph2', arg);
     }
 
     /**
@@ -1001,7 +1338,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     get velocityGraph2() {
-        return this.data.velocityGraph2;
+        return this._velocityGraph2;
     }
 
     /**
@@ -1010,7 +1347,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     set rotationSpeedGraph(arg) {
-        this._setValue('rotationSpeedGraph', arg);
+        this._setGraphProperty('rotationSpeedGraph', arg);
     }
 
     /**
@@ -1019,7 +1356,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     get rotationSpeedGraph() {
-        return this.data.rotationSpeedGraph;
+        return this._rotationSpeedGraph;
     }
 
     /**
@@ -1029,7 +1366,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     set rotationSpeedGraph2(arg) {
-        this._setValue('rotationSpeedGraph2', arg);
+        this._setGraphProperty('rotationSpeedGraph2', arg);
     }
 
     /**
@@ -1038,7 +1375,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     get rotationSpeedGraph2() {
-        return this.data.rotationSpeedGraph2;
+        return this._rotationSpeedGraph2;
     }
 
     /**
@@ -1047,7 +1384,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     set radialSpeedGraph(arg) {
-        this._setValue('radialSpeedGraph', arg);
+        this._setGraphProperty('radialSpeedGraph', arg);
     }
 
     /**
@@ -1056,7 +1393,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     get radialSpeedGraph() {
-        return this.data.radialSpeedGraph;
+        return this._radialSpeedGraph;
     }
 
     /**
@@ -1067,7 +1404,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     set radialSpeedGraph2(arg) {
-        this._setValue('radialSpeedGraph2', arg);
+        this._setGraphProperty('radialSpeedGraph2', arg);
     }
 
     /**
@@ -1076,7 +1413,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     get radialSpeedGraph2() {
-        return this.data.radialSpeedGraph2;
+        return this._radialSpeedGraph2;
     }
 
     /**
@@ -1085,7 +1422,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     set scaleGraph(arg) {
-        this._setValue('scaleGraph', arg);
+        this._setGraphProperty('scaleGraph', arg);
     }
 
     /**
@@ -1094,7 +1431,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     get scaleGraph() {
-        return this.data.scaleGraph;
+        return this._scaleGraph;
     }
 
     /**
@@ -1104,7 +1441,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     set scaleGraph2(arg) {
-        this._setValue('scaleGraph2', arg);
+        this._setGraphProperty('scaleGraph2', arg);
     }
 
     /**
@@ -1113,7 +1450,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     get scaleGraph2() {
-        return this.data.scaleGraph2;
+        return this._scaleGraph2;
     }
 
     /**
@@ -1122,7 +1459,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     set colorGraph(arg) {
-        this._setValue('colorGraph', arg);
+        this._setGraphProperty('colorGraph', arg);
     }
 
     /**
@@ -1131,7 +1468,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     get colorGraph() {
-        return this.data.colorGraph;
+        return this._colorGraph;
     }
 
     /**
@@ -1141,7 +1478,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     set colorGraph2(arg) {
-        this._setValue('colorGraph2', arg);
+        this._setGraphProperty('colorGraph2', arg);
     }
 
     /**
@@ -1150,7 +1487,7 @@ class ParticleSystemComponent extends Component {
      * @type {CurveSet}
      */
     get colorGraph2() {
-        return this.data.colorGraph2;
+        return this._colorGraph2;
     }
 
     /**
@@ -1159,7 +1496,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     set alphaGraph(arg) {
-        this._setValue('alphaGraph', arg);
+        this._setGraphProperty('alphaGraph', arg);
     }
 
     /**
@@ -1168,7 +1505,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     get alphaGraph() {
-        return this.data.alphaGraph;
+        return this._alphaGraph;
     }
 
     /**
@@ -1178,7 +1515,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     set alphaGraph2(arg) {
-        this._setValue('alphaGraph2', arg);
+        this._setGraphProperty('alphaGraph2', arg);
     }
 
     /**
@@ -1187,7 +1524,7 @@ class ParticleSystemComponent extends Component {
      * @type {Curve}
      */
     get alphaGraph2() {
-        return this.data.alphaGraph2;
+        return this._alphaGraph2;
     }
 
     /**
@@ -1197,7 +1534,7 @@ class ParticleSystemComponent extends Component {
      * @type {Texture}
      */
     set colorMap(arg) {
-        this._setValue('colorMap', arg);
+        this._setComplexProperty('colorMap', arg);
     }
 
     /**
@@ -1206,7 +1543,7 @@ class ParticleSystemComponent extends Component {
      * @type {Texture}
      */
     get colorMap() {
-        return this.data.colorMap;
+        return this._colorMap;
     }
 
     /**
@@ -1216,7 +1553,7 @@ class ParticleSystemComponent extends Component {
      * @type {Texture}
      */
     set normalMap(arg) {
-        this._setValue('normalMap', arg);
+        this._setSimpleProperty('normalMap', arg);
     }
 
     /**
@@ -1225,7 +1562,7 @@ class ParticleSystemComponent extends Component {
      * @type {Texture}
      */
     get normalMap() {
-        return this.data.normalMap;
+        return this._normalMap;
     }
 
     /**
@@ -1234,7 +1571,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set animTilesX(arg) {
-        this._setValue('animTilesX', arg);
+        this._setComplexProperty('animTilesX', arg);
     }
 
     /**
@@ -1243,7 +1580,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get animTilesX() {
-        return this.data.animTilesX;
+        return this._animTilesX;
     }
 
     /**
@@ -1252,7 +1589,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set animTilesY(arg) {
-        this._setValue('animTilesY', arg);
+        this._setComplexProperty('animTilesY', arg);
     }
 
     /**
@@ -1261,7 +1598,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get animTilesY() {
-        return this.data.animTilesY;
+        return this._animTilesY;
     }
 
     /**
@@ -1271,7 +1608,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set animStartFrame(arg) {
-        this._setValue('animStartFrame', arg);
+        this._setComplexProperty('animStartFrame', arg);
     }
 
     /**
@@ -1280,7 +1617,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get animStartFrame() {
-        return this.data.animStartFrame;
+        return this._animStartFrame;
     }
 
     /**
@@ -1291,7 +1628,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set animNumFrames(arg) {
-        this._setValue('animNumFrames', arg);
+        this._setComplexProperty('animNumFrames', arg);
     }
 
     /**
@@ -1300,7 +1637,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get animNumFrames() {
-        return this.data.animNumFrames;
+        return this._animNumFrames;
     }
 
     /**
@@ -1311,7 +1648,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set animNumAnimations(arg) {
-        this._setValue('animNumAnimations', arg);
+        this._setComplexProperty('animNumAnimations', arg);
     }
 
     /**
@@ -1320,7 +1657,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get animNumAnimations() {
-        return this.data.animNumAnimations;
+        return this._animNumAnimations;
     }
 
     /**
@@ -1330,7 +1667,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set animIndex(arg) {
-        this._setValue('animIndex', arg);
+        this._setComplexProperty('animIndex', arg);
     }
 
     /**
@@ -1339,7 +1676,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get animIndex() {
-        return this.data.animIndex;
+        return this._animIndex;
     }
 
     /**
@@ -1349,7 +1686,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set randomizeAnimIndex(arg) {
-        this._setValue('randomizeAnimIndex', arg);
+        this._setComplexProperty('randomizeAnimIndex', arg);
     }
 
     /**
@@ -1359,7 +1696,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get randomizeAnimIndex() {
-        return this.data.randomizeAnimIndex;
+        return this._randomizeAnimIndex;
     }
 
     /**
@@ -1369,7 +1706,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set animSpeed(arg) {
-        this._setValue('animSpeed', arg);
+        this._setSimpleProperty('animSpeed', arg);
     }
 
     /**
@@ -1378,7 +1715,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     get animSpeed() {
-        return this.data.animSpeed;
+        return this._animSpeed;
     }
 
     /**
@@ -1387,7 +1724,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     set animLoop(arg) {
-        this._setValue('animLoop', arg);
+        this._setComplexProperty('animLoop', arg);
     }
 
     /**
@@ -1396,7 +1733,7 @@ class ParticleSystemComponent extends Component {
      * @type {boolean}
      */
     get animLoop() {
-        return this.data.animLoop;
+        return this._animLoop;
     }
 
     /**
@@ -1406,7 +1743,21 @@ class ParticleSystemComponent extends Component {
      * @type {number[]}
      */
     set layers(arg) {
-        this._setValue('layers', arg);
+        const oldLayers = this._layers;
+        this._layers = arg;
+
+        if (!this.emitter) return;
+        for (let i = 0; i < oldLayers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(oldLayers[i]);
+            if (!layer) continue;
+            layer.removeMeshInstances([this.emitter.meshInstance]);
+        }
+        if (!this.enabled || !this.entity.enabled) return;
+        for (let i = 0; i < arg.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(arg[i]);
+            if (!layer) continue;
+            layer.addMeshInstances([this.emitter.meshInstance]);
+        }
     }
 
     /**
@@ -1415,7 +1766,7 @@ class ParticleSystemComponent extends Component {
      * @type {number[]}
      */
     get layers() {
-        return this.data.layers;
+        return this._layers;
     }
 
     /**
@@ -1441,18 +1792,58 @@ class ParticleSystemComponent extends Component {
         return this._drawOrder;
     }
 
-    /** @ignore */
-    _setValue(name, value) {
-        const data = this.data;
-        const oldValue = data[name];
-        data[name] = value;
-        this.fire('set', name, oldValue, value);
+    /**
+     * Sets a property that only requires the emitter material to be updated.
+     *
+     * @param {string} name - The name of the property to set.
+     * @param {*} arg - The new value of the property.
+     * @private
+     */
+    _setSimpleProperty(name, arg) {
+        this[`_${name}`] = arg;
+        if (this.emitter) {
+            this.emitter[name] = arg;
+            this.emitter.resetMaterial();
+        }
+    }
+
+    /**
+     * Sets a property that requires the particle system to be rebuilt.
+     *
+     * @param {string} name - The name of the property to set.
+     * @param {*} arg - The new value of the property.
+     * @private
+     */
+    _setComplexProperty(name, arg) {
+        this[`_${name}`] = arg;
+        if (this.emitter) {
+            this.emitter[name] = arg;
+            this.emitter.resetMaterial();
+            this.rebuild();
+            this.reset();
+        }
+    }
+
+    /**
+     * Sets a curve property that requires the emitter graphs to be rebuilt.
+     *
+     * @param {string} name - The name of the property to set.
+     * @param {*} arg - The new value of the property.
+     * @private
+     */
+    _setGraphProperty(name, arg) {
+        this[`_${name}`] = arg;
+        if (this.emitter) {
+            this.emitter[name] = arg;
+            this.emitter.rebuildGraphs();
+            this.emitter.resetMaterial();
+        }
     }
 
     addMeshInstanceToLayers() {
         if (!this.emitter) return;
-        for (let i = 0; i < this.layers.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
             if (!layer) continue;
             layer.addMeshInstances([this.emitter.meshInstance]);
             this.emitter._layer = layer;
@@ -1461,25 +1852,10 @@ class ParticleSystemComponent extends Component {
 
     removeMeshInstanceFromLayers() {
         if (!this.emitter) return;
-        for (let i = 0; i < this.layers.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        for (let i = 0; i < this._layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
             if (!layer) continue;
             layer.removeMeshInstances([this.emitter.meshInstance]);
-        }
-    }
-
-    onSetLayers(name, oldValue, newValue) {
-        if (!this.emitter) return;
-        for (let i = 0; i < oldValue.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
-            if (!layer) continue;
-            layer.removeMeshInstances([this.emitter.meshInstance]);
-        }
-        if (!this.enabled || !this.entity.enabled) return;
-        for (let i = 0; i < newValue.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
-            if (!layer) continue;
-            layer.addMeshInstances([this.emitter.meshInstance]);
         }
     }
 
@@ -1493,14 +1869,14 @@ class ParticleSystemComponent extends Component {
 
     onLayerAdded(layer) {
         if (!this.emitter) return;
-        const index = this.layers.indexOf(layer.id);
+        const index = this._layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addMeshInstances([this.emitter.meshInstance]);
     }
 
     onLayerRemoved(layer) {
         if (!this.emitter) return;
-        const index = this.layers.indexOf(layer.id);
+        const index = this._layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances([this.emitter.meshInstance]);
     }
@@ -1541,34 +1917,6 @@ class ParticleSystemComponent extends Component {
 
     _onColorMapAssetChange(asset) {}
 
-    onSetColorMapAsset(name, oldValue, newValue) {
-        const assets = this.system.app.assets;
-        if (oldValue) {
-            const asset = assets.get(oldValue);
-            if (asset) {
-                this._unbindColorMapAsset(asset);
-            }
-        }
-
-        if (newValue) {
-            if (newValue instanceof Asset) {
-                this.data.colorMapAsset = newValue.id;
-                newValue = newValue.id;
-            }
-
-            const asset = assets.get(newValue);
-            if (asset) {
-                this._bindColorMapAsset(asset);
-            } else {
-                assets.once(`add:${newValue}`, (asset) => {
-                    this._bindColorMapAsset(asset);
-                });
-            }
-        } else {
-            this.colorMap = null;
-        }
-    }
-
     _bindNormalMapAsset(asset) {
         asset.on('load', this._onNormalMapAssetLoad, this);
         asset.on('unload', this._onNormalMapAssetUnload, this);
@@ -1604,35 +1952,6 @@ class ParticleSystemComponent extends Component {
     }
 
     _onNormalMapAssetChange(asset) {}
-
-    onSetNormalMapAsset(name, oldValue, newValue) {
-        const assets = this.system.app.assets;
-
-        if (oldValue) {
-            const asset = assets.get(oldValue);
-            if (asset) {
-                this._unbindNormalMapAsset(asset);
-            }
-        }
-
-        if (newValue) {
-            if (newValue instanceof Asset) {
-                this.data.normalMapAsset = newValue.id;
-                newValue = newValue.id;
-            }
-
-            const asset = assets.get(newValue);
-            if (asset) {
-                this._bindNormalMapAsset(asset);
-            } else {
-                assets.once(`add:${newValue}`, (asset) => {
-                    this._bindNormalMapAsset(asset);
-                });
-            }
-        } else {
-            this.normalMap = null;
-        }
-    }
 
     _bindMeshAsset(asset) {
         asset.on('load', this._onMeshAssetLoad, this);
@@ -1670,42 +1989,6 @@ class ParticleSystemComponent extends Component {
 
     _onMeshAssetChange(asset) {}
 
-    onSetMeshAsset(name, oldValue, newValue) {
-        const assets = this.system.app.assets;
-
-        if (oldValue) {
-            const asset = assets.get(oldValue);
-            if (asset) {
-                this._unbindMeshAsset(asset);
-            }
-        }
-
-        if (newValue) {
-            if (newValue instanceof Asset) {
-                this.data.meshAsset = newValue.id;
-                newValue = newValue.id;
-            }
-
-            const asset = assets.get(newValue);
-            if (asset) {
-                this._bindMeshAsset(asset);
-            }
-        } else {
-            this._onMeshChanged(null);
-        }
-    }
-
-    onSetMesh(name, oldValue, newValue) {
-        // hack this for now
-        // if the value being set is null, an asset or an asset id, then assume we are
-        // setting the mesh asset, which will in turn update the mesh
-        if (!newValue || newValue instanceof Asset || typeof newValue === 'number') {
-            this.meshAsset = newValue;
-        } else {
-            this._onMeshChanged(newValue);
-        }
-    }
-
     _onMeshChanged(mesh) {
         if (mesh && !(mesh instanceof Mesh)) {
             // if mesh is a pc.Model, use the first meshInstance
@@ -1716,37 +1999,12 @@ class ParticleSystemComponent extends Component {
             }
         }
 
-        this.data.mesh = mesh;
+        this._mesh = mesh;
 
         if (this.emitter) {
             this.emitter.mesh = mesh;
             this.emitter.resetMaterial();
             this.rebuild();
-        }
-    }
-
-    onSetRenderAsset(name, oldValue, newValue) {
-        const assets = this.system.app.assets;
-
-        if (oldValue) {
-            const asset = assets.get(oldValue);
-            if (asset) {
-                this._unbindRenderAsset(asset);
-            }
-        }
-
-        if (newValue) {
-            if (newValue instanceof Asset) {
-                this.data.renderAsset = newValue.id;
-                newValue = newValue.id;
-            }
-
-            const asset = assets.get(newValue);
-            if (asset) {
-                this._bindRenderAsset(asset);
-            }
-        } else {
-            this._onRenderChanged(null);
         }
     }
 
@@ -1803,22 +2061,6 @@ class ParticleSystemComponent extends Component {
         this._onMeshChanged(meshes && meshes[0]);
     }
 
-    onSetLoop(name, oldValue, newValue) {
-        if (this.emitter) {
-            this.emitter[name] = newValue;
-            this.emitter.resetTime();
-        }
-    }
-
-    onSetBlendType(name, oldValue, newValue) {
-        if (this.emitter) {
-            this.emitter[name] = newValue;
-            this.emitter.material.blendType = newValue;
-            this.emitter.resetMaterial();
-            this.rebuild();
-        }
-    }
-
     _requestDepth() {
         if (this._requestedDepth) return;
         if (!depthLayer) depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
@@ -1836,57 +2078,13 @@ class ParticleSystemComponent extends Component {
         }
     }
 
-    onSetDepthSoftening(name, oldValue, newValue) {
-        if (oldValue !== newValue) {
-            if (newValue) {
-                if (this.enabled && this.entity.enabled) this._requestDepth();
-                if (this.emitter) this.emitter[name] = newValue;
-            } else {
-                if (this.enabled && this.entity.enabled) this._releaseDepth();
-                if (this.emitter) this.emitter[name] = newValue;
-            }
-            if (this.emitter) {
-                this.reset();
-                this.emitter.resetMaterial();
-                this.rebuild();
-            }
-        }
-    }
-
-    onSetSimpleProperty(name, oldValue, newValue) {
-        if (this.emitter) {
-            this.emitter[name] = newValue;
-            this.emitter.resetMaterial();
-        }
-    }
-
-    onSetComplexProperty(name, oldValue, newValue) {
-        if (this.emitter) {
-            this.emitter[name] = newValue;
-            this.emitter.resetMaterial();
-            this.rebuild();
-            this.reset();
-        }
-    }
-
-    onSetGraphProperty(name, oldValue, newValue) {
-        if (this.emitter) {
-            this.emitter[name] = newValue;
-            this.emitter.rebuildGraphs();
-            this.emitter.resetMaterial();
-        }
-    }
-
     onEnable() {
         const scene = this.system.app.scene;
         const layers = scene.layers;
 
-        // get data store once
-        const data = this.data;
-
         // load any assets that haven't been loaded yet
         for (let i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
-            let asset = data[ASSET_PROPERTIES[i]];
+            let asset = this[`_${ASSET_PROPERTIES[i]}`];
             if (asset) {
                 if (!(asset instanceof Asset)) {
                     const id = parseInt(asset, 10);
@@ -1909,90 +2107,82 @@ class ParticleSystemComponent extends Component {
         }
 
         if (!this.emitter) {
-            let mesh = data.mesh;
-
-            // mesh might be an asset id of an asset
-            // that hasn't been loaded yet
-            if (!(mesh instanceof Mesh)) {
-                mesh = null;
-            }
-
             this.emitter = new ParticleEmitter(this.system.app.graphicsDevice, {
-                numParticles: data.numParticles,
-                emitterExtents: data.emitterExtents,
-                emitterExtentsInner: data.emitterExtentsInner,
-                emitterRadius: data.emitterRadius,
-                emitterRadiusInner: data.emitterRadiusInner,
-                emitterShape: data.emitterShape,
-                initialVelocity: data.initialVelocity,
-                wrap: data.wrap,
-                localSpace: data.localSpace,
-                screenSpace: data.screenSpace,
-                wrapBounds: data.wrapBounds,
-                lifetime: data.lifetime,
-                rate: data.rate,
-                rate2: data.rate2,
+                numParticles: this._numParticles,
+                emitterExtents: this._emitterExtents,
+                emitterExtentsInner: this._emitterExtentsInner,
+                emitterRadius: this._emitterRadius,
+                emitterRadiusInner: this._emitterRadiusInner,
+                emitterShape: this._emitterShape,
+                initialVelocity: this._initialVelocity,
+                wrap: this._wrap,
+                localSpace: this._localSpace,
+                screenSpace: this._screenSpace,
+                wrapBounds: this._wrapBounds,
+                lifetime: this._lifetime,
+                rate: this._rate,
+                rate2: this._rate2,
 
-                orientation: data.orientation,
-                particleNormal: data.particleNormal,
+                orientation: this._orientation,
+                particleNormal: this._particleNormal,
 
-                animTilesX: data.animTilesX,
-                animTilesY: data.animTilesY,
-                animStartFrame: data.animStartFrame,
-                animNumFrames: data.animNumFrames,
-                animNumAnimations: data.animNumAnimations,
-                animIndex: data.animIndex,
-                randomizeAnimIndex: data.randomizeAnimIndex,
-                animSpeed: data.animSpeed,
-                animLoop: data.animLoop,
+                animTilesX: this._animTilesX,
+                animTilesY: this._animTilesY,
+                animStartFrame: this._animStartFrame,
+                animNumFrames: this._animNumFrames,
+                animNumAnimations: this._animNumAnimations,
+                animIndex: this._animIndex,
+                randomizeAnimIndex: this._randomizeAnimIndex,
+                animSpeed: this._animSpeed,
+                animLoop: this._animLoop,
 
-                startAngle: data.startAngle,
-                startAngle2: data.startAngle2,
+                startAngle: this._startAngle,
+                startAngle2: this._startAngle2,
 
-                scaleGraph: data.scaleGraph,
-                scaleGraph2: data.scaleGraph2,
+                scaleGraph: this._scaleGraph,
+                scaleGraph2: this._scaleGraph2,
 
-                colorGraph: data.colorGraph,
-                colorGraph2: data.colorGraph2,
+                colorGraph: this._colorGraph,
+                colorGraph2: this._colorGraph2,
 
-                alphaGraph: data.alphaGraph,
-                alphaGraph2: data.alphaGraph2,
+                alphaGraph: this._alphaGraph,
+                alphaGraph2: this._alphaGraph2,
 
-                localVelocityGraph: data.localVelocityGraph,
-                localVelocityGraph2: data.localVelocityGraph2,
+                localVelocityGraph: this._localVelocityGraph,
+                localVelocityGraph2: this._localVelocityGraph2,
 
-                velocityGraph: data.velocityGraph,
-                velocityGraph2: data.velocityGraph2,
+                velocityGraph: this._velocityGraph,
+                velocityGraph2: this._velocityGraph2,
 
-                rotationSpeedGraph: data.rotationSpeedGraph,
-                rotationSpeedGraph2: data.rotationSpeedGraph2,
+                rotationSpeedGraph: this._rotationSpeedGraph,
+                rotationSpeedGraph2: this._rotationSpeedGraph2,
 
-                radialSpeedGraph: data.radialSpeedGraph,
-                radialSpeedGraph2: data.radialSpeedGraph2,
+                radialSpeedGraph: this._radialSpeedGraph,
+                radialSpeedGraph2: this._radialSpeedGraph2,
 
-                colorMap: data.colorMap,
-                normalMap: data.normalMap,
-                loop: data.loop,
-                preWarm: data.preWarm,
-                sort: data.sort,
-                stretch: data.stretch,
-                alignToMotion: data.alignToMotion,
-                lighting: data.lighting,
-                halfLambert: data.halfLambert,
-                intensity: data.intensity,
-                depthSoftening: data.depthSoftening,
+                colorMap: this._colorMap,
+                normalMap: this._normalMap,
+                loop: this._loop,
+                preWarm: this._preWarm,
+                sort: this._sort,
+                stretch: this._stretch,
+                alignToMotion: this._alignToMotion,
+                lighting: this._lighting,
+                halfLambert: this._halfLambert,
+                intensity: this._intensity,
+                depthSoftening: this._depthSoftening,
                 scene: this.system.app.scene,
-                mesh: mesh,
-                depthWrite: data.depthWrite,
-                noFog: data.noFog,
+                mesh: this._mesh,
+                depthWrite: this._depthWrite,
+                noFog: this._noFog,
                 node: this.entity,
-                blendType: data.blendType
+                blendType: this._blendType
             });
 
             this.emitter.meshInstance.node = this.entity;
-            this.emitter.drawOrder = this.drawOrder;
+            this.emitter.drawOrder = this._drawOrder;
 
-            if (!data.autoPlay) {
+            if (!this._autoPlay) {
                 this.pause();
                 this.emitter.meshInstance.visible = false;
             }
@@ -2009,7 +2199,7 @@ class ParticleSystemComponent extends Component {
             this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
-        if (this.enabled && this.entity.enabled && data.depthSoftening) {
+        if (this.enabled && this.entity.enabled && this._depthSoftening) {
             this._requestDepth();
         }
     }
@@ -2030,7 +2220,7 @@ class ParticleSystemComponent extends Component {
 
         if (this.emitter) {
             this.removeMeshInstanceFromLayers();
-            if (this.data.depthSoftening) this._releaseDepth();
+            if (this._depthSoftening) this._releaseDepth();
 
             // clear camera as it isn't updated while disabled and we don't want to hold
             // onto old reference
@@ -2052,7 +2242,7 @@ class ParticleSystemComponent extends Component {
         for (let i = 0; i < ASSET_PROPERTIES.length; i++) {
             const prop = ASSET_PROPERTIES[i];
 
-            if (this.data[prop]) {
+            if (this[`_${prop}`]) {
                 this[prop] = null;
             }
         }
@@ -2075,7 +2265,7 @@ class ParticleSystemComponent extends Component {
     stop() {
         if (this.emitter) {
             this.emitter.loop = false;
-            this.emitter.resetTime();
+            this.emitter.resetTime(this.emitter.lifetime);
             this.emitter.addTime(0, true);
         }
     }
@@ -2084,24 +2274,24 @@ class ParticleSystemComponent extends Component {
      * Freezes the simulation.
      */
     pause() {
-        this.data.paused = true;
+        this._paused = true;
     }
 
     /**
      * Unfreezes the simulation.
      */
     unpause() {
-        this.data.paused = false;
+        this._paused = false;
     }
 
     /**
      * Enables/unfreezes the simulation.
      */
     play() {
-        this.data.paused = false;
+        this._paused = false;
         if (this.emitter) {
             this.emitter.meshInstance.visible = true;
-            this.emitter.loop = this.data.loop;
+            this.emitter.loop = this._loop;
             this.emitter.resetTime();
         }
     }
@@ -2112,16 +2302,14 @@ class ParticleSystemComponent extends Component {
      * @returns {boolean} True if the particle system is currently playing and false otherwise.
      */
     isPlaying() {
-        if (this.data.paused) {
+        if (this._paused || !this.emitter) {
             return false;
         }
-        if (this.emitter && this.emitter.loop) {
+        if (this.emitter.loop) {
             return true;
         }
 
-        // possible bug here what happens if the non looping emitter
-        // was paused in the meantime?
-        return Date.now() <= this.emitter.endTime;
+        return this.emitter.simTimeTotal <= this.emitter.endTime;
     }
 
     /**
@@ -2152,4 +2340,4 @@ class ParticleSystemComponent extends Component {
     }
 }
 
-export { ParticleSystemComponent };
+export { _properties, ParticleSystemComponent };

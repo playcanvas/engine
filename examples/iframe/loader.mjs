@@ -50,6 +50,14 @@ class ExampleLoader {
     _allowRestart = true;
 
     /**
+     * The last requested MiniStats enabled state, re-applied on hot reload.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _miniStatsEnabled = false;
+
+    /**
      * @type {Function[]}
      * @private
      */
@@ -71,7 +79,8 @@ class ExampleLoader {
             }
         }
 
-        if (!this._started) {
+        const firstStart = !this._started;
+        if (firstStart) {
             // Sets code editor component files
             // Sets example component files (for controls + description)
             // Sets mini stats enabled state based on UI
@@ -83,6 +92,12 @@ class ExampleLoader {
             });
         }
         this._started = true;
+
+        // 'exampleLoad' re-applies the MiniStats toggle but only fires on first start, so re-apply it
+        // here after a hot reload - otherwise the panel stays hidden until the button is toggled twice.
+        if (!firstStart) {
+            this.setMiniStats(this._miniStatsEnabled);
+        }
 
         // Updates controls UI
         fire('updateFiles', {
@@ -266,6 +281,7 @@ class ExampleLoader {
      * @param {boolean} enabled - The enabled state of ministats
      */
     setMiniStats(enabled = false) {
+        this._miniStatsEnabled = enabled;
         if (this._config.NO_MINISTATS) {
             fire('miniStats', { state: false });
             return;

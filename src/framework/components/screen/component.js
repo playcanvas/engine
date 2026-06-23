@@ -193,7 +193,7 @@ class ScreenComponent extends Component {
         this._elements.delete(element);
     }
 
-    onRemove() {
+    onBeforeRemove() {
         this.system.app.graphicsDevice.off('resizecanvas', this._onResize, this);
         this.fire('remove');
 

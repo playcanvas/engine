@@ -1,15 +1,22 @@
 import { Debug } from '../../../core/debug.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
-import { SoundComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { SoundManager } from '../../../platform/sound/manager.js'
  */
 
-const _schema = ['enabled'];
+const _properties = [
+    'volume',
+    'pitch',
+    'positional',
+    'refDistance',
+    'maxDistance',
+    'rollOffFactor',
+    'distanceModel',
+    'slots'
+];
 
 /**
  * Manages creation of {@link SoundComponent}s.
@@ -29,9 +36,6 @@ class SoundComponentSystem extends ComponentSystem {
         this.id = 'sound';
 
         this.ComponentType = SoundComponent;
-        this.DataType = SoundComponentData;
-
-        this.schema = _schema;
 
         /**
          * Gets / sets the sound manager.
@@ -74,63 +78,49 @@ class SoundComponentSystem extends ComponentSystem {
         return this.manager.context;
     }
 
-    initializeComponentData(component, data, properties) {
-        properties = [
-            'volume',
-            'pitch',
-            'positional',
-            'refDistance',
-            'maxDistance',
-            'rollOffFactor',
-            'distanceModel',
-            'slots'
-        ];
-
-        for (let i = 0; i < properties.length; i++) {
-            if (data.hasOwnProperty(properties[i])) {
-                component[properties[i]] = data[properties[i]];
+    initializeComponentData(component, data) {
+        for (let i = 0; i < _properties.length; i++) {
+            if (data.hasOwnProperty(_properties[i])) {
+                component[_properties[i]] = data[_properties[i]];
             }
         }
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
-        const srcComponent = entity.sound;
-        const srcSlots = srcComponent.slots;
+        const c = entity.sound;
 
-        // convert 'slots' back to
-        // simple option objects
-        const slots = {};
-        for (const key in srcSlots) {
-            const srcSlot = srcSlots[key];
-            slots[key] = {
-                name: srcSlot.name,
-                volume: srcSlot.volume,
-                pitch: srcSlot.pitch,
-                loop: srcSlot.loop,
-                duration: srcSlot.duration,
-                startTime: srcSlot.startTime,
-                overlap: srcSlot.overlap,
-                autoPlay: srcSlot.autoPlay,
-                asset: srcSlot.asset
-            };
-        }
-
-        const cloneData = {
-            distanceModel: srcComponent.distanceModel,
-            enabled: srcComponent.enabled,
-            maxDistance: srcComponent.maxDistance,
-            pitch: srcComponent.pitch,
-            positional: srcComponent.positional,
-            refDistance: srcComponent.refDistance,
-            rollOffFactor: srcComponent.rollOffFactor,
-            slots: slots,
-            volume: srcComponent.volume
+        const data = {
+            enabled: c.enabled
         };
 
-        // add component with new data
-        return this.addComponent(clone, cloneData);
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            if (property === 'slots') {
+                // convert 'slots' back to simple option objects
+                const slots = {};
+                for (const key in c.slots) {
+                    const srcSlot = c.slots[key];
+                    slots[key] = {
+                        name: srcSlot.name,
+                        volume: srcSlot.volume,
+                        pitch: srcSlot.pitch,
+                        loop: srcSlot.loop,
+                        duration: srcSlot.duration,
+                        startTime: srcSlot.startTime,
+                        overlap: srcSlot.overlap,
+                        autoPlay: srcSlot.autoPlay,
+                        asset: srcSlot.asset
+                    };
+                }
+                data.slots = slots;
+            } else {
+                data[property] = c[property];
+            }
+        }
+
+        return this.addComponent(clone, data);
     }
 
     onUpdate(dt) {
@@ -166,7 +156,7 @@ class SoundComponentSystem extends ComponentSystem {
             }
         }
 
-        component.onRemove();
+        component.onBeforeRemove();
     }
 
     destroy() {
@@ -175,7 +165,5 @@ class SoundComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(SoundComponent.prototype, _schema);
 
 export { SoundComponentSystem };

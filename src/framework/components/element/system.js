@@ -8,13 +8,10 @@ import { StandardMaterial } from '../../../scene/materials/standard-material.js'
 import { ComponentSystem } from '../system.js';
 import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
 import { ElementComponent } from './component.js';
-import { ElementComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Manages creation of {@link ElementComponent}s.
@@ -34,9 +31,7 @@ class ElementComponentSystem extends ComponentSystem {
         this.id = 'element';
 
         this.ComponentType = ElementComponent;
-        this.DataType = ElementComponentData;
 
-        this.schema = _schema;
         this._unicodeConverter = null;
         this._rtlReorder = null;
 
@@ -76,7 +71,7 @@ class ElementComponentSystem extends ComponentSystem {
         this.defaultImageMaterials = [];
 
         this.on('add', this.onAddComponent, this);
-        this.on('beforeremove', this.onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     destroy() {
@@ -259,7 +254,8 @@ class ElementComponentSystem extends ComponentSystem {
             component._updateScreen(result.screen);
         }
 
-        super.initializeComponentData(component, data, properties);
+        // pass an empty properties list as the enabled state is initialized above
+        super.initializeComponentData(component, data, []);
 
         component._beingInitialized = false;
 
@@ -272,8 +268,8 @@ class ElementComponentSystem extends ComponentSystem {
         entity.fire('element:add');
     }
 
-    onRemoveComponent(entity, component) {
-        component.onRemove();
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 
     cloneComponent(entity, clone) {

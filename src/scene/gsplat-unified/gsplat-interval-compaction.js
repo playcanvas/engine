@@ -21,6 +21,7 @@ import { computeGsplatIntervalScatterSource } from '../shader-lib/wgsl/chunks/gs
 import { computeGsplatWriteIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-write-indirect-args.js';
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
+import { buildGSplatIntervalData, INTERVAL_STRIDE } from './gsplat-interval-data.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -31,9 +32,6 @@ import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 const WORKGROUP_SIZE = 256;
 
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
-
-// 16 bytes per interval: { workBufferBase, splatCount, boundsIndex, pad }
-const INTERVAL_STRIDE = 4;
 
 
 /**
@@ -48,7 +46,21 @@ class GSplatIntervalCompaction {
     /** @type {GraphicsDevice} */
     device;
 
-    /** @type {StorageBuffer|null} */
+    /**
+     * Manager-owned shared scratch (see {@link GSplatHybridRendererScratch}) the compacted index list
+     * is borrowed from — shared with the directional-shadow cull. The prefix-sum / count / interval
+     * buffers stay per-instance.
+     *
+     * @type {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch}
+     * @private
+     */
+    _scratch;
+
+    /**
+     * Borrowed candidate index list from {@link _scratch}, refreshed each dispatch (not owned here).
+     *
+     * @type {StorageBuffer|null}
+     */
     compactedSplatIds = null;
 
     /** @type {StorageBuffer|null} */
@@ -65,9 +77,6 @@ class GSplatIntervalCompaction {
 
     /** @type {StorageBuffer|null} */
     sortElementCountBuffer = null;
-
-    /** @type {number} */
-    allocatedCompactedCount = 0;
 
     /** @type {number} */
     allocatedIntervalCount = 0;
@@ -122,10 +131,15 @@ class GSplatIntervalCompaction {
 
     /**
      * @param {GraphicsDevice} device - The graphics device (must support compute).
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch} scratch -
+     * Manager-owned shared scratch the compacted index list is borrowed from (shared across the
+     * forward + shadow GPU-sort passes within a manager).
      */
-    constructor(device) {
+    constructor(device, scratch) {
         Debug.assert(device.supportsCompute, 'GSplatIntervalCompaction requires compute shader support (WebGPU)');
+        Debug.assert(scratch, 'GSplatIntervalCompaction requires a shared scratch (GSplatHybridRendererScratch)');
         this.device = device;
+        this._scratch = scratch;
 
         this.numSplatsBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
         this.sortElementCountBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
@@ -139,7 +153,7 @@ class GSplatIntervalCompaction {
     }
 
     destroy() {
-        this.compactedSplatIds?.destroy();
+        // compactedSplatIds is borrowed from the manager-owned scratch — never freed here.
         this.intervalsBuffer?.destroy();
         this.countBuffer?.destroy();
         this.prefixSumKernel?.destroy();
@@ -337,12 +351,9 @@ class GSplatIntervalCompaction {
      * @private
      */
     _ensureCapacity(numIntervals, totalActiveSplats) {
-        if (totalActiveSplats > this.allocatedCompactedCount) {
-            this.compactedSplatIds?.destroy();
-            this.allocatedCompactedCount = totalActiveSplats;
-            this.compactedSplatIds = new StorageBuffer(this.device, totalActiveSplats * 4, BUFFERUSAGE_COPY_SRC);
-            DebugHelper.setName(this.compactedSplatIds, 'GsplatIntervalCompaction.compactedSplatIds');
-        }
+        // borrow the manager-owned shared candidate list (shared with the shadow cull). The scratch
+        // grows monotonically and is freed by the manager, not here.
+        this.compactedSplatIds = this._scratch.ensureCompactedSplatIds(totalActiveSplats);
 
         const requiredCountSize = numIntervals + 1;
         if (requiredCountSize > this.allocatedCountBufferSize) {
@@ -358,6 +369,15 @@ class GSplatIntervalCompaction {
     }
 
     /**
+     * Forces the next {@link uploadIntervals} call to re-upload interval metadata, even for the
+     * same world-state version. Used after a work-buffer rebuild, where boundsBaseIndex values may
+     * have shifted and the cached upload is stale.
+     */
+    invalidateUpload() {
+        this._uploadedVersion = -1;
+    }
+
+    /**
      * Builds and uploads interval metadata from the world state. Called once per
      * world state change (not every frame).
      *
@@ -367,7 +387,6 @@ class GSplatIntervalCompaction {
         if (worldState.version === this._uploadedVersion) return;
         this._uploadedVersion = worldState.version;
 
-        const splats = worldState.splats;
         const numIntervals = worldState.totalIntervals;
 
         if (numIntervals === 0) return;
@@ -380,31 +399,7 @@ class GSplatIntervalCompaction {
             DebugHelper.setName(this.intervalsBuffer, 'GsplatIntervalCompaction.intervals');
         }
 
-        const data = new Uint32Array(numIntervals * INTERVAL_STRIDE);
-        let writeIdx = 0;
-
-        for (let s = 0; s < splats.length; s++) {
-            const splat = splats[s];
-
-            if (splat.intervals.length > 0) {
-                // Octree: each interval has its own offset from per-node allocation
-                const nodeIndices = splat.intervalNodeIndices;
-                for (let i = 0; i < splat.intervals.length; i += 2) {
-                    const count = splat.intervals[i + 1] - splat.intervals[i];
-                    data[writeIdx++] = splat.intervalOffsets[i / 2];
-                    data[writeIdx++] = count;
-                    data[writeIdx++] = splat.boundsBaseIndex + (nodeIndices.length > 0 ? nodeIndices[i / 2] : 0);
-                    data[writeIdx++] = 0;
-                }
-            } else {
-                // Non-octree: single interval covering the entire splat
-                data[writeIdx++] = splat.intervalOffsets[0];
-                data[writeIdx++] = splat.activeSplats;
-                data[writeIdx++] = splat.boundsBaseIndex;
-                data[writeIdx++] = 0;
-            }
-        }
-
+        const data = buildGSplatIntervalData(worldState);
         this.intervalsBuffer.write(0, data, 0, numIntervals * INTERVAL_STRIDE);
     }
 

@@ -88,10 +88,14 @@ class XrMenu extends Script {
     static scriptName = 'xrMenu';
 
     /**
-     * Array of menu item definitions. Each item should have a `label` (display text) and
-     * `eventName` (app event to fire when activated).
+     * Array of menu item definitions. Item kinds:
+     * - Interactive button: `{ label, eventName }` — fires `app.fire(eventName)` when activated.
+     * - Label (read-only): `{ label }` — non-interactive; update via {@link XrMenu#setItemLabel}.
+     * - Number row: `{ type: 'number', label, value, decEvent, incEvent }` — a single line with a
+     *   `label: value` readout and '-' / '+' buttons firing `decEvent` / `incEvent`. Update the
+     *   value via {@link XrMenu#setItemValue}.
      *
-     * @type {Array<{label: string, eventName: string}>}
+     * @type {Array<{label?: string, value?: string, eventName?: string, type?: string, decEvent?: string, incEvent?: string}>}
      * @attribute
      */
     menuItems = [];
@@ -331,6 +335,24 @@ class XrMenu extends Script {
     /** @type {Entity[]} */
     _buttons = [];
 
+    /**
+     * Per-line layout descriptors (one per generated menu row). A simple row is
+     * `{ kind: 'simple', entity }`; a number row is
+     * `{ kind: 'number', labelEntity, minus, plus, labelX, minusX, plusX, baseLabel }`.
+     *
+     * @type {Array<Object>}
+     */
+    _rows = [];
+
+    /**
+     * Per-`menuItems` text-update targets, so {@link XrMenu#setItemLabel} / {@link XrMenu#setItemValue}
+     * stay indexed by the original `menuItems` position even when a row expands into multiple
+     * entities (number rows). Each entry is `{ entity, baseLabel }`.
+     *
+     * @type {Array<{entity: Entity, baseLabel: string|null}>}
+     */
+    _itemTargets = [];
+
     /** @type {Set<XrInputSource>} */
     _inputSources = new Set();
 
@@ -416,8 +438,14 @@ class XrMenu extends Script {
         this.app.xr.input.on('add', this._onInputSourceAdd, this);
         this.app.xr.input.on('remove', this._onInputSourceRemove, this);
 
-        // Listen for XR session end to clean up
+        // Listen for XR session end to clean up.
         this.app.xr.on('end', this._onXrEnd, this);
+
+        // Drive clicks from the select/pinch event in addition to the gamepad-button polling in
+        // _updateRayInteraction. This is required on platforms (e.g. Apple Vision Pro) where a pinch
+        // arrives as a 'transient-pointer' select event with no pollable button on the hovering
+        // 'tracked-pointer' source.
+        this.app.xr.input.on('selectstart', this._onSelectStart, this);
 
         this.on('destroy', () => {
             this._onDestroy();
@@ -428,6 +456,7 @@ class XrMenu extends Script {
         if (this.app.xr) {
             this.app.xr.input.off('add', this._onInputSourceAdd, this);
             this.app.xr.input.off('remove', this._onInputSourceRemove, this);
+            this.app.xr.input.off('selectstart', this._onSelectStart, this);
             this.app.xr.off('end', this._onXrEnd, this);
         }
 
@@ -438,6 +467,8 @@ class XrMenu extends Script {
         }
 
         this._buttons = [];
+        this._rows = [];
+        this._itemTargets = [];
         this._inputSources.clear();
     }
 
@@ -446,6 +477,24 @@ class XrMenu extends Script {
         this._inputSources.clear();
         this._activeInputSource = null;
         this._followInitialized = false;
+    }
+
+    /**
+     * Handler for the raw 'selectstart' (pinch/trigger press) input event. Clicks the currently
+     * hovered button. This is the click path for platforms where the pinch arrives as a separate
+     * 'transient-pointer' select source (e.g. Apple Vision Pro) that the per-frame gamepad-button
+     * pick loop can't see; the hovered button is already tracked via the 'tracked-pointer' ray.
+     * The {@link _onButtonClick} debounce prevents a double-fire on platforms (e.g. Quest) where the
+     * gamepad-button path also fires for the same press.
+     *
+     * @private
+     */
+    _onSelectStart() {
+        // _hoveredButton is only ever an interactive button (labels are skipped during picking), and
+        // it reflects whatever the pointer ray is currently on.
+        if (this._hoveredButton) {
+            this._onButtonClick(this._hoveredButton);
+        }
     }
 
     /**
@@ -465,7 +514,9 @@ class XrMenu extends Script {
         const item = this.menuItems[index];
         if (item) item.label = text;
 
-        const entity = this._buttons[index];
+        // Index by menuItems position via _itemTargets (robust to number rows expanding a single
+        // item into multiple entities); fall back to the flat _buttons list before generation.
+        const entity = this._itemTargets[index]?.entity ?? this._buttons[index];
         if (!entity) return false;
 
         // Prefer the direct ref captured in menuData; fall back to children[0] for items that
@@ -477,6 +528,57 @@ class XrMenu extends Script {
         // @ts-ignore
         if (entity.menuData) entity.menuData.label = text;
         return true;
+    }
+
+    /**
+     * Updates the value shown on a `number` row, recomposing the displayed text as `LABEL: value`
+     * from the row's static label. The new value is persisted into the `menuItems` entry so it
+     * survives regeneration.
+     *
+     * @param {number} index - Index into the `menuItems` array (the number row).
+     * @param {string} value - New value text (e.g. '1.5M').
+     * @returns {boolean} True if the item was found and updated, false otherwise.
+     */
+    setItemValue(index, value) {
+        const item = this.menuItems[index];
+        if (item) item.value = value;
+
+        const target = this._itemTargets[index];
+        if (!target?.entity) return false;
+
+        const text = target.baseLabel != null ? `${target.baseLabel}: ${value}` : `${value}`;
+        // @ts-ignore - menuData is a custom property attached in _createButton
+        const textElement = target.entity.menuData?.textElement ?? target.entity.children[0]?.element;
+        if (!textElement) return false;
+        textElement.text = text;
+        return true;
+    }
+
+    /**
+     * Sets the overall menu scale at runtime, re-applying it to the menu screen immediately.
+     * Useful for compensating text readability when the XR framebuffer resolution is reduced
+     * (scale the menu up so it covers more framebuffer pixels).
+     *
+     * @param {number} value - New overall scale multiplier for the whole menu.
+     */
+    setMenuScale(value) {
+        this.menuScale = value;
+        if (this._screenEntity) {
+            const scale = this._uiScale * value;
+            this._screenEntity.setLocalScale(scale, scale, scale);
+        }
+    }
+
+    /**
+     * Whether a pointer ray (controller or hand) is currently over an interactive menu button.
+     * Updated every frame from the ray-picking pass. Useful for coordinating with world
+     * interactors — e.g. a navigation script can skip teleporting when a select/pinch gesture
+     * lands on the menu rather than the world.
+     *
+     * @type {boolean}
+     */
+    get isPointerOverMenu() {
+        return this._hoveredButton !== null;
     }
 
     /**
@@ -540,6 +642,8 @@ class XrMenu extends Script {
             button.destroy();
         }
         this._buttons = [];
+        this._rows = [];
+        this._itemTargets = [];
 
         // Convert meter sizes to UI pixels
         const widthPx = this.buttonWidth / this._uiScale;
@@ -551,6 +655,20 @@ class XrMenu extends Script {
             const item = this.menuItems[i];
             if (!item || typeof item !== 'object') continue;
 
+            // Number row: a value readout plus '-' / '+' buttons on a single line.
+            if (item.type === 'number') {
+                const row = this._createNumberRow(item, i, widthPx, heightPx);
+                this._screenEntity.addChild(row.labelEntity);
+                this._screenEntity.addChild(row.minus);
+                this._screenEntity.addChild(row.plus);
+                // The label is non-interactive; minus/plus are interactive (picked + clicked like
+                // any other button). All three are tracked in _buttons for picking/opacity.
+                this._buttons.push(row.labelEntity, row.minus, row.plus);
+                this._rows.push(row);
+                this._itemTargets.push({ entity: row.labelEntity, baseLabel: row.baseLabel });
+                continue;
+            }
+
             const label = item.label || `Button ${i}`;
             const eventName = item.eventName || '';
 
@@ -558,10 +676,12 @@ class XrMenu extends Script {
             if (button) {
                 this._screenEntity.addChild(button);
                 this._buttons.push(button);
+                this._rows.push({ kind: 'simple', entity: button });
+                this._itemTargets.push({ entity: button, baseLabel: null });
             }
         }
 
-        // Layout buttons vertically
+        // Layout rows vertically
         this._layoutButtons(heightPx, spacingPx);
     }
 
@@ -667,6 +787,40 @@ class XrMenu extends Script {
         button.menuData.textElement = textEntity.element;
 
         return button;
+    }
+
+    /**
+     * Creates a single-line "number" row: a value readout on the left and small '-' / '+' buttons
+     * on the right. The readout is a non-interactive label; the buttons fire `decEvent` / `incEvent`.
+     * Returns the three entities plus their precomputed horizontal positions for {@link XrMenu#_layoutButtons}.
+     *
+     * @param {Object} item - The menu item ({ type:'number', label, value, decEvent, incEvent }).
+     * @param {number} index - Index of the item in `menuItems`.
+     * @param {number} widthPx - Full row width in pixels.
+     * @param {number} heightPx - Row height in pixels.
+     * @returns {Object} Row descriptor.
+     * @private
+     */
+    _createNumberRow(item, index, widthPx, heightPx) {
+        const gap = heightPx * 0.25;
+        const btn = heightPx;                                       // square +/- buttons
+        const labelWidth = Math.max(1, widthPx - 2 * btn - 2 * gap);
+
+        // Centers, with the row centered at x = 0 (total width = widthPx).
+        const left = -widthPx / 2;
+        const labelX = left + labelWidth / 2;
+        const minusX = left + labelWidth + gap + btn / 2;
+        const plusX = left + labelWidth + gap + btn + gap + btn / 2;
+
+        const baseLabel = item.label ?? '';
+        const value = item.value ?? '';
+
+        // Reuse _createButton for all three cells (label = non-interactive, minus/plus = buttons).
+        const labelEntity = this._createButton(`${baseLabel}: ${value}`, '', index, labelWidth, heightPx);
+        const minus = this._createButton('-', item.decEvent || '', index, btn, heightPx);
+        const plus = this._createButton('+', item.incEvent || '', index, btn, heightPx);
+
+        return { kind: 'number', labelEntity, minus, plus, labelX, minusX, plusX, baseLabel };
     }
 
     /**
@@ -780,12 +934,21 @@ class XrMenu extends Script {
      * @private
      */
     _layoutButtons(heightPx, spacingPx) {
-        const totalHeight = (this._buttons.length - 1) * (heightPx + spacingPx) + heightPx;
+        // One line per row (a number row's value + '-' + '+' share a single line).
+        const rows = this._rows;
+        const totalHeight = (rows.length - 1) * (heightPx + spacingPx) + heightPx;
         const startY = totalHeight / 2 - heightPx / 2;
 
-        for (let i = 0; i < this._buttons.length; i++) {
-            const button = this._buttons[i];
-            button.setLocalPosition(0, startY - i * (heightPx + spacingPx), 0);
+        for (let r = 0; r < rows.length; r++) {
+            const y = startY - r * (heightPx + spacingPx);
+            const row = rows[r];
+            if (row.kind === 'number') {
+                row.labelEntity.setLocalPosition(row.labelX, y, 0);
+                row.minus.setLocalPosition(row.minusX, y, 0);
+                row.plus.setLocalPosition(row.plusX, y, 0);
+            } else {
+                row.entity.setLocalPosition(0, y, 0);
+            }
         }
     }
 
@@ -1260,8 +1423,12 @@ class XrMenu extends Script {
             }
             this._updateMenuOpacity(this._currentOpacity);
 
-            // Disable container when fully faded out
-            if (this._currentOpacity <= 0 && this._menuContainer) {
+            // Disable container only when fully faded *out* (hiding). The _targetOpacity guard is
+            // essential: on the first XR frame dt is ~0, so a fade-*in* leaves _currentOpacity at 0
+            // for a frame; without the guard this would disable the container, and since _menuVisible
+            // is already true, _setMenuVisible(true) never re-enables it — the menu stays hidden for
+            // the whole session (first-session-only bug).
+            if (this._currentOpacity <= 0 && this._targetOpacity <= 0 && this._menuContainer) {
                 this._menuContainer.enabled = false;
             }
         }
@@ -1320,6 +1487,18 @@ class XrMenu extends Script {
         tmpVec3A.add(tmpVec3B);
         tmpVec3B.copy(cam.up).mulScalar(this.followOffset.y);
         tmpVec3A.add(tmpVec3B);
+
+        // Guard against a not-yet-ready camera pose (e.g. Apple Vision Pro reports a degenerate /
+        // NaN pose on its first WebXR frame after a page load). Writing a non-finite transform here
+        // is fatal: the lerp/slerp below blend from the container's own value, so one NaN write
+        // propagates forever and the menu stays invisible for the whole session. Defer (without
+        // setting _followInitialized) until the pose is finite, so we snap the instant it's valid.
+        const poseValid =
+            Number.isFinite(tmpVec3A.x) && Number.isFinite(tmpVec3A.y) && Number.isFinite(tmpVec3A.z) &&
+            Number.isFinite(camRot.x) && Number.isFinite(camRot.y) && Number.isFinite(camRot.z) && Number.isFinite(camRot.w);
+        if (!poseValid) {
+            return;
+        }
 
         // Snap on the first frame so the menu doesn't fly in from the world origin
         if (!this._followInitialized) {

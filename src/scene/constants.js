@@ -1225,21 +1225,14 @@ export const GSPLAT_RENDERER_AUTO = 0;
 export const GSPLAT_RENDERER_RASTER_CPU_SORT = 1;
 
 /**
- * Rasterization-based rendering with GPU-side culling and sorting. WebGPU only. Experimental with
- * limited functionality.
+ * Rasterization-based rendering with GPU-side culling and sorting. WebGPU only.
  *
  * @type {number}
  * @category Graphics
- * @alpha
  */
 export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 
-/**
- * Full compute pipeline for rendering. WebGPU only. Experimental with limited functionality.
- *
- * @type {number}
- * @category Graphics
- */
+// deprecated
 export const GSPLAT_RENDERER_COMPUTE = 3;
 
 /**
@@ -1267,14 +1260,7 @@ export const GSPLAT_DEBUG_LOD = 1;
  */
 export const GSPLAT_DEBUG_SH_UPDATE = 2;
 
-/**
- * Debug heatmap rendering for the compute rasterizer. Visualizes the average number of splats
- * processed per pixel in each tile as a blue-to-red color ramp. Only supported with
- * {@link GSPLAT_RENDERER_COMPUTE}.
- *
- * @type {number}
- * @category Graphics
- */
+// deprecated
 export const GSPLAT_DEBUG_HEATMAP = 3;
 
 /**

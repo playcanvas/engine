@@ -83,7 +83,7 @@ app.on('destroy', () => {
 // capture storing Y as "down"; otherwise the world arrives upside-down.
 const config = {
     name: 'Poland-village',
-    url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_poland_02/lod-meta.json',
+    url: 'https://code.playcanvas.com/examples_data/example_poland_02/lod-meta.json',
     // Camera-movement threshold (world units) that retriggers LOD evaluation. Each instance
     // footprint is hundreds of units across, so re-evaluating every 0.5 units was overkill —
     // 32 still updates well before the camera crosses a meaningful fraction of a tile.
@@ -268,6 +268,21 @@ assetListLoader.load(() => {
         return { pos: [x, y, z], eulerX };
     };
 
+    // Start at the lowest LOD for a fast initial display, then open up to the FULL LOD range
+    // (all levels, 0..worst) once the first frame's data is ready. The range is per-component,
+    // so it is applied to every tile on creation and whenever it changes.
+    const lodLevels = /** @type {any} */ (assets.scene.resource).octree?.lodLevels ?? 1;
+    const worstLod = lodLevels - 1;
+    const lodRange = { min: worstLod, max: worstLod };
+    const applyLodRange = (min, max) => {
+        lodRange.min = min;
+        lodRange.max = max;
+        gsInstances.forEach((gs) => {
+            gs.lodRangeMin = min;
+            gs.lodRangeMax = max;
+        });
+    };
+
     // Add/remove entities to match the requested count. Newly added tiles are positioned and
     // LOD-configured once, on creation; surplus tiles are destroyed from the end. Tiles that
     // remain are left completely untouched, so the shared streamed resource isn't re-fetched
@@ -287,6 +302,8 @@ assetListLoader.load(() => {
             const gs = /** @type {any} */ (entity.gsplat);
             gs.lodBaseDistance = data.get('lodBaseDistance');
             gs.lodMultiplier = data.get('lodMultiplier');
+            gs.lodRangeMin = lodRange.min;
+            gs.lodRangeMax = lodRange.max;
             gsInstances.push(gs);
         }
         while (instanceEntities.length > N) {
@@ -301,19 +318,11 @@ assetListLoader.load(() => {
     rebuildInstances();
     data.on('instances:set', rebuildInstances);
 
-    // Start at the lowest LOD for a fast initial display, then open up to the FULL LOD range
-    // (all levels, 0..worst) once the first frame's data is ready.
-    const lodLevels = /** @type {any} */ (assets.scene.resource).octree?.lodLevels ?? 1;
-    const worstLod = lodLevels - 1;
-    app.scene.gsplat.lodRangeMin = worstLod;
-    app.scene.gsplat.lodRangeMax = worstLod;
-
     const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
     const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
         if (ready && loadingCount === 0) {
             gsplatSystem.off('frame:ready', onFrameReady);
-            app.scene.gsplat.lodRangeMin = 0;
-            app.scene.gsplat.lodRangeMax = worstLod;
+            applyLodRange(0, worstLod);
             // reveal the backdrop now, together with the loaded scene (not before it)
             app.scene.skybox = skyboxCubemap;
         }

@@ -1,18 +1,12 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { RenderComponent } from './component.js';
-import { RenderComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = [
-    'enabled'
-];
 
 // order matters here
 const _properties = [
@@ -52,12 +46,10 @@ class RenderComponentSystem extends ComponentSystem {
         this.id = 'render';
 
         this.ComponentType = RenderComponent;
-        this.DataType = RenderComponentData;
 
-        this.schema = _schema;
         this.defaultMaterial = getDefaultMaterial(app.graphicsDevice);
 
-        this.on('beforeremove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, _data, properties) {
@@ -80,7 +72,7 @@ class RenderComponentSystem extends ComponentSystem {
             component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
-        super.initializeComponentData(component, _data, _schema);
+        super.initializeComponentData(component, _data);
     }
 
     cloneComponent(entity, clone) {
@@ -115,11 +107,9 @@ class RenderComponentSystem extends ComponentSystem {
         return component;
     }
 
-    onRemove(entity, component) {
-        component.onRemove();
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 }
-
-Component._buildAccessors(RenderComponent.prototype, _schema);
 
 export { RenderComponentSystem };

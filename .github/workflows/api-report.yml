@@ -1,0 +1,105 @@
+name: API Report
+
+# Builds a full-signature view of the public API for the PR head and its base, sourced from
+# TypeDoc's --json model — so it follows the docs' public-API rules (excludeNotDocumented, @ignore,
+# @private, the typedoc plugin) and never reports internal/ignored symbols. Diffs the two and
+# posts/updates/removes a sticky PR comment. Informative only; never fails the build.
+#
+# Note: comments directly, so on fork PRs (read-only token) the comment step can't post; it is
+# marked continue-on-error so those runs stay green (just without a comment).
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: api-report-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  api-report:
+    name: API Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out base
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Check out PR
+        uses: actions/checkout@v7.0.0
+        with:
+          path: pr
+
+      - name: Setup Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+
+      - name: Build base API surface
+        run: |
+          cp pr/utils/api-surface.mjs base/utils/api-surface.mjs
+          cd base
+          npm clean-install --progress=false --no-fund
+          npx typedoc --json api.json --skipErrorChecking
+          node utils/api-surface.mjs api.json > surface.txt
+
+      - name: Build PR API surface
+        run: |
+          cd pr
+          npm clean-install --progress=false --no-fund
+          npx typedoc --json api.json --skipErrorChecking
+          node utils/api-surface.mjs api.json > surface.txt
+
+      - name: Diff surfaces
+        run: git --no-pager diff --no-index -U0 -- base/surface.txt pr/surface.txt > api-diff.txt || true
+
+      - name: Comment on PR
+        continue-on-error: true # fork PRs get a read-only token; don't fail the run if commenting is denied
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const MARKER = '<!-- api-report-bot -->';
+            const prNumber = context.payload.pull_request.number;
+
+            const raw = fs.existsSync('api-diff.txt') ? fs.readFileSync('api-diff.txt', 'utf8') : '';
+            // each surface line is fully-qualified, so keep only +/- lines (drop diff/@@ headers)
+            const lines = raw.split('\n').filter(l => /^[+-]/.test(l) && !/^(\+\+\+|---)/.test(l));
+            const adds = lines.filter(l => l.startsWith('+')).length;
+            const dels = lines.filter(l => l.startsWith('-')).length;
+
+            const { owner, repo } = context.repo;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: prNumber });
+            const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            if (!lines.length) {
+              if (existing) {
+                await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+              }
+              return;
+            }
+
+            // ~~~ fence (not ```), so backticks in PR-controlled content can't break out
+            let diff = lines.join('\n');
+            const LIMIT = 60000;
+            const note = diff.length > LIMIT ? '\n… (diff truncated)' : '';
+            if (note) diff = diff.slice(0, LIMIT);
+            const body = `${MARKER}\n### Public API report\n\n`
+              + `This PR changes the public API surface (**+${adds} / −${dels}**), per the docs' rules `
+              + `(@ignore / @private / undocumented are excluded).\n\n`
+              + `<details><summary>Show API diff</summary>\n\n~~~diff\n${diff}${note}\n~~~\n\n</details>\n\n`
+              + `_Informational only — this never fails the build._`;
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
+            }

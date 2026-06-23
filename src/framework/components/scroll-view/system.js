@@ -1,13 +1,9 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
-import { ScrollViewComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 // Order matters: scalars/booleans/visibility flags must precede the four entity refs.
 // Assigning a scrollbar entity triggers _onHorizontalScrollbarGain / _onVerticalScrollbarGain,
@@ -48,11 +44,8 @@ class ScrollViewComponentSystem extends ComponentSystem {
         this.id = 'scrollview';
 
         this.ComponentType = ScrollViewComponent;
-        this.DataType = ScrollViewComponentData;
 
-        this.schema = _schema;
-
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
 
         this.app.systems.on('update', this.onUpdate, this);
     }
@@ -70,28 +63,22 @@ class ScrollViewComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
         const c = entity.scrollview;
-        return this.addComponent(clone, {
-            enabled: c.enabled,
-            horizontal: c.horizontal,
-            vertical: c.vertical,
-            scrollMode: c.scrollMode,
-            bounceAmount: c.bounceAmount,
-            friction: c.friction,
-            dragThreshold: c.dragThreshold,
-            useMouseWheel: c.useMouseWheel,
-            mouseWheelSensitivity: c.mouseWheelSensitivity,
-            horizontalScrollbarVisibility: c.horizontalScrollbarVisibility,
-            verticalScrollbarVisibility: c.verticalScrollbarVisibility,
-            viewportEntity: c.viewportEntity,
-            contentEntity: c.contentEntity,
-            horizontalScrollbarEntity: c.horizontalScrollbarEntity,
-            verticalScrollbarEntity: c.verticalScrollbarEntity
-        });
+
+        const data = {
+            enabled: c.enabled
+        };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            data[property] = c[property];
+        }
+
+        return this.addComponent(clone, data);
     }
 
     onUpdate(dt) {
@@ -107,8 +94,8 @@ class ScrollViewComponentSystem extends ComponentSystem {
         }
     }
 
-    _onRemoveComponent(entity, component) {
-        component.onRemove();
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 
     destroy() {
@@ -117,7 +104,5 @@ class ScrollViewComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(ScrollViewComponent.prototype, _schema);
 
 export { ScrollViewComponentSystem };

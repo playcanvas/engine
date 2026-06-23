@@ -128,6 +128,16 @@ class Texture {
      */
     renderVersionDirty = 0;
 
+    /**
+     * A render version stamped each time the texture content is marked for upload to the GPU.
+     * Unlike {@link renderVersionDirty} (which tracks property changes), this tracks pixel content
+     * changes - including same-size video frame uploads - allowing consumers to detect when the
+     * texture content has changed since they last used it.
+     *
+     * @ignore
+     */
+    uploadVersion = 0;
+
     /** @protected */
     _storage = false;
 
@@ -1266,6 +1276,13 @@ class Texture {
      */
     markForUpload() {
         this._needsUpload = true;
+
+        // stamp the content version, allowing consumers (e.g. the clustered cookie atlas) to detect
+        // that the content has changed since they last used it
+        if (this.device) {
+            this.uploadVersion = this.device.renderVersion;
+        }
+
         this.device?.texturesToUpload?.add(this);
     }
 

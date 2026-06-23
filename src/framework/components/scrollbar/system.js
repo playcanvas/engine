@@ -1,13 +1,9 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { ScrollbarComponent } from './component.js';
-import { ScrollbarComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 const _properties = ['orientation', 'value', 'handleSize', 'handleEntity'];
 
@@ -29,12 +25,9 @@ class ScrollbarComponentSystem extends ComponentSystem {
         this.id = 'scrollbar';
 
         this.ComponentType = ScrollbarComponent;
-        this.DataType = ScrollbarComponentData;
-
-        this.schema = _schema;
 
         this.on('add', this._onAddComponent, this);
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -45,29 +38,31 @@ class ScrollbarComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
     }
 
     cloneComponent(entity, clone) {
         const c = entity.scrollbar;
-        return this.addComponent(clone, {
-            enabled: c.enabled,
-            orientation: c.orientation,
-            value: c.value,
-            handleSize: c.handleSize,
-            handleEntity: c.handleEntity
-        });
+
+        const data = {
+            enabled: c.enabled
+        };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            data[property] = c[property];
+        }
+
+        return this.addComponent(clone, data);
     }
 
     _onAddComponent(entity) {
         entity.fire('scrollbar:add');
     }
 
-    _onRemoveComponent(entity, component) {
-        component.onRemove();
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 }
-
-Component._buildAccessors(ScrollbarComponent.prototype, _schema);
 
 export { ScrollbarComponentSystem };

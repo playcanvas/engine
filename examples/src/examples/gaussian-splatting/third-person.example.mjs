@@ -88,8 +88,8 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
+    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
+    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
     character: new pc.Asset('character', 'container', { url: './assets/models/bitmoji.glb' }),
     idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
     walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
@@ -118,6 +118,16 @@ app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxIntensity = 0.5;
 app.scene.layers.getLayerById(pc.LAYERID_SKYBOX).enabled = false;
 
+// Register the renderer handler before setting the initial value, so the initial
+// AUTO selection is resolved to the concrete renderer and shown in the dropdown.
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+
 // Initial control values
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('splatBudget', 4);
@@ -127,14 +137,6 @@ data.set('cameraSmoothing', 0.0005);
 data.set('lookSens', 0.15);
 data.set('data.stats.gsplats', '—');
 data.set('data.stats.resolution', '—');
-
-data.on('renderer:set', () => {
-    app.scene.gsplat.renderer = data.get('renderer');
-    const current = app.scene.gsplat.currentRenderer;
-    if (current !== data.get('renderer')) {
-        setTimeout(() => data.set('renderer', current), 0);
-    }
-});
 
 const applySplatBudget = () => {
     const millions = data.get('splatBudget');

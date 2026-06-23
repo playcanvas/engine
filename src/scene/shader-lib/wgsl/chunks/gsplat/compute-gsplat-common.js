@@ -28,6 +28,10 @@ struct SplatCov2D {
     #if GSPLAT_AA
         aaFactor: f32,
     #endif
+    #ifdef GSPLAT_XR
+        // Eye-1 NDC, computed for the union visibility test and reused by the cache write.
+        ndc1: vec2f,
+    #endif
 }
 
 fn computeSplatCov(
@@ -46,11 +50,16 @@ fn computeSplatCov(
     isOrtho: u32,
     alphaClip: f32,
     minContribution: f32,
+    foveationStrength: f32,
+    foveationCenter: f32,
     #ifdef GSPLAT_FISHEYE
         fisheye_k: f32,
         fisheye_inv_k: f32,
         fisheye_projMat00: f32,
         fisheye_projMat11: f32,
+    #endif
+    #ifdef GSPLAT_XR
+        viewProj1: mat4x4f,
     #endif
 ) -> SplatCov2D {
     var result: SplatCov2D;
@@ -97,6 +106,18 @@ fn computeSplatCov(
             (ndc.y * 0.5 + 0.5) * viewportHeight
         );
 
+    #endif
+
+    #ifdef GSPLAT_XR
+        // Eye-1 projection: used for union visibility (a splat is kept when visible in either
+        // eye) and stored in the result so the cache write does not re-project. The behind-camera
+        // test above covers both eyes (parallel-axis stereo shares view z).
+        let clip1 = viewProj1 * vec4f(worldCenter, 1.0);
+        let ndc1 = clip1.xy / clip1.w;
+        let screen1 = vec2f(
+            (ndc1.x * 0.5 + 0.5) * viewportWidth,
+            (ndc1.y * 0.5 + 0.5) * viewportHeight
+        );
     #endif
 
     let rot: half3x3 = quatToMat3(rotation);
@@ -174,8 +195,25 @@ fn computeSplatCov(
     // Rejects splats whose total visual contribution (opacity * projected area) is
     // negligible. Near the camera, projected areas are large so contributions naturally
     // exceed the threshold; at distance, areas shrink and low-impact splats are culled.
+    //
+    // Foveation: the threshold is raised radially from the screen centre. Within
+    // foveationCenter (NDC radius) there is no effect; the boost ramps with a smoothstep
+    // to full foveationStrength at the screen edge (r = 1) and beyond (corners). With
+    // strength 0 this is an exact no-op.
+    let fovNdc = screen * vec2f(2.0 / viewportWidth, 2.0 / viewportHeight) - vec2f(1.0);
+    #ifdef GSPLAT_XR
+        // Stereo: use the smaller of the two eyes' radii, so a splat near the centre of either
+        // eye is protected (the foveated boost only applies where it is peripheral in both).
+        let fovR = min(length(fovNdc), length(ndc1));
+    #else
+        let fovR = length(fovNdc);
+    #endif
+    // manual smoothstep with a guard so foveationCenter near 1.0 cannot divide by zero
+    let fovT = saturate((fovR - foveationCenter) / max(1.0 - foveationCenter, 1e-4));
+    let effMinContribution = minContribution + foveationStrength * fovT * fovT * (3.0 - 2.0 * fovT);
+
     let totalContribution = opacity * 6.283185 * sqrt(det);
-    if (totalContribution < minContribution) {
+    if (totalContribution < effMinContribution) {
         return result;
     }
 
@@ -200,10 +238,21 @@ fn computeSplatCov(
     }
 
     // Frustum cull: reject splats entirely off-screen
-    if (screen.x + radiusX < 0.0 || screen.x - radiusX > viewportWidth ||
-        screen.y + radiusY < 0.0 || screen.y - radiusY > viewportHeight) {
-        return result;
-    }
+    #ifdef GSPLAT_XR
+        // Stereo union: reject only when off-screen in BOTH eyes, otherwise splats visible only
+        // near one eye's edge (e.g. the right edge of the right eye) would be missing.
+        if ((screen.x + radiusX < 0.0 || screen.x - radiusX > viewportWidth ||
+             screen.y + radiusY < 0.0 || screen.y - radiusY > viewportHeight) &&
+            (screen1.x + radiusX < 0.0 || screen1.x - radiusX > viewportWidth ||
+             screen1.y + radiusY < 0.0 || screen1.y - radiusY > viewportHeight)) {
+            return result;
+        }
+    #else
+        if (screen.x + radiusX < 0.0 || screen.x - radiusX > viewportWidth ||
+            screen.y + radiusY < 0.0 || screen.y - radiusY > viewportHeight) {
+            return result;
+        }
+    #endif
 
     // When the projected extent exceeds the radius cap, rescale the covariance
     // so the Gaussian reaches its cutoff at the capped boundary. Without this,
@@ -221,6 +270,9 @@ fn computeSplatCov(
         result.viewDepth = sqrt(d2);
     #else
         result.viewDepth = -viewCenter.z;
+    #endif
+    #ifdef GSPLAT_XR
+        result.ndc1 = ndc1;
     #endif
     result.valid = true;
     return result;

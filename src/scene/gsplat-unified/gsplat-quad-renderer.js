@@ -290,9 +290,9 @@ class GSplatQuadRenderer extends GSplatRenderer {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);
         }
 
-        // Update fisheye projection
+        // Update fisheye projection (forced off in XR — see GSplatRenderer.resolveFisheye)
         const cam = this.cameraNode.camera;
-        this.fisheyeProj.update(params.fisheye, cam.fov, cam.projectionMatrix);
+        this.fisheyeProj.update(this.resolveFisheye(params.fisheye), cam.fov, cam.projectionMatrix);
 
         const fisheyeEnabled = this.fisheyeProj.enabled;
         if (fisheyeEnabled !== this._lastFisheyeEnabled) {

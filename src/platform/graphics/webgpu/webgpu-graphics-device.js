@@ -49,6 +49,17 @@ const _indirectEntryByteSize = 5 * 4;
 // size of indirect dispatch entry in bytes, 3 x 32bit (x, y, z workgroup counts)
 const _indirectDispatchEntryByteSize = 3 * 4;
 
+// WebGPU color formats a swapchain or WebXR projection layer can present, mapped to the matching
+// engine PIXELFORMAT_* constant. Used to align device.backBufferFormat with the color format the
+// WebXR runtime actually renders into while immersive (see WebgpuGraphicsDevice#setXrBackBufferFormat).
+const _gpuFormatToPixelFormat = {
+    'rgba8unorm': PIXELFORMAT_RGBA8,
+    'rgba8unorm-srgb': PIXELFORMAT_SRGBA8,
+    'bgra8unorm': PIXELFORMAT_BGRA8,
+    'bgra8unorm-srgb': PIXELFORMAT_SBGRA8,
+    'rgba16float': PIXELFORMAT_RGBA16F
+};
+
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Array of GPU resources pending destruction. Resources are destroyed after the current
@@ -156,6 +167,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     submitVersion = 0;
+
+    /**
+     * Canvas-derived backbuffer pixel format ({@link GraphicsDevice#backBufferFormat}), captured once
+     * the swapchain is configured. While immersive, {@link backBufferFormat} is temporarily overridden
+     * with the WebXR projection-layer format; this is the value {@link _clearXrState} restores to.
+     *
+     * @type {number|undefined}
+     * @private
+     */
+    _canvasBackBufferFormat;
 
     /**
      * When set, immersive XR writes color to this texture instead of the canvas swapchain.
@@ -278,7 +299,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * Reset all per-frame WebGPU XR render state to its inactive defaults. Called by the XR bridge
-     * at the end of each XR frame and on session teardown, and by the graphics device on destroy.
+     * at the start of each beginFrame and on session teardown, and by the graphics device on destroy.
      *
      * @ignore
      */
@@ -288,6 +309,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.xrColorTextureViewDescriptor = null;
         this.xrSubImages.length = 0;
         this.xrCurrentViewIndex = -1;
+
+        // restore the canvas-derived backbuffer format that immersive rendering temporarily overrode
+        if (this._canvasBackBufferFormat !== undefined) {
+            this.backBufferFormat = this._canvasBackBufferFormat;
+        }
+    }
+
+    /**
+     * Override {@link backBufferFormat} with the color format of the active WebXR projection layer,
+     * so engine systems that key off the backbuffer format - notably {@link RenderTarget#isColorBufferSrgb}
+     * (which drives output gamma correction in the forward renderer and compose pass) and scene
+     * color-grab - stay consistent with the texture the XR runtime renders into. The view format is
+     * used (rather than the raw projection-layer color format) because it carries the runtime's per-eye
+     * sRGB reinterpretation, which is what actually determines hardware gamma encoding on write.
+     * Reverts to the canvas-derived format in {@link _clearXrState}. No-op for unrecognized formats.
+     *
+     * @param {any} viewFormat - WebGPU color view format of the XR projection layer (`GPUTextureFormat`).
+     * @ignore
+     */
+    setXrBackBufferFormat(viewFormat) {
+        const format = _gpuFormatToPixelFormat[viewFormat];
+        if (format !== undefined) {
+            this.backBufferFormat = format;
+        }
     }
 
     initDeviceCaps() {
@@ -383,6 +428,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
+        // Imagination PowerVR GPUs (Pixel 10 / Tensor G5) have buggy WebGPU drivers (broken
+        // compute, shader miscompiles), so fail device creation here to let createGraphicsDevice
+        // fall back to WebGL2. Remove when fixed: https://github.com/playcanvas/engine/issues/8874
+        if (this.gpuAdapter?.info?.vendor === 'img-tec') {
+            Debug.warn('WebGPU is disabled on Imagination PowerVR GPUs due to driver issues, falling back to WebGL2. See https://github.com/playcanvas/engine/issues/8874');
+            return null;
+        }
+
         const featureLevel = this.initOptions.featureLevel;
         const bare = featureLevel === 'bare';
 
@@ -462,6 +515,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // HTML-in-Canvas support (copyElementImageToTexture)
         this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
 
+        // transient (memoryless) attachment support (GPUTextureUsage.TRANSIENT_ATTACHMENT)
+        this.supportsTransientAttachments = typeof GPUTextureUsage !== 'undefined' && 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
+
         // handle lost device
         this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
 
@@ -536,6 +592,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         };
         this.gpuContext?.configure(this.canvasConfig);
 
+        // remember the canvas-derived backbuffer format so it can be restored after an immersive XR
+        // session, which temporarily overrides backBufferFormat with the projection-layer format
+        this._canvasBackBufferFormat = this.backBufferFormat;
+
         this.createBackbuffer();
 
         this.clearRenderer = new WebgpuClearRenderer(this);
@@ -580,12 +640,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     createBackbuffer() {
         this.supportsStencil = this.initOptions.stencil;
+
+        // transient (memoryless) attachment requests - RenderTarget gates these on device support
         this.backBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: this.initOptions.depth,
             stencil: this.supportsStencil,
-            samples: this.samples
+            samples: this.samples,
+            transientColor: this.initOptions.transientColor,
+            transientDepth: this.initOptions.transientDepth
         });
         this.backBuffer.impl.isBackbuffer = true;
     }
@@ -1122,7 +1186,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 if (renderPass.samples > 1 && target.autoResolve) {
                     const depthAttachment = target.impl.depthAttachment;
                     const destTexture = target.depthBuffer.impl.gpuTexture;
-                    if (depthAttachment && destTexture) {
+
+                    // a transient (memoryless) depth buffer cannot be sampled, so it cannot be the
+                    // source of a shader-based depth resolve (it has no TEXTURE_BINDING usage)
+                    if (depthAttachment?.transient) {
+                        Debug.errorOnce(`Depth resolve is not possible on render target '${target.name}' because its depth is a transient (memoryless) attachment. Disable transientDepth to allow depth resolve.`);
+                    } else if (depthAttachment && destTexture) {
                         this.resolver.resolveDepth(this.commandEncoder, depthAttachment.multisampledDepthBuffer, destTexture);
                     }
                 }
@@ -1438,7 +1507,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      *
      * @param {WebgpuBuffer} storageBuffer - The storage buffer.
      * @param {number} bufferOffset - The offset in bytes to start writing to the storage buffer.
-     * @param {ArrayBufferView} data - The data to write to the storage buffer.
+     * @param {ArrayBufferView|ArrayBuffer} data - The data to write to the storage buffer.
      * @param {number} dataOffset - Offset in data to begin writing from. Given in elements if data
      * is a TypedArray and bytes otherwise.
      * @param {number} size - Size of content to write from data to buffer. Given in elements if
@@ -1475,14 +1544,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (color) {
 
             // read from supplied render target, or from the framebuffer
-            /** @type {GPUImageCopyTexture} */
+            /** @type {GPUTexelCopyTextureInfo} */
             const copySrc = {
                 texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: source ? source.mipLevel : 0
             };
 
             // write to supplied render target, or to the framebuffer
-            /** @type {GPUImageCopyTexture} */
+            /** @type {GPUTexelCopyTextureInfo} */
             const copyDst = {
                 texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: dest ? dest.mipLevel : 0
@@ -1496,10 +1565,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // read from supplied render target, or from the framebuffer
             const sourceRT = source ? source : this.renderTarget;
+
+            // a transient (memoryless) depth buffer cannot be sampled or copied out (it has neither
+            // TEXTURE_BINDING nor COPY_SRC), so a depth grab is not possible. Check the actual
+            // allocation state on the attachment rather than the requested RT flag.
+            if (sourceRT.impl.depthAttachment?.transient) {
+                Debug.errorOnce(`copyRenderTarget cannot copy depth from render target '${sourceRT.name}' because its depth is a transient (memoryless) attachment. Disable transientDepth to allow depth grab / copy.`);
+                DebugGraphics.popGpuMarker(this);
+                return false;
+            }
+
             const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
             const sourceMipLevel = sourceRT.mipLevel;
 
-            if (source.samples > 1) {
+            if (sourceRT.samples > 1) {
 
                 // resolve the depth to a color buffer of destination render target
                 const destTexture = dest.colorBuffer.impl.gpuTexture;
@@ -1511,13 +1590,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
                 const destMipLevel = dest ? dest.mipLevel : this.renderTarget.mipLevel;
 
-                /** @type {GPUImageCopyTexture} */
+                /** @type {GPUTexelCopyTextureInfo} */
                 const copySrc = {
                     texture: sourceTexture,
                     mipLevel: sourceMipLevel
                 };
 
-                /** @type {GPUImageCopyTexture} */
+                /** @type {GPUTexelCopyTextureInfo} */
                 const copyDst = {
                     texture: destTexture,
                     mipLevel: destMipLevel

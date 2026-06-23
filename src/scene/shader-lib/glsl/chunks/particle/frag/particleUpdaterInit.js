@@ -1,7 +1,11 @@
 export default /* glsl */`
 varying vec2 vUv0;
 
-uniform highp sampler2D particleTexIN;
+#ifdef CAPS_TEXTURE_FLOAT_RENDERABLE
+    uniform highp sampler2D particleTexIN;
+#else
+    uniform highp usampler2D particleTexIN;
+#endif
 uniform highp sampler2D internalTex0;
 uniform highp sampler2D internalTex1;
 uniform highp sampler2D internalTex2;

@@ -16,8 +16,13 @@ export const mochaGlobalSetup = () => {
         return handler(request, response);
     });
 
-    server.listen(3000, () => {
-        console.log('Server started at http://localhost:3000');
+    // Return a Promise so Mocha waits for the server to be listening before any test
+    // issues a request, avoiding a startup race against the first XHR.
+    return new Promise((resolve) => {
+        server.listen(3210, () => {
+            console.log('Server started at http://localhost:3210');
+            resolve();
+        });
     });
 };
 

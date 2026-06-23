@@ -1,16 +1,10 @@
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { AnimComponent } from './component.js';
-import { AnimComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = [
-    'enabled'
-];
 
 /**
  * The AnimComponentSystem manages creating and deleting AnimComponents.
@@ -30,16 +24,13 @@ class AnimComponentSystem extends ComponentSystem {
         this.id = 'anim';
 
         this.ComponentType = AnimComponent;
-        this.DataType = AnimComponentData;
-
-        this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('animationUpdate', this.onAnimationUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
-        super.initializeComponentData(component, data, _schema);
+        super.initializeComponentData(component, data);
         const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
         Object.keys(data).forEach((key) => {
             // these properties will be initialized manually below
@@ -51,7 +42,11 @@ class AnimComponentSystem extends ComponentSystem {
             component.loadStateGraph(component.stateGraph);
         }
         if (data.layers) {
-            data.layers.forEach((layer, i) => {
+            data.layers.forEach((layer) => {
+                // Layers added dynamically via addLayer() aren't part of the state graph, so
+                // loadStateGraph() above won't have recreated them. Resolve (or create) the
+                // matching clone layer by name before assigning its animations.
+                const cloneLayer = component.addLayer(layer.name, layer.weight, layer.mask, layer.blendType);
                 layer._controller.states.forEach((stateKey) => {
                     layer._controller._states[stateKey]._animationList.forEach((node) => {
                         if (!node.animTrack || node.animTrack === AnimTrack.EMPTY) {
@@ -59,11 +54,11 @@ class AnimComponentSystem extends ComponentSystem {
                             // If there is an animation asset that hasn't been loaded, assign it once it has loaded. If it is already loaded it will be assigned already.
                             if (animationAsset && !animationAsset.loaded) {
                                 animationAsset.once('load', () => {
-                                    component.layers[i].assignAnimation(node.name, animationAsset.resource);
+                                    cloneLayer.assignAnimation(node.name, animationAsset.resource);
                                 });
                             }
                         } else {
-                            component.layers[i].assignAnimation(node.name, node.animTrack);
+                            cloneLayer.assignAnimation(node.name, node.animTrack);
                         }
                     });
                 });
@@ -93,9 +88,8 @@ class AnimComponentSystem extends ComponentSystem {
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
                 const component = components[id].entity.anim;
-                const componentData = component.data;
 
-                if (componentData.enabled && component.entity.enabled && component.playing) {
+                if (component.enabled && component.entity.enabled && component.playing) {
                     component.update(dt);
                 }
             }
@@ -150,7 +144,5 @@ class AnimComponentSystem extends ComponentSystem {
         this.app.systems.off('animationUpdate', this.onAnimationUpdate, this);
     }
 }
-
-Component._buildAccessors(AnimComponent.prototype, _schema);
 
 export { AnimComponentSystem };

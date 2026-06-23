@@ -7,11 +7,10 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
-import { Frustum } from '../../core/shape/frustum.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT, UNIFORMTYPE_UINT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_NONE,
     BINDGROUP_MESH_UB,
@@ -57,7 +56,6 @@ const viewInvMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
-const tempFrustum = new Frustum();
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
 const _dynamicBindGroup = new DynamicBindGroup();
@@ -315,16 +313,11 @@ class Renderer {
         const flipY = target?.flipY;
 
         let viewList = null;
-        if (camera.xr && camera.xr.session) {
-            const transform = camera._node?.parent?.getWorldTransform() || null;
-            const views = camera.xr.views;
-            viewList = views.list;
+        if (camera.xrActive) {
+            viewList = camera.xrViews;
 
-            // update transforms for all views
-            for (let v = 0; v < viewList.length; v++) {
-                const view = viewList[v];
-                view.updateTransforms(transform);
-            }
+            // refresh the derived per-view matrices for all views
+            camera.updateViewTransforms();
         } else {
 
             // Projection Matrix
@@ -421,7 +414,7 @@ class Renderer {
         // viewport size. In stereo XR the XR session reports the per-eye viewport directly,
         // which is correct for both side-by-side single-texture and multi-pass per-eye-view
         // layouts — preferred over inferring from target.width.
-        const xrView = camera.xr?.session ? camera.xr.views.list[0] : null;
+        const xrView = camera.xrActive ? (camera.xrViews[0] ?? null) : null;
         let viewportWidth = xrView ? xrView.viewport.z : (target ? target.width : this.device.width);
         let viewportHeight = xrView ? xrView.viewport.w : (target ? target.height : this.device.height);
         viewportWidth *= camera.rect.z;
@@ -494,24 +487,8 @@ class Renderer {
 
     updateCameraFrustum(camera) {
 
-        if (camera.xr && camera.xr.views.list.length) {
-            // Calculate combined frustum from all XR views to avoid culling objects
-            // visible in any view (e.g. right edge of right eye in stereo rendering).
-            // This works because WebXR uses parallel projection for stereo views - both eyes
-            // look in the same direction with only a horizontal offset, so frustum plane
-            // normals are identical and we can merge by selecting outermost planes.
-            const views = camera.xr.views.list;
-
-            // first view establishes the base frustum
-            viewProjMat.mul2(views[0].projMat, views[0].viewOffMat);
-            camera.frustum.setFromMat4(viewProjMat);
-
-            // for additional views, expand frustum to encompass all views
-            for (let v = 1; v < views.length; v++) {
-                viewProjMat.mul2(views[v].projMat, views[v].viewOffMat);
-                tempFrustum.setFromMat4(viewProjMat);
-                camera.frustum.add(tempFrustum);
-            }
+        // XR: combined frustum from all views (avoids culling objects visible in only one eye)
+        if (camera.updateXrFrustum()) {
             return;
         }
 
@@ -710,7 +687,7 @@ class Renderer {
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
                 new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
-                new UniformFormat('view_index', UNIFORMTYPE_FLOAT)
+                new UniformFormat('view_index', UNIFORMTYPE_UINT)
             ];
 
             if (isClustered) {

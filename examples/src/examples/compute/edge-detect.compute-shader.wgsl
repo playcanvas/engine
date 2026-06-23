@@ -1,9 +1,11 @@
 // Include half-precision type aliases (resolves to f16 when supported, f32 otherwise)
 #include "halfTypesCS"
 
-@group(0) @binding(0) var inputTexture: texture_2d<f32>;
-@group(0) @binding(1) var inputTexture_sampler: sampler;
-@group(0) @binding(2) var outputTexture: texture_storage_2d<rgba8unorm, write>;
+// Simplified-syntax declarations (no @group/@binding) - the engine reflects these into a bind
+// group automatically, so the example does not provide a computeBindGroupFormat.
+var inputTexture: texture_2d<f32>;
+var inputTexture_sampler: sampler;
+var outputTexture: texture_storage_2d<rgba8unorm, write>;
 
 @compute @workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) global_id : vec3u) {

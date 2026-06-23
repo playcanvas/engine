@@ -1,15 +1,11 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { LayoutGroupComponent } from './component.js';
-import { LayoutGroupComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 const MAX_ITERATIONS = 100;
 
@@ -31,13 +27,10 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         this.id = 'layoutgroup';
 
         this.ComponentType = LayoutGroupComponent;
-        this.DataType = LayoutGroupComponentData;
-
-        this.schema = _schema;
 
         this._reflowQueue = [];
 
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
 
         // Perform reflow when running in the engine
         this.app.systems.on('postUpdate', this._onPostUpdate, this);
@@ -61,7 +54,8 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
         if (data.wrap !== undefined) component.wrap = data.wrap;
 
-        super.initializeComponentData(component, data, properties);
+        // pass an empty properties list as the enabled state is initialized above
+        super.initializeComponentData(component, data, []);
     }
 
     cloneComponent(entity, clone) {
@@ -123,8 +117,8 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         }
     }
 
-    _onRemoveComponent(entity, component) {
-        component.onRemove();
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 
     destroy() {
@@ -133,7 +127,5 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }
 }
-
-Component._buildAccessors(LayoutGroupComponent.prototype, _schema);
 
 export { LayoutGroupComponentSystem };

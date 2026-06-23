@@ -7,7 +7,7 @@ import { http } from '../../../src/platform/net/http.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
-const BASE_URL = 'http://localhost:3000/static/';
+const BASE_URL = 'http://localhost:3210/static/';
 const META_URL = 'assets/splats/meta.json';
 const META = {
     version: 2,
@@ -77,11 +77,11 @@ describe('SogParser', function () {
             expect(err).to.equal(null);
             expect(resource).to.equal(null);
             expect(urls).to.deep.equal([
-                'http://localhost:3000/static/assets/splats/means_l.webp',
-                'http://localhost:3000/static/assets/splats/means_u.webp',
-                'http://localhost:3000/static/assets/splats/quats.webp',
-                'http://localhost:3000/static/assets/splats/scales.webp',
-                'http://localhost:3000/static/assets/splats/sh0.webp'
+                'http://localhost:3210/static/assets/splats/means_l.webp',
+                'http://localhost:3210/static/assets/splats/means_u.webp',
+                'http://localhost:3210/static/assets/splats/quats.webp',
+                'http://localhost:3210/static/assets/splats/scales.webp',
+                'http://localhost:3210/static/assets/splats/sh0.webp'
             ]);
             done();
         }, sog);

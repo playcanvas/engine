@@ -1,13 +1,9 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { LayoutChildComponent } from './component.js';
-import { LayoutChildComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * Manages creation of {@link LayoutChildComponent}s.
@@ -27,9 +23,6 @@ class LayoutChildComponentSystem extends ComponentSystem {
         this.id = 'layoutchild';
 
         this.ComponentType = LayoutChildComponent;
-        this.DataType = LayoutChildComponentData;
-
-        this.schema = _schema;
     }
 
     initializeComponentData(component, data, properties) {
@@ -42,7 +35,8 @@ class LayoutChildComponentSystem extends ComponentSystem {
         if (data.fitHeightProportion !== undefined) component.fitHeightProportion = data.fitHeightProportion;
         if (data.excludeFromLayout !== undefined) component.excludeFromLayout = data.excludeFromLayout;
 
-        super.initializeComponentData(component, data, properties);
+        // pass an empty properties list as the enabled state is initialized above
+        super.initializeComponentData(component, data, []);
     }
 
     cloneComponent(entity, clone) {
@@ -60,7 +54,5 @@ class LayoutChildComponentSystem extends ComponentSystem {
         });
     }
 }
-
-Component._buildAccessors(LayoutChildComponent.prototype, _schema);
 
 export { LayoutChildComponentSystem };

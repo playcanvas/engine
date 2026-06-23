@@ -105,6 +105,48 @@ class GSplatPlacement {
     }
 
     /**
+     * Minimum allowed LOD index (inclusive). Clamped to the asset's valid range at use.
+     *
+     * @private
+     */
+    _lodRangeMin = 0;
+
+    /**
+     * Maximum allowed LOD index (inclusive). Clamped to the asset's valid range at use.
+     *
+     * @private
+     */
+    _lodRangeMax = 99;
+
+    /**
+     * @type {number}
+     */
+    set lodRangeMin(value) {
+        if (this._lodRangeMin !== value) {
+            this._lodRangeMin = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodRangeMin() {
+        return this._lodRangeMin;
+    }
+
+    /**
+     * @type {number}
+     */
+    set lodRangeMax(value) {
+        if (this._lodRangeMax !== value) {
+            this._lodRangeMax = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodRangeMax() {
+        return this._lodRangeMax;
+    }
+
+    /**
      * The axis-aligned bounding box for this placement, in local space.
      * Null means use resource.aabb as fallback.
      *

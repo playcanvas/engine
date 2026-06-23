@@ -85,8 +85,8 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://s3.eu-west-1.amazonaws.com/code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' })
+    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
+    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' })
 };
 
 await new Promise((resolve) => {
@@ -95,13 +95,8 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Initial control values
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-data.set('splatBudget', 4);
-data.set('data.stats.gsplats', '—');
-data.set('data.stats.resolution', '—');
-
-// Renderer selection
+// Renderer selection. Register before setting the initial value, so the initial
+// AUTO selection is resolved to the concrete renderer and shown in the dropdown.
 data.on('renderer:set', () => {
     app.scene.gsplat.renderer = data.get('renderer');
     const current = app.scene.gsplat.currentRenderer;
@@ -109,6 +104,12 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
+
+// Initial control values
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('splatBudget', 4);
+data.set('data.stats.gsplats', '—');
+data.set('data.stats.resolution', '—');
 
 // Splat budget (in millions)
 const applySplatBudget = () => {

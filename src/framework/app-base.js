@@ -411,7 +411,7 @@ class AppBase extends EventHandler {
      * // Search the asset registry for all assets with the tag 'vehicle'
      * const vehicleAssets = this.app.assets.findByTag('vehicle');
      */
-    assets;
+    assets = new AssetRegistry(this.loader);
 
     /**
      * The bundle registry managed by the application.
@@ -566,7 +566,6 @@ class AppBase extends EventHandler {
         this.scene = new Scene(graphicsDevice);
         this._registerSceneImmediate(this.scene);
 
-        this.assets = new AssetRegistry(this.loader);
         if (assetPrefix) this.assets.prefix = assetPrefix;
 
         this.bundles = new BundleRegistry(this.assets);
@@ -803,6 +802,11 @@ class AppBase extends EventHandler {
         // configure retrying assets - overrides the default set in the constructor
         if (typeof props.maxAssetRetries === 'number' && props.maxAssetRetries > 0) {
             this.loader.enableRetry(props.maxAssetRetries);
+        }
+
+        // configure the concurrent request limit - overrides the default (0 is valid, meaning unlimited)
+        if (typeof props.maxConcurrentRequests === 'number' && props.maxConcurrentRequests >= 0) {
+            this.loader.maxConcurrentRequests = props.maxConcurrentRequests;
         }
 
         // TODO: remove this temporary block after migrating properties
@@ -1417,6 +1421,24 @@ class AppBase extends EventHandler {
      * is subdivided into. Defaults to [10, 3, 10].
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
+     * @param {boolean} [settings.render.gsplatRadialSorting] - Enables radial sorting of Gaussian splats. Defaults to false.
+     * @param {number} [settings.render.gsplatLodUpdateDistance] - Distance threshold in world units to trigger gsplat LOD updates. Defaults to 1.
+     * @param {number} [settings.render.gsplatLodUpdateAngle] - Angle threshold in degrees to trigger gsplat LOD updates based on camera rotation. Defaults to 0.
+     * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.
+     * @param {number} [settings.render.gsplatLodUnderfillLimit] - Maximum number of gsplat LOD levels allowed below the optimal level when optimal data is not resident. Defaults to 0.
+     * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. 0 disables budget enforcement. Defaults to 0.
+     * @param {number} [settings.render.gsplatAlphaClip] - Alpha threshold for gsplat shadow, pick, and prepass rendering. Defaults to 0.3.
+     * @param {number} [settings.render.gsplatAlphaClipForward] - Alpha threshold for the forward gsplat rendering pass. Defaults to 1 / 255.
+     * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.
+     * @param {number} [settings.render.gsplatMinContribution] - Minimum visual contribution threshold for the compute gsplat renderer. Defaults to 3.
+     * @param {number} [settings.render.gsplatFoveationStrength] - Foveated contribution culling strength. Defaults to 0.
+     * @param {number} [settings.render.gsplatFoveationCenter] - Protected centre radius for foveated contribution culling. Defaults to 0.3.
+     * @param {boolean} [settings.render.gsplatAntiAlias] - Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
+     * @param {boolean} [settings.render.gsplatUseFog] - Whether to apply scene fog to Gaussian splats. Defaults to true.
+     * @param {number} [settings.render.gsplatColorUpdateAngle] - Viewing angle threshold in degrees for triggering gsplat spherical harmonics color updates. Defaults to 10.
+     * @param {number} [settings.render.gsplatCooldownTicks] - Number of update ticks before unloading unused streamed gsplat resources. Defaults to 100.
+     * @param {string} [settings.render.gsplatDataFormat] - Work buffer data format for gsplat rendering. One of the GSPLATDATA_* constants. Defaults to {@link GSPLATDATA_COMPACT}.
+     * @param {boolean} [settings.render.gsplatEnableIds] - Enables per-component ID storage in the gsplat work buffer. Defaults to false.
      * @example
      *
      * const settings = {

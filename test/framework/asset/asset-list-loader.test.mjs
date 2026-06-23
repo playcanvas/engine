@@ -8,7 +8,7 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 describe('AssetListLoader', function () {
 
     let app;
-    const assetPath = 'http://localhost:3000/test/assets/';
+    const assetPath = '/test/assets/';
 
     beforeEach(function () {
         jsdomSetup();

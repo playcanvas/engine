@@ -7,7 +7,6 @@ import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';
 import { ComponentSystem } from '../system.js';
 import { CollisionComponent } from './component.js';
-import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
 /**
@@ -20,21 +19,20 @@ const p2 = new Vec3();
 const quat = new Quat();
 const tempGraphNode = new GraphNode();
 
-const _schema = [
-    'enabled',
-    'type',
+// Note that `shape` is deliberately absent from this list - it is runtime
+// state created and owned by the type implementation, not component data
+const _properties = [
     'halfExtents',
-    'linearOffset',
-    'angularOffset',
     'radius',
     'axis',
     'height',
     'convexHull',
-    'asset',
-    'renderAsset',
-    'shape',
     'model',
+    'asset',
     'render',
+    'renderAsset',
+    'linearOffset',
+    'angularOffset',
     'checkVertexDuplicates'
 ];
 
@@ -45,29 +43,29 @@ class CollisionSystemImpl {
     }
 
     // Called before the call to system.super.initializeComponentData is made
-    beforeInitialize(component, data) {
-        data.shape = null;
+    beforeInitialize(component) {
+        component._shape = null;
 
-        data.model = new Model();
-        data.model.graph = new GraphNode();
+        const model = new Model();
+        model.graph = new GraphNode();
+        component._model = model;
     }
 
     // Called after the call to system.super.initializeComponentData is made
-    afterInitialize(component, data) {
+    afterInitialize(component) {
         this.recreatePhysicalShapes(component);
-        component.data.initialized = true;
+        component._initialized = true;
     }
 
     // Called when a collision component changes type in order to recreate debug and physical shapes
-    reset(component, data) {
-        this.beforeInitialize(component, data);
-        this.afterInitialize(component, data);
+    reset(component) {
+        this.beforeInitialize(component);
+        this.afterInitialize(component);
     }
 
     // Re-creates rigid bodies / triggers
     recreatePhysicalShapes(component) {
         const entity = component.entity;
-        const data = component.data;
 
         if (typeof Ammo !== 'undefined') {
             if (entity.trigger) {
@@ -75,10 +73,10 @@ class CollisionSystemImpl {
                 delete entity.trigger;
             }
 
-            if (data.shape) {
+            if (component._shape) {
                 if (component._compoundParent) {
                     if (component !== component._compoundParent) {
-                        this.system._removeCompoundChild(component._compoundParent, data.shape);
+                        this.system._removeCompoundChild(component._compoundParent, component._shape);
                     }
 
                     if (component._compoundParent.entity.rigidbody) {
@@ -86,18 +84,18 @@ class CollisionSystemImpl {
                     }
                 }
 
-                this.destroyShape(data);
+                this.destroyShape(component);
             }
 
-            data.shape = this.createPhysicalShape(component.entity, data);
+            component._shape = this.createPhysicalShape(entity, component);
 
             const firstCompoundChild = !component._compoundParent;
 
-            if (data.type === 'compound' && (!component._compoundParent || component === component._compoundParent)) {
+            if (component._type === 'compound' && (!component._compoundParent || component === component._compoundParent)) {
                 component._compoundParent = component;
 
                 entity.forEach(this._addEachDescendant, component);
-            } else if (data.type !== 'compound') {
+            } else if (component._type !== 'compound') {
                 if (!component.rigidbody) {
                     component._compoundParent = null;
                     let parent = entity.parent;
@@ -126,26 +124,36 @@ class CollisionSystemImpl {
             }
 
             if (entity.rigidbody) {
-                entity.rigidbody.disableSimulation();
-                entity.rigidbody.createBody();
-
-                if (entity.enabled && entity.rigidbody.enabled) {
-                    entity.rigidbody.enableSimulation();
-                }
+                this._recreateBody(entity);
             } else if (!component._compoundParent) {
-                if (!entity.trigger) {
-                    entity.trigger = new Trigger(this.system.app, component, data);
-                } else {
-                    entity.trigger.initialize(data);
-                }
+                this._recreateTrigger(entity, component);
             }
+        }
+    }
+
+    // Re-creates the entity's rigid body after the collision shape changed
+    _recreateBody(entity) {
+        entity.rigidbody.disableSimulation();
+        entity.rigidbody.createBody();
+
+        if (entity.enabled && entity.rigidbody.enabled) {
+            entity.rigidbody.enableSimulation();
+        }
+    }
+
+    // Creates the entity's trigger, or re-initializes an existing one
+    _recreateTrigger(entity, component) {
+        if (!entity.trigger) {
+            entity.trigger = new Trigger(this.system.app, component);
+        } else {
+            entity.trigger.initialize();
         }
     }
 
     // Creates a physical shape for the collision. This consists
     // of the actual shape that will be used for the rigid bodies / triggers of
     // the collision.
-    createPhysicalShape(entity, data) {
+    createPhysicalShape(entity, component) {
         return undefined;
     }
 
@@ -155,17 +163,17 @@ class CollisionSystemImpl {
         }
     }
 
-    destroyShape(data) {
-        if (data.shape) {
-            Ammo.destroy(data.shape);
-            data.shape = null;
+    destroyShape(component) {
+        if (component._shape) {
+            Ammo.destroy(component._shape);
+            component._shape = null;
         }
     }
 
     beforeRemove(entity, component) {
-        if (component.data.shape) {
+        if (component._shape) {
             if (component._compoundParent && !component._compoundParent.entity._destroying) {
-                this.system._removeCompoundChild(component._compoundParent, component.data.shape);
+                this.system._removeCompoundChild(component._compoundParent, component._shape);
 
                 if (component._compoundParent.entity.rigidbody) {
                     component._compoundParent.entity.rigidbody.activate();
@@ -174,53 +182,17 @@ class CollisionSystemImpl {
 
             component._compoundParent = null;
 
-            this.destroyShape(component.data);
+            this.destroyShape(component);
         }
-    }
-
-    // Called when the collision is removed
-    remove(entity, data) {
-        if (entity.rigidbody && entity.rigidbody.body) {
-            entity.rigidbody.disableSimulation();
-        }
-
-        if (entity.trigger) {
-            entity.trigger.destroy();
-            delete entity.trigger;
-        }
-    }
-
-    // Called when the collision is cloned to another entity
-    clone(entity, clone) {
-        const src = this.system.store[entity.guid];
-
-        const data = {
-            enabled: src.data.enabled,
-            type: src.data.type,
-            halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
-            linearOffset: [src.data.linearOffset.x, src.data.linearOffset.y, src.data.linearOffset.z],
-            angularOffset: [src.data.angularOffset.x, src.data.angularOffset.y, src.data.angularOffset.z, src.data.angularOffset.w],
-            radius: src.data.radius,
-            axis: src.data.axis,
-            height: src.data.height,
-            convexHull: src.data.convexHull,
-            asset: src.data.asset,
-            renderAsset: src.data.renderAsset,
-            model: src.data.model,
-            render: src.data.render,
-            checkVertexDuplicates: src.data.checkVertexDuplicates
-        };
-
-        return this.system.addComponent(clone, data);
     }
 }
 
 // Box Collision System
 class CollisionBoxSystemImpl extends CollisionSystemImpl {
-    createPhysicalShape(entity, data) {
+    createPhysicalShape(entity, component) {
         if (typeof Ammo !== 'undefined') {
-            const he = data.halfExtents;
-            const ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
+            const he = component.halfExtents;
+            const ammoHe = new Ammo.btVector3(he.x, he.y, he.z);
             const shape = new Ammo.btBoxShape(ammoHe);
             Ammo.destroy(ammoHe);
             return shape;
@@ -231,9 +203,9 @@ class CollisionBoxSystemImpl extends CollisionSystemImpl {
 
 // Sphere Collision System
 class CollisionSphereSystemImpl extends CollisionSystemImpl {
-    createPhysicalShape(entity, data) {
+    createPhysicalShape(entity, component) {
         if (typeof Ammo !== 'undefined') {
-            return new Ammo.btSphereShape(data.radius);
+            return new Ammo.btSphereShape(component.radius);
         }
         return undefined;
     }
@@ -241,10 +213,10 @@ class CollisionSphereSystemImpl extends CollisionSystemImpl {
 
 // Capsule Collision System
 class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
-    createPhysicalShape(entity, data) {
-        const axis = data.axis ?? 1;
-        const radius = data.radius ?? 0.5;
-        const height = Math.max((data.height ?? 2) - 2 * radius, 0);
+    createPhysicalShape(entity, component) {
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = Math.max(component.height - 2 * radius, 0);
 
         let shape = null;
 
@@ -268,10 +240,10 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
 
 // Cylinder Collision System
 class CollisionCylinderSystemImpl extends CollisionSystemImpl {
-    createPhysicalShape(entity, data) {
-        const axis = data.axis ?? 1;
-        const radius = data.radius ?? 0.5;
-        const height = data.height ?? 1;
+    createPhysicalShape(entity, component) {
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = component.height;
 
         let halfExtents = null;
         let shape = null;
@@ -303,10 +275,10 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
 
 // Cone Collision System
 class CollisionConeSystemImpl extends CollisionSystemImpl {
-    createPhysicalShape(entity, data) {
-        const axis = data.axis ?? 1;
-        const radius = data.radius ?? 0.5;
-        const height = data.height ?? 1;
+    createPhysicalShape(entity, component) {
+        const axis = component.axis;
+        const radius = component.radius;
+        const height = component.height;
 
         let shape = null;
 
@@ -332,7 +304,7 @@ class CollisionConeSystemImpl extends CollisionSystemImpl {
 class CollisionMeshSystemImpl extends CollisionSystemImpl {
     // override for the mesh implementation because the asset model needs
     // special handling
-    beforeInitialize(component, data) {}
+    beforeInitialize(component) {}
 
     createAmmoHull(mesh, node, shape, scale) {
         const hull = new Ammo.btConvexHullShape();
@@ -450,28 +422,28 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         Ammo.destroy(transform);
     }
 
-    createPhysicalShape(entity, data) {
+    createPhysicalShape(entity, component) {
         if (typeof Ammo === 'undefined') return undefined;
 
-        if (data.model || data.render) {
+        if (component._model || component._render) {
 
             const shape = new Ammo.btCompoundShape();
             const entityTransform = entity.getWorldTransform();
             const scale = entityTransform.getScale();
 
-            if (data.render) {
-                const meshes = data.render.meshes;
+            if (component._render) {
+                const meshes = component._render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
-                    if (data.convexHull) {
+                    if (component._convexHull) {
                         this.createAmmoHull(meshes[i], tempGraphNode, shape, scale);
                     } else {
-                        this.createAmmoMesh(meshes[i], tempGraphNode, shape, scale, data.checkVertexDuplicates);
+                        this.createAmmoMesh(meshes[i], tempGraphNode, shape, scale, component._checkVertexDuplicates);
                     }
                 }
-            } else if (data.model) {
-                const meshInstances = data.model.meshInstances;
+            } else if (component._model) {
+                const meshInstances = component._model.meshInstances;
                 for (let i = 0; i < meshInstances.length; i++) {
-                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape, null, data.checkVertexDuplicates);
+                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape, null, component._checkVertexDuplicates);
                 }
                 const vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
                 shape.setLocalScaling(vec);
@@ -485,14 +457,12 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     }
 
     recreatePhysicalShapes(component) {
-        const data = component.data;
-
-        if (data.renderAsset || data.asset) {
+        if (component._renderAsset || component._asset) {
             if (component.enabled && component.entity.enabled) {
                 this.loadAsset(
                     component,
-                    data.renderAsset || data.asset,
-                    data.renderAsset ? 'render' : 'model'
+                    component._renderAsset || component._asset,
+                    component._renderAsset ? 'render' : 'model'
                 );
                 return;
             }
@@ -502,16 +472,18 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     }
 
     loadAsset(component, id, property) {
-        const data = component.data;
         const assets = this.system.app.assets;
-        const previousPropertyValue = data[property];
+        // write the loaded resource to the private field - the public setter
+        // would trigger a second shape rebuild via doRecreatePhysicalShape
+        const privateProperty = `_${property}`;
+        const previousPropertyValue = component[privateProperty];
 
         const onAssetFullyReady = (asset) => {
-            if (data[property] !== previousPropertyValue) {
+            if (component[privateProperty] !== previousPropertyValue) {
                 // the asset has changed since we started loading it, so ignore this callback
                 return;
             }
-            data[property] = asset.resource;
+            component[privateProperty] = asset.resource;
             this.doRecreatePhysicalShape(component);
         };
 
@@ -545,30 +517,22 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
     doRecreatePhysicalShape(component) {
         const entity = component.entity;
-        const data = component.data;
 
-        if (data.model || data.render) {
-            this.destroyShape(data);
+        if (component._model || component._render) {
+            this.destroyShape(component);
 
-            data.shape = this.createPhysicalShape(entity, data);
+            component._shape = this.createPhysicalShape(entity, component);
 
             if (entity.rigidbody) {
-                entity.rigidbody.disableSimulation();
-                entity.rigidbody.createBody();
-
-                if (entity.enabled && entity.rigidbody.enabled) {
-                    entity.rigidbody.enableSimulation();
-                }
+                this._recreateBody(entity);
             } else {
-                if (!entity.trigger) {
-                    entity.trigger = new Trigger(this.system.app, component, data);
-                } else {
-                    entity.trigger.initialize(data);
-                }
+                // note: unlike the base implementation, the trigger is
+                // created even when the component is a compound child
+                this._recreateTrigger(entity, component);
             }
         } else {
             this.beforeRemove(entity, component);
-            this.remove(entity, data);
+            this.system.onRemove(entity);
         }
     }
 
@@ -589,25 +553,25 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         super.updateTransform(component, position, rotation, scale);
     }
 
-    destroyShape(data) {
-        if (!data.shape) {
+    destroyShape(component) {
+        if (!component._shape) {
             return;
         }
 
-        const numShapes = data.shape.getNumChildShapes();
+        const numShapes = component._shape.getNumChildShapes();
         for (let i = 0; i < numShapes; i++) {
-            const shape = data.shape.getChildShape(i);
+            const shape = component._shape.getChildShape(i);
             Ammo.destroy(shape);
         }
 
-        Ammo.destroy(data.shape);
-        data.shape = null;
+        Ammo.destroy(component._shape);
+        component._shape = null;
     }
 }
 
 // Compound Collision System
 class CollisionCompoundSystemImpl extends CollisionSystemImpl {
-    createPhysicalShape(entity, data) {
+    createPhysicalShape(entity, component) {
         if (typeof Ammo !== 'undefined') {
             return new Ammo.btCompoundShape();
         }
@@ -669,9 +633,6 @@ class CollisionComponentSystem extends ComponentSystem {
         this.id = 'collision';
 
         this.ComponentType = CollisionComponent;
-        this.DataType = CollisionComponentData;
-
-        this.schema = _schema;
 
         this.implementations = { };
 
@@ -681,81 +642,38 @@ class CollisionComponentSystem extends ComponentSystem {
         this.on('remove', this.onRemove, this);
     }
 
-    initializeComponentData(component, _data, properties) {
-        properties = [
-            'type',
-            'halfExtents',
-            'radius',
-            'axis',
-            'height',
-            'convexHull',
-            'shape',
-            'model',
-            'asset',
-            'render',
-            'renderAsset',
-            'enabled',
-            'linearOffset',
-            'angularOffset',
-            'checkVertexDuplicates'
-        ];
-
-        // duplicate the input data because we are modifying it
-        const data = {};
-        for (let i = 0, len = properties.length; i < len; i++) {
-            const property = properties[i];
-            data[property] = _data[property];
+    initializeComponentData(component, data) {
+        // resolve the type first - falsy values fall back to the current
+        // type, matching the old initializer, and the private field is
+        // written directly so the type setter does not fire changeType
+        // before the component is initialized
+        if (data.type) {
+            component._type = data.type;
         }
 
-        // asset takes priority over model
-        // but they are both trying to change the mesh
-        // so remove one of them to avoid conflicts
-        let idx;
-        if (_data.hasOwnProperty('asset')) {
-            idx = properties.indexOf('model');
-            if (idx !== -1) {
-                properties.splice(idx, 1);
-            }
-            idx = properties.indexOf('render');
-            if (idx !== -1) {
-                properties.splice(idx, 1);
-            }
-        } else if (_data.hasOwnProperty('model')) {
-            idx = properties.indexOf('asset');
-            if (idx !== -1) {
-                properties.splice(idx, 1);
+        // asset takes priority over model and render but they are all trying
+        // to change the mesh, so remove the conflicting inputs
+        let properties = _properties;
+        if (data.asset !== undefined) {
+            properties = properties.filter(p => p !== 'model' && p !== 'render');
+        } else if (data.model !== undefined) {
+            properties = properties.filter(p => p !== 'asset');
+        }
+
+        // apply the user-supplied properties through the public setters - all
+        // side effects are gated on _initialized, which is still false here
+        for (const property of properties) {
+            if (data[property] !== undefined) {
+                component[property] = data[property];
             }
         }
 
-        if (!data.type) {
-            data.type = component.data.type;
-        }
-        component.data.type = data.type;
+        const impl = this._createImplementation(component._type);
+        impl.beforeInitialize(component);
 
-        if (Array.isArray(data.halfExtents)) {
-            data.halfExtents = new Vec3(data.halfExtents);
-        }
+        super.initializeComponentData(component, data);
 
-        if (Array.isArray(data.linearOffset)) {
-            data.linearOffset = new Vec3(data.linearOffset);
-        }
-
-        if (Array.isArray(data.angularOffset)) {
-            // Allow for euler angles to be passed as a 3 length array
-            const values = data.angularOffset;
-            if (values.length === 3) {
-                data.angularOffset = new Quat().setFromEulerAngles(values[0], values[1], values[2]);
-            } else {
-                data.angularOffset = new Quat(data.angularOffset);
-            }
-        }
-
-        const impl = this._createImplementation(data.type);
-        impl.beforeInitialize(component, data);
-
-        super.initializeComponentData(component, data, properties);
-
-        impl.afterInitialize(component, data);
+        impl.afterInitialize(component);
     }
 
     // Creates an implementation based on the collision type and caches it
@@ -794,22 +712,43 @@ class CollisionComponentSystem extends ComponentSystem {
         return this.implementations[type];
     }
 
-    // Gets an existing implementation for the specified entity
-    _getImplementation(entity) {
-        return this.implementations[entity.collision.data.type];
-    }
-
     cloneComponent(entity, clone) {
-        return this._getImplementation(entity).clone(entity, clone);
+        const c = entity.collision;
+
+        // type drives the implementation selection so it is handled outside
+        // the shared property list
+        const data = {
+            enabled: c.enabled,
+            type: c.type
+        };
+
+        for (const property of _properties) {
+            data[property] = c[property];
+        }
+
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {
-        this.implementations[component.data.type].beforeRemove(entity, component);
+        this.implementations[component.type].beforeRemove(entity, component);
         component.onBeforeRemove();
+
+        // discard any stored collisions keyed to this entity so a later entity that reuses the
+        // same GUID (e.g. after reloading the same scene) does not inherit stale tracking
+        if (this.app.systems.rigidbody) {
+            this.app.systems.rigidbody.clearEntityCollisions(entity);
+        }
     }
 
-    onRemove(entity, data) {
-        this.implementations[data.type].remove(entity, data);
+    onRemove(entity) {
+        if (entity.rigidbody && entity.rigidbody.body) {
+            entity.rigidbody.disableSimulation();
+        }
+
+        if (entity.trigger) {
+            entity.trigger.destroy();
+            delete entity.trigger;
+        }
     }
 
     updateCompoundChildTransform(entity, forceUpdate) {
@@ -820,7 +759,7 @@ class CollisionComponentSystem extends ComponentSystem {
             const transform = this._getNodeTransform(entity, parentComponent.entity);
             const idx = parentComponent.getCompoundChildShapeIndex(entity.collision.shape);
             if (idx === null) {
-                parentComponent.shape.addChildShape(transform, entity.collision.data.shape);
+                parentComponent.shape.addChildShape(transform, entity.collision.shape);
             } else {
                 parentComponent.shape.updateChildTransform(idx, transform, true);
             }
@@ -844,19 +783,19 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     onTransformChanged(component, position, rotation, scale) {
-        this.implementations[component.data.type].updateTransform(component, position, rotation, scale);
+        this.implementations[component.type].updateTransform(component, position, rotation, scale);
     }
 
     // Destroys the previous collision type and creates a new one based on the new type provided
     changeType(component, previousType, newType) {
         this.implementations[previousType].beforeRemove(component.entity, component);
-        this.implementations[previousType].remove(component.entity, component.data);
-        this._createImplementation(newType).reset(component, component.data);
+        this.onRemove(component.entity);
+        this._createImplementation(newType).reset(component);
     }
 
     // Recreates rigid bodies or triggers for the specified component
     recreatePhysicalShapes(component) {
-        this.implementations[component.data.type].recreatePhysicalShapes(component);
+        this.implementations[component.type].recreatePhysicalShapes(component);
     }
 
     _calculateNodeRelativeTransform(node, relative) {
@@ -898,8 +837,8 @@ class CollisionComponentSystem extends ComponentSystem {
         const component = node.collision;
 
         if (component && component._hasOffset) {
-            const lo = component.data.linearOffset;
-            const ao = component.data.angularOffset;
+            const lo = component.linearOffset;
+            const ao = component.angularOffset;
             const newOrigin = p2;
 
             quat.copy(rot).transformVector(lo, newOrigin);

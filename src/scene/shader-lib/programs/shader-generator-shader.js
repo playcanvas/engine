@@ -49,14 +49,15 @@ class ShaderGeneratorShader extends ShaderGenerator {
         definitionOptions.attributes = attributes;
     }
 
-    createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl) {
-
-        const desc = options.shaderDesc;
-
-        const includes = new Map(sharedIncludes);
-        includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
-
-        const defines = new Map(options.defines);
+    /**
+     * Adds object / mesh level defines (derived from {@link MeshInstance} shader defines) to the
+     * supplied map. These describe properties of the rendered mesh and so are made available to
+     * both the vertex and fragment shaders.
+     *
+     * @param {Map<string, any>} defines - The defines map to add to.
+     * @param {object} options - The shader generation options.
+     */
+    addSharedDefines(defines, options) {
         if (options.skin) defines.set('SKIN', true);
         if (options.useInstancing) defines.set('INSTANCING', true);
         if (options.useMorphPosition || options.useMorphNormal) {
@@ -65,6 +66,17 @@ class ShaderGeneratorShader extends ShaderGenerator {
             if (options.useMorphPosition) defines.set('MORPHING_POSITION', true);
             if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
         }
+    }
+
+    createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl) {
+
+        const desc = options.shaderDesc;
+
+        const includes = new Map(sharedIncludes);
+        includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
+
+        const defines = new Map(options.defines);
+        this.addSharedDefines(defines, options);
 
         definitionOptions.vertexCode = wgsl ? desc.vertexWGSL : desc.vertexGLSL;
         definitionOptions.vertexIncludes = includes;
@@ -77,6 +89,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         const includes = new Map(sharedIncludes);
         const defines = new Map(options.defines);
+        this.addSharedDefines(defines, options);
 
         definitionOptions.fragmentCode = wgsl ? desc.fragmentWGSL : desc.fragmentGLSL;
         definitionOptions.fragmentIncludes = includes;

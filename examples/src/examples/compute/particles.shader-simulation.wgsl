@@ -1,30 +1,29 @@
-// uniform buffer for the compute shader
-struct ub_compute {
-    count: u32,              // number of particles
-    dt: f32,                 // delta time
-    sphereCount: u32         // number of spheres
-}
-
 // sphere struct used for the colliders
 struct Sphere {
     center: vec3<f32>,
     radius: f32
 }
 
-@group(0) @binding(0) var<uniform> ubCompute : ub_compute;
-@group(0) @binding(1) var<storage, read_write> particles: array<Particle>;
-@group(0) @binding(2) var<storage, read> spheres: array<Sphere>;
+// Simplified-syntax resources (no @group/@binding) - the engine reflects these into a bind group
+// automatically, so the example does not provide computeBindGroupFormat / computeUniformBufferFormats.
+// The loose uniforms are collapsed into a single generated uniform buffer.
+uniform count: u32;              // number of particles
+uniform dt: f32;                 // delta time
+uniform sphereCount: u32;        // number of spheres
+
+var<storage, read_write> particles: array<Particle>;
+var<storage, read> spheres: array<Sphere>;
 
 @compute @workgroup_size(64)
 fn main(@builtin(global_invocation_id) global_invocation_id: vec3u) {
 
     // particle index - ignore if out of bounds (as they get batched into groups of 64)
     let index = global_invocation_id.x * 1024 + global_invocation_id.y;
-    if (index >= ubCompute.count) { return; }
+    if (index >= uniform.count) { return; }
 
     // update times
     var particle = particles[index];
-    particle.collisionTime += ubCompute.dt;
+    particle.collisionTime += uniform.dt;
 
     // if particle gets too far, reset it to its original position / velocity
     var distance = length(particle.position);
@@ -41,7 +40,7 @@ fn main(@builtin(global_invocation_id) global_invocation_id: vec3u) {
     var next = particle.position + delta;
 
     // handle collisions with spheres
-    for (var i = 0u; i < ubCompute.sphereCount; i++) {
+    for (var i = 0u; i < uniform.sphereCount; i++) {
         var center = spheres[i].center;
         var radius = spheres[i].radius;
 

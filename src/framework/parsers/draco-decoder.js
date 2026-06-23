@@ -1,6 +1,7 @@
 import { WasmModule } from '../../core/wasm-module.js';
 import { DracoWorker } from './draco-worker.js';
 import { Debug } from '../../core/debug.js';
+import { platform } from '../../core/platform.js';
 import { http } from '../../platform/net/http.js';
 
 const downloadMaxRetries = 3;
@@ -28,8 +29,10 @@ class JobQueue {
     // initialize the queue with worker instances
     init(workers) {
         workers.forEach((worker) => {
-            worker.addEventListener('message', (message) => {
-                const data = message.data;
+            const messageHandler = (message) => {
+                // browser/web workers deliver a MessageEvent (data on `.data`); Node
+                // worker_threads `message` events deliver the posted value directly.
+                const data = message.data ?? message;
                 const callback = this.jobCallbacks.get(data.jobId);
                 if (callback) {
                     callback(data.error, {
@@ -60,7 +63,13 @@ class JobQueue {
                         }
                     }
                 }
-            });
+            };
+
+            if (platform.environment === 'node') {
+                worker.on('message', messageHandler);
+            } else {
+                worker.addEventListener('message', messageHandler);
+            }
         });
 
         // assign workers to the first queue
@@ -81,7 +90,21 @@ class JobQueue {
         }
     }
 
+    // mark the queue as failed: notify pending jobs and fail any future ones
+    fail(error) {
+        this.error = error;
+        this.jobQueue.length = 0;
+        const callbacks = this.jobCallbacks;
+        this.jobCallbacks = new Map();
+        callbacks.forEach(callback => callback(error));
+    }
+
     enqueueJob(buffer, callback) {
+        if (this.error) {
+            callback(this.error);
+            return;
+        }
+
         const job = {
             jobId: this.jobId++,
             buffer: buffer
@@ -188,14 +211,17 @@ const initializeWorkers = (config) => {
             '/* worker */',
             `(\n${DracoWorker.toString()}\n)()\n\n`
         ].join('\n');
-        const blob = new Blob([code], { type: 'application/javascript' });
-        const workerUrl = URL.createObjectURL(blob);
         const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
+
+        // Node uses worker_threads (no Blob/URL.createObjectURL), passing the worker source as
+        // an eval string; the browser builds a blob URL and spawns a web worker from it.
+        const isNode = platform.environment === 'node';
+        const workerUrl = isNode ? null : URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
 
         // create worker instances
         const workers = [];
         for (let i = 0; i < numWorkers; ++i) {
-            const worker = new Worker(workerUrl);
+            const worker = isNode ? new Worker(code, { eval: true }) : new Worker(workerUrl);
             worker.postMessage({
                 type: 'init',
                 module: dracoModule
@@ -203,6 +229,10 @@ const initializeWorkers = (config) => {
             workers.push(worker);
         }
         jobQueue.init(workers);
+    })
+    .catch((err) => {
+        Debug.warnOnce(`Failed to load the Draco decoder (${config.jsUrl}, ${config.wasmUrl}): ${err}. Draco compressed meshes will not load.`);
+        jobQueue.fail(err instanceof Error ? err : new Error(err));
     });
 
     return true;

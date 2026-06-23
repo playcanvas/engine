@@ -27,8 +27,10 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         // near blur
         let cocNear: f32 = coc.g;
         if (cocNear > 0.0001) {
+            // blur radius as a fraction of frame height, aspect-corrected so the kernel stays
+            // circular in screen pixels - this makes the effect resolution-independent
             let nearTextureSize: vec2f = vec2f(textureDimensions(nearTexture, 0));
-            let step: vec2f = cocNear * uniform.blurRadiusNear / nearTextureSize;
+            let step: vec2f = cocNear * uniform.blurRadiusNear * vec2f(nearTextureSize.y / nearTextureSize.x, 1.0);
 
             for (var i: i32 = 0; i < {KERNEL_COUNT}; i = i + 1) {
                 let uv: vec2f = uv0 + step * uniform.kernel[i].element;
@@ -43,7 +45,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         if (cocFar > 0.0001) { // far blur
 
             let farTextureSize: vec2f = vec2f(textureDimensions(farTexture, 0));
-            let step: vec2f = cocFar * uniform.blurRadiusFar / farTextureSize;
+            let step: vec2f = cocFar * uniform.blurRadiusFar * vec2f(farTextureSize.y / farTextureSize.x, 1.0);
 
             var sumCoC: f32 = 0.0;
             for (var i: i32 = 0; i < {KERNEL_COUNT}; i = i + 1) {

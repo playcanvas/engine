@@ -189,18 +189,17 @@ class ShaderUtils {
 
     /**
      * Add defines required for correct screenDepthPS chunk functionality for the given camera
-     * shader parameters.
+     * shader parameters. Note that the float vs packed-RGBA8 decode is selected inside the chunk
+     * using the global CAPS_TEXTURE_FLOAT_RENDERABLE define, which matches the format the depth
+     * prepass allocates the linear depth texture in.
      *
-     * @param {GraphicsDevice} device - The graphics device.
      * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
+     * @param {Map<string, string>} defines - The map of defines to add to.
      * @ignore
      */
-    static addScreenDepthChunkDefines(device, cameraShaderParams, defines) {
+    static addScreenDepthChunkDefines(cameraShaderParams, defines) {
         if (cameraShaderParams.sceneDepthMapLinear) {
             defines.set('SCENE_DEPTHMAP_LINEAR', '');
-        }
-        if (device.textureFloatRenderable) {
-            defines.set('SCENE_DEPTHMAP_FLOAT', '');
         }
     }
 }

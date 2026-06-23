@@ -121,7 +121,7 @@ class ZoneComponent extends Component {
         this.fire('state', this.enabled);
     }
 
-    _onBeforeRemove() {
+    onBeforeRemove() {
         this.fire('remove');
     }
 }

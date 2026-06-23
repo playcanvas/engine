@@ -145,7 +145,7 @@ assetListLoader.load(() => {
         shadowResolution: 1024,
         shadowIntensity: 0.4,
         shadowType: pc.SHADOW_PCSS_32F,
-        penumbraSize: 10,
+        penumbraSize: 0.05,
         penumbraFalloff: 4,
         shadowSamples: 10,
         shadowBlockerSamples: 10

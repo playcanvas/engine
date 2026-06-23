@@ -1,15 +1,11 @@
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { _properties, LightComponent } from './component.js';
-import { LightComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
-
-const _schema = ['enabled'];
 
 /**
  * A Light Component is used to dynamically light the scene.
@@ -29,11 +25,8 @@ class LightComponentSystem extends ComponentSystem {
         this.id = 'light';
 
         this.ComponentType = LightComponent;
-        this.DataType = LightComponentData;
 
-        this.schema = _schema;
-
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     }
 
     initializeComponentData(component, _data) {
@@ -68,11 +61,11 @@ class LightComponentSystem extends ComponentSystem {
             }
         }
 
-        super.initializeComponentData(component, data, ['enabled']);
+        super.initializeComponentData(component, data);
     }
 
-    _onRemoveComponent(entity, component) {
-        component.onRemove();
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 
     cloneComponent(entity, clone) {
@@ -96,7 +89,5 @@ class LightComponentSystem extends ComponentSystem {
         return this.addComponent(clone, data);
     }
 }
-
-Component._buildAccessors(LightComponent.prototype, _schema);
 
 export { LightComponentSystem };

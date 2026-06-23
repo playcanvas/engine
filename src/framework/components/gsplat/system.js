@@ -2,10 +2,8 @@ import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js';
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
-import { GSplatComponentData } from './data.js';
 import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
 import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
@@ -25,10 +23,6 @@ Debug.call(() => {
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  */
 
-const _schema = [
-    'enabled'
-];
-
 // order matters here
 const _properties = [
     'unified',
@@ -36,7 +30,6 @@ const _properties = [
     'lodMultiplier',
     'castShadows',
     'material',
-    'highQualitySH',
     'asset',
     'resource',
     'layers'
@@ -102,6 +95,29 @@ class GSplatComponentSystem extends ComponentSystem {
     static EVENT_FRAMEREADY = 'frame:ready';
 
     /**
+     * Fired once per frame, after the component/script updates and before rendering, when GSplat
+     * streaming has produced new data that a render would show (newly streamed octree LOD) or a CPU
+     * sort result is ready to be applied. This drives on-demand rendering for apps that run with
+     * {@link AppBase#autoRender} set to false: a typical handler sets {@link AppBase#renderNextFrame}
+     * so the new data is shown.
+     *
+     * Streaming (LOD evaluation, file loading) runs every frame regardless of `autoRender`, so the
+     * scene keeps loading in the background; this event tells you when it's worth rendering.
+     *
+     * Note: this event covers streaming changes only. Changes you make yourself — moving the camera,
+     * modifying the scene, or adding, removing, or changing properties of gsplat components — should
+     * trigger a render yourself.
+     *
+     * @event
+     * @example
+     * app.autoRender = false;
+     * app.systems.gsplat.on('frame:request', () => {
+     *     app.renderNextFrame = true;
+     * });
+     */
+    static EVENT_FRAMEREQUEST = 'frame:request';
+
+    /**
      * Create a new GSplatComponentSystem.
      *
      * @param {AppBase} app - The Application.
@@ -113,9 +129,6 @@ class GSplatComponentSystem extends ComponentSystem {
         this.id = 'gsplat';
 
         this.ComponentType = GSplatComponent;
-        this.DataType = GSplatComponentData;
-
-        this.schema = _schema;
 
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
 
@@ -123,7 +136,17 @@ class GSplatComponentSystem extends ComponentSystem {
         ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);
         ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_WGSL).add(gsplatChunksWGSL);
 
-        this.on('beforeremove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
+
+        // Drive gsplat streaming (LOD + file loading) every frame, independent of rendering, so it
+        // keeps progressing when app.autoRender is false. 'framerender' fires after the script/anim
+        // updates (current camera) and before the render gate, so a frame:request handler can render
+        // the same frame.
+        this.app.on('framerender', this.onFrameRender, this);
+    }
+
+    onFrameRender() {
+        this.app.renderer.gsplatDirector?.updateStreaming();
     }
 
     initializeComponentData(component, _data, properties) {
@@ -142,7 +165,7 @@ class GSplatComponentSystem extends ComponentSystem {
             component.customAabb = new BoundingBox(new Vec3(_data.aabbCenter), new Vec3(_data.aabbHalfExtents));
         }
 
-        super.initializeComponentData(component, _data, _schema);
+        super.initializeComponentData(component, _data);
     }
 
     cloneComponent(entity, clone) {
@@ -173,8 +196,8 @@ class GSplatComponentSystem extends ComponentSystem {
         return component;
     }
 
-    onRemove(entity, component) {
-        component.onRemove();
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 
     /**
@@ -208,8 +231,11 @@ class GSplatComponentSystem extends ComponentSystem {
         Debug.deprecated('GSplatComponentSystem#getGSplatMaterial is deprecated. Use GSplatComponentSystem#getMaterial instead.');
         return this.getMaterial(camera, layer);
     }
-}
 
-Component._buildAccessors(GSplatComponent.prototype, _schema);
+    destroy() {
+        super.destroy();
+        this.app.off('framerender', this.onFrameRender, this);
+    }
+}
 
 export { GSplatComponentSystem };

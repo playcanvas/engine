@@ -66,6 +66,18 @@ class RenderTarget {
      */
     _samples;
 
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _transientColor;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _transientDepth;
+
     /** @type {boolean} */
     autoResolve;
 
@@ -140,6 +152,19 @@ class RenderTarget {
      * @param {number} [options.samples] - Number of hardware anti-aliasing samples. Default is 1.
      * @param {boolean} [options.stencil] - If set to true, depth buffer will include stencil.
      * Defaults to false. Ignored if depthBuffer is defined or depth is false.
+     * @param {boolean} [options.transientColor] - If set to true, the multi-sampled (MSAA) color
+     * attachment is allocated as a transient ("memoryless") attachment, allowing tile-based GPUs to
+     * keep its contents in on-chip memory and avoid VRAM allocation. WebGPU only, and only effective
+     * when samples > 1 - it has no effect on single-sampled color (which is always stored). Ignored
+     * on devices without transient attachment support. The attachment must be cleared on load and
+     * discarded on store, so it is incompatible with a scene color grab pass (`sceneColorMap`).
+     * Defaults to false.
+     * @param {boolean} [options.transientDepth] - If set to true, the (engine-allocated) depth
+     * attachment is allocated as a transient ("memoryless") attachment (see `transientColor`).
+     * Applies to both single- and multi-sampled depth. WebGPU only; ignored on devices without
+     * transient attachment support, and ignored (with a warning) when an explicit `depthBuffer` is
+     * provided. Incompatible with a scene depth grab pass (`sceneDepthMap`), a depth prepass, or any
+     * depth resolve, as the depth cannot be sampled or copied out. Defaults to false.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
      * const colorBuffer = new pc.Texture(graphicsDevice, {
@@ -235,6 +260,20 @@ class RenderTarget {
         }
         if (!this.name) {
             this.name = 'Untitled';
+        }
+
+        // transient (memoryless) attachments (WebGPU only). Gated on device support, so they are
+        // silently ignored when the device does not support transient attachments. Transient color
+        // additionally requires MSAA (single-sampled color is always stored), also silently ignored.
+        const transientSupported = !!this._device.supportsTransientAttachments;
+        this._transientColor = (options.transientColor ?? false) && transientSupported && this._samples > 1;
+        this._transientDepth = (options.transientDepth ?? false) && transientSupported && !this._depthBuffer;
+
+        // transient depth applies to the engine-allocated depth buffer only. Requesting it together
+        // with a user-provided depthBuffer is invalid API usage (that buffer's contents must persist),
+        // so warn rather than silently ignore it - unlike the unsupported-device case above.
+        if ((options.transientDepth ?? false) && this._depthBuffer) {
+            Debug.warnOnce(`RenderTarget '${this.name}' was created with both transientDepth and a depthBuffer. Transient depth applies to the engine-allocated depth buffer only and cannot be used with a provided depthBuffer; the transientDepth flag is ignored.`);
         }
 
         // render image flipped in Y
@@ -482,6 +521,26 @@ class RenderTarget {
      */
     get samples() {
         return this._samples;
+    }
+
+    /**
+     * True if the multi-sampled color attachment is allocated as a transient ("memoryless")
+     * attachment (WebGPU only). See the `transientColor` constructor option.
+     *
+     * @type {boolean}
+     */
+    get transientColor() {
+        return this._transientColor;
+    }
+
+    /**
+     * True if the depth attachment is allocated as a transient ("memoryless") attachment (WebGPU
+     * only). See the `transientDepth` constructor option.
+     *
+     * @type {boolean}
+     */
+    get transientDepth() {
+        return this._transientDepth;
     }
 
     /**

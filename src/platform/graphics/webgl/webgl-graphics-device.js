@@ -157,8 +157,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         super(canvas, options);
         options = this.initOptions;
 
-        this.updateClientRect();
-
         // initialize this before registering lost context handlers to avoid undefined access when the device is created lost.
         this.initTextureUnits();
 
@@ -991,6 +989,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
 
         gl.enable(gl.SCISSOR_TEST);
+
+        this.textureUnit = 0;
+        gl.activeTexture(gl.TEXTURE0);
 
         gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
 

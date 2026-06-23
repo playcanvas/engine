@@ -37,14 +37,21 @@ varying gaussianColor: half4;
     #include "pickPS"
 #endif
 
+#ifdef GSPLAT_USER_VARYINGS
+    #include "gsplatUserVaryingsPS"
+#endif
+#include "gsplatModifyPS"
+
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
     let A: half = dot(gaussianUV, gaussianUV);
+
+    // note: no early return after the discard - it would make the control flow non-uniform,
+    // preventing user gsplatModifyPS chunks from using derivatives (fwidth etc.)
     if (A > half(1.0)) {
         discard;
-        return output;
     }
 
     // evaluate alpha
@@ -72,7 +79,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #elif SHADOW_PASS
 
-        output.color = vec4f(0.0, 0.0, 0.0, 1.0);
+        output.color = vec4f(input.position.z, 0.0, 0.0, 1.0);
 
     #elif PREPASS_PASS
 
@@ -82,14 +89,15 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         if (alpha < half(uniform.alphaClipForward)) {
             discard;
-            return output;
         }
 
         #ifndef DITHER_NONE
             opacityDither(f32(alpha), id * 0.013);
         #endif
 
-        output.color = vec4f(vec3f(gaussianColor.xyz * alpha), f32(alpha));
+        var fragColor: vec4f = vec4f(vec3f(gaussianColor.xyz), f32(alpha));
+        modifySplatColor(vec2f(gaussianUV), &fragColor);
+        output.color = vec4f(fragColor.xyz * fragColor.a, fragColor.a);
     #endif
 
     return output;

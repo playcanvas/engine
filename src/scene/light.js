@@ -263,6 +263,10 @@ class Light {
         this._shadowRenderParams = [];
         this._shadowCameraParams = [];
 
+        // per-cascade ortho radii for directional PCSS, packed into a vec4 (max 4 cascades).
+        // lazily allocated by the renderer only for directional lights that use PCSS.
+        this._shadowCascadeRadii = null;
+
         // Shadow mapping properties
         this.shadowDistance = 40;
         this._shadowResolution = 1024;
@@ -273,6 +277,7 @@ class Light {
         this.shadowUpdateOverrides = null;
         this._isVsm = false;
         this._isPcf = true;
+        this._isPcss = false;
 
         this._softShadowParams = new Float32Array(4);
         this.shadowSamples = 16;
@@ -289,6 +294,7 @@ class Light {
         this.atlasVersion = 0;      // version of the atlas for the allocated slot, allows invalidation when atlas recreates slots
         this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
         this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
+        this.cookieRenderVersion = -1;  // cookie texture's uploadVersion last rendered into the atlas, used to re-render dynamic (e.g. video) cookies
 
         this._node = null;
 
@@ -516,8 +522,13 @@ class Light {
         shadowInfo = shadowTypeInfo.get(value);
         this._isVsm = shadowInfo?.vsm ?? false;
         this._isPcf = shadowInfo?.pcf ?? false;
+        this._isPcss = shadowInfo?.pcss ?? false;
 
         this._shadowType = value;
+
+        // hardware depth bias is skipped for PCSS, so refresh it now that _isPcss is known
+        this._updateShadowBias();
+
         this._destroyShadowMap();
         this.updateKey();
     }
@@ -1047,7 +1058,13 @@ class Light {
     }
 
     _updateShadowBias() {
-        if (this._type === LIGHTTYPE_OMNI && !this.clusteredLighting) {
+        // No hardware depth bias (polygon offset) is applied for:
+        // - non-clustered omni lights (they store distance, not depth), or
+        // - PCSS shadows of any light type. PCSS stores depth in a color buffer and applies its
+        //   bias in the shader, so the hardware polygon offset is a no-op on WebGL but is applied
+        //   inconsistently on WebGPU (different shadow depth-buffer format), which incorrectly
+        //   removed valid self-shadows. Hardware bias is only meaningful for hardware-compare PCF.
+        if ((this._type === LIGHTTYPE_OMNI && !this.clusteredLighting) || this._isPcss) {
             this.shadowDepthState.depthBias = 0;
             this.shadowDepthState.depthBiasSlope = 0;
         } else {

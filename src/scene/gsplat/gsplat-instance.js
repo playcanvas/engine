@@ -4,9 +4,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { GSplatResolveSH } from './gsplat-resolve-sh.js';
 import { GSplatSorter } from './gsplat-sorter.js';
-import { GSplatSogData } from './gsplat-sog-data.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../constants.js';
@@ -47,9 +45,6 @@ class GSplatInstance {
 
     lastCameraDirection = new Vec3();
 
-    /** @type {GSplatResolveSH|null} */
-    resolveSH = null;
-
     /**
      * List of cameras this instance is visible for. Updated every frame by the renderer.
      *
@@ -62,7 +57,6 @@ class GSplatInstance {
      * @param {GSplatResourceBase} resource - The splat instance.
      * @param {object} [options] - Options for the instance.
      * @param {ShaderMaterial|null} [options.material] - The material instance.
-     * @param {boolean} [options.highQualitySH] - Whether to use the high quality or the approximate spherical harmonic calculation. Only applies to SOG data.
      * @param {import('../scene.js').Scene} [options.scene] - The scene to fire sort timing events on.
      */
     constructor(resource, options = {}) {
@@ -125,15 +119,12 @@ class GSplatInstance {
         } else {
             Debug.warnOnce(`Skipping gsplat resource id ${resource.id} on the non-unified rendering path — no centers buffer. Scene#gsplatCentersEnabled needs to be true.`);
         }
-
-        this.setHighQualitySH(options.highQualitySH ?? false);
     }
 
     destroy() {
         this.resource?.releaseMesh();
         this.orderTexture?.destroy();
         this.orderBuffer?.destroy();
-        this.resolveSH?.destroy();
         this.material?.destroy();
         this.meshInstance?.destroy();
         this.sorter?.destroy();
@@ -235,28 +226,8 @@ class GSplatInstance {
             const camera = this.cameras[0];
             this.sort(camera._node);
 
-            // resolve spherical harmonics
-            this.resolveSH?.render(camera._node, this.meshInstance.node.getWorldTransform());
-
             // we get new list of cameras each frame
             this.cameras.length = 0;
-        }
-    }
-
-    setHighQualitySH(value) {
-        const { resource } = this;
-        const { gsplatData } = resource;
-
-        if (gsplatData instanceof GSplatSogData &&
-            gsplatData.shBands > 0 &&
-            value === !!this.resolveSH) {
-
-            if (this.resolveSH) {
-                this.resolveSH.destroy();
-                this.resolveSH = null;
-            } else {
-                this.resolveSH = new GSplatResolveSH(resource.device, this);
-            }
         }
     }
 }

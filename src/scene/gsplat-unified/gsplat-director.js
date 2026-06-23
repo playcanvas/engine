@@ -188,6 +188,22 @@ class GSplatDirector {
     eventHandler;
 
     /**
+     * Per-frame token, incremented once each streaming tick ({@link updateStreaming}). A manager's
+     * streaming work (LOD evaluation, world-state update) can run from two places in a frame: the
+     * streaming tick, which advances managers that already exist, and the render path
+     * ({@link GSplatManager#update}), which additionally covers managers created during that render
+     * — e.g. at startup, or when a camera, layer, or gsplat component is added — so they render in
+     * the same frame instead of a frame later.
+     *
+     * The manager records the token it last streamed for and skips the work when the token is
+     * unchanged, so the streaming runs at most once per frame regardless of which path reaches it
+     * first (the render-path call is a no-op for managers the tick already advanced).
+     *
+     * @type {number}
+     */
+    _streamToken = 0;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Renderer} renderer - The renderer.
      * @param {Scene} scene - The scene.
@@ -237,14 +253,69 @@ class GSplatDirector {
     }
 
     /**
+     * CPU streaming tick. Driven by the gsplat component system every frame (even when rendering is
+     * skipped, e.g. `app.autoRender = false`). Applies pending param changes, processes resource
+     * cleanup, and advances each existing manager's LOD/streaming/world-state via
+     * {@link GSplatManager#updateStreaming}. Fires `frame:request` once when a render would show new
+     * data (a new world-state version) or when a CPU-sort result is waiting to be applied.
+     *
+     * Uses the cached `camerasMap` topology (built by {@link update} on the render path) — newly
+     * added cameras, layers, or gsplat components register on the next rendered frame. Does no GPU
+     * draw work.
+     */
+    updateStreaming() {
+
+        // apply pending gsplat params changes (e.g. varying streams) before the world reads them
+        this.scene.gsplat.frameUpdate();
+
+        // process any pending resource destructions
+        GSplatResourceCleanup.process(this.device);
+
+        // per-frame token: dedups the streaming pass between this tick and the render path
+        const token = ++this._streamToken;
+
+        let needRender = false;
+        let streamed = false;
+        this.camerasMap.forEach((cameraData) => {
+            cameraData.layersMap.forEach((layerData) => {
+                const manager = layerData.gsplatManager;
+                if (manager) {
+                    needRender = manager.updateStreaming(token) || needRender;
+                    needRender = manager.hasPendingSort || needRender;
+                    streamed = true;
+                }
+                const shadowManager = layerData.gsplatManagerShadow;
+                if (shadowManager) {
+                    needRender = shadowManager.updateStreaming(token) || needRender;
+                    needRender = shadowManager.hasPendingSort || needRender;
+                    streamed = true;
+                }
+            });
+        });
+
+        // Clear the LOD/params dirty flag now that a manager's world.update has consumed it above.
+        // Only clear it when at least one manager actually ran: before the first render (or before
+        // any gsplat component exists) there are no managers in camerasMap to consume it, so leave
+        // it set — otherwise a param change made before the first frame (e.g. overdraw mode) would
+        // be dropped and the first manager created on the render path would miss the dirty-driven
+        // setup. The material dirty flag is cleared separately by frameEnd() in update(), after the
+        // renderers re-sync the material — so we must NOT clear it here.
+        if (streamed) {
+            this.scene.gsplat.dirty = false;
+        }
+
+        // request a render when streaming advanced, or a CPU sort result is waiting to be applied
+        if (needRender) {
+            this.eventHandler.fire('frame:request');
+        }
+    }
+
+    /**
      * Updates the director for the given layer composition cameras and layers.
      *
      * @param {LayerComposition} comp - The layer composition.
      */
     update(comp) {
-
-        // Process any pending resource destructions
-        GSplatResourceCleanup.process(this.device);
 
         // remove camera / layer entires for cameras / layers no longer in the composition
         this.camerasMap.forEach((cameraData, camera) => {
@@ -357,6 +428,22 @@ class GSplatDirector {
         for (let i = 0; i < comp.layerList.length; i++) {
             comp.layerList[i].gsplatPlacementsDirty = false;
         }
+    }
+
+    /**
+     * Post-cull shadow pass. Runs AFTER `cullComposition` (so each directional light's shadow-camera
+     * frustum has been fitted) and before the frame graph renders the shadow maps, dispatching each
+     * manager's per-light gsplat shadow cull. Only managers whose forward renderer is GPU-sort
+     * (which cannot self-cast) hold a shadow renderer; for the rest this is a no-op. The CPU-sort
+     * quad renderer self-casts and is unaffected.
+     */
+    updateShadows() {
+        this.camerasMap.forEach((cameraData) => {
+            cameraData.layersMap.forEach((layerData) => {
+                layerData.gsplatManager?.updateShadows();
+                layerData.gsplatManagerShadow?.updateShadows();
+            });
+        });
     }
 }
 

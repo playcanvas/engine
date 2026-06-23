@@ -1,19 +1,18 @@
 import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
-import { ButtonComponentData } from './data.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  */
 
-const _schema = [
-    'enabled',
+const _properties = [
+    'imageEntity',
     'active',
-    { name: 'hitPadding', type: 'vec4' },
+    'hitPadding',
     'transitionMode',
-    { name: 'hoverTint', type: 'rgba' },
-    { name: 'pressedTint', type: 'rgba' },
-    { name: 'inactiveTint', type: 'rgba' },
+    'hoverTint',
+    'pressedTint',
+    'inactiveTint',
     'fadeDuration',
     'hoverSpriteAsset',
     'hoverSpriteFrame',
@@ -41,18 +40,39 @@ class ButtonComponentSystem extends ComponentSystem {
         this.id = 'button';
 
         this.ComponentType = ButtonComponent;
-        this.DataType = ButtonComponentData;
 
-        this.schema = _schema;
-
-        this.on('beforeremove', this._onRemoveComponent, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
 
         this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
-        component.imageEntity = data.imageEntity;
-        super.initializeComponentData(component, data, _schema);
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            // Guard on `undefined` rather than `hasOwnProperty` so that explicitly
+            // passing `{ hoverTint: undefined }` does not clobber the class-field
+            // default, matching the base initializer's behavior
+            if (data[property] !== undefined) {
+                component[property] = data[property];
+            }
+        }
+
+        super.initializeComponentData(component, data);
+    }
+
+    cloneComponent(entity, clone) {
+        const c = entity.button;
+
+        const data = {
+            enabled: c.enabled
+        };
+
+        for (let i = 0; i < _properties.length; i++) {
+            const property = _properties[i];
+            data[property] = c[property];
+        }
+
+        return this.addComponent(clone, data);
     }
 
     onUpdate(dt) {
@@ -67,8 +87,8 @@ class ButtonComponentSystem extends ComponentSystem {
         }
     }
 
-    _onRemoveComponent(entity, component) {
-        component.onRemove();
+    onBeforeRemove(entity, component) {
+        component.onBeforeRemove();
     }
 
     destroy() {

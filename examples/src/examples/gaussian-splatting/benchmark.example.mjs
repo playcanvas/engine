@@ -32,8 +32,7 @@ const IDLE_FPS_SAMPLE_MS = 1000;
 const RENDERERS = [
     { device: 'webgl2', renderer: pc.GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGL2 CPU Sort', shortLabel: 'GL2 CPU' },
     { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGPU CPU Sort', shortLabel: 'GPU CPU' },
-    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_GPU_SORT, label: 'WebGPU GPU Sort', shortLabel: 'GPU Sort' },
-    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_COMPUTE, label: 'WebGPU Compute', shortLabel: 'Compute' }
+    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_GPU_SORT, label: 'WebGPU GPU Sort', shortLabel: 'GPU Sort' }
 ];
 
 const BUDGETS = [1, 2, 3, 4, 6, 8, 10, 15, 20, 25, 30, 35]; // millions

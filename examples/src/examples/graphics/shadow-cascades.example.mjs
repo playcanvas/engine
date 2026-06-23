@@ -63,6 +63,10 @@ assetListLoader.load(() => {
             cascadeBlend: 0.1, // blend between cascades
             shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
             vsmBlurSize: 11, // shader filter blur size for VSM shadows
+            penumbraSize: 0.02, // PCSS world-space light area size
+            penumbraFalloff: 4, // PCSS softening curve falloff
+            shadowSamples: 16, // PCSS filter samples
+            shadowBlockerSamples: 16, // PCSS blocker search samples
             everyFrame: true // true if all cascades update every frame
         }
     });
@@ -140,7 +144,7 @@ assetListLoader.load(() => {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: tree,
-            distanceMax: 600
+            distanceMax: 1800
         }
     });
     camera.script.create('orbitCameraInputMouse');
@@ -159,11 +163,7 @@ assetListLoader.load(() => {
 
             // enable shadow casting
             castShadows: true,
-            shadowDistance: 1000,
-
-            // parameters for PCSS
-            penumbraSize: 20,
-            penumbraFalloff: 8
+            shadowDistance: 1000
         },
         ...data.get('settings.light')
     });

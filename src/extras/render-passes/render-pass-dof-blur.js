@@ -28,6 +28,17 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
     _blurRingPoints = 3;
 
     /**
+     * Resolution the blur radius is calibrated against. The blur is applied as a fraction of this
+     * height, making the effect resolution-independent (higher resolution only increases quality,
+     * not blur strength). Applied as a uniform scale on the blur radius, so it can be changed at
+     * runtime without recompiling the shader. Value 540 matches the legacy half-resolution far
+     * texture at a 1080p frame, preserving previously authored blurRadius values.
+     *
+     * @type {number}
+     */
+    referenceHeight = 540;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Texture|null} nearTexture - The near texture to blur. Skip near blur if the texture is null.
      * @param {Texture} farTexture - The far texture to blur.
@@ -107,8 +118,14 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
 
         this.kernelId.setValue(this.kernel);
         this.kernelCountId.setValue(this.kernel.length >> 1);
-        this.blurRadiusNearId.setValue(this.blurRadiusNear);
-        this.blurRadiusFarId.setValue(this.blurRadiusFar);
+
+        // express the blur radius as a fraction of the reference height, so the effect is
+        // resolution-independent (the shader then aspect-corrects it to stay circular in pixels);
+        // guard against an invalid reference height to avoid Infinity/NaN blur radii
+        const referenceHeight = this.referenceHeight > 0 ? this.referenceHeight : 540;
+        const invReferenceHeight = 1 / referenceHeight;
+        this.blurRadiusNearId.setValue(this.blurRadiusNear * invReferenceHeight);
+        this.blurRadiusFarId.setValue(this.blurRadiusFar * invReferenceHeight);
 
         super.execute();
     }

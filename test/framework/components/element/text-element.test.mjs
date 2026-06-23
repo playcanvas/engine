@@ -44,7 +44,7 @@ describe('TextElement', function () {
         element.width = 200;
 
         fontAsset = new Asset('arial.json', 'font', {
-            url: 'http://localhost:3000/test/assets/fonts/arial.json'
+            url: '/test/assets/fonts/arial.json'
         });
 
         fontAsset.ready(function () {
@@ -1426,6 +1426,73 @@ describe('TextElement', function () {
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
+    it('Masked text is not culled when its wrapped content overflows the element box (#4615)', function () {
+        // screen-space screens enable element culling
+        const screen = new Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        const camera = new Entity();
+        camera.addComponent('camera');
+        app.root.addChild(camera);
+
+        // masking image element, centered on the screen
+        const mask = new Entity();
+        mask.addComponent('element', {
+            type: 'image',
+            mask: true,
+            anchor: [0.5, 0.5, 0.5, 0.5],
+            pivot: [0.5, 0.5],
+            width: 200,
+            height: 100
+        });
+        screen.addChild(mask);
+
+        // child text whose wrapped content is much taller than its one-line box
+        const e = new Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: 'the quick brown fox jumps over the lazy dog and keeps on running for a while',
+            fontAsset: fontAsset,
+            anchor: [0.5, 0.5, 0.5, 0.5],
+            pivot: [0.5, 0.5],
+            alignment: [0.5, 0.5],
+            autoWidth: false,
+            autoHeight: false,
+            wrapLines: true,
+            width: 150,
+            height: 20
+        });
+        mask.addChild(e);
+
+        app.update(0.1);
+        app.render();
+
+        // sanity: the text is masked and its rendered content overflows its box vertically
+        expect(e.element.maskedBy).to.equal(mask);
+        const contentHeight = e.element._text.height;
+        expect(contentHeight).to.be.greaterThan(e.element.calculatedHeight);
+
+        // centered over the mask -> visible
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
+
+        // move the box clear of the mask, but by less than the content overflow, so the wrapped
+        // glyphs still reach into the mask region. The box alone is outside the mask (the old
+        // box-based test culled it here), but the rendered text is not, so it must stay visible.
+        e.setLocalPosition(0, -(55 + contentHeight / 4), 0);
+        app.update(0.1);
+        app.render();
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
+
+        // move it far enough that even the overflowing content clears the mask -> culled
+        e.setLocalPosition(0, -(contentHeight / 2 + 100), 0);
+        app.update(0.1);
+        app.render();
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
+    });
+
     it('text is set to translated text when we set the key', function () {
         addText('en-US', 'key', 'translation');
         element.fontAsset = fontAsset;
@@ -1507,7 +1574,7 @@ describe('TextElement', function () {
 
     it('changing the locale changes the font asset', function (done) {
         assets.font2 = new Asset('courier.json', 'font', {
-            url: 'http://localhost:3000/test/assets/fonts/courier.json'
+            url: '/test/assets/fonts/courier.json'
         });
 
         app.assets.add(assets.font2);
@@ -1530,9 +1597,53 @@ describe('TextElement', function () {
         app.i18n.locale = 'fr';
     });
 
+    it('does not render the previous locale text when a cached localized font is swapped in on locale change', function (done) {
+        assets.font2 = new Asset('courier.json', 'font', {
+            url: '/test/assets/fonts/courier.json'
+        });
+
+        app.assets.add(assets.font2);
+        app.assets.load(assets.font2);
+
+        assets.font2.on('load', function () {
+            setTimeout(function () {
+                // both the default and localized fonts are now loaded (cached)
+                fontAsset.addLocalizedAssetId('fr', assets.font2.id);
+                addText('en-US', 'key', 'english');
+                addText('fr', 'key', 'french');
+                element.fontAsset = fontAsset;
+                element.key = 'key';
+
+                // switch to the localized font; cached so it is applied synchronously
+                app.i18n.locale = 'fr';
+                expect(element.text).to.equal('french');
+                expect(element.font).to.equal(assets.font2.resource);
+
+                // record the text rendered on every update during the next locale change
+                const textElement = element._text;
+                const updateText = textElement._updateText;
+                const renderedTexts = [];
+                textElement._updateText = function (text) {
+                    renderedTexts.push(text === undefined ? this._text : text);
+                    return updateText.call(this, text);
+                };
+
+                // switching back swaps in the cached default font; it must never be
+                // rendered with the previous (french) string
+                app.i18n.locale = 'en-US';
+                textElement._updateText = updateText;
+
+                expect(renderedTexts).to.not.include('french');
+                expect(element.text).to.equal('english');
+                expect(element.font).to.equal(assets.font.resource);
+                done();
+            });
+        });
+    });
+
     it('text element that does not use localization uses the default font asset not its localized variant', function (done) {
         assets.font2 = new Asset('courier.json', 'font', {
-            url: 'http://localhost:3000/test/assets/fonts/courier.json'
+            url: '/test/assets/fonts/courier.json'
         });
 
         app.assets.add(assets.font2);
@@ -1554,7 +1665,7 @@ describe('TextElement', function () {
 
     it('if text element is disabled it does not automatically load localizedAssets', function () {
         assets.font2 = new Asset('courier.json', 'font', {
-            url: 'http://localhost:3000/test/assets/fonts/courier.json'
+            url: '/test/assets/fonts/courier.json'
         });
 
         app.assets.add(assets.font2);
