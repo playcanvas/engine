@@ -70,7 +70,12 @@
                             "enabled": { "type": "boolean" }
                         }
                     }
-                }
+                },
+                "entitySample": { "type": "array" },
+                "renderables": { "type": "array" },
+                "collisions": { "type": "array" },
+                "animations": { "type": "array" },
+                "recentInput": { "type": "array" }
             }
         },
         "assets": {
