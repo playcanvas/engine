@@ -411,7 +411,7 @@ class AppBase extends EventHandler {
      * // Search the asset registry for all assets with the tag 'vehicle'
      * const vehicleAssets = this.app.assets.findByTag('vehicle');
      */
-    assets;
+    assets = new AssetRegistry(this.loader);
 
     /**
      * The bundle registry managed by the application.
@@ -566,7 +566,6 @@ class AppBase extends EventHandler {
         this.scene = new Scene(graphicsDevice);
         this._registerSceneImmediate(this.scene);
 
-        this.assets = new AssetRegistry(this.loader);
         if (assetPrefix) this.assets.prefix = assetPrefix;
 
         this.bundles = new BundleRegistry(this.assets);
