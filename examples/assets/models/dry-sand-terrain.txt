@@ -1,0 +1,7 @@
+The FREE - Dry Sand Terrain model has been obtained from this address:
+https://sketchfab.com/3d-models/free-dry-sand-terrain-56c551e472b942de806afe90b1b9cdda
+
+Author: josevega
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/
