@@ -49,7 +49,7 @@ const startStream = (app, entry, url, opts = {}) => {
             if (msg?.t === 'request-snapshot') {
                 send({ t: 'snapshot', snapshot: buildSnapshot(entry) });
             } else if (msg?.t === 'input') {
-                injectInput(app.graphicsDevice.canvas, msg);
+                injectInput(app.graphicsDevice.canvas, msg, m => entry.recordInput?.('injected', m));
             }
         };
         socket.onclose = () => {

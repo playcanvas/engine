@@ -7,8 +7,11 @@ const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
 const CAPABILITIES = ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input'];
 const MAX_DIAGNOSTICS = 100;
+const MAX_INPUT = 100;
 const WAIT_FRAME_CANCELLED = 'app detached or destroyed while waiting for frame';
 const WAIT_SETTLED_CANCELLED = 'app detached or destroyed while waiting to settle';
+const INJECTED = '__playcanvasRuntimeToolsInjected';
+const INPUT_EVENTS = ['keydown', 'keyup', 'mousedown', 'mouseup', 'mousemove', 'wheel', 'touchstart', 'touchmove', 'touchend', 'touchcancel'];
 
 let idCounter = 0;
 const registry = new Map();
@@ -25,6 +28,31 @@ const resolve = (appId) => {
         throw new Error(`unknown appId '${appId}', attached apps: [${[...registry.keys()].join(', ')}]`);
     }
     return entry;
+};
+
+const inputKind = (action, kind) => kind ?? (action.startsWith('key') ? 'key' : action.startsWith('mouse') || action === 'wheel' ? 'mouse' : action.startsWith('touch') ? 'touch' : 'unknown');
+
+const touches = (list) => [...(list ?? [])].slice(0, 5).map(t => ({
+    id: t.identifier ?? 0,
+    x: Math.round(t.clientX ?? 0),
+    y: Math.round(t.clientY ?? 0)
+}));
+
+const recordInput = (entry, source, e) => {
+    const action = e.action ?? e.type;
+    const kind = inputKind(action, e.kind);
+    const item = { source, kind, action, frame: entry.app.frame, ts: Date.now() };
+    if (kind === 'key') {
+        item.code = e.code ?? null;
+        item.key = e.key ?? null;
+    } else if (kind === 'mouse') {
+        item.x = Math.round(e.x ?? e.clientX ?? 0);
+        item.y = Math.round(e.y ?? e.clientY ?? 0);
+        item.button = e.button ?? null;
+    } else if (kind === 'touch') {
+        item.touches = e.touches ? touches(e.touches) : (e.changedTouches ? touches(e.changedTouches) : e.touches ?? null);
+    }
+    entry.input.push(item);
 };
 
 const createGlobal = () => {
@@ -54,7 +82,8 @@ const createGlobal = () => {
         // drive a synthetic input event into the app (key/mouse). callable in-page via an eval
         // bridge (Playwright/CDP); also the path used by the dev server's file/POST input channels.
         input(msg, appId) {
-            injectInput(resolve(appId).app.graphicsDevice.canvas, msg);
+            const entry = resolve(appId);
+            injectInput(entry.app.graphicsDevice.canvas, msg, m => entry.recordInput('injected', m));
         },
         waitForFrame(appId) {
             const entry = resolve(appId);
@@ -142,9 +171,14 @@ const attachRuntimeTools = (app, opts = {}) => {
         detached: false,
         timeMs: 0,
         waits: new Set(),
-        errors: new RingBuffer(MAX_DIAGNOSTICS)
+        errors: new RingBuffer(MAX_DIAGNOSTICS),
+        input: new RingBuffer(MAX_INPUT)
     };
+    entry.recordInput = (source, e) => recordInput(entry, source, e);
     const destroy = { handle: null };
+    const inputTargets = [app.graphicsDevice.canvas, app.graphicsDevice.canvas.ownerDocument?.defaultView ?? globalThis]
+        .filter((t, i, all) => t && all.indexOf(t) === i);
+    const seenInput = new WeakSet();
 
     const onStart = () => {
         entry.started = true;
@@ -169,6 +203,13 @@ const attachRuntimeTools = (app, opts = {}) => {
     app.on('start', onStart);
     app.on('frameupdate', onFrameUpdate);
     app.assets.on('error', onAssetError);
+    const onInput = (e) => {
+        if (!e[INJECTED] && !seenInput.has(e)) {
+            seenInput.add(e);
+            entry.recordInput('real', e);
+        }
+    };
+    inputTargets.forEach(target => INPUT_EVENTS.forEach(t => target.addEventListener?.(t, onInput, true)));
 
     const detach = () => {
         if (entry.detached) {
@@ -178,6 +219,7 @@ const attachRuntimeTools = (app, opts = {}) => {
         app.off('start', onStart);
         app.off('frameupdate', onFrameUpdate);
         app.assets?.off('error', onAssetError);
+        inputTargets.forEach(target => INPUT_EVENTS.forEach(t => target.removeEventListener?.(t, onInput, true)));
         entry.stopStream?.();
         destroy.handle.off();
         for (const cancel of [...entry.waits]) {
