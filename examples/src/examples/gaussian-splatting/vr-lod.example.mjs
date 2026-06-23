@@ -1,5 +1,7 @@
 // @config
-// @flag HIDDEN
+//
+// Demonstrates Gaussian Splat rendering in VR (WebXR).
+//
 // @flag NO_MINISTATS
 //
 // @credit
@@ -162,7 +164,7 @@ const createEnterVrButton = (onClick) => {
     btn.textContent = 'Enter VR';
     Object.assign(btn.style, {
         position: 'fixed',
-        top: '12px',
+        bottom: '12px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: '10',
@@ -284,7 +286,7 @@ assetListLoader.load(() => {
                 { label: 'FOVEATION: OFF', eventName: 'xrhud:foveation' }, // [3] toggle (off by default)
                 // [4] number row: splat budget, +/- 0.5M (0.5..4M)
                 { type: 'number', label: 'BUDGET', value: '2.0M', decEvent: 'budget:dec', incEvent: 'budget:inc' },
-                // [5] number row: scene index (0 = original, 1 = cave, 2 = skatepark)
+                // [5] number row: scene index (0 = cave, 1 = original, 2 = skatepark)
                 { type: 'number', label: 'SCENE', value: '0', decEvent: 'scene:dec', incEvent: 'scene:inc' },
                 // [6] number row: minContribution, +/- 2 (1..20)
                 { type: 'number', label: 'Contribution', value: '5', decEvent: 'contribution:dec', incEvent: 'contribution:inc' },
@@ -474,9 +476,9 @@ assetListLoader.load(() => {
         }
     };
 
-    // Selectable scenes via the in-XR SCENE number row: 0 = original, 1 = the cave from the
-    // gaussian-splatting/depth-of-field example. The cave splat is unrotated (its proxy is what's
-    // flipped in that example), whereas the original needs a 180° flip.
+    // Selectable scenes via the in-XR SCENE number row: 0 = the cave from the
+    // gaussian-splatting/depth-of-field example, 1 = original. The cave splat is unrotated (its proxy
+    // is what's flipped in that example), whereas the original needs a 180° flip.
     const caveAsset = new pc.Asset('gsplat-cave', 'gsplat', {
         url: 'https://code.playcanvas.com/examples_data/example_cave_01/lod-meta.json'
     });
@@ -493,10 +495,10 @@ assetListLoader.load(() => {
     app.assets.add(apartmentAsset);
 
     const SCENES = [
-        // 0: original Roman Parish church — rig at the configured start, looking at the focus point
-        { asset: assets.church, euler: [270, 0, 0], pos: config.cameraPosition, focus: config.focusPoint || [0, 0.6, 0] },
-        // 1: cave — small interior; viewpoint roughly matches the depth-of-field example
+        // 0: cave — small interior; viewpoint roughly matches the depth-of-field example
         { asset: caveAsset, euler: [0, 0, 0], pos: [0.1, -0.1, 0.06], focus: [1.2, -0.4, 1.0] },
+        // 1: original Roman Parish church — rig at the configured start, looking at the focus point
+        { asset: assets.church, euler: [270, 0, 0], pos: config.cameraPosition, focus: config.focusPoint || [0, 0.6, 0] },
         // 2: apartment (.sog) — start at the editor/paint "biker1" spot, transformed into this
         // scene's frame (apartment at origin, euler 180, scale 1), looking toward the interior
         { asset: apartmentAsset, euler: [180, 0, 0], pos: [-3.8, -0.1, 7.2], focus: [0, -0.1, 0] },
