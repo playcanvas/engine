@@ -32,7 +32,7 @@ const round = (n) => {
     const r = Number.isFinite(n) ? Math.round(n * 1000) / 1000 : null;
     return Object.is(r, -0) ? 0 : r;
 };
-const v3 = (v) => v ? [round(v.x), round(v.y), round(v.z)] : null;
+const v3 = v => (v ? [round(v.x), round(v.y), round(v.z)] : null);
 
 const pathOf = (e) => {
     const parts = [];
@@ -55,9 +55,9 @@ const walkEntities = (root, limit = MAX_ENTITIES) => {
     return out;
 };
 
-const componentsOf = (e) => Object.keys(e.c ?? {}).sort();
+const componentsOf = e => Object.keys(e.c ?? {}).sort();
 
-const entityInfo = (e) => ({
+const entityInfo = e => ({
     name: e.name,
     path: pathOf(e),
     enabled: e.enabled,
@@ -88,7 +88,7 @@ const renderablesOf = (app) => {
     return out;
 };
 
-const collisionsOf = (app) => app.root.findComponents('collision').slice(0, MAX_COLLISIONS).map(c => ({
+const collisionsOf = app => app.root.findComponents('collision').slice(0, MAX_COLLISIONS).map(c => ({
     entity: c.entity.name,
     path: pathOf(c.entity),
     type: c.type,
@@ -104,7 +104,7 @@ const collisionsOf = (app) => app.root.findComponents('collision').slice(0, MAX_
     } : null
 }));
 
-const animationsOf = (app) => [
+const animationsOf = app => [
     ...app.root.findComponents('anim').map(a => ({
         entity: a.entity.name,
         path: pathOf(a.entity),
