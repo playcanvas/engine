@@ -17,6 +17,7 @@ import { XrAnchors } from './xr-anchors.js';
 import { XrMeshDetection } from './xr-mesh-detection.js';
 import { XrViews } from './xr-views.js';
 import { XrBridge } from '../../platform/graphics/xr-bridge.js';
+import { DEVICETYPE_WEBGPU } from '../../platform/graphics/constants.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -322,6 +323,55 @@ class XrManager extends EventHandler {
             });
             this._deviceAvailabilityCheck();
         }
+    }
+
+    /**
+     * Tests whether an immersive WebXR session of the given type can run on the specified graphics
+     * backend. Unlike {@link XrManager#isAvailable}, this is a static method that can be called
+     * before a graphics device (or the {@link AppBase}) is created, which makes it useful for
+     * deciding which device type to create for XR - for example WebGPU vs WebGL2.
+     *
+     * This is a best-effort preflight check. The only authoritative test remains a successful
+     * {@link XrManager#start}, so a fallback path should always be kept.
+     *
+     * @param {string} deviceType - The graphics device type the session would run on. Can be
+     * {@link DEVICETYPE_WEBGPU} or {@link DEVICETYPE_WEBGL2}.
+     * @param {string} type - The session type. Can be:
+     *
+     * - {@link XRTYPE_VR}: Immersive VR session.
+     * - {@link XRTYPE_AR}: Immersive AR session.
+     *
+     * @returns {Promise<boolean>} Promise that resolves to true if a session of the given type is
+     * reported supported on the given backend, false otherwise.
+     * @example
+     * const supported = await pc.XrManager.isDeviceSupported(pc.DEVICETYPE_WEBGPU, pc.XRTYPE_VR);
+     * if (supported) {
+     *     // a WebGPU device can be created and used to offer VR
+     * }
+     */
+    static async isDeviceSupported(deviceType, type) {
+        if (!platform.browser || !navigator.xr || !XrManager._backendSupportsXr(deviceType)) {
+            return false;
+        }
+
+        try {
+            return await navigator.xr.isSessionSupported(type);
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Returns whether the given graphics backend meets the WebXR binding requirement. A WebGPU
+     * backend can only host an XR session when the browser exposes `XRGPUBinding`; a WebGL backend
+     * uses the classic `XRWebGLLayer` and needs no additional binding.
+     *
+     * @param {string} [deviceType] - The graphics device type, see DEVICETYPE_*.
+     * @returns {boolean} True if the backend can host a WebXR session.
+     * @private
+     */
+    static _backendSupportsXr(deviceType) {
+        return deviceType !== DEVICETYPE_WEBGPU || typeof globalThis.XRGPUBinding !== 'undefined';
     }
 
     /**
@@ -678,6 +728,13 @@ class XrManager extends EventHandler {
      */
     _sessionSupportCheck(type) {
         navigator.xr.isSessionSupported(type).then((available) => {
+            // A session reported as supported by the browser can still be unusable on the current
+            // graphics backend (a WebGPU device requires `XRGPUBinding`). Reflect that requirement
+            // so availability matches what can actually be started on this device.
+            if (available && !XrManager._backendSupportsXr(this.app?.graphicsDevice?.deviceType)) {
+                available = false;
+            }
+
             if (this._available[type] === available) {
                 return;
             }
