@@ -22,6 +22,7 @@ const KEYCODE = {
     AltLeft: 18,
     AltRight: 18
 };
+const INJECTED = '__playcanvasRuntimeToolsInjected';
 
 const keyCodeFor = (code) => {
     if (!code) return 0;
@@ -54,7 +55,13 @@ const makeTouchEvent = (canvas, action, pts) => {
     return ev;
 };
 
-const injectInput = (canvas, msg) => {
+const dispatch = (canvas, ev, msg, record) => {
+    Object.defineProperty(ev, INJECTED, { value: true });
+    record?.(msg);
+    canvas.dispatchEvent(ev);
+};
+
+const injectInput = (canvas, msg, record) => {
     if (msg.kind === 'key') {
         const ev = new KeyboardEvent(msg.action, { code: msg.code, key: msg.key ?? '', bubbles: true, cancelable: true });
         const kc = keyCodeFor(msg.code);
@@ -62,9 +69,9 @@ const injectInput = (canvas, msg) => {
             Object.defineProperty(ev, 'keyCode', { get: () => kc });
             Object.defineProperty(ev, 'which', { get: () => kc });
         }
-        canvas.dispatchEvent(ev);
+        dispatch(canvas, ev, msg, record);
     } else if (msg.kind === 'mouse') {
-        canvas.dispatchEvent(new MouseEvent(msg.action, {
+        dispatch(canvas, new MouseEvent(msg.action, {
             clientX: msg.x ?? 0,
             clientY: msg.y ?? 0,
             movementX: msg.dx ?? 0,
@@ -73,10 +80,10 @@ const injectInput = (canvas, msg) => {
             buttons: msg.buttons ?? 0,
             bubbles: true,
             cancelable: true
-        }));
+        }), msg, record);
     } else if (msg.kind === 'touch') {
         const pts = msg.touches ?? [{ id: msg.id ?? 0, x: msg.x ?? 0, y: msg.y ?? 0 }];
-        canvas.dispatchEvent(makeTouchEvent(canvas, msg.action, pts));
+        dispatch(canvas, makeTouchEvent(canvas, msg.action, pts), msg, record);
     }
 };
 

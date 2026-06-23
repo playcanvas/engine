@@ -50,6 +50,11 @@ describe('runtime-tools snapshot', function () {
         expect(snap.scene.lights).to.equal(0);
         expect(snap.scene.layers.length).to.be.greaterThan(0);
         expect(snap.scene.layers[0]).to.have.all.keys('id', 'name', 'enabled');
+        expect(snap.scene.entitySample[0]).to.include.keys('name', 'path', 'enabled', 'position', 'rotation', 'scale', 'components');
+        expect(snap.scene.renderables).to.deep.equal([]);
+        expect(snap.scene.collisions).to.deep.equal([]);
+        expect(snap.scene.animations).to.deep.equal([]);
+        expect(snap.scene.recentInput).to.deep.equal([]);
     });
 
     it('reports asset counts and failures from the entry buffer', function () {

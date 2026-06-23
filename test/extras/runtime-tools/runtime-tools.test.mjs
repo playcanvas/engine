@@ -66,6 +66,16 @@ describe('attachRuntimeTools', function () {
         const snap = globalThis.__PLAYCANVAS_TOOLS__.snapshot();
         expect(snap.version).to.equal(1);
         expect(snap.app.id).to.match(/^pc-app-\d+$/);
+        expect(snap.scene.entitySample[0]).to.include.keys('path', 'components');
+    });
+
+    it('records recent real and injected input in snapshots', function () {
+        attachRuntimeTools(app);
+        app.graphicsDevice.canvas.dispatchEvent(new window.KeyboardEvent('keydown', { code: 'KeyA', bubbles: true }));
+        globalThis.__PLAYCANVAS_TOOLS__.input({ kind: 'key', action: 'keydown', code: 'KeyD' });
+        const recent = globalThis.__PLAYCANVAS_TOOLS__.snapshot().scene.recentInput;
+        expect(recent.map(e => e.source)).to.deep.equal(['real', 'injected']);
+        expect(recent.map(e => e.code)).to.deep.equal(['KeyA', 'KeyD']);
     });
 
     it('throws an actionable error for unknown appId', function () {
