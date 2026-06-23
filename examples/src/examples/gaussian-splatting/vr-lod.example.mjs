@@ -496,7 +496,7 @@ assetListLoader.load(() => {
 
     const SCENES = [
         // 0: cave — small interior; viewpoint roughly matches the depth-of-field example
-        { asset: caveAsset, euler: [0, 0, 0], pos: [0.1, -0.1, 0.06], focus: [1.2, -0.4, 1.0] },
+        { asset: caveAsset, euler: [0, 0, 0], pos: [0.01, -0.09, -0.26], focus: [-0.22, -0.05, -1.24] },
         // 1: original Roman Parish church — rig at the configured start, looking at the focus point
         { asset: assets.church, euler: [270, 0, 0], pos: config.cameraPosition, focus: config.focusPoint || [0, 0.6, 0] },
         // 2: apartment (.sog) — start at the editor/paint "biker1" spot, transformed into this
