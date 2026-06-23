@@ -714,6 +714,12 @@ class GraphicsDevice extends EventHandler {
 
         this.textureBias = this.scope.resolve('textureBias');
         this.textureBias.setValue(0.0);
+
+        // initialize the client rect from the canvas, so that it is valid before the first frame
+        // update. This allows functions like CameraComponent#screenToWorld to work correctly when
+        // called from a script's initialize / postInitialize, which run before the first device
+        // update (see https://github.com/playcanvas/engine/issues/8932).
+        this.updateClientRect();
     }
 
     /**
