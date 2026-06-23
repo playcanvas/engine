@@ -1,6 +1,5 @@
 import { RingBuffer } from './ring-buffer.js';
 import { buildSnapshot } from './snapshot.js';
-import { startStream } from './stream.js';
 import { injectInput } from './input.js';
 
 const PROTOCOL = 'playcanvas.runtime-tools';
@@ -32,7 +31,7 @@ const resolve = (appId) => {
 
 const inputKind = (action, kind) => kind ?? (action.startsWith('key') ? 'key' : action.startsWith('mouse') || action === 'wheel' ? 'mouse' : action.startsWith('touch') ? 'touch' : 'unknown');
 
-const touches = (list) => [...(list ?? [])].slice(0, 5).map(t => ({
+const touches = list => [...(list ?? [])].slice(0, 5).map(t => ({
     id: t.identifier ?? 0,
     x: Math.round(t.clientX ?? 0),
     y: Math.round(t.clientY ?? 0)
@@ -79,8 +78,7 @@ const createGlobal = () => {
                 missingAssets: errors.filter(e => e.kind === 'asset' && e.url).map(e => e.url)
             };
         },
-        // drive a synthetic input event into the app (key/mouse). callable in-page via an eval
-        // bridge (Playwright/CDP); also the path used by the dev server's file/POST input channels.
+        // drive a synthetic input event into the app through a browser eval bridge.
         input(msg, appId) {
             const entry = resolve(appId);
             injectInput(entry.app.graphicsDevice.canvas, msg, m => entry.recordInput('injected', m));
@@ -141,7 +139,6 @@ const createGlobal = () => {
  * is JSON-serializable; no live engine objects escape.
  *
  * @param {import('../../framework/app-base.js').AppBase} app - The application to expose.
- * @param {object} [opts] - Options. opts.stream (a ws:// URL) opts into dev-only realtime streaming.
  * @returns {() => void} A function that detaches the app again. Detaching the last app
  * removes the global. Apps also detach automatically on destroy.
  * @example
@@ -150,7 +147,7 @@ const createGlobal = () => {
  * const app = new Application(canvas);
  * attachRuntimeTools(app);
  */
-const attachRuntimeTools = (app, opts = {}) => {
+const attachRuntimeTools = (app) => {
     for (const e of registry.values()) {
         if (e.app === app) {
             return e.detach;
@@ -176,8 +173,10 @@ const attachRuntimeTools = (app, opts = {}) => {
     };
     entry.recordInput = (source, e) => recordInput(entry, source, e);
     const destroy = { handle: null };
-    const inputTargets = [app.graphicsDevice.canvas, app.graphicsDevice.canvas.ownerDocument?.defaultView ?? globalThis]
-        .filter((t, i, all) => t && all.indexOf(t) === i);
+    const inputTargets = [
+        app.graphicsDevice.canvas,
+        app.graphicsDevice.canvas.ownerDocument?.defaultView ?? globalThis
+    ].filter((t, i, all) => t && all.indexOf(t) === i);
     const seenInput = new WeakSet();
 
     const onStart = () => {
@@ -220,7 +219,6 @@ const attachRuntimeTools = (app, opts = {}) => {
         app.off('frameupdate', onFrameUpdate);
         app.assets?.off('error', onAssetError);
         inputTargets.forEach(target => INPUT_EVENTS.forEach(t => target.removeEventListener?.(t, onInput, true)));
-        entry.stopStream?.();
         destroy.handle.off();
         for (const cancel of [...entry.waits]) {
             cancel();
@@ -244,10 +242,6 @@ const attachRuntimeTools = (app, opts = {}) => {
 
     if (!globalThis.__PLAYCANVAS_TOOLS__) {
         createGlobal();
-    }
-
-    if (opts.stream) {
-        entry.stopStream = startStream(app, entry, opts.stream, opts.streamOpts);
     }
 
     if (typeof globalThis.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
