@@ -183,7 +183,6 @@ export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
 export { FramePass } from './platform/graphics/frame-pass.js';
 export { FramePassColorGrab } from './scene/graphics/frame-pass-color-grab.js';
-export { FramePassRadixSort } from './scene/graphics/frame-pass-radix-sort.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
