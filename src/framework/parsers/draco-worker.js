@@ -1,4 +1,7 @@
 function DracoWorker(jsUrl, wasmUrl) {
+    // In a browser/web worker this is `self`; in a Node worker_threads worker it's the parentPort.
+    const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
+
     let draco;
 
     // https://github.com/google/draco/blob/master/src/draco/attributes/geometry_attribute.h#L43
@@ -263,7 +266,7 @@ function DracoWorker(jsUrl, wasmUrl) {
 
     const decode = (data) => {
         const result = decodeMesh(new Uint8Array(data.buffer));
-        self.postMessage({
+        myself.postMessage({
             jobId: data.jobId,
             error: result.error,
             indices: result.indices,
@@ -276,12 +279,18 @@ function DracoWorker(jsUrl, wasmUrl) {
     const workQueue = [];
 
     // handle incoming message
-    self.onmessage = (message) => {
+    myself.addEventListener('message', (message) => {
         const data = message.data;
         switch (data.type) {
-            case 'init':
+            case 'init': {
+                // The glue script concatenated ahead of this worker exposes the module factory
+                // differently per environment: as a global in a browser worker, and via
+                // `module.exports` (CommonJS) in a Node worker_threads worker.
+                const DracoDecoderModule = myself.DracoDecoderModule ||
+                    (typeof module !== 'undefined' && module.exports);
+
                 // initialize draco module
-                self.DracoDecoderModule({
+                DracoDecoderModule({
                     instantiateWasm: (imports, successCallback) => {
                         WebAssembly.instantiate(data.module, imports)
                         .then(result => successCallback(result))
@@ -294,6 +303,7 @@ function DracoWorker(jsUrl, wasmUrl) {
                     workQueue.forEach(data => decode(data));
                 });
                 break;
+            }
             case 'decodeMesh':
                 if (draco) {
                     decode(data);
@@ -302,7 +312,7 @@ function DracoWorker(jsUrl, wasmUrl) {
                 }
                 break;
         }
-    };
+    });
 }
 
 export {
