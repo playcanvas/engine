@@ -42,7 +42,11 @@ class AnimComponentSystem extends ComponentSystem {
             component.loadStateGraph(component.stateGraph);
         }
         if (data.layers) {
-            data.layers.forEach((layer, i) => {
+            data.layers.forEach((layer) => {
+                // Layers added dynamically via addLayer() aren't part of the state graph, so
+                // loadStateGraph() above won't have recreated them. Resolve (or create) the
+                // matching clone layer by name before assigning its animations.
+                const cloneLayer = component.addLayer(layer.name, layer.weight, layer.mask, layer.blendType);
                 layer._controller.states.forEach((stateKey) => {
                     layer._controller._states[stateKey]._animationList.forEach((node) => {
                         if (!node.animTrack || node.animTrack === AnimTrack.EMPTY) {
@@ -50,11 +54,11 @@ class AnimComponentSystem extends ComponentSystem {
                             // If there is an animation asset that hasn't been loaded, assign it once it has loaded. If it is already loaded it will be assigned already.
                             if (animationAsset && !animationAsset.loaded) {
                                 animationAsset.once('load', () => {
-                                    component.layers[i].assignAnimation(node.name, animationAsset.resource);
+                                    cloneLayer.assignAnimation(node.name, animationAsset.resource);
                                 });
                             }
                         } else {
-                            component.layers[i].assignAnimation(node.name, node.animTrack);
+                            cloneLayer.assignAnimation(node.name, node.animTrack);
                         }
                     });
                 });
