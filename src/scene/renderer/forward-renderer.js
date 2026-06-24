@@ -1030,6 +1030,11 @@ class ForwardRenderer extends Renderer {
                 }
             }
         }
+
+        // consume one-shot (THISFRAME) shadow updates - the frame graph is now built and shadow
+        // casters were culled earlier this frame, so both have read the shadow update mode before
+        // it is changed here
+        this.consumeOneShotShadows();
     }
 
     /**
