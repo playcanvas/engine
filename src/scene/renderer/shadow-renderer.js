@@ -166,8 +166,9 @@ class ShadowRenderer {
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
 
-        // event before the camera is culling
-        this.renderer.scene?.fire(EVENT_PRECULL, camera);
+        // event before culling - the camera is null as this is internal (shadow) culling rather
+        // than culling for a user camera
+        this.renderer.scene?.fire(EVENT_PRECULL, null);
 
         visible.length = 0;
 
@@ -200,8 +201,9 @@ class ShadowRenderer {
         // this sorts the shadow casters by the shader id
         visible.sort(this.sortCompareShader);
 
-        // event after the camera is done with culling
-        this.renderer.scene?.fire(EVENT_POSTCULL, camera);
+        // event after culling - the camera is null as this is internal (shadow) culling rather
+        // than culling for a user camera
+        this.renderer.scene?.fire(EVENT_POSTCULL, null);
     }
 
     sortCompareShader(drawCallA, drawCallB) {
