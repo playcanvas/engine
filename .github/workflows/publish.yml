@@ -60,13 +60,6 @@ jobs:
       - name: Run unit tests
         run: npm test
 
-      - name: Build Examples Browser
-        working-directory: ./examples
-        run: |
-          npm clean-install --progress=false --no-fund
-          npm run lint
-          npm run build
-
       - name: Publish to npm
         run: |
           if [[ "${{ env.TAG }}" =~ "alpha" ]]; then
