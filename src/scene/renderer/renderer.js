@@ -969,28 +969,12 @@ class Renderer {
      */
     cullShadowmaps(comp) {
 
-        const isClustered = this.scene.clusteredLightingEnabled;
-
-        // shadow casters culling for local (point and spot) lights
+        // shadow casters culling for local (point and spot) lights. The shadow-update-mode forcing
+        // (atlas slot reassigned / shadow map not yet allocated) was applied earlier, in
+        // updateLightVisibility, so the update mode is already final here.
         for (let i = 0; i < this.localLights.length; i++) {
             const light = this.localLights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
-
-                if (isClustered) {
-                    // if atlas slot is reassigned, make sure to update the shadow map, including the culling
-                    if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
-                        light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-                    }
-                } else {
-
-                    // force rendering shadow at least once to allocate the shadow map needed by the shaders
-                    if (light.shadowUpdateMode === SHADOWUPDATE_NONE && light.castShadows) {
-                        if (!light.getRenderData(null, 0).shadowCamera.renderTarget) {
-                            light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-                        }
-                    }
-                }
-
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
                     this._shadowRendererLocal.cull(light, comp);
                 }
@@ -1002,6 +986,48 @@ class Renderer {
         this.cameraDirShadowLights.forEach((lightList, camera) => {
             for (let i = 0; i < lightList.length; i++) {
                 this._shadowRendererDirectional.cull(lightList[i], comp, camera);
+            }
+        });
+    }
+
+    /**
+     * After the frame graph is built and shadow casters are culled, account for shadow-map updates
+     * and consume one-shot ({@link SHADOWUPDATE_THISFRAME}) requests for lights whose shadow
+     * actually rendered this frame, reverting them to {@link SHADOWUPDATE_NONE}. A light that did
+     * not render this frame (for example an off-screen local light) keeps its request, so the
+     * shadow updates the next frame the light is rendered. Must run after both the frame graph build
+     * and shadow-caster culling, so that `needsShadowRendering` (a pure predicate) reports the same
+     * result to both before the update mode is changed here.
+     */
+    consumeOneShotShadows() {
+
+        const clustered = this.scene.clusteredLightingEnabled;
+        const shadowRenderer = this.shadowRenderer;
+
+        // local lights: the shadow renders if shadow rendering is needed and, in clustered lighting,
+        // an atlas slot has been allocated for it
+        const localLights = this.localLights;
+        for (let i = 0; i < localLights.length; i++) {
+            const light = localLights[i];
+            if (shadowRenderer.needsShadowRendering(light) && (!clustered || light.atlasViewportAllocated)) {
+                this._shadowMapUpdates += light.numShadowFaces;
+                if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                    light.shadowUpdateMode = SHADOWUPDATE_NONE;
+                }
+            }
+        }
+
+        // directional lights: a separate shadow is rendered for each camera that uses the light, as
+        // the shadow frustum is fit to that camera
+        this.cameraDirShadowLights.forEach((lightList) => {
+            for (let i = 0; i < lightList.length; i++) {
+                const light = lightList[i];
+                if (shadowRenderer.needsShadowRendering(light)) {
+                    this._shadowMapUpdates += light.numShadowFaces;
+                    if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                        light.shadowUpdateMode = SHADOWUPDATE_NONE;
+                    }
+                }
             }
         });
     }
@@ -1101,8 +1127,33 @@ class Renderer {
         // update shadow / cookie atlas allocation for the visible lights. Update it after the lights
         // were culled, but before shadow maps are culled, as it might force some 'update once'
         // shadows to cull.
-        if (scene.clusteredLightingEnabled) {
+        const isClustered = scene.clusteredLightingEnabled;
+        if (isClustered) {
             this.updateLightTextureAtlas();
+        }
+
+        // force a shadow re-render for local lights whose atlas slot was reassigned (clustered) or
+        // whose shadow map has not yet been allocated (non-clustered). Done here - before the frame
+        // graph is built and shadow casters are culled - so both of those steps see the final
+        // shadow update mode.
+        const localLights = this.localLights;
+        for (let i = 0; i < localLights.length; i++) {
+            const light = localLights[i];
+            if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+                if (isClustered) {
+                    // if the atlas slot is reassigned, make sure to update the shadow map (incl. culling)
+                    if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                        light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                    }
+                } else {
+                    // force rendering the shadow at least once to allocate the shadow map needed by the shaders
+                    if (light.shadowUpdateMode === SHADOWUPDATE_NONE && light.castShadows) {
+                        if (!light.getRenderData(null, 0).shadowCamera.renderTarget) {
+                            light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                        }
+                    }
+                }
+            }
         }
 
         // collect shadow-casting directional lights per camera + allocate their shadow maps

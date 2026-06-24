@@ -17,7 +17,7 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
     SHADOWCAMERA_NAME,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
+    SHADOWUPDATE_NONE,
     shadowTypeInfo
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -377,19 +377,12 @@ class ShadowRenderer {
         }
     }
 
+    // Pure predicate - whether the light needs its shadow rendered this frame. Has no side effects:
+    // the SHADOWUPDATE_THISFRAME -> SHADOWUPDATE_NONE consume and the shadow-map-update stat are
+    // applied once per frame in Renderer#consumeOneShotShadows, after the frame graph is built and
+    // shadow casters are culled (so build and cull can both read shadowUpdateMode before it changes).
     needsShadowRendering(light) {
-
-        const needs = light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
-
-        if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
-            light.shadowUpdateMode = SHADOWUPDATE_NONE;
-        }
-
-        if (needs) {
-            this.renderer._shadowMapUpdates += light.numShadowFaces;
-        }
-
-        return needs;
+        return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
     }
 
     getLightRenderData(light, camera, face) {
