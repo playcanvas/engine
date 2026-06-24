@@ -39,26 +39,23 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-      - name: Build PlayCanvas
-        run: npm run build
-
-      - name: Run Publint
-        run: npm run publint
-
-      - name: Run Post-build tests
-        run: npm run test:build
+      - name: Run unit tests
+        run: npm test
 
       - name: Build API reference manual
         run: npm run docs
 
-      - name: Build TypeScript declarations
-        run: npm run build:types
+      - name: Build PlayCanvas
+        run: npm run build
+
+      - name: Run Post-build tests
+        run: npm run test:build
 
       - name: Compile TypeScript declarations
         run: npm run test:types
 
-      - name: Run unit tests
-        run: npm test
+      - name: Run Publint
+        run: npm run publint
 
       - name: Publish to npm
         run: |
