@@ -293,9 +293,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Gets the color of the light.
+     * Gets the color of the light. Use the setter to update the color.
      *
-     * @type {Color}
+     * @type {Readonly<Color>}
      */
     get color() {
         return this._light.getColor();
@@ -1177,7 +1177,7 @@ class LightComponent extends Component {
     /**
      * Gets the array of layer IDs ({@link Layer#id}) to which this light should belong.
      *
-     * @type {number[]}
+     * @type {ReadonlyArray<number>}
      */
     get layers() {
         return this._layers;
