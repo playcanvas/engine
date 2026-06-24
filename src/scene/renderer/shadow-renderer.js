@@ -381,7 +381,10 @@ class ShadowRenderer {
 
         const needs = light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
 
-        if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+        // consume a one-shot (THISFRAME) update only when the shadow actually renders this frame.
+        // If the light is not rendered (e.g. an off-screen local light), the request is left in
+        // place so the shadow updates the next frame the light is rendered.
+        if (needs && light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
             light.shadowUpdateMode = SHADOWUPDATE_NONE;
         }
 
