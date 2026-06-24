@@ -3,6 +3,8 @@ import { stub } from 'sinon';
 
 import { DummyComponentSystem } from './test-component/system.mjs';
 import { Color } from '../../src/core/math/color.js';
+import { Vec3 } from '../../src/core/math/vec3.js';
+import { BoundingBox } from '../../src/core/shape/bounding-box.js';
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
@@ -691,6 +693,73 @@ describe('Entity', function () {
             const components = child.findComponents('anim');
             expect(components).to.be.an('array');
             expect(components.length).to.equal(0);
+        });
+
+    });
+
+    describe('#forEachRenderMeshInstance', function () {
+
+        it('visits render and model mesh instances in hierarchy order', function () {
+            const root = new Entity('root');
+            const child = new Entity('child');
+            const grandchild = new Entity('grandchild');
+            root.addChild(child);
+            child.addChild(grandchild);
+
+            const rootMesh = { aabb: new BoundingBox() };
+            const childMesh = { aabb: new BoundingBox() };
+            const grandchildMesh = { aabb: new BoundingBox() };
+            const render = { meshInstances: [rootMesh] };
+            const model = { meshInstances: [childMesh] };
+            const childRender = { meshInstances: [grandchildMesh] };
+            root.c.render = render;
+            child.c.model = model;
+            grandchild.c.render = childRender;
+
+            const calls = [];
+            root.forEachRenderMeshInstance((meshInstance, component, entity) => {
+                calls.push([meshInstance, component, entity]);
+            });
+
+            expect(calls).to.deep.equal([
+                [rootMesh, render, root],
+                [childMesh, model, child],
+                [grandchildMesh, childRender, grandchild]
+            ]);
+        });
+
+    });
+
+    describe('#getAabb', function () {
+
+        it('returns null when no render mesh instances are found', function () {
+            const entity = new Entity();
+
+            expect(entity.getAabb()).to.equal(null);
+        });
+
+        it('unions descendant render mesh instance bounds into the result', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+
+            root.c.render = {
+                meshInstances: [{
+                    aabb: new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 2, 3))
+                }]
+            };
+            child.c.model = {
+                meshInstances: [{
+                    aabb: new BoundingBox(new Vec3(5, 0, 0), new Vec3(1, 1, 1))
+                }]
+            };
+
+            const result = new BoundingBox();
+            const aabb = root.getAabb(result);
+
+            expect(aabb).to.equal(result);
+            expect(aabb.center.equals(new Vec3(2.5, 0, 0))).to.equal(true);
+            expect(aabb.halfExtents.equals(new Vec3(3.5, 2, 3))).to.equal(true);
         });
 
     });

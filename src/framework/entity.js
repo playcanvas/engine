@@ -1,5 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { guid } from '../core/guid.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
 import { GraphNode } from '../scene/graph-node.js';
 import { getApplication } from './globals.js';
 
@@ -28,6 +29,14 @@ import { getApplication } from './globals.js';
  * @import { ScrollbarComponent } from './components/scrollbar/component.js'
  * @import { SoundComponent } from './components/sound/component.js'
  * @import { SpriteComponent } from './components/sprite/component.js'
+ * @import { MeshInstance } from '../scene/mesh-instance.js'
+ */
+
+/**
+ * @callback RenderMeshInstanceCallback
+ * @param {MeshInstance} meshInstance - The render mesh instance.
+ * @param {RenderComponent|ModelComponent} component - The component that owns the mesh instance.
+ * @param {Entity} entity - The entity that owns the component.
  */
 
 /**
@@ -464,6 +473,63 @@ class Entity extends GraphNode {
      */
     findComponents(type) {
         return this.find(entity => entity.c?.[type]).map(entity => entity.c[type]);
+    }
+
+    /**
+     * Executes a provided function once for each {@link MeshInstance} on this entity and all of
+     * its descendants.
+     *
+     * @param {RenderMeshInstanceCallback} callback - The function to execute on each mesh
+     * instance.
+     * @param {object} [thisArg] - Optional value to use as this when executing callback function.
+     * @example
+     * entity.forEachRenderMeshInstance((meshInstance) => {
+     *     meshInstance.visible = false;
+     * });
+     */
+    forEachRenderMeshInstance(callback, thisArg) {
+        this.forEach((entity) => {
+            const render = entity.c.render;
+            const renderMeshes = render?.meshInstances;
+            for (let i = 0, len = renderMeshes?.length ?? 0; i < len; i++) {
+                callback.call(thisArg, renderMeshes[i], render, entity);
+            }
+
+            const model = entity.c.model;
+            const modelMeshes = model?.meshInstances;
+            for (let i = 0, len = modelMeshes?.length ?? 0; i < len; i++) {
+                callback.call(thisArg, modelMeshes[i], model, entity);
+            }
+        });
+    }
+
+    /**
+     * Gets the axis-aligned bounding box enclosing all render mesh instances on this entity and all
+     * of its descendants.
+     *
+     * @param {BoundingBox} [result] - The bounding box to receive the result.
+     * @returns {BoundingBox|null} The bounding box, or null if no render mesh instances were found.
+     * @example
+     * const aabb = entity.getAabb();
+     * if (aabb) {
+     *     // use aabb
+     * }
+     */
+    getAabb(result) {
+        let aabb = result;
+        let found = false;
+
+        this.forEachRenderMeshInstance((meshInstance) => {
+            if (found) {
+                aabb.add(meshInstance.aabb);
+            } else {
+                aabb = aabb || new BoundingBox();
+                aabb.copy(meshInstance.aabb);
+                found = true;
+            }
+        });
+
+        return found ? aabb : null;
     }
 
     /**
