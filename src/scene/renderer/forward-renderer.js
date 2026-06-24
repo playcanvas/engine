@@ -1087,7 +1087,11 @@ class ForwardRenderer extends Renderer {
         // update gsplat director
         this.gsplatDirector?.update(comp);
 
-        // visibility culling of lights, meshInstances, shadows casters
+        // light visibility culling, light atlas allocation and directional shadow light collection
+        // (mesh-independent, so it can run before the frame graph is built in a later refactor)
+        this.updateLightVisibility(comp);
+
+        // visibility culling of meshInstances and shadow casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
