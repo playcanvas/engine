@@ -247,9 +247,10 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Gets the half-extents of the box-shaped collision volume in the x, y and z axes.
+     * Gets the half-extents of the box-shaped collision volume in the x, y and z axes. Use the
+     * setter to update the collision shape.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get halfExtents() {
         return this._halfExtents;
@@ -277,9 +278,9 @@ class CollisionComponent extends Component {
 
     /**
      * Gets the positional offset of the collision shape from the Entity position along the local
-     * axes.
+     * axes. Use the setter to update the collision shape.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get linearOffset() {
         return this._linearOffset;
@@ -309,9 +310,10 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Gets the rotational offset of the collision shape from the Entity rotation in local space.
+     * Gets the rotational offset of the collision shape from the Entity rotation in local space. Use
+     * the setter to update the collision shape.
      *
-     * @type {Quat}
+     * @type {Readonly<Quat>}
      */
     get angularOffset() {
         return this._angularOffset;

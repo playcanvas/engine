@@ -155,7 +155,7 @@
     "test": "mocha --ignore \"test/assets/scripts/*.js\" --ignore \"test/bundles/**\" --recursive --require test/fixtures.mjs --timeout 5000",
     "test:build": "mocha --recursive \"test/bundles/**/*.test.mjs\" --timeout 30000",
     "test:coverage": "c8 npm test",
-    "test:types": "tsc --pretty false build/playcanvas.d.ts"
+    "test:types": "tsc --pretty false --noEmit build/playcanvas.d.ts test/typecheck/api-ergonomics.ts"
   },
   "engines": {
     "node": ">=18.3.0"

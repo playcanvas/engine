@@ -1763,7 +1763,7 @@ class ParticleSystemComponent extends Component {
     /**
      * Gets the array of layer IDs ({@link Layer#id}) to which this particle system belongs.
      *
-     * @type {number[]}
+     * @type {ReadonlyArray<number>}
      */
     get layers() {
         return this._layers;

@@ -380,9 +380,10 @@ class SoundComponent extends Component {
     }
 
     /**
-     * Gets a dictionary that contains the {@link SoundSlot}s managed by this SoundComponent.
+     * Gets a dictionary that contains the {@link SoundSlot}s managed by this SoundComponent. Use
+     * addSlot and removeSlot to change slots.
      *
-     * @type {Object<string, SoundSlot>}
+     * @type {Readonly<Record<string, SoundSlot>>}
      */
     get slots() {
         return this._slots;

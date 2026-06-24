@@ -424,9 +424,9 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * Gets the color tint of the sprite.
+     * Gets the color tint of the sprite. Use the setter to update the tint.
      *
-     * @type {Color}
+     * @type {Readonly<Color>}
      */
     get color() {
         return this._color;
@@ -744,7 +744,7 @@ class SpriteComponent extends Component {
     /**
      * Gets the array of layer IDs ({@link Layer#id}) to which this sprite belongs.
      *
-     * @type {number[]}
+     * @type {ReadonlyArray<number>}
      */
     get layers() {
         return this._layers;
