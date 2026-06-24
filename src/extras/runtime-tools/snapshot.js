@@ -207,14 +207,10 @@ const buildSnapshot = (entry) => {
         render: {
             drawCalls: stats.drawCalls.total,
             triangles: profiler ? stats.frame.triangles : null,
-            shaderErrors: 0, // populated once engine shader-error events exist (separate plan)
-            visibleMeshes: null, // protocol v2
             activeCamera: cameras.length ? cameras[cameras.length - 1].entity.name : null
         },
         diagnostics: {
             errors: entry.errors.length,
-            warnings: 0,
-            failedRequests: 0,
             missingAssets: assetErrors.filter(e => e.url).length
         },
         perf: {

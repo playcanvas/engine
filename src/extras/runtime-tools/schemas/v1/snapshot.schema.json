@@ -113,22 +113,18 @@
         },
         "render": {
             "type": "object",
-            "required": ["drawCalls", "triangles", "shaderErrors", "visibleMeshes", "activeCamera"],
+            "required": ["drawCalls", "triangles", "activeCamera"],
             "properties": {
                 "drawCalls": { "type": "number" },
                 "triangles": { "type": ["number", "null"] },
-                "shaderErrors": { "type": "number" },
-                "visibleMeshes": { "type": ["number", "null"] },
                 "activeCamera": { "type": ["string", "null"] }
             }
         },
         "diagnostics": {
             "type": "object",
-            "required": ["errors", "warnings", "failedRequests", "missingAssets"],
+            "required": ["errors", "missingAssets"],
             "properties": {
                 "errors": { "type": "number" },
-                "warnings": { "type": "number" },
-                "failedRequests": { "type": "number" },
                 "missingAssets": { "type": "number" }
             }
         },

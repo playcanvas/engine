@@ -44,6 +44,13 @@
  * @module Engine
  */
 
+// #if _DEBUG
+import { attachRuntimeTools } from './extras/runtime-tools/runtime-tools.js';
+import { AppBase } from './framework/app-base.js';
+
+AppBase._debugAppCreated = app => attachRuntimeTools(app);
+// #endif
+
 // CORE
 export * from './core/constants.js';
 export { extend, revision, version } from './core/core.js';

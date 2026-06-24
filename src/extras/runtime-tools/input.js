@@ -1,4 +1,4 @@
-// dev-only: synthesize a DOM input event so the running app's pc.Keyboard / pc.Mouse / pc.TouchDevice react.
+// synthesize a DOM input event so the running app's pc.Keyboard / pc.Mouse / pc.TouchDevice react.
 // pc.Keyboard reads the legacy event.keyCode, which the KeyboardEvent constructor does NOT
 // populate from its init dict — so we stamp keyCode/which after construction, else injected
 // keys register as 0 and never match KEY_*. dispatched on the canvas with bubbles, so it
