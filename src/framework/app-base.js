@@ -640,9 +640,18 @@ class AppBase extends EventHandler {
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         }
+
+        // #if _DEBUG
+        AppBase._debugAppCreated?.(this);
+        // #endif
     }
 
     static _applications = {};
+
+    // #if _DEBUG
+    /** @ignore */
+    static _debugAppCreated = null;
+    // #endif
 
     /**
      * Get the current application. In the case where there are multiple running applications, the

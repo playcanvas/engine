@@ -73,8 +73,6 @@ const createGlobal = () => {
             const errors = resolve(appId).errors.toArray();
             return {
                 errors,
-                warnings: [],
-                failedRequests: [],
                 missingAssets: errors.filter(e => e.kind === 'asset' && e.url).map(e => e.url)
             };
         },
@@ -135,8 +133,8 @@ const createGlobal = () => {
 /**
  * Attaches runtime introspection tools to an application, exposing the
  * `globalThis.__PLAYCANVAS_TOOLS__` protocol global for test harnesses and agents. Opt-in:
- * the global only exists while at least one app is attached. Read-only: all returned data
- * is JSON-serializable; no live engine objects escape.
+ * the global only exists while at least one app is attached. Snapshot and diagnostic data is
+ * JSON-serializable; no live engine objects escape.
  *
  * @param {import('../../framework/app-base.js').AppBase} app - The application to expose.
  * @returns {() => void} A function that detaches the app again. Detaching the last app
