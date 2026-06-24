@@ -997,7 +997,31 @@ class Renderer {
             }
         }
 
-        // shadow casters culling for directional lights - start with none and collect lights for cameras
+        // collect shadow-casting directional lights per camera + allocate their shadow maps. Kept
+        // separate (and mesh- / frustum-independent) so it can run before the frame graph is built
+        // in a later refactor.
+        this.collectDirectionalShadowLights(comp);
+
+        // cull shadow casters / fit cascades for the collected directional lights (mesh-dependent)
+        this.cameraDirShadowLights.forEach((lightList, camera) => {
+            for (let i = 0; i < lightList.length; i++) {
+                this._shadowRendererDirectional.cull(lightList[i], comp, camera);
+            }
+        });
+    }
+
+    /**
+     * Collects the set of shadow-casting directional lights for each camera into
+     * {@link Renderer#cameraDirShadowLights}, and ensures each such light has a shadow map
+     * allocated. This is independent of mesh culling and camera frusta (it uses only the
+     * composition's cameras and the layers' directional lights), so it can run before the frame
+     * graph is built. The actual shadow-caster culling is done separately.
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
+    collectDirectionalShadowLights(comp) {
+
+        // start with none and collect lights for cameras
         this.cameraDirShadowLights.clear();
         const cameras = comp.cameras;
         for (let i = 0; i < cameras.length; i++) {
@@ -1023,8 +1047,7 @@ class Renderer {
                                 lightList = lightList ?? [];
                                 lightList.push(light);
 
-                                // frustum culling for the directional shadow when rendering the camera
-                                this._shadowRendererDirectional.cull(light, comp, camera);
+                                this._shadowRendererDirectional.prepareShadowMap(light);
                             }
                         }
                     }

@@ -849,6 +849,7 @@ class Lightmapper {
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
+                this.renderer._shadowRendererDirectional.prepareShadowMap(light);
                 this.renderer._shadowRendererDirectional.cull(light, comp, this.camera, casters);
 
                 const shadowPass = this.renderer._shadowRendererDirectional.getLightRenderPass(light, this.camera);
