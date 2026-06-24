@@ -261,9 +261,10 @@ class AnimComponent extends Component {
     }
 
     /**
-     * Returns the animation layers available in this anim component.
+     * Returns the animation layers available in this anim component. Use addLayer or loadStateGraph
+     * to change layers.
      *
-     * @type {AnimComponentLayer[]}
+     * @type {ReadonlyArray<AnimComponentLayer>}
      */
     get layers() {
         return this._layers;

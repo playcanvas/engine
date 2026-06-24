@@ -273,9 +273,10 @@ class ScriptComponent extends Component {
     }
 
     /**
-     * Gets the array of all script instances attached to an entity.
+     * Gets the array of all script instances attached to an entity. Use create, destroy and move to
+     * change attached scripts or their order.
      *
-     * @type {ScriptType[]}
+     * @type {ReadonlyArray<ScriptType>}
      */
     get scripts() {
         return this._scripts;

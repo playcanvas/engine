@@ -474,9 +474,9 @@ class Material {
     }
 
     /**
-     * Gets the blend state for this material.
+     * Gets the blend state for this material. Use the setter to update transparency and sort state.
      *
-     * @type {BlendState}
+     * @type {Readonly<BlendState>}
      */
     get blendState() {
         return this._blendState;
