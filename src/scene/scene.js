@@ -121,23 +121,33 @@ class Scene extends EventHandler {
     static EVENT_POSTRENDER_LAYER = 'postrender:layer';
 
     /**
-     * Fired before visibility culling is performed for the camera.
+     * Fired before mesh instance visibility culling is performed for a camera. The handler is
+     * passed the {@link CameraComponent} being culled, or null when the culling is internal (for
+     * example when culling shadow casters for a light's shadow map). Note that light visibility
+     * culling happens earlier in the frame and is not bracketed by this event.
      *
      * @event
      * @example
      * app.scene.on('precull', (camera) => {
-     *    console.log(`Visibility culling will be performed for camera ${camera.entity.name}`);
+     *    if (camera) {
+     *        console.log(`Visibility culling will be performed for camera ${camera.entity.name}`);
+     *    }
      * });
      */
     static EVENT_PRECULL = 'precull';
 
     /**
-     * Fired after visibility culling is performed for the camera.
+     * Fired after mesh instance visibility culling is performed for a camera; mesh instance
+     * visibility (such as {@link MeshInstance#visibleThisFrame}) is up to date when this fires. The
+     * handler is passed the {@link CameraComponent} that was culled, or null when the culling is
+     * internal (for example when culling shadow casters for a light's shadow map).
      *
      * @event
      * @example
      * app.scene.on('postcull', (camera) => {
-     *    console.log(`Visibility culling was performed for camera ${camera.entity.name}`);
+     *    if (camera) {
+     *        console.log(`Visibility culling was performed for camera ${camera.entity.name}`);
+     *    }
      * });
      */
     static EVENT_POSTCULL = 'postcull';
