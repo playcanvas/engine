@@ -1146,9 +1146,13 @@ class Renderer {
                         light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                     }
                 } else {
-                    // force rendering the shadow at least once to allocate the shadow map needed by the shaders
-                    if (light.shadowUpdateMode === SHADOWUPDATE_NONE && light.castShadows) {
-                        if (!light.getRenderData(null, 0).shadowCamera.renderTarget) {
+                    // allocate the shadow map early (before the frame graph is built and before the
+                    // forward pass reads it), mirroring directional lights. Force a one-shot update
+                    // when the map was (re)created (first use, or destroyed by a property change such
+                    // as shadowType) so the new map actually gets rendered.
+                    if (light.castShadows && light.visibleThisFrame && !light._shadowMap) {
+                        this._shadowRendererLocal.prepareShadowMap(light);
+                        if (light.shadowUpdateMode === SHADOWUPDATE_NONE) {
                             light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                         }
                     }
