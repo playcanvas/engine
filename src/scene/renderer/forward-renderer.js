@@ -1030,11 +1030,6 @@ class ForwardRenderer extends Renderer {
                 }
             }
         }
-
-        // consume one-shot (THISFRAME) shadow updates - the frame graph is now built and shadow
-        // casters were culled earlier this frame, so both have read the shadow update mode before
-        // it is changed here
-        this.consumeOneShotShadows();
     }
 
     /**
@@ -1095,6 +1090,17 @@ class ForwardRenderer extends Renderer {
         // light visibility culling, light atlas allocation and directional shadow light collection
         // (mesh-independent, so it can run before the frame graph is built in a later refactor)
         this.updateLightVisibility(comp);
+    }
+
+    /**
+     * Visibility culling of mesh instances and shadow casters, followed by GPU data updates for the
+     * resulting visible objects, and consuming one-shot shadow updates. Runs after the frame graph
+     * has been built (which is itself after {@link ForwardRenderer#update}), so shadow-pass building
+     * and shadow-caster culling have both read the shadow update mode before it is consumed here.
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
+    cull(comp) {
 
         // visibility culling of meshInstances and shadow casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
@@ -1107,6 +1113,10 @@ class ForwardRenderer extends Renderer {
 
         // GPU update for visible objects requiring one
         this.gpuUpdate(this.processingMeshInstances);
+
+        // consume one-shot (THISFRAME) shadow updates - the frame graph has been built and shadow
+        // casters culled, so both have read the shadow update mode before it is changed here
+        this.consumeOneShotShadows();
     }
 }
 

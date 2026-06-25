@@ -819,7 +819,7 @@ class Renderer {
      * @param {MeshInstance[]} drawCalls - Draw calls to cull.
      * @param {CulledInstances} culledInstances - Stores culled instances.
      */
-    cull(camera, drawCalls, culledInstances) {
+    cullMeshInstances(camera, drawCalls, culledInstances) {
         // #if _PROFILER
         const cullTime = now();
         // #endif
@@ -1196,7 +1196,7 @@ class Renderer {
 
                     // cull mesh instances
                     const culledInstances = layer.getCulledInstances(camera.camera);
-                    this.cull(camera.camera, layer.meshInstances, culledInstances);
+                    this.cullMeshInstances(camera.camera, layer.meshInstances, culledInstances);
                 }
             }
 
