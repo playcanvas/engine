@@ -20,6 +20,15 @@ import { ResourceHandler } from './handler.js';
  * @import { AppBase } from '../app-base.js'
  */
 
+/**
+ * @callback AddParserCallback
+ * Callback used by {@link TextureHandler#addParser} to decide on which parser to use.
+ * @param {string} url - The resource url.
+ * @param {object} data - The raw texture data.
+ * @returns {boolean} Return true if this parser should be used to parse the data into a
+ * {@link Texture}.
+ */
+
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
     'clamp': ADDRESS_CLAMP_TO_EDGE,
@@ -138,6 +147,31 @@ class TextureHandler extends ResourceHandler {
         // parser will be used when other more specific parsers are not found.
         this.imgParser = new ImgParser(assets, device);
 
+        /**
+         * Collection of texture parsers organized by file extension. This property contains
+         * the default parsers for various texture formats. Additional parsers can be added
+         * using the {@link TextureHandler#addParser} method, and default parsers can be
+         * removed using the {@link TextureHandler#removeParser} method.
+         *
+         * @type {Object.<string, TextureParser>}
+         * @property {DdsParser} dds - Parser for DirectDraw Surface (.dds) files
+         * @property {KtxParser} ktx - Parser for Khronos Texture (.ktx) files
+         * @property {Ktx2Parser} ktx2 - Parser for Khronos Texture 2.0 (.ktx2) files
+         * @property {BasisParser} basis - Parser for Basis Universal (.basis) files
+         * @property {HdrParser} hdr - Parser for High Dynamic Range (.hdr) files
+         *
+         * @example
+         * // Access a specific parser for configuration
+         * const textureHandler = app.loader.getHandler('texture');
+         * const basisParser = textureHandler.parsers.basis;
+         *
+         * @example
+         * // Check if a specific parser is available
+         * const textureHandler = app.loader.getHandler('texture');
+         * if (textureHandler.parsers.ktx2) {
+         *     console.log('KTX2 textures are supported');
+         * }
+         */
         this.parsers = {
             dds: new DdsParser(assets),
             ktx: new KtxParser(assets),
@@ -145,6 +179,12 @@ class TextureHandler extends ResourceHandler {
             basis: new BasisParser(assets, device),
             hdr: new HdrParser(assets)
         };
+
+        /**
+         * @type {Array<{parser: object, decider: Function}>}
+         * @private
+         */
+        this._customParsers = [];
     }
 
     set crossOrigin(value) {
@@ -157,9 +197,19 @@ class TextureHandler extends ResourceHandler {
 
     set maxRetries(value) {
         this.imgParser.maxRetries = value;
+        
+        // Set maxRetries for default parsers
         for (const parser in this.parsers) {
             if (this.parsers.hasOwnProperty(parser)) {
                 this.parsers[parser].maxRetries = value;
+            }
+        }
+        
+        // Set maxRetries for custom parsers
+        for (let i = 0; i < this._customParsers.length; i++) {
+            const customParser = this._customParsers[i].parser;
+            if (customParser.hasOwnProperty('maxRetries')) {
+                customParser.maxRetries = value;
             }
         }
     }
@@ -168,11 +218,74 @@ class TextureHandler extends ResourceHandler {
         return this.imgParser.maxRetries;
     }
 
+    /**
+     * Add a parser that converts raw data into a {@link Texture}.
+     * Custom parsers are checked before the default parsers, allowing
+     * developers to override default behavior or add support for new formats.
+     *
+     * @param {object} parser - An object that implements the {@link TextureParser} interface.
+     * @param {AddParserCallback} decider - A function that decides on which parser to use. The function should
+     * take the `url` and `data` arguments and return `true` if this parser should be used to parse the
+     * data into a {@link Texture}. The first parser to return `true` is used.
+     *
+     * @example
+     * // Add a custom parser for 16-bit PNG normal maps
+     * const textureHandler = app.loader.getHandler('texture');
+     * const customParser = new SixteenBitPngParser(app.assets);
+     * textureHandler.addParser(customParser, (url, data) => {
+     *     return url.endsWith('_normal16.png');
+     * });
+     *
+     * @example
+     * // Add a parser for textures without file extensions
+     * const textureHandler = app.loader.getHandler('texture');
+     * const headerBasedParser = new HeaderBasedParser(app.assets);
+     * textureHandler.addParser(headerBasedParser, (url, data) => {
+     *     // Check magic bytes or headers to identify format
+     *     return data && data.byteLength > 4 &&
+     *            new Uint8Array(data, 0, 4).toString() === '137,80,78,71'; // PNG signature
+     * });
+     */
+    addParser(parser, decider) {
+        this._customParsers.push({
+            parser: parser,
+            decider: decider
+        });
+    }
+
+    /**
+     * Remove a default parser by name. This enables tree-shaking by allowing
+     * developers to remove unused parsers from their builds.
+     *
+     * @param {string} name - The name of the parser to remove (e.g., 'dds', 'ktx', 'basis', 'ktx2', 'hdr').
+     *
+     * @example
+     * // Remove unused parsers to reduce bundle size
+     * const textureHandler = app.loader.getHandler('texture');
+     * textureHandler.removeParser('dds');
+     * textureHandler.removeParser('ktx');
+     * textureHandler.removeParser('hdr');
+     */
+    removeParser(name) {
+        if (this.parsers.hasOwnProperty(name)) {
+            delete this.parsers[name];
+        }
+    }
+
     _getUrlWithoutParams(url) {
         return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
     }
 
-    _getParser(url) {
+    _getParser(url, data) {
+        // First check custom parsers
+        for (let i = 0; i < this._customParsers.length; i++) {
+            const customParser = this._customParsers[i];
+            if (customParser.decider(url, data)) {
+                return customParser.parser;
+            }
+        }
+        
+        // Fall back to default parsers based on file extension
         const ext = path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '');
         return this.parsers[ext] || this.imgParser;
     }
@@ -256,7 +369,7 @@ class TextureHandler extends ResourceHandler {
         }
 
         const textureOptions = this._getTextureOptions(asset);
-        let texture = this._getParser(url).open(url, data, this._device, textureOptions);
+        let texture = this._getParser(url, data).open(url, data, this._device, textureOptions);
 
         if (texture === null) {
             texture = new Texture(this._device, {
