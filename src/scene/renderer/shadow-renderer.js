@@ -145,7 +145,7 @@ class ShadowRenderer {
             const meshInstance = meshInstances[i];
 
             if (meshInstance.castShadow) {
-                if (!meshInstance.cull || meshInstance._isVisible(camera)) {
+                if (!meshInstance.cull || meshInstance._isVisible(camera, this.renderer._aabbUpdateIndex)) {
                     meshInstance.visibleThisFrame = true;
                     visible.push(meshInstance);
                 }
