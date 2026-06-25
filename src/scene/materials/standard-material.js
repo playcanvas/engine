@@ -868,6 +868,7 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
+    /** @ignore */
     getShaderVariant(params) {
 
         const { device, scene, pass, objDefs, sortedLights, cameraShaderParams } = params;

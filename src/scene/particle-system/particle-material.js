@@ -37,6 +37,7 @@ class ParticleMaterial extends Material {
         Debug.assert(emitter);
     }
 
+    /** @ignore */
     getShaderVariant(params) {
 
         const { device, scene, cameraShaderParams, objDefs } = params;

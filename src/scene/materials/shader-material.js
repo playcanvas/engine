@@ -128,6 +128,7 @@ class ShaderMaterial extends Material {
         return this;
     }
 
+    /** @ignore */
     getShaderVariant(params) {
 
         const { objDefs } = params;

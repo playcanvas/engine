@@ -87,6 +87,7 @@ class LitMaterial extends Material {
 
     hasClearCoatNormals = false;
 
+    /** @ignore */
     getShaderVariant(params) {
 
         options.usedUvs = this.usedUvs.slice();
