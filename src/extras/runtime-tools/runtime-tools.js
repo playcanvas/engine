@@ -4,15 +4,19 @@ import { injectInput } from './input.js';
 
 const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
-const CAPABILITIES = ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input'];
+const CAPABILITIES = ['help', 'apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input'];
 const MAX_DIAGNOSTICS = 100;
 const MAX_INPUT = 100;
 const WAIT_FRAME_CANCELLED = 'app detached or destroyed while waiting for frame';
 const WAIT_SETTLED_CANCELLED = 'app detached or destroyed while waiting to settle';
 const INJECTED = '__playcanvasRuntimeToolsInjected';
 const INPUT_EVENTS = ['keydown', 'keyup', 'mousedown', 'mouseup', 'mousemove', 'wheel', 'touchstart', 'touchmove', 'touchend', 'touchcancel'];
+const GLOBAL = '__PLAYCANVAS_TOOLS__';
+const ALIAS = 'playcanvasTools';
+const HINT = 'PlayCanvas debug tools: window.playcanvasTools.help() or window.playcanvasTools.snapshot()';
 
 let idCounter = 0;
+let hintLogged = false;
 const registry = new Map();
 
 const resolve = (appId) => {
@@ -55,10 +59,23 @@ const recordInput = (entry, source, e) => {
 };
 
 const createGlobal = () => {
-    globalThis.__PLAYCANVAS_TOOLS__ = {
+    /** @type {RuntimeToolsGlobal} */
+    const tools = {
         protocol: PROTOCOL,
         version: PROTOCOL_VERSION,
         capabilities: CAPABILITIES.slice(),
+        help() {
+            return {
+                global: `window.${ALIAS}`,
+                protocolGlobal: `window.${GLOBAL}`,
+                examples: [
+                    'window.playcanvasTools.snapshot()',
+                    'await window.playcanvasTools.waitForSettled()',
+                    'window.playcanvasTools.diagnostics()',
+                    'window.playcanvasTools.input({ kind: "key", action: "keydown", code: "Space" })'
+                ]
+            };
+        },
         apps() {
             return [...registry.values()].map(e => ({
                 id: e.id,
@@ -128,13 +145,26 @@ const createGlobal = () => {
             });
         }
     };
+
+    globalThis[GLOBAL] = tools;
+    if (globalThis[ALIAS] === undefined) {
+        globalThis[ALIAS] = tools;
+    }
+
+    // #if _DEBUG
+    if (!hintLogged) {
+        hintLogged = true;
+        console.info(HINT);
+    }
+    // #endif
 };
 
 /**
  * Attaches runtime introspection tools to an application, exposing the
- * `globalThis.__PLAYCANVAS_TOOLS__` protocol global for test harnesses and agents. Opt-in:
- * the global only exists while at least one app is attached. Snapshot and diagnostic data is
- * JSON-serializable; no live engine objects escape.
+ * `globalThis.__PLAYCANVAS_TOOLS__` protocol global and `globalThis.playcanvasTools` alias for
+ * test harnesses and agents. Call `playcanvasTools.help()` in the browser console for examples.
+ * Opt-in: the global only exists while at least one app is attached. Snapshot and diagnostic data
+ * is JSON-serializable; no live engine objects escape.
  *
  * @param {import('../../framework/app-base.js').AppBase} app - The application to expose.
  * @returns {() => void} A function that detaches the app again. Detaching the last app
@@ -226,7 +256,11 @@ const attachRuntimeTools = (app) => {
             registry.delete(id);
         }
         if (registry.size === 0) {
-            delete globalThis.__PLAYCANVAS_TOOLS__;
+            const tools = globalThis[GLOBAL];
+            if (globalThis[ALIAS] === tools) {
+                delete globalThis[ALIAS];
+            }
+            delete globalThis[GLOBAL];
         }
     };
     entry.detach = detach;
@@ -238,7 +272,7 @@ const attachRuntimeTools = (app) => {
 
     registry.set(id, entry);
 
-    if (!globalThis.__PLAYCANVAS_TOOLS__) {
+    if (!globalThis[GLOBAL]) {
         createGlobal();
     }
 
@@ -252,3 +286,17 @@ const attachRuntimeTools = (app) => {
 };
 
 export { attachRuntimeTools };
+
+/**
+ * @typedef {object} RuntimeToolsGlobal - Debug runtime tools exposed on the browser global.
+ * @property {string} protocol - Protocol name.
+ * @property {number} version - Protocol version.
+ * @property {string[]} capabilities - Supported tool methods.
+ * @property {() => object} help - Returns method names and copyable examples.
+ * @property {() => object[]} apps - Lists attached apps.
+ * @property {(appId?: string) => object} snapshot - Returns a serializable app snapshot.
+ * @property {(appId?: string) => { errors: object[], missingAssets: string[] }} diagnostics - Returns recent runtime diagnostics.
+ * @property {(msg: object, appId?: string) => void} input - Injects a synthetic DOM input event.
+ * @property {(appId?: string) => Promise<{ frame: number }>} waitForFrame - Resolves after the next frame.
+ * @property {(appId?: string, options?: { frames?: number, timeout?: number }) => Promise<{ frame: number, settledFrames: number }>} waitForSettled - Resolves after the app has started and asset loading settles.
+ */

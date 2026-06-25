@@ -21,6 +21,7 @@ describe('attachRuntimeTools', function () {
         app?.destroy();
         app = null;
         expect(globalThis.__PLAYCANVAS_TOOLS__).to.be.undefined;
+        expect(globalThis.playcanvasTools).to.be.undefined;
         jsdomTeardown();
     });
 
@@ -30,7 +31,17 @@ describe('attachRuntimeTools', function () {
         expect(tools.protocol).to.equal('playcanvas.runtime-tools');
         expect(tools.version).to.equal(1);
         expect(tools.capabilities).to.deep.equal(
-            ['apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input']);
+            ['help', 'apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input']);
+    });
+
+    it('exposes a discoverable alias and help examples', function () {
+        attachRuntimeTools(app);
+        const tools = globalThis.__PLAYCANVAS_TOOLS__;
+        const help = tools.help();
+        expect(globalThis.playcanvasTools).to.equal(tools);
+        expect(help.global).to.equal('window.playcanvasTools');
+        expect(help.protocolGlobal).to.equal('window.__PLAYCANVAS_TOOLS__');
+        expect(help.examples).to.include('window.playcanvasTools.snapshot()');
     });
 
     it('lists attached apps with a generated id when canvas has no id', function () {
@@ -112,6 +123,7 @@ describe('attachRuntimeTools', function () {
         const detach = attachRuntimeTools(app);
         detach();
         expect(globalThis.__PLAYCANVAS_TOOLS__).to.be.undefined;
+        expect(globalThis.playcanvasTools).to.be.undefined;
     });
 
     it('dispatches the ready event when a DOM is present', function () {
