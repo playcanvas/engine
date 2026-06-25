@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 
-import { MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT } from '../../../src/platform/input/constants.js';
+import { MouseButton } from '../../../src/platform/input/mouse-button.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
 
-const buttons = [MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT];
+const buttons = [MouseButton.Left, MouseButton.Middle, MouseButton.Right];
 
 // Mock the _getTargetCoords method, otherwise it returns null
 Mouse.prototype._getTargetCoords = function (event) {
@@ -59,7 +59,7 @@ describe('Mouse', function () {
 
         it('should handle mousedown events', (done) => {
             mouse.on('mousedown', (event) => {
-                expect(event.button).to.equal(MOUSEBUTTON_LEFT);
+                expect(event.button).to.equal(MouseButton.Left);
                 expect(event.event).to.be.an.instanceOf(MouseEvent);
 
                 done();
@@ -71,7 +71,7 @@ describe('Mouse', function () {
 
         it('should handle mouseup events', (done) => {
             mouse.on('mouseup', (event) => {
-                expect(event.button).to.equal(MOUSEBUTTON_LEFT);
+                expect(event.button).to.equal(MouseButton.Left);
                 expect(event.event).to.be.an.instanceOf(MouseEvent);
 
                 done();

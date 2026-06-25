@@ -1,4 +1,5 @@
 /**
+ * @import { Key } from './key.js';
  * @import { Keyboard } from './keyboard.js'
  */
 
@@ -13,9 +14,9 @@
  */
 class KeyboardEvent {
     /**
-     * The keyCode of the key that has changed. See the KEY_* constants.
+     * The keyCode of the key that has changed.
      *
-     * @type {number|null}
+     * @type {Key|null}
      */
     key = null;
 
@@ -40,7 +41,7 @@ class KeyboardEvent {
      * @param {globalThis.KeyboardEvent} event - The original browser event that was fired.
      * @example
      * const onKeyDown = function (e) {
-     *     if (e.key === pc.KEY_SPACE) {
+     *     if (e.key === pc.Key.Space) {
      *         // space key pressed
      *     }
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
