@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS, SHADER_DEPTH_PICK
+    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS, SHADER_DEPTH_PICK, SHADER_NORMAL_PICK
 } from './constants.js';
 
 /**
@@ -64,6 +64,12 @@ class ShaderPassInfo {
             // depth pick generates both PICK_PASS and DEPTH_PICK_PASS defines
             keyword = 'PICK';
             this.defines.set('DEPTH_PICK_PASS', '');
+        } else if (this.index === SHADER_NORMAL_PICK) {
+            // normal pick generates PICK_PASS, DEPTH_PICK_PASS (for the world point) and
+            // NORMAL_PICK_PASS defines
+            keyword = 'PICK';
+            this.defines.set('DEPTH_PICK_PASS', '');
+            this.defines.set('NORMAL_PICK_PASS', '');
         }
 
         this.defines.set(`${keyword}_PASS`, '');
@@ -107,6 +113,7 @@ class ShaderPass {
         add('shadow', SHADER_SHADOW);
         add('pick', SHADER_PICK);
         add('depth_pick', SHADER_DEPTH_PICK);
+        add('normal_pick', SHADER_NORMAL_PICK);
     }
 
     /**

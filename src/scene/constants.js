@@ -815,6 +815,9 @@ export const SHADER_PICK = 3;
 // shader pass used by the Picker class to render mesh ID and depth
 export const SHADER_DEPTH_PICK = 4;
 
+// shader pass used by the Picker class to render mesh ID, depth and world-space surface normal
+export const SHADER_NORMAL_PICK = 5;
+
 /**
  * Shader that performs forward rendering.
  *

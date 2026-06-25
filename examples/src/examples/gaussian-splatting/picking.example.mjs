@@ -184,15 +184,20 @@ assetListLoader.load(() => {
         const pickerScale = 0.25;
         picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
 
-        // render the ID texture
+        // render the ID texture — scissor to a single pixel around the click so only that
+        // fragment is rasterized into the pick buffer
         const worldLayer = app.scene.layers.getLayerByName('World');
-        picker.prepare(camera.camera, app.scene, [worldLayer]);
+        const px = x * pickerScale;
+        const py = y * pickerScale;
+        picker.prepare(camera.camera, app.scene, [worldLayer], {
+            x: px, y: py, width: 1, height: 1
+        });
 
         // get the world position at the clicked point
-        picker.getWorldPointAsync(x * pickerScale, y * pickerScale).then((worldPoint) => {
+        picker.getWorldPointAsync(px, py).then((worldPoint) => {
             if (worldPoint) {
                 // get the meshInstance of the picked object
-                picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
+                picker.getSelectionAsync(px, py, 1, 1).then((meshInstances) => {
 
                     if (meshInstances.length > 0) {
                         // Unified mode: picker returns the GSplatComponent directly

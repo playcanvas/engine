@@ -127,6 +127,23 @@ class Picker {
     renderTargetDepth = null;
 
     /**
+     * Optional buffer holding the world-space surface normal (RGBA8, encoded as n*0.5+0.5) for
+     * normal picking.
+     *
+     * @type {Texture|null}
+     * @private
+     */
+    normalBuffer = null;
+
+    /**
+     * Internal render target for reading the normal buffer.
+     *
+     * @type {RenderTarget|null}
+     * @private
+     */
+    renderTargetNormal = null;
+
+    /**
      * Mapping table from ids to MeshInstances or GSplatComponents.
      *
      * @type {Map<number, MeshInstance | GSplatComponent>}
@@ -149,8 +166,12 @@ class Picker {
      * @param {number} height - The height of the pick buffer in pixels.
      * @param {boolean} [depth] - Whether to enable depth picking. When enabled, depth
      * information is captured alongside mesh IDs using MRT. Defaults to false.
+     * @param {boolean} [normals] - Whether to enable normal picking. When enabled, the world-space
+     * surface normal is captured alongside mesh IDs and depth using MRT, letting
+     * {@link Picker#getWorldPointAndNormalAsync} read the normal directly instead of
+     * reconstructing it from neighboring depths. Implies depth. Defaults to false.
      */
-    constructor(app, width, height, depth = false) {
+    constructor(app, width, height, depth = false, normals = false) {
         // Note: The only reason this class needs the app is to access the renderer. Ideally we remove this dependency and move
         // the Picker from framework to the scene level, or even the extras.
         Debug.assert(app);
@@ -158,7 +179,9 @@ class Picker {
 
         this.renderPass = new RenderPassPicker(this.device, app.renderer);
 
-        this.depth = depth;
+        this.normals = normals;
+        // normal picking captures depth too (needed to reconstruct the world point)
+        this.depth = depth || normals;
         this.width = 0;
         this.height = 0;
         this.resize(width, height);
@@ -263,6 +286,11 @@ class Picker {
      * @private
      */
     _readTexture(texture, x, y, width, height, renderTarget) {
+        // Floor before the WebGL2 Y-flip so the flipped row matches prepare()'s scissor, which
+        // floors (via sanitizeRect) before flipping. With fractional pick coordinates, flipping
+        // first and flooring after lands the read one row off the rasterized pixel.
+        x = Math.floor(x);
+        y = Math.floor(y);
         if (this.device?.isWebGL2) {
             y = renderTarget.height - (y + height);
         }
@@ -294,38 +322,107 @@ class Picker {
      * });
      */
     async getWorldPointAsync(x, y) {
-        // get the camera from the render pass
-        const camera = this.renderPass.camera;
-        if (!camera) {
+        const state = this._captureCameraState();
+        if (!state) {
             return null;
         }
-
-        // capture camera state synchronously before awaiting
-        const viewProjMat = new Mat4().mul2(camera.camera.projectionMatrix, camera.camera.viewMatrix);
-        const invViewProj = viewProjMat.invert();
-        const near = camera.nearClip;
-        const far = camera.farClip;
-        const isOrtho = camera.projection === PROJECTION_ORTHOGRAPHIC;
 
         const linearDepth = await this.getPointDepthAsync(x, y);
         if (linearDepth === null) {
             return null;
         }
 
-        // convert linear normalized depth [0,1] to NDC depth [0,1] for unprojection
-        const ndcDepth = isOrtho ? linearDepth : (far * linearDepth / (linearDepth * (far - near) + near));
+        return this._unprojectDepth(x, y, linearDepth, state);
+    }
 
-        // unproject to world space using the captured matrix
-        const deviceCoord = new Vec4(
+    /**
+     * Return the world position and surface normal at the specified screen coordinates. Requires
+     * the picker to have been created with `normals: true`: the world-space surface normal is read
+     * directly from its dedicated MRT attachment (a single-pixel read), and the world point is
+     * reconstructed from the depth attachment at the same pixel.
+     *
+     * @param {number} x - The x coordinate of the pixel to pick.
+     * @param {number} y - The y coordinate of the pixel to pick.
+     * @returns {Promise<{point: Vec3, normal: Vec3}|null>} Promise resolving to the world point and
+     * a unit world-space normal, or null if normal picking is not enabled or nothing was picked.
+     * @example
+     * picker.prepare(camera, scene, layers, { x: px, y: py, width: 1, height: 1 });
+     * picker.getWorldPointAndNormalAsync(px, py).then((hit) => {
+     *     if (hit) {
+     *         console.log('point', hit.point.toString(), 'normal', hit.normal.toString());
+     *     }
+     * });
+     */
+    async getWorldPointAndNormalAsync(x, y) {
+        if (!this.normalBuffer) {
+            return null;
+        }
+        const state = this._captureCameraState();
+        if (!state) {
+            return null;
+        }
+
+        // depth gates the hit: the normal buffer is cleared to white, which would otherwise decode
+        // to a valid-looking normal, so a null depth means "nothing picked here".
+        const depth = await this.getPointDepthAsync(x, y);
+        if (depth === null) {
+            return null;
+        }
+
+        const normal = await this._readNormalAt(x, y);
+        if (!normal) {
+            return null;
+        }
+
+        return { point: this._unprojectDepth(x, y, depth, state), normal };
+    }
+
+    /**
+     * Capture camera state needed to unproject pick-buffer depths into world space. Returns null
+     * if no camera was supplied to the last prepare() call.
+     *
+     * @returns {{invViewProj: Mat4, near: number, far: number, isOrtho: boolean, cameraPos: Vec3}|null}
+     * Captured camera state, or null if no camera is bound.
+     * @private
+     */
+    _captureCameraState() {
+        const camera = this.renderPass.camera;
+        if (!camera) {
+            return null;
+        }
+        const viewProjMat = new Mat4().mul2(camera.camera.projectionMatrix, camera.camera.viewMatrix);
+        return {
+            invViewProj: viewProjMat.invert(),
+            near: camera.nearClip,
+            far: camera.farClip,
+            isOrtho: camera.projection === PROJECTION_ORTHOGRAPHIC,
+            cameraPos: camera.entity.getPosition().clone()
+        };
+    }
+
+    /**
+     * Unproject a pick-buffer pixel + linear depth back into world space.
+     *
+     * @param {number} x - Pick-buffer x in pixel coords, top-left origin.
+     * @param {number} y - Pick-buffer y in pixel coords, top-left origin.
+     * @param {number} linearDepth - Linear normalized depth [0,1].
+     * @param {{invViewProj: Mat4, near: number, far: number, isOrtho: boolean}} state - Camera state
+     * captured by {@link Picker#_captureCameraState}.
+     * @returns {Vec3} World position.
+     * @private
+     */
+    _unprojectDepth(x, y, linearDepth, state) {
+        const { invViewProj, near, far, isOrtho } = state;
+        const ndcDepth = isOrtho ? linearDepth : (far * linearDepth / (linearDepth * (far - near) + near));
+        const dc = new Vec4(
             (x / this.width) * 2 - 1,
             (1 - y / this.height) * 2 - 1,
             ndcDepth * 2 - 1,
             1.0
         );
-        invViewProj.transformVec4(deviceCoord, deviceCoord);
-        deviceCoord.mulScalar(1.0 / deviceCoord.w);
-
-        return new Vec3(deviceCoord.x, deviceCoord.y, deviceCoord.z);
+        invViewProj.transformVec4(dc, dc);
+        dc.mulScalar(1.0 / dc.w);
+        return new Vec3(dc.x, dc.y, dc.z);
     }
 
     /**
@@ -339,6 +436,7 @@ class Picker {
      * @ignore
      */
     async getPointDepthAsync(x, y) {
+
         if (!this.depthBuffer) {
             return null;
         }
@@ -356,6 +454,39 @@ class Picker {
         // reinterpret bits as float
         _int32View[0] = intBits;
         return _floatView[0];
+    }
+
+    /**
+     * Read and decode the world-space surface normal at the given pick-buffer pixel from the
+     * normal attachment (RGBA8, encoded as n*0.5+0.5). Callers should gate on a valid depth at the
+     * same pixel, since the buffer is cleared to white and a cleared pixel decodes to a non-null
+     * (but meaningless) normal.
+     *
+     * @param {number} x - Pick-buffer x in pixels, top-left origin.
+     * @param {number} y - Pick-buffer y in pixels, top-left origin.
+     * @returns {Promise<Vec3|null>} The unit world-space normal, or null if normal picking is not
+     * enabled or the sample is degenerate.
+     * @private
+     */
+    async _readNormalAt(x, y) {
+        if (!this.normalBuffer) {
+            return null;
+        }
+
+        const pixels = await this._readTexture(this.normalBuffer, x, y, 1, 1, /** @type {RenderTarget} */ (this.renderTargetNormal));
+
+        // decode RGBA8 (n*0.5+0.5) back to a world-space vector in [-1, 1]
+        const normal = new Vec3(
+            (pixels[0] / 255) * 2 - 1,
+            (pixels[1] / 255) * 2 - 1,
+            (pixels[2] / 255) * 2 - 1
+        );
+
+        const len = normal.length();
+        if (len < 1e-4) {
+            return null;
+        }
+        return normal.mulScalar(1 / len);
     }
 
     // sanitize the rectangle to make sure it's inside the texture and does not use fractions
@@ -427,6 +558,18 @@ class Picker {
             });
         }
 
+        if (this.normals) {
+            // create normal buffer for MRT (attachment 2, matches pcFragColor2)
+            this.normalBuffer = this.createTexture('pick-normal');
+            colorBuffers.push(this.normalBuffer);
+
+            // create a render target for reading the normal buffer
+            this.renderTargetNormal = new RenderTarget({
+                colorBuffer: this.normalBuffer,
+                depth: false
+            });
+        }
+
         this.renderTarget = new RenderTarget({
             colorBuffers: colorBuffers,
             depth: true
@@ -441,8 +584,12 @@ class Picker {
         this.renderTargetDepth?.destroy();
         this.renderTargetDepth = null;
 
+        this.renderTargetNormal?.destroy();
+        this.renderTargetNormal = null;
+
         this.colorBuffer = null;
         this.depthBuffer = null;
+        this.normalBuffer = null;
     }
 
     /**
@@ -455,8 +602,13 @@ class Picker {
      * @param {Scene} scene - The scene containing the pickable mesh instances.
      * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all
      * layers of the specified camera will be used.
+     * @param {object} [options] - Optional rendering controls.
+     * @param {number} [options.x] - Scissor rect left edge in pick-buffer pixels, top-left origin.
+     * @param {number} [options.y] - Scissor rect top edge in pick-buffer pixels, top-left origin.
+     * @param {number} [options.width] - Scissor rect width in pick-buffer pixels.
+     * @param {number} [options.height] - Scissor rect height in pick-buffer pixels.
      */
-    prepare(camera, scene, layers) {
+    prepare(camera, scene, layers, options) {
 
         if (layers instanceof Layer) {
             layers = [layers];
@@ -465,6 +617,7 @@ class Picker {
         // make the render target the right size
         this.renderTarget?.resize(this.width, this.height);
         this.renderTargetDepth?.resize(this.width, this.height);
+        this.renderTargetNormal?.resize(this.width, this.height);
 
         // clear registered meshes mapping
         this.mapping.clear();
@@ -476,8 +629,23 @@ class Picker {
         renderPass.setClearColor(Color.WHITE);
         renderPass.depthStencilOps.clearDepth = true;
 
+        // optional scissor rect — sanitize and flip top-left → bottom-left for device.setScissor
+        let scissorRect = null;
+        if (options && this.renderTarget) {
+            const w = options.width ?? 0;
+            const h = options.height ?? 0;
+            if (w > 0 && h > 0) {
+                const r = this.sanitizeRect(options.x ?? 0, options.y ?? 0, w, h);
+                const flippedY = this.renderTarget.height - (r.y + r.w);
+                scissorRect = new Vec4(r.x, flippedY, r.z, r.w);
+            }
+        }
+
+        const writeDepth = this.depth;
+        const writeNormals = this.normals;
+
         // render the pass to update the render target
-        renderPass.update(camera, scene, layers, this.mapping, this.depth);
+        renderPass.update(camera, scene, layers, this.mapping, writeDepth, writeNormals, scissorRect);
         renderPass.render();
     }
 

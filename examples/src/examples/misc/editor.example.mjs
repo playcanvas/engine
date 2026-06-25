@@ -184,6 +184,9 @@ setGizmoControls();
 // view cube
 const viewCube = new pc.ViewCube(new pc.Vec4(0, 1, 1, 0));
 viewCube.dom.style.margin = '20px';
+data.set('picking', {
+    showAxes: false
+});
 data.set('viewCube', {
     colorX: Object.values(viewCube.colorX),
     colorY: Object.values(viewCube.colorY),
@@ -207,6 +210,21 @@ app.on('prerender', () => {
     viewCube.update(camera.getWorldTransform());
 });
 
+// pick hit visualization — three orthogonal axes anchored at the clicked surface point.
+// PlayCanvas is Y-up, so the derived surface normal is the local +Y (green) axis.
+// Tangent and bitangent become local +X (red) and local +Z (blue) respectively.
+/** @type {{ point: pc.Vec3 | null, normal: pc.Vec3 }} */
+const pickHit = {
+    point: null,
+    normal: new pc.Vec3()
+};
+const pickTangent = new pc.Vec3();
+const pickBitangent = new pc.Vec3();
+const pickTip = new pc.Vec3();
+const worldUp = new pc.Vec3(0, 1, 0);
+const worldRight = new pc.Vec3(1, 0, 0);
+const AXIS_LEN = 1.0;
+
 // selector
 const layers = app.scene.layers;
 const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
@@ -225,6 +243,26 @@ selector.on('deselect', () => {
     }
     gizmoHandler.clear();
     outlineRenderer.removeAllEntities();
+    pickHit.point = null;
+});
+selector.on('pick', (/** @type {pc.Vec3} */ point, /** @type {pc.Vec3} */ normal) => {
+    pickHit.point = (pickHit.point ?? new pc.Vec3()).copy(point);
+    pickHit.normal.copy(normal);
+});
+app.on('prerender', () => {
+    if (!pickHit.point || !data.get('picking.showAxes')) return;
+    const p = pickHit.point;
+    const n = pickHit.normal;
+
+    // choose a reference vector not (anti)parallel to the normal, then build a right-handed
+    // orthonormal basis with X = tangent, Y = normal, Z = bitangent = cross(X, Y)
+    const ref = Math.abs(n.y) < 0.99 ? worldUp : worldRight;
+    pickTangent.cross(ref, n).normalize();
+    pickBitangent.cross(pickTangent, n).normalize();
+
+    app.drawLine(p, pickTip.copy(pickTangent).mulScalar(AXIS_LEN).add(p), pc.Color.RED);
+    app.drawLine(p, pickTip.copy(n).mulScalar(AXIS_LEN).add(p), pc.Color.GREEN);
+    app.drawLine(p, pickTip.copy(pickBitangent).mulScalar(AXIS_LEN).add(p), pc.Color.BLUE);
 });
 
 // ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size

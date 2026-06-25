@@ -1,5 +1,6 @@
 import {
     BindingTwoWay,
+    BooleanInput,
     LabelGroup,
     Panel,
     SliderInput,
@@ -188,6 +189,15 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'viewCube.lineLength' }}
                         min={10}
                         max={200}
+                    />
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='Picking'>
+                <LabelGroup text='Show Pick Point'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'picking.showAxes' }}
                     />
                 </LabelGroup>
             </Panel>
