@@ -1892,11 +1892,6 @@ class AppBase extends EventHandler {
 
         this.systems.destroy();
 
-        // layer composition
-        if (this.scene.layers) {
-            this.scene.layers.destroy();
-        }
-
         // destroy bundle registry
         this.bundles.destroy();
         this.bundles = null;

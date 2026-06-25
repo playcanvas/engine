@@ -28,6 +28,7 @@ import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
+ * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js'
  * @import { WorldClusters } from '../lighting/world-clusters.js'
  */
 
@@ -513,7 +514,7 @@ class ForwardRenderer extends Renderer {
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass) {
+    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass, viewUniformFormat) {
 
         // fog params from the scene, or overridden by the camera
         const fogParams = camera.fogParams ?? this.scene.fog;
@@ -594,7 +595,7 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
+            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, viewUniformFormat, sortedLights);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -606,7 +607,7 @@ class ForwardRenderer extends Renderer {
         return _drawCallList;
     }
 
-    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups) {
+    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
         const device = this.device;
         const scene = this.scene;
         const passFlag = 1 << pass;
@@ -706,8 +707,9 @@ class ForwardRenderer extends Renderer {
 
                     if (device.supportsUniformBuffers) {
 
-                        const viewBindGroup = viewBindGroups[v];
-                        device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+                        // per-view dynamic bind group + offset captured during setupViewUniformBuffers
+                        this._viewOffsetScratch[0] = this._viewBindGroupOffsets[v];
+                        device.setBindGroup(BINDGROUP_VIEW, this._viewBindGroups[v], this._viewOffsetScratch);
 
                     } else {
 
@@ -741,17 +743,17 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewBindGroups) {
+    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewUniformFormat) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass, viewUniformFormat);
 
         // render mesh instances
-        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups);
+        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
 
         _drawCallList.clear();
 
@@ -770,8 +772,6 @@ class ForwardRenderer extends Renderer {
      * @param {boolean} transparent - True if transparent sublayer should be rendered, opaque
      * otherwise.
      * @param {number} shaderPass - A type of shader to use during rendering.
-     * @param {BindGroup[]} viewBindGroups - An array storing the view level bing groups (can be
-     * empty array, and this function populates if per view).
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.clearColor] - True if the color buffer should be cleared.
      * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
@@ -781,8 +781,14 @@ class ForwardRenderer extends Renderer {
      * @param {MeshInstance[]} [options.meshInstances] - The mesh instances to be rendered. Use
      * when layer is not provided.
      * @param {object} [options.splitLights] - The split lights to be used for clustered lighting.
+     * @param {Function} [options.drawCallback] - Function called before each mesh instance is
+     * rendered, with the mesh instance as the argument.
+     * @param {UniformBufferFormat} [options.viewUniformFormat] - A custom view uniform buffer
+     * format to use for this layer. When not provided, the renderer's default view uniform format
+     * is used. The shaders are processed and the view uniform buffer is set up using the same
+     * format, so they always match.
      */
-    renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, viewBindGroups, options = {}) {
+    renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, options = {}) {
 
         const { scene, device } = this;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
@@ -844,7 +850,16 @@ class ForwardRenderer extends Renderer {
 
         const viewList = this.setCameraUniforms(camera, renderTarget);
         if (device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewList);
+            // ensure the default view uniform format exists - renderForwardLayer can run outside
+            // the main frame update (e.g. the picker and lightmapper passes)
+            this.initViewUniformFormat(scene.clusteredLightingEnabled);
+        }
+
+        // callers may supply a custom view uniform format, otherwise the renderer default is used
+        const viewUniformFormat = options.viewUniformFormat ?? this.viewUniformFormat;
+
+        if (device.supportsUniformBuffers) {
+            this.setupViewUniformBuffers(viewUniformFormat, viewList);
         }
 
         // clearing - do it after the view bind groups are set up, to avoid overriding those
@@ -864,10 +879,10 @@ class ForwardRenderer extends Renderer {
             visible,
             splitLights,
             shaderPass,
-            null,
+            options.drawCallback ?? null,
             layer,
             flipFaces,
-            viewBindGroups);
+            viewUniformFormat);
 
         if (layer) {
             layer._forwardDrawCalls += this._forwardDrawCalls - forwardDrawCalls;

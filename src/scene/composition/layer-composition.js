@@ -123,15 +123,6 @@ class LayerComposition extends EventHandler {
         this._transparentOrder = {};
     }
 
-    destroy() {
-        this.destroyRenderActions();
-    }
-
-    destroyRenderActions() {
-        this._renderActions.forEach(ra => ra.destroy());
-        this._renderActions.length = 0;
-    }
-
     markDirty() {
         this._dirty = true;
     }
@@ -180,7 +171,7 @@ class LayerComposition extends EventHandler {
 
             // render in order of cameras sorted by priority
             let renderActionCount = 0;
-            this.destroyRenderActions();
+            this._renderActions.length = 0;
 
             for (let i = 0; i < this.cameras.length; i++) {
                 const camera = this.cameras[i];

@@ -312,7 +312,7 @@ class RenderPassForward extends RenderPass {
 
             const renderTarget = renderAction.renderTarget ?? device.backBuffer;
             renderer.renderForwardLayer(camera.camera, renderTarget, layer, transparent,
-                shaderPass, renderAction.viewBindGroups, options);
+                shaderPass, options);
 
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
