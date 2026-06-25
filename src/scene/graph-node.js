@@ -264,7 +264,7 @@ class GraphNode extends EventHandler {
     /**
      * Gets the normalized local space X-axis vector of the graph node in world space.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get right() {
         if (!this._right) {
@@ -276,7 +276,7 @@ class GraphNode extends EventHandler {
     /**
      * Gets the normalized local space Y-axis vector of the graph node in world space.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get up() {
         if (!this._up) {
@@ -288,7 +288,7 @@ class GraphNode extends EventHandler {
     /**
      * Gets the normalized local space negative Z-axis vector of the graph node in world space.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get forward() {
         if (!this._forward) {
@@ -387,9 +387,10 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Gets the children of this graph node.
+     * Gets the children of this graph node. Use addChild, insertChild, removeChild or reparent to
+     * change the hierarchy.
      *
-     * @type {GraphNode[]}
+     * @type {ReadonlyArray<GraphNode>}
      */
     get children() {
         return this._children;
@@ -741,7 +742,7 @@ class GraphNode extends EventHandler {
      * Important: The value returned by this function should be considered read-only. In order to
      * set the world space rotation of the graph node, use {@link setEulerAngles}.
      *
-     * @returns {Vec3} The world space rotation of the graph node in Euler angle form.
+     * @returns {Readonly<Vec3>} The world space rotation of the graph node in Euler angle form.
      * @example
      * const angles = this.entity.getEulerAngles();
      * angles.y = 180; // rotate the entity around Y by 180 degrees
@@ -759,7 +760,7 @@ class GraphNode extends EventHandler {
      * Important: The value returned by this function should be considered read-only. In order to
      * set the local space rotation of the graph node, use {@link setLocalEulerAngles}.
      *
-     * @returns {Vec3} The local space rotation of the graph node as Euler angles in XYZ order.
+     * @returns {Readonly<Vec3>} The local space rotation of the graph node as Euler angles in XYZ order.
      * @example
      * const angles = this.entity.getLocalEulerAngles();
      * angles.y = 180;
@@ -775,9 +776,9 @@ class GraphNode extends EventHandler {
      * {@link Vec3}. The returned vector should be considered read-only. To update the local
      * position, use {@link setLocalPosition}.
      *
-     * @returns {Vec3} The local space position of the graph node.
+     * @returns {Readonly<Vec3>} The local space position of the graph node.
      * @example
-     * const position = this.entity.getLocalPosition();
+     * const position = this.entity.getLocalPosition().clone();
      * position.x += 1; // move the entity 1 unit along x.
      * this.entity.setLocalPosition(position);
      */
@@ -790,7 +791,7 @@ class GraphNode extends EventHandler {
      * {@link Quat}. The returned quaternion should be considered read-only. To update the local
      * rotation, use {@link setLocalRotation}.
      *
-     * @returns {Quat} The local space rotation of the graph node as a quaternion.
+     * @returns {Readonly<Quat>} The local space rotation of the graph node as a quaternion.
      * @example
      * const rotation = this.entity.getLocalRotation();
      */
@@ -803,9 +804,9 @@ class GraphNode extends EventHandler {
      * {@link Vec3}. The returned vector should be considered read-only. To update the local scale,
      * use {@link setLocalScale}.
      *
-     * @returns {Vec3} The local space scale of the graph node.
+     * @returns {Readonly<Vec3>} The local space scale of the graph node.
      * @example
-     * const scale = this.entity.getLocalScale();
+     * const scale = this.entity.getLocalScale().clone();
      * scale.x = 100;
      * this.entity.setLocalScale(scale);
      */
@@ -817,7 +818,7 @@ class GraphNode extends EventHandler {
      * Get the local transform matrix for this graph node. This matrix is the transform relative to
      * the node's parent's world transformation matrix.
      *
-     * @returns {Mat4} The node's local transformation matrix.
+     * @returns {Readonly<Mat4>} The node's local transformation matrix.
      * @example
      * const transform = this.entity.getLocalTransform();
      */
@@ -834,9 +835,9 @@ class GraphNode extends EventHandler {
      * {@link Vec3}. The value returned by this function should be considered read-only. In order
      * to set the world space position of the graph node, use {@link setPosition}.
      *
-     * @returns {Vec3} The world space position of the graph node.
+     * @returns {Readonly<Vec3>} The world space position of the graph node.
      * @example
-     * const position = this.entity.getPosition();
+     * const position = this.entity.getPosition().clone();
      * position.x = 10;
      * this.entity.setPosition(position);
      */
@@ -850,7 +851,7 @@ class GraphNode extends EventHandler {
      * {@link Quat}. The value returned by this function should be considered read-only. In order
      * to set the world space rotation of the graph node, use {@link setRotation}.
      *
-     * @returns {Quat} The world space rotation of the graph node as a quaternion.
+     * @returns {Readonly<Quat>} The world space rotation of the graph node as a quaternion.
      * @example
      * const rotation = this.entity.getRotation();
      */
@@ -867,7 +868,7 @@ class GraphNode extends EventHandler {
      * read-only. Note that it is not possible to set the world space scale of a graph node
      * directly.
      *
-     * @returns {Vec3} The world space scale of the graph node.
+     * @returns {Readonly<Vec3>} The world space scale of the graph node.
      * @example
      * const scale = this.entity.getScale();
      * @ignore
@@ -882,7 +883,7 @@ class GraphNode extends EventHandler {
     /**
      * Get the world transformation matrix for this graph node.
      *
-     * @returns {Mat4} The node's world transformation matrix.
+     * @returns {Readonly<Mat4>} The node's world transformation matrix.
      * @example
      * const transform = this.entity.getWorldTransform();
      */

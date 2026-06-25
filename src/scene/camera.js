@@ -117,14 +117,6 @@ class Camera {
      */
     framePasses = [];
 
-    /**
-     * Frame passes that execute before this camera's main scene rendering. Entries are picked up
-     * by the RenderPassForward that renders this camera's layers.
-     *
-     * @type {FramePass[]}
-     */
-    beforePasses = [];
-
     /** @type {number} */
     jitter = 0;
 
@@ -404,6 +396,12 @@ class Camera {
         this._layersSet = new Set(this._layers);
     }
 
+    /**
+     * Gets the layer IDs this camera renders. Use the setter to replace the array; do not mutate
+     * the returned array.
+     *
+     * @type {ReadonlyArray<number>}
+     */
     get layers() {
         return this._layers;
     }

@@ -24,7 +24,6 @@ import { array } from '../core/array-utils.js';
 import { PickerId } from './picker-id.js';
 
 /**
- * @import { BindGroupFormat } from '../platform/graphics/bind-group-format.js'
  * @import { Camera } from './camera.js'
  * @import { GSplatInstance } from './gsplat/gsplat-instance.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
@@ -752,12 +751,11 @@ class MeshInstance {
      * @param {Scene} scene - The scene.
      * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
      * @param {UniformBufferFormat} [viewUniformFormat] - The format of the view uniform buffer.
-     * @param {BindGroupFormat} [viewBindGroupFormat] - The format of the view bind group.
      * @param {any} [sortedLights] - Array of arrays of lights.
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, viewBindGroupFormat, sortedLights) {
+    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, sortedLights) {
 
         const shaderDefs = this._shaderDefs;
 
@@ -795,7 +793,6 @@ class MeshInstance {
                     pass: shaderPass,
                     sortedLights: sortedLights,
                     viewUniformFormat: viewUniformFormat,
-                    viewBindGroupFormat: viewBindGroupFormat,
                     vertexFormat: this.mesh.vertexBuffer?.format
                 });
 

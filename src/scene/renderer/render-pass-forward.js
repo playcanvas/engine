@@ -168,26 +168,6 @@ class RenderPassForward extends RenderPass {
         return index;
     }
 
-    // Collect before-passes from cameras whose first render action lives in this
-    // RenderPassForward. Uses the existing firstCameraUse flag (set by LayerComposition)
-    // to guarantee each camera's before-passes are scheduled exactly once, even when
-    // multiple RenderPassForward instances reference the same camera (e.g. CameraFrame's
-    // scenePass vs afterPass).
-    updateCameraBeforePasses() {
-        for (let i = 0; i < this.renderActions.length; i++) {
-            const ra = this.renderActions[i];
-            if (ra.firstCameraUse) {
-                const camera = ra.camera?.camera;
-                if (camera) {
-                    const { beforePasses } = camera;
-                    for (let j = 0; j < beforePasses.length; j++) {
-                        this.beforePasses.push(beforePasses[j]);
-                    }
-                }
-            }
-        }
-    }
-
     updateDirectionalShadows() {
         // add directional shadow passes if needed for the cameras used in this render pass
         const { renderer, renderActions } = this;
@@ -237,7 +217,6 @@ class RenderPassForward extends RenderPass {
 
     frameUpdate() {
         super.frameUpdate();
-        this.updateCameraBeforePasses();
         this.updateDirectionalShadows();
         this.updateClears();
     }
@@ -333,7 +312,7 @@ class RenderPassForward extends RenderPass {
 
             const renderTarget = renderAction.renderTarget ?? device.backBuffer;
             renderer.renderForwardLayer(camera.camera, renderTarget, layer, transparent,
-                shaderPass, renderAction.viewBindGroups, options);
+                shaderPass, options);
 
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what

@@ -237,9 +237,10 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Gets the scaling factor for angular movement of the body in each axis.
+     * Gets the scaling factor for angular movement of the body in each axis. Use the setter to
+     * update the physics body.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get angularFactor() {
         return this._angularFactor;
@@ -262,9 +263,10 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Gets the rotational speed of the body around each world axis.
+     * Gets the rotational speed of the body around each world axis. Use the setter to update the
+     * physics body.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get angularVelocity() {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
@@ -382,9 +384,10 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Gets the scaling factor for linear movement of the body in each axis.
+     * Gets the scaling factor for linear movement of the body in each axis. Use the setter to
+     * update the physics body.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get linearFactor() {
         return this._linearFactor;
@@ -407,9 +410,9 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Gets the speed of the body in a given direction.
+     * Gets the speed of the body in a given direction. Use the setter to update the physics body.
      *
-     * @type {Vec3}
+     * @type {Readonly<Vec3>}
      */
     get linearVelocity() {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {

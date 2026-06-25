@@ -1,4 +1,4 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Vec2 } from '../../core/math/vec2.js';
@@ -9,9 +9,8 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+    BINDGROUP_MESH, BINDGROUP_VIEW,
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT, UNIFORMTYPE_UINT,
-    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     CULLFACE_NONE,
     BINDGROUP_MESH_UB,
     FRONTFACE_CCW,
@@ -19,9 +18,8 @@ import {
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
-import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
+import { DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import {
     VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
@@ -40,8 +38,10 @@ import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 import { Camera } from '../camera.js';
 
 /**
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  * @import { CulledInstances } from '../layer.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { RenderView } from '../render-view.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Light } from '../light.js'
  * @import { MeshInstance } from '../mesh-instance.js'
@@ -157,6 +157,40 @@ class Renderer {
      */
     dirLightShadows = new Map();
 
+    /**
+     * Shared non-persistent view uniform buffers, keyed by their uniform format. Reused every frame
+     * and bound via the dynamic buffer system, so no per-render-action view bind groups are needed.
+     *
+     * @type {WeakMap<UniformBufferFormat, UniformBuffer>}
+     */
+    _viewUniformBuffers = new WeakMap();
+
+    /**
+     * Reusable receiver for a view uniform buffer's dynamic bind group + offset.
+     *
+     * @type {DynamicBindGroup}
+     */
+    _dynamicViewBindGroup = new DynamicBindGroup();
+
+    /**
+     * Per-view dynamic bind groups, captured during multiview view-uniform setup (allocations may
+     * span dynamic buffers, so the bind group is captured per view alongside its offset).
+     *
+     * @type {BindGroup[]}
+     */
+    _viewBindGroups = [];
+
+    /** @type {number[]} */
+    _viewBindGroupOffsets = [];
+
+    /**
+     * Reused single-element array passed as the dynamic offsets to per-view setBindGroup, to avoid
+     * per-draw allocation.
+     *
+     * @type {number[]}
+     */
+    _viewOffsetScratch = [0];
+
     blueNoise = new BlueNoise(123);
 
     /**
@@ -194,9 +228,8 @@ class Renderer {
                 this._shadowRendererLocal, this.lightTextureAtlas);
         }
 
-        // view bind group format with its uniform buffer format
+        // format of the view uniform buffer
         this.viewUniformFormat = null;
-        this.viewBindGroupFormat = null;
 
         // timing
         this._skinTime = 0;
@@ -669,7 +702,7 @@ class Renderer {
         this.viewPosId.setValue(vp);
     }
 
-    initViewBindGroupFormat(isClustered) {
+    initViewUniformFormat(isClustered) {
 
         if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
@@ -705,32 +738,6 @@ class Renderer {
             }
 
             this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
-
-            // format of the view bind group - contains single uniform buffer, and some textures
-            const formats = [
-
-                // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
-                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-
-                // disable view level textures, as they consume texture slots. They get automatically added to mesh bind group
-                // for the meshes that uses them
-                // new BindTextureFormat('lightsTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
-                // new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
-                // new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
-
-                // new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
-                // new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
-            ];
-
-            // disable view level textures, as they consume texture slots. They get automatically added to mesh bind group
-            // for the meshes that uses them
-            // if (isClustered) {
-            //     formats.push(...[
-            //         new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
-            //     ]);
-            // }
-
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, formats);
         }
     }
 
@@ -739,7 +746,7 @@ class Renderer {
      */
     setupViewUniforms(view, index) {
 
-        // any view uniforms need to be part of the view uniform buffer, see initViewBindGroupFormat
+        // any view uniforms need to be part of the view uniform buffer, see initViewUniformFormat
         this.projId.setValue(view.projMat.data);
         this.projSkyboxId.setValue(view.projMat.data);
         this.viewId.setValue(view.viewOffMat.data);
@@ -750,43 +757,54 @@ class Renderer {
         this.viewIndexId.setValue(index);
     }
 
-    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewList) {
-
-        Debug.assert(Array.isArray(viewBindGroups), 'viewBindGroups must be an array');
-        const { device } = this;
-
-        // make sure we have bind group for each view
-        const viewCount = viewList?.length ?? 1;
-        while (viewBindGroups.length < viewCount) {
-            const ub = new UniformBuffer(device, viewUniformFormat, false);
-            const bg = new BindGroup(device, viewBindGroupFormat, ub);
-            DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
-            viewBindGroups.push(bg);
+    /**
+     * Returns the shared non-persistent view uniform buffer for the given format, creating it on
+     * first use. It is bound via the dynamic buffer system, so it needs no explicit bind group.
+     *
+     * @param {UniformBufferFormat} viewUniformFormat - The view uniform buffer format.
+     * @returns {UniformBuffer} The shared view uniform buffer.
+     */
+    getViewUniformBuffer(viewUniformFormat) {
+        let ub = this._viewUniformBuffers.get(viewUniformFormat);
+        if (!ub) {
+            ub = new UniformBuffer(this.device, viewUniformFormat, false);
+            this._viewUniformBuffers.set(viewUniformFormat, ub);
         }
+        return ub;
+    }
+
+    /**
+     * Sets up the view uniform buffer(s) for the current camera and binds the single-view case.
+     * Uses the shared per-format view uniform buffer, sourcing its bind group + dynamic offset from
+     * the dynamic buffer system (no per-render-action view bind groups).
+     *
+     * @param {UniformBufferFormat} viewUniformFormat - The view uniform buffer format.
+     * @param {RenderView[]|null} viewList - The list of XR views for multiview, or null for a
+     * single view.
+     */
+    setupViewUniformBuffers(viewUniformFormat, viewList) {
+
+        Debug.assert(viewUniformFormat);
+        const { device } = this;
+        const ub = this.getViewUniformBuffer(viewUniformFormat);
 
         if (viewList) {
 
+            // multiview: set up a dynamic bind group + offset per view, captured for per-view
+            // binding in the render loop (allocations may span dynamic buffers, so capture both)
+            const viewCount = viewList.length;
             for (let i = 0; i < viewCount; i++) {
-
-                // set up view uniforms
-                const view = viewList[i];
-                this.setupViewUniforms(view, i);
-
-                // update view bind group / uniforms
-                const viewBindGroup = viewBindGroups[i];
-                viewBindGroup.defaultUniformBuffer.update();
-                viewBindGroup.update();
+                this.setupViewUniforms(viewList[i], i);
+                ub.update(this._dynamicViewBindGroup);
+                this._viewBindGroups[i] = this._dynamicViewBindGroup.bindGroup;
+                this._viewBindGroupOffsets[i] = this._dynamicViewBindGroup.offsets[0];
             }
+
         } else {
 
-            const viewBindGroup = viewBindGroups[0];
-            viewBindGroup.defaultUniformBuffer.update();
-            viewBindGroup.update();
-        }
-
-        // bind it when a single view is used, otherwise this is handled per view inside rendering loop
-        if (!viewList) {
-            device.setBindGroup(BINDGROUP_VIEW, viewBindGroups[0]);
+            // single view: uniforms were set by setCameraUniforms; update the buffer and bind
+            ub.update(this._dynamicViewBindGroup);
+            device.setBindGroup(BINDGROUP_VIEW, this._dynamicViewBindGroup.bindGroup, this._dynamicViewBindGroup.offsets);
         }
     }
 
@@ -819,7 +837,7 @@ class Renderer {
      * @param {MeshInstance[]} drawCalls - Draw calls to cull.
      * @param {CulledInstances} culledInstances - Stores culled instances.
      */
-    cull(camera, drawCalls, culledInstances) {
+    cullMeshInstances(camera, drawCalls, culledInstances) {
         // #if _PROFILER
         const cullTime = now();
         // #endif
@@ -969,35 +987,81 @@ class Renderer {
      */
     cullShadowmaps(comp) {
 
-        const isClustered = this.scene.clusteredLightingEnabled;
-
-        // shadow casters culling for local (point and spot) lights
+        // shadow casters culling for local (point and spot) lights. The shadow-update-mode forcing
+        // (atlas slot reassigned / shadow map not yet allocated) was applied earlier, in
+        // updateLightVisibility, so the update mode is already final here.
         for (let i = 0; i < this.localLights.length; i++) {
             const light = this.localLights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
-
-                if (isClustered) {
-                    // if atlas slot is reassigned, make sure to update the shadow map, including the culling
-                    if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
-                        light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-                    }
-                } else {
-
-                    // force rendering shadow at least once to allocate the shadow map needed by the shaders
-                    if (light.shadowUpdateMode === SHADOWUPDATE_NONE && light.castShadows) {
-                        if (!light.getRenderData(null, 0).shadowCamera.renderTarget) {
-                            light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-                        }
-                    }
-                }
-
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
                     this._shadowRendererLocal.cull(light, comp);
                 }
             }
         }
 
-        // shadow casters culling for directional lights - start with none and collect lights for cameras
+        // cull shadow casters / fit cascades for the directional lights collected (earlier, in
+        // updateLightVisibility) into cameraDirShadowLights (mesh-dependent)
+        this.cameraDirShadowLights.forEach((lightList, camera) => {
+            for (let i = 0; i < lightList.length; i++) {
+                this._shadowRendererDirectional.cull(lightList[i], comp, camera);
+            }
+        });
+    }
+
+    /**
+     * After the frame graph is built and shadow casters are culled, account for shadow-map updates
+     * and consume one-shot ({@link SHADOWUPDATE_THISFRAME}) requests for lights whose shadow
+     * actually rendered this frame, reverting them to {@link SHADOWUPDATE_NONE}. A light that did
+     * not render this frame (for example an off-screen local light) keeps its request, so the
+     * shadow updates the next frame the light is rendered. Must run after both the frame graph build
+     * and shadow-caster culling, so that `needsShadowRendering` (a pure predicate) reports the same
+     * result to both before the update mode is changed here.
+     */
+    consumeOneShotShadows() {
+
+        const clustered = this.scene.clusteredLightingEnabled;
+        const shadowRenderer = this.shadowRenderer;
+
+        // local lights: the shadow renders if shadow rendering is needed and, in clustered lighting,
+        // an atlas slot has been allocated for it
+        const localLights = this.localLights;
+        for (let i = 0; i < localLights.length; i++) {
+            const light = localLights[i];
+            if (shadowRenderer.needsShadowRendering(light) && (!clustered || light.atlasViewportAllocated)) {
+                this._shadowMapUpdates += light.numShadowFaces;
+                if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                    light.shadowUpdateMode = SHADOWUPDATE_NONE;
+                }
+            }
+        }
+
+        // directional lights: a separate shadow is rendered for each camera that uses the light, as
+        // the shadow frustum is fit to that camera
+        this.cameraDirShadowLights.forEach((lightList) => {
+            for (let i = 0; i < lightList.length; i++) {
+                const light = lightList[i];
+                if (shadowRenderer.needsShadowRendering(light)) {
+                    this._shadowMapUpdates += light.numShadowFaces;
+                    if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                        light.shadowUpdateMode = SHADOWUPDATE_NONE;
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Collects the set of shadow-casting directional lights for each camera into
+     * {@link Renderer#cameraDirShadowLights}, and ensures each such light has a shadow map
+     * allocated. This is independent of mesh culling and camera frusta (it uses only the
+     * composition's cameras and the layers' directional lights), so it can run before the frame
+     * graph is built. The actual shadow-caster culling is done separately.
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
+    collectDirectionalShadowLights(comp) {
+
+        // start with none and collect lights for cameras
         this.cameraDirShadowLights.clear();
         const cameras = comp.cameras;
         for (let i = 0; i < cameras.length; i++) {
@@ -1023,8 +1087,7 @@ class Renderer {
                                 lightList = lightList ?? [];
                                 lightList.push(light);
 
-                                // frustum culling for the directional shadow when rendering the camera
-                                this._shadowRendererDirectional.cull(light, comp, camera);
+                                this._shadowRendererDirectional.prepareShadowMap(light);
                             }
                         }
                     }
@@ -1040,8 +1103,89 @@ class Renderer {
     }
 
     /**
-     * visibility culling of lights, meshInstances, shadows casters. Also applies
-     * `meshInstance.visible`.
+     * Per-camera light visibility culling, light-atlas allocation and directional-shadow-light
+     * collection. This is independent of mesh culling and the frame graph, so it runs before the
+     * frame graph is built. The mesh and shadow-caster culling that depends on it is done later in
+     * {@link Renderer#cullComposition}.
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
+    updateLightVisibility(comp) {
+
+        const { scene } = this;
+
+        // reset per-frame light visibility: directional lights start visible, local lights start
+        // hidden (and are marked visible below by cullLights if they intersect a camera frustum)
+        const lights = this.lights;
+        for (let i = 0; i < lights.length; i++) {
+            lights[i].beginFrame();
+        }
+
+        // for all cameras: update the frustum and cull each layer's lights for visibility
+        const numCameras = comp.cameras.length;
+        for (let i = 0; i < numCameras; i++) {
+            const camera = comp.cameras[i];
+
+            // update camera and frustum
+            const renderTarget = camera.renderTarget;
+            camera.frameUpdate(renderTarget);
+            this.updateCameraFrustum(camera.camera);
+
+            // for all of its enabled layers cull the non-directional lights once with each camera
+            // lights aren't collected anywhere, but marked as visible
+            const layerIds = camera.layers;
+            for (let j = 0; j < layerIds.length; j++) {
+                const layer = comp.getLayerById(layerIds[j]);
+                if (layer && layer.enabled) {
+                    this.cullLights(camera.camera, layer._lights);
+                }
+            }
+        }
+
+        // update shadow / cookie atlas allocation for the visible lights. Update it after the lights
+        // were culled, but before shadow maps are culled, as it might force some 'update once'
+        // shadows to cull.
+        const isClustered = scene.clusteredLightingEnabled;
+        if (isClustered) {
+            this.updateLightTextureAtlas();
+        }
+
+        // force a shadow re-render for local lights whose atlas slot was reassigned (clustered) or
+        // whose shadow map has not yet been allocated (non-clustered). Done here - before the frame
+        // graph is built and shadow casters are culled - so both of those steps see the final
+        // shadow update mode.
+        const localLights = this.localLights;
+        for (let i = 0; i < localLights.length; i++) {
+            const light = localLights[i];
+            if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+                if (isClustered) {
+                    // if the atlas slot is reassigned, make sure to update the shadow map (incl. culling)
+                    if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                        light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                    }
+                } else {
+                    // allocate the shadow map early (before the frame graph is built and before the
+                    // forward pass reads it), mirroring directional lights. Force a one-shot update
+                    // when the map was (re)created (first use, or destroyed by a property change such
+                    // as shadowType) so the new map actually gets rendered.
+                    if (light.castShadows && light.visibleThisFrame && !light._shadowMap) {
+                        this._shadowRendererLocal.prepareShadowMap(light);
+                        if (light.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                            light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                        }
+                    }
+                }
+            }
+        }
+
+        // collect shadow-casting directional lights per camera + allocate their shadow maps
+        this.collectDirectionalShadowLights(comp);
+    }
+
+    /**
+     * Visibility culling of meshInstances and shadow casters. Light visibility, the light atlas and
+     * the directional-shadow-light collection are done earlier in
+     * {@link Renderer#updateLightVisibility}.
      *
      * @param {LayerComposition} comp - The layer composition.
      */
@@ -1062,13 +1206,8 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // update camera and frustum
-            const renderTarget = camera.renderTarget;
-            camera.frameUpdate(renderTarget);
-            this.updateCameraFrustum(camera.camera);
-
-            // event before the camera is culling, fired after the frustum has been updated so
-            // listeners can rely on the current camera state
+            // event before the camera is culling, fired after the frustum has been updated (in
+            // updateLightVisibility) so listeners can rely on the current camera state
             scene?.fire(EVENT_PRECULL, camera);
 
             // for all of its enabled layers
@@ -1077,24 +1216,14 @@ class Renderer {
                 const layer = comp.getLayerById(layerIds[j]);
                 if (layer && layer.enabled) {
 
-                    // cull each layer's non-directional lights once with each camera
-                    // lights aren't collected anywhere, but marked as visible
-                    this.cullLights(camera.camera, layer._lights);
-
                     // cull mesh instances
                     const culledInstances = layer.getCulledInstances(camera.camera);
-                    this.cull(camera.camera, layer.meshInstances, culledInstances);
+                    this.cullMeshInstances(camera.camera, layer.meshInstances, culledInstances);
                 }
             }
 
             // event after the camera is done with culling
             scene?.fire(EVENT_POSTCULL, camera);
-        }
-
-        // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
-        // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
-        if (scene.clusteredLightingEnabled) {
-            this.updateLightTextureAtlas();
         }
 
         // cull shadow casters for all lights
@@ -1205,13 +1334,6 @@ class Renderer {
         // clear light arrays
         _tempMeshInstances.length = 0;
         _tempMeshInstancesSkinned.length = 0;
-
-        // clear light visibility
-        const lights = this.lights;
-        const lightCount = lights.length;
-        for (let i = 0; i < lightCount; i++) {
-            lights[i].beginFrame();
-        }
     }
 
     updateLightTextureAtlas() {
@@ -1255,7 +1377,7 @@ class Renderer {
 
         this.clustersDebugRendered = false;
 
-        this.initViewBindGroupFormat(this.scene.clusteredLightingEnabled);
+        this.initViewUniformFormat(this.scene.clusteredLightingEnabled);
 
         // no valid shadows at the start of the frame
         this.dirLightShadows.clear();

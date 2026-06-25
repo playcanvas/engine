@@ -25,15 +25,15 @@ class ShaderProcessorOptions {
     /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
-     * @param {UniformBufferFormat} [viewUniformFormat] - Format of the uniform buffer.
-     * @param {BindGroupFormat} [viewBindGroupFormat] - Format of the bind group.
+     * @param {UniformBufferFormat} [viewUniformFormat] - Format of the view uniform buffer. The
+     * view bind group contains only this single uniform buffer (no textures), so its layout is
+     * derived from the uniform format alone and no bind group format is required.
      * @param {VertexFormat} [vertexFormat] - Format of the vertex buffer.
      */
-    constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    constructor(viewUniformFormat, vertexFormat) {
 
         // construct a sparse array
         this.uniformFormats[BINDGROUP_VIEW] = viewUniformFormat;
-        this.bindGroupFormats[BINDGROUP_VIEW] = viewBindGroupFormat;
 
         this.vertexFormat = vertexFormat;
     }

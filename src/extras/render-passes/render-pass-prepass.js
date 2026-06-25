@@ -31,9 +31,6 @@ const DEPTH_UNIFORM_NAME = 'uSceneDepthMap';
  * @ignore
  */
 class RenderPassPrepass extends RenderPass {
-    /** @type {BindGroup[]} */
-    viewBindGroups = [];
-
     /** @type {Texture} */
     linearDepthTexture;
 
@@ -56,12 +53,6 @@ class RenderPassPrepass extends RenderPass {
         this.renderTarget = null;
         this.linearDepthTexture?.destroy();
         this.linearDepthTexture = null;
-
-        this.viewBindGroups.forEach((bg) => {
-            bg.defaultUniformBuffer.destroy();
-            bg.destroy();
-        });
-        this.viewBindGroups.length = 0;
     }
 
     setupRenderTarget(options) {
@@ -126,7 +117,7 @@ class RenderPassPrepass extends RenderPass {
                         }
                     }
 
-                    renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_PREPASS, this.viewBindGroups, {
+                    renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_PREPASS, {
                         meshInstances: tempMeshInstances
                     });
 

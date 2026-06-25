@@ -1156,10 +1156,15 @@ class AppBase extends EventHandler {
     renderComposition(layerComposition) {
         DebugGraphics.clearGpuMarkers();
 
-        // update composition, cull everything, assign atlas slots for clustered lighting
+        // update composition + light visibility, assign atlas slots for clustered lighting
         this.renderer.update(layerComposition);
 
+        // build the frame graph from the (not-yet-culled) composition
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
+
+        // cull mesh instances and shadow casters - this fills what the passes read at render time
+        this.renderer.cull(layerComposition);
+
         this.frameGraph.render(this.graphicsDevice);
     }
 
@@ -1886,11 +1891,6 @@ class AppBase extends EventHandler {
         }
 
         this.systems.destroy();
-
-        // layer composition
-        if (this.scene.layers) {
-            this.scene.layers.destroy();
-        }
 
         // destroy bundle registry
         this.bundles.destroy();

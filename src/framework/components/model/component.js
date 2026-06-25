@@ -180,9 +180,10 @@ class ModelComponent extends Component {
     }
 
     /**
-     * Gets the array of mesh instances contained in the component's model.
+     * Gets the array of mesh instances contained in the component's model. Use the setter to
+     * replace the array; do not mutate the returned array.
      *
-     * @type {MeshInstance[]|null}
+     * @type {ReadonlyArray<MeshInstance>|null}
      */
     get meshInstances() {
         if (!this._model) {
@@ -605,7 +606,7 @@ class ModelComponent extends Component {
     /**
      * Gets the array of layer IDs ({@link Layer#id}) to which the mesh instances belong.
      *
-     * @type {number[]}
+     * @type {ReadonlyArray<number>}
      */
     get layers() {
         return this._layers;
@@ -775,7 +776,7 @@ class ModelComponent extends Component {
     /**
      * Gets the dictionary that holds material overrides for each mesh instance.
      *
-     * @type {Object<string, number>}
+     * @type {Readonly<Record<string, number>>}
      */
     get mapping() {
         return this._mapping;

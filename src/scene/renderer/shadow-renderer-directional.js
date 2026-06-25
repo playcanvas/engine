@@ -76,8 +76,11 @@ class ShadowRendererDirectional {
         this.device = renderer.device;
     }
 
-    // cull directional shadow map
-    cull(light, comp, camera, casters = null) {
+    // Minimal prerequisite for directional shadow-pass creation: ensure the shadow map exists
+    // and the light is marked visible. This is caster- and camera-independent, so it can run
+    // early in the frame (before mesh culling), unlike cull() which sets up the per-cascade
+    // shadow cameras and culls casters.
+    prepareShadowMap(light) {
 
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
@@ -85,6 +88,12 @@ class ShadowRendererDirectional {
         if (!light._shadowMap) {
             light._shadowMap = ShadowMap.create(this.device, light);
         }
+    }
+
+    // cull directional shadow map. prepareShadowMap(light) must have been called first.
+    cull(light, comp, camera, casters = null) {
+
+        Debug.assert(light._shadowMap, 'ShadowRendererDirectional.cull requires prepareShadowMap() to have been called for the light first.');
 
         // generate splits for the cascades
         const nearDist = camera._nearClip;
