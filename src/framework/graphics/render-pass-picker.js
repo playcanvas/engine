@@ -1,6 +1,8 @@
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { UNIFORMTYPE_MAT4 } from '../../platform/graphics/constants.js';
+import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
 
 /**
@@ -14,7 +16,6 @@ import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
 
 const tempMeshInstances = [];
 const lights = [[], [], []];
-const defaultShadowAtlasParams = new Float32Array(2);
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
@@ -22,9 +23,6 @@ const defaultShadowAtlasParams = new Float32Array(2);
  * @ignore
  */
 class RenderPassPicker extends RenderPass {
-    /** @type {BindGroup[]} */
-    viewBindGroups = [];
-
     /** @type {BlendState} */
     blendState = BlendState.NOBLEND;
 
@@ -49,17 +47,30 @@ class RenderPassPicker extends RenderPass {
     /** @type {Map<number, MeshInstance|null>} */
     _pickMeshInstances = new Map();
 
+    /**
+     * Minimal view uniform format used by the picker. The pick shaders only need the view
+     * projection (and the view matrix for depth picking); any other view uniform a shader happens
+     * to reference falls back to the per-mesh uniform buffer automatically. This avoids pulling in
+     * the full forward view format (and its lighting / shadow uniforms) which the picker does not
+     * need.
+     *
+     * @type {UniformBufferFormat|null}
+     */
+    _viewUniformFormat = null;
+
     constructor(device, renderer) {
         super(device);
         this.renderer = renderer;
     }
 
-    destroy() {
-        this.viewBindGroups.forEach((bg) => {
-            bg.defaultUniformBuffer.destroy();
-            bg.destroy();
-        });
-        this.viewBindGroups.length = 0;
+    getViewUniformFormat() {
+        if (!this._viewUniformFormat) {
+            this._viewUniformFormat = new UniformBufferFormat(this.device, [
+                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_view', UNIFORMTYPE_MAT4)
+            ]);
+        }
+        return this._viewUniformFormat;
     }
 
     /**
@@ -170,30 +181,16 @@ class RenderPassPicker extends RenderPass {
 
             if (tempMeshInstances.length > 0) {
 
-                // upload clustered lights uniforms
-                const clusteredLightingEnabled = scene.clusteredLightingEnabled;
-                if (clusteredLightingEnabled) {
-                    const lightClusters = this.emptyWorldClusters;
-                    lightClusters.activate();
-                }
-
-                renderer.setCameraUniforms(camera.camera, renderTarget);
-
-                // TODO: These uniforms are not required by the picker pass, but it uses the
-                // forward view format which includes them. Ideally, each pass should be able
-                // to specify its own view format to avoid setting unnecessary uniforms.
-                renderer.dispatchGlobalLights(scene);
-                device.scope.resolve('shadowAtlasParams').setValue(defaultShadowAtlasParams);
-
-                if (device.supportsUniformBuffers) {
-                    // Initialize view bind group format if not already done
-                    renderer.initViewBindGroupFormat(clusteredLightingEnabled);
-                    renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, null);
-                }
-
+                // render the mesh instances through the standard forward layer path, using the
+                // picker's own minimal view uniform format; it sets up the camera and view uniforms,
+                // and the callback forces the picker blend state per mesh
                 const shaderPass = this.depth ? SHADER_DEPTH_PICK : SHADER_PICK;
-                renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, shaderPass, (meshInstance) => {
-                    device.setBlendState(this.blendState);
+                renderer.renderForwardLayer(camera.camera, renderTarget, null, undefined, shaderPass, {
+                    meshInstances: tempMeshInstances,
+                    splitLights: lights,
+                    lightClusters: this.emptyWorldClusters,
+                    viewUniformFormat: device.supportsUniformBuffers ? this.getViewUniformFormat() : undefined,
+                    drawCallback: () => device.setBlendState(this.blendState)
                 });
 
                 tempMeshInstances.length = 0;

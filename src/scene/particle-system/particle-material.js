@@ -67,7 +67,7 @@ class ParticleMaterial extends Material {
             customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
         };
 
-        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('particle', particle);

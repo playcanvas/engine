@@ -147,7 +147,7 @@ class ShaderMaterial extends Material {
             shaderChunks: this.shaderChunks // override chunks from the material
         };
 
-        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
 
         const library = getProgramLibrary(params.device);
         library.register('shader-material', shaderGeneratorShader);

@@ -20,7 +20,6 @@ import { getDefaultMaterial } from './default-material.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
- * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Light } from '../light.js';
  * @import { MeshInstance } from '../mesh-instance.js'
@@ -61,7 +60,6 @@ let id = 0;
  * @property {number} pass - The shader pass.
  * @property {Light[][]} sortedLights - The sorted lights.
  * @property {UniformBufferFormat|undefined} viewUniformFormat - The view uniform format.
- * @property {BindGroupFormat|undefined} viewBindGroupFormat - The view bind group format.
  * @property {VertexFormat} vertexFormat - The vertex format.
  * @ignore
  */

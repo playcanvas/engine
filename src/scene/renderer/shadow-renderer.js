@@ -5,8 +5,8 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import {
-    SEMANTIC_POSITION, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
-    UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
+    SEMANTIC_POSITION,
+    UNIFORMTYPE_MAT4
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
@@ -24,7 +24,6 @@ import { ShaderPass } from '../shader-pass.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 
 /**
@@ -102,9 +101,8 @@ class ShadowRenderer {
         // uniforms
         this.shadowMapLightRadiusId = scope.resolve('light_radius');
 
-        // view bind group format with its uniform buffer format
+        // format of the view uniform buffer
         this.viewUniformFormat = null;
-        this.viewBindGroupFormat = null;
 
         // blend states
         this.blendStateWrite = new BlendState();
@@ -339,7 +337,7 @@ class ShadowRenderer {
             // Uniforms II (shadow): meshInstance overrides
             meshInstance.setParameters(device, passFlags);
 
-            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat, this.viewBindGroupFormat);
+            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat);
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
@@ -447,7 +445,7 @@ class ShadowRenderer {
         const renderer = this.renderer;
         renderer.setCameraUniforms(shadowCam, rt);
         if (device.supportsUniformBuffers) {
-            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, null);
+            renderer.setupViewUniformBuffers(this.viewUniformFormat, null);
         }
 
         renderer.setupViewport(shadowCam, rt);
@@ -554,7 +552,7 @@ class ShadowRenderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    initViewBindGroupFormat() {
+    initViewUniformFormat() {
 
         if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
@@ -562,16 +560,11 @@ class ShadowRenderer {
             this.viewUniformFormat = new UniformBufferFormat(this.device, [
                 new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4)
             ]);
-
-            // format of the view bind group - contains single uniform buffer, and no textures
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, [
-                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ]);
         }
     }
 
     frameUpdate() {
-        this.initViewBindGroupFormat();
+        this.initViewUniformFormat();
     }
 }
 
