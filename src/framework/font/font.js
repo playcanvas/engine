@@ -1,6 +1,7 @@
 import { FONT_MSDF } from './constants.js';
 
 /**
+ * @import { ResourceLoader } from '../handlers/loader.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
@@ -33,9 +34,42 @@ class Font {
          */
         this.intensity = 0.0;
 
+        /**
+         * The resource loader used to load the font textures. Set by the {@link FontHandler} so
+         * that {@link Font#destroy} can release the textures from the loader cache. Null for fonts
+         * created without going through the resource loader.
+         *
+         * @type {ResourceLoader|null}
+         * @ignore
+         */
+        this._loader = null;
+
         // json data
         this._data = null;
         this.data = data;
+    }
+
+    /**
+     * Frees the GPU textures owned by the font and removes them from the resource loader cache.
+     * Called automatically when the owning font asset is unloaded (see {@link Asset#unload}).
+     */
+    destroy() {
+        const textures = this.textures;
+        if (textures) {
+            for (let i = 0; i < textures.length; i++) {
+                const texture = textures[i];
+
+                // font textures are loaded directly through the resource loader (keyed by their
+                // url, which is stored as the texture name), so remove the cache entry to avoid
+                // handing back a destroyed texture on a subsequent load
+                this._loader?.clearCache(texture.name, 'texture');
+                texture.destroy();
+            }
+            this.textures = null;
+        }
+
+        this._loader = null;
+        this._data = null;
     }
 
     set data(value) {
