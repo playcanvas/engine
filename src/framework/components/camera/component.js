@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { ASPECT_AUTO, LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
+import { LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
 import { Component } from '../component.js';
@@ -1258,20 +1258,6 @@ class CameraComponent extends Component {
      */
     calculateAspectRatio(rt) {
         return this._camera.calculateAspectRatio(rt);
-    }
-
-    /**
-     * Prepare the camera for frame rendering.
-     *
-     * @param {RenderTarget|null} [rt] - Render
-     * target to which rendering will be performed. Will affect camera's aspect ratio, if
-     * aspectRatioMode is {@link ASPECT_AUTO}.
-     * @ignore
-     */
-    frameUpdate(rt) {
-        if (this.aspectRatioMode === ASPECT_AUTO) {
-            this.aspectRatio = this.calculateAspectRatio(rt);
-        }
     }
 
     /**
