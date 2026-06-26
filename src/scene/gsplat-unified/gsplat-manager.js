@@ -18,6 +18,7 @@ import {
 import { Color } from '../../core/math/color.js';
 
 /**
+ * @import { EventHandle } from '../../core/event-handle.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
  * @import { GSplatWorldState } from './gsplat-world-state.js'
@@ -132,6 +133,14 @@ class GSplatManager {
     /** @type {boolean} */
     sortNeeded = true;
 
+    /**
+     * Event handle for the graphics device restored event.
+     *
+     * @type {EventHandle|null}
+     * @private
+     */
+    _deviceRestoredEvent = null;
+
     /** @type {GraphNode} */
     cameraNode;
 
@@ -216,10 +225,18 @@ class GSplatManager {
 
         this.layer = layer;
         this._createRenderer(this.scene.gsplat.currentRenderer);
+
+        // On a graphics context restore the work buffer render target comes back blank (its
+        // contents are GPU-rendered, not re-uploaded from CPU like source textures), so the splats
+        // need re-materializing. See _onDeviceRestored.
+        this._deviceRestoredEvent = this.device.on('devicerestored', this._onDeviceRestored, this);
     }
 
     destroy() {
         this._destroyed = true;
+
+        this._deviceRestoredEvent?.off();
+        this._deviceRestoredEvent = null;
 
         // Tear down the CPU sorter while the renderer and world are still alive.
         this.destroyCpuSorting();
@@ -239,6 +256,23 @@ class GSplatManager {
         // Free the shared GPU-sort scratch after its borrowers (forward + shadow compactions) are gone.
         this._hybridScratch?.destroy();
         this._hybridScratch = null;
+    }
+
+    /**
+     * Handles a graphics context restore: the work buffer render target is recreated empty, so
+     * force a full rebuild and re-sort to re-materialize the splats from the (auto-restored) source
+     * textures.
+     *
+     * Skipped when the world has streaming octree instances: those destroy and asynchronously
+     * reload their source resources from URL via their own device-lost handling, and rebuilding the
+     * work buffer here would render from textures that have been destroyed (and not yet reloaded).
+     *
+     * @private
+     */
+    _onDeviceRestored() {
+        if (this.world.hasOctreeInstances) return;
+        this.world.invalidate({ workBuffer: true });
+        this.sortNeeded = true;
     }
 
     /**
