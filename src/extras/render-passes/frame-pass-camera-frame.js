@@ -384,9 +384,52 @@ class FramePassCameraFrame extends FramePass {
         pass.toneMapping = TONEMAP_NONE;
     }
 
+    /**
+     * Adds the camera's layers from the pass's layer composition to a forward render pass, starting
+     * from the given index, till the end of the layer list, or till the last layer with the given id
+     * and transparency is reached (inclusive). Only layers that the camera renders are added.
+     *
+     * @param {RenderPassForward} renderPass - The forward render pass to add the layers to.
+     * @param {number} startIndex - The index of the first layer to be considered for adding.
+     * @param {boolean} firstLayerClears - True if the first layer added should clear the render target.
+     * @param {number} [lastLayerId] - The id of the last layer to be added. If not specified, all
+     * layers till the end of the layer list are added.
+     * @param {boolean} [lastLayerIsTransparent] - True if the last layer to be added is transparent.
+     * Defaults to true.
+     * @returns {number} Returns the index of last layer added.
+     */
+    addCameraLayers(renderPass, startIndex, firstLayerClears, lastLayerId, lastLayerIsTransparent = true) {
+
+        const cameraComponent = this.cameraComponent;
+        const { layerList, subLayerList } = renderPass.layerComposition;
+        let clearRenderTarget = firstLayerClears;
+
+        let index = startIndex;
+        while (index < layerList.length) {
+
+            const layer = layerList[index];
+            const isTransparent = subLayerList[index];
+
+            // add it for rendering if the camera renders it
+            if (cameraComponent.camera.layersSet.has(layer.id)) {
+                renderPass.addLayer(cameraComponent, layer, isTransparent, clearRenderTarget);
+                clearRenderTarget = false;
+            }
+
+            index++;
+
+            // stop at last requested layer
+            if (layer.id === lastLayerId && isTransparent === lastLayerIsTransparent) {
+                break;
+            }
+        }
+
+        return index;
+    }
+
     setupScenePass(options) {
 
-        const { app, device, cameraComponent } = this;
+        const { app, device } = this;
         const { scene, renderer } = app;
         const composition = scene.layers;
 
@@ -407,7 +450,7 @@ class FramePassCameraFrame extends FramePass {
             clearRenderTarget: true     // true if the render target should be cleared
         };
 
-        ret.lastAddedIndex = this.scenePass.addLayers(composition, cameraComponent, ret.lastAddedIndex, ret.clearRenderTarget, lastLayerId, lastLayerIsTransparent);
+        ret.lastAddedIndex = this.addCameraLayers(this.scenePass, ret.lastAddedIndex, ret.clearRenderTarget, lastLayerId, lastLayerIsTransparent);
         ret.clearRenderTarget = false;
 
         // grab pass allowing us to copy the render scene into a texture and use for refraction
@@ -420,7 +463,7 @@ class FramePassCameraFrame extends FramePass {
             this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
             this.setupScenePassSettings(this.scenePassTransparent);
             this.scenePassTransparent.init(this.rt);
-            ret.lastAddedIndex = this.scenePassTransparent.addLayers(composition, cameraComponent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
+            ret.lastAddedIndex = this.addCameraLayers(this.scenePassTransparent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
 
             // if no layers are rendered by this pass, remove it
             if (!this.scenePassTransparent.rendersAnything) {
@@ -520,7 +563,7 @@ class FramePassCameraFrame extends FramePass {
         this.afterPass.init(targetRenderTarget);
 
         // add all remaining layers the camera renders
-        this.afterPass.addLayers(composition, cameraComponent, scenePassesInfo.lastAddedIndex, scenePassesInfo.clearRenderTarget);
+        this.addCameraLayers(this.afterPass, scenePassesInfo.lastAddedIndex, scenePassesInfo.clearRenderTarget);
     }
 
     frameUpdate() {

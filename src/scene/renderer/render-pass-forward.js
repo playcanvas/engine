@@ -116,54 +116,6 @@ class RenderPassForward extends RenderPass {
         this.addLayerRenderStep(step);
     }
 
-    /**
-     * Adds layers to be rendered by this render pass, starting from the given index of the layer
-     * in the layer composition, till the end of the layer list, or till the last layer with the
-     * given id and transparency is reached (inclusive). Note that only layers that are rendered by
-     * the specified camera are added.
-     *
-     * @param {LayerComposition} composition - The layer composition containing the layers to be
-     * added, typically the scene layer composition.
-     * @param {CameraComponent} cameraComponent - The camera component that is used to render the
-     * layers.
-     * @param {number} startIndex - The index of the first layer to be considered for adding.
-     * @param {boolean} firstLayerClears - True if the first layer added should clear the render
-     * target.
-     * @param {number} [lastLayerId] - The id of the last layer to be added. If not specified, all
-     * layers till the end of the layer list are added.
-     * @param {boolean} [lastLayerIsTransparent] - True if the last layer to be added is transparent.
-     * Defaults to true.
-     * @returns {number} Returns the index of last layer added.
-     */
-    addLayers(composition, cameraComponent, startIndex, firstLayerClears, lastLayerId, lastLayerIsTransparent = true) {
-
-        const { layerList, subLayerList } = composition;
-        let clearRenderTarget = firstLayerClears;
-
-        let index = startIndex;
-        while (index < layerList.length) {
-
-            const layer = layerList[index];
-            const isTransparent = subLayerList[index];
-            const renderedByCamera = cameraComponent.camera.layersSet.has(layer.id);
-
-            // add it for rendering
-            if (renderedByCamera) {
-                this.addLayer(cameraComponent, layer, isTransparent, clearRenderTarget);
-                clearRenderTarget = false;
-            }
-
-            index++;
-
-            // stop at last requested layer
-            if (layer.id === lastLayerId && isTransparent === lastLayerIsTransparent) {
-                break;
-            }
-        }
-
-        return index;
-    }
-
     updateDirectionalShadows() {
         // add directional shadow passes if needed for the cameras used in this render pass
         const { renderer, layerRenderSteps } = this;
@@ -350,7 +302,9 @@ class RenderPassForward extends RenderPass {
                 }${(` Lay: ${layer.name}`).padEnd(22, ' ')
                 }${step.transparent ? ' TRANSP' : ' OPAQUE'
                 }${enabled ? ' ENABLED' : ' DISABLED'
-                }${(` Meshes: ${layer.meshInstances.length}`).padEnd(5, ' ')}`
+                }${(` Meshes: ${layer.meshInstances.length}`).padEnd(5, ' ')
+                }${step.firstCameraUse ? ' CAM-FIRST' : ''
+                }${step.lastCameraUse ? ' CAM-LAST' : ''}`
                 );
             });
         }

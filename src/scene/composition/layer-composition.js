@@ -375,8 +375,6 @@ class LayerComposition extends EventHandler {
                         (enabled ? ' ENABLED ' : ' DISABLED') +
                         (` RT: ${ra.renderTarget ? ra.renderTarget.name : '-'}`).padEnd(30, ' ')
                     } Clear: ${clear
-                    }${ra.firstCameraUse ? ' CAM-FIRST' : ''
-                    }${ra.lastCameraUse ? ' CAM-LAST' : ''
                     }${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`
                     );
                 }
