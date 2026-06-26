@@ -29,9 +29,6 @@ class RenderAction {
          */
         this.renderTarget = null;
 
-        // light clusters (type WorldClusters)
-        this.lightClusters = null;
-
         // clear flags
         this.clearColor = false;
         this.clearDepth = false;
