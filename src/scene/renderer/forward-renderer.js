@@ -15,6 +15,7 @@ import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
+import { LayerRenderStep } from './layer-render-step.js';
 import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 
@@ -23,6 +24,7 @@ import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
  * @import { FrameGraph } from '../frame-graph.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { RenderAction } from '../composition/render-action.js'
  * @import { Layer } from '../layer.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
@@ -1072,10 +1074,29 @@ class ForwardRenderer extends Renderer {
 
         const renderActions = layerComposition._renderActions;
         for (let i = startIndex; i <= endIndex; i++) {
-            renderPass.addRenderAction(renderActions[i]);
+            renderPass.addLayerRenderStep(this._layerRenderStepFromRenderAction(renderActions[i]));
         }
 
         frameGraph.addRenderPass(renderPass);
+    }
+
+    /**
+     * Build a {@link LayerRenderStep} from a composition {@link RenderAction}. This is the only
+     * place that bridges the internal RenderAction scheduling type to the render pass's own
+     * LayerRenderStep, so neither RenderPassForward nor LayerRenderStep reference RenderAction.
+     *
+     * @param {RenderAction} renderAction - The composition render action.
+     * @returns {LayerRenderStep} The layer render step.
+     * @private
+     */
+    _layerRenderStepFromRenderAction(renderAction) {
+        const step = new LayerRenderStep(renderAction.camera, renderAction.layer, renderAction.transparent, renderAction.renderTarget);
+        step.clearColor = renderAction.clearColor;
+        step.clearDepth = renderAction.clearDepth;
+        step.clearStencil = renderAction.clearStencil;
+        step.firstCameraUse = renderAction.firstCameraUse;
+        step.lastCameraUse = renderAction.lastCameraUse;
+        return step;
     }
 
     /**
