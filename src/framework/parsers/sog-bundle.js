@@ -242,6 +242,17 @@ class SogBundleParser {
 
             await Promise.allSettled(promises);
 
+            // Release the encoded source bytes held by the embedded texture assets. These are
+            // views into the downloaded zip arrayBuffer; once the textures have been decoded and
+            // uploaded, dropping them lets the whole archive buffer be garbage collected. The
+            // decoded ImageBitmap retained by each texture (for re-upload on device context loss)
+            // is unaffected.
+            Object.values(textures).forEach((t) => {
+                if (t.file) {
+                    t.file.contents = null;
+                }
+            });
+
             const { assets } = this.app;
 
             asset.once('unload', () => {
