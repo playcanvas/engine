@@ -1211,6 +1211,73 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return true;
     }
 
+    /**
+     * Copies a region of a source texture into a destination texture. The destination is written
+     * via `copyTexSubImage2D` as a bound texture, so only the source needs a framebuffer. This is
+     * the WebGL texture-copy primitive used by {@link Texture#copy}.
+     *
+     * @param {Texture} source - The source texture.
+     * @param {Texture} dest - The destination texture.
+     * @param {object} [options] - The copy options (see {@link Texture#copy}).
+     * @returns {boolean} True if the copy was successful.
+     * @ignore
+     */
+    copyTextureToTexture(source, dest, options = {}) {
+        const gl = this.gl;
+
+        const sourceMipLevel = options.sourceMipLevel ?? 0;
+        const destMipLevel = options.destMipLevel ?? 0;
+        const face = options.face ?? 0;
+
+        const sx = options.sourceX ?? 0;
+        const sy = options.sourceY ?? 0;
+        const dx = options.destX ?? 0;
+        const dy = options.destY ?? 0;
+        const w = options.width ?? Math.max(1, source.width >> sourceMipLevel);
+        const h = options.height ?? Math.max(1, source.height >> sourceMipLevel);
+
+        DebugGraphics.pushGpuMarker(this, 'COPY-TEX');
+
+        // wrap the source in a render target so it can be read from a framebuffer (mip level and
+        // face are selected by the render target). Reuse a caller-supplied one if provided, as an
+        // optimization for high-frequency copies.
+        const sourceRenderTarget = options.sourceRenderTarget ?? new RenderTarget({
+            name: 'TextureCopySource',
+            colorBuffer: source,
+            depth: false,
+            face: face,
+            mipLevel: sourceMipLevel
+        });
+
+        const prevRt = this.renderTarget;
+
+        this.setRenderTarget(sourceRenderTarget);
+        this.initRenderTarget(sourceRenderTarget);
+        this.setFramebuffer(sourceRenderTarget.impl._glFrameBuffer);
+
+        // ensure the destination texture is created / uploaded and bound on a texture unit
+        this.setTexture(dest, 0);
+
+        // destination face / target (cubemap face selected explicitly, otherwise 2D)
+        const destTarget = dest.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + face : gl.TEXTURE_2D;
+
+        // copy the source framebuffer region into the bound destination texture
+        gl.copyTexSubImage2D(destTarget, destMipLevel, dx, dy, sx, sy, w, h);
+
+        // destroy the temporary render target if we created it
+        if (!options.sourceRenderTarget) {
+            sourceRenderTarget.destroy();
+        }
+
+        // restore the previous render target binding
+        this.setRenderTarget(prevRt);
+        this.setFramebuffer(prevRt ? prevRt.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer);
+
+        DebugGraphics.popGpuMarker(this);
+
+        return true;
+    }
+
     frameStart() {
         super.frameStart();
 
