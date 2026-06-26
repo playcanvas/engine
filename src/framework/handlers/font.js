@@ -140,6 +140,11 @@ class FontHandler extends ResourceHandler {
             // only textures
             font = new Font(data, null);
         }
+
+        // give the font access to the loader so it can release its textures from the cache when
+        // the asset is unloaded
+        font._loader = this._loader;
+
         return font;
     }
 
