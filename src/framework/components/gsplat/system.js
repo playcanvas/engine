@@ -28,6 +28,8 @@ const _properties = [
     'unified',
     'lodBaseDistance',
     'lodMultiplier',
+    'lodRangeMin',
+    'lodRangeMax',
     'castShadows',
     'material',
     'asset',
