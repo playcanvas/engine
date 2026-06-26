@@ -1343,6 +1343,105 @@ class Texture {
     }
 
     /**
+     * Validates the parameters of a {@link Texture#copy} operation.
+     *
+     * @param {Texture} source - The source texture.
+     * @param {object} options - The copy options (see {@link Texture#copy}).
+     * @returns {boolean} True if the copy parameters are valid.
+     * @private
+     */
+    _validateCopy(source, options) {
+        // #if _DEBUG
+        if (!source) {
+            Debug.error('Texture#copy: a source texture must be provided.');
+            return false;
+        }
+        if (source._format !== this._format) {
+            Debug.error(`Texture#copy: source and destination formats must match (source '${source.name}', destination '${this.name}').`);
+            return false;
+        }
+        if (source._compressed || this._compressed) {
+            Debug.error('Texture#copy: copying compressed textures is not supported.');
+            return false;
+        }
+        if (source._volume || this._volume) {
+            Debug.error('Texture#copy: copying 3D (volume) textures is not supported.');
+            return false;
+        }
+
+        const sourceMipLevel = options.sourceMipLevel ?? 0;
+        const destMipLevel = options.destMipLevel ?? 0;
+        if (sourceMipLevel < 0 || sourceMipLevel >= source.numLevels) {
+            Debug.error(`Texture#copy: sourceMipLevel ${sourceMipLevel} is out of range (source has ${source.numLevels} levels).`);
+            return false;
+        }
+        if (destMipLevel < 0 || destMipLevel >= this.numLevels) {
+            Debug.error(`Texture#copy: destMipLevel ${destMipLevel} is out of range (destination has ${this.numLevels} levels).`);
+            return false;
+        }
+
+        // number of array layers / cubemap faces
+        const sourceLayers = source.cubemap ? 6 : Math.max(1, source.arrayLength);
+        const destLayers = this.cubemap ? 6 : Math.max(1, this.arrayLength);
+        const face = options.face ?? 0;
+        if (face < 0 || face >= sourceLayers || face >= destLayers) {
+            Debug.error(`Texture#copy: face ${face} is out of range.`);
+            return false;
+        }
+
+        // region bounds, evaluated at the chosen mip levels
+        const sw = Math.max(1, source.width >> sourceMipLevel);
+        const sh = Math.max(1, source.height >> sourceMipLevel);
+        const dw = Math.max(1, this.width >> destMipLevel);
+        const dh = Math.max(1, this.height >> destMipLevel);
+        const sx = options.sourceX ?? 0;
+        const sy = options.sourceY ?? 0;
+        const dx = options.destX ?? 0;
+        const dy = options.destY ?? 0;
+        const w = options.width ?? (sw - sx);
+        const h = options.height ?? (sh - sy);
+        if (w <= 0 || h <= 0 || sx < 0 || sy < 0 || dx < 0 || dy < 0 ||
+            sx + w > sw || sy + h > sh || dx + w > dw || dy + h > dh) {
+            Debug.error(`Texture#copy: copy region is out of bounds (source ${sw}x${sh}, destination ${dw}x${dh}).`);
+            return false;
+        }
+        // #endif
+        return true;
+    }
+
+    /**
+     * Copies a region of a source texture into this texture. Both textures must have the same
+     * pixel format. The copied region sizes must match (no scaling), and must lie within the
+     * chosen mip levels of both textures.
+     *
+     * @param {Texture} source - The source texture to copy from.
+     * @param {object} [options] - Optional arguments.
+     * @param {number} [options.sourceMipLevel] - The source mip level to copy from. Defaults to 0.
+     * @param {number} [options.destMipLevel] - The destination mip level to copy to. Defaults to 0.
+     * @param {number} [options.face] - The cubemap face or array layer to copy (applies to both
+     * source and destination). Defaults to 0.
+     * @param {number} [options.sourceX] - The left edge of the source region. Defaults to 0.
+     * @param {number} [options.sourceY] - The top edge of the source region. Defaults to 0.
+     * @param {number} [options.width] - The width of the copied region. Defaults to the full width
+     * of the source mip level (minus sourceX).
+     * @param {number} [options.height] - The height of the copied region. Defaults to the full
+     * height of the source mip level (minus sourceY).
+     * @param {number} [options.destX] - The left edge of the destination region. Defaults to 0.
+     * @param {number} [options.destY] - The top edge of the destination region. Defaults to 0.
+     * @param {RenderTarget} [options.sourceRenderTarget] - A render target wrapping the source
+     * texture as its color buffer, at the matching face / mip level. Provide as an optimization to
+     * avoid allocating a temporary one when copying with high frequency (per frame). Note that this
+     * is only utilized on the WebGL platform, and ignored on WebGPU.
+     * @returns {boolean} True if the copy was successful, false otherwise.
+     */
+    copy(source, options = {}) {
+        if (!this._validateCopy(source, options)) {
+            return false;
+        }
+        return this.impl.copy?.(source, options) ?? true;
+    }
+
+    /**
      * Creates a TextureView for this texture, specifying a subset of mip levels and array layers.
      * TextureViews can be used with compute shaders to access specific portions of a texture.
      *

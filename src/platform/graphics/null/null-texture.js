@@ -12,6 +12,10 @@ class NullTexture {
 
     loseContext() {
     }
+
+    copy(source, options) {
+        return true;
+    }
 }
 
 export { NullTexture };
