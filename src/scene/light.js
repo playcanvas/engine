@@ -26,7 +26,6 @@ import { FloatPacking } from '../core/math/float-packing.js';
  */
 
 /**
- * @import { BindGroup } from '../platform/graphics/bind-group.js'
  * @import { Layer } from './layer.js'
  */
 

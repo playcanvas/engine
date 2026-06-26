@@ -13,10 +13,6 @@ import {
 import { Color } from '../../core/math/color.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 
-/**
- * @import { BindGroup } from '../../platform/graphics/bind-group.js'
- */
-
 const tempMeshInstances = [];
 
 // uniform name of the depth texture

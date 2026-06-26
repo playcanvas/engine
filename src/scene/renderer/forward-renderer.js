@@ -19,7 +19,6 @@ import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 
 /**
- * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  * @import { Camera } from '../camera.js'
  * @import { FrameGraph } from '../frame-graph.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'

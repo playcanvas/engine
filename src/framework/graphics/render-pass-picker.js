@@ -6,7 +6,6 @@ import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/unif
 import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
 
 /**
- * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  * @import { CameraComponent } from '../components/camera/component.js'
  * @import { Scene } from '../../scene/scene.js'
  * @import { Layer } from '../../scene/layer.js'
