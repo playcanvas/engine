@@ -1126,9 +1126,7 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // update camera and frustum
-            const renderTarget = camera.renderTarget;
-            camera.frameUpdate(renderTarget);
+            // update the camera frustum for culling (aspect ratio auto-refreshes on read)
             this.updateCameraFrustum(camera.camera);
 
             // for all of its enabled layers cull the non-directional lights once with each camera
