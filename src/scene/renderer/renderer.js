@@ -42,6 +42,7 @@ import { Camera } from '../camera.js';
  * @import { CulledInstances } from '../layer.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { RenderView } from '../render-view.js'
+ * @import { Layer } from '../layer.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Light } from '../light.js'
  * @import { MeshInstance } from '../mesh-instance.js'
@@ -119,6 +120,16 @@ class Renderer {
      * @protected
      */
     processingMeshInstances = new Set();
+
+    /**
+     * The distinct cameras with mesh-instance cull requests registered for the current frame, in
+     * registration order. Populated by {@link Renderer#requestMeshInstanceCull} and drained by
+     * {@link Renderer#executeMeshInstanceCull}. Reused across frames to avoid per-frame allocation.
+     *
+     * @type {Camera[]}
+     * @private
+     */
+    _cullCameras = [];
 
     /**
      * @type {WorldClustersAllocator}
@@ -1181,6 +1192,70 @@ class Renderer {
     }
 
     /**
+     * Registers a request to cull a layer's mesh instances for a camera in the current frame. The
+     * culling itself is performed later, in a single batch, by
+     * {@link Renderer#executeMeshInstanceCull}. Requests are de-duplicated per (camera, layer), so
+     * requesting the same pair more than once (e.g. for its opaque and transparent sub-layers) is
+     * harmless.
+     *
+     * This lets the frame graph drive culling - each pass requests the (camera, layer) pairs it
+     * will actually render - instead of culling every camera/layer combination in the composition.
+     *
+     * @param {Camera} camera - The camera to cull for.
+     * @param {Layer} layer - The layer whose mesh instances should be culled.
+     * @ignore
+     */
+    requestMeshInstanceCull(camera, layer) {
+        // track each requested camera once, when its first layer this frame is registered
+        if (camera.addCullLayer(layer)) {
+            this._cullCameras.push(camera);
+        }
+    }
+
+    /**
+     * Performs all mesh-instance culling requested via {@link Renderer#requestMeshInstanceCull}
+     * this frame, then clears the request list. For each requested camera the precull event is
+     * fired (before the frustum is refreshed, so a listener may still adjust the camera), the
+     * camera frustum is updated, each requested layer is culled, and the postcull event is fired.
+     *
+     * The events are passed the owning camera component for a framework camera, or null for an
+     * internal camera (shadow / reflection / picker), matching the documented precull/postcull
+     * contract.
+     *
+     * @ignore
+     */
+    executeMeshInstanceCull() {
+
+        const { scene } = this;
+        const cameras = this._cullCameras;
+
+        for (let i = 0; i < cameras.length; i++) {
+            const camera = cameras[i];
+
+            // recover the owning camera component (framework camera) or null (internal camera),
+            // without the scene layer taking a dependency on the framework
+            const cameraComponent = camera.node?.camera ?? null;
+
+            // precull is fired before the frustum is refreshed, so a listener may adjust the camera
+            scene?.fire(EVENT_PRECULL, cameraComponent);
+
+            this.updateCameraFrustum(camera);
+
+            for (const layer of camera.cullLayers) {
+                this.cullMeshInstances(camera, layer.meshInstances, layer.getCulledInstances(camera));
+            }
+
+            scene?.fire(EVENT_POSTCULL, cameraComponent);
+
+            // reset the camera's per-frame cull layer set
+            camera.clearCullLayers();
+        }
+
+        // requests consumed - reset for the next frame
+        cameras.length = 0;
+    }
+
+    /**
      * Visibility culling of meshInstances and shadow casters. Light visibility, the light atlas and
      * the directional-shadow-light collection are done earlier in
      * {@link Renderer#updateLightVisibility}.
@@ -1197,32 +1272,11 @@ class Renderer {
 
         this.processingMeshInstances.clear();
 
-        // for all cameras
-        const numCameras = comp.cameras.length;
-        this._camerasRendered += numCameras;
+        this._camerasRendered += comp.cameras.length;
 
-        for (let i = 0; i < numCameras; i++) {
-            const camera = comp.cameras[i];
-
-            // event before the camera is culling, fired after the frustum has been updated (in
-            // updateLightVisibility) so listeners can rely on the current camera state
-            scene?.fire(EVENT_PRECULL, camera);
-
-            // for all of its enabled layers
-            const layerIds = camera.layers;
-            for (let j = 0; j < layerIds.length; j++) {
-                const layer = comp.getLayerById(layerIds[j]);
-                if (layer && layer.enabled) {
-
-                    // cull mesh instances
-                    const culledInstances = layer.getCulledInstances(camera.camera);
-                    this.cullMeshInstances(camera.camera, layer.meshInstances, culledInstances);
-                }
-            }
-
-            // event after the camera is done with culling
-            scene?.fire(EVENT_POSTCULL, camera);
-        }
+        // cull mesh instances for the (camera, layer) pairs the frame graph's passes requested
+        // (this also fires the per-camera precull / postcull events)
+        this.executeMeshInstanceCull();
 
         // cull shadow casters for all lights
         this.cullShadowmaps(comp);

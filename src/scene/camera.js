@@ -18,6 +18,7 @@ import { CameraShaderParams } from './camera-shader-params.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { FogParams } from './fog-params.js'
+ * @import { Layer } from './layer.js'
  * @import { RenderView } from './render-view.js'
  * @import { ShaderPassInfo } from './shader-pass.js'
  */
@@ -182,6 +183,12 @@ class Camera {
         this._jitters = [0, 0, 0, 0];            // jitter values for TAA, 0-1 - current frame, 2-3 - previous frame
 
         this.frustum = new Frustum();
+
+        // Reusable set of layers to cull for this camera in the current frame. Populated through
+        // requestMeshInstanceCull and drained by executeMeshInstanceCull on the renderer; kept on
+        // the camera so the per-camera cull state needs no per-frame allocation.
+        /** @type {Set<Layer>} */
+        this._cullLayers = new Set();
 
         // Set by XrManager when an XR session takes over this camera: a reference to the manager's
         // live per-view array (matrices, viewports, updated each frame), or null when not in XR.
@@ -544,6 +551,43 @@ class Camera {
      */
     get xrActive() {
         return this._xrViews !== null;
+    }
+
+    /**
+     * Registers a layer to be culled for this camera in the current frame. Used by the renderer's
+     * request/execute mesh-instance culling.
+     *
+     * @param {Layer} layer - The layer to cull for this camera.
+     * @returns {boolean} True if this is the first layer registered for this camera this frame,
+     * letting the caller track the camera exactly once.
+     * @ignore
+     */
+    addCullLayer(layer) {
+        const first = this._cullLayers.size === 0;
+        this._cullLayers.add(layer);
+        return first;
+    }
+
+    /**
+     * Gets the set of layers registered to be culled for this camera in the current frame. For
+     * read-only iteration; use {@link Camera#addCullLayer} and {@link Camera#clearCullLayers} to
+     * mutate it.
+     *
+     * @type {Set<Layer>}
+     * @ignore
+     */
+    get cullLayers() {
+        return this._cullLayers;
+    }
+
+    /**
+     * Clears the set of layers registered to be culled for this camera, called once the camera's
+     * culling has been performed.
+     *
+     * @ignore
+     */
+    clearCullLayers() {
+        this._cullLayers.clear();
     }
 
     /**

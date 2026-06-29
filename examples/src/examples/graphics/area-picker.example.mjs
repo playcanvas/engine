@@ -4,6 +4,7 @@
 // highlighted.
 
 import * as pc from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -31,7 +32,7 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.ScriptComponentSystem];
 createOptions.resourceHandlers = [pc.TextureHandler];
 
 const app = new pc.AppBase(canvas);
@@ -122,12 +123,26 @@ assetListLoader.load(() => {
         return primitive;
     }
 
-    // Create main camera
+    // Create main camera. It auto-orbits the scene until the first right-click, after which
+    // interactive orbit controls (drag to orbit, scroll to zoom) take over - letting the view be
+    // moved around to visually confirm culling. Left-click picks without stopping the orbit.
     const camera = new pc.Entity();
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
+    camera.addComponent('script');
     app.root.addChild(camera);
+
+    // auto-rotation is active until the first right-click; at that point we create CameraControls
+    // (which attaches at the camera's current pose, so there's no jump) and hand control to the
+    // user, never auto-rotating again
+    let autoRotate = true;
+    const stopAutoRotate = () => {
+        if (!autoRotate) return;
+        autoRotate = false;
+        const cameraControls = /** @type {CameraControls} */ (camera.script.create(CameraControls));
+        cameraControls.focusPoint = new pc.Vec3(0, 0, 0);
+    };
 
     data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
         camera.camera.projection = value ? pc.PROJECTION_ORTHOGRAPHIC : pc.PROJECTION_PERSPECTIVE;
@@ -197,28 +212,34 @@ assetListLoader.load(() => {
     /** @type {{ x: number, y: number } | null} */
     let pendingPickRequest = null;
 
-    // handle mouse click to pick world point
+    // handle mouse buttons: left button picks a world point (auto-rotation continues, so the picked
+    // marker can be seen from a moving viewpoint), right button hands control to the user and stops
+    // the auto-rotation. The context menu is disabled so the right button is usable.
     const mouse = new pc.Mouse(document.body);
+    mouse.disableContextMenu();
     mouse.on('mousedown', (event) => {
-        // store the pick request to be processed after picker.prepare
-        pendingPickRequest = {
-            x: event.x * pickerScale,
-            y: event.y * pickerScale
-        };
+        if (event.button === pc.MOUSEBUTTON_RIGHT) {
+            // right button stops the auto-rotation and hands control to the user
+            stopAutoRotate();
+        } else if (event.button === pc.MOUSEBUTTON_LEFT) {
+            // left button picks a world point; store the request to process after picker.prepare
+            pendingPickRequest = {
+                x: event.x * pickerScale,
+                y: event.y * pickerScale
+            };
+        }
     });
 
     // update each frame
     let time = 0;
     app.on('update', (/** @type {number} */ dt) => {
-        time += dt * 0.1;
 
-        // orbit the camera around
-        if (!camera) {
-            return;
+        // auto-orbit the camera until the user takes control
+        if (autoRotate) {
+            time += dt * 0.1;
+            camera.setLocalPosition(40 * Math.sin(time), 0, 40 * Math.cos(time));
+            camera.lookAt(pc.Vec3.ZERO);
         }
-
-        camera.setLocalPosition(40 * Math.sin(time), 0, 40 * Math.cos(time));
-        camera.lookAt(pc.Vec3.ZERO);
 
         // Make sure the picker is the right size, and prepare it, which renders meshes into its render target
         if (picker) {

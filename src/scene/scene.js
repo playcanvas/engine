@@ -121,8 +121,9 @@ class Scene extends EventHandler {
     static EVENT_POSTRENDER_LAYER = 'postrender:layer';
 
     /**
-     * Fired before mesh instance visibility culling is performed for a camera. The handler is
-     * passed the {@link CameraComponent} being culled, or null when the culling is internal (for
+     * Fired before mesh instance visibility culling is performed for a camera, just before the
+     * camera's culling frustum is refreshed (so a handler may still adjust the camera). The handler
+     * is passed the {@link CameraComponent} being culled, or null when the culling is internal (for
      * example when culling shadow casters for a light's shadow map). Note that light visibility
      * culling happens earlier in the frame and is not bracketed by this event.
      *

@@ -167,6 +167,19 @@ class RenderPassForward extends RenderPass {
         super.frameUpdate();
         this.updateDirectionalShadows();
         this.updateClears();
+
+        // request mesh-instance culling for the (camera, layer) pairs this pass will render, so
+        // their culled lists are ready by the time the pass executes. Gated by the same isEnabled
+        // check execute() uses, so a disabled sub-layer (e.g. one left in a persistent CameraFrame
+        // pass) is neither culled nor rendered. The same (camera, layer) appearing as both an
+        // opaque and a transparent step is de-duplicated by the request.
+        const { renderer, layerComposition, layerRenderSteps } = this;
+        for (let i = 0; i < layerRenderSteps.length; i++) {
+            const step = layerRenderSteps[i];
+            if (layerComposition.isEnabled(step.layer, step.transparent)) {
+                renderer.requestMeshInstanceCull(step.cameraComponent.camera, step.layer);
+            }
+        }
     }
 
     before() {
