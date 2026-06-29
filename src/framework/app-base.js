@@ -809,6 +809,11 @@ class AppBase extends EventHandler {
             this.loader.maxConcurrentRequests = props.maxConcurrentRequests;
         }
 
+        // send asset requests with credentials - applied before preloading so preloaded assets pick it up
+        if (typeof props.withCredentials === 'boolean') {
+            this.loader.withCredentials = props.withCredentials;
+        }
+
         // TODO: remove this temporary block after migrating properties
         if (!props.useDevicePixelRatio) {
             props.useDevicePixelRatio = props.use_device_pixel_ratio;

@@ -389,6 +389,36 @@ class ResourceLoader {
     }
 
     /**
+     * Sets whether asset requests are sent with credentials. When true, cross-origin requests
+     * include credentials (cookies, client TLS certificates and HTTP authentication), allowing
+     * assets to be loaded from an authenticated cross-origin host. The server must respond with a
+     * non-wildcard `Access-Control-Allow-Origin` and `Access-Control-Allow-Credentials: true`.
+     * Defaults to false.
+     *
+     * Set this before assets start loading (i.e. before {@link AppBase#preload} or
+     * {@link AssetRegistry#load}). Note this is a process-global setting (it applies to the shared
+     * HTTP layer), so with multiple applications the last value set wins. It applies to all
+     * XHR-based requests, which covers the large majority of asset loads.
+     *
+     * @type {boolean}
+     * @example
+     * // load all assets from an authenticated cross-origin host
+     * app.loader.withCredentials = true;
+     */
+    set withCredentials(value) {
+        http.withCredentials = !!value;
+    }
+
+    /**
+     * Gets whether asset requests are sent with credentials.
+     *
+     * @type {boolean}
+     */
+    get withCredentials() {
+        return http.withCredentials;
+    }
+
+    /**
      * Destroys the resource loader.
      */
     destroy() {

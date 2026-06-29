@@ -86,7 +86,11 @@ class ImgParser extends TextureParser {
 
     _loadImage(url, originalUrl, crossOrigin, callback, asset) {
         const image = new Image();
-        if (crossOrigin) {
+        if (http.withCredentials) {
+            // an <img> element cannot use the XHR `withCredentials` flag, so 'use-credentials' is
+            // the equivalent way to send credentials with a cross-origin image request
+            image.crossOrigin = 'use-credentials';
+        } else if (crossOrigin) {
             image.crossOrigin = crossOrigin;
         }
 
