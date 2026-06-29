@@ -639,6 +639,21 @@ class LayerComposition extends EventHandler {
     }
 
     /**
+     * Returns true if the sub-layer at the given flat {@link LayerComposition#layerList} index is
+     * enabled and rendered by the given camera. Combines the per-layer enabled flag, the per
+     * sub-layer enabled flag and the layer's set of cameras.
+     *
+     * @param {number} index - The index of the sub-layer in {@link LayerComposition#layerList}.
+     * @param {Camera} camera - The camera to test.
+     * @returns {boolean} True if the sub-layer is enabled and the camera renders it.
+     * @ignore
+     */
+    isSubLayerRenderedByCamera(index, camera) {
+        const layer = this.layerList[index];
+        return layer.enabled && this.subLayerEnabled[index] && layer.camerasSet.has(camera);
+    }
+
+    /**
      * Update maps of layer IDs and names to match the layer list.
      *
      * @private
