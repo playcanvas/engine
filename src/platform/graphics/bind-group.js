@@ -64,6 +64,25 @@ class BindGroup {
     _uniformBufferContainers = [];
 
     /**
+     * For each texture / storage-texture slot, the GPU implementation object the slot was last
+     * built against. A texture's `impl` is replaced when its GPU resource is recreated (e.g.
+     * {@link Texture#resize}), which can happen mid-render in the same render version the bind
+     * group was last built — so the {@link renderVersionDirty} check alone misses it and the bind
+     * group keeps a view of the (now destroyed) old GPU texture. Tracking impl identity forces a
+     * rebuild whenever the underlying GPU resource is recreated.
+     *
+     * @type {object[]}
+     * @private
+     */
+    _textureImpls = [];
+
+    /**
+     * @type {object[]}
+     * @private
+     */
+    _storageTextureImpls = [];
+
+    /**
      * Create a new Bind Group.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this uniform buffer.
@@ -153,7 +172,11 @@ class BindGroup {
         } else if (this.renderVersionUpdated < texture.renderVersionDirty) {
             // if the texture properties have changed
             this.dirty = true;
+        } else if (this._textureImpls[index] !== texture.impl) {
+            // the texture's GPU resource was recreated (e.g. resize) since the last build
+            this.dirty = true;
         }
+        this._textureImpls[index] = texture.impl;
     }
 
     /**
@@ -175,7 +198,11 @@ class BindGroup {
         } else if (this.renderVersionUpdated < texture.renderVersionDirty) {
             // if the texture properties have changed
             this.dirty = true;
+        } else if (this._storageTextureImpls[index] !== texture.impl) {
+            // the texture's GPU resource was recreated (e.g. resize) since the last build
+            this.dirty = true;
         }
+        this._storageTextureImpls[index] = texture.impl;
     }
 
     /**
