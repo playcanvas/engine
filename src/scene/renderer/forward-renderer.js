@@ -999,7 +999,7 @@ class ForwardRenderer extends Renderer {
                 const nextRenderAction = renderActions[i + 1];
                 const isNextLayerDepth = nextRenderAction ? (!nextRenderAction.useCameraPasses && nextRenderAction.layer.id === LAYERID_DEPTH) : false;
                 const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
-                const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
+                const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.culler.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
 
                 // end of the block using the same render target if the next render action uses a different render target,
                 // a different camera, or needs directional shadows rendered before it or similar.
@@ -1124,7 +1124,7 @@ class ForwardRenderer extends Renderer {
 
         // light visibility culling, light atlas allocation and directional shadow light collection
         // (mesh-independent, so it can run before the frame graph is built in a later refactor)
-        this.updateLightVisibility(comp);
+        this.culler.updateLightVisibility(comp);
     }
 
     /**
@@ -1139,7 +1139,7 @@ class ForwardRenderer extends Renderer {
 
         // visibility culling of meshInstances and shadow casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
-        this.cullComposition(comp);
+        this.culler.cullComposition(comp);
 
         // Dispatch gsplat directional shadow culls. Runs after cullComposition so each directional
         // light's shadow-camera frustum has been fitted, and before the frame graph renders the
@@ -1147,11 +1147,11 @@ class ForwardRenderer extends Renderer {
         this.gsplatDirector?.updateShadows();
 
         // GPU update for visible objects requiring one
-        this.gpuUpdate(this.processingMeshInstances);
+        this.gpuUpdate(this.culler.processingMeshInstances);
 
         // consume one-shot (THISFRAME) shadow updates - the frame graph has been built and shadow
         // casters culled, so both have read the shadow update mode before it is changed here
-        this.consumeOneShotShadows();
+        this.culler.consumeOneShotShadows();
     }
 }
 

@@ -153,7 +153,7 @@ class RenderPassPrepass extends RenderPass {
             if (layerList[i].id === LAYERID_DEPTH) break;
             if (composition.isSubLayerRenderedByCamera(i, cullCamera)) {
                 qualified.push(i);
-                renderer.requestMeshInstanceCull(cullCamera, layerList[i]);
+                renderer.culler.requestMeshInstanceCull(cullCamera, layerList[i]);
             }
         }
     }

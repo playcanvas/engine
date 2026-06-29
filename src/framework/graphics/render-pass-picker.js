@@ -114,7 +114,7 @@ class RenderPassPicker extends RenderPass {
 
             // request culling of this layer for the picking camera, so execute() can read the
             // camera-visible instances instead of the whole layer
-            renderer.requestMeshInstanceCull(camera.camera, srcLayer);
+            renderer.culler.requestMeshInstanceCull(camera.camera, srcLayer);
 
             // kick off a compute tiled renderer for the gsplat manager on this layer, and store the mesh instance
             // which copies the results to the pick buffer
@@ -128,7 +128,7 @@ class RenderPassPicker extends RenderPass {
 
         // perform the requested culls now (the picker renders standalone, outside the main
         // cullComposition), so the culled instance lists are ready for execute()
-        renderer.executeMeshInstanceCull();
+        renderer.culler.executeMeshInstanceCull();
     }
 
     execute() {

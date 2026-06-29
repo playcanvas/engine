@@ -6,7 +6,6 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW,
@@ -21,9 +20,7 @@ import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
-    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    EVENT_PRECULL, EVENT_POSTCULL, EVENT_CULL_END
+    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -35,6 +32,7 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
+import { Culler } from './culler.js';
 import { Camera } from '../camera.js';
 
 /**
@@ -56,7 +54,6 @@ const viewProjMat = new Mat4();
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
-const tempSphere = new BoundingSphere();
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
 const _dynamicBindGroup = new DynamicBindGroup();
@@ -113,23 +110,13 @@ class Renderer {
     scene;
 
     /**
-     * A set of visible mesh instances which need further processing before being rendered, e.g.
-     * skinning or morphing. Extracted during culling.
+     * The scene visibility culler: per-camera light visibility, mesh-instance culling (request /
+     * execute) and shadow-caster culling.
      *
-     * @type {Set<MeshInstance>}
-     * @protected
+     * @type {Culler}
+     * @ignore
      */
-    processingMeshInstances = new Set();
-
-    /**
-     * The distinct cameras with mesh-instance cull requests registered for the current frame, in
-     * registration order. Populated by {@link Renderer#requestMeshInstanceCull} and drained by
-     * {@link Renderer#executeMeshInstanceCull}. Reused across frames to avoid per-frame allocation.
-     *
-     * @type {Camera[]}
-     * @private
-     */
-    _cullCameras = [];
+    culler;
 
     /**
      * @type {WorldClustersAllocator}
@@ -150,23 +137,6 @@ class Renderer {
      * @type {Light[]}
      */
     localLights = [];
-
-    /**
-     * A list of unique directional shadow casting lights for each enabled camera. This is generated
-     * each frame during light culling.
-     *
-     * @type {Map<Camera, Array<Light>>}
-     */
-    cameraDirShadowLights = new Map();
-
-    /**
-     * A mapping of a directional light to a camera, for which the shadow is currently valid. This
-     * is cleared each frame, and updated each time a directional light shadow is rendered for a
-     * camera, and allows us to manually schedule shadow passes when a new camera needs a shadow.
-     *
-     * @type {Map<Light, Camera>}
-     */
-    dirLightShadows = new Map();
 
     /**
      * Shared non-persistent view uniform buffers, keyed by their uniform format. Reused every frame
@@ -232,6 +202,9 @@ class Renderer {
         this.shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
         this._shadowRendererLocal = new ShadowRendererLocal(this, this.shadowRenderer);
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
+
+        // visibility culling (lights, mesh instances, shadow casters)
+        this.culler = new Culler(this);
 
         // clustered passes
         if (this.scene.clusteredLightingEnabled) {
@@ -843,54 +816,6 @@ class Renderer {
         }
     }
 
-    /**
-     * @param {Camera} camera - The camera used for culling.
-     * @param {MeshInstance[]} drawCalls - Draw calls to cull.
-     * @param {CulledInstances} culledInstances - Stores culled instances.
-     */
-    cullMeshInstances(camera, drawCalls, culledInstances) {
-        // #if _PROFILER
-        const cullTime = now();
-        // #endif
-
-        const opaque = culledInstances.opaque;
-        opaque.length = 0;
-        const transparent = culledInstances.transparent;
-        transparent.length = 0;
-
-        const doCull = camera.frustumCulling;
-        const count = drawCalls.length;
-
-        for (let i = 0; i < count; i++) {
-            const drawCall = drawCalls[i];
-            if (drawCall.visible) {
-
-                const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
-                if (visible) {
-                    drawCall.visibleThisFrame = true;
-
-                    // sort mesh instance into the right bucket based on its transparency
-                    const bucket = drawCall.transparent ? transparent : opaque;
-                    bucket.push(drawCall);
-
-                    if (drawCall.skinInstance || drawCall.morphInstance || drawCall.gsplatInstance) {
-                        this.processingMeshInstances.add(drawCall);
-
-                        // register visible cameras
-                        if (drawCall.gsplatInstance) {
-                            drawCall.gsplatInstance.cameras.push(camera);
-                        }
-                    }
-                }
-            }
-        }
-
-        // #if _PROFILER
-        this._cullTime += now() - cullTime;
-        this._numDrawCallsCulled += doCull ? count : 0;
-        // #endif
-    }
-
     collectLights(comp) {
 
         // build a list and of all unique lights from all layers
@@ -951,342 +876,6 @@ class Renderer {
 
         _tempLightSet.clear();
         _tempLayerSet.clear();
-    }
-
-    cullLights(camera, lights) {
-
-        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
-        const physicalUnits = this.scene.physicalUnits;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-
-            if (light.enabled) {
-                // directional lights are marked visible at the start of the frame
-                if (light._type !== LIGHTTYPE_DIRECTIONAL) {
-                    light.getBoundingSphere(tempSphere);
-                    if (camera.frustum.containsSphere(tempSphere)) {
-                        light.visibleThisFrame = true;
-                        light.usePhysicalUnits = physicalUnits;
-
-                        // maximum screen area taken by the light
-                        const screenSize = camera.getScreenSize(tempSphere);
-                        light.maxScreenSize = Math.max(light.maxScreenSize, screenSize);
-                    } else {
-                        // if shadow casting light does not have shadow map allocated, mark it visible to allocate shadow map
-                        // Note: This won't be needed when clustered shadows are used, but at the moment even culled out lights
-                        // are used for rendering, and need shadow map to be allocated
-                        // TODO: delete this code when clusteredLightingEnabled is being removed and is on by default.
-                        if (!clusteredLightingEnabled) {
-                            if (light.castShadows && !light.shadowMap) {
-                                light.visibleThisFrame = true;
-                            }
-                        }
-                    }
-                } else {
-                    light.usePhysicalUnits = this.scene.physicalUnits;
-                }
-            }
-        }
-    }
-
-    /**
-     * Shadow map culling for directional and visible local lights visible meshInstances are
-     * collected into light._renderData, and are marked as visible for directional lights also
-     * shadow camera matrix is set up.
-     *
-     * @param {LayerComposition} comp - The layer composition.
-     */
-    cullShadowmaps(comp) {
-
-        // shadow casters culling for local (point and spot) lights. The shadow-update-mode forcing
-        // (atlas slot reassigned / shadow map not yet allocated) was applied earlier, in
-        // updateLightVisibility, so the update mode is already final here.
-        for (let i = 0; i < this.localLights.length; i++) {
-            const light = this.localLights[i];
-            if (light._type !== LIGHTTYPE_DIRECTIONAL) {
-                if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    this._shadowRendererLocal.cull(light, comp);
-                }
-            }
-        }
-
-        // cull shadow casters / fit cascades for the directional lights collected (earlier, in
-        // updateLightVisibility) into cameraDirShadowLights (mesh-dependent)
-        this.cameraDirShadowLights.forEach((lightList, camera) => {
-            for (let i = 0; i < lightList.length; i++) {
-                this._shadowRendererDirectional.cull(lightList[i], comp, camera);
-            }
-        });
-    }
-
-    /**
-     * After the frame graph is built and shadow casters are culled, account for shadow-map updates
-     * and consume one-shot ({@link SHADOWUPDATE_THISFRAME}) requests for lights whose shadow
-     * actually rendered this frame, reverting them to {@link SHADOWUPDATE_NONE}. A light that did
-     * not render this frame (for example an off-screen local light) keeps its request, so the
-     * shadow updates the next frame the light is rendered. Must run after both the frame graph build
-     * and shadow-caster culling, so that `needsShadowRendering` (a pure predicate) reports the same
-     * result to both before the update mode is changed here.
-     */
-    consumeOneShotShadows() {
-
-        const clustered = this.scene.clusteredLightingEnabled;
-        const shadowRenderer = this.shadowRenderer;
-
-        // local lights: the shadow renders if shadow rendering is needed and, in clustered lighting,
-        // an atlas slot has been allocated for it
-        const localLights = this.localLights;
-        for (let i = 0; i < localLights.length; i++) {
-            const light = localLights[i];
-            if (shadowRenderer.needsShadowRendering(light) && (!clustered || light.atlasViewportAllocated)) {
-                this._shadowMapUpdates += light.numShadowFaces;
-                if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
-                    light.shadowUpdateMode = SHADOWUPDATE_NONE;
-                }
-            }
-        }
-
-        // directional lights: a separate shadow is rendered for each camera that uses the light, as
-        // the shadow frustum is fit to that camera
-        this.cameraDirShadowLights.forEach((lightList) => {
-            for (let i = 0; i < lightList.length; i++) {
-                const light = lightList[i];
-                if (shadowRenderer.needsShadowRendering(light)) {
-                    this._shadowMapUpdates += light.numShadowFaces;
-                    if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
-                        light.shadowUpdateMode = SHADOWUPDATE_NONE;
-                    }
-                }
-            }
-        });
-    }
-
-    /**
-     * Collects the set of shadow-casting directional lights for each camera into
-     * {@link Renderer#cameraDirShadowLights}, and ensures each such light has a shadow map
-     * allocated. This is independent of mesh culling and camera frusta (it uses only the
-     * composition's cameras and the layers' directional lights), so it can run before the frame
-     * graph is built. The actual shadow-caster culling is done separately.
-     *
-     * @param {LayerComposition} comp - The layer composition.
-     */
-    collectDirectionalShadowLights(comp) {
-
-        // start with none and collect lights for cameras
-        this.cameraDirShadowLights.clear();
-        const cameras = comp.cameras;
-        for (let i = 0; i < cameras.length; i++) {
-            const cameraComponent = cameras[i];
-            if (cameraComponent.enabled) {
-                const camera = cameraComponent.camera;
-
-                // get directional lights from all layers of the camera
-                let lightList;
-                const cameraLayers = camera.layers;
-                for (let l = 0; l < cameraLayers.length; l++) {
-                    const cameraLayer = comp.getLayerById(cameraLayers[l]);
-                    if (cameraLayer) {
-                        const layerDirLights = cameraLayer.splitLights[LIGHTTYPE_DIRECTIONAL];
-
-                        for (let j = 0; j < layerDirLights.length; j++) {
-                            const light = layerDirLights[j];
-
-                            // unique shadow casting lights
-                            if (light.castShadows && !_tempSet.has(light)) {
-                                _tempSet.add(light);
-
-                                lightList = lightList ?? [];
-                                lightList.push(light);
-
-                                this._shadowRendererDirectional.prepareShadowMap(light);
-                            }
-                        }
-                    }
-                }
-
-                if (lightList) {
-                    this.cameraDirShadowLights.set(camera, lightList);
-                }
-
-                _tempSet.clear();
-            }
-        }
-    }
-
-    /**
-     * Per-camera light visibility culling, light-atlas allocation and directional-shadow-light
-     * collection. This is independent of mesh culling and the frame graph, so it runs before the
-     * frame graph is built. The mesh and shadow-caster culling that depends on it is done later in
-     * {@link Renderer#cullComposition}.
-     *
-     * @param {LayerComposition} comp - The layer composition.
-     */
-    updateLightVisibility(comp) {
-
-        const { scene } = this;
-
-        // reset per-frame light visibility: directional lights start visible, local lights start
-        // hidden (and are marked visible below by cullLights if they intersect a camera frustum)
-        const lights = this.lights;
-        for (let i = 0; i < lights.length; i++) {
-            lights[i].beginFrame();
-        }
-
-        // for all cameras: update the frustum and cull each layer's lights for visibility
-        const numCameras = comp.cameras.length;
-        for (let i = 0; i < numCameras; i++) {
-            const camera = comp.cameras[i];
-
-            // update the camera frustum for culling (aspect ratio auto-refreshes on read)
-            this.updateCameraFrustum(camera.camera);
-
-            // for all of its enabled layers cull the non-directional lights once with each camera
-            // lights aren't collected anywhere, but marked as visible
-            const layerIds = camera.layers;
-            for (let j = 0; j < layerIds.length; j++) {
-                const layer = comp.getLayerById(layerIds[j]);
-                if (layer && layer.enabled) {
-                    this.cullLights(camera.camera, layer._lights);
-                }
-            }
-        }
-
-        // update shadow / cookie atlas allocation for the visible lights. Update it after the lights
-        // were culled, but before shadow maps are culled, as it might force some 'update once'
-        // shadows to cull.
-        const isClustered = scene.clusteredLightingEnabled;
-        if (isClustered) {
-            this.updateLightTextureAtlas();
-        }
-
-        // force a shadow re-render for local lights whose atlas slot was reassigned (clustered) or
-        // whose shadow map has not yet been allocated (non-clustered). Done here - before the frame
-        // graph is built and shadow casters are culled - so both of those steps see the final
-        // shadow update mode.
-        const localLights = this.localLights;
-        for (let i = 0; i < localLights.length; i++) {
-            const light = localLights[i];
-            if (light._type !== LIGHTTYPE_DIRECTIONAL) {
-                if (isClustered) {
-                    // if the atlas slot is reassigned, make sure to update the shadow map (incl. culling)
-                    if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
-                        light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-                    }
-                } else {
-                    // allocate the shadow map early (before the frame graph is built and before the
-                    // forward pass reads it), mirroring directional lights. Force a one-shot update
-                    // when the map was (re)created (first use, or destroyed by a property change such
-                    // as shadowType) so the new map actually gets rendered.
-                    if (light.castShadows && light.visibleThisFrame && !light._shadowMap) {
-                        this._shadowRendererLocal.prepareShadowMap(light);
-                        if (light.shadowUpdateMode === SHADOWUPDATE_NONE) {
-                            light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-                        }
-                    }
-                }
-            }
-        }
-
-        // collect shadow-casting directional lights per camera + allocate their shadow maps
-        this.collectDirectionalShadowLights(comp);
-    }
-
-    /**
-     * Registers a request to cull a layer's mesh instances for a camera in the current frame. The
-     * culling itself is performed later, in a single batch, by
-     * {@link Renderer#executeMeshInstanceCull}. Requests are de-duplicated per (camera, layer), so
-     * requesting the same pair more than once (e.g. for its opaque and transparent sub-layers) is
-     * harmless.
-     *
-     * This lets the frame graph drive culling - each pass requests the (camera, layer) pairs it
-     * will actually render - instead of culling every camera/layer combination in the composition.
-     *
-     * @param {Camera} camera - The camera to cull for.
-     * @param {Layer} layer - The layer whose mesh instances should be culled.
-     * @ignore
-     */
-    requestMeshInstanceCull(camera, layer) {
-        // track each requested camera once, when its first layer this frame is registered
-        if (camera.addCullLayer(layer)) {
-            this._cullCameras.push(camera);
-        }
-    }
-
-    /**
-     * Performs all mesh-instance culling requested via {@link Renderer#requestMeshInstanceCull}
-     * this frame, then clears the request list. For each requested camera the precull event is
-     * fired (before the frustum is refreshed, so a listener may still adjust the camera), the
-     * camera frustum is updated, each requested layer is culled, and the postcull event is fired.
-     *
-     * The events are passed the owning camera component for a framework camera, or null for an
-     * internal camera (shadow / reflection / picker), matching the documented precull/postcull
-     * contract.
-     *
-     * @ignore
-     */
-    executeMeshInstanceCull() {
-
-        const { scene } = this;
-        const cameras = this._cullCameras;
-
-        for (let i = 0; i < cameras.length; i++) {
-            const camera = cameras[i];
-
-            // recover the owning camera component (framework camera) or null (internal camera),
-            // without the scene layer taking a dependency on the framework
-            const cameraComponent = camera.node?.camera ?? null;
-
-            // precull is fired before the frustum is refreshed, so a listener may adjust the camera
-            scene?.fire(EVENT_PRECULL, cameraComponent);
-
-            this.updateCameraFrustum(camera);
-
-            for (const layer of camera.cullLayers) {
-                this.cullMeshInstances(camera, layer.meshInstances, layer.getCulledInstances(camera));
-            }
-
-            scene?.fire(EVENT_POSTCULL, cameraComponent);
-
-            // reset the camera's per-frame cull layer set
-            camera.clearCullLayers();
-        }
-
-        // requests consumed - reset for the next frame
-        cameras.length = 0;
-    }
-
-    /**
-     * Visibility culling of meshInstances and shadow casters. Light visibility, the light atlas and
-     * the directional-shadow-light collection are done earlier in
-     * {@link Renderer#updateLightVisibility}.
-     *
-     * @param {LayerComposition} comp - The layer composition.
-     */
-    cullComposition(comp) {
-
-        // #if _PROFILER
-        const cullTime = now();
-        // #endif
-
-        const { scene } = this;
-
-        this.processingMeshInstances.clear();
-
-        this._camerasRendered += comp.cameras.length;
-
-        // cull mesh instances for the (camera, layer) pairs the frame graph's passes requested
-        // (this also fires the per-camera precull / postcull events)
-        this.executeMeshInstanceCull();
-
-        // cull shadow casters for all lights
-        this.cullShadowmaps(comp);
-
-        // event after the engine has finished culling all cameras
-        scene?.fire(EVENT_CULL_END);
-
-        // #if _PROFILER
-        this._cullTime += now() - cullTime;
-        // #endif
     }
 
     /**
@@ -1432,7 +1021,7 @@ class Renderer {
         this.initViewUniformFormat(this.scene.clusteredLightingEnabled);
 
         // no valid shadows at the start of the frame
-        this.dirLightShadows.clear();
+        this.culler.dirLightShadows.clear();
     }
 }
 
