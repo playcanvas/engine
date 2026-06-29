@@ -124,6 +124,76 @@ class CurveSet {
     }
 
     /**
+     * Appends a new curve to the curve set. The new curve adopts the curve set's current
+     * {@link CurveSet#type} interpolation scheme, so that all curves in the set continue to share
+     * the same type.
+     *
+     * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and value
+     * second) for the new curve.
+     * @returns {Curve} The newly created curve.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1]]);
+     * const curve = curveSet.add([0, 0, 1, 0.5]); // append a second curve
+     */
+    add(data) {
+        const curve = new Curve(data);
+        curve.type = this._type;
+        this.curves.push(curve);
+        return curve;
+    }
+
+    /**
+     * Removes a curve from the curve set.
+     *
+     * @param {number|Curve} indexOrCurve - The index of the curve to remove, or the curve instance
+     * itself.
+     * @returns {Curve|null} The removed curve, or null if it was not found.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * curveSet.remove(0);             // remove by index
+     * curveSet.remove(curveSet.get(0)); // or remove by reference
+     */
+    remove(indexOrCurve) {
+        const index = typeof indexOrCurve === 'number' ?
+            indexOrCurve : this.curves.indexOf(indexOrCurve);
+
+        if (index < 0 || index >= this.curves.length) {
+            return null;
+        }
+
+        return this.curves.splice(index, 1)[0];
+    }
+
+    /**
+     * Removes all keys from every curve in the set, while keeping the curves themselves. The number
+     * of curves is unchanged, so {@link CurveSet#value} still returns an array of the same length.
+     *
+     * @returns {this} The curve set instance.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * curveSet.clearKeys(); // both curves are now empty, but the set still has 2 curves
+     */
+    clearKeys() {
+        for (let i = 0; i < this.curves.length; i++) {
+            this.curves[i].clear();
+        }
+        return this;
+    }
+
+    /**
+     * Removes all curves from the curve set, leaving it empty.
+     *
+     * @returns {this} The curve set instance.
+     * @example
+     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * curveSet.clear(); // the set now has no curves
+     */
+    clear() {
+        this.curves.length = 0;
+        return this;
+    }
+
+    /**
      * Returns the interpolated value of all curves in the curve set at the specified time.
      *
      * @param {number} time - The time at which to calculate the value.

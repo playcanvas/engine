@@ -103,6 +103,37 @@ class Curve {
     }
 
     /**
+     * Removes the key at the specified index.
+     *
+     * @param {number} index - The index of the key to remove.
+     * @returns {number[]|null} The removed `[time, value]` pair, or null if the index is out of
+     * range.
+     * @example
+     * const curve = new pc.Curve([0, 1, 1, 2]);
+     * curve.remove(0); // removes the key at time 0
+     */
+    remove(index) {
+        if (index < 0 || index >= this.keys.length) {
+            return null;
+        }
+
+        return this.keys.splice(index, 1)[0];
+    }
+
+    /**
+     * Removes all keys from the curve.
+     *
+     * @returns {this} The curve instance.
+     * @example
+     * const curve = new pc.Curve([0, 1, 1, 2]);
+     * curve.clear(); // curve now has no keys
+     */
+    clear() {
+        this.keys.length = 0;
+        return this;
+    }
+
+    /**
      * Gets the `[time, value]` pair at the specified index.
      *
      * @param {number} index - The index of key to return.

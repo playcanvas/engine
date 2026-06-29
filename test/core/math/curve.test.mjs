@@ -87,6 +87,43 @@ describe('Curve', function () {
 
     });
 
+    describe('#remove', function () {
+
+        it('removes and returns the key at the given index', function () {
+            const c = new Curve([0, 0, 0.5, 1, 1, 2]);
+            const removed = c.remove(1);
+            expect(removed).to.deep.equal([0.5, 1]);
+            expect(c.length).to.equal(2);
+            expect(c.get(0)).to.deep.equal([0, 0]);
+            expect(c.get(1)).to.deep.equal([1, 2]);
+        });
+
+        it('returns null when the index is out of range', function () {
+            const c = new Curve([0, 0, 1, 2]);
+            expect(c.remove(2)).to.equal(null);
+            expect(c.remove(-1)).to.equal(null);
+            expect(c.length).to.equal(2);
+        });
+
+    });
+
+    describe('#clear', function () {
+
+        it('removes all keys from the curve', function () {
+            const c = new Curve([0, 0, 0.5, 1, 1, 2]);
+            const result = c.clear();
+            expect(c.length).to.equal(0);
+            expect(result).to.equal(c);
+        });
+
+        it('is a no-op on an empty curve', function () {
+            const c = new Curve();
+            c.clear();
+            expect(c.length).to.equal(0);
+        });
+
+    });
+
     describe('#clone', function () {
 
         it('clones an empty curve', function () {
