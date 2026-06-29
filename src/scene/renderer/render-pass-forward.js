@@ -125,15 +125,15 @@ class RenderPassForward extends RenderPass {
             const camera = cameraComponent.camera;
 
             // if this camera uses directional shadow lights
-            const shadowDirLights = this.renderer.cameraDirShadowLights.get(camera);
+            const shadowDirLights = this.renderer.culler.cameraDirShadowLights.get(camera);
             if (shadowDirLights) {
 
                 for (let l = 0; l < shadowDirLights.length; l++) {
                     const light = shadowDirLights[l];
 
                     // the shadow map is not already rendered for this light
-                    if (renderer.dirLightShadows.get(light) !== camera) {
-                        renderer.dirLightShadows.set(light, camera);
+                    if (renderer.culler.dirLightShadows.get(light) !== camera) {
+                        renderer.culler.dirLightShadows.set(light, camera);
 
                         // render the shadow before this render pass
                         const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, camera);
@@ -177,7 +177,7 @@ class RenderPassForward extends RenderPass {
         for (let i = 0; i < layerRenderSteps.length; i++) {
             const step = layerRenderSteps[i];
             if (layerComposition.isEnabled(step.layer, step.transparent)) {
-                renderer.requestMeshInstanceCull(step.cameraComponent.camera, step.layer);
+                renderer.culler.requestMeshInstanceCull(step.cameraComponent.camera, step.layer);
             }
         }
     }

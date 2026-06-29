@@ -185,8 +185,8 @@ class Camera {
         this.frustum = new Frustum();
 
         // Reusable set of layers to cull for this camera in the current frame. Populated through
-        // requestMeshInstanceCull and drained by executeMeshInstanceCull on the renderer; kept on
-        // the camera so the per-camera cull state needs no per-frame allocation.
+        // requestMeshInstanceCull and drained by executeMeshInstanceCull on the renderer's culler;
+        // kept on the camera so the per-camera cull state needs no per-frame allocation.
         /** @type {Set<Layer>} */
         this._cullLayers = new Set();
 
