@@ -769,7 +769,7 @@ class Lightmapper {
             shadowCam.aspectRatio = 1;
             shadowCam.fov = light._outerConeAngle * 2;
 
-            this.renderer.updateCameraFrustum(shadowCam);
+            shadowCam.updateFrustum();
         }
         return shadowCam;
     }

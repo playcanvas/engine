@@ -322,7 +322,7 @@ class Culler {
             const camera = comp.cameras[i];
 
             // update the camera frustum for culling (aspect ratio auto-refreshes on read)
-            renderer.updateCameraFrustum(camera.camera);
+            camera.camera.updateFrustum();
 
             // for all of its enabled layers cull the non-directional lights once with each camera
             // lights aren't collected anywhere, but marked as visible
@@ -421,7 +421,7 @@ class Culler {
             // precull is fired before the frustum is refreshed, so a listener may adjust the camera
             scene?.fire(EVENT_PRECULL, cameraComponent);
 
-            renderer.updateCameraFrustum(camera);
+            camera.updateFrustum();
 
             for (const layer of camera.cullLayers) {
                 this.cullMeshInstances(camera, layer.meshInstances, layer.getCulledInstances(camera));

@@ -6,7 +6,7 @@ import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
 import {
-    ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
+    VIEW_CENTER, ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
@@ -30,6 +30,9 @@ const _point = new Vec3();
 const _invViewProjMat = new Mat4();
 const _xrViewProjMat = new Mat4();
 const _xrViewFrustum = new Frustum();
+const _frustumViewInvMat = new Mat4();
+const _frustumViewMat = new Mat4();
+const _frustumViewProjMat = new Mat4();
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 /**
@@ -749,6 +752,39 @@ class Camera {
             this.frustum.add(_xrViewFrustum);
         }
         return true;
+    }
+
+    /**
+     * Updates {@link Camera#frustum} for the camera's current transform and projection, for
+     * visibility culling. Uses the combined (VIEW_CENTER) view; XR cameras delegate to
+     * {@link Camera#updateXrFrustum}. Honors the {@link Camera#calculateProjection} and
+     * {@link Camera#calculateTransform} overrides.
+     *
+     * @ignore
+     */
+    updateFrustum() {
+
+        // XR: combined frustum from all views (avoids culling objects visible in only one eye)
+        if (this.updateXrFrustum()) {
+            return;
+        }
+
+        const projMat = this.projectionMatrix;
+        if (this.calculateProjection) {
+            this.calculateProjection(projMat, VIEW_CENTER);
+        }
+
+        if (this.calculateTransform) {
+            this.calculateTransform(_frustumViewInvMat, VIEW_CENTER);
+        } else {
+            const pos = this._node.getPosition();
+            const rot = this._node.getRotation();
+            _frustumViewInvMat.setTRS(pos, rot, Vec3.ONE);
+        }
+        _frustumViewMat.copy(_frustumViewInvMat).invert();
+
+        _frustumViewProjMat.mul2(projMat, _frustumViewMat);
+        this.frustum.setFromMat4(_frustumViewProjMat);
     }
 
     /**

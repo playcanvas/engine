@@ -502,32 +502,6 @@ class Renderer {
         this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
-    updateCameraFrustum(camera) {
-
-        // XR: combined frustum from all views (avoids culling objects visible in only one eye)
-        if (camera.updateXrFrustum()) {
-            return;
-        }
-
-        const projMat = camera.projectionMatrix;
-        if (camera.calculateProjection) {
-            camera.calculateProjection(projMat, VIEW_CENTER);
-        }
-
-        if (camera.calculateTransform) {
-            camera.calculateTransform(viewInvMat, VIEW_CENTER);
-        } else {
-            const pos = camera._node.getPosition();
-            const rot = camera._node.getRotation();
-            viewInvMat.setTRS(pos, rot, Vec3.ONE);
-            this.viewInvId.setValue(viewInvMat.data);
-        }
-        viewMat.copy(viewInvMat).invert();
-
-        viewProjMat.mul2(projMat, viewMat);
-        camera.frustum.setFromMat4(viewProjMat);
-    }
-
     setBaseConstants(device, material) {
 
         // Cull mode

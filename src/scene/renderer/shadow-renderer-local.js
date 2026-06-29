@@ -91,7 +91,7 @@ class ShadowRendererLocal {
             }
 
             // cull shadow casters
-            this.renderer.updateCameraFrustum(shadowCam);
+            shadowCam.updateFrustum();
             this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
         }
     }
