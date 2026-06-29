@@ -19,7 +19,7 @@
 //
 // XR stereo variant (compiled with the `GSPLAT_XR` define; same 8 u32 / 32 B stride, so buffer
 // sizes are unchanged). Only the per-eye screen position is duplicated; everything else is shared
-// between the two eyes — valid because WebXR stereo is parallel-axis (see Renderer.updateCameraFrustum).
+// between the two eyes — valid because WebXR stereo is parallel-axis (see Camera.updateFrustum).
 // Perspective-only: clip.z is NOT stored, it is reconstructed in the hybrid VS from the shared w.
 //   [0,1] ndc0.xy   (f32)            — eye 0 normalized device coords (clip.xy / clip.w)
 //   [2,3] ndc1.xy   (f32)            — eye 1 normalized device coords

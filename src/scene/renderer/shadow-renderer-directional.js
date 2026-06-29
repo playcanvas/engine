@@ -181,7 +181,7 @@ class ShadowRendererDirectional {
             shadowCam.orthoHeight = radius;
 
             // cull shadow casters
-            this.renderer.updateCameraFrustum(shadowCam);
+            shadowCam.updateFrustum();
             this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
 
             const cascadeFlag = 1 << cascade;
