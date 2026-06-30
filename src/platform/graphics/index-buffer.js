@@ -37,15 +37,17 @@ class IndexBuffer {
      * - {@link BUFFER_STREAM}
      *
      * Defaults to {@link BUFFER_STATIC}.
-     * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the index buffer
-     * will be initialized to zeros.
+     * @param {ArrayBuffer|ArrayBufferView} [initialData] - Initial data. Can be an
+     * {@link ArrayBuffer} or a typed array (for example a {@link Uint16Array}). The data is stored
+     * by reference and is not copied, so a typed array that is a view into a larger buffer is kept
+     * as-is. If left unspecified, the index buffer will be initialized to zeros.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.storage] - Defines if the index buffer can be used as a storage
      * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      * @example
      * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
      * // static, hinting that the buffer will never be modified.
-     * const indices = new UInt16Array([0, 1, 2]);
+     * const indices = new Uint16Array([0, 1, 2]);
      * const indexBuffer = new pc.IndexBuffer(graphicsDevice,
      *                                        pc.INDEXFORMAT_UINT16,
      *                                        3,
@@ -147,7 +149,10 @@ class IndexBuffer {
     /**
      * Gives access to the block of memory that stores the buffer's indices.
      *
-     * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
+     * @returns {ArrayBuffer|ArrayBufferView} The memory that stores the buffer's indices. This
+     * matches whatever was supplied as the initial data: an {@link ArrayBuffer} when none was
+     * provided, otherwise the {@link ArrayBuffer} or typed array that was passed in. Use
+     * {@link ArrayBuffer.isView} to distinguish the two before accessing it.
      */
     lock() {
         return this.storage;
@@ -167,7 +172,8 @@ class IndexBuffer {
     /**
      * Set preallocated data on the index buffer.
      *
-     * @param {ArrayBuffer} data - The index data to set.
+     * @param {ArrayBuffer|ArrayBufferView} data - The index data to set. Can be an
+     * {@link ArrayBuffer} or a typed array. Stored by reference, not copied.
      * @returns {boolean} True if the data was set successfully, false otherwise.
      * @ignore
      */
