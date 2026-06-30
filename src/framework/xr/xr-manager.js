@@ -317,12 +317,35 @@ class XrManager extends EventHandler {
         // 2. Space class
         // 3. Controllers class
 
-        if (this._supported) {
+        if (this._supported && XrManager._allowsSpatialTracking()) {
             navigator.xr.addEventListener('devicechange', () => {
                 this._deviceAvailabilityCheck();
             });
             this._deviceAvailabilityCheck();
         }
+    }
+
+    /**
+     * The startup availability probe calls {@link navigator.xr.isSessionSupported}, which the
+     * browser blocks - logging a `xr-spatial-tracking is not allowed in this document` permissions
+     * policy violation - when the `xr-spatial-tracking` feature is disallowed for the document (for
+     * example when the app runs in an iframe without `allow="xr-spatial-tracking"`). Only skip the
+     * probe when the policy explicitly disallows the feature; when the Feature Policy API is
+     * unavailable (e.g. Safari / visionOS) we cannot tell, so proceed as before.
+     *
+     * @returns {boolean} - True if the probe should run.
+     * @private
+     */
+    static _allowsSpatialTracking() {
+        const featurePolicy = platform.browser && document.featurePolicy;
+        if (featurePolicy?.allowsFeature) {
+            const allowed = featurePolicy.allowsFeature('xr-spatial-tracking');
+            if (!allowed) {
+                Debug.warn('WebXR availability detection skipped: the "xr-spatial-tracking" feature is disallowed for this document. If XR is needed, add allow="xr-spatial-tracking" to the embedding iframe or send a matching Permissions-Policy header.');
+            }
+            return allowed;
+        }
+        return true;
     }
 
     /**
