@@ -337,7 +337,9 @@ class AnimationComponent extends Component {
                     this.animEvaluator.removeClips();
                 }
 
-                const clip = new AnimClip(this.animations[this.currAnim], 0, 1.0, true, this.loop);
+                // pass the component as the event handler so any events embedded in the track
+                // fire on this component (consistent with AnimComponent)
+                const clip = new AnimClip(this.animations[this.currAnim], 0, 1.0, true, this.loop, this);
                 clip.name = this.currAnim;
                 clip.blendWeight = this.blending ? 0 : 1;
                 clip.reset();
