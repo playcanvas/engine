@@ -746,6 +746,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // shared view UB across XR multiview eyes) binds the buffer this bind group was built for.
         const gl = this.gl;
         const buffers = bindGroup.impl.buffers;
+
+        // all uniform buffers in the group would bind to the same point (index), so only a single
+        // uniform buffer per bind group is supported (matches the uniform block linking in WebglShader)
+        Debug.assert(buffers.length <= 1, `Bind group at index ${index} has ${buffers.length} uniform buffers, but WebGL2 supports a single uniform buffer per bind group.`, bindGroup);
+
         for (let i = 0; i < buffers.length; i++) {
             gl.bindBufferBase(gl.UNIFORM_BUFFER, index, buffers[i].bufferId);
         }
