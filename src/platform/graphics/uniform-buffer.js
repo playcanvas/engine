@@ -248,8 +248,9 @@ class UniformBuffer {
 
             graphicsDevice._vram.ub += this.format.byteSize;
 
-            // TODO: register with the device and handle lost context
-            // this.device.buffers.push(this);
+            // register with the device so the GPU buffer is recreated and re-uploaded on a lost
+            // context (non-persistent buffers re-allocate from the dynamic buffers on next update)
+            this.device.buffers.add(this);
         } else {
 
             this.allocation = new DynamicBufferAllocation();
@@ -262,9 +263,10 @@ class UniformBuffer {
     destroy() {
 
         if (this.persistent) {
-            // stop tracking the vertex buffer
-            // TODO: remove the buffer from the list on the device (lost context handling)
             const device = this.device;
+
+            // stop tracking the buffer for lost context handling
+            device.buffers.delete(this);
 
             this.impl.destroy(device);
 
@@ -292,6 +294,15 @@ class UniformBuffer {
      */
     loseContext() {
         this.impl?.loseContext();
+    }
+
+    /**
+     * Called when the rendering context is restored. Recreates the GPU buffer and re-uploads the
+     * data from the persistent CPU storage. Only persistent uniform buffers are tracked for context
+     * loss; non-persistent ones are re-allocated from the dynamic buffers on their next update.
+     */
+    restoreContext() {
+        this.impl?.unlock(this);
     }
 
     /**
@@ -356,6 +367,9 @@ class UniformBuffer {
             // Upload the new data
             this.impl.unlock(this);
         } else {
+            // upload the data to the dynamic buffer - a no-op on backends that copy it separately
+            // (WebGPU), but WebGL uploads eagerly here
+            this.allocation.gpuBuffer.upload();
             this.storageFloat32 = null;
             this.storageInt32 = null;
         }

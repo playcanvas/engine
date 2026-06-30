@@ -33,6 +33,14 @@ class DynamicBuffer {
         ]);
     }
 
+    /**
+     * Upload the buffer's data to the GPU. A no-op on backends (such as WebGPU) that copy the data
+     * to the GPU separately; WebGL overrides this to eagerly upload, as it has no buffer mapping and
+     * executes draws immediately.
+     */
+    upload() {
+    }
+
     getBindGroup(ub) {
         const ubSize = ub.format.byteSize;
         let bindGroup = this.bindGroupCache.get(ubSize);

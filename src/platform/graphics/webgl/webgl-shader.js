@@ -2,7 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { TRACEID_SHADER_COMPILE } from '../../../core/constants.js';
 import { now } from '../../../core/time.js';
 import { WebglShaderInput } from './webgl-shader-input.js';
-import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
+import { bindGroupNames, SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 import { DeviceCache } from '../device-cache.js';
 import { DebugGraphics } from '../debug-graphics.js';
 
@@ -350,6 +350,12 @@ class WebglShader {
                 continue;
             }
 
+            // uniforms that are members of a uniform block have no individual location - they are
+            // supplied through a bound uniform buffer, so skip them from the per-uniform commit path
+            if (location === null) {
+                continue;
+            }
+
             const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
             if (samplerTypes.has(info.type)) {
@@ -357,6 +363,25 @@ class WebglShader {
             } else {
                 this.uniforms.push(shaderInput);
             }
+        }
+
+        // Link uniform blocks to their binding points. By convention a block is named
+        // 'ub_<bindGroupName>' (e.g. 'ub_view', 'ub_mesh_ub') and is bound to the matching bind
+        // group index, which is used as its GL uniform buffer binding point (see
+        // WebglGraphicsDevice.setBindGroup). A block not following this convention cannot be
+        // matched to a binding point - it is asserted in debug builds and ignored otherwise.
+        const numBlocks = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORM_BLOCKS);
+        for (let i = 0; i < numBlocks; i++) {
+            const blockName = gl.getActiveUniformBlockName(glProgram, i);
+            const shortName = blockName.startsWith('ub_') ? blockName.substring(3) : blockName;
+            const bindGroupIndex = bindGroupNames.indexOf(shortName);
+
+            Debug.assert(bindGroupIndex >= 0,
+                `Shader [${shader.label}] declares an unsupported uniform block [${blockName}] - user uniform buffers are not supported.`,
+                shader);
+
+            const bindingPoint = bindGroupIndex >= 0 ? bindGroupIndex : i;
+            gl.uniformBlockBinding(glProgram, i, bindingPoint);
         }
 
         shader.ready = true;

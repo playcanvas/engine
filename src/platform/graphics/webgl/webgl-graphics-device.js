@@ -33,6 +33,10 @@ import { DebugGraphics } from '../debug-graphics.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
+import { WebglUniformBuffer } from './webgl-uniform-buffer.js';
+import { WebglBindGroup } from './webgl-bind-group.js';
+import { WebglBindGroupFormat } from './webgl-bind-group-format.js';
+import { WebglDynamicBuffers } from './webgl-dynamic-buffers.js';
 import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
@@ -47,6 +51,7 @@ import { TextureUtils } from '../texture-utils.js';
 import { getBuiltInTexture } from '../built-in-textures.js';
 
 /**
+ * @import { BindGroup } from '../bind-group.js'
  * @import { RenderPass } from '../render-pass.js'
  * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
@@ -234,6 +239,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeContextCaches();
 
         this.createBackbuffer(null);
+
+        // dynamic uniform buffer support (whole-buffer pool, see WebglDynamicBuffers)
+        this.dynamicBuffers = new WebglDynamicBuffers(this);
 
         // only enable ImageBitmap on chrome
         this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
@@ -707,6 +715,41 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new WebglShader(shader);
     }
 
+    createUniformBufferImpl(uniformBuffer) {
+        return new WebglUniformBuffer();
+    }
+
+    createBindGroupFormatImpl(bindGroupFormat) {
+        return new WebglBindGroupFormat();
+    }
+
+    createBindGroupImpl(bindGroup) {
+        return new WebglBindGroup();
+    }
+
+    /**
+     * @param {number} index - Index of the bind group slot
+     * @param {BindGroup} bindGroup - Bind group to attach
+     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group. Unused
+     * on WebGL: every uniform buffer is bound as a whole buffer from offset zero (see below).
+     */
+    setBindGroup(index, bindGroup, offsets) {
+
+        // WebGL2 has no bind group object, so we bind each of the bind group's uniform buffers to a
+        // uniform buffer binding point directly. The bind group index is used as the binding point,
+        // matching the uniform block linking done in WebglShader, and relies on a single uniform
+        // buffer per bind group (the case in the engine's view / mesh bind group layout). Each
+        // uniform buffer is a whole buffer - persistent, or a whole dynamic buffer from the pool -
+        // so it is always bound from offset zero with bindBufferBase, and the offsets are not used.
+        const gl = this.gl;
+        const uniformBuffers = bindGroup.uniformBuffers;
+        for (let i = 0; i < uniformBuffers.length; i++) {
+            const uniformBuffer = uniformBuffers[i];
+            const buffer = uniformBuffer.persistent ? uniformBuffer.impl.bufferId : uniformBuffer.allocation.gpuBuffer.bufferId;
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, index, buffer);
+        }
+    }
+
     createDrawCommandImpl(drawCommands) {
         return new WebglDrawCommands(drawCommands.indexSizeBytes);
     }
@@ -1041,6 +1084,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             shader.loseContext();
         }
 
+        // release dynamic uniform buffers (their GL buffers are gone with the context)
+        this.dynamicBuffers.loseContext();
+
         this.fire('devicelost');
     }
 
@@ -1290,6 +1336,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         super.frameEnd();
         this.gpuProfiler.frameEnd();
         this.gpuProfiler.request();
+
+        // recycle dynamic uniform buffers used this frame back to the free pool
+        this.dynamicBuffers.onFrameEnd();
     }
 
     /**
