@@ -60,7 +60,7 @@ const chunkVersions = {
     refractionDynamicPS: '1.70',
 
     // text
-    msdfPS: '2.20'
+    msdfPS: '2.21'
 };
 
 // removed
