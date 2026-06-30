@@ -3,33 +3,35 @@
 // To use, first register the parser:
 //
 // // add parser to model resource handler
-// var objParser = new pc.ObjModelParser(this.app.graphicsDevice);
+// const objParser = new ObjModelParser(this.app.graphicsDevice);
 // this.app.loader.getHandler("model").addParser(objParser, function (url) {
 //     return (pc.path.getExtension(url) === '.obj');
 // });
 //
 // Then load obj as a model asset:
 //
-// var asset = new pc.Asset("MyObj", "model", {
+// const asset = new pc.Asset("MyObj", "model", {
 //    url: "model.obj"
 // });
 // this.app.assets.add(asset);
 // this.app.assets.load(asset);
-function ObjModelParser(device) {
-    this._device = device;
-    this._defaultMaterial = new pc.StandardMaterial();
-}
 
-Object.assign(ObjModelParser.prototype, {
-    // First draft obj parser
-    // probably doesn't handle a lot of the obj spec
-    // Known issues:
-    // - can't handle meshes larger than 65535 verts
-    // - assigns default material to all meshes
-    // - doesn't created indexed geometry
-    parse: function (input, callback) {
+// First draft obj parser
+// probably doesn't handle a lot of the obj spec
+// Known issues:
+// - can't handle meshes larger than 65535 verts
+// - assigns default material to all meshes
+// - doesn't created indexed geometry
+// eslint-disable-next-line no-unused-vars -- exposed as a global for external use (see usage comment above)
+class ObjModelParser {
+    constructor(device) {
+        this._device = device;
+        this._defaultMaterial = new pc.StandardMaterial();
+    }
+
+    parse(input, callback) {
         // expanded vert, uv and normal values from face indices
-        var parsed = {
+        const parsed = {
             default: {
                 verts: [],
                 normals: [],
@@ -37,14 +39,13 @@ Object.assign(ObjModelParser.prototype, {
                 indices: []
             }
         };
-        var group = 'default'; // current group
-        var lines = input.split('\n');
-        var verts = [], normals = [], uvs = [];
-        var i;
+        let group = 'default'; // current group
+        const lines = input.split('\n');
+        const verts = [], normals = [], uvs = [];
 
-        for (i = 0; i < lines.length; i++) {
-            var line = lines[i].trim();
-            var parts = line.split(/\s+/);
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            const parts = line.split(/\s+/);
 
             if (line[0] === 'v') {
                 if (parts[0] === 'v') {
@@ -65,11 +66,10 @@ Object.assign(ObjModelParser.prototype, {
                     };
                 }
             } else if (line[0] === 'f') {
-                var p, r;
                 if (parts.length === 4) {
                     // triangles
-                    for (p = 1; p < parts.length; p++) {
-                        r = this._parseIndices(parts[p]);
+                    for (let p = 1; p < parts.length; p++) {
+                        const r = this._parseIndices(parts[p]);
                         parsed[group].verts.push(verts[r[0] * 3], verts[r[0] * 3 + 1], verts[r[0] * 3 + 2]); // expand uvs from indices
                         if (r[1] * 2 < uvs.length) {
                             parsed[group].uvs.push(uvs[r[1] * 2], uvs[r[1] * 2 + 1]);
@@ -81,10 +81,10 @@ Object.assign(ObjModelParser.prototype, {
 
                 } else if (parts.length === 5) {
                     // quads
-                    var order = [1, 2, 3, 3, 4, 1]; // split quad into to triangles;
-                    for (var o = 0; o < order.length; o++) {
-                        p = order[o];
-                        r = this._parseIndices(parts[p]);
+                    const order = [1, 2, 3, 3, 4, 1]; // split quad into to triangles;
+                    for (let o = 0; o < order.length; o++) {
+                        const p = order[o];
+                        const r = this._parseIndices(parts[p]);
                         parsed[group].verts.push(verts[r[0] * 3], verts[r[0] * 3 + 1], verts[r[0] * 3 + 2]); // expand uvs from indices
                         if (r[1] * 2 < uvs.length) {
                             parsed[group].uvs.push(uvs[r[1] * 2], uvs[r[1] * 2 + 1]);
@@ -99,18 +99,18 @@ Object.assign(ObjModelParser.prototype, {
             }
         }
 
-        var model = new pc.Model();
-        var groupNames = Object.keys(parsed);
-        var root = new pc.GraphNode();
+        const model = new pc.Model();
+        const groupNames = Object.keys(parsed);
+        const root = new pc.GraphNode();
         // create a new mesh instance for each "group"
-        for (i = 0; i < groupNames.length; i++) {
-            var currentGroup = parsed[groupNames[i]];
+        for (let i = 0; i < groupNames.length; i++) {
+            const currentGroup = parsed[groupNames[i]];
             if (!currentGroup.verts.length) continue;
             if (currentGroup.verts.length > 65535) {
                 console.warn('Warning: mesh with more than 65535 vertices');
             }
 
-            var geom = new pc.Geometry();
+            const geom = new pc.Geometry();
             geom.positions = currentGroup.verts;
             if (currentGroup.normals.length > 0) {
                 geom.normals = currentGroup.normals;
@@ -119,25 +119,25 @@ Object.assign(ObjModelParser.prototype, {
                 geom.uvs = currentGroup.uvs;
             }
 
-            var mesh = pc.Mesh.fromGeometry(this._device, geom);
+            const mesh = pc.Mesh.fromGeometry(this._device, geom);
 
-            var mi = new pc.MeshInstance(mesh, this._defaultMaterial, new pc.GraphNode());
+            const mi = new pc.MeshInstance(mesh, this._defaultMaterial, new pc.GraphNode());
             model.meshInstances.push(mi);
             root.addChild(mi.node);
         }
         model.graph = root;
         model.getGraph().syncHierarchy();
         callback(null, model);
-    },
+    }
 
-    _parseIndices: function (str) {
-        var result = [];
-        var indices = str.split('/');
-        for (var i = 0; i < 3; i++) {
+    _parseIndices(str) {
+        const result = [];
+        const indices = str.split('/');
+        for (let i = 0; i < 3; i++) {
             if (indices[i]) {
                 result[i] = parseInt(indices[i], 10) - 1; // convert to 0-indexed
             }
         }
         return result;
     }
-});
+}
