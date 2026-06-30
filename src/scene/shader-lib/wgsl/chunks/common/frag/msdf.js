@@ -7,6 +7,7 @@ fn median(r: f32, g: f32, b: f32) -> f32 {
 }
 
 uniform font_sdfIntensity: f32; // intensity is used to boost the value read from the SDF, 0 is no boost, 1.0 is max boost
+uniform font_pxrange: f32;      // number of texels of SDF spread (inside <-> outside) in the atlas
 
 #ifndef LIT_MSDF_TEXT_ATTRIBUTE
     uniform outline_color: vec4f;
@@ -51,12 +52,17 @@ fn applyMsdf(color_in: vec4f) -> vec4f {
     // coverage threshold (0.5 = glyph edge); font_sdfIntensity fattens the glyph
     let edge: f32 = 0.5 - 0.5 * uniform.font_sdfIntensity;
 
-    // anti-aliasing width: distance field change per pixel, clamped above zero
-    let aa: f32 = max(abs(dpdx(sigDist)) + abs(dpdy(sigDist)), 1e-4);
+    // Width of the distance-field transition in screen pixels, from the uv magnification (both
+    // axes) and the atlas spread. Stable under motion and minification, unlike the distance-field
+    // gradient whose noise on undersampled glyphs makes small text shimmer. Floored at 1px so
+    // minified text keeps a soft ~1px edge rather than a razor one.
+    let unitRange: vec2f = vec2f(uniform.font_pxrange) / vec2f(textureDimensions(texture_msdfMap, 0));
+    let uvDeriv: vec2f = max(abs(dpdx(vUv0)) + abs(dpdy(vUv0)), vec2f(1e-6));
+    let screenPxRange: f32 = max(0.5 * dot(unitRange, vec2f(1.0) / uvDeriv), 1.0);
 
-    let inside: f32 = clamp((sigDist - edge) / aa + 0.5, 0.0, 1.0);
-    let outline: f32 = clamp((sigDist + outline_thicknessValue - edge) / aa + 0.5, 0.0, 1.0);
-    let shadow: f32 = clamp((sigDistShdw + outline_thicknessValue - edge) / aa + 0.5, 0.0, 1.0);
+    let inside: f32 = clamp(screenPxRange * (sigDist - edge) + 0.5, 0.0, 1.0);
+    let outline: f32 = clamp(screenPxRange * (sigDist + outline_thicknessValue - edge) + 0.5, 0.0, 1.0);
+    let shadow: f32 = clamp(screenPxRange * (sigDistShdw + outline_thicknessValue - edge) + 0.5, 0.0, 1.0);
 
     let tcolor_outline: vec4f = outline * vec4f(outline_colorValue.a * outline_colorValue.rgb, outline_colorValue.a);
     var tcolor: vec4f = select(vec4f(0.0), tcolor_outline, outline > inside);
