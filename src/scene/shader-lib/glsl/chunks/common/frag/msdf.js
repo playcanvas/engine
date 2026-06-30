@@ -6,6 +6,7 @@ float median(float r, float g, float b) {
 }
 
 uniform float font_sdfIntensity; // intensity is used to boost the value read from the SDF, 0 is no boost, 1.0 is max boost
+uniform float font_pxrange;      // number of texels of SDF spread (inside <-> outside) in the atlas
 
 #ifndef LIT_MSDF_TEXT_ATTRIBUTE
     uniform vec4 outline_color;
@@ -38,12 +39,16 @@ vec4 applyMsdf(vec4 color) {
     // coverage threshold (0.5 = glyph edge); font_sdfIntensity fattens the glyph
     float edge = 0.5 - 0.5 * font_sdfIntensity;
 
-    // anti-aliasing width: distance field change per pixel, clamped above zero
-    float aa = max(fwidth(sigDist), 1e-4);
+    // Width of the distance-field transition in screen pixels, from the uv magnification (both
+    // axes) and the atlas spread. Stable under motion and minification, unlike fwidth(sigDist)
+    // whose noise on undersampled glyphs makes small text shimmer. Floored at 1px so minified
+    // text keeps a soft ~1px edge rather than a razor one.
+    vec2 unitRange = vec2(font_pxrange) / vec2(textureSize(texture_msdfMap, 0));
+    float screenPxRange = max(0.5 * dot(unitRange, 1.0 / max(fwidth(vUv0), vec2(1e-6))), 1.0);
 
-    float inside = clamp((sigDist - edge) / aa + 0.5, 0.0, 1.0);
-    float outline = clamp((sigDist + outline_thickness - edge) / aa + 0.5, 0.0, 1.0);
-    float shadow = clamp((sigDistShdw + outline_thickness - edge) / aa + 0.5, 0.0, 1.0);
+    float inside = clamp(screenPxRange * (sigDist - edge) + 0.5, 0.0, 1.0);
+    float outline = clamp(screenPxRange * (sigDist + outline_thickness - edge) + 0.5, 0.0, 1.0);
+    float shadow = clamp(screenPxRange * (sigDistShdw + outline_thickness - edge) + 0.5, 0.0, 1.0);
 
     vec4 tcolor = (outline > inside) ? outline * vec4(outline_color.a * outline_color.rgb, outline_color.a) : vec4(0.0);
     tcolor = mix(tcolor, color, inside);
