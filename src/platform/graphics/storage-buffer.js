@@ -101,7 +101,6 @@ class StorageBuffer {
      * to false.
      * @returns {Promise<ArrayBufferView>} A promise that resolves with the data read from the
      * storage buffer.
-     * @ignore
      */
     read(offset = 0, size = this.byteSize, data = null, immediate = false) {
         return this.impl.read(this.device, offset, size, data, immediate);
