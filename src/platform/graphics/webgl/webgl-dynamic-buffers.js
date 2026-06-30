@@ -1,3 +1,4 @@
+import { DynamicBuffers } from '../dynamic-buffers.js';
 import { WebglDynamicBuffer } from './webgl-dynamic-buffer.js';
 
 /**
@@ -16,7 +17,7 @@ import { WebglDynamicBuffer } from './webgl-dynamic-buffer.js';
  *
  * @ignore
  */
-class WebglDynamicBuffers {
+class WebglDynamicBuffers extends DynamicBuffers {
     /**
      * Free buffers available for allocation, keyed by byte size.
      *
@@ -35,7 +36,9 @@ class WebglDynamicBuffers {
      * @param {WebglGraphicsDevice} device - The graphics device.
      */
     constructor(device) {
-        this.device = device;
+        // this implementation uses a per-size whole-buffer pool, not the base bump allocator, so
+        // the base buffer size / alignment are unused
+        super(device, 0, 0);
     }
 
     destroy() {

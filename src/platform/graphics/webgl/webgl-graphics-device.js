@@ -741,12 +741,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // buffer per bind group (the case in the engine's view / mesh bind group layout). Each
         // uniform buffer is a whole buffer - persistent, or a whole dynamic buffer from the pool -
         // so it is always bound from offset zero with bindBufferBase, and the offsets are not used.
+        // The buffers were captured by WebglBindGroup.update (not read from the uniform buffer's
+        // live allocation here), so a uniform buffer re-allocated several times in a frame (e.g. the
+        // shared view UB across XR multiview eyes) binds the buffer this bind group was built for.
         const gl = this.gl;
-        const uniformBuffers = bindGroup.uniformBuffers;
-        for (let i = 0; i < uniformBuffers.length; i++) {
-            const uniformBuffer = uniformBuffers[i];
-            const buffer = uniformBuffer.persistent ? uniformBuffer.impl.bufferId : uniformBuffer.allocation.gpuBuffer.bufferId;
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, index, buffer);
+        const buffers = bindGroup.impl.buffers;
+        for (let i = 0; i < buffers.length; i++) {
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, index, buffers[i].bufferId);
         }
     }
 

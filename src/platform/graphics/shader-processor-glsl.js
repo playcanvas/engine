@@ -28,9 +28,6 @@ const KEYWORD = /[ \t]*(\battribute\b|\bvarying\b|\buniform\b)/g;
 // eslint-disable-next-line regexp/no-unused-capturing-group, regexp/no-super-linear-backtracking
 const KEYWORD_LINE = /(\battribute\b|\bvarying\b|\bout\b|\buniform\b)[ \t]*([^;]+)(;+)/g;
 
-// marker for a place in the source code to be replaced by code
-const MARKER = '@@@';
-
 // an array identifier, for example 'data[4]' - group 1 is 'data', group 2 is everything in brackets: '4'
 const ARRAY_IDENTIFIER = /([\w-]+)\[(.*?)\]/;
 
@@ -115,6 +112,14 @@ class UniformLine {
  */
 class ShaderProcessorGLSL {
     /**
+     * Marker for the place in the source code where generated code blocks are injected. Shared with
+     * subclasses (e.g. the WebGL2 processor) so the marker is defined in one place.
+     *
+     * @type {string}
+     */
+    static MARKER = '@@@';
+
+    /**
      * Process the shader.
      *
      * @param {GraphicsDevice} device - The graphics device.
@@ -165,11 +170,11 @@ class ShaderProcessorGLSL {
 
         // VS - insert the blocks to the source
         const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}`;
-        const vshader = vertexExtracted.src.replace(MARKER, vBlock);
+        const vshader = vertexExtracted.src.replace(ShaderProcessorGLSL.MARKER, vBlock);
 
         // FS - insert the blocks to the source
         const fBlock = `${fragmentVaryingsBlock}\n${outBlock}\n${uniformsData.code}`;
-        const fshader = fragmentExtracted.src.replace(MARKER, fBlock);
+        const fshader = fragmentExtracted.src.replace(ShaderProcessorGLSL.MARKER, fBlock);
 
         return {
             vshader: vshader,
@@ -180,8 +185,10 @@ class ShaderProcessorGLSL {
         };
     }
 
-    // Extract required information from the shader source code.
-    static extract(src) {
+    // Extract required information from the shader source code. When uniformsOnly is true, only
+    // 'uniform' lines are extracted - attributes and varyings are left in the source unchanged (the
+    // WebGL2 path relies on the gles3 compatibility macros to handle those).
+    static extract(src, uniformsOnly = false) {
 
         // collected data
         const attributes = [];
@@ -191,13 +198,19 @@ class ShaderProcessorGLSL {
 
         // replacement marker - mark a first replacement place, this is where code
         // blocks are injected later
-        let replacement = `${MARKER}\n`;
+        let replacement = `${ShaderProcessorGLSL.MARKER}\n`;
 
         // extract relevant parts of the shader
         let match;
         while ((match = KEYWORD.exec(src)) !== null) {
 
             const keyword = match[1];
+
+            // in uniforms-only mode, leave attribute / varying lines untouched
+            if (uniformsOnly && keyword !== 'uniform') {
+                continue;
+            }
+
             switch (keyword) {
                 case 'attribute':
                 case 'varying':
@@ -236,6 +249,18 @@ class ShaderProcessorGLSL {
             outs,
             uniforms
         };
+    }
+
+    /**
+     * Parse extracted uniform lines into {@link UniformLine} instances. Exposed so subclasses (e.g.
+     * the WebGL2 processor) can reuse the parsing without needing access to the private UniformLine.
+     *
+     * @param {string[]} uniformLines - The uniform lines (bodies, without the 'uniform' keyword).
+     * @param {Shader} shader - The shader.
+     * @returns {Array<UniformLine>} The parsed uniform lines.
+     */
+    static parseUniformLines(uniformLines, shader) {
+        return uniformLines.map(line => new UniformLine(line, shader));
     }
 
     /**
@@ -509,4 +534,4 @@ class ShaderProcessorGLSL {
     }
 }
 
-export { ShaderProcessorGLSL };
+export { ShaderProcessorGLSL, UniformLine };

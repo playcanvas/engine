@@ -139,8 +139,8 @@ class Renderer {
     localLights = [];
 
     /**
-     * Shared non-persistent view uniform buffers, keyed by their uniform format. Reused every frame
-     * and bound via the dynamic buffer system, so no per-render-action view bind groups are needed.
+     * Shared non-persistent view uniform buffers, keyed by their uniform format. Reused every frame,
+     * with the bind group and dynamic offset sourced from the dynamic buffer system.
      *
      * @type {WeakMap<UniformBufferFormat, UniformBuffer>}
      */
@@ -662,7 +662,8 @@ class Renderer {
 
     initViewUniformFormat(isClustered) {
 
-        if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
+        // view uniforms always go through a uniform buffer (on all backends)
+        if (!this.viewUniformFormat) {
 
             // format of the view uniform buffer
             const uniforms = [
@@ -732,9 +733,10 @@ class Renderer {
     }
 
     /**
-     * Sets up the view uniform buffer(s) for the current camera and binds the single-view case.
-     * Uses the shared per-format view uniform buffer, sourcing its bind group + dynamic offset from
-     * the dynamic buffer system (no per-render-action view bind groups).
+     * Sets up the shared (per-format) view uniform buffer for the current camera. For a single view
+     * it updates the buffer and binds it immediately; for multiview (XR) it updates the buffer per
+     * view and captures the per-view bind group and dynamic offset, which the forward render loop
+     * then binds per draw. The bind group and dynamic offset come from the dynamic buffer system.
      *
      * @param {UniformBufferFormat} viewUniformFormat - The view uniform buffer format.
      * @param {RenderView[]|null} viewList - The list of XR views for multiview, or null for a
