@@ -186,7 +186,7 @@ class AnimClip {
     }
 
     fireNextEvent() {
-        this._eventHandler.fire(this.nextEvent.name, { track: this.track, ...this.nextEvent });
+        this._eventHandler?.fire(this.nextEvent.name, { track: this.track, ...this.nextEvent });
         this.moveEventCursor();
     }
 
