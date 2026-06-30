@@ -2,7 +2,32 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 /* eslint-disable-next-line import/no-unresolved */
-import { ArrayType, Converter, DeclarationReflection, IntrinsicType, ReflectionFlag, ReflectionKind, ReferenceType, UnionType } from 'typedoc';
+import { ArrayType, Converter, DeclarationReflection, IntrinsicType, ReflectionFlag, ReflectionKind, ReferenceType, TypeScript as ts, UnionType } from 'typedoc';
+
+/**
+ * Determines whether a TypeScript declaration is annotated with an `@ignore` (or `@hidden`) JSDoc
+ * modifier tag, meaning it should be excluded from the generated documentation.
+ *
+ * @param {import('typedoc').TypeScript.Declaration} declaration - The TypeScript declaration node.
+ * @returns {boolean} True if the declaration is tagged `@ignore` or `@hidden`.
+ */
+function hasIgnoreTag(declaration) {
+    // Tags attached directly to the declaration (covers regular symbols such as classes, functions
+    // and properties).
+    const tags = [...(ts.getJSDocTags(declaration) ?? [])];
+
+    // For `@typedef` (and `@callback`) the symbol's declaration is the tag node itself, so sibling
+    // modifier tags such as `@ignore` live on the hosting JSDoc comment block rather than on the
+    // tag. Pull those in as well.
+    if (declaration.parent && ts.isJSDoc(declaration.parent)) {
+        tags.push(...(declaration.parent.tags ?? []));
+    }
+
+    return tags.some((tag) => {
+        const name = tag.tagName?.escapedText;
+        return name === 'ignore' || name === 'hidden';
+    });
+}
 
 /**
  * Extract property types from JSDoc in a .js file.
@@ -61,17 +86,48 @@ function load(app) {
         ['StandardMaterial', './src/scene/materials/standard-material.js']
     ]);
 
-    // Sweep away any top-level Accessor reflections that `typedoc-plugin-missing-exports` has
-    // incorrectly hoisted out of their owning class into the project root. These show up as
-    // orphan entries under the "Other" category on the generated index page, with broken
-    // self-links to anchors that don't exist. The canonical documentation for each accessor
-    // lives on its owning class's page; removing the project-root duplicates does not affect
-    // those class-member reflections.
+    // Collect reflections that `typedoc-plugin-missing-exports` re-introduces even though their
+    // source declaration is tagged `@ignore`. That plugin records referenced-but-unexported
+    // symbols during conversion and re-converts them at resolve time, after TypeDoc's own
+    // `@ignore` removal pass has already run - so the resulting reflection has lost its `@ignore`
+    // tag and leaks into the public docs (e.g. the internal `ShaderVariantParams` typedef, which
+    // is only referenced by `@ignore` methods). We can't detect this from the reflection's stripped
+    // comment, so inspect the original TypeScript declaration here, while the symbol is still
+    // available, and remember which reflections to drop.
+    const ignoredReflections = new Set();
+    app.converter.on(Converter.EVENT_CREATE_DECLARATION, (/** @type {import('typedoc').Context} */ context, reflection) => {
+        const declarations = context.getSymbolFromReflection(reflection)?.declarations;
+
+        // Require *every* declaration to be tagged, not just one: a get/set accessor is backed by
+        // two declarations and tagging only the setter `@ignore` (as `Entity#guid` and
+        // `Texture#srgb` do) is meant to hide the setter while keeping the public getter, so the
+        // reflection as a whole must stay.
+        if (declarations?.length && declarations.every(hasIgnoreTag)) {
+            ignoredReflections.add(reflection);
+        }
+    });
+
     app.converter.on(Converter.EVENT_RESOLVE_END, (/** @type {import('typedoc').Context} */ context) => {
+        // Sweep away any top-level Accessor reflections that `typedoc-plugin-missing-exports` has
+        // incorrectly hoisted out of their owning class into the project root. These show up as
+        // orphan entries under the "Other" category on the generated index page, with broken
+        // self-links to anchors that don't exist. The canonical documentation for each accessor
+        // lives on its owning class's page; removing the project-root duplicates does not affect
+        // those class-member reflections.
         const orphans = context.project.children?.filter(child => child.kind === ReflectionKind.Accessor) ?? [];
         for (const orphan of orphans) {
             context.project.removeReflection(orphan);
         }
+
+        // Drop the `@ignore`-tagged reflections gathered above. Guard against reflections that
+        // TypeDoc already removed (the original, pre-leak conversion), removing only those still
+        // present in the project.
+        for (const reflection of ignoredReflections) {
+            if (context.project.getReflectionById(reflection.id) === reflection) {
+                context.project.removeReflection(reflection);
+            }
+        }
+        ignoredReflections.clear();
     });
 
     app.converter.on(Converter.EVENT_RESOLVE_BEGIN, (/** @type {import('typedoc').Context} */ context) => {
