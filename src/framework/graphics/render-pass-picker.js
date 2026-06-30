@@ -194,7 +194,7 @@ class RenderPassPicker extends RenderPass {
                     meshInstances: tempMeshInstances,
                     splitLights: lights,
                     lightClusters: this.emptyWorldClusters,
-                    viewUniformFormat: device.supportsUniformBuffers ? this.getViewUniformFormat() : undefined,
+                    viewUniformFormat: this.getViewUniformFormat(),
                     drawCallback: () => device.setBlendState(this.blendState)
                 });
 

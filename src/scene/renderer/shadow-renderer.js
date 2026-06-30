@@ -444,9 +444,9 @@ class ShadowRenderer {
         const rt = shadowCam.renderTarget;
         const renderer = this.renderer;
         renderer.setCameraUniforms(shadowCam, rt);
-        if (device.supportsUniformBuffers) {
-            renderer.setupViewUniformBuffers(this.viewUniformFormat, null);
-        }
+
+        // view uniforms always go through a uniform buffer (on all backends)
+        renderer.setupViewUniformBuffers(this.viewUniformFormat, null);
 
         renderer.setupViewport(shadowCam, rt);
 
@@ -554,7 +554,8 @@ class ShadowRenderer {
 
     initViewUniformFormat() {
 
-        if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
+        // view uniforms always go through a uniform buffer (on all backends)
+        if (!this.viewUniformFormat) {
 
             // format of the view uniform buffer
             this.viewUniformFormat = new UniformBufferFormat(this.device, [

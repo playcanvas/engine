@@ -706,16 +706,10 @@ class ForwardRenderer extends Renderer {
 
                     device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
-                    if (device.supportsUniformBuffers) {
-
-                        // per-view dynamic bind group + offset captured during setupViewUniformBuffers
-                        this._viewOffsetScratch[0] = this._viewBindGroupOffsets[v];
-                        device.setBindGroup(BINDGROUP_VIEW, this._viewBindGroups[v], this._viewOffsetScratch);
-
-                    } else {
-
-                        this.setupViewUniforms(view, v);
-                    }
+                    // per-view dynamic bind group + offset captured during setupViewUniformBuffers
+                    // (the per-view scope values were set there too)
+                    this._viewOffsetScratch[0] = this._viewBindGroupOffsets[v];
+                    device.setBindGroup(BINDGROUP_VIEW, this._viewBindGroups[v], this._viewOffsetScratch);
 
                     const first = v === viewListStart;
                     const last = v === viewListEnd - 1;
@@ -791,7 +785,7 @@ class ForwardRenderer extends Renderer {
      */
     renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, options = {}) {
 
-        const { scene, device } = this;
+        const { scene } = this;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
         this.setupViewport(camera, renderTarget);
@@ -850,18 +844,16 @@ class ForwardRenderer extends Renderer {
         this.setFogConstants(fogParams);
 
         const viewList = this.setCameraUniforms(camera, renderTarget);
-        if (device.supportsUniformBuffers) {
-            // ensure the default view uniform format exists - renderForwardLayer can run outside
-            // the main frame update (e.g. the picker and lightmapper passes)
-            this.initViewUniformFormat(scene.clusteredLightingEnabled);
-        }
+
+        // ensure the default view uniform format exists - renderForwardLayer can run outside
+        // the main frame update (e.g. the picker and lightmapper passes)
+        this.initViewUniformFormat(scene.clusteredLightingEnabled);
 
         // callers may supply a custom view uniform format, otherwise the renderer default is used
         const viewUniformFormat = options.viewUniformFormat ?? this.viewUniformFormat;
 
-        if (device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(viewUniformFormat, viewList);
-        }
+        // view uniforms always go through a uniform buffer (on all backends)
+        this.setupViewUniformBuffers(viewUniformFormat, viewList);
 
         // clearing - do it after the view bind groups are set up, to avoid overriding those
         const clearColor = options.clearColor ?? false;
