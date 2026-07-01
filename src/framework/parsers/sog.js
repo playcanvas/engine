@@ -105,6 +105,10 @@ class SogParser {
         this.maxRetries = maxRetries;
     }
 
+    canParse(context) {
+        return context.ext === 'json';
+    }
+
     /**
      * Checks if loading should be aborted due to asset unload or invalid device.
      *

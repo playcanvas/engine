@@ -1,9 +1,8 @@
-import { path } from '../../core/path.js';
-import { PlyParser } from '../parsers/ply.js';
-import { ResourceHandler } from './handler.js';
-import { SogParser } from '../parsers/sog.js';
-import { SogBundleParser } from '../parsers/sog-bundle.js';
 import { GSplatOctreeParser } from '../parsers/gsplat-octree.js';
+import { PlyParser } from '../parsers/ply.js';
+import { SogBundleParser } from '../parsers/sog-bundle.js';
+import { SogParser } from '../parsers/sog.js';
+import { ResourceHandler } from './handler.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -18,42 +17,15 @@ class GSplatHandler extends ResourceHandler {
      */
     constructor(app) {
         super(app, 'gsplat');
-        this._parsersByExt = {
-            ply: new PlyParser(app, 3),
-            sog: new SogBundleParser(app),
-            json: new SogParser(app, 3),
-            octree: new GSplatOctreeParser(app, 3)
-        };
-    }
 
-    _getUrlWithoutParams(url) {
-        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-    }
-
-    _getParser(url) {
-        const basename = path.getBasename(this._getUrlWithoutParams(url)).toLowerCase();
-        if (basename === 'lod-meta.json') {
-            return this._parsersByExt.octree;
-        }
-
-        const ext = path.getExtension(basename).replace('.', '');
-
-        return this._parsersByExt[ext] || this._parsersByExt.ply;
-    }
-
-    load(url, callback, asset) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        this._getParser(url.original).load(url, callback, asset);
-    }
-
-    open(url, data, asset) {
-        return data;
+        // `lod-meta.json` matches both the octree parser (by basename) and the SOG parser (by its
+        // `.json` extension); the octree parser is registered last so that, with newest-first
+        // selection, it is consulted first and wins. Other extensions are unambiguous, and an
+        // unrecognized extension matches no parser (there is no catch-all) and fails with a clear error.
+        this.addParser(new PlyParser(app, 3));          // .ply
+        this.addParser(new SogBundleParser(app));       // .sog bundle
+        this.addParser(new SogParser(app, 3));          // .json (SOG meta)
+        this.addParser(new GSplatOctreeParser(app, 3)); // lod-meta.json
     }
 }
 

@@ -23,6 +23,10 @@ class GSplatOctreeParser {
         this.maxRetries = maxRetries;
     }
 
+    canParse(context) {
+        return context.basename === 'lod-meta.json';
+    }
+
     /**
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
