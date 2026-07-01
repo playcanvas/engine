@@ -37,6 +37,9 @@ class ScriptComponentSystem extends ComponentSystem {
 
         this.ComponentType = ScriptComponent;
 
+        // 'order' is consumed alongside 'scripts' in initializeComponentData, it is not a component property
+        this.extraDataProperties = ['order'];
+
         // list of all entities script components
         // we are using pc.SortedLoopArray because it is
         // safe to modify while looping through it

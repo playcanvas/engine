@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
@@ -22,6 +23,26 @@ class ComponentSystem extends EventHandler {
      * @readonly
      */
     id;
+
+    /**
+     * A list of option names accepted by {@link ComponentSystem#addComponent} that are not settable
+     * properties of the component itself - for example keys the system consumes to build derived
+     * state (such as `aabbCenter`) or deprecated aliases. Used only by debug-build validation to
+     * avoid false-positive warnings; subclasses that accept such options should override this.
+     *
+     * @type {string[]}
+     * @ignore
+     */
+    extraDataProperties = [];
+
+    /**
+     * Cache of option names already validated as acceptable by {@link ComponentSystem#addComponent},
+     * lazily populated the first time each option is seen. Debug builds only.
+     *
+     * @type {Set<string>|null}
+     * @ignore
+     */
+    _validProps = null;
 
     /**
      * Create a new ComponentSystem instance.
@@ -64,6 +85,12 @@ class ComponentSystem extends EventHandler {
 
         entity[this.id] = component;
         entity.c[this.id] = component;
+
+        // Warn about options whose names don't map to a settable component property (typically
+        // typos), which would otherwise be silently ignored. Runs before initializeComponentData so
+        // systems that copy arbitrary keys onto the component (e.g. anim) don't mask the typo.
+        // Wrapped in Debug.call so the whole call is stripped from release builds.
+        Debug.call(() => validateComponentOptions(this, component, data));
 
         this.initializeComponentData(component, data);
 
@@ -234,6 +261,58 @@ function convertValue(value, type) {
         default:
             throw new Error(`Could not convert unhandled type: ${type}`);
     }
+}
+
+/**
+ * Returns true if `key` names a settable property of `obj` - either an accessor with a setter, or a
+ * writable data property - found anywhere on its prototype chain below `Object.prototype`. Note
+ * this only detects properties that can be assigned; getter-only accessors return false. The body
+ * is wrapped in {@link Debug.call} so it is stripped from release builds (this is only ever called
+ * from the debug-only {@link validateComponentOptions}).
+ *
+ * @param {object} obj - The object to test.
+ * @param {string} key - The property name to test.
+ * @returns {boolean} True if the property can be assigned on `obj`.
+ */
+function isSettableProperty(obj, key) {
+    let settable = false;
+    Debug.call(() => {
+        for (let proto = obj; proto && proto !== Object.prototype; proto = Object.getPrototypeOf(proto)) {
+            const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+            if (descriptor) {
+                settable = descriptor.set !== undefined || descriptor.writable === true;
+                return;
+            }
+        }
+    });
+    return settable;
+}
+
+/**
+ * Warns (once per option name and component type) about options passed to
+ * {@link ComponentSystem#addComponent} that are neither settable properties of the component nor
+ * listed in {@link ComponentSystem#extraDataProperties}, catching typos that would otherwise be
+ * silently ignored. The body is wrapped in {@link Debug.call} so it is stripped from release builds.
+ *
+ * @param {ComponentSystem} system - The component system creating the component.
+ * @param {Component} component - The freshly constructed component.
+ * @param {object} data - The options passed to addComponent.
+ */
+function validateComponentOptions(system, component, data) {
+    Debug.call(() => {
+        const valid = system._validProps ??= new Set(['enabled', ...system.extraDataProperties]);
+        for (const key of Object.keys(data)) {
+            if (valid.has(key)) {
+                continue;
+            }
+            if (isSettableProperty(component, key)) {
+                // memoize so repeatedly adding the same component type stays cheap
+                valid.add(key);
+            } else {
+                Debug.warnOnce(`addComponent: ignoring unknown option '${key}' passed to the '${system.id}' component - check for a typo.`);
+            }
+        }
+    });
 }
 
 export { ComponentSystem };

@@ -132,6 +132,9 @@ class GSplatComponentSystem extends ComponentSystem {
 
         this.ComponentType = GSplatComponent;
 
+        // consumed to build customAabb, not settable component properties
+        this.extraDataProperties = ['aabbCenter', 'aabbHalfExtents'];
+
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
 
         // register gsplat shader chunks

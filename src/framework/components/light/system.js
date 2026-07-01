@@ -26,6 +26,9 @@ class LightComponentSystem extends ComponentSystem {
 
         this.ComponentType = LightComponent;
 
+        // 'enable' is a deprecated alias for 'enabled', handled in initializeComponentData
+        this.extraDataProperties = ['enable'];
+
         this.on('beforeremove', this.onBeforeRemove, this);
     }
 

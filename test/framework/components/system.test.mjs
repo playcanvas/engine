@@ -1,10 +1,12 @@
 import { expect } from 'chai';
 
+import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Vec4 } from '../../../src/core/math/vec4.js';
 import { ComponentSystem } from '../../../src/framework/components/system.js';
+import { Entity } from '../../../src/framework/entity.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -236,6 +238,83 @@ describe('ComponentSystem', function () {
             system.schema = null;
 
             expect(system.getPropertiesOfType('typeA')).to.deep.equal([]);
+        });
+
+    });
+
+    describe('#addComponent() option validation', function () {
+        let warnings;
+        let originalWarn;
+
+        const validationWarnings = () => warnings.filter(w => w.includes('ignoring unknown option'));
+
+        beforeEach(function () {
+            // Debug.warnOnce dedupes globally by message, so clear the cache to keep tests independent
+            Debug._loggedMessages.clear();
+            warnings = [];
+            originalWarn = console.warn;
+            console.warn = (...args) => warnings.push(args.join(' '));
+        });
+
+        afterEach(function () {
+            console.warn = originalWarn;
+        });
+
+        it('warns about an unknown option (typo)', function () {
+            const entity = new Entity('test', app);
+            app.systems.render.addComponent(entity, { castShadow: true }); // typo for castShadows
+
+            const w = validationWarnings();
+            expect(w).to.have.lengthOf(1);
+            expect(w[0]).to.include('castShadow');
+            expect(w[0]).to.include('render');
+        });
+
+        it('does not warn about valid options', function () {
+            const entity = new Entity('test', app);
+            app.systems.render.addComponent(entity, { castShadows: true, receiveShadows: false });
+
+            expect(validationWarnings()).to.have.lengthOf(0);
+        });
+
+        it('does not warn about the shared enabled option', function () {
+            const entity = new Entity('test', app);
+            app.systems.render.addComponent(entity, { enabled: false });
+
+            expect(validationWarnings()).to.have.lengthOf(0);
+        });
+
+        it('does not warn about options consumed by the system (extraDataProperties)', function () {
+            const entity = new Entity('test', app);
+            app.systems.render.addComponent(entity, {
+                aabbCenter: [0, 0, 0],
+                aabbHalfExtents: [1, 1, 1]
+            });
+
+            expect(validationWarnings()).to.have.lengthOf(0);
+        });
+
+        it('warns about a read-only (getter-only) property', function () {
+            const entity = new Entity('test', app);
+            app.systems.camera.addComponent(entity, { frustum: {} }); // frustum is getter-only
+
+            const w = validationWarnings();
+            expect(w).to.have.lengthOf(1);
+            expect(w[0]).to.include('frustum');
+        });
+
+        it('does not warn about anim options handled outside of component properties', function () {
+            const entity = new Entity('test', app);
+            app.systems.anim.addComponent(entity, { layers: [], masks: {} });
+
+            expect(validationWarnings()).to.have.lengthOf(0);
+        });
+
+        it('warns only once for the same option and component type', function () {
+            app.systems.render.addComponent(new Entity('a', app), { castShadow: true });
+            app.systems.render.addComponent(new Entity('b', app), { castShadow: true });
+
+            expect(validationWarnings()).to.have.lengthOf(1);
         });
 
     });

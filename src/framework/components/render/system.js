@@ -47,6 +47,9 @@ class RenderComponentSystem extends ComponentSystem {
 
         this.ComponentType = RenderComponent;
 
+        // consumed to build customAabb, not settable component properties
+        this.extraDataProperties = ['aabbCenter', 'aabbHalfExtents'];
+
         this.defaultMaterial = getDefaultMaterial(app.graphicsDevice);
 
         this.on('beforeremove', this.onBeforeRemove, this);
