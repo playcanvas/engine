@@ -179,14 +179,14 @@ class ContainerHandler extends ResourceHandler {
         super(app, 'container');
 
         this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
-        this.parsers = { };
+        this._parsersByExt = { };
     }
 
     set maxRetries(value) {
         this.glbContainerParser.maxRetries = value;
-        for (const parser in this.parsers) {
-            if (this.parsers.hasOwnProperty(parser)) {
-                this.parsers[parser].maxRetries = value;
+        for (const parser in this._parsersByExt) {
+            if (this._parsersByExt.hasOwnProperty(parser)) {
+                this._parsersByExt[parser].maxRetries = value;
             }
         }
     }
@@ -211,7 +211,7 @@ class ContainerHandler extends ResourceHandler {
      */
     _getParser(url) {
         const ext = url ? path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '') : null;
-        return this.parsers[ext] || this.glbContainerParser;
+        return this._parsersByExt[ext] || this.glbContainerParser;
     }
 
     /**

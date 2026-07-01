@@ -138,7 +138,7 @@ class TextureHandler extends ResourceHandler {
         // parser will be used when other more specific parsers are not found.
         this.imgParser = new ImgParser(assets, device);
 
-        this.parsers = {
+        this._parsersByExt = {
             dds: new DdsParser(assets),
             ktx: new KtxParser(assets),
             ktx2: new Ktx2Parser(assets, device),
@@ -157,9 +157,9 @@ class TextureHandler extends ResourceHandler {
 
     set maxRetries(value) {
         this.imgParser.maxRetries = value;
-        for (const parser in this.parsers) {
-            if (this.parsers.hasOwnProperty(parser)) {
-                this.parsers[parser].maxRetries = value;
+        for (const parser in this._parsersByExt) {
+            if (this._parsersByExt.hasOwnProperty(parser)) {
+                this._parsersByExt[parser].maxRetries = value;
             }
         }
     }
@@ -174,7 +174,7 @@ class TextureHandler extends ResourceHandler {
 
     _getParser(url) {
         const ext = path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '');
-        return this.parsers[ext] || this.imgParser;
+        return this._parsersByExt[ext] || this.imgParser;
     }
 
     _getTextureOptions(asset) {

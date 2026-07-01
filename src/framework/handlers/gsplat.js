@@ -18,7 +18,7 @@ class GSplatHandler extends ResourceHandler {
      */
     constructor(app) {
         super(app, 'gsplat');
-        this.parsers = {
+        this._parsersByExt = {
             ply: new PlyParser(app, 3),
             sog: new SogBundleParser(app),
             json: new SogParser(app, 3),
@@ -33,12 +33,12 @@ class GSplatHandler extends ResourceHandler {
     _getParser(url) {
         const basename = path.getBasename(this._getUrlWithoutParams(url)).toLowerCase();
         if (basename === 'lod-meta.json') {
-            return this.parsers.octree;
+            return this._parsersByExt.octree;
         }
 
         const ext = path.getExtension(basename).replace('.', '');
 
-        return this.parsers[ext] || this.parsers.ply;
+        return this._parsersByExt[ext] || this._parsersByExt.ply;
     }
 
     load(url, callback, asset) {
