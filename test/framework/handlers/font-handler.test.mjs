@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { FILTER_LINEAR } from '../../../src/platform/graphics/constants.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -66,6 +67,30 @@ describe('FontHandler', function () {
                 expect(app.loader.getFromCache(texture.name, 'texture')).to.be.undefined;
             });
 
+            done();
+        });
+
+        asset.on('error', err => done(new Error(err)));
+    });
+
+    // regression test: MSDF atlases must load without mipmaps and with a non-mip minFilter. Mip
+    // levels average the distance-field channels, corrupting the median under minification (which
+    // showed as a faint flickering line below thin strokes on small text).
+    it('loads MSDF atlas textures without mipmaps', function (done) {
+        const asset = new Asset('arial', 'font', {
+            url: 'http://localhost:3210/test/assets/fonts/arial.json'
+        });
+
+        app.assets.add(asset);
+        app.assets.load(asset);
+
+        asset.ready(function () {
+            const textures = asset.resource.textures;
+            expect(textures).to.have.lengthOf(1);
+            textures.forEach((texture) => {
+                expect(texture.mipmaps).to.equal(false);
+                expect(texture.minFilter).to.equal(FILTER_LINEAR);
+            });
             done();
         });
 

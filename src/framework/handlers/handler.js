@@ -80,9 +80,10 @@ class ResourceHandler {
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link load}.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     * @param {object} [options] - Optional resource-creation options passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */
-    open(url, data, asset) {
+    open(url, data, asset, options) {
         return data;
     }
 

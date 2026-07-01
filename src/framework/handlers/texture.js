@@ -250,12 +250,14 @@ class TextureHandler extends ResourceHandler {
         this._getParser(url.original).load(url, callback, asset);
     }
 
-    open(url, data, asset) {
+    open(url, data, asset, options) {
         if (!url) {
             return undefined;
         }
 
-        const textureOptions = this._getTextureOptions(asset);
+        // asset-derived options, with any per-load creation options (e.g. mipmaps: false for
+        // MSDF font atlases) taking precedence
+        const textureOptions = { ...this._getTextureOptions(asset), ...options };
         let texture = this._getParser(url).open(url, data, this._device, textureOptions);
 
         if (texture === null) {

@@ -187,7 +187,7 @@ class ResourceLoader {
                     }
 
                     try {
-                        self._onSuccess(key, handler.open(urlObj.original, data, asset), extra);
+                        self._onSuccess(key, handler.open(urlObj.original, data, asset, options), extra);
                     } catch (e) {
                         self._onFailure(key, e);
                     }

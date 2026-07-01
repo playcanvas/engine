@@ -103,9 +103,12 @@ class FontHandler extends ResourceHandler {
         const textures = new Array(numTextures);
         const loader = this._loader;
 
-        // MSDF atlases must not be mipmapped: mip levels average the distance-field channels,
-        // and median(average) != average(median), so minified text samples a corrupted median.
+        // MSDF atlases must not be mipmapped: mip levels average the distance-field channels, and
+        // median(average) != average(median), so minified text samples a corrupted median. Request
+        // a non-mipmapped texture at creation time (mipmaps can't be disabled after creation on
+        // WebGPU) rather than mutating the loaded texture.
         const isMsdf = !data.type || data.type === FONT_MSDF;
+        const textureOptions = isMsdf ? { mipmaps: false, minFilter: FILTER_LINEAR } : undefined;
 
         const loadTexture = function (index) {
             const onLoaded = function (err, texture) {
@@ -117,11 +120,6 @@ class FontHandler extends ResourceHandler {
                     return;
                 }
 
-                if (isMsdf) {
-                    texture.minFilter = FILTER_LINEAR;
-                    texture.mipmaps = false;
-                }
-
                 texture.upload();
                 textures[index] = texture;
                 numLoaded++;
@@ -131,9 +129,9 @@ class FontHandler extends ResourceHandler {
             };
 
             if (index === 0) {
-                loader.load(url, 'texture', onLoaded);
+                loader.load(url, 'texture', onLoaded, null, textureOptions);
             } else {
-                loader.load(url.replace('.png', `${index}.png`), 'texture', onLoaded);
+                loader.load(url.replace('.png', `${index}.png`), 'texture', onLoaded, null, textureOptions);
             }
         };
 
