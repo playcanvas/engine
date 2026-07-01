@@ -106,6 +106,26 @@ describe('GSplatAssetLoader', function () {
             expect(loadCalls).to.equal(callsAtFailure);
         });
 
+        it('does not accumulate duplicate load listeners across error retries', function () {
+            const url = 'http://example.com/chunk.json';
+
+            loader.load(url);
+            resolveWithError();
+            resolveWithError();
+
+            // Two retries consumed (each attaches a fresh 'error' listener), but the original
+            // 'load' listener from the initial _startLoading() call is still pending - it must
+            // not have been duplicated by either retry.
+            const asset = lastAsset();
+            expect(asset._callbacks.get('load')?.length).to.equal(1);
+
+            const processQueueSpy = spy(loader, '_processQueue');
+            resolveWithResource({ ok: true });
+
+            expect(processQueueSpy.callCount).to.equal(1);
+            expect(loader.getResource(url)).to.deep.equal({ ok: true });
+        });
+
         it('retries a URL again after it is unloaded and re-requested', function () {
             const url = 'http://example.com/chunk.json';
 

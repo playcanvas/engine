@@ -259,11 +259,15 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
             asset.loaded = false;
             asset.loading = false;
 
-            // Retry loading via _startLoading() (not registry.load() directly) so a fresh
-            // 'error'/'load' listener pair is attached - otherwise a second consecutive
-            // failure for this URL would have nothing left to catch it.
+            // Retry loading. Re-attach only the 'error' listener - it was consumed by the
+            // once() that just fired, and a second consecutive failure would otherwise have
+            // nothing left to catch it. Don't touch 'load': the original listener from
+            // _startLoading() is still pending (it never fired) and re-adding it would leave
+            // two 'load' listeners on this asset, double-invoking _onAssetLoadSuccess on the
+            // eventual success.
             Debug.warn(`GSplatAssetLoader: Retrying load for ${url} (attempt ${retryCount + 1}/${this.maxRetries})`);
-            this._startLoading(url);
+            asset.once('error', retryErr => this._onAssetLoadError(url, asset, retryErr));
+            this._registry.load(asset);
         } else {
             // Max retries exceeded
             Debug.error(`GSplatAssetLoader: Failed to load ${url} after ${this.maxRetries} retries: ${err}`);
