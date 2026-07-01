@@ -1,10 +1,21 @@
+import { revision, version } from '../../core/core.js';
 import { RingBuffer } from './ring-buffer.js';
-import { buildSnapshot } from './snapshot.js';
 import { injectInput } from './input.js';
+import { serialize, tryCatch } from './serialize.js';
+
+// resolved by the jscc preprocessor per build variant; unprocessed source (dev/tests)
+// executes every block and resolves to 'debug'
+let buildVariant = 'release';
+// #if _PROFILER
+buildVariant = 'profiler';
+// #endif
+// #if _DEBUG
+buildVariant = 'debug';
+// #endif
 
 const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
-const CAPABILITIES = ['help', 'apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input'];
+const CAPABILITIES = ['help', 'apps', 'query', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input'];
 const MAX_DIAGNOSTICS = 100;
 const MAX_INPUT = 100;
 const WAIT_FRAME_CANCELLED = 'app detached or destroyed while waiting for frame';
@@ -13,7 +24,7 @@ const INJECTED = '__playcanvasRuntimeToolsInjected';
 const INPUT_EVENTS = ['keydown', 'keyup', 'mousedown', 'mouseup', 'mousemove', 'wheel', 'touchstart', 'touchmove', 'touchend', 'touchcancel'];
 const GLOBAL = '__PLAYCANVAS_TOOLS__';
 const ALIAS = 'playcanvasTools';
-const HINT = 'PlayCanvas debug tools: window.playcanvasTools.help() or window.playcanvasTools.snapshot()';
+const HINT = 'PlayCanvas debug tools: window.playcanvasTools.help() or window.playcanvasTools.query(app => app.root.name)';
 
 let idCounter = 0;
 let hintLogged = false;
@@ -64,12 +75,14 @@ const createGlobal = () => {
         protocol: PROTOCOL,
         version: PROTOCOL_VERSION,
         capabilities: CAPABILITIES.slice(),
+        engine: { version, revision, buildVariant },
         help() {
             return {
                 global: `window.${ALIAS}`,
                 protocolGlobal: `window.${GLOBAL}`,
                 examples: [
-                    'window.playcanvasTools.snapshot()',
+                    'window.playcanvasTools.query(app => app.root.findByName("player")?.forward)',
+                    'window.playcanvasTools.query(app => app.stats.drawCalls.total)',
                     'await window.playcanvasTools.waitForSettled()',
                     'window.playcanvasTools.diagnostics()',
                     'window.playcanvasTools.input({ kind: "key", action: "keydown", code: "Space" })'
@@ -83,14 +96,21 @@ const createGlobal = () => {
                 running: e.started && !e.destroyed
             }));
         },
-        snapshot(appId) {
-            return buildSnapshot(resolve(appId));
+        query(fn, appId, opts) {
+            if (typeof fn !== 'function') {
+                throw new Error('query(fn) needs a function, e.g. window.playcanvasTools.query(app => app.root.findByName("player").forward)');
+            }
+            const { app } = resolve(appId);
+            const [err, val] = tryCatch(() => fn(app));
+            return err ? { error: err.message } : serialize(val, opts);
         },
         diagnostics(appId) {
-            const errors = resolve(appId).errors.toArray();
+            const entry = resolve(appId);
+            const errors = entry.errors.toArray();
             return {
                 errors,
-                missingAssets: errors.filter(e => e.kind === 'asset' && e.url).map(e => e.url)
+                missingAssets: errors.filter(e => e.kind === 'asset' && e.url).map(e => e.url),
+                recentInput: entry.input.toArray().slice(-50)
             };
         },
         // drive a synthetic input event into the app through a browser eval bridge.
@@ -163,8 +183,8 @@ const createGlobal = () => {
  * Attaches runtime introspection tools to an application, exposing the
  * `globalThis.__PLAYCANVAS_TOOLS__` protocol global and `globalThis.playcanvasTools` alias for
  * test harnesses and agents. Call `playcanvasTools.help()` in the browser console for examples.
- * Opt-in: the global only exists while at least one app is attached. Snapshot and diagnostic data
- * is JSON-serializable; no live engine objects escape.
+ * Opt-in: the global only exists while at least one app is attached. Query and diagnostic results
+ * are JSON-serializable; no live engine objects escape.
  *
  * @param {import('../../framework/app-base.js').AppBase} app - The application to expose.
  * @returns {() => void} A function that detaches the app again. Detaching the last app
@@ -292,10 +312,11 @@ export { attachRuntimeTools };
  * @property {string} protocol - Protocol name.
  * @property {number} version - Protocol version.
  * @property {string[]} capabilities - Supported tool methods.
+ * @property {{ version: string, revision: string, buildVariant: string }} engine - Engine identity and build variant.
  * @property {() => object} help - Returns method names and copyable examples.
  * @property {() => object[]} apps - Lists attached apps.
- * @property {(appId?: string) => object} snapshot - Returns a serializable app snapshot.
- * @property {(appId?: string) => { errors: object[], missingAssets: string[] }} diagnostics - Returns recent runtime diagnostics.
+ * @property {(fn: (app: import('../../framework/app-base.js').AppBase) => any, appId?: string, opts?: object) => object} query - Runs fn against the live app and returns bounded, cycle-safe JSON.
+ * @property {(appId?: string) => { errors: object[], missingAssets: string[], recentInput: object[] }} diagnostics - Returns recent runtime diagnostics.
  * @property {(msg: object, appId?: string) => void} input - Injects a synthetic DOM input event.
  * @property {(appId?: string) => Promise<{ frame: number }>} waitForFrame - Resolves after the next frame.
  * @property {(appId?: string, options?: { frames?: number, timeout?: number }) => Promise<{ frame: number, settledFrames: number }>} waitForSettled - Resolves after the app has started and asset loading settles.

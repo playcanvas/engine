@@ -31,7 +31,8 @@ describe('attachRuntimeTools', function () {
         expect(tools.protocol).to.equal('playcanvas.runtime-tools');
         expect(tools.version).to.equal(1);
         expect(tools.capabilities).to.deep.equal(
-            ['help', 'apps', 'snapshot', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input']);
+            ['help', 'apps', 'query', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input']);
+        expect(tools.engine).to.have.keys('version', 'revision', 'buildVariant');
     });
 
     it('exposes a discoverable alias and help examples', function () {
@@ -41,7 +42,7 @@ describe('attachRuntimeTools', function () {
         expect(globalThis.playcanvasTools).to.equal(tools);
         expect(help.global).to.equal('window.playcanvasTools');
         expect(help.protocolGlobal).to.equal('window.__PLAYCANVAS_TOOLS__');
-        expect(help.examples).to.include('window.playcanvasTools.snapshot()');
+        expect(help.examples).to.include('window.playcanvasTools.query(app => app.stats.drawCalls.total)');
     });
 
     it('lists attached apps with a generated id when canvas has no id', function () {
@@ -72,19 +73,29 @@ describe('attachRuntimeTools', function () {
         d1();
     });
 
-    it('snapshot() resolves the single attached app implicitly', function () {
+    it('query() runs a fn against the single attached app and serializes the result', function () {
         attachRuntimeTools(app);
-        const snap = globalThis.__PLAYCANVAS_TOOLS__.snapshot();
-        expect(snap.version).to.equal(1);
-        expect(snap.app.id).to.match(/^pc-app-\d+$/);
-        expect(snap.scene.entitySample[0]).to.include.keys('path', 'components');
+        const tools = globalThis.__PLAYCANVAS_TOOLS__;
+        expect(tools.query(a => a.root.name)).to.equal(app.root.name);
+        // a live entity comes back as a bounded summary (name/path/forward/children), not a live ref
+        const rootSummary = tools.query(a => a.root);
+        expect(rootSummary).to.include.keys('name', 'path', 'children');
+        // a throwing fn is contained as { error }, not propagated
+        expect(tools.query(() => {
+            throw new Error('boom');
+        })).to.deep.equal({ error: 'boom' });
     });
 
-    it('records recent real and injected input in snapshots', function () {
+    it('query() throws an actionable error when not given a function', function () {
+        attachRuntimeTools(app);
+        expect(() => globalThis.__PLAYCANVAS_TOOLS__.query('nope')).to.throw(/needs a function/);
+    });
+
+    it('records recent real and injected input in diagnostics', function () {
         attachRuntimeTools(app);
         app.graphicsDevice.canvas.dispatchEvent(new window.KeyboardEvent('keydown', { code: 'KeyA', bubbles: true }));
         globalThis.__PLAYCANVAS_TOOLS__.input({ kind: 'key', action: 'keydown', code: 'KeyD' });
-        const recent = globalThis.__PLAYCANVAS_TOOLS__.snapshot().scene.recentInput;
+        const recent = globalThis.__PLAYCANVAS_TOOLS__.diagnostics().recentInput;
         expect(recent.map(e => e.source)).to.deep.equal(['real', 'injected']);
         expect(recent.map(e => e.code)).to.deep.equal(['KeyA', 'KeyD']);
     });
@@ -92,7 +103,7 @@ describe('attachRuntimeTools', function () {
     it('throws an actionable error for unknown appId', function () {
         attachRuntimeTools(app);
         expect(() => {
-            globalThis.__PLAYCANVAS_TOOLS__.snapshot('nope');
+            globalThis.__PLAYCANVAS_TOOLS__.query(a => a, 'nope');
         }).to.throw(/unknown appId 'nope'/);
     });
 
