@@ -93,16 +93,11 @@ class SogParser {
     /** @type {AppBase} */
     app;
 
-    /** @type {number} */
-    maxRetries;
-
     /**
      * @param {AppBase} app - The app instance.
-     * @param {number} maxRetries - Maximum amount of retries.
      */
-    constructor(app, maxRetries) {
+    constructor(app) {
         this.app = app;
-        this.maxRetries = maxRetries;
     }
 
     canParse(context) {
@@ -272,8 +267,8 @@ class SogParser {
 
             // we need to specify JSON for blob URLs
             const options = {
-                retry: this.maxRetries > 0,
-                maxRetries: this.maxRetries,
+                retry: this.handler.maxRetries > 0,
+                maxRetries: this.handler.maxRetries,
                 responseType: Http.ResponseType.JSON
             };
 

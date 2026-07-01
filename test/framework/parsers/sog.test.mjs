@@ -48,7 +48,8 @@ describe('SogParser', function () {
     });
 
     it('resolves texture urls from the document base uri', function (done) {
-        const parser = new SogParser(app, 0);
+        const parser = new SogParser(app);
+        parser.handler = app.loader.getHandler('gsplat');
         const sog = new Asset('sog', 'gsplat', {
             url: META_URL
         });

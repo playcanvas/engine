@@ -568,16 +568,11 @@ class PlyParser {
     /** @type {AppBase} */
     app;
 
-    /** @type {number} */
-    maxRetries;
-
     /**
      * @param {AppBase} app - The app instance.
-     * @param {number} maxRetries - Maximum amount of retries.
      */
-    constructor(app, maxRetries) {
+    constructor(app) {
         this.app = app;
-        this.maxRetries = maxRetries;
     }
 
     canParse(context) {

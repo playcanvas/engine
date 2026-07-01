@@ -22,10 +22,10 @@ class GSplatHandler extends ResourceHandler {
         // `.json` extension); the octree parser is registered last so that, with newest-first
         // selection, it is consulted first and wins. Other extensions are unambiguous, and an
         // unrecognized extension matches no parser (there is no catch-all) and fails with a clear error.
-        this.addParser(new PlyParser(app, 3));          // .ply
+        this.addParser(new PlyParser(app));             // .ply
         this.addParser(new SogBundleParser(app));       // .sog bundle
-        this.addParser(new SogParser(app, 3));          // .json (SOG meta)
-        this.addParser(new GSplatOctreeParser(app, 3)); // lod-meta.json
+        this.addParser(new SogParser(app));             // .json (SOG meta)
+        this.addParser(new GSplatOctreeParser(app));    // lod-meta.json
     }
 }
 
