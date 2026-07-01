@@ -113,12 +113,10 @@ describe('GSplatAssetLoader', function () {
             resolveWithError();
             resolveWithError();
 
-            // Two retries consumed (each attaches a fresh 'error' listener), but the original
-            // 'load' listener from the initial _startLoading() call is still pending - it must
-            // not have been duplicated by either retry.
-            const asset = lastAsset();
-            expect(asset._callbacks.get('load')?.length).to.equal(1);
-
+            // Two retries consumed (each attaches a fresh 'error' listener). If the original
+            // 'load' listener from the initial _startLoading() call had been duplicated by
+            // either retry, _onAssetLoadSuccess (and so _processQueue) would run once per
+            // duplicate on the eventual success below instead of exactly once.
             const processQueueSpy = spy(loader, '_processQueue');
             resolveWithResource({ ok: true });
 
