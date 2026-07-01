@@ -1,6 +1,8 @@
 import { path } from '../../core/path.js';
 import { string } from '../../core/string.js';
+import { FILTER_LINEAR } from '../../platform/graphics/constants.js';
 import { http } from '../../platform/net/http.js';
+import { FONT_MSDF } from '../font/constants.js';
 import { Font } from '../font/font.js';
 import { ResourceHandler } from './handler.js';
 
@@ -101,6 +103,10 @@ class FontHandler extends ResourceHandler {
         const textures = new Array(numTextures);
         const loader = this._loader;
 
+        // MSDF atlases must not be mipmapped: mip levels average the distance-field channels,
+        // and median(average) != average(median), so minified text samples a corrupted median.
+        const isMsdf = !data.type || data.type === FONT_MSDF;
+
         const loadTexture = function (index) {
             const onLoaded = function (err, texture) {
                 if (error) return;
@@ -109,6 +115,11 @@ class FontHandler extends ResourceHandler {
                     error = err;
                     callback(err);
                     return;
+                }
+
+                if (isMsdf) {
+                    texture.minFilter = FILTER_LINEAR;
+                    texture.mipmaps = false;
                 }
 
                 texture.upload();
