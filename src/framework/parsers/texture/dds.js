@@ -7,7 +7,8 @@ import {
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXHINT_ASSET
+    TEXHINT_ASSET,
+    pixelFormatLinearToGamma
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
@@ -103,6 +104,10 @@ class DdsParser extends TextureParser {
             return texture;
         }
 
+        // create the texture directly in the sRGB format when requested, to avoid an expensive
+        // runtime format switch (matches the ktx/ktx2/basis parsers)
+        const textureFormat = textureOptions.srgb ? pixelFormatLinearToGamma(format) : format;
+
         texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -112,7 +117,7 @@ class DdsParser extends TextureParser {
             addressV: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: width,
             height: height,
-            format: format,
+            format: textureFormat,
             cubemap: isCubemap,
             mipmaps: mips > 1,
 

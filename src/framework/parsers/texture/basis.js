@@ -58,6 +58,10 @@ class BasisParser extends TextureParser {
             cubemap: data.cubemap,
             levels: data.levels,
 
+            // derive mipmaps from the actual level count, so a single-level file isn't treated as an
+            // incomplete mip chain (which renders black); matches the dds parser
+            mipmaps: data.levels.length > 1,
+
             ...textureOptions
         });
         texture.upload();

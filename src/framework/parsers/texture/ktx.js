@@ -82,6 +82,10 @@ class KtxParser extends TextureParser {
             cubemap: textureData.cubemap,
             levels: textureData.levels,
 
+            // derive mipmaps from the actual level count, so a single-level file isn't treated as an
+            // incomplete mip chain (which renders black); matches the dds parser
+            mipmaps: textureData.levels.length > 1,
+
             ...textureOptions
         });
 
