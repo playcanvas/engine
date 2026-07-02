@@ -123,7 +123,7 @@ const srcClouds = terrain.find((node) => {
 });
 
 // Store cloud parents for later and remove clouds from terrain hierarchy
-const cloudParents = srcClouds.map((cloud) => cloud.parent);
+const cloudParents = srcClouds.map(cloud => cloud.parent);
 srcClouds.forEach((cloud) => {
     cloud.parent.removeChild(cloud);
 });
@@ -155,7 +155,7 @@ revealScript.edgeTint.set(5, 2, 0); // orange/gold edge
 revealScript.tint.set(1, 1, 1);
 
 // Now disable the original terrain render components (keep gsplat visible)
-const terrainRenders = terrain.find((node) => node.render && !node.name.includes('Gsplat'));
+const terrainRenders = terrain.find(node => node.render && !node.name.includes('Gsplat'));
 terrainRenders.forEach((node) => {
     node.render.enabled = false;
 });

@@ -237,8 +237,8 @@ const spacingX = (mx.x - mn.x) * LAYOUT.spacingFactor;
 const spacingZ = (mx.z - mn.z) * LAYOUT.spacingFactor;
 
 const numSplatsPerInstance = /** @type {any} */ (assets.scene.resource).numSplats;
-const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
-const toB = (v) => `${(v / 1e9).toFixed(1)}B`;
+const toM = v => `${(v / 1e6).toFixed(1)}M`;
+const toB = v => `${(v / 1e9).toFixed(1)}B`;
 
 // --- LOD tuning (temporary): seed defaults and live-apply on change ---
 data.set('lodBaseDistance', DEFAULT_LOD_BASE_DISTANCE);
@@ -267,7 +267,7 @@ const refRows = ringSize;
 const offX = (cols - 1) * 0.5 * spacingX;
 
 // Map a position-within-ring counter (0, 1, 2, …) to a centre-out signed offset: 0, +1, -1, …
-const rowOffset = (r) => Math.ceil(r / 2) * (r % 2 === 1 ? 1 : -1);
+const rowOffset = r => Math.ceil(r / 2) * (r % 2 === 1 ? 1 : -1);
 
 // Cylindrical bend along the length (Z): map each tile's centre-out length coordinate onto an
 // arc so the ground curves up to both sides and each tile tilts to stay tangent to the
@@ -377,8 +377,8 @@ const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config
 // that tile. Only X/Z are taken from the tile centre; the camera keeps its configured
 // (absolute) elevation rather than the tile's mid-height, so it starts above the ground.
 const tile0Center = instanceEntities[0]
-    .getWorldTransform()
-    .transformPoint(new Vec3((mn.x + mx.x) * 0.5, (mn.y + mx.y) * 0.5, (mn.z + mx.z) * 0.5), new Vec3());
+.getWorldTransform()
+.transformPoint(new Vec3((mn.x + mx.x) * 0.5, (mn.y + mx.y) * 0.5, (mn.z + mx.z) * 0.5), new Vec3());
 
 const camera = new Entity('camera');
 camera.addComponent('camera', {

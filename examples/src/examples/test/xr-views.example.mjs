@@ -253,19 +253,18 @@ camera.camera.camera.xrViews = viewsList;
 let arrayTex = null;
 let compositeCamera = null;
 if (device.isWebGPU) {
-    const createArrayTexture = (w, h) =>
-        new Texture(device, {
-            name: 'XrViewsArrayTexture',
-            format: device.backBufferFormat,
-            arrayLength: numViews,
-            width: w,
-            height: h,
-            mipmaps: false,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            minFilter: FILTER_LINEAR,
-            magFilter: FILTER_LINEAR
-        });
+    const createArrayTexture = (w, h) => new Texture(device, {
+        name: 'XrViewsArrayTexture',
+        format: device.backBufferFormat,
+        arrayLength: numViews,
+        width: w,
+        height: h,
+        mipmaps: false,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR
+    });
 
     arrayTex = createArrayTexture(Math.max(canvas.width, 1), Math.max(canvas.height, 1));
 

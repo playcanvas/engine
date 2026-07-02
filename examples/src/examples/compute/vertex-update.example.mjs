@@ -154,38 +154,38 @@ cameraEntity.script.create('orbitCameraInputTouch');
 app.root.addChild(cameraEntity);
 
 // a compute shader that will modify the vertex buffer of the mesh every frame
-const shader = device.supportsCompute
-    ? new Shader(device, {
-          name: 'ComputeShader',
-          shaderLanguage: SHADERLANGUAGE_WGSL,
-          cshader: computeShaderWgsl,
+const shader = device.supportsCompute ?
+    new Shader(device, {
+        name: 'ComputeShader',
+        shaderLanguage: SHADERLANGUAGE_WGSL,
+        cshader: computeShaderWgsl,
 
-          // format of a uniform buffer used by the compute shader
-          computeUniformBufferFormats: {
-              ub: new UniformBufferFormat(device, [
-                  new UniformFormat('count', UNIFORMTYPE_UINT),
-                  new UniformFormat('positionOffset', UNIFORMTYPE_UINT),
-                  new UniformFormat('normalOffset', UNIFORMTYPE_UINT),
-                  new UniformFormat('time', UNIFORMTYPE_FLOAT)
-              ])
-          },
+        // format of a uniform buffer used by the compute shader
+        computeUniformBufferFormats: {
+            ub: new UniformBufferFormat(device, [
+                new UniformFormat('count', UNIFORMTYPE_UINT),
+                new UniformFormat('positionOffset', UNIFORMTYPE_UINT),
+                new UniformFormat('normalOffset', UNIFORMTYPE_UINT),
+                new UniformFormat('time', UNIFORMTYPE_FLOAT)
+            ])
+        },
 
-          // format of a bind group, providing resources for the compute shader
-          computeBindGroupFormat: new BindGroupFormat(device, [
-              // a uniform buffer we provided format for
-              new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
-              // the vertex buffer we want to modify
-              new BindStorageBufferFormat('vb', SHADERSTAGE_COMPUTE)
-          ])
-      })
-    : null;
+        // format of a bind group, providing resources for the compute shader
+        computeBindGroupFormat: new BindGroupFormat(device, [
+            // a uniform buffer we provided format for
+            new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
+            // the vertex buffer we want to modify
+            new BindStorageBufferFormat('vb', SHADERSTAGE_COMPUTE)
+        ])
+    }) :
+    null;
 
 // information about the vertex buffer format - offset of position and normal attributes
 // Note: data is stored non-interleaved, positions together, normals together, so no need
 // to worry about stride
 const format = mesh.vertexBuffer.format;
-const positionElement = format.elements.find((e) => e.name === SEMANTIC_POSITION);
-const normalElement = format.elements.find((e) => e.name === SEMANTIC_NORMAL);
+const positionElement = format.elements.find(e => e.name === SEMANTIC_POSITION);
+const normalElement = format.elements.find(e => e.name === SEMANTIC_NORMAL);
 
 // create an instance of the compute shader, and provide it the mesh vertex buffer
 const compute = new Compute(device, shader, 'ComputeModifyVB');

@@ -305,7 +305,7 @@ canvas.addEventListener('drop', async (e) => {
     if (files.length === 0) return;
 
     // Detect unpacked SOG: a meta.json file was dropped (with any number of sibling webp files).
-    const metaFile = files.find((f) => f.name.toLowerCase() === 'meta.json');
+    const metaFile = files.find(f => f.name.toLowerCase() === 'meta.json');
     const isUnpackedSog = !!metaFile;
 
     // Otherwise expect a single gsplat/glb file
@@ -347,7 +347,7 @@ canvas.addEventListener('drop', async (e) => {
             },
             null,
             {
-                mapUrl: (filename) => blobMap.get(filename)
+                mapUrl: filename => blobMap.get(filename)
             }
         );
 
@@ -355,7 +355,7 @@ canvas.addEventListener('drop', async (e) => {
 
         await new Promise((resolve, reject) => {
             asset.once('load', () => resolve(asset));
-            asset.once('error', (err) => reject(err));
+            asset.once('error', err => reject(err));
             app.assets.load(asset);
         });
 

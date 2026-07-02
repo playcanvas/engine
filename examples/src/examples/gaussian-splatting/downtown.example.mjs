@@ -202,7 +202,7 @@ for (let i = 0; i < pieces.length; i++) {
     totalSplats += res.numSplats ?? 0;
     lodLevels = Math.max(lodLevels, res.octree?.lodLevels ?? 1);
 }
-const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
+const toM = v => `${(v / 1e6).toFixed(1)}M`;
 data.set('data.stats.splatsTotal', toM(totalSplats));
 
 // combined world-space bounds, for framing the camera
@@ -288,9 +288,9 @@ app.root.addChild(camera);
 // focus point straight ahead of the camera's initial orientation — CameraControls derives the
 // starting yaw/pitch from (position -> focus), reproducing the configured rotation.
 const focusPoint = camera.forward
-    .clone()
-    .mulScalar(radius * 0.5)
-    .add(camera.getPosition());
+.clone()
+.mulScalar(radius * 0.5)
+.add(camera.getPosition());
 
 camera.addComponent('script');
 const cc = /** @type {CameraControls} */ (/** @type {any} */ (camera.script).create(CameraControls));
@@ -328,19 +328,19 @@ data.on('splatBudget:set', applySplatBudget);
 // --- on-screen quality buttons: each sets the splat budget. The Splat Budget slider in the
 // controls stays two-way bound to the same value, so it tracks the buttons and can still be
 // dragged; clicking a button just resets the value. ---
-const QUALITY = platform.mobile
-    ? [
-          ['Low', 2],
-          ['Medium', 4],
-          ['High', 6],
-          ['Extreme', 8]
-      ]
-    : [
-          ['Low', 4],
-          ['Medium', 8],
-          ['High', 16],
-          ['Extreme', 25]
-      ];
+const QUALITY = platform.mobile ?
+    [
+        ['Low', 2],
+        ['Medium', 4],
+        ['High', 6],
+        ['Extreme', 8]
+    ] :
+    [
+        ['Low', 4],
+        ['Medium', 8],
+        ['High', 16],
+        ['Extreme', 25]
+    ];
 
 const qualityBar = document.createElement('div');
 Object.assign(qualityBar.style, {
