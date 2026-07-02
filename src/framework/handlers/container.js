@@ -9,12 +9,14 @@ import { ResourceHandler } from './handler.js';
  */
 
 /**
- * Container for a list of animations, textures, materials, renders and a model.
+ * Container for a list of animations, textures, materials, renders, gsplats and a model.
  *
  * @property {Asset[]} renders An array of the Render assets.
  * @property {Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
  * @property {Asset[]} textures An array of the {@link Texture} assets.
  * @property {Asset[]} animations An array of the {@link Animation} assets.
+ * @property {Asset[]} gsplats An array of the gsplat assets, created for meshes using the
+ * KHR_gaussian_splatting glTF extension.
  * @interface
  * @category Graphics
  */
@@ -149,8 +151,8 @@ class ContainerResource {
  * [options.morphPreferHighPrecision] - When true, high precision storage for morph targets should
  * be preferred. This is faster to create and allows higher precision, but takes more memory and
  * might be slower to render. Defaults to false.
- * [options.skipMeshes] - When true, the meshes from the container are not created. This can be
- * useful if you only need access to textures or animations and similar.
+ * [options.skipMeshes] - When true, the meshes and gaussian splats from the container are not
+ * created. This can be useful if you only need access to textures or animations and similar.
  *
  * For example, to receive a texture preprocess callback:
  *

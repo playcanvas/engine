@@ -46,6 +46,7 @@ import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { createInstancing } from './glb/extensions/ext-mesh-gpu-instancing.js';
 import { createDracoMesh } from './glb/extensions/khr-draco-mesh-compression.js';
+import { createGSplats, hasGSplatExtension } from './glb/extensions/khr-gaussian-splatting.js';
 import { createLights } from './glb/extensions/khr-lights-punctual.js';
 import { createVariants, registerMeshVariants } from './glb/extensions/khr-materials-variants.js';
 import { getTextureSource } from './glb/extensions/texture-source.js';
@@ -74,6 +75,8 @@ class GlbResources {
     meshDefaultMaterials;
 
     renders;
+
+    gsplats;
 
     skins;
 
@@ -411,6 +414,11 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
     const meshes = [];
 
     gltfMesh.primitives.forEach((primitive) => {
+
+        if (hasGSplatExtension(primitive)) {
+            // gaussian splat primitives are handled by createGSplats instead
+            return;
+        }
 
         if (primitive.extensions?.KHR_draco_mesh_compression) {
             // handle draco compressed mesh
@@ -1189,6 +1197,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     // buffer data must have finished loading in order to create meshes and animations
     const bufferViewData = await Promise.all(bufferViews);
     const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, options);
+    const gsplats = options.skipMeshes ? [] : createGSplats(device, gltf, bufferViewData);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
     createInstancing(device, gltf, nodeInstancingMap, bufferViewData);
 
@@ -1219,6 +1228,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     result.meshVariants = meshVariants;
     result.meshDefaultMaterials = meshDefaultMaterials;
     result.renders = renders;
+    result.gsplats = gsplats;
     result.skins = skins;
     result.lights = lights;
     result.cameras = cameras;

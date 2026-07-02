@@ -205,6 +205,15 @@ class GltfAccessor {
         return result;
     }
 
+    // extract a single component of an interleaved accessor data array into a new array
+    static extractComponent(source, numComponents, component, count) {
+        const result = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
+            result[i] = source[i * numComponents + component];
+        }
+        return result;
+    }
+
     // get accessor data as (unnormalized, unquantized) Float32 data
     static getDataFloat32(gltfAccessor, bufferViews) {
         const data = GltfAccessor.getData(gltfAccessor, bufferViews, true);
