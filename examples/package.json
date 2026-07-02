@@ -18,6 +18,7 @@
     "format:check": "prettier --check \"src/examples/**/*.{mjs,jsx}\"",
     "lint": "eslint .",
     "serve": "vite preview",
+    "test": "node --test utils/*.test.mjs",
     "type:check": "npm run -s type:check:app && npm run -s type:check:examples",
     "type:check:app": "npm run -s build:metadata && tsc -p tsconfig.app.json --pretty false",
     "type:check:examples": "tsc -p tsconfig.examples.json --pretty false"
