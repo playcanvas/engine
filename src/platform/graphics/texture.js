@@ -183,6 +183,9 @@ class Texture {
      * - {@link PIXELFORMAT_ATC_RGBA}
      *
      * Defaults to {@link PIXELFORMAT_RGBA8}.
+     * @param {boolean} [options.srgb] - When true, the texture is created in the sRGB variant of
+     * the requested format, if one exists, and is automatically converted to linear space when
+     * sampled. When the format has no sRGB variant, this option is ignored. Defaults to false.
      * @param {string} [options.projection] - The projection type of the texture, used when the
      * texture represents an environment. Can be:
      *
@@ -284,7 +287,10 @@ class Texture {
         this._width = Math.floor(options.width ?? 4);
         this._height = Math.floor(options.height ?? 4);
 
-        this._format = options.format ?? PIXELFORMAT_RGBA8;
+        // when srgb is requested, the texture is created in the sRGB variant of the format, if
+        // one exists - this avoids an expensive runtime format switch when it is first used as such
+        const format = options.format ?? PIXELFORMAT_RGBA8;
+        this._format = options.srgb ? pixelFormatLinearToGamma(format) : format;
         this._compressed = isCompressedPixelFormat(this._format);
         this._integerFormat = isIntegerPixelFormat(this._format);
         if (this._integerFormat) {
