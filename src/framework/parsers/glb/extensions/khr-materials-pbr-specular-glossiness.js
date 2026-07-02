@@ -46,7 +46,14 @@ const KHR_materials_pbrSpecularGlossiness = {
     },
 
     getColorTextures(data) {
-        return data.hasOwnProperty('specularGlossinessTexture') ? [data.specularGlossinessTexture] : [];
+        const textures = [];
+        if (data.hasOwnProperty('diffuseTexture')) {
+            textures.push(data.diffuseTexture);
+        }
+        if (data.hasOwnProperty('specularGlossinessTexture')) {
+            textures.push(data.specularGlossinessTexture);
+        }
+        return textures;
     }
 };
 
