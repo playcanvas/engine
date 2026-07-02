@@ -34,6 +34,7 @@
     "@types/react-router-dom": "5.3.3",
     "cross-env": "10.1.0",
     "eslint": "9.39.4",
+    "eslint-config-prettier": "10.1.8",
     "esbuild": "0.28.1",
     "examples": "file:./iframe",
     "fflate": "0.8.3",

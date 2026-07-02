@@ -251,7 +251,7 @@ data.set('data', {
 });
 
 // set an update function on the app's update event
-app.on('update', (dt) => {
+app.on('update', (_dt) => {
     // bake lightmaps when hud properties change
     if (needBake) {
         needBake = false;

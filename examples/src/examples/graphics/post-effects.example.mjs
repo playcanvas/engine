@@ -92,10 +92,10 @@ app.scene.exposure = 1;
  * @param {pc.Vec3} position - The position (unused).
  * @param {pc.Vec3} scale - The scale.
  * @param {number} brightness - The brightness (unused).
- * @param {boolean} [allowEmissive] - Allow emissive (unused).
+ * @param {boolean} [_allowEmissive] - Allow emissive (unused).
  * @returns {pc.Entity} The returned entity.
  */
-function createPrimitive(primitiveType, position, scale, brightness, allowEmissive = true) {
+function createPrimitive(primitiveType, position, scale, brightness, _allowEmissive = true) {
     // create a material
     const material = new pc.StandardMaterial();
     material.gloss = 0.4;

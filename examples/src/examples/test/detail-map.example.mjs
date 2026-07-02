@@ -157,7 +157,7 @@ data.set('data', {
 });
 
 // update things each frame
-app.on('update', (dt) => {
+app.on('update', (_dt) => {
     // toggle diffuse detail map
     const diffuseEnabled = !!material.diffuseDetailMap;
     if (diffuseEnabled !== data.get('data.diffuse')) {

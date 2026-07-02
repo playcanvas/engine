@@ -151,7 +151,7 @@ data.set('data', {
 });
 
 // update things each frame
-app.on('update', (dt) => {
+app.on('update', (_dt) => {
     const height = data.get('data.height');
     if (height !== parallaxMaterial.heightMapFactor) {
         parallaxMaterial.heightMapFactor = height;

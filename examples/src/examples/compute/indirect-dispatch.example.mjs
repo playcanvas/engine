@@ -343,7 +343,7 @@ if (device.supportsCompute) {
     });
 
     // update loop
-    app.on('update', (/** @type {number} */ dt) => {
+    app.on('update', (/** @type {number} */ _dt) => {
         if (!device.supportsCompute || !scanCompute || !effectComputeEdge || !effectComputeSmooth) {
             return;
         }

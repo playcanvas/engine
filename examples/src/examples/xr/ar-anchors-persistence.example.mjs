@@ -91,7 +91,7 @@ const createAnchor = (hitTestResult) => {
         if (err) return message('Failed creating Anchor');
         if (!anchor) return message('Anchor has not been created');
 
-        anchor.persist((err, uuid) => {
+        anchor.persist((err, _uuid) => {
             if (err) {
                 message('Anchor failed to persist');
             }

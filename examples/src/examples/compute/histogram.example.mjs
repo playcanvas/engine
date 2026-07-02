@@ -140,7 +140,7 @@ solid.setLocalScale(0.35, 0.35, 0.35);
 app.root.addChild(solid);
 
 let firstFrame = true;
-app.on('update', (/** @type {number} */ dt) => {
+app.on('update', (/** @type {number} */ _dt) => {
     // the update function runs every frame before the frame gets rendered. on the first time it
     // runs, the scene color map has not been rendered yet, so we skip the first frame.
     if (firstFrame) {
