@@ -1,6 +1,9 @@
 import { path } from '../../core/path.js';
 import { string } from '../../core/string.js';
+import { FILTER_LINEAR } from '../../platform/graphics/constants.js';
 import { http } from '../../platform/net/http.js';
+import { Asset } from '../asset/asset.js';
+import { FONT_MSDF } from '../font/constants.js';
 import { Font } from '../font/font.js';
 import { ResourceHandler } from './handler.js';
 
@@ -101,6 +104,14 @@ class FontHandler extends ResourceHandler {
         const textures = new Array(numTextures);
         const loader = this._loader;
 
+        // MSDF atlases must not be mipmapped: mip levels average the distance-field channels, and
+        // median(average) != average(median), so minified text samples a corrupted median. Request
+        // non-mipmapped textures at creation time (on WebGPU mipmaps cannot be disabled after
+        // creation), using per-load texture options on an ephemeral asset. Bitmap fonts keep
+        // their mipmaps.
+        const isMsdf = !data.type || data.type === FONT_MSDF;
+        const textureOptions = isMsdf ? { texture: { mipmaps: false, minFilter: FILTER_LINEAR } } : null;
+
         const loadTexture = function (index) {
             const onLoaded = function (err, texture) {
                 if (error) return;
@@ -119,11 +130,9 @@ class FontHandler extends ResourceHandler {
                 }
             };
 
-            if (index === 0) {
-                loader.load(url, 'texture', onLoaded);
-            } else {
-                loader.load(url.replace('.png', `${index}.png`), 'texture', onLoaded);
-            }
+            const pageUrl = index === 0 ? url : url.replace('.png', `${index}.png`);
+            const pageAsset = textureOptions ? new Asset(pageUrl, 'texture', { url: pageUrl }, null, textureOptions) : null;
+            loader.load(pageUrl, 'texture', onLoaded, pageAsset);
         };
 
         for (let i = 0; i < numTextures; i++) {
