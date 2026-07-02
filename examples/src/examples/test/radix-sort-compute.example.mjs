@@ -564,7 +564,8 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         // Snap to a multiple of 8 so the bit count is compatible with both
         // 4-bit and 8-bit radix modes without realignment at sort time.
         const validBits = [8, 16, 24, 32];
-        const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev)
+        const nearest = validBits.reduce((prev, curr) =>
+            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
         );
         if (nearest !== currentNumBits) {
             currentNumBits = nearest;
@@ -706,7 +707,7 @@ function startBenchmark() {
     // Filter the benchmark size sweep to respect the user-selected upper
     // bound from the Benchmark panel.
     const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
-    const sizes = BENCH_SIZES.filter(n => n <= maxN);
+    const sizes = BENCH_SIZES.filter((n) => n <= maxN);
     if (sizes.length === 0) {
         showBenchStatus('No benchmark sizes selected.');
         setTimeout(() => {
@@ -1351,9 +1352,9 @@ function benchFilename() {
         tag = info.architecture || info.device || info.vendor || 'gpu';
     }
     tag = String(tag)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
     const d = new Date();
     const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
     const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
@@ -1425,7 +1426,7 @@ async function runValidation() {
     if (validateRunning || benchState) return;
 
     const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
-    const sizes = BENCH_SIZES.filter(n => n <= maxN);
+    const sizes = BENCH_SIZES.filter((n) => n <= maxN);
     if (sizes.length === 0) {
         showBenchStatus('No validation sizes selected.');
         setTimeout(() => {
@@ -1614,7 +1615,7 @@ function renderValidateResults(results, sizes, onClose) {
         // `data-toggle` set earlier (which captured `detailRows.length`
         // BEFORE pushing this size's failures, i.e. the start index).
         if (rowHasDetails) {
-            const startIdx = detailRows.findIndex(r => r.size === size);
+            const startIdx = detailRows.findIndex((r) => r.size === size);
             const lastIdx = detailRows.length - 1;
             let detailHtml = '';
             for (let d = startIdx; d <= lastIdx; d++) {
@@ -1756,9 +1757,9 @@ function validateFilename() {
         tag = info.architecture || info.device || info.vendor || 'gpu';
     }
     tag = String(tag)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
     const d = new Date();
     const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
     const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;

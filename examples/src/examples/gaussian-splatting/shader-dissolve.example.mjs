@@ -168,12 +168,12 @@ const dissolveScript = hotel.script?.create(GsplatDissolveShaderEffect);
 // Wire up parameter sliders - each updates the script live
 /** @type {Record<string, (value: any) => void>} */
 const paramHandlers = {
-    duration: v => dissolveScript && (dissolveScript.duration = v),
-    noiseFrequency: v => dissolveScript && (dissolveScript.noiseFrequency = v),
-    edgeWidth: v => dissolveScript && (dissolveScript.edgeWidth = v),
-    liftDistance: v => dissolveScript && (dissolveScript.liftDistance = v),
-    waveAmplitude: v => dissolveScript && (dissolveScript.waveAmplitude = v),
-    waveFrequency: v => dissolveScript && (dissolveScript.waveFrequency = v)
+    duration: (v) => dissolveScript && (dissolveScript.duration = v),
+    noiseFrequency: (v) => dissolveScript && (dissolveScript.noiseFrequency = v),
+    edgeWidth: (v) => dissolveScript && (dissolveScript.edgeWidth = v),
+    liftDistance: (v) => dissolveScript && (dissolveScript.liftDistance = v),
+    waveAmplitude: (v) => dissolveScript && (dissolveScript.waveAmplitude = v),
+    waveFrequency: (v) => dissolveScript && (dissolveScript.waveFrequency = v)
 };
 Object.keys(paramHandlers).forEach((key) => {
     data.on(`${key}:set`, () => paramHandlers[key](data.get(key)));

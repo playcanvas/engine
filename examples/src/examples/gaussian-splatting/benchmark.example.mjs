@@ -258,8 +258,8 @@ const headerBtnCss = [
 ].join(';');
 
 const compactBtnCss = headerBtnCss
-.replace('padding: 6px 14px', 'padding: 3px 6px')
-.replace('font-size: 14px', 'font-size: 11px');
+    .replace('padding: 6px 14px', 'padding: 3px 6px')
+    .replace('font-size: 14px', 'font-size: 11px');
 const compactRowOnlyBtnCss = compactBtnCss.replace('#4a9eff', '#2fa36b');
 const compactRunAllBtnCss = compactBtnCss.replace('#4a9eff', '#e05555');
 
@@ -507,7 +507,7 @@ window.addEventListener('resize', () => {
     window.clearTimeout(uiResizeTimer);
     uiResizeTimer = window.setTimeout(() => {
         updateGpuInfo();
-        if (!storedResults.some(r => r !== null)) return;
+        if (!storedResults.some((r) => r !== null)) return;
         refreshChartAndDownload();
     }, 200);
 });
@@ -658,9 +658,9 @@ function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
                 const wallSec = wallStart !== null ? Math.max(1e-9, (wallEnd - wallStart) / 1000) : 1e-9;
                 const effectiveFps = MEASURE_FRAMES / wallSec;
                 const avgGpu =
-                    gpuTimingSupported && gpuTimes.length === MEASURE_FRAMES ?
-                        gpuTimes.reduce((a, b) => a + b, 0) / MEASURE_FRAMES :
-                        -1;
+                    gpuTimingSupported && gpuTimes.length === MEASURE_FRAMES
+                        ? gpuTimes.reduce((a, b) => a + b, 0) / MEASURE_FRAMES
+                        : -1;
                 const avgSplats = splatCounts.reduce((a, b) => a + b, 0) / splatCounts.length;
                 /** @type {Map<string, number>} */
                 const avgPass = new Map();
@@ -987,7 +987,7 @@ function refreshChartAndDownload() {
     fpsChartWrap.innerHTML = '';
     chartActionsRow.innerHTML = '';
 
-    const anyResults = storedResults.some(r => r !== null);
+    const anyResults = storedResults.some((r) => r !== null);
     if (!anyResults) return;
 
     const chartGpu = document.createElement('canvas');
@@ -1054,7 +1054,7 @@ function refreshChartAndDownload() {
  */
 function buildDownloadText() {
     const COL_W = 10;
-    const budgetHeader = BUDGETS.map(b => `${b}M`.padStart(COL_W)).join('');
+    const budgetHeader = BUDGETS.map((b) => `${b}M`.padStart(COL_W)).join('');
     const lineW = 24 + BUDGETS.length * COL_W;
 
     let text = 'GSplat Benchmark Results\n';
@@ -1102,8 +1102,8 @@ function buildDownloadText() {
         text += `\n${splatLine}\n`;
     }
 
-    const fmtGpu = g => (g >= 0 ? g.toFixed(2) : 'N/A');
-    const fmtEff = f => (f > 0 ? f.toFixed(1) : '\u2014');
+    const fmtGpu = (g) => (g >= 0 ? g.toFixed(2) : 'N/A');
+    const fmtEff = (f) => (f > 0 ? f.toFixed(1) : '\u2014');
 
     text += '\nGPU Frame Time (ms)\n';
     text += `${'Renderer'.padEnd(22)} ${budgetHeader}\n`;
@@ -1167,7 +1167,7 @@ function buildDownloadText() {
     }
 
     text += `\nConfig: ${WARMUP_FRAMES} warmup + ${MEASURE_FRAMES} measured frames per budget level\n`;
-    text += `Budgets: ${BUDGETS.map(b => `${b}M`).join(', ')}\n`;
+    text += `Budgets: ${BUDGETS.map((b) => `${b}M`).join(', ')}\n`;
     text += `UserAgent: ${navigator.userAgent}\n`;
     text += `Date: ${new Date().toISOString()}\n`;
     return text;
@@ -1566,7 +1566,7 @@ async function runRow(budgetIndex) {
     setButtonsEnabled(false);
     setTestingMode(true);
 
-    const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
+    const indices = BUDGETS.map((_, i) => i).filter((i) => i <= budgetIndex);
     for (let c = 0; c < RENDERERS.length; c++) {
         await runTests(c, indices); // eslint-disable-line no-await-in-loop
     }
@@ -1607,7 +1607,7 @@ async function runCell(colIndex, budgetIndex) {
     setButtonsEnabled(false);
     setTestingMode(true);
 
-    const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
+    const indices = BUDGETS.map((_, i) => i).filter((i) => i <= budgetIndex);
     await runTests(colIndex, indices);
 
     setTestingMode(false);

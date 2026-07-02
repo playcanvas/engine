@@ -297,11 +297,11 @@ app.keyboard.on('keydown', (e) => {
 if (app.xr.supported) {
     // XR availability
     document
-    .querySelector('.container > .button[data-xr="immersive-ar"]')
-    ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_AR));
+        .querySelector('.container > .button[data-xr="immersive-ar"]')
+        ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_AR));
     document
-    .querySelector('.container > .button[data-xr="immersive-vr"]')
-    ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_VR));
+        .querySelector('.container > .button[data-xr="immersive-vr"]')
+        ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_VR));
 
     // XR availability events
     app.xr.on('available', (type, available) => {

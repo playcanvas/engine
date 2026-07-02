@@ -113,17 +113,17 @@ const options = {
 };
 
 new UsdzExporter()
-.build(entity, options)
-.then((arrayBuffer) => {
-    const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
-    // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
-    // the download of the .asdz file triggers its opening in QuickLook AT mode.
-    // In other browsers, this simply downloads the generated .asdz file.
+    .build(entity, options)
+    .then((arrayBuffer) => {
+        const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+        // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
+        // the download of the .asdz file triggers its opening in QuickLook AT mode.
+        // In other browsers, this simply downloads the generated .asdz file.
 
-    // @ts-ignore
-    link.href = URL.createObjectURL(blob);
-})
-.catch(console.error);
+        // @ts-ignore
+        link.href = URL.createObjectURL(blob);
+    })
+    .catch(console.error);
 
 // when clicking on the download UI button, trigger the download
 data.on('download', () => {

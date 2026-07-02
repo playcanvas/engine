@@ -180,14 +180,14 @@ const options = {
 };
 
 new GltfExporter()
-.build(app.root, options)
-.then((arrayBuffer) => {
-    const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+    .build(app.root, options)
+    .then((arrayBuffer) => {
+        const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
-    // @ts-ignore
-    link.href = URL.createObjectURL(blob);
-})
-.catch(console.error);
+        // @ts-ignore
+        link.href = URL.createObjectURL(blob);
+    })
+    .catch(console.error);
 
 // when clicking on the download UI button, trigger the download
 data.on('download', () => {

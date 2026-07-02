@@ -229,7 +229,7 @@ const handlePointer = (x, y) => {
                 if (meshInstances.length > 0) {
                     // Unified mode: picker returns the GSplatComponent directly
                     const picked = meshInstances[0];
-                    const entity = entities.find(e => e.entity.gsplat === picked);
+                    const entity = entities.find((e) => e.entity.gsplat === picked);
 
                     if (entity) {
                         // trigger the visual effect only if not already animating

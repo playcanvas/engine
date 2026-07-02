@@ -129,31 +129,31 @@ Rotator.prototype.update = function (/** @type {number} */ dt) {
 };
 
 // a compute shader that will tint the input texture and write the result to the storage texture
-const shader = device.supportsCompute ?
-    new Shader(device, {
-        name: 'ComputeShader',
-        shaderLanguage: SHADERLANGUAGE_WGSL,
-        cshader: computeShaderWgsl,
+const shader = device.supportsCompute
+    ? new Shader(device, {
+          name: 'ComputeShader',
+          shaderLanguage: SHADERLANGUAGE_WGSL,
+          cshader: computeShaderWgsl,
 
-        computeUniformBufferFormats: {
-            ub: new UniformBufferFormat(device, [
-                new UniformFormat('tint', UNIFORMTYPE_VEC4),
-                new UniformFormat('offset', UNIFORMTYPE_FLOAT),
-                new UniformFormat('frequency', UNIFORMTYPE_FLOAT)
-            ])
-        },
+          computeUniformBufferFormats: {
+              ub: new UniformBufferFormat(device, [
+                  new UniformFormat('tint', UNIFORMTYPE_VEC4),
+                  new UniformFormat('offset', UNIFORMTYPE_FLOAT),
+                  new UniformFormat('frequency', UNIFORMTYPE_FLOAT)
+              ])
+          },
 
-        // format of a bind group, providing resources for the compute shader
-        computeBindGroupFormat: new BindGroupFormat(device, [
-            // a uniform buffer we provided format for
-            new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
-            // input textures
-            new BindTextureFormat('inTexture', SHADERSTAGE_COMPUTE, undefined, undefined, false),
-            // output storage textures
-            new BindStorageTextureFormat('outTexture', PIXELFORMAT_RGBA8, TEXTUREDIMENSION_2D)
-        ])
-    }) :
-    null;
+          // format of a bind group, providing resources for the compute shader
+          computeBindGroupFormat: new BindGroupFormat(device, [
+              // a uniform buffer we provided format for
+              new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
+              // input textures
+              new BindTextureFormat('inTexture', SHADERSTAGE_COMPUTE, undefined, undefined, false),
+              // output storage textures
+              new BindStorageTextureFormat('outTexture', PIXELFORMAT_RGBA8, TEXTUREDIMENSION_2D)
+          ])
+      })
+    : null;
 
 // helper function, which creates a cube entity, and an instance of the compute shader that will
 // update its texture each frame
