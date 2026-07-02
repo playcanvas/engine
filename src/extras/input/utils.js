@@ -1,3 +1,5 @@
+export const isTouchPointer = (pointerType) => pointerType === 'touch' || pointerType === 'pen';
+
 // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX
 export const movementState = () => {
     const state = new Map();

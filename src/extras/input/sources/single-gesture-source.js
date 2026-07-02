@@ -1,6 +1,6 @@
 import { DOUBLE_TAP_THRESHOLD, DOUBLE_TAP_VARIANCE } from '../constants.js';
 import { InputSource } from '../input.js';
-import { movementState } from '../utils.js';
+import { isTouchPointer, movementState } from '../utils.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
@@ -102,7 +102,7 @@ class SingleGestureSource extends InputSource {
         const { pointerType, pointerId, clientX, clientY } = event;
         this._movementState.down(event);
 
-        if (pointerType !== 'touch') {
+        if (!isTouchPointer(pointerType)) {
             return;
         }
         this._element?.setPointerCapture(pointerId);
@@ -134,7 +134,7 @@ class SingleGestureSource extends InputSource {
         const { pointerType, pointerId, target, clientX, clientY } = event;
         const [movementX, movementY] = this._movementState.move(event);
 
-        if (pointerType !== 'touch') {
+        if (!isTouchPointer(pointerType)) {
             return;
         }
         if (target !== this._element) {
@@ -162,7 +162,7 @@ class SingleGestureSource extends InputSource {
         const { pointerType, pointerId } = event;
         this._movementState.up(event);
 
-        if (pointerType !== 'touch') {
+        if (!isTouchPointer(pointerType)) {
             return;
         }
         this._element?.releasePointerCapture(pointerId);
