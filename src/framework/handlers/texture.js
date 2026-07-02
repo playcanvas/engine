@@ -222,6 +222,12 @@ class TextureHandler extends ResourceHandler {
         // texture parsers use an extended open(url, data, device, textureOptions) signature, so the
         // handler drives the delegation (and the shared post-processing below) instead of the base open
         const parser = this._selectParser(this._makeContext(url, asset));
+
+        // the img catch-all normally guarantees a parser - guard against a user-modified registry
+        // (for example with the img parser removed to reject unknown formats)
+        if (!parser) {
+            return undefined;
+        }
         const textureOptions = this._getTextureOptions(asset);
         let texture = parser.open(url, data, this._device, textureOptions);
 

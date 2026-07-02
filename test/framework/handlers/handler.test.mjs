@@ -55,6 +55,18 @@ describe('ResourceHandler (parser registry)', function () {
             expect(errorSpy.called).to.be.true;
         });
 
+        it('does not register a parser without canParse, leaving selection intact', function () {
+            const handler = new ResourceHandler(fakeApp, 'test');
+            stub(console, 'error');
+            const good = mockParser(() => true);
+            handler.addParser(good);
+            handler.addParser({ load: stub() });
+
+            // the non-conforming parser was refused; selection still resolves to the valid parser
+            expect(handler.parsers).to.deep.equal([good]);
+            expect(handler._selectParser(handler._makeContext('a.json'))).to.equal(good);
+        });
+
         it('warns (removed) when the legacy decider argument is passed', function () {
             const handler = new ResourceHandler(fakeApp, 'test');
             // Debug.removed dedupes globally - clear so this assertion is order-independent

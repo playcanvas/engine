@@ -41,7 +41,9 @@ import { Asset } from '../asset/asset.js';
  * @property {(url: (string | {load: string, original: string}), callback: ResourceHandlerCallback, asset?: Asset) => void} load -
  * Fetches (typically via `this.handler.fetch`) and produces the resource, then invokes the callback.
  * @property {(url: string, data: *, asset?: Asset) => *} [open] - Optional. Called by the default
- * {@link ResourceHandler#open} when parsers are registered.
+ * {@link ResourceHandler#open} when parsers are registered. Handlers that override `open` may call
+ * it with an extended signature - for example the texture handler calls
+ * `open(url, data, device, textureOptions)` on its parsers.
  * @property {ResourceHandler} [handler] - Assigned by the owning handler on registration; available in
  * `load`/`open` (for example `this.handler.fetch(...)`).
  */
@@ -118,6 +120,11 @@ class ResourceHandler {
      * recently added parser whose {@link ResourceParser#canParse} returns true is selected. This lets a
      * later registration override a built-in parser for the same format.
      *
+     * Register parsers before starting loads for this handler's type - selection runs for both the
+     * load and open phases, so changing the registry while loads are in flight can route them
+     * inconsistently. Note that handlers that implement their own loading without consulting
+     * registered parsers (for example cubemap or font) ignore registered parsers.
+     *
      * @param {ResourceParser} parser - The parser to register. Must implement `canParse(context)`.
      * @param {*} [decider] - Removed. Previously a `(url, data) => boolean` selector; implement
      * `canParse(context)` on the parser instead. If passed, it is ignored and logs a warning.
@@ -132,6 +139,14 @@ class ResourceHandler {
             Debug.removed('ResourceHandler#addParser(parser, decider): the "decider" argument was removed. ' +
                 'Implement canParse(context) on the parser instead.');
         }
+
+        // refuse a non-conforming parser in release builds too (the assert above is stripped) - if it
+        // was registered, newest-first selection would throw on every load of this handler's type,
+        // instead of just leaving the custom format unhandled
+        if (!parser || typeof parser.canParse !== 'function') {
+            return;
+        }
+
         // give the parser a public back-reference to its owning handler, so its load()/open() can use
         // this.handler.fetch(...) without reaching through a private property
         parser.handler = this;

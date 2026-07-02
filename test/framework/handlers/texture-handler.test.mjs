@@ -61,4 +61,10 @@ describe('TextureHandler (parser selection)', function () {
     it('open returns undefined for a null url (the loader.open path)', function () {
         expect(app.loader.getHandler('texture').open(null, {})).to.be.undefined;
     });
+
+    it('open returns undefined when no parser matches (img catch-all removed)', function () {
+        const handler = app.loader.getHandler('texture');
+        handler.removeParser(handler.imgParser);
+        expect(handler.open('tex.xyz', {})).to.be.undefined;
+    });
 });
