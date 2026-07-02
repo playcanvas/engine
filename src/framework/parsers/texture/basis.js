@@ -1,7 +1,7 @@
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET, pixelFormatLinearToGamma } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
+import { Http } from '../../../platform/net/http.js';
 
-import { Asset } from '../../asset/asset.js';
 import { basisTranscode } from '../../handlers/basis.js';
 
 import { TextureParser } from './texture.js';
@@ -10,10 +10,13 @@ import { TextureParser } from './texture.js';
  * Parser for basis files.
  */
 class BasisParser extends TextureParser {
-    constructor(registry, device) {
+    constructor(device) {
         super();
         this.device = device;
-        this.maxRetries = 0;
+    }
+
+    canParse(context) {
+        return context.ext === 'basis';
     }
 
     load(url, callback, asset) {
@@ -33,18 +36,17 @@ class BasisParser extends TextureParser {
             }
         };
 
-        Asset.fetchArrayBuffer(url.load, (err, result) => {
+        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, result) => {
             if (err) {
                 callback(err);
             } else {
                 transcode(result);
             }
-        }, asset, this.maxRetries);
+        }, asset);
     }
 
     // our async transcode call provides the neat structure we need to create the texture instance
     open(url, data, device, textureOptions = {}) {
-        const format = textureOptions.srgb ? pixelFormatLinearToGamma(data.format) : data.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -54,7 +56,7 @@ class BasisParser extends TextureParser {
             addressV: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: data.width,
             height: data.height,
-            format: format,
+            format: data.format,
             cubemap: data.cubemap,
             levels: data.levels,
 

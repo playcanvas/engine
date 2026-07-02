@@ -245,6 +245,15 @@ class ResourceHandler {
             return;
         }
 
+        // normalize a plain string url into the load/original structure, so parsers can rely on
+        // url.load / url.original (the pre-registry handlers all accepted plain strings)
+        if (typeof url === 'string') {
+            url = {
+                load: url,
+                original: url
+            };
+        }
+
         const context = this._makeContext(url, asset);
         const parser = this._selectParser(context);
         if (!parser) {

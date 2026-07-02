@@ -25,7 +25,10 @@ describe('TextureHandler (parser selection)', function () {
     });
 
     // resolves the parser the texture handler would use for a url's extension
-    const parserFor = url => app.loader.getHandler('texture')._getParser(url);
+    const parserFor = (url) => {
+        const handler = app.loader.getHandler('texture');
+        return handler._selectParser(handler._makeContext({ load: url, original: url }));
+    };
 
     it('routes .dds to the DDS parser', function () {
         expect(parserFor('tex.dds')).to.be.an.instanceof(DdsParser);
@@ -53,5 +56,9 @@ describe('TextureHandler (parser selection)', function () {
 
     it('falls back to the image parser for an unrecognized extension', function () {
         expect(parserFor('tex.xyz')).to.be.an.instanceof(ImgParser);
+    });
+
+    it('open returns undefined for a null url (the loader.open path)', function () {
+        expect(app.loader.getHandler('texture').open(null, {})).to.be.undefined;
     });
 });

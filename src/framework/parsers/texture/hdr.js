@@ -9,8 +9,7 @@ import {
     TEXTURETYPE_RGBE
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-
-import { Asset } from '../../asset/asset.js';
+import { Http } from '../../../platform/net/http.js';
 
 import { TextureParser } from './texture.js';
 
@@ -18,13 +17,12 @@ import { TextureParser } from './texture.js';
  * Texture parser for hdr files.
  */
 class HdrParser extends TextureParser {
-    constructor(registry) {
-        super();
-        this.maxRetries = 0;
+    canParse(context) {
+        return context.ext === 'hdr';
     }
 
     load(url, callback, asset) {
-        Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
+        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, callback, asset);
 
         // .hdr assets should be loaded with 'rgbe' type, but historically they were not, so set a default type here
         if (asset.data && !asset.data.type) {
@@ -53,10 +51,13 @@ class HdrParser extends TextureParser {
             levels: textureData.levels,
             format: PIXELFORMAT_RGBA8,
             type: TEXTURETYPE_RGBE,
-            // RGBE can't be filtered, so mipmaps are out of the question! (unless we generated them ourselves)
-            mipmaps: false,
 
-            ...textureOptions
+            ...textureOptions,
+
+            // requirements of RGBE encoded data, which override any asset-provided options: it
+            // must stay in a linear format, and as it can't be filtered, it cannot use mipmaps
+            srgb: false,
+            mipmaps: false
         });
 
         texture.upload();
