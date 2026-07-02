@@ -1,30 +1,10 @@
-import { http, Http } from '../../platform/net/http.js';
+import { BinaryParser } from '../parsers/binary.js';
 import { ResourceHandler } from './handler.js';
 
 class BinaryHandler extends ResourceHandler {
     constructor(app) {
         super(app, 'binary');
-    }
-
-    load(url, callback) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        http.get(url.load, {
-            responseType: Http.ResponseType.ARRAY_BUFFER,
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        }, (err, response) => {
-            if (!err) {
-                callback(null, response);
-            } else {
-                callback(`Error loading binary resource: ${url.original} [${err}]`);
-            }
-        });
+        this.addParser(new BinaryParser());
     }
 
     /**

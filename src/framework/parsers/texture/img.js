@@ -1,5 +1,5 @@
 import {
-    PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, TEXHINT_ASSET
+    PIXELFORMAT_RGBA8, TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { http } from '../../../platform/net/http.js';
@@ -20,7 +20,6 @@ class ImgParser extends TextureParser {
         super();
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
-        this.maxRetries = 0;
         this.device = device;
 
         // run image alpha test
@@ -29,6 +28,12 @@ class ImgParser extends TextureParser {
             ImgAlphaTest.run(this.device);
         }
         // #endif
+    }
+
+    canParse() {
+        // the browser can decode any image format, so this parser acts as the catch-all; it is
+        // registered first, letting the format-specific parsers take precedence
+        return true;
     }
 
     load(url, callback, asset) {
@@ -75,7 +80,7 @@ class ImgParser extends TextureParser {
             // #endif
             width: data.width,
             height: data.height,
-            format: textureOptions.srgb ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8,
+            format: PIXELFORMAT_RGBA8,
 
             ...textureOptions
         });
@@ -95,7 +100,7 @@ class ImgParser extends TextureParser {
         }
 
         let retries = 0;
-        const maxRetries = this.maxRetries;
+        const maxRetries = this.handler.maxRetries;
         let retryTimeout;
 
         const dummySize = 1024 * 1024;
@@ -139,8 +144,8 @@ class ImgParser extends TextureParser {
         const options = {
             cache: true,
             responseType: 'blob',
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries,
+            retry: this.handler.maxRetries > 0,
+            maxRetries: this.handler.maxRetries,
             progress: asset
         };
         http.get(url, options, (err, blob) => {

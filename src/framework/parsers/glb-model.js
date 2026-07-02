@@ -1,3 +1,4 @@
+import { Http } from '../../platform/net/http.js';
 import { GlbContainerResource } from './glb-container-resource.js';
 import { GlbParser } from './glb-parser.js';
 
@@ -6,6 +7,20 @@ class GlbModelParser {
         this._device = modelHandler.device;
         this._defaultMaterial = modelHandler.defaultMaterial;
         this._assets = modelHandler.assets;
+    }
+
+    canParse(context) {
+        return context.ext === 'glb';
+    }
+
+    load(url, callback, asset) {
+        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, data) => {
+            if (err) {
+                callback(err);
+            } else {
+                this.parse(data, callback, asset);
+            }
+        }, asset);
     }
 
     parse(data, callback, asset) {

@@ -48,9 +48,7 @@ app.assets.loadFromUrl(scripturl, 'script', () => {
     // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
     // set up obj parser
     // @ts-ignore globally loaded ObjModelParser
-    app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice), (url) => {
-        return pc.path.getExtension(url) === '.obj';
-    });
+    app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
 
     app.assets.loadFromUrl(objurl, 'model', (err, asset) => {
         app.start();

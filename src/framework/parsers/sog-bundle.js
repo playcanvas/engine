@@ -148,12 +148,12 @@ class SogBundleParser {
     /** @type {AppBase} */
     app;
 
-    /** @type {number} */
-    maxRetries;
-
-    constructor(app, maxRetries = 3) {
+    constructor(app) {
         this.app = app;
-        this.maxRetries = maxRetries;
+    }
+
+    canParse(context) {
+        return context.ext === 'sog';
     }
 
     /**

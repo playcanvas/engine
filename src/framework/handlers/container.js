@@ -1,4 +1,3 @@
-import { path } from '../../core/path.js';
 import { GlbContainerParser } from '../parsers/glb-container-parser.js';
 import { ResourceHandler } from './handler.js';
 
@@ -7,7 +6,6 @@ import { ResourceHandler } from './handler.js';
  * @import { Asset } from '../asset/asset.js'
  * @import { Entity } from '../entity.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { ResourceHandlerCallback } from './handler.js'
  */
 
 /**
@@ -178,70 +176,9 @@ class ContainerHandler extends ResourceHandler {
     constructor(app) {
         super(app, 'container');
 
-        this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
-        this.parsers = { };
-    }
-
-    set maxRetries(value) {
-        this.glbContainerParser.maxRetries = value;
-        for (const parser in this.parsers) {
-            if (this.parsers.hasOwnProperty(parser)) {
-                this.parsers[parser].maxRetries = value;
-            }
-        }
-    }
-
-    get maxRetries() {
-        return this.glbContainerParser.maxRetries;
-    }
-
-    /**
-     * @param {string} url - The resource URL.
-     * @returns {string} The URL with query parameters removed.
-     * @private
-     */
-    _getUrlWithoutParams(url) {
-        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-    }
-
-    /**
-     * @param {string} url - The resource URL.
-     * @returns {*} A suitable parser to parse the resource.
-     * @private
-     */
-    _getParser(url) {
-        const ext = url ? path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '') : null;
-        return this.parsers[ext] || this.glbContainerParser;
-    }
-
-    /**
-     * @param {string | {load: string, original: string}} url - Either the URL of the resource to
-     * load or a structure containing the load URL (used for loading the resource) and the original
-     * URL (used for identifying the resource format; necessary when loading, for example, from
-     * a blob URL).
-     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
-     * an error occurs.
-     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
-     */
-    load(url, callback, asset) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        this._getParser(url.original).load(url, callback, asset);
-    }
-
-    /**
-     * @param {string} url - The URL of the resource to open.
-     * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
-     * @returns {*} The parsed resource data.
-     */
-    open(url, data, asset) {
-        return this._getParser(url).open(url, data, asset);
+        // GLB is the only built-in container format and acts as the catch-all; users can register
+        // more specific parsers (for example usdz), which are consulted first (newest-first).
+        this.addParser(new GlbContainerParser(app.graphicsDevice, app.assets));
     }
 }
 

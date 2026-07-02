@@ -4,9 +4,7 @@
 //
 // // add parser to model resource handler
 // const objParser = new ObjModelParser(this.app.graphicsDevice);
-// this.app.loader.getHandler("model").addParser(objParser, function (url) {
-//     return (pc.path.getExtension(url) === '.obj');
-// });
+// this.app.loader.getHandler("model").addParser(objParser);
 //
 // Then load obj as a model asset:
 //
@@ -27,6 +25,20 @@ class ObjModelParser {
     constructor(device) {
         this._device = device;
         this._defaultMaterial = new pc.StandardMaterial();
+    }
+
+    canParse(context) {
+        return context.ext === 'obj';
+    }
+
+    load(url, callback, asset) {
+        this.handler.fetch(url, pc.Http.ResponseType.TEXT, (err, response) => {
+            if (err) {
+                callback(err);
+            } else {
+                this.parse(response, callback);
+            }
+        }, asset);
     }
 
     parse(input, callback) {
