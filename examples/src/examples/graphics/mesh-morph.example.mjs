@@ -59,7 +59,7 @@ app.root.addChild(camera);
  * @param {number} c - The plane normal's z coordinate.
  * @returns {number} The shortest distance.
  */
-const shortestDistance = function (x, y, z, a, b, c) {
+const shortestDistance = (x, y, z, a, b, c) => {
     const d = Math.abs(a * x + b * y + c * z);
     const e = Math.sqrt(a * a + b * b + c * c);
     return d / e;
@@ -76,7 +76,7 @@ const shortestDistance = function (x, y, z, a, b, c) {
  * @param {number} nz - The plane normal's z coordinate.
  * @returns {pc.MorphTarget} The morph target.
  */
-const createMorphTarget = function (positions, normals, indices, nx, ny, nz) {
+const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
     // modify vertices to separate array
     const modifiedPositions = new Float32Array(positions.length);
     /** @type {number} */
@@ -124,7 +124,7 @@ const createMorphTarget = function (positions, normals, indices, nx, ny, nz) {
  * @param {number} z - The z coordinate.
  * @returns {pc.MorphInstance} The morph instance.
  */
-const createMorphInstance = function (x, y, z) {
+const createMorphInstance = (x, y, z) => {
     // create the base mesh - a sphere, with higher amount of vertices / triangles
     const mesh = pc.Mesh.fromGeometry(
         app.graphicsDevice,
@@ -182,7 +182,7 @@ for (let k = 0; k < 3; k++) {
 
 // update function called once per frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     for (let m = 0; m < morphInstances.length; m++) {

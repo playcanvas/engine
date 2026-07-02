@@ -36,7 +36,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -85,7 +85,7 @@ camera.translate(0, 0, 10);
 
 // Set an update function on the app's update event
 let angle = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     angle += dt;
     if (angle > 360) {
         angle = 0;

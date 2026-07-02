@@ -384,6 +384,83 @@ const assetLoaderTopLevelAwait = {
     }
 };
 
+const functionExpressionArrow = {
+    meta: {
+        type: 'suggestion',
+        fixable: 'code',
+        docs: {
+            description: 'prefer arrow syntax for safe example function expressions'
+        },
+        messages: {
+            preferArrow: 'Use an arrow function expression here.'
+        }
+    },
+
+    create(context) {
+        const sourceCode = context.sourceCode;
+
+        const hasDynamicBinding = (node) => {
+            if (!node || typeof node !== 'object') {
+                return false;
+            }
+            if (node.type === 'ThisExpression' ||
+                node.type === 'Super' ||
+                node.type === 'MetaProperty' ||
+                (node.type === 'Identifier' && node.name === 'arguments')) {
+                return true;
+            }
+            if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
+                return false;
+            }
+            return Object.entries(node).some(([key, value]) => {
+                if (key === 'parent' || key === 'loc' || key === 'range') {
+                    return false;
+                }
+                if (Array.isArray(value)) {
+                    return value.some(child => child?.type && hasDynamicBinding(child));
+                }
+                return value?.type && hasDynamicBinding(value);
+            });
+        };
+
+        const canFix = (node) => {
+            const parent = node.parent;
+
+            if (node.id || node.generator || hasDynamicBinding(node.body)) {
+                return false;
+            }
+
+            if (parent.type === 'VariableDeclarator' && parent.init === node) {
+                return true;
+            }
+
+            if (parent.type === 'Property' && parent.kind === 'init' && parent.value === node) {
+                return true;
+            }
+
+            return parent.type === 'CallExpression' && parent.arguments.includes(node);
+        };
+
+        return {
+            FunctionExpression(node) {
+                if (!canFix(node)) {
+                    return;
+                }
+
+                context.report({
+                    node,
+                    messageId: 'preferArrow',
+                    fix(fixer) {
+                        const params = node.params.map(param => sourceCode.getText(param)).join(', ');
+                        const async = node.async ? 'async ' : '';
+                        return fixer.replaceText(node, `${async}(${params}) => ${sourceCode.getText(node.body)}`);
+                    }
+                });
+            }
+        };
+    }
+};
+
 const importOrder = ['error', {
     groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'unknown'],
     pathGroups: [
@@ -489,14 +566,16 @@ export default [
                 rules: {
                     'config-block-at-top': configBlockAtTop,
                     'config-block-shape': configBlockShape,
-                    'asset-loader-top-level-await': assetLoaderTopLevelAwait
+                    'asset-loader-top-level-await': assetLoaderTopLevelAwait,
+                    'function-expression-arrow': functionExpressionArrow
                 }
             }
         },
         rules: {
             'examples/asset-loader-top-level-await': 'error',
             'examples/config-block-at-top': 'error',
-            'examples/config-block-shape': 'error'
+            'examples/config-block-shape': 'error',
+            'examples/function-expression-arrow': 'error'
         }
     },
     {

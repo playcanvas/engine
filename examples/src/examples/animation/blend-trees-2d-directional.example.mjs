@@ -56,7 +56,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -179,7 +179,7 @@ data.set('data', {
 
 // Helper to update animation points for visualization
 const updateAnimPoints = () => {
-    const points = locomotionLayer._controller._states.Travel.animations.map(animNode => ({
+    const points = locomotionLayer._controller._states.Travel.animations.map((animNode) => ({
         x: animNode.point?.x ?? 0,
         y: animNode.point?.y ?? 0,
         weight: animNode.weight ?? 0
@@ -191,7 +191,7 @@ const updateAnimPoints = () => {
 updateAnimPoints();
 
 // Listen for position changes from controls
-data.on('data.pos:set', value => {
+data.on('data.pos:set', (value) => {
     modelEntity.anim.setFloat('posX', value.x);
     modelEntity.anim.setFloat('posY', value.y);
     // Update animation points when position changes (weights recalculate)

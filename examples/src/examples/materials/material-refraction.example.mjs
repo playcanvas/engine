@@ -46,7 +46,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -94,7 +94,7 @@ ground.setLocalScale(30, 1, 30);
 ground.setLocalPosition(0, -2, 0);
 app.root.addChild(ground);
 
-const createObject = function (x, y, z, material, scale) {
+const createObject = (x, y, z, material, scale) => {
     const obj = new pc.Entity();
     obj.addComponent('render', {
         material: material,
@@ -151,7 +151,7 @@ data.set('data', {
 
 // update things each frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     // rotate camera around the objects
     time += dt;
     camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));

@@ -73,7 +73,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -240,7 +240,7 @@ app.root.addChild(lights.directional);
 // Allow user to toggle individual lights
 app.keyboard.on(
     'keydown',
-    e => {
+    (e) => {
         // if the user is editing an input field, ignore key presses
         if (e.element.constructor.name === 'HTMLInputElement') return;
         switch (e.key) {
@@ -260,7 +260,7 @@ app.keyboard.on(
 
 // Simple update loop to rotate the light
 let angleRad = 1;
-app.on('update', dt => {
+app.on('update', (dt) => {
     angleRad += 0.3 * dt;
     if (entity) {
         lights.spot.lookAt(new pc.Vec3(0, -5, 0));

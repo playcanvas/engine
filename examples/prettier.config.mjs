@@ -2,7 +2,7 @@ export default {
     printWidth: 120,
     tabWidth: 4,
     singleQuote: true,
-    arrowParens: 'avoid',
+    arrowParens: 'always',
     trailingComma: 'none',
     overrides: [
         {

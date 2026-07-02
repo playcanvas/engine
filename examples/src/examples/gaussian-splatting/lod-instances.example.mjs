@@ -133,7 +133,7 @@ const wgslRenderModifier = `
     }
 `;
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -193,7 +193,7 @@ const hslToRgb = (h, s, l) => {
 app.scene.gsplat.material.setParameter('uColorLookup', colorTexture);
 
 // Function to apply or remove colorization shader (for both GLSL and WGSL)
-const applyColorize = enabled => {
+const applyColorize = (enabled) => {
     if (enabled) {
         app.scene.gsplat.material.getShaderChunks('glsl').set('gsplatModifyVS', glslRenderModifier);
         app.scene.gsplat.material.getShaderChunks('wgsl').set('gsplatModifyVS', wgslRenderModifier);
@@ -286,7 +286,7 @@ Object.assign(cc, {
 
 // update HUD stats and animate colors every frame
 let currentTime = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     currentTime += dt;
 
     // Animate color texture using HSL hue rotation for saturated colors

@@ -53,7 +53,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -159,7 +159,7 @@ atlas.texture = texture;
  * @param {string} frame - Frame key for pc.Sprite.
  * @returns {pc.Asset} The asset.
  */
-const createSpriteAsset = function (frame) {
+const createSpriteAsset = (frame) => {
     const sprite = new pc.Sprite(app.graphicsDevice, {
         atlas: atlas,
         frameKeys: [frame],

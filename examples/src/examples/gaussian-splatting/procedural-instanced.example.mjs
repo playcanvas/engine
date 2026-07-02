@@ -244,7 +244,7 @@ app.root.addChild(camera);
 
 // Animate tints and rotate
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // Rotate parent
@@ -262,7 +262,7 @@ app.on('update', dt => {
         const speed = 0.17; // animation speed (slowed 3x)
 
         // Helper: convert hue (0-1) to RGB with full saturation
-        const hueToRgb = h => {
+        const hueToRgb = (h) => {
             h = ((h % 1) + 1) % 1; // normalize to 0-1
             const x = 1 - Math.abs(((h * 6) % 2) - 1);
             if (h < 1 / 6) return [1, x, 0];

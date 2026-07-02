@@ -42,7 +42,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -65,7 +65,7 @@ const NUM_SPHERES = 5;
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
  */
-const createSphere = function (x, y, z) {
+const createSphere = (x, y, z) => {
     const material = new pc.StandardMaterial();
     material.metalness = y / (NUM_SPHERES - 1);
     material.gloss = x / (NUM_SPHERES - 1);
@@ -90,7 +90,7 @@ const createSphere = function (x, y, z) {
  * @param {number} z - The z coordinate.
  * @param {number} rot - Euler rotation around z coordinate.
  */
-const createText = function (fontAsset, message, x, y, z, rot) {
+const createText = (fontAsset, message, x, y, z, rot) => {
     // Create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {
@@ -122,7 +122,7 @@ let x = 0;
 let y = 0;
 const rot = new pc.Quat();
 
-mouse.on('mousemove', event => {
+mouse.on('mousemove', (event) => {
     if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
         x += event.dx;
         y += event.dy;

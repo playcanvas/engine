@@ -24,7 +24,7 @@ export function Controls({ observer }) {
             <Panel headerText='Full Body Layer'>
                 <LabelGroup text='active state'>
                     <SelectInput
-                        options={['Idle', 'Walk'].map(_ => ({ v: _, t: _ }))}
+                        options={['Idle', 'Walk'].map((_) => ({ v: _, t: _ }))}
                         binding={new BindingTwoWay()}
                         link={{
                             observer,
@@ -36,7 +36,7 @@ export function Controls({ observer }) {
             <Panel headerText='Upper Body Layer'>
                 <LabelGroup text='active state'>
                     <SelectInput
-                        options={['Eager', 'Idle', 'Dance'].map(_ => ({ v: _, t: _ }))}
+                        options={['Eager', 'Idle', 'Dance'].map((_) => ({ v: _, t: _ }))}
                         binding={new BindingTwoWay()}
                         link={{
                             observer,

@@ -58,7 +58,7 @@ const assets = {
     gravel: new pc.Asset('gravel', 'audio', { url: './assets/sounds/footsteps.mp3' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -138,7 +138,7 @@ app.root.addChild(entity);
 let angle = 135;
 const radius = 3;
 const height = 0; // 1.1;
-app.on('update', dt => {
+app.on('update', (dt) => {
     angle += 30 * dt;
     if (angle > 360) {
         angle -= 360;

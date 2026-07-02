@@ -8,7 +8,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -76,7 +76,7 @@ const cubes = [];
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
  */
-const createCube = function (x, y, z) {
+const createCube = (x, y, z) => {
     const cube = new pc.Entity();
     cube.addComponent('render', {
         type: 'box',
@@ -97,10 +97,10 @@ for (let x = 0; x <= SIZE; x++) {
 }
 
 if (app.xr.supported) {
-    const activate = function () {
+    const activate = () => {
         if (app.xr.isAvailable(pc.XRTYPE_VR)) {
             c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-                callback: function (err) {
+                callback: (err) => {
                     if (err) message(`Immersive VR failed to start: ${err.message}`);
                 }
             });
@@ -114,7 +114,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', evt => {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -129,7 +129,7 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', evt => {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -140,7 +140,7 @@ if (app.xr.supported) {
     // when input source is triggers select
     // pick closest box and change its color
     const ray = new pc.Ray();
-    app.xr.input.on('select', inputSource => {
+    app.xr.input.on('select', (inputSource) => {
         let candidate = null;
         let candidateDist = Infinity;
 

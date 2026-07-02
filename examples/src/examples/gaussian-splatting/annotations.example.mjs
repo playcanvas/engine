@@ -88,7 +88,7 @@ const assets = {
     bicycle: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 

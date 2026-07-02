@@ -220,8 +220,8 @@ async function runTests() {
 
     // Summary
     console.log('='.repeat(60));
-    const passed = results.filter(r => r.passed);
-    const failed = results.filter(r => !r.passed);
+    const passed = results.filter((r) => r.passed);
+    const failed = results.filter((r) => !r.passed);
 
     console.log(`Results: ${passed.length}/${results.length} passed`);
 
@@ -230,7 +230,7 @@ async function runTests() {
         resultOverlay.textContent = 'ALL TESTS PASSED';
         resultOverlay.style.background = 'rgba(0, 128, 0, 0.9)';
         resultOverlay.style.color = 'white';
-        detailsOverlay.textContent = `${passed.length} formats tested successfully:\n${passed.map(r => r.name).join(', ')}`;
+        detailsOverlay.textContent = `${passed.length} formats tested successfully:\n${passed.map((r) => r.name).join(', ')}`;
     } else {
         console.error('TESTS FAILED');
         for (const f of failed) {
@@ -239,7 +239,7 @@ async function runTests() {
         resultOverlay.textContent = 'TESTS FAILED';
         resultOverlay.style.background = 'rgba(200, 0, 0, 0.9)';
         resultOverlay.style.color = 'white';
-        detailsOverlay.textContent = `Failed formats:\n${failed.map(f => `${f.name}: ${f.error}`).join('\n')}\n\nPassed: ${passed.map(r => r.name).join(', ')}`;
+        detailsOverlay.textContent = `Failed formats:\n${failed.map((f) => `${f.name}: ${f.error}`).join('\n')}\n\nPassed: ${passed.map((r) => r.name).join(', ')}`;
     }
 
     console.log('='.repeat(60));

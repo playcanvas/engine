@@ -45,7 +45,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -61,7 +61,7 @@ app.start();
  * @param {number} z - The z position.
  * @param {number} rot - The rotation.
  */
-const createText = function (fontAsset, message, x, y, z, rot) {
+const createText = (fontAsset, message, x, y, z, rot) => {
     const text = new pc.Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],

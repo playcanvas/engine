@@ -49,7 +49,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -74,7 +74,7 @@ const ditherOptions = [pc.DITHER_NONE, pc.DITHER_BAYER8, pc.DITHER_BLUENOISE, pc
  * @param {number} x - The x coordinate.
  * @param {number} z - The z coordinate.
  */
-const createSphere = function (x, z) {
+const createSphere = (x, z) => {
     const material = new pc.StandardMaterial();
     material.name = `material-${ditherOptions[x]}-${z}`;
     material.emissive = new pc.Color(1, 0, 0);
@@ -114,7 +114,7 @@ const createSphere = function (x, z) {
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
  */
-const createText = function (fontAsset, message, x, y) {
+const createText = (fontAsset, message, x, y) => {
     // Create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {

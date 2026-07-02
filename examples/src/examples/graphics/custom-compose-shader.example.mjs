@@ -75,7 +75,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -104,8 +104,8 @@ loveMaterial.emissiveIntensity = 200;
 loveMaterial.update();
 
 // adjust all materials of the love sign to disable dynamic refraction
-loveEntity.findComponents('render').forEach(render => {
-    render.meshInstances.forEach(meshInstance => {
+loveEntity.findComponents('render').forEach((render) => {
+    render.meshInstances.forEach((meshInstance) => {
         meshInstance.material.useDynamicRefraction = false;
     });
 });

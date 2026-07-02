@@ -49,7 +49,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -83,7 +83,7 @@ for (let i = 0; i < 300; i++) {
 // handle mouse move event and store current mouse position to use as a position to pick from the scene
 new pc.Mouse(document.body).on(
     'mousemove',
-    event => {
+    (event) => {
         mouseX = event.x;
         mouseY = event.y;
     },
@@ -219,7 +219,7 @@ let pendingPickRequest = null;
 // the auto-rotation. The context menu is disabled so the right button is usable.
 const mouse = new pc.Mouse(document.body);
 mouse.disableContextMenu();
-mouse.on('mousedown', event => {
+mouse.on('mousedown', (event) => {
     if (event.button === pc.MOUSEBUTTON_RIGHT) {
         // right button stops the auto-rotation and hands control to the user
         stopAutoRotate();
@@ -297,7 +297,7 @@ app.on('update', (/** @type {number} */ dt) => {
     }
 
     // when all promises are resolved, we can highlight the meshes
-    Promise.all(promises).then(results => {
+    Promise.all(promises).then((results) => {
         // turn off previously highlighted meshes
         for (let h = 0; h < highlights.length; h++) {
             highlightMaterial(highlights[h], pc.Color.BLACK);
@@ -326,7 +326,7 @@ app.on('update', (/** @type {number} */ dt) => {
         const { x, y } = pendingPickRequest;
         pendingPickRequest = null;
 
-        picker.getWorldPointAsync(x, y).then(worldPoint => {
+        picker.getWorldPointAsync(x, y).then((worldPoint) => {
             if (worldPoint) {
                 marker.enabled = true;
                 marker.setPosition(worldPoint);

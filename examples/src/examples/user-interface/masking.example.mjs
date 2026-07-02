@@ -51,7 +51,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -176,7 +176,7 @@ createLabel('Heart alpha mask', 0, -295, 26);
 // Animate the content. Time only advances while animation is enabled, so
 // toggling it off freezes the scene in place.
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     if (data.get('data.animate')) {
         time += dt;
     }

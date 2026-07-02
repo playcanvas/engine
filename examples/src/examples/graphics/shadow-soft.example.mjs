@@ -47,7 +47,7 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -88,7 +88,7 @@ app.root.addChild(terrain);
 
 // get the clouds so that we can animate them
 /** @type {Array<pc.Entity>} */
-const srcClouds = terrain.find(node => {
+const srcClouds = terrain.find((node) => {
     const isCloud = node.name.includes('Icosphere');
 
     if (isCloud) {
@@ -102,7 +102,7 @@ const srcClouds = terrain.find(node => {
 // clone some additional clouds
 /** @type {Array<pc.Entity>} */
 const clouds = [];
-srcClouds.forEach(cloud => {
+srcClouds.forEach((cloud) => {
     clouds.push(cloud);
 
     for (let i = 0; i < 3; i++) {

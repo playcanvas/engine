@@ -104,7 +104,7 @@ blueBox.addComponent('render', {
 blueBox.setLocalScale(2.5, 2.5, 2.5);
 app.root.addChild(blueBox);
 
-app.on('update', dt => {
+app.on('update', (dt) => {
     if (redBox) {
         redBox.rotate(0, 10 * dt, 0);
     }

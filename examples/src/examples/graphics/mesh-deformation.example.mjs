@@ -42,7 +42,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -70,7 +70,7 @@ app.root.addChild(entity);
 const allMeshes = [];
 /** @type {Array<pc.RenderComponent>} */
 const renders = entity.findComponents('render');
-renders.forEach(render => {
+renders.forEach((render) => {
     // collect positions from all mesh instances on this render component
     const meshInstances = render.meshInstances;
     for (let i = 0; i < meshInstances.length; i++) {
@@ -95,7 +95,7 @@ renders.forEach(render => {
 const tempPositions = [];
 
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     if (entity) {

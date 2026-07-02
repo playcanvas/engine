@@ -8,7 +8,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -87,7 +87,7 @@ app.root.addChild(cone);
 const tmpVec3A = new pc.Vec3();
 
 if (app.xr.supported) {
-    const activate = function () {
+    const activate = () => {
         if (app.xr.isAvailable(pc.XRTYPE_AR)) {
             camera.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
                 depthSensing: {
@@ -95,7 +95,7 @@ if (app.xr.supported) {
                     usagePreference: pc.XRDEPTHSENSINGUSAGE_GPU,
                     dataFormatPreference: pc.XRDEPTHSENSINGFORMAT_F32
                 },
-                callback: function (err) {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -109,7 +109,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', evt => {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -124,7 +124,7 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', evt => {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -138,7 +138,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_AR}`, available => {
+    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
         if (available) {
             if (!app.xr.views.supportedDepth) {
                 message('AR Camera Depth is not supported');

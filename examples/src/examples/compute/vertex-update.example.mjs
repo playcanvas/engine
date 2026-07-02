@@ -58,7 +58,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -146,8 +146,8 @@ const shader = device.supportsCompute
 // Note: data is stored non-interleaved, positions together, normals together, so no need
 // to worry about stride
 const format = mesh.vertexBuffer.format;
-const positionElement = format.elements.find(e => e.name === pc.SEMANTIC_POSITION);
-const normalElement = format.elements.find(e => e.name === pc.SEMANTIC_NORMAL);
+const positionElement = format.elements.find((e) => e.name === pc.SEMANTIC_POSITION);
+const normalElement = format.elements.find((e) => e.name === pc.SEMANTIC_NORMAL);
 
 // create an instance of the compute shader, and provide it the mesh vertex buffer
 const compute = new pc.Compute(device, shader, 'ComputeModifyVB');
@@ -157,7 +157,7 @@ compute.setParameter('positionOffset', positionElement?.offset / 4); // number o
 compute.setParameter('normalOffset', normalElement?.offset / 4); // number of floats offset
 
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
     if (entity) {
         // update non-constant parameters each frame

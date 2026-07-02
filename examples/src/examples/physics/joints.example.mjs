@@ -10,7 +10,7 @@ pc.WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise(resolve => {
+await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -296,7 +296,7 @@ for (let i = 0; i < 3; i++) {
 
 // ***********    Click to shoot balls   *******************
 
-app.mouse.on(pc.EVENT_MOUSEDOWN, event => {
+app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
     const ball = new pc.Entity('ball');
     ball.addComponent('render', {
         type: 'sphere',
@@ -323,7 +323,7 @@ app.mouse.on(pc.EVENT_MOUSEDOWN, event => {
 
 // reverse the slider motor at each end of the rail to patrol back and forth
 let patrolTimer = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     patrolTimer += dt;
     if (patrolTimer > 3) {
         patrolTimer = 0;

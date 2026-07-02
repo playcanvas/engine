@@ -32,7 +32,7 @@ const assets = {
     statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -155,7 +155,7 @@ if (app.graphicsDevice.isWebGL2) {
 
 // update things each frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     // rotate camera around
     time += dt;
     camera.setLocalPosition(9 * Math.sin(time * 0.2), 6, 25 * Math.cos(time * 0.2));

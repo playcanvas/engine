@@ -48,7 +48,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -135,7 +135,7 @@ app.root.addChild(sphere);
 // An update function executes once per frame
 let time = 0;
 const spherePos = new pc.Vec3();
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // move the large sphere up and down

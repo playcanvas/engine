@@ -67,7 +67,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -82,8 +82,8 @@ laboratoryEntity.setLocalScale(100, 100, 100);
 app.root.addChild(laboratoryEntity);
 
 // set up materials to use SSAO only (disable baked AO map)
-laboratoryEntity.findComponents('render').forEach(render => {
-    render.meshInstances.forEach(meshInstance => {
+laboratoryEntity.findComponents('render').forEach((render) => {
+    render.meshInstances.forEach((meshInstance) => {
         meshInstance.material.depthState = pc.DepthState.DEFAULT;
         meshInstance.material.blendType = pc.BLEND_NONE;
         meshInstance.material.aoMap = null;
@@ -96,8 +96,8 @@ laboratoryEntity.findComponents('render').forEach(render => {
 const torchIntensity = 60;
 const torchLights = [];
 laboratoryEntity
-    .find(node => node.name.indexOf('Fackel') !== -1)
-    .forEach(torch => {
+    .find((node) => node.name.indexOf('Fackel') !== -1)
+    .forEach((torch) => {
         const render = torch.findComponent('render');
         if (!render) return;
 
@@ -125,7 +125,7 @@ const terrain = assets.terrain.resource.instantiateRenderEntity({
 app.root.addChild(terrain);
 
 // accumulate the native (unscaled) world bounds of all the terrain mesh instances
-const terrainMeshes = terrain.findComponents('render').flatMap(render => render.meshInstances);
+const terrainMeshes = terrain.findComponents('render').flatMap((render) => render.meshInstances);
 const terrainAabb = new pc.BoundingBox();
 terrainMeshes.forEach((mi, i) => (i === 0 ? terrainAabb.copy(mi.aabb) : terrainAabb.add(mi.aabb)));
 
@@ -143,8 +143,8 @@ terrain.setLocalPosition(-tc.x * terrainScale - 71.6, groundLevel - terrainTop +
 // dim the terrain albedo (diffuse) by 0.5 to balance the bright sand against the darker building.
 // Scaling diffuse multiplies the albedo texture, darkening the surface in direct and ambient light.
 const dimmedTerrainMaterials = new Set();
-terrain.findComponents('render').forEach(render => {
-    render.meshInstances.forEach(mi => {
+terrain.findComponents('render').forEach((render) => {
+    render.meshInstances.forEach((mi) => {
         const material = mi.material;
         if (dimmedTerrainMaterials.has(material)) return;
         dimmedTerrainMaterials.add(material);
@@ -291,7 +291,7 @@ data.set('data', {
 });
 
 // build a pc.Curve from an array of [x, y] keyframe pairs (as edited in the inspector)
-const buildCurve = pairs => {
+const buildCurve = (pairs) => {
     const curve = new pc.Curve(pairs.flat());
     curve.type = pc.CURVE_SMOOTHSTEP;
     return curve;
@@ -300,7 +300,7 @@ const buildCurve = pairs => {
 let lastBloom = -1;
 const timeSpeed = 1; // hours per second
 
-app.on('update', dt => {
+app.on('update', (dt) => {
     // advance the time of day, skipping the (boring) night by jumping from 20:00 back to 05:00
     if (data.get('data.time.animate')) {
         let hour = data.get('data.time.hour') + dt * timeSpeed;

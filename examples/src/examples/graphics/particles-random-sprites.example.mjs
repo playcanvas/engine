@@ -64,7 +64,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -124,7 +124,7 @@ const alphaCurve = new pc.Curve([0, 0, 0.5, 1, 1, 0]);
  * @param {number} animTilesY - The anim tiles Y coordinate.
  * @returns {object} The particle system component options.
  */
-const particleSystemConfiguration = function (asset, animTilesX, animTilesY) {
+const particleSystemConfiguration = (asset, animTilesX, animTilesY) => {
     return {
         numParticles: 32,
         lifetime: 2,

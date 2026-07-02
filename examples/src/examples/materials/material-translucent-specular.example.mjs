@@ -47,7 +47,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -83,7 +83,7 @@ const NUM_SPHERES_Z = 5;
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
  */
-const createSphere = function (x, y, z) {
+const createSphere = (x, y, z) => {
     const material = new pc.StandardMaterial();
     material.diffuse = new pc.Color(0.7, 0.7, 0.7);
     material.specular = new pc.Color(1, 1, 1);
@@ -116,7 +116,7 @@ const createSphere = function (x, y, z) {
  * @param {number} rotx - Rotation around x coordinate (euler angles).
  * @param {number} roty - Rotation around y coordinate (euler angles).
  */
-const createText = function (fontAsset, message, x, y, z, rotx, roty) {
+const createText = (fontAsset, message, x, y, z, rotx, roty) => {
     // Create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {

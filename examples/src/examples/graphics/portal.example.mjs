@@ -57,7 +57,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -95,7 +95,7 @@ Portal.prototype.initialize = function () {
     // set the stencil and other parameters on all materials
     /** @type {Array<pc.RenderComponent>} */
     const renders = this.entity.findComponents('render');
-    renders.forEach(render => {
+    renders.forEach((render) => {
         for (const meshInstance of render.meshInstances) {
             const mat = meshInstance.material;
             mat.stencilBack = mat.stencilFront = stencil;
@@ -131,7 +131,7 @@ PortalGeometry.prototype.initialize = function () {
     // set the stencil parameters on all materials
     /** @type {Array<pc.RenderComponent>} */
     const renders = this.entity.findComponents('render');
-    renders.forEach(render => {
+    renders.forEach((render) => {
         for (const meshInstance of render.meshInstances) {
             meshInstance.material.stencilBack = meshInstance.material.stencilFront = stencil;
         }

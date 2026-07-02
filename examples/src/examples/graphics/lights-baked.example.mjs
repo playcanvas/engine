@@ -45,7 +45,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -290,7 +290,7 @@ data.set('data', {
 });
 
 // Set an update function on the app's update event
-app.on('update', dt => {
+app.on('update', (dt) => {
     // bake lightmaps when HUD properties change
     if (needBake) {
         needBake = false;

@@ -56,7 +56,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -151,7 +151,7 @@ data.set('data', {
 });
 
 // update things each frame
-app.on('update', dt => {
+app.on('update', (dt) => {
     const height = data.get('data.height');
     if (height !== parallaxMaterial.heightMapFactor) {
         parallaxMaterial.heightMapFactor = height;

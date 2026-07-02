@@ -49,7 +49,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -65,7 +65,7 @@ app.scene.skyboxMip = 2;
  * @param {number[]} layer - The render component's layers.
  * @returns {pc.Entity} The returned entity.
  */
-const createHighQualitySphere = function (material, layer) {
+const createHighQualitySphere = (material, layer) => {
     // Create Entity and add it to the scene
     const entity = new pc.Entity('HighResSphere');
     app.root.addChild(entity);
@@ -154,7 +154,7 @@ decalMaterial.setParameter('uDecalMap', assets.decal.resource);
 // To render into uv space of the mesh, we need to render the mesh using our custom shader into
 // the texture. In order to do this, we creates a new entity, containing the same mesh instances,
 // but using our custom shader. We make it a child of the original entity, to use its transform.
-const meshInstances = meshEntity.render.meshInstances.map(srcMeshInstance => {
+const meshInstances = meshEntity.render.meshInstances.map((srcMeshInstance) => {
     return new pc.MeshInstance(srcMeshInstance.mesh, decalMaterial);
 });
 const cloneEntity = new pc.Entity('cloneEntity');
@@ -179,7 +179,7 @@ light.setLocalEulerAngles(45, 90, 0);
 let time = 0;
 let decalTime = 0;
 const decalFrequency = 0.5;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt * 0.7;
 
     // a decal projection box is an orthographic projection from some position. We calculate position

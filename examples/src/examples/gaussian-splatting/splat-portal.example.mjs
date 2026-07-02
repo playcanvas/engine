@@ -83,7 +83,7 @@ const assets = {
     )
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -170,7 +170,7 @@ app.scene.layers.insertTransparent(outsideLayer, 4);
  *
  * @param {boolean} nowSwapped - True when the user has just entered the Skatepark world.
  */
-const reorderLayersForSwap = nowSwapped => {
+const reorderLayersForSwap = (nowSwapped) => {
     const newFromLayer = nowSwapped ? insideLayer : outsideLayer;
     const newThroughLayer = nowSwapped ? outsideLayer : insideLayer;
     app.scene.layers.removeTransparent(insideLayer);
@@ -332,7 +332,7 @@ const buildOriginalTransform = (/** @type {typeof sceneConfigs[number]} */ confi
 /** @type {Map<pc.Layer, SceneState>} */
 const sceneStates = new Map();
 
-sceneConfigs.forEach(config => {
+sceneConfigs.forEach((config) => {
     const entity = new pc.Entity(`${config.name}Splat`);
     entity.addComponent('gsplat', {
         asset: config.asset,

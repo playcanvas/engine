@@ -36,7 +36,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -76,7 +76,7 @@ light.addComponent('light', {
 light.translate(5, 0, 15);
 app.root.addChild(light);
 
-app.on('update', dt => {
+app.on('update', (dt) => {
     if (entity) {
         entity.rotate(0, 10 * dt, 0);
     }

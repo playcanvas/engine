@@ -65,10 +65,10 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 });
 
 await Promise.all([
-    new Promise(resolve => {
+    new Promise((resolve) => {
         pc.WasmModule.getInstance('Ammo', () => resolve(true));
     }),
-    new Promise(resolve => {
+    new Promise((resolve) => {
         pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
@@ -144,7 +144,7 @@ const assets = {
     ...lutAssets
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -231,8 +231,8 @@ const animatableKeys = LUT_CATALOG.filter(({ file }) => file !== null).map(({ ke
 const HOLD_SECONDS = 1.5;
 const CROSSFADE_SECONDS = 1.5;
 const CYCLE_SECONDS = HOLD_SECONDS + CROSSFADE_SECONDS;
-const randomKey = excludeKey => {
-    const choices = animatableKeys.filter(k => k !== excludeKey);
+const randomKey = (excludeKey) => {
+    const choices = animatableKeys.filter((k) => k !== excludeKey);
     return choices[Math.floor(Math.random() * choices.length)];
 };
 let animClock = 0;
@@ -244,7 +244,7 @@ const startLutAnimate = () => {
     data.set('lutIntensity2', 1);
     data.set('lutBlend', 0);
 };
-data.on('lutAnimate:set', value => {
+data.on('lutAnimate:set', (value) => {
     if (value) {
         startLutAnimate();
     }

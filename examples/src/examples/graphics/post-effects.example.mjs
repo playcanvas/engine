@@ -75,7 +75,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -179,7 +179,7 @@ data.set('scripts', {
     }
 });
 
-Object.keys(data.get('scripts')).forEach(key => {
+Object.keys(data.get('scripts')).forEach((key) => {
     camera.script.create(key, {
         attributes: data.get(`scripts.${key}`)
     });
@@ -193,7 +193,7 @@ app.root.addChild(camera);
 // Allow user to toggle individual post effects
 app.keyboard.on(
     'keydown',
-    e => {
+    (e) => {
         // if the user is editing an input field, ignore key presses
         if (e.element.constructor.name === 'HTMLInputElement') return;
         switch (e.key) {

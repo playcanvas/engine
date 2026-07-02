@@ -30,7 +30,7 @@ const assets = {
     statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -77,7 +77,7 @@ const renderComponents = entity.findComponents('render');
 // for all render components
 renderComponents.forEach((/** @type {pc.RenderComponent} */ render) => {
     // For all meshes in the render component, assign new material
-    render.meshInstances.forEach(meshInstance => {
+    render.meshInstances.forEach((meshInstance) => {
         meshInstance.material = material;
     });
 
@@ -86,7 +86,7 @@ renderComponents.forEach((/** @type {pc.RenderComponent} */ render) => {
 });
 
 let currentTime = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     // Update the time and pass it to shader
     currentTime += dt;
     material.setParameter('uTime', currentTime);

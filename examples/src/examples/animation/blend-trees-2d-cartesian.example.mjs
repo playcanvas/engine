@@ -58,7 +58,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -189,7 +189,7 @@ const updateAnimPoints = () => {
 updateAnimPoints();
 
 // Listen for position changes from controls
-data.on('data.pos:set', value => {
+data.on('data.pos:set', (value) => {
     modelEntity.anim.setFloat('posX', value.x);
     modelEntity.anim.setFloat('posY', value.y);
     // Update animation points when position changes (weights recalculate)
