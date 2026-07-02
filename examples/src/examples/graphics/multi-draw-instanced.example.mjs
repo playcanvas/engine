@@ -46,7 +46,7 @@ const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -162,7 +162,7 @@ cmd.update(3);
 
 // orbit camera
 let angle = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     angle += dt * 0.2;
     camera.setLocalPosition(15 * Math.sin(angle), 7, 15 * Math.cos(angle));
     camera.lookAt(pc.Vec3.ZERO);

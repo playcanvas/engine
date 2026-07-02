@@ -30,7 +30,7 @@ export function Controls({ observer }) {
             return panel?.offsetWidth ?? canvas.parentElement?.offsetWidth ?? 0;
         };
 
-        const mouseEvent = e => {
+        const mouseEvent = (e) => {
             const w = width();
             if (!w) {
                 return;
@@ -79,7 +79,7 @@ export function Controls({ observer }) {
             ctx.fillRect(0, halfHeight, w, 1);
             ctx.fillStyle = '#232e30';
 
-            animPoints.forEach(animNode => {
+            animPoints.forEach((animNode) => {
                 const posX = (animNode.x + 1) * halfWidth;
                 const posY = (animNode.y * -1 + 1) * halfHeight;
                 const size = 8;

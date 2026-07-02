@@ -10,7 +10,7 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
-await new Promise(resolve => {
+await new Promise((resolve) => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
@@ -45,7 +45,7 @@ const assets = {
     heart: new pc.Asset('heart', 'container', { url: './assets/models/heart_draco.glb' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -77,7 +77,7 @@ light.addComponent('light', {
 light.setLocalPosition(1, 1, 5);
 app.root.addChild(light);
 
-app.on('update', dt => {
+app.on('update', (dt) => {
     if (entity) {
         entity.rotate(4 * dt, -20 * dt, 0);
     }

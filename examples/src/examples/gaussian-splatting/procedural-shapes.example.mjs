@@ -80,7 +80,7 @@ const assets = {
     gearTexture: new pc.Asset('gear', 'texture', { url: './assets/textures/gear.png' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -298,7 +298,7 @@ data.set('showLines', true);
 createLinesEntity();
 
 // Handle toggle changes
-data.on('showLines:set', value => {
+data.on('showLines:set', (value) => {
     if (value) {
         createLinesEntity();
     } else {

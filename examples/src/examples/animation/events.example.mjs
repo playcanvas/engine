@@ -50,7 +50,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -111,7 +111,7 @@ for (let i = -5; i <= 5; i++) {
  *
  * @param {pc.Vec3} pos - The position of the box to light up.
  */
-const highlightBox = pos => {
+const highlightBox = (pos) => {
     const i = Math.floor(pos.x + 0.5);
     const j = Math.floor(pos.z + 0.5);
     const colorVec = new pc.Vec3(Math.random(), Math.random(), Math.random());
@@ -162,14 +162,14 @@ walkTrack.events = new pc.AnimEvents([
 // add the animation track to the anim component, with a defined speed
 modelEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
-modelEntity.anim.on('foot_step', event => {
+modelEntity.anim.on('foot_step', (event) => {
     // highlight the box that is under the foot's bone position
     highlightBox(modelEntity.findByName(event.bone).getPosition());
 });
 
 app.on('update', () => {
     // on update, iterate over any currently highlighted boxes and reduce their emissive property
-    highlightedBoxes.forEach(box => {
+    highlightedBoxes.forEach((box) => {
         const material = box.render.material;
         material.emissiveIntensity *= 0.95;
         material.update();

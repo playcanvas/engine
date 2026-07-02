@@ -65,7 +65,7 @@ const assets = {
     orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -109,7 +109,7 @@ data.set('alphaClip', 0.4);
 // toggle verifies the cast shadow follows the animated position, since the shadow draw uses the
 // same quad vertex shader as the forward pass.
 const sceneMat = app.scene.gsplat.material;
-const applyCustomShader = enabled => {
+const applyCustomShader = (enabled) => {
     if (enabled) {
         sceneMat.getShaderChunks('glsl').set('gsplatModifyVS', shaderGlslVert);
         sceneMat.getShaderChunks('wgsl').set('gsplatModifyVS', shaderWgslVert);

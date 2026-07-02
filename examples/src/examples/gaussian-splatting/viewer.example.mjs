@@ -88,7 +88,7 @@ const assets = {
     hdri: new pc.Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -110,7 +110,7 @@ app.scene.gsplat.minContribution = 2;
 const calcEntityAABB = (bbox, entity) => {
     bbox.center.set(0, 0, 0);
     bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach(render => {
+    entity.findComponents('render').forEach((render) => {
         render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
             bbox.add(mi.aabb);
         });
@@ -259,18 +259,18 @@ data.on('*:set', (/** @type {string} */ path) => {
 });
 
 // Setup drag and drop handlers
-canvas.addEventListener('dragover', e => {
+canvas.addEventListener('dragover', (e) => {
     e.preventDefault();
 });
 
-canvas.addEventListener('drop', async e => {
+canvas.addEventListener('drop', async (e) => {
     e.preventDefault();
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
 
     // Detect unpacked SOG: a meta.json file was dropped (with any number of sibling webp files).
-    const metaFile = files.find(f => f.name.toLowerCase() === 'meta.json');
+    const metaFile = files.find((f) => f.name.toLowerCase() === 'meta.json');
     const isUnpackedSog = !!metaFile;
 
     // Otherwise expect a single gsplat/glb file
@@ -312,7 +312,7 @@ canvas.addEventListener('drop', async e => {
             },
             null,
             {
-                mapUrl: filename => blobMap.get(filename)
+                mapUrl: (filename) => blobMap.get(filename)
             }
         );
 
@@ -320,7 +320,7 @@ canvas.addEventListener('drop', async e => {
 
         await new Promise((resolve, reject) => {
             asset.once('load', () => resolve(asset));
-            asset.once('error', err => reject(err));
+            asset.once('error', (err) => reject(err));
             app.assets.load(asset);
         });
 
@@ -334,7 +334,7 @@ canvas.addEventListener('drop', async e => {
 
         splatEntity = entity;
 
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
             requestAnimationFrame(resolve);
         });
 
@@ -371,7 +371,7 @@ canvas.addEventListener('drop', async e => {
         splatEntity = entity;
 
         // Wait a frame for customAabb to be available
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
             requestAnimationFrame(resolve);
         });
 

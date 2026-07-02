@@ -47,7 +47,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -154,7 +154,7 @@ particles.addComponent('particlesystem', {
 screen.screen.syncDrawOrder();
 
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt * 0.3;
 
     // move buttons along the circular path

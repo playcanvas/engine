@@ -250,7 +250,7 @@ const updatePanel = () => {
         <div style="font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 8px;">Click to change variant</div>
         ${variants
             .map(
-                v => `
+                (v) => `
             <div data-variant="${v}" class="variant-btn${v === activeVariant ? ' active' : ''}" style="
                 padding: 14px 16px;
                 border-radius: 12px;
@@ -332,7 +332,7 @@ if (supportsHtmlInCanvas) {
 }
 
 // --- Load assets and build scene ---
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -459,7 +459,7 @@ let targetYaw = 0;
 let targetPitch = 0;
 let currentYaw = 0;
 let currentPitch = 0;
-canvas.addEventListener('mousemove', e => {
+canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
     const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
@@ -488,7 +488,7 @@ app.root.addChild(light);
 // modes: via getElementTransform hit testing (HTML-in-Canvas) or via
 // standard DOM events (overlay fallback). When a variant button is clicked
 // we apply the glTF KHR_materials_variants extension and repaint.
-htmlPanel.addEventListener('click', e => {
+htmlPanel.addEventListener('click', (e) => {
     const btn = /** @type {HTMLElement} */ (e.target).closest('[data-variant]');
     if (!btn) return;
     const variant = btn.getAttribute('data-variant');

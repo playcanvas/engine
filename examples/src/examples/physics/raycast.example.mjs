@@ -10,7 +10,7 @@ pc.WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise(resolve => {
+await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -60,7 +60,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -153,7 +153,7 @@ const temp = new pc.Vec3();
 // Set an update function on the application's update event
 let time = 0;
 let y = 0;
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     time += dt;
 
     // Reset all shapes to green
@@ -185,7 +185,7 @@ app.on('update', function (dt) {
     app.drawLine(start, end, white);
 
     const results = app.systems.rigidbody.raycastAll(start, end);
-    results.forEach(result => {
+    results.forEach((result) => {
         result.entity.render.material = red;
 
         // Render the normal on the surface from the hit point
@@ -202,7 +202,7 @@ app.on('update', function (dt) {
  * @param {number} z - The z coordinate.
  * @param {number} rot - Euler-rotation around z coordinate.
  */
-const createText = function (fontAsset, message, x, y, z, rot) {
+const createText = (fontAsset, message, x, y, z, rot) => {
     // Create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {

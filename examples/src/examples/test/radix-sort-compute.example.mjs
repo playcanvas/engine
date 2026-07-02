@@ -686,7 +686,7 @@ function startBenchmark() {
     // Filter the benchmark size sweep to respect the user-selected upper
     // bound from the Benchmark panel.
     const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
-    const sizes = BENCH_SIZES.filter(n => n <= maxN);
+    const sizes = BENCH_SIZES.filter((n) => n <= maxN);
     if (sizes.length === 0) {
         showBenchStatus('No benchmark sizes selected.');
         setTimeout(() => {
@@ -1025,7 +1025,7 @@ function renderBenchResults(results, onClose) {
     // Wire up per-row toggles. Each button flips the matching detail row
     // and swaps its caret glyph.
     const toggles = benchResults.querySelectorAll('button[data-toggle]');
-    toggles.forEach(btn => {
+    toggles.forEach((btn) => {
         const b = /** @type {HTMLButtonElement} */ (btn);
         b.onclick = () => {
             const idx = b.getAttribute('data-toggle');
@@ -1106,7 +1106,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
      * @param {number} v - Value in ms.
      * @returns {number} Pixel Y.
      */
-    const yOf = v => {
+    const yOf = (v) => {
         const lv = Math.log10(Math.max(v, 10 ** (logMin - 2)));
         return H - PAD.bottom - ((lv - logMin) / logRange) * plotH;
     };
@@ -1405,7 +1405,7 @@ async function runValidation() {
     if (validateRunning || benchState) return;
 
     const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
-    const sizes = BENCH_SIZES.filter(n => n <= maxN);
+    const sizes = BENCH_SIZES.filter((n) => n <= maxN);
     if (sizes.length === 0) {
         showBenchStatus('No validation sizes selected.');
         setTimeout(() => {
@@ -1506,7 +1506,7 @@ async function runValidation() {
                     // Yield a frame so the engine can flush the GPU queue
                     // between sorts and the status overlay updates live.
                     // eslint-disable-next-line no-await-in-loop
-                    await new Promise(resolve => {
+                    await new Promise((resolve) => {
                         requestAnimationFrame(() => resolve(undefined));
                     });
                 }
@@ -1598,7 +1598,7 @@ function renderValidateResults(results, sizes, onClose) {
         // `data-toggle` set earlier (which captured `detailRows.length`
         // BEFORE pushing this size's failures, i.e. the start index).
         if (rowHasDetails) {
-            const startIdx = detailRows.findIndex(r => r.size === size);
+            const startIdx = detailRows.findIndex((r) => r.size === size);
             const lastIdx = detailRows.length - 1;
             let detailHtml = '';
             for (let d = startIdx; d <= lastIdx; d++) {
@@ -1626,7 +1626,7 @@ function renderValidateResults(results, sizes, onClose) {
 
     // Wire toggle buttons.
     const toggles = benchResults.querySelectorAll('button[data-toggle]');
-    toggles.forEach(btn => {
+    toggles.forEach((btn) => {
         btn.addEventListener('click', () => {
             const idx = btn.getAttribute('data-toggle');
             const row = /** @type {HTMLElement|null} */ (

@@ -64,7 +64,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -102,7 +102,7 @@ const lights = assets.lights.resource.instantiateRenderEntity({
 // enable all lights from the glb
 /** @type {Array<pc.LightComponent>} */
 const lightComponents = lights.findComponents('light');
-lightComponents.forEach(component => {
+lightComponents.forEach((component) => {
     component.enabled = true;
 });
 lights.setLocalPosition(10, 0, 0);
@@ -300,7 +300,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
 
 let resizeControlPanel = true;
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // resize control panel to fit the content better

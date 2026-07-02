@@ -48,7 +48,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -103,7 +103,7 @@ autoFontSizeContainer.addChild(autoFontSizeText);
 
 // update the container's size to showcase the auto-sizing feature
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
     autoFontSizeContainer.element.width = 280 + Math.sin(time) * 80;
     autoFontSizeContainer.element.height = 60 + Math.sin(time * 0.5) * 50;

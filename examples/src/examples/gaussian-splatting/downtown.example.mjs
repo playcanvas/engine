@@ -114,7 +114,7 @@ const assets = {
     sky: new pc.Asset('hdri', 'texture', { url: config.skyUrl }, { mipmaps: false })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -166,7 +166,7 @@ for (let i = 0; i < pieces.length; i++) {
     totalSplats += res.numSplats ?? 0;
     lodLevels = Math.max(lodLevels, res.octree?.lodLevels ?? 1);
 }
-const toM = v => `${(v / 1e6).toFixed(1)}M`;
+const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
 data.set('data.stats.splatsTotal', toM(totalSplats));
 
 // combined world-space bounds, for framing the camera
@@ -212,7 +212,7 @@ app.scene.sky.type = pc.SKYTYPE_INFINITE;
 // Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some
 // nearby detail, then open up to the full range once the first frame's data is ready.
 const worstLod = lodLevels - 1;
-gsInstances.forEach(gs => {
+gsInstances.forEach((gs) => {
     gs.lodRangeMin = Math.max(0, worstLod - 3);
     gs.lodRangeMax = worstLod;
 });
@@ -225,7 +225,7 @@ const onFrameReady = (
 ) => {
     if (ready && loadingCount === 0) {
         gsplatSystem.off('frame:ready', onFrameReady);
-        gsInstances.forEach(gs => {
+        gsInstances.forEach((gs) => {
             gs.lodRangeMin = 0;
             gs.lodRangeMax = worstLod;
         });

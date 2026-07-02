@@ -187,7 +187,7 @@ if (device.supportsHtmlTextures) {
     console.warn('HTML textures are not supported - using canvas fallback');
 }
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 

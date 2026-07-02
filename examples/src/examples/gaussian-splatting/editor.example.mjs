@@ -65,7 +65,7 @@ const assets = {
     apartment: new pc.Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -135,7 +135,7 @@ uiPanel.appendChild(listContainer);
 document.body.appendChild(uiPanel);
 
 // Show/hide gizmo for an entity
-const showGizmoFor = entity => {
+const showGizmoFor = (entity) => {
     if (activeGizmoEntity) {
         gizmo.detach();
     }
@@ -147,7 +147,7 @@ const showGizmoFor = entity => {
 };
 
 // Remove entity from scene
-const removeEntity = editable => {
+const removeEntity = (editable) => {
     showGizmoFor(null);
 
     // Cleanup processors
@@ -181,7 +181,7 @@ function updateEntityList() {
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'X';
         deleteBtn.className = 'gsplat-delete';
-        deleteBtn.onclick = e => {
+        deleteBtn.onclick = (e) => {
             e.stopPropagation();
             removeEntity(editable);
         };
@@ -194,7 +194,7 @@ function updateEntityList() {
 // Sets up textures, creates processors, and sets work buffer modifier
 // Assumes extra streams already exist on the format
 // Returns { selectionProcessor, deleteProcessor }
-const setupEditableProcessors = gsplatComponent => {
+const setupEditableProcessors = (gsplatComponent) => {
     // Initialize splatVisible: all visible (255)
     const visibleTexture = gsplatComponent.getInstanceTexture('splatVisible');
     const visibleData = new Uint8Array(visibleTexture.width * visibleTexture.height);
@@ -401,7 +401,7 @@ const collectSelectedData = async () => {
 
     // Read all visibility and selection textures in parallel
     const textureDataArray = await Promise.all(
-        editables.map(async editable => {
+        editables.map(async (editable) => {
             const visibleTexture = editable.component.getInstanceTexture('splatVisible');
             const selectionTexture = editable.component.getInstanceTexture('splatSelection');
             const [visibleData, selectionData] = await Promise.all([
@@ -556,7 +556,7 @@ data.on('select', () => {
 });
 
 // Box size change handler
-data.on('boxSize:set', value => {
+data.on('boxSize:set', (value) => {
     if (selectionBox) {
         const halfSize = value / 2;
         selectionBox.halfExtents.set(halfSize, halfSize, halfSize);

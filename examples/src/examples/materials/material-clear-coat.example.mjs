@@ -46,7 +46,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -79,7 +79,7 @@ light.setLocalEulerAngles(85, -100, 0);
  * @param {number} z - The z coordinate.
  * @param {pc.Material} material - The material.
  */
-const createSphere = function (x, y, z, material) {
+const createSphere = (x, y, z, material) => {
     const sphere = new pc.Entity();
 
     sphere.addComponent('render', {
@@ -127,7 +127,7 @@ createSphere(0.5, 0, 0, clearCoatMaterial);
 
 // update things each frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     // rotate camera around the objects
     time += dt;
     camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));

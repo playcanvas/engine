@@ -145,7 +145,7 @@ const assets = {
     apartment: new pc.Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -316,7 +316,7 @@ const paintAt = (x, y) => {
     preparePicker();
 
     // Get world position for the paint brush
-    picker.getWorldPointAsync(x, y).then(worldPoint => {
+    picker.getWorldPointAsync(x, y).then((worldPoint) => {
         if (worldPoint) {
             const brushRadius = data.get('brushSize');
 
@@ -327,7 +327,7 @@ const paintAt = (x, y) => {
 };
 
 // RMB paint - disable orbit input while painting (orbit-camera handles LMB/MMB/wheel natively)
-app.mouse.on(pc.EVENT_MOUSEDOWN, e => {
+app.mouse.on(pc.EVENT_MOUSEDOWN, (e) => {
     if (e.button === pc.MOUSEBUTTON_RIGHT) {
         isPainting = true;
         pickerDirty = true;
@@ -337,11 +337,11 @@ app.mouse.on(pc.EVENT_MOUSEDOWN, e => {
     }
 });
 
-app.mouse.on(pc.EVENT_MOUSEMOVE, e => {
+app.mouse.on(pc.EVENT_MOUSEMOVE, (e) => {
     if (isPainting) paintAt(e.x, e.y);
 });
 
-app.mouse.on(pc.EVENT_MOUSEUP, e => {
+app.mouse.on(pc.EVENT_MOUSEUP, (e) => {
     if (e.button === pc.MOUSEBUTTON_RIGHT) {
         isPainting = false;
         orbitInput.enabled = true;

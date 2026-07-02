@@ -56,7 +56,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -94,7 +94,7 @@ const blendModes = [pc.BLEND_ADDITIVE, pc.BLEND_ADDITIVEALPHA, pc.BLEND_SCREEN, 
  * @param {number} z - The z coordinate.
  * @returns {pc.Entity} The returned entity.
  */
-const createPrimitive = function (x, y, z) {
+const createPrimitive = (x, y, z) => {
     const material = new pc.StandardMaterial();
 
     // emissive color
@@ -144,7 +144,7 @@ for (let i = 0; i < NUM_BOXES; i++) {
  * @param {number} z - The z coordinate.
  * @param {number} rot - The z coordinate rotation (euler angles).
  */
-const createText = function (fontAsset, message, x, y, z, rot) {
+const createText = (fontAsset, message, x, y, z, rot) => {
     // Create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {
@@ -203,7 +203,7 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // rotate the boxes
     rot.setFromEulerAngles(20 * time, 30 * time, 0);
-    boxes.forEach(box => {
+    boxes.forEach((box) => {
         box.setRotation(rot);
     });
 });

@@ -63,7 +63,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -160,7 +160,7 @@ app.on('update', (/** @type {number} */ dt) => {
         // will be resolved later, when the GPU is done running it, and so the histogram on the
         // screen will be up to few frames behind.
         const histogramData = new Uint32Array(numBins);
-        histogramStorageBuffer.read(0, undefined, histogramData).then(data => {
+        histogramStorageBuffer.read(0, undefined, histogramData).then((data) => {
             // render the histogram using lines
             const scale = 1 / 50000;
             const positions = [];

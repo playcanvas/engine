@@ -64,7 +64,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -169,7 +169,7 @@ app.root.addChild(ground);
 
 let firstFrame = true;
 let currentTime = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     // on the first frame, when camera is updated, move it further away from the focus tree
     if (firstFrame) {
         firstFrame = false;

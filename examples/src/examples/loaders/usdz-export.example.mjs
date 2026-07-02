@@ -61,7 +61,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -96,7 +96,7 @@ const options = {
 
 new pc.UsdzExporter()
     .build(entity, options)
-    .then(arrayBuffer => {
+    .then((arrayBuffer) => {
         const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
         // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
         // the download of the .asdz file triggers its opening in QuickLook AT mode.
@@ -113,7 +113,7 @@ data.on('download', () => {
 });
 
 // spin the meshe
-app.on('update', dt => {
+app.on('update', (dt) => {
     if (entity) {
         entity.rotate(0, -12 * dt, 0);
     }

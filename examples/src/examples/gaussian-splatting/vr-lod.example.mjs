@@ -140,7 +140,7 @@ const assets = {
 /**
  * @param {string} msg - Status message for the mirror page.
  */
-const setMessage = msg => {
+const setMessage = (msg) => {
     /** @type {HTMLDivElement | null} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -159,7 +159,7 @@ const setMessage = msg => {
  * @param {() => void} onClick - Click handler that starts VR.
  * @returns {HTMLButtonElement} The created button element.
  */
-const createEnterVrButton = onClick => {
+const createEnterVrButton = (onClick) => {
     const btn = document.createElement('button');
     btn.textContent = 'Enter VR';
     Object.assign(btn.style, {
@@ -188,7 +188,7 @@ const createEnterVrButton = onClick => {
     return btn;
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -435,7 +435,7 @@ const applyPreset = () => {
     }
 };
 
-const loadGsplat = scene => {
+const loadGsplat = (scene) => {
     if (gsplatEntity) {
         gsplatEntity.destroy();
         gsplatEntity = null;
@@ -528,7 +528,7 @@ let sceneIndex = 0;
 // pitch, so we keep yaw only — using the full desktop pos.y here would lift the viewer metres off
 // the ground (the "giant" effect), and keeping the previous yaw would leave you facing the wrong
 // way after a scene switch.
-const placeForSceneXr = scene => {
+const placeForSceneXr = (scene) => {
     const p = scene.pos;
     const f = scene.focus;
     // Stand on the ground (y = 0) by default; per-scene `xrY` lifts the spawn for scenes whose
@@ -539,7 +539,7 @@ const placeForSceneXr = scene => {
     cameraRig.setLocalEulerAngles(0, yaw, 0);
 };
 
-const setScene = index => {
+const setScene = (index) => {
     sceneIndex = pc.math.clamp(index, 0, SCENES.length - 1);
     xrHud?.setItemValue(SCENE_ROW, `${sceneIndex}`);
     const scene = SCENES[sceneIndex];
@@ -596,7 +596,7 @@ const tryStartVr = () => {
         // its rig setup, as that is bound to the xr 'start' event, not the start call.
         camera.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
             framebufferScaleFactor: data.get('framebufferScaleFactor'),
-            callback: err => {
+            callback: (err) => {
                 if (err) setMessage(`Failed to start VR: ${err.message}`);
             }
         });
@@ -616,7 +616,7 @@ const updateEnterVrButton = () => {
 
 if (app.xr.supported) {
     if (app.touch) {
-        app.touch.on('touchend', evt => {
+        app.touch.on('touchend', (evt) => {
             if (app.xr.active) {
                 app.fire('xr:end');
                 evt.event.preventDefault();
@@ -651,7 +651,7 @@ if (app.xr.supported) {
             updateEnterVrButton();
         });
     });
-    app.xr.on(`available:${pc.XRTYPE_VR}`, available => {
+    app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
         updateEnterVrButton();
         setMessage(available ? 'Click Enter VR to start' : 'Immersive VR is unavailable');
     });
@@ -668,7 +668,7 @@ if (app.xr.supported) {
 
 // Refresh the readouts at ~2 Hz so the numbers are readable rather than flickering every frame.
 let hudTimer = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     hudTimer += dt;
     if (hudTimer < 0.5) return;
     hudTimer = 0;

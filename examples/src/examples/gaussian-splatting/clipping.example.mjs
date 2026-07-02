@@ -86,7 +86,7 @@ const assets = {
     )
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -186,7 +186,7 @@ const boxMin = new pc.Vec3();
 const boxMax = new pc.Vec3();
 
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     if (data.get('animate')) {
         time += dt;
     }

@@ -81,7 +81,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -103,9 +103,9 @@ app.root.addChild(platformEntity);
 // get a list of emissive materials from the scene to allow their intensity to be changed
 const emissiveMaterials = [];
 const emissiveNames = new Set(['Light_Upper_Light-Upper_0', 'Emissive_Cyan__0']);
-platformEntity.findComponents('render').forEach(render => {
+platformEntity.findComponents('render').forEach((render) => {
     if (emissiveNames.has(render.entity.name)) {
-        render.meshInstances.forEach(meshInstance => emissiveMaterials.push(meshInstance.material));
+        render.meshInstances.forEach((meshInstance) => emissiveMaterials.push(meshInstance.material));
     }
 });
 
@@ -245,7 +245,7 @@ const applySettings = () => {
 
     // emissive
     const emissive = data.get('data.scene.emissive');
-    emissiveMaterials.forEach(material => {
+    emissiveMaterials.forEach((material) => {
         material.emissiveIntensity = emissive;
         material.update();
     });

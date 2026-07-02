@@ -70,7 +70,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -278,7 +278,7 @@ app.scene.envAtlas = assets.helipad.resource;
 // update things each frame
 let time = 0;
 let switchTime = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     // rotate texture camera around the objects
     time += dt;
     textureCamera.setLocalPosition(12 * Math.sin(time), 3, 12 * Math.cos(time));

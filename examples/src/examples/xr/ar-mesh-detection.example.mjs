@@ -8,7 +8,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -68,7 +68,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -90,11 +90,11 @@ l.addComponent('light', {
 camera.addChild(l);
 
 if (app.xr.supported) {
-    const activate = function () {
+    const activate = () => {
         if (app.xr.isAvailable(pc.XRTYPE_AR)) {
             camera.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
                 meshDetection: true,
-                callback: function (err) {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -108,7 +108,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', evt => {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -123,7 +123,7 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', evt => {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -135,7 +135,7 @@ if (app.xr.supported) {
         // Trigger manual room capture
         // With a delay due to some issues on Quest 3 triggering immediately
         setTimeout(() => {
-            app.xr.initiateRoomCapture(err => {
+            app.xr.initiateRoomCapture((err) => {
                 if (err) console.log(err);
             });
         }, 500);
@@ -143,7 +143,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_AR}`, available => {
+    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
         if (available) {
             if (app.xr.meshDetection.supported) {
                 message('Touch screen to start AR session and look at the floor or walls');
@@ -168,7 +168,7 @@ if (app.xr.supported) {
     materialWireframe.emissive = new pc.Color(1, 1, 1);
 
     // create entities for each XrMesh as they are added
-    app.xr.meshDetection.on('add', xrMesh => {
+    app.xr.meshDetection.on('add', (xrMesh) => {
         // solid mesh
         const mesh = new pc.Mesh(app.graphicsDevice);
         mesh.clear(true, false);
@@ -227,7 +227,7 @@ if (app.xr.supported) {
     });
 
     // when XrMesh is removed, destroy related entity
-    app.xr.meshDetection.on('remove', xrMesh => {
+    app.xr.meshDetection.on('remove', (xrMesh) => {
         const entity = entities.get(xrMesh);
         if (entity) {
             entity.destroy();

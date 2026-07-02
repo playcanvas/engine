@@ -25,7 +25,7 @@ const assets = {
     tv: new pc.Asset('tv', 'container', { url: './assets/models/tv.glb' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -124,7 +124,7 @@ entity.render.meshInstances[1].material = material;
 video.load();
 
 const mouse = new pc.Mouse(document.body);
-mouse.on('mousedown', event => {
+mouse.on('mousedown', (event) => {
     if (entity && event.buttons[pc.MOUSEBUTTON_LEFT]) {
         video.muted = !video.muted;
     }
@@ -132,7 +132,7 @@ mouse.on('mousedown', event => {
 
 let upload = false;
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // rotate the tv object

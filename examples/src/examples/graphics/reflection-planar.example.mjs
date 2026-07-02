@@ -48,7 +48,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -180,7 +180,7 @@ app.root.addChild(reflectionCamera);
 
 // update things each frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // rotate primitives around their center and also orbit them around the shiny sphere

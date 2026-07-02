@@ -16,7 +16,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -68,7 +68,7 @@ const assets = {
     )
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -108,10 +108,10 @@ l.translate(0, 10, 0);
 app.root.addChild(l);
 
 if (app.xr.supported) {
-    const activate = function () {
+    const activate = () => {
         if (app.xr.isAvailable(pc.XRTYPE_VR)) {
             c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
-                callback: function (err) {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive VR failed to start: ${err.message}`);
                 }
             });
@@ -125,7 +125,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', evt => {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 activate();
             } else {
@@ -137,7 +137,7 @@ if (app.xr.supported) {
         });
     }
 
-    app.keyboard.on('keydown', evt => {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -149,7 +149,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive VR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_VR}`, available => {
+    app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
         message(`Immersive VR is ${available ? 'available' : 'unavailable'}`);
     });
 

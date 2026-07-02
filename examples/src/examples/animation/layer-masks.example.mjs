@@ -57,7 +57,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -178,7 +178,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 /**
  * @param {pc.Entity} entity - The entity to draw the skeleton for.
  */
-const drawSkeleton = entity => {
+const drawSkeleton = (entity) => {
     entity.children.forEach((/** @type {pc.Entity} */ c) => {
         const target = modelEntity.anim._targets[`${entity.path}/graph/localPosition`];
         if (target) {

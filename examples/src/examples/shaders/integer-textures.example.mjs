@@ -81,7 +81,7 @@ app.on('destroy', () => {
 });
 
 // Helpers to create integer pixel buffers and render targets which we will ping-pong between
-const createPixelColorBuffer = i => {
+const createPixelColorBuffer = (i) => {
     return new pc.Texture(device, {
         name: `PixelBuffer_${i}`,
         width: TEXTURE_WIDTH,
@@ -198,7 +198,7 @@ const resetData = () => {
 resetData();
 data.on('reset', resetData);
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -258,7 +258,7 @@ mouse.disableContextMenu();
 // Reset on space bar, select brush on 1-4
 keyboard.on(
     'keyup',
-    event => {
+    (event) => {
         switch (event.key) {
             case pc.KEY_SPACE:
                 resetData();
@@ -281,7 +281,7 @@ keyboard.on(
 );
 
 let mouseState = 0;
-mouse.on('mousedown', event => {
+mouse.on('mousedown', (event) => {
     if (event.button === pc.MOUSEBUTTON_LEFT) {
         if (keyboard.isPressed(pc.KEY_SHIFT)) {
             mouseState = 2;
@@ -300,7 +300,7 @@ const mouseRay = new pc.Ray();
 const planePoint = new pc.Vec3();
 const mousePos = new pc.Vec2();
 const mouseUniform = new Float32Array(2);
-mouse.on('mousemove', event => {
+mouse.on('mousemove', (event) => {
     const x = event.x;
     const y = event.y;
 

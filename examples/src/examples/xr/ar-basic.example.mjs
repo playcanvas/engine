@@ -8,7 +8,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -73,7 +73,7 @@ app.root.addChild(l);
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
  */
-const createCube = function (x, y, z) {
+const createCube = (x, y, z) => {
     const cube = new pc.Entity();
     cube.addComponent('render', {
         type: 'box'
@@ -92,10 +92,10 @@ for (let x = 0; x < SIZE; x++) {
 }
 
 if (app.xr.supported) {
-    const activate = function () {
+    const activate = () => {
         if (app.xr.isAvailable(pc.XRTYPE_AR)) {
             c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
-                callback: function (err) {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -109,7 +109,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', evt => {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -124,7 +124,7 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', evt => {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -136,7 +136,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_AR}`, available => {
+    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
         message(`Immersive AR is ${available ? 'available' : 'unavailable'}`);
     });
 
