@@ -64,6 +64,13 @@ class MaterialHandler extends ResourceHandler {
     }
 
     patch(asset, assets) {
+        // patching (the engine-only _data handoff, the name sync and the asset binding below) is
+        // specific to StandardMaterial, the built-in json parser's output; materials produced by
+        // user-registered parsers manage their own data and asset references
+        if (!(asset.resource instanceof StandardMaterial)) {
+            return;
+        }
+
         // in an engine-only environment we manually copy the source data into the asset
         if (asset.resource._data) {
             asset._data = asset.resource._data; // use _data to avoid firing events
@@ -74,11 +81,7 @@ class MaterialHandler extends ResourceHandler {
         asset.data.name = asset.name;
         asset.resource.name = asset.name;
 
-        // the asset binding below is specific to StandardMaterial (the built-in json parser's
-        // output); materials produced by user-registered parsers manage their own asset references
-        if (asset.resource instanceof StandardMaterial) {
-            this._bindAndAssignAssets(asset, assets);
-        }
+        this._bindAndAssignAssets(asset, assets);
 
         asset.off('unload', this._onAssetUnload, this);
         asset.on('unload', this._onAssetUnload, this);
