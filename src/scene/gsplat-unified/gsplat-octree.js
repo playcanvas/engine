@@ -360,7 +360,11 @@ class GSplatOctree {
      */
     ensureFileResource(fileIndex) {
         Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
-        Debug.assert(this.assetLoader);
+
+        // If octree was destroyed, assetLoader is null - nothing to load
+        if (!this.assetLoader) {
+            return;
+        }
 
         // resource already loaded
         if (this.fileResources.has(fileIndex)) {
