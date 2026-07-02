@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
-import { http } from '../../platform/net/http.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
+import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { AssetReference } from '../asset/asset-reference.js';
 import { JsonStandardMaterialParser } from '../parsers/material/json-standard-material.js';
 import { ResourceHandler } from './handler.js';
@@ -56,45 +56,11 @@ class MaterialHandler extends ResourceHandler {
 
         this._assets = app.assets;
         this._device = app.graphicsDevice;
+
+        // the json parser is the catch-all for material assets; the handler keeps a reference to
+        // it as patch uses its migrate/initialize when binding standard material assets
         this._parser = new JsonStandardMaterialParser();
-    }
-
-    load(url, callback) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        // Loading from URL (engine-only)
-        http.get(url.load, {
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        }, (err, response) => {
-            if (!err) {
-                if (callback) {
-                    response._engine = true;
-                    callback(null, response);
-                }
-            } else {
-                if (callback) {
-                    callback(`Error loading material: ${url.original} [${err}]`);
-                }
-            }
-        });
-    }
-
-    open(url, data) {
-        const material = this._parser.parse(data);
-
-        // temp storage for engine-only as we need this during patching
-        if (data._engine) {
-            material._data = data;
-            delete data._engine;
-        }
-
-        return material;
+        this.addParser(this._parser);
     }
 
     patch(asset, assets) {
@@ -108,7 +74,11 @@ class MaterialHandler extends ResourceHandler {
         asset.data.name = asset.name;
         asset.resource.name = asset.name;
 
-        this._bindAndAssignAssets(asset, assets);
+        // the asset binding below is specific to StandardMaterial (the built-in json parser's
+        // output); materials produced by user-registered parsers manage their own asset references
+        if (asset.resource instanceof StandardMaterial) {
+            this._bindAndAssignAssets(asset, assets);
+        }
 
         asset.off('unload', this._onAssetUnload, this);
         asset.on('unload', this._onAssetUnload, this);
