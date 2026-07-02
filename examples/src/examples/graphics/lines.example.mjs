@@ -30,11 +30,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -53,7 +53,7 @@ app.scene.exposure = 0.2;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 30, 0);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
@@ -62,7 +62,7 @@ camera.setLocalPosition(80, 40, 80);
 camera.lookAt(new pc.Vec3(0, -35, 0));
 app.root.addChild(camera);
 
-// create a directional light
+// Create a directional light
 const directionallight = new pc.Entity();
 directionallight.addComponent('light', {
     type: 'directional',
@@ -121,13 +121,13 @@ function groundColor(color, point) {
     color.lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));
 }
 
-// set an update function on the app's update event
+// Set an update function on the app's update event
 let time = 0;
 app.on('update', (dt) => {
     time += dt;
 
     // generate grid of lines - store positions and colors as an arrays of numbers instead of
-    // vec3s and colors to improve performance
+    // Vec3s and Colors to improve performance
     const positions = [];
     const colors = [];
 
@@ -168,7 +168,7 @@ app.on('update', (dt) => {
     // submit the generated arrays of lines and colors for rendering
     app.drawLineArrays(positions, colors);
 
-    // array of vec3 and color classes for different way to render lines
+    // array of Vec3 and Color classes for different way to render lines
     const grayLinePositions = [];
     const grayLineColors = [];
 

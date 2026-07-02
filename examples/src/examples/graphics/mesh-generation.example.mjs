@@ -27,11 +27,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -53,7 +53,7 @@ app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
  * @returns {pc.Entity} The returned entity.
  */
 function createLight(color, scale) {
-    // create an entity with a omni light component, which is casting shadows (using rendering to cubemap)
+    // Create an Entity with a omni light component, which is casting shadows (using rendering to cubemap)
     const light = new pc.Entity();
     light.addComponent('light', {
         type: 'omni',
@@ -73,7 +73,7 @@ function createLight(color, scale) {
         material: material
     });
 
-    // scale the sphere
+    // Scale the sphere
     light.setLocalScale(scale, scale, scale);
 
     app.root.addChild(light);
@@ -88,25 +88,25 @@ const lights = [
     { radius: 4, speed: -0.3, scale: 5.5, light: createLight(new pc.Color(0.8, 0.9, 0.4), 1.7) }
 ];
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2)
 });
 
-// add the new entity to the hierarchy
+// Add the new Entity to the hierarchy
 app.root.addChild(camera);
 
-// position the camera
+// Position the camera
 camera.translate(0, 5, 20);
 camera.lookAt(pc.Vec3.ZERO);
 
-// generate a 3d grid plane with world size of 20, and resolution of 60
+// Generate a 3D grid plane with world size of 20, and resolution of 60
 const resolution = 60;
 const extent = 20;
 const scale = extent / resolution;
 
-// generate positions and uv coordinates for vertices, store them in float32arrays
+// Generate positions and uv coordinates for vertices, store them in Float32Arrays
 const positions = new Float32Array(3 * resolution * resolution);
 const uvs = new Float32Array(2 * resolution * resolution);
 let index = 0;
@@ -121,7 +121,7 @@ for (let x = 0; x < resolution; x++) {
     }
 }
 
-// generate array of indices to form triangle list - two triangles per grid square
+// Generate array of indices to form triangle list - two triangles per grid square
 /** @type {number[]} */
 const indexArray = [];
 for (let x = 0; x < resolution - 1; x++) {
@@ -143,22 +143,22 @@ for (let x = 0; x < resolution - 1; x++) {
  * @param {boolean} [initAll] - Also set UV's and indices.
  */
 function updateMesh(mesh, initAll) {
-    // set updated positions and normal each frame
+    // Set updated positions and normal each frame
     mesh.setPositions(positions);
     // @ts-ignore engine-tsd
     mesh.setNormals(pc.calculateNormals(positions, indexArray));
 
-    // update mesh uvs and indices only one time, as they do not change each frame
+    // update mesh Uvs and Indices only one time, as they do not change each frame
     if (initAll) {
         mesh.setUvs(0, uvs);
         mesh.setIndices(indexArray);
     }
 
-    // let mesh update vertex and index buffer as needed
+    // Let mesh update Vertex and Index buffer as needed
     mesh.update(pc.PRIMITIVE_TRIANGLES);
 }
 
-// create a mesh with dynamic vertex buffer and static index buffer
+// Create a mesh with dynamic vertex buffer and static index buffer
 const mesh = new pc.Mesh(app.graphicsDevice);
 mesh.clear(true, false);
 updateMesh(mesh, true);
@@ -171,22 +171,22 @@ material.metalness = 0.3;
 material.useMetalness = true;
 material.update();
 
-// create the mesh instance
+// Create the mesh instance
 const meshInstance = new pc.MeshInstance(mesh, material);
 
-// create the entity with render component using meshinstances
+// Create the entity with render component using meshInstances
 const entity = new pc.Entity();
 entity.addComponent('render', {
     meshInstances: [meshInstance]
 });
 app.root.addChild(entity);
 
-// set an update function on the app's update event
+// Set an update function on the app's update event
 let time = 0;
 app.on('update', (dt) => {
     time += dt;
 
-    // move the lights along circles, also keep separate list of their position for faster update in next block of code
+    // Move the lights along circles, also keep separate list of their position for faster update in next block of code
     const lightPositions = [];
     for (let l = 0; l < lights.length; l++) {
         const element = lights[l];
@@ -204,7 +204,7 @@ app.on('update', (dt) => {
         for (let z = 0; z < resolution; z++) {
             let elevation = 0;
 
-            // evaluate distance of grid vertex to each light position, and increase elevation if light is within the range
+            // Evaluate distance of grid vertex to each light position, and increase elevation if light is within the range
             for (let l = 0; l < lightPositions.length; l++) {
                 const dx = positions[index] - lightPositions[l].x;
                 const dz = positions[index + 2] - lightPositions[l].y;
@@ -214,7 +214,7 @@ app.on('update', (dt) => {
                 elevation += 1 - dist;
             }
 
-            // store elevation in .y element
+            // Store elevation in .y element
             positions[index + 1] = elevation;
             index += 3;
         }

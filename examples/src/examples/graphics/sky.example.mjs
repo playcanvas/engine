@@ -29,7 +29,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable hdr rendering if supported
+    // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
@@ -47,11 +47,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -68,13 +68,13 @@ app.start();
 const statueEntity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(statueEntity);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     farClip: 500,
     fov: 60,
 
-    // if the device renders in hdr mode, disable tone mapping to output hdr values without any processing
+    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
     toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
     gammaCorrection: pc.GAMMA_SRGB
 });
@@ -97,7 +97,7 @@ cameraEntity.setLocalPosition(-4, 5, 22);
 cameraEntity.lookAt(0, 0, 1);
 app.root.addChild(cameraEntity);
 
-// ------ custom render passes set up ------
+// ------ Custom render passes set up ------
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.update();
 
@@ -153,7 +153,7 @@ const applyHdri = (source) => {
     app.scene.envAtlas = envAtlas;
 };
 
-// when ui value changes, update skybox data
+// when UI value changes, update skybox data
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
 
@@ -178,7 +178,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get('data.skybox.rotation'), 0);
         app.scene.exposure = data.get('data.skybox.exposure');
 
-        // colorenhance
+        // colorEnhance
         cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
         cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
         cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
@@ -192,7 +192,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
 // apply initial preset
 data.set('data.skybox.preset', 'Street Dome');
 
-// set initial colorenhance values (after preset so it doesn't get overwritten)
+// set initial colorEnhance values (AFTER preset so it doesn't get overwritten)
 data.set('data.colorEnhance', {
     enabled: false,
     shadows: 0,

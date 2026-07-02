@@ -34,11 +34,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler, pc.JsonHand
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -95,7 +95,7 @@ const points = [];
 const colors = [];
 
 for (let i = 0; i < easingFunctions.length; i++) {
-    // create an entity with a sphere render component
+    // Create an entity with a sphere render component
     const sphere = new pc.Entity();
 
     sphere.addComponent('render', {
@@ -111,17 +111,17 @@ for (let i = 0; i < easingFunctions.length; i++) {
         attributes: {
             tweens: [
                 {
-                    autoPlay: true, // start this tween immediately
-                    delay: 0, // no delay on start
+                    autoPlay: true, // Start this tween immediately
+                    delay: 0, // No delay on start
                     duration: 1500, // 2 seconds
                     easingFunction: i,
-                    easingType: 2, // inout type
+                    easingType: 2, // InOut type
                     end: new pc.Vec4(4, -i, 0, 0),
-                    path: 'localPosition', // update the entity's local position
-                    repeat: -1, // repeat infinitely
-                    repeatDelay: 0, // no delay between repeats
+                    path: 'localPosition', // Update the entity's local position
+                    repeat: -1, // Repeat infinitely
+                    repeatDelay: 0, // No delay between repeats
                     start: new pc.Vec4(0, -i, 0, 0),
-                    yoyo: true // ping pong between start and end values
+                    yoyo: true // Ping pong between start and end values
                 }
             ]
         }
@@ -130,15 +130,15 @@ for (let i = 0; i < easingFunctions.length; i++) {
     sphere.setLocalScale(0.8, 0.8, 0.8);
     app.root.addChild(sphere);
 
-    // add a line for the path of the sphere
+    // Add a line for the path of the sphere
     points.push(new pc.Vec3(0, -i, 0), new pc.Vec3(4, -i, 0));
     colors.push(pc.Color.WHITE, pc.Color.WHITE);
 
-    // create a text label for the sphere
+    // Create a text label for the sphere
     createText(assets.font, easingFunctions[i], -0.5, -i, 0, 0);
 }
 
-// create an entity with a directional light component
+// Create an entity with a directional light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional'
@@ -146,7 +146,7 @@ light.addComponent('light', {
 light.setLocalEulerAngles(70, 30, 0);
 app.root.addChild(light);
 
-// create an entity with a camera component
+// Create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)

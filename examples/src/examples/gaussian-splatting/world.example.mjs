@@ -41,18 +41,18 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is updated when window changes size
+// Ensure canvas is updated when window changes size
 const onResize = () => app.resizeCanvas();
 window.addEventListener('resize', onResize);
 app.on('destroy', () => {
     window.removeEventListener('resize', onResize);
 });
 
-// skatepark configuration
+// Skatepark configuration
 const config = {
     url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json',
     lodUpdateDistance: 1,
@@ -66,7 +66,7 @@ const config = {
     enablePan: false
 };
 
-// lod preset definitions
+// LOD preset definitions
 /** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
 const LOD_PRESETS = {
     desktop: {
@@ -102,7 +102,7 @@ app.start();
 app.scene.skyboxMip = 1;
 app.scene.exposure = 1.5;
 
-// enable rotation-based lod updates and behind-camera penalty
+// enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 2;
 app.scene.gsplat.radialSorting = true;
@@ -110,7 +110,7 @@ app.scene.gsplat.minPixelSize = 1;
 app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
 app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-// set up sh update parameters
+// set up SH update parameters
 app.scene.gsplat.colorUpdateAngle = 10;
 
 data.on('renderer:set', () => {
@@ -121,7 +121,7 @@ data.on('renderer:set', () => {
     }
 });
 
-// initialize ui settings
+// initialize UI settings
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('debug', pc.GSPLAT_DEBUG_NONE);
 data.set('splatBudget', pc.platform.mobile ? 1 : 4);
@@ -138,11 +138,11 @@ const applySplatBudget = () => {
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
-// auto-select lod preset based on device
+// Auto-select LOD preset based on device
 const preset = pc.platform.mobile ? 'mobile' : 'desktop';
 const presetData = LOD_PRESETS[preset];
 
-// create skatepark entity
+// Create skatepark entity
 const skatepark = new pc.Entity('Skatepark');
 skatepark.addComponent('gsplat', {
     asset: assets.skatepark,
@@ -155,7 +155,7 @@ skatepark.setLocalEulerAngles(rotX, rotY, rotZ);
 skatepark.setLocalScale(1, 1, 1);
 app.root.addChild(skatepark);
 
-// apply lod distances to skatepark
+// Apply LOD distances to skatepark
 const gs = /** @type {any} */ (skatepark.gsplat);
 gs.lodBaseDistance = presetData.lodBaseDistance;
 gs.lodMultiplier = 4;
@@ -170,10 +170,10 @@ data.on('lodMultiplier:set', () => {
     gs.lodMultiplier = data.get('lodMultiplier');
 });
 
-// world center coordinates
+// World center coordinates
 const worldCenter = { x: 18, y: -1.3, z: 13.5 };
 
-// create biker entity at center, ground level
+// Create biker entity at center, ground level
 const biker = new pc.Entity('Biker');
 biker.addComponent('gsplat', {
     asset: assets.biker
@@ -183,7 +183,7 @@ biker.setLocalEulerAngles(180, 0, 0);
 biker.setLocalScale(1, 1, 1);
 app.root.addChild(biker);
 
-// create first orbiting logo
+// Create first orbiting logo
 const logo1 = new pc.Entity('Logo1');
 logo1.addComponent('gsplat', {
     asset: assets.logo
@@ -191,7 +191,7 @@ logo1.addComponent('gsplat', {
 logo1.setLocalEulerAngles(180, 90, 0);
 app.root.addChild(logo1);
 
-// create second orbiting logo
+// Create second orbiting logo
 const logo2 = new pc.Entity('Logo2');
 logo2.addComponent('gsplat', {
     asset: assets.logo
@@ -200,7 +200,7 @@ logo2.setLocalEulerAngles(180, 90, 0);
 logo2.setLocalScale(0.5, 0.5, 0.5);
 app.root.addChild(logo2);
 
-// create camera
+// Create camera
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -208,14 +208,14 @@ camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
 });
 
-// set camera position
+// Set camera position
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint);
 const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
 camera.setLocalPosition(camX, camY, camZ);
 app.root.addChild(camera);
 
-// add camera controls
+// Add camera controls
 camera.addComponent('script');
 const cc = /** @type {CameraControls} */ (/** @type {any} */ (camera.script).create(CameraControls));
 Object.assign(cc, {
@@ -238,14 +238,14 @@ data.on('orbitCamera:set', () => {
     }
 });
 
-// orbit parameters
+// Orbit parameters
 const logo1Radius = 3;
 const logo1Speed = 0.6;
 const logo2Radius = 5;
 const logo2Speed = -0.2;
 const orbitHeight = 3;
 
-// animation update
+// Animation update
 let time = 0;
 const centerVec = new pc.Vec3(worldCenter.x, worldCenter.y + orbitHeight, worldCenter.z);
 const rollSpeed1 = 90; // degrees per second
@@ -253,7 +253,7 @@ const rollSpeed2 = 120; // degrees per second
 app.on('update', (dt) => {
     time += dt;
 
-    // orbit logo 1 around world center
+    // Orbit logo 1 around world center
     const angle1 = time * logo1Speed;
     logo1.setLocalPosition(
         worldCenter.x + logo1Radius * Math.sin(angle1),
@@ -263,7 +263,7 @@ app.on('update', (dt) => {
     logo1.lookAt(centerVec);
     logo1.rotateLocal(0, 0, time * rollSpeed1);
 
-    // orbit logo 2 around world center (opposite direction)
+    // Orbit logo 2 around world center (opposite direction)
     const angle2 = time * logo2Speed;
     logo2.setLocalPosition(
         worldCenter.x + logo2Radius * Math.sin(angle2),
@@ -273,6 +273,6 @@ app.on('update', (dt) => {
     logo2.lookAt(centerVec);
     logo2.rotateLocal(0, 0, time * rollSpeed2);
 
-    // update hud stats
+    // Update HUD stats
     data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
 });

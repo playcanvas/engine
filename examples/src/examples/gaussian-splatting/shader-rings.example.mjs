@@ -41,11 +41,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -75,7 +75,7 @@ material.getShaderChunks('glsl').set('gsplatModifyPS', shaderGlslFrag);
 material.getShaderChunks('wgsl').set('gsplatModifyPS', shaderWgslFrag);
 material.update();
 
-// create skull gsplat
+// Create skull gsplat
 const skull = new pc.Entity('skull');
 skull.addComponent('gsplat', {
     asset: assets.skull
@@ -84,7 +84,7 @@ skull.setLocalEulerAngles(180, 90, 0);
 skull.setLocalScale(0.7, 0.7, 0.7);
 app.root.addChild(skull);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: pc.Color.BLACK,
@@ -111,19 +111,19 @@ if (orbitCam) {
 camera.script?.create('orbitCameraInputMouse');
 camera.script?.create('orbitCameraInputTouch');
 
-// auto-rotate camera when idle
+// Auto-rotate camera when idle
 let autoRotateEnabled = true;
 let lastInteractionTime = 0;
 const autoRotateDelay = 2; // seconds of inactivity before auto-rotate resumes
 const autoRotateSpeed = 10; // degrees per second
 
-// detect user interaction (click/touch only, not mouse movement)
+// Detect user interaction (click/touch only, not mouse movement)
 const onUserInteraction = () => {
     autoRotateEnabled = false;
     lastInteractionTime = Date.now();
 };
 
-// listen for click and touch events only
+// Listen for click and touch events only
 if (app.mouse) {
     app.mouse.on('mousedown', onUserInteraction);
     app.mouse.on('mousewheel', onUserInteraction);
@@ -142,12 +142,12 @@ app.on('update', (dt) => {
     material.setParameter('uTime', time);
     material.update();
 
-    // re-enable auto-rotate after delay
+    // Re-enable auto-rotate after delay
     if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
         autoRotateEnabled = true;
     }
 
-    // apply auto-rotation
+    // Apply auto-rotation
     if (autoRotateEnabled) {
         const orbitCamera = camera.script?.get('orbitCamera');
         if (orbitCamera) {

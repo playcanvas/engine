@@ -41,9 +41,9 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // the scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
-    // to avoid the additional cost. this is only used for the ui which renders on top of the
-    // post-processed scene, and we're typically happy with some aliasing on the ui.
+    // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
+    // to avoid the additional cost. This is only used for the UI which renders on top of the
+    // post-processed scene, and we're typically happy with some aliasing on the UI.
     antialias: false
 };
 
@@ -67,11 +67,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -117,7 +117,7 @@ cat.setLocalPosition(-80, 80, -20);
 cat.setLocalScale(80, 80, 80);
 app.root.addChild(cat);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     farClip: 1500,
@@ -141,7 +141,7 @@ cameraEntity.setLocalPosition(-50, 100, 220);
 cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
-// ------ custom render passes set up ------
+// ------ Custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
@@ -156,13 +156,13 @@ cameraFrame.vignette.intensity = 0.5;
 cameraFrame.update();
 
 const applySettings = () => {
-    // taa
+    // TAA
     const taa = data.get('data.taa.enabled');
     cameraFrame.taa.enabled = taa;
     cameraFrame.taa.jitter = data.get('data.taa.jitter');
     cameraFrame.rendering.sharpness = taa ? 1 : 0;
 
-    // dof
+    // DOF
     cameraFrame.dof.enabled = data.get('data.dof.enabled');
     cameraFrame.dof.nearBlur = data.get('data.dof.nearBlur');
     cameraFrame.dof.focusDistance = data.get('data.dof.focusDistance');
@@ -202,7 +202,7 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// apply ui changes
+// apply UI changes
 data.on('*:set', (/** @type {string} */ path) => {
     const pathArray = path.split('.');
     if (pathArray[1] !== 'stats') {

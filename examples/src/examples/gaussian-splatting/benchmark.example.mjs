@@ -42,8 +42,8 @@ const BUDGETS = [1, 2, 3, 4, 6, 8, 10, 15, 20, 25, 30, 35]; // millions
 const CHART_REF_W = 778;
 const CHART_REF_H = 389;
 
-// ── stored results per renderer column ──
-// storedresults[col].budgetresults is length budgets.length, entries are null or result object
+// ── Stored results per renderer column ──
+// storedResults[col].budgetResults is length BUDGETS.length, entries are null or result object
 
 /** @type {(object|null)[]} */
 const storedResults = new Array(RENDERERS.length).fill(null);
@@ -102,9 +102,9 @@ function formatEffectiveFpsCell(effectiveFps) {
     return effectiveFps > 0 ? effectiveFps.toFixed(1) : '\u2014';
 }
 
-// ── ui ──
+// ── UI ──
 
-// override main.css which sets touch-action:none on * and overflow:hidden on body
+// Override main.css which sets touch-action:none on * and overflow:hidden on body
 const overrideStyle = document.createElement('style');
 overrideStyle.textContent =
     '*, *::before, *::after { touch-action: auto !important; } html, body { overflow: auto !important; height: auto !important; }';
@@ -193,7 +193,7 @@ Object.assign(benchmarkLegendEl.style, {
 });
 containerEl.appendChild(benchmarkLegendEl);
 
-// high res toggle
+// High Res toggle
 const highResLabel = document.createElement('label');
 Object.assign(highResLabel.style, {
     display: 'inline-flex',
@@ -216,7 +216,7 @@ highResLabel.appendChild(document.createTextNode('High Resolution'));
 containerEl.appendChild(highResLabel);
 containerEl.appendChild(document.createElement('br'));
 
-// shared button style for header buttons
+// Shared button style for header buttons
 const headerBtnCss = [
     'background: #4a9eff',
     'color: #fff',
@@ -541,7 +541,7 @@ if (existingCanvas) {
     existingCanvas.remove();
 }
 
-// ── helpers ──
+// ── Helpers ──
 
 /**
  * @param {HTMLCanvasElement} canvas - The canvas.
@@ -850,7 +850,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     /** Initial yaw so measure-phase orbit stays centered now that warmup does not rotate. */
     const startAngle = -(MEASURE_FRAMES / 2) * 0.5;
 
-    // ensure storedresults[colindex] exists with the right structure
+    // Ensure storedResults[colIndex] exists with the right structure
     if (!storedResults[colIndex]) {
         storedResults[colIndex] = {
             label: config.label,
@@ -908,13 +908,13 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     canvas.height = 0;
     canvas.remove();
 
-    // allow gc to reclaim gpu/asset memory before the next run (helps on mobile)
+    // allow GC to reclaim GPU/asset memory before the next run (helps on mobile)
     await new Promise((resolve) => {
         setTimeout(resolve, 1000);
     });
 }
 
-// ── chart + download ──
+// ── Chart + download ──
 
 /**
  * Size the chart canvas to match the adjacent benchmark table (width × height, × DPR).
@@ -1056,7 +1056,7 @@ function buildDownloadText() {
         ''
     ].join('\n');
 
-    // find first column with at least one budget result for splat count line
+    // Find first column with at least one budget result for splat count line
     let firstValid = null;
     for (const r of storedResults) {
         if (!r) continue;
@@ -1185,10 +1185,10 @@ function captureElementSize(el) {
 async function pageToPngBlob() {
     const { w: W, h: H } = captureElementSize(containerEl);
 
-    // clone; canvases don't render inside foreignobject, so swap them for <img>.
+    // Clone; canvases don't render inside foreignObject, so swap them for <img>.
     const clone = /** @type {HTMLElement} */ (containerEl.cloneNode(true));
     clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    // hint full content width so mobile browsers lay out the clone like desktop (wide table).
+    // Hint full content width so mobile browsers lay out the clone like desktop (wide table).
     clone.style.boxSizing = 'border-box';
     clone.style.width = `${W}px`;
     clone.style.minHeight = `${H}px`;
@@ -1207,7 +1207,7 @@ async function pageToPngBlob() {
         img.src = live.toDataURL();
         img.width = live.width;
         img.height = live.height;
-        // match on-screen css pixel size so foreignobject reserves full chart height (avoids squashed / clipped canvas on mobile).
+        // Match on-screen CSS pixel size so foreignObject reserves full chart height (avoids squashed / clipped canvas on mobile).
         img.style.cssText = [
             'display:block',
             `background:${live.style.background || '#1a1a2e'}`,
@@ -1234,7 +1234,7 @@ async function pageToPngBlob() {
     ctx.fillRect(0, 0, W, H);
     ctx.drawImage(pageImg, 0, 0, W, H);
 
-    // trim uniform #111 margins; keep alpha so aa edges are not misclassified as bg.
+    // Trim uniform #111 margins; keep alpha so AA edges are not misclassified as bg.
     const data = ctx.getImageData(0, 0, W, H).data;
     const BG = 0x11;
     const TOL = 4;
@@ -1432,7 +1432,7 @@ function drawBudgetChart(chartCanvas, mode) {
         }
     }
 
-    // legend (font + spacing 1.5× prior for readability)
+    // Legend (font + spacing 1.5× prior for readability)
     const legendFontPx = 15 * scale;
     const legendLineGap = 21 * scale;
     ctx.font = `${legendFontPx}px monospace`;
@@ -1493,7 +1493,7 @@ function startIdleFpsProbe() {
     });
 }
 
-// ── run logic ──
+// ── Run logic ──
 
 /**
  * @param {number} colIndex - Column to run.

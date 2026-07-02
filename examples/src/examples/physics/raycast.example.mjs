@@ -49,11 +49,11 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -79,11 +79,11 @@ function createMaterial(color) {
     return material;
 }
 
-// create a couple of materials
+// Create a couple of materials
 const red = createMaterial(new pc.Color(1, 0, 0));
 const green = createMaterial(new pc.Color(0, 1, 0));
 
-// create light
+// Create light
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional'
@@ -92,7 +92,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setEulerAngles(45, 30, 0);
 
-// create camera
+// Create camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.5, 0.5, 0.8)
@@ -112,7 +112,7 @@ camera.setPosition(5, 0, 15);
 function createPhysicalShape(type, material, x, y, z) {
     const e = new pc.Entity();
 
-    // have to set the position of the entity before adding the static rigidbody
+    // Have to set the position of the entity before adding the static rigidbody
     // component because static bodies cannot be moved after creation
     app.root.addChild(e);
     e.setPosition(x, y, z);
@@ -132,7 +132,7 @@ function createPhysicalShape(type, material, x, y, z) {
     return e;
 }
 
-// create two rows of physical geometric shapes
+// Create two rows of physical geometric shapes
 const types = ['box', 'capsule', 'cone', 'cylinder', 'sphere'];
 types.forEach((type, idx) => {
     createPhysicalShape(type, green, idx * 2 + 1, 2, 0);
@@ -141,22 +141,22 @@ types.forEach((type, idx) => {
     createPhysicalShape(type, green, idx * 2 + 1, -2, 0);
 });
 
-// allocate some colors
+// Allocate some colors
 const white = new pc.Color(1, 1, 1);
 const blue = new pc.Color(0, 0, 1);
 
-// allocate some vectors
+// Allocate some vectors
 const start = new pc.Vec3();
 const end = new pc.Vec3();
 const temp = new pc.Vec3();
 
-// set an update function on the application's update event
+// Set an update function on the application's update event
 let time = 0;
 let y = 0;
 app.on('update', (dt) => {
     time += dt;
 
-    // reset all shapes to green
+    // Reset all shapes to green
     app.root.findComponents('render').forEach((/** @type {pc.RenderComponent}*/ render) => {
         render.material = green;
     });
@@ -165,14 +165,14 @@ app.on('update', (dt) => {
     start.set(0, y, 0);
     end.set(10, y, 0);
 
-    // render the ray used in the raycast
+    // Render the ray used in the raycast
     app.drawLine(start, end, white);
 
     const result = app.systems.rigidbody.raycastFirst(start, end);
     if (result) {
         result.entity.render.material = red;
 
-        // render the normal on the surface from the hit point
+        // Render the normal on the surface from the hit point
         temp.copy(result.normal).mulScalar(0.3).add(result.point);
         app.drawLine(result.point, temp, blue);
     }
@@ -181,14 +181,14 @@ app.on('update', (dt) => {
     start.set(0, y, 0);
     end.set(10, y, 0);
 
-    // render the ray used in the raycast
+    // Render the ray used in the raycast
     app.drawLine(start, end, white);
 
     const results = app.systems.rigidbody.raycastAll(start, end);
     results.forEach((result) => {
         result.entity.render.material = red;
 
-        // render the normal on the surface from the hit point
+        // Render the normal on the surface from the hit point
         temp.copy(result.normal).mulScalar(0.3).add(result.point);
         app.drawLine(result.point, temp, blue);
     }, this);
@@ -203,7 +203,7 @@ app.on('update', (dt) => {
  * @param {number} rot - Euler-rotation around z coordinate.
  */
 const createText = (fontAsset, message, x, y, z, rot) => {
-    // create a text element-based entity
+    // Create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],

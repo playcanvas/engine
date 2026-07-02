@@ -42,11 +42,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -64,7 +64,7 @@ app.scene.skyboxIntensity = 0.5;
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0, 0, 0.05)
@@ -86,7 +86,7 @@ cameraEntity.script.create('orbitCameraInputTouch');
 app.root.addChild(cameraEntity);
 cameraEntity.script.orbitCamera.pivotPoint = new pc.Vec3(0, 5, 0);
 
-// create an entity for the ground
+// Create an Entity for the ground
 const material = new pc.StandardMaterial();
 material.gloss = 0.6;
 material.metalness = 0.4;
@@ -102,7 +102,7 @@ ground.setLocalScale(10, 1, 10);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// create a directional light
+// Create a directional light
 const lightDirEntity = new pc.Entity();
 lightDirEntity.addComponent('light', {
     type: 'directional',
@@ -139,7 +139,7 @@ const colorCurve = new pc.CurveSet([
     [0, 0, 1, 0.3] // b
 ]);
 
-// create entity for particle system
+// Create entity for particle system
 const entity = new pc.Entity('Emitter');
 app.root.addChild(entity);
 entity.setLocalPosition(0, 1, 0);
@@ -165,7 +165,7 @@ entity.addComponent('particlesystem', {
     halfLambert: true,
     alignToMotion: true,
 
-    // texture applied to the mesh particles using the mesh uvs
+    // texture applied to the mesh particles using the mesh UVs
     colorMap: assets.color.resource
 });
 
@@ -182,7 +182,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     const propertyName = path.split('.')[1];
 
     // the 'textured' toggle switches the color map on and off (null falls back to the
-    // default white texture), demonstrating mesh uvs are used for texturing
+    // default white texture), demonstrating mesh UVs are used for texturing
     if (propertyName === 'textured') {
         entity.particlesystem.colorMap = value ? assets.color.resource : null;
         return;

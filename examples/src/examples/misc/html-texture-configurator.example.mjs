@@ -7,15 +7,15 @@
 // native DOM event system. {accent:Click} to switch shoe material variants.
 
 //
-// this example demonstrates a 3d product configurator where an interactive html
-// panel (styled with css glassmorphism) is rendered as a gpu texture on a 3d
-// plane next to a shoe model with gltf khr_materials_variants. the htmlsync
-// class keeps the dom element's css transform in sync with the 3d projection so
-// the browser can hit-test clicks and hovers on the html buttons.
+// This example demonstrates a 3D product configurator where an interactive HTML
+// panel (styled with CSS glassmorphism) is rendered as a GPU texture on a 3D
+// plane next to a shoe model with glTF KHR_materials_variants. The HtmlSync
+// class keeps the DOM element's CSS transform in sync with the 3D projection so
+// the browser can hit-test clicks and hovers on the HTML buttons.
 //
-// fallback: when device.supportshtmltextures is false, the html panel is shown
-// as a fixed dom overlay on top of the canvas instead of a 3d textured plane.
-// click handling works identically in both modes via standard dom events.
+// Fallback: when device.supportsHtmlTextures is false, the HTML panel is shown
+// as a fixed DOM overlay on top of the canvas instead of a 3D textured plane.
+// Click handling works identically in both modes via standard DOM events.
 //
 import * as pc from 'playcanvas';
 import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
@@ -23,15 +23,15 @@ import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-r
 import { deviceType } from 'examples/context';
 
 // ---------------------------------------------------------------------------
-// htmlsync — self-contained helper class for html-in-canvas hit testing.
-// copy this class into any playcanvas project that uses the html-in-canvas
-// proposal (layoutsubtree + getelementtransform) to render interactive html
-// elements on 3d plane entities.
+// HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.
+// Copy this class into any PlayCanvas project that uses the HTML-in-Canvas
+// proposal (layoutsubtree + getElementTransform) to render interactive HTML
+// elements on 3D plane entities.
 //
-// usage:
-//   const sync = new htmlsync(canvas, htmlelement, planeentity, width, height);
+// Usage:
+//   const sync = new HtmlSync(canvas, htmlElement, planeEntity, width, height);
 //   // every frame:
-//   sync.update(cameracomponent);
+//   sync.update(cameraComponent);
 // ---------------------------------------------------------------------------
 class HtmlSync {
     /**
@@ -46,9 +46,9 @@ class HtmlSync {
         this.element = element;
         this.planeEntity = planeEntity;
 
-        // pixeltolocal maps html pixel coords (0..width, 0..height) to the
-        // playcanvas plane's local space (-0.5..0.5). column 2 provides a
-        // non-zero z axis (the plane's normal) so the matrix stays
+        // pixelToLocal maps HTML pixel coords (0..width, 0..height) to the
+        // PlayCanvas plane's local space (-0.5..0.5). Column 2 provides a
+        // non-zero Z axis (the plane's normal) so the matrix stays
         // non-singular — the browser needs to invert it for hit testing.
         this._pixelToLocal = new pc.Mat4();
         this._pixelToLocal.data.set([1 / width, 0, 0, 0, 0, 0, 1 / height, 0, 0, 1, 0, 0, -0.5, 0, -0.5, 1]);
@@ -69,16 +69,16 @@ class HtmlSync {
         const w = canvas.width;
         const h = canvas.height;
 
-        // world · pixeltolocal
+        // world · pixelToLocal
         this._t1.mul2(this.planeEntity.getWorldTransform(), this._pixelToLocal);
         // projection · view
         this._t2.mul2(cameraComponent.projectionMatrix, cameraComponent.viewMatrix);
-        // viewproj · world · pixeltolocal
+        // viewProj · world · pixelToLocal
         this._drawTransform.mul2(this._t2, this._t1);
 
-        // viewport: clip-space → device pixels (y flipped)
+        // viewport: clip-space → device pixels (Y flipped)
         this._t1.data.set([w / 2, 0, 0, 0, 0, -h / 2, 0, 0, 0, 0, 1, 0, w / 2, h / 2, 0, 1]);
-        // viewport · viewproj · world · pixeltolocal  (_t2 receives the result)
+        // viewport · viewProj · world · pixelToLocal  (_t2 receives the result)
         this._t2.mul2(this._t1, this._drawTransform);
 
         const d = this._t2.data;
@@ -101,13 +101,13 @@ class HtmlSync {
             d[15]
         ]);
 
-        // register the element for hit testing via the browser api.
+        // Register the element for hit testing via the browser API.
         /** @type {any} */ (canvas).getElementTransform(this.element, domDrawTransform);
 
-        // apply the css transform ourselves. the browser's internal s^-1·t·s
+        // Apply the CSS transform ourselves. The browser's internal S^-1·T·S
         // formula doesn't handle perspective projections correctly — it scales
-        // the w row via s, distorting the perspective divide for non-origin
-        // points. the fix: scale only the output x,y rows by 1/dpr.
+        // the w row via S, distorting the perspective divide for non-origin
+        // points. The fix: scale only the output x,y rows by 1/DPR.
         const dpr = w / canvas.clientWidth;
         this.element.style.transform = new DOMMatrix([
             d[0] / dpr,
@@ -130,9 +130,9 @@ class HtmlSync {
     }
 }
 
-// enable html-in-canvas: the "layoutsubtree" attribute tells the browser to
-// composite any child html elements into the canvas, making them available as
-// texture sources and enabling hit testing through getelementtransform.
+// Enable HTML-in-Canvas: the "layoutsubtree" attribute tells the browser to
+// composite any child HTML elements into the canvas, making them available as
+// texture sources and enabling hit testing through getElementTransform.
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 canvas.setAttribute('layoutsubtree', 'true');
 window.focus();
@@ -177,10 +177,10 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 
-// --- html ui panel ---
-// the ui panel is a regular html <div> styled with css. when html-in-canvas is
-// supported it gets appended to the canvas (so it's composited into the gpu
-// surface and can be used as a texture). otherwise it falls back to a fixed dom
+// --- HTML UI Panel ---
+// The UI panel is a regular HTML <div> styled with CSS. When HTML-in-Canvas is
+// supported it gets appended to the canvas (so it's composited into the GPU
+// surface and can be used as a texture). Otherwise it falls back to a fixed DOM
 // overlay on top of the canvas.
 const PANEL_WIDTH = 280;
 const PANEL_HEIGHT = 380;
@@ -188,14 +188,14 @@ const PANEL_HEIGHT = 380;
 let variants = ['Beach', 'Midnight', 'Street'];
 let activeVariant = '';
 
-// color swatches for each shoe variant, displayed as conic gradients
+// Color swatches for each shoe variant, displayed as conic gradients
 const variantColors = {
     beach: ['#e8a0b0', '#d4828f', '#f0c0c8'],
     midnight: ['#2196c8', '#1565a0', '#4fc3f7'],
     street: ['#2a2a2a', '#e94560', '#1a1a1a']
 };
 
-// check if the device can use html elements as texture sources (html-in-canvas api)
+// Check if the device can use HTML elements as texture sources (HTML-in-Canvas API)
 const supportsHtmlInCanvas = device.supportsHtmlTextures;
 
 const htmlPanel = document.createElement('div');
@@ -216,15 +216,15 @@ htmlPanel.style.border = '1px solid rgba(255,255,255,0.18)';
 htmlPanel.style.boxShadow = '0 8px 40px rgba(0,0,0,0.25)';
 
 if (supportsHtmlInCanvas) {
-    // positioned at (0,0) with top-left origin — the htmlsync class will
-    // override the css transform each frame to project it onto the 3d plane.
+    // Positioned at (0,0) with top-left origin — the HtmlSync class will
+    // override the CSS transform each frame to project it onto the 3D plane.
     htmlPanel.style.position = 'absolute';
     htmlPanel.style.left = '0';
     htmlPanel.style.top = '0';
     htmlPanel.style.transformOrigin = '0 0';
 } else {
-    // fallback: render as a standard dom overlay when html-in-canvas is
-    // not available. the panel remains interactive via normal dom events.
+    // Fallback: render as a standard DOM overlay when HTML-in-Canvas is
+    // not available. The panel remains interactive via normal DOM events.
     htmlPanel.style.position = 'fixed';
     htmlPanel.style.right = '40px';
     htmlPanel.style.top = '50%';
@@ -285,12 +285,12 @@ const updatePanel = () => {
 };
 updatePanel();
 
-// --- html-to-gpu texture pipeline ---
-// when html-in-canvas is available, the html panel is appended as a child of
-// the canvas and captured into a gpu texture (texelementimage2d on webgl,
-// copyelementimagetotexture on webgpu). the
+// --- HTML-to-GPU texture pipeline ---
+// When HTML-in-Canvas is available, the HTML panel is appended as a child of
+// the canvas and captured into a GPU texture (texElementImage2D on WebGL,
+// copyElementImageToTexture on WebGPU). The
 // browser fires a "paint" event whenever the panel's visual content changes;
-// we respond by re-uploading the texture. the first paint uses setsource() to
+// we respond by re-uploading the texture. The first paint uses setSource() to
 // bind the element, subsequent paints just call upload().
 /** @type {pc.Texture|null} */
 let panelTexture = null;
@@ -331,18 +331,18 @@ if (supportsHtmlInCanvas) {
     document.body.appendChild(htmlPanel);
 }
 
-// --- load assets and build scene ---
+// --- Load assets and build scene ---
 await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-// environment lighting (skybox excluded from camera so background stays white)
+// Environment lighting (skybox excluded from camera so background stays white)
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxIntensity = 2;
 
-// layers setup for reflective ground
+// Layers setup for reflective ground
 const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
@@ -351,7 +351,7 @@ const excludedLayer = new pc.Layer({ name: 'Excluded' });
 app.scene.layers.insertOpaque(excludedLayer, app.scene.layers.getOpaqueIndex(worldLayer) + 1);
 app.scene.layers.insertTransparent(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
-// background plane behind the scene
+// Background plane behind the scene
 const bgMaterial = new pc.StandardMaterial();
 bgMaterial.diffuse = new pc.Color(0, 0, 0);
 bgMaterial.emissiveMap = assets.background.resource;
@@ -369,14 +369,14 @@ bgPlane.setLocalEulerAngles(90, 0, 0);
 bgPlane.setLocalScale(30, 1, 30);
 app.root.addChild(bgPlane);
 
-// shoe model
+// Shoe model
 const shoeEntity = assets.shoe.resource.instantiateRenderEntity();
 shoeEntity.setLocalScale(3, 3, 3);
 shoeEntity.setLocalEulerAngles(0, 0, -20);
 shoeEntity.setLocalPosition(0, 1.7, 0);
 app.root.addChild(shoeEntity);
 
-// read variant names from the model
+// Read variant names from the model
 const modelVariants = assets.shoe.resource.getMaterialVariants();
 if (modelVariants.length > 0) {
     variants = modelVariants;
@@ -384,9 +384,9 @@ if (modelVariants.length > 0) {
 activeVariant = variants[0];
 updatePanel();
 
-// 3d panel entity — a plane textured with the live html panel texture.
-// it uses emissive rendering (unlit) with premultiplied alpha blending so
-// the glassmorphism transparency from css is preserved in 3d.
+// 3D panel entity — a plane textured with the live HTML panel texture.
+// It uses emissive rendering (unlit) with premultiplied alpha blending so
+// the glassmorphism transparency from CSS is preserved in 3D.
 let panel = null;
 if (panelTexture) {
     const panelMaterial = new pc.StandardMaterial();
@@ -412,7 +412,7 @@ if (panelTexture) {
     app.root.addChild(panel);
 }
 
-// reflective ground plane (in excluded layer so it doesn't render into its own reflection)
+// Reflective ground plane (in excluded layer so it doesn't render into its own reflection)
 const groundReflector = new pc.Entity('ground');
 groundReflector.addComponent('render', {
     type: 'plane',
@@ -435,7 +435,7 @@ reflectionScript.fadeColor = new pc.Color(1, 1, 1, 1);
 
 app.root.addChild(groundReflector);
 
-// camera - exclude skybox layer, include depth layer for reflection
+// Camera - exclude skybox layer, include depth layer for reflection
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(1, 1, 1, 1),
@@ -449,7 +449,7 @@ camera.lookAt(2.2, 1.5, 0);
 
 app.root.addChild(camera);
 
-// subtle camera sway — orbit around the look target at constant distance
+// Subtle camera sway — orbit around the look target at constant distance
 const lookTarget = new pc.Vec3(2.2, 1.5, 0);
 const baseDir = camera.getPosition().clone().sub(lookTarget);
 const baseDist = baseDir.length();
@@ -467,10 +467,10 @@ canvas.addEventListener('mousemove', (e) => {
     targetPitch = ny * 0.15;
 });
 
-// set the main camera for the reflection script
+// Set the main camera for the reflection script
 reflectionScript.mainCamera = camera;
 
-// light
+// Light
 const light = new pc.Entity('light');
 light.addComponent('light', {
     type: 'directional',
@@ -484,10 +484,10 @@ light.addComponent('light', {
 light.setEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
-// click handling — the html panel receives real dom click events in both
-// modes: via getelementtransform hit testing (html-in-canvas) or via
-// standard dom events (overlay fallback). when a variant button is clicked
-// we apply the gltf khr_materials_variants extension and repaint.
+// Click handling — the HTML panel receives real DOM click events in both
+// modes: via getElementTransform hit testing (HTML-in-Canvas) or via
+// standard DOM events (overlay fallback). When a variant button is clicked
+// we apply the glTF KHR_materials_variants extension and repaint.
 htmlPanel.addEventListener('click', (e) => {
     const btn = /** @type {HTMLElement} */ (e.target).closest('[data-variant]');
     if (!btn) return;
@@ -502,15 +502,15 @@ htmlPanel.addEventListener('click', (e) => {
     }
 });
 
-// per-frame sync: htmlsync projects the 3d panel position into screen
-// space and sets the html element's css transform so the browser's hit
-// testing aligns with where the panel appears in the 3d scene.
+// Per-frame sync: HtmlSync projects the 3D panel position into screen
+// space and sets the HTML element's CSS transform so the browser's hit
+// testing aligns with where the panel appears in the 3D scene.
 const supportsGetElementTransform = typeof canvas.getElementTransform === 'function';
 const htmlSync =
     panel && supportsGetElementTransform ? new HtmlSync(canvas, htmlPanel, panel, PANEL_WIDTH, PANEL_HEIGHT) : null;
 
 app.on('update', (/** @type {number} */ dt) => {
-    // smooth camera sway — orbit at constant radius
+    // Smooth camera sway — orbit at constant radius
     currentYaw += (targetYaw - currentYaw) * 2 * dt;
     currentPitch += (targetPitch - currentPitch) * 2 * dt;
 

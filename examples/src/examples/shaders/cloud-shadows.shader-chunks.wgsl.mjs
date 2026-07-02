@@ -11,7 +11,7 @@ export const litUserDeclarationPS = /* wgsl */ `
     uniform cloudShadowIntensity: f32;
 `;
 
-// override endps to apply cloud shadow after combinecolor but before emission/fog/tonemap/gamma
+// Override endPS to apply cloud shadow after combineColor but before emission/fog/tonemap/gamma
 export const endPS = /* wgsl */ `
     var finalRgb: vec3f = combineColor(litArgs_albedo, litArgs_sheen_specularity, litArgs_clearcoat_specularity);
 

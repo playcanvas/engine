@@ -53,11 +53,11 @@ createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.Contai
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -90,7 +90,7 @@ laboratoryEntity.findComponents('render').forEach((render) => {
         meshInstance.material.depthState = pc.DepthState.DEFAULT;
         meshInstance.material.blendType = pc.BLEND_NONE;
 
-        // disable baked ao map as we want to use ssao only
+        // disable baked AO map as we want to use SSAO only
         meshInstance.material.aoMap = null;
         meshInstance.material.update();
     });
@@ -128,7 +128,7 @@ primitive.setLocalScale(new pc.Vec3(400, 1, 400));
 primitive.setLocalPosition(0, -40, 0);
 app.root.addChild(primitive);
 
-// create a directional light
+// Create a directional light
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -143,7 +143,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(35, 30, 0);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),
@@ -168,12 +168,12 @@ cameraEntity.script.create('orbitCameraInputTouch');
 cameraEntity.setLocalPosition(-60, 30, 60);
 app.root.addChild(cameraEntity);
 
-// ------ custom render passes set up ------
+// ------ Custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
 
-// use 16but render target for better precision, improves quality with taa and randomized ssao
+// use 16but render target for better precision, improves quality with TAA and randomized SSAO
 cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
 
 const applySettings = () => {
@@ -191,16 +191,16 @@ const applySettings = () => {
     cameraFrame.ssao.randomize = data.get('data.ssao.randomize');
     cameraFrame.debug = data.get('data.ssao.debug') ? 'ssao' : null;
 
-    // taa or msaa
+    // TAA or MSAA
     const taa = data.get('data.ssao.taa');
     cameraFrame.taa.enabled = taa;
-    cameraFrame.rendering.samples = taa ? 1 : 4; // disable msaa when taa is enabled
-    cameraFrame.rendering.sharpness = taa ? 1 : 0; // sharpen the image when taa is enabled
+    cameraFrame.rendering.samples = taa ? 1 : 4; // disable MSAA when TAA is enabled
+    cameraFrame.rendering.sharpness = taa ? 1 : 0; // sharpen the image when TAA is enabled
 
     cameraFrame.update();
 };
 
-// apply ui changes
+// apply UI changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     applySettings();
 

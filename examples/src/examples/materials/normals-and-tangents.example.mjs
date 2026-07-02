@@ -49,11 +49,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -66,7 +66,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
 app.scene.skyboxIntensity = 1.5;
@@ -77,7 +77,7 @@ leftEntity.setPosition(0, 0, 1);
 leftEntity.setLocalScale(0.8, 0.8, 0.8);
 app.root.addChild(leftEntity);
 
-// create a camera with an orbit camera script
+// Create a camera with an orbit camera script
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES

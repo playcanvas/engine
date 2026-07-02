@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Jso
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -180,7 +180,7 @@ app.start();
 // enable area lights which are disabled by default for clustered lighting
 app.scene.lighting.areaLightsEnabled = true;
 
-// set the loaded area light lut data
+// set the loaded area light LUT data
 const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
@@ -197,7 +197,7 @@ const statue = assets.statue.resource.instantiateRenderEntity();
 statue.setLocalScale(0.4, 0.4, 0.4);
 app.root.addChild(statue);
 
-// create the camera, which renders entities
+// Create the camera, which renders entities
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -209,7 +209,7 @@ app.root.addChild(camera);
 camera.setLocalPosition(0, 2.5, 12);
 camera.lookAt(0, 0, 0);
 
-// create lights with light source shape
+// Create lights with light source shape
 const light1 = createAreaLight(
     'spot',
     pc.LIGHTSHAPE_RECT,

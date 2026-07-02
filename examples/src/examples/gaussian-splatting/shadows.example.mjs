@@ -48,11 +48,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -71,20 +71,20 @@ await new Promise((resolve) => {
 
 app.start();
 
-// setup projected skydome from hdr
+// Setup projected skydome from HDR
 const hdriTexture = assets.hdri.resource;
 
-// generate high resolution cubemap for skybox
+// Generate high resolution cubemap for skybox
 const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriTexture);
 app.scene.skybox = skybox;
 
-// generate env-atlas for lighting
+// Generate env-atlas for lighting
 const lighting = pc.EnvLighting.generateLightingSource(hdriTexture);
 const envAtlas = pc.EnvLighting.generateAtlas(lighting);
 lighting.destroy();
 app.scene.envAtlas = envAtlas;
 
-// set exposure and projected dome
+// Set exposure and projected dome
 app.scene.exposure = 0.4;
 app.scene.sky.type = pc.SKYTYPE_DOME;
 app.scene.sky.node.setLocalScale(new pc.Vec3(50, 50, 50));
@@ -105,7 +105,7 @@ data.on('alphaClip:set', () => {
 });
 data.set('alphaClip', 0.4);
 
-// optional custom vertex shader that animates each splat's position (via modifysplatcenter). the
+// Optional custom vertex shader that animates each splat's position (via modifySplatCenter). The
 // toggle verifies the cast shadow follows the animated position, since the shadow draw uses the
 // same quad vertex shader as the forward pass.
 const sceneMat = app.scene.gsplat.material;
@@ -123,7 +123,7 @@ data.on('shader:set', () => applyCustomShader(!!data.get('shader')));
 applyCustomShader(false);
 data.set('shader', false);
 
-// create first splat entity
+// Create first splat entity
 const biker = new pc.Entity('biker');
 biker.addComponent('gsplat', {
     asset: assets.biker,
@@ -134,7 +134,7 @@ biker.setLocalEulerAngles(180, 90, 0);
 biker.setLocalScale(0.7, 0.7, 0.7);
 app.root.addChild(biker);
 
-// create second splat entity
+// Create second splat entity
 const biker2 = new pc.Entity('biker2');
 biker2.addComponent('gsplat', {
     asset: assets.biker,
@@ -145,7 +145,7 @@ biker2.setLocalEulerAngles(180, 0, 0);
 biker2.setLocalScale(0.7, 0.7, 0.7);
 app.root.addChild(biker2);
 
-// create camera
+// Create camera
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(1, 1, 1),
@@ -154,7 +154,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(-3, 2, 4);
 
-// add orbit camera script with mouse and touch support
+// Add orbit camera script with mouse and touch support
 camera.addComponent('script');
 camera.script?.create('orbitCamera', {
     attributes: {
@@ -168,7 +168,7 @@ camera.script?.create('orbitCameraInputMouse');
 camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// create shadow catcher
+// Create shadow catcher
 const shadowCatcher = new pc.Entity('ShadowCatcher');
 shadowCatcher.addComponent('script');
 const shadowCatcherScript = shadowCatcher.script?.create(ShadowCatcher);
@@ -177,11 +177,11 @@ if (shadowCatcherScript) {
 }
 app.root.addChild(shadowCatcher);
 
-// create up to 6 shadow-casting directional lights; the 'lights' slider enables the first n of
-// them. each light keeps a fixed base azimuth (so adding or removing one never moves the
-// others) and they all rotate together in the same direction. the azimuths are ordered so the
+// Create up to 6 shadow-casting directional lights; the 'Lights' slider enables the first N of
+// them. Each light keeps a fixed base azimuth (so adding or removing one never moves the
+// others) and they all rotate together in the same direction. The azimuths are ordered so the
 // enabled set stays well-distributed: light 1 is opposite light 0, and at the full count of 6
-// they are evenly spaced 60° apart ({30,90,150,210,270,330}). intermediate odd counts are
+// they are evenly spaced 60° apart ({30,90,150,210,270,330}). Intermediate odd counts are
 // intentionally not symmetrical.
 const lightBaseAzimuths = [30, 210, 90, 270, 150, 330];
 const lights = lightBaseAzimuths.map((azimuth, i) => {
@@ -203,7 +203,7 @@ const lights = lightBaseAzimuths.map((azimuth, i) => {
     return light;
 });
 
-// number of active lights (0..6). enables the first n; the rest are disabled.
+// Number of active lights (0..6). Enables the first N; the rest are disabled.
 data.on('numLights:set', () => {
     const count = data.get('numLights');
     lights.forEach((light, i) => {
@@ -212,7 +212,7 @@ data.on('numLights:set', () => {
 });
 data.set('numLights', 2);
 
-// rotate all lights together (same direction), preserving each light's fixed azimuth offset;
+// Rotate all lights together (same direction), preserving each light's fixed azimuth offset;
 // also advance the custom-shader animation time.
 let lightAngle = 0;
 let currentTime = 0;
@@ -225,7 +225,7 @@ app.on('update', (/** @type {number} */ dt) => {
     currentTime += dt;
     sceneMat.setParameter('uTime', currentTime);
 
-    // re-dirty the scene gsplat material each frame so the per-frame utime propagates to the
+    // re-dirty the scene gsplat material each frame so the per-frame uTime propagates to the
     // renderer's material copy (the quad renderer only re-copies template params when dirty)
     sceneMat.update();
 });

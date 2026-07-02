@@ -38,11 +38,11 @@ await new Promise((resolve) => {
 
 app.start();
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -51,7 +51,7 @@ app.on('destroy', () => {
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-// create small 2d texture representing movement direction (wind)
+// create small 2D texture representing movement direction (wind)
 const textureResolution = 10;
 const textureData = new Uint8ClampedArray(textureResolution * textureResolution * 4);
 
@@ -83,7 +83,7 @@ const pixels = texture.lock();
 pixels.set(textureData);
 texture.unlock();
 
-// create main camera, which renders the world
+// Create main camera, which renders the world
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
@@ -124,7 +124,7 @@ if (app.graphicsDevice.isWebGL2) {
     // set large bounding box so we don't need to update it each frame
     mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(100, 100, 100));
 
-    // create the material from the vertex and fragment shaders which is used to render point sprites
+    // Create the material from the vertex and fragment shaders which is used to render point sprites
     const material = new pc.ShaderMaterial({
         uniqueName: 'TransformFeerback',
         vertexGLSL: shaderCloudVert,
@@ -135,7 +135,7 @@ if (app.graphicsDevice.isWebGL2) {
     material.blendType = pc.BLEND_ADDITIVEALPHA;
     material.depthWrite = false;
 
-    // create the mesh instance
+    // Create the mesh instance
     const meshInstance = new pc.MeshInstance(mesh, material);
 
     // create an entity used to render the mesh instance using a render component
@@ -146,7 +146,7 @@ if (app.graphicsDevice.isWebGL2) {
     });
     app.root.addChild(entity);
 
-    // set up transform feedback. this creates a clone of the vertex buffer, and sets up rendering to ping pong between them
+    // set up transform feedback. This creates a clone of the vertex buffer, and sets up rendering to ping pong between them
     tf = new pc.TransformFeedback(mesh.vertexBuffer);
     shader = pc.TransformFeedback.createShader(app.graphicsDevice, shaderFeedbackVert, 'transformShaderExample', [
         'updated_vertex_position'

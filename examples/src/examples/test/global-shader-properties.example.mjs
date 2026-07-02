@@ -58,11 +58,11 @@ await new Promise((resolve) => {
 
 app.start();
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -74,14 +74,14 @@ app.scene.skyboxMip = 0;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
 
-// standard material ----------
+// STANDARD MATERIAL ----------
 
 /** @type {pc.Entity} */
 const terrain = assets.terrain.resource.instantiateRenderEntity();
 terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
-// gsplat material ----------
+// GSPLAT MATERIAL ----------
 
 const biker = new pc.Entity();
 biker.addComponent('gsplat', {
@@ -92,7 +92,7 @@ biker.setLocalEulerAngles(180, 90, 0);
 biker.setLocalScale(20, 20, 20);
 app.root.addChild(biker);
 
-// shader material ----------
+// SHADER MATERIAL ----------
 
 const box = new pc.Entity('ShaderMaterial');
 const boxMaterial = createGoochMaterial(null, [0.13, 0.55, 0.13]);
@@ -104,7 +104,7 @@ box.setLocalScale(30, 30, 30);
 box.setLocalPosition(-70, 30, 130);
 app.root.addChild(box);
 
-// lit material ----------
+// LIT MATERIAL ----------
 
 const material = new pc.LitMaterial();
 material.setParameter('texture_envAtlas', assets.helipad.resource);
@@ -153,7 +153,7 @@ primitive.setLocalScale(30, 30, 30);
 primitive.setLocalPosition(-170, 30, 130);
 app.root.addChild(primitive);
 
-// particle system ----------
+// PARTICLE SYSTEM ----------
 
 const localVelocityCurve = new pc.CurveSet([
     [0, 0, 0.5, 30],
@@ -171,7 +171,7 @@ const worldVelocityCurve = new pc.CurveSet([
     [0, 0]
 ]);
 
-// create entity for particle system
+// Create entity for particle system
 const entity = new pc.Entity('ParticleSystem');
 app.root.addChild(entity);
 entity.setLocalPosition(0, 20, 0);
@@ -194,7 +194,7 @@ entity.addComponent('particlesystem', {
 
 // --------
 
-// create an entity with a camera component
+// create an Entity with a camera component
 const camera = new pc.Entity('MainCamera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.9, 0.9, 0.9),
@@ -224,7 +224,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// create a directional light casting soft shadows
+// Create a directional light casting soft shadows
 const dirLight = new pc.Entity('Cascaded Light');
 dirLight.addComponent('light', {
     type: 'directional',
@@ -242,7 +242,7 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(75, 120, 20);
 
-// handle hud changes
+// handle HUD changes
 data.on('*:set', (path, value) => {
     const propertyName = path.split('.')[1];
     if (propertyName === 'tonemapping') {

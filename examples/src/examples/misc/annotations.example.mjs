@@ -16,14 +16,14 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
-// initialize basis to allow loading of compressed textures
+// Initialize basis to allow loading of compressed textures
 pc.basisInitialize({
     glueUrl: './assets/wasm/basis/basis.wasm.js',
     wasmUrl: './assets/wasm/basis/basis.wasm.wasm',
@@ -63,11 +63,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -80,7 +80,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// setup hdr environment
+// Setup HDR environment
 const applyHdri = (source) => {
     const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
     app.scene.skybox = skybox;
@@ -97,13 +97,13 @@ device.on('devicerestored', () => {
 
 applyHdri(assets.shanghai.resource);
 
-// setup sky dome
+// Setup sky dome
 app.scene.sky.type = pc.SKYTYPE_DOME;
 app.scene.sky.node.setLocalScale(new pc.Vec3(50, 50, 50));
 app.scene.sky.node.setLocalPosition(new pc.Vec3(0, 0, 0));
 app.scene.sky.center = new pc.Vec3(0, 0.1, 0);
 
-// create camera entity
+// Create camera entity
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.5, 0.6, 0.9),
@@ -112,7 +112,7 @@ camera.addComponent('camera', {
 });
 camera.setPosition(12, 8.3, 4.5);
 
-// add camera controls
+// Add camera controls
 camera.addComponent('script');
 camera.script.create(CameraControls, {
     properties: {
@@ -125,7 +125,7 @@ camera.script.create(CameraControls, {
 
 app.root.addChild(camera);
 
-// create directional light
+// Create directional light
 const light = new pc.Entity('light');
 light.addComponent('light', {
     type: 'directional',
@@ -137,23 +137,23 @@ light.addComponent('light', {
 });
 app.root.addChild(light);
 
-// create a wrapper entity for the jet fighter (like pc-model does in web-components)
+// Create a wrapper entity for the jet fighter (like pc-model does in web-components)
 const jetFighter = new pc.Entity('jet-fighter');
 jetFighter.setPosition(-2, 1.6, 0);
 jetFighter.setEulerAngles(0, 0, 3);
 app.root.addChild(jetFighter);
 
-// instantiate the model as a child of the wrapper
+// Instantiate the model as a child of the wrapper
 const jetModel = assets.jetFighter.resource.instantiateRenderEntity({
     castShadows: true
 });
 jetFighter.addChild(jetModel);
 
-// add annotation manager to the jet fighter entity
+// Add annotation manager to the jet fighter entity
 jetFighter.addComponent('script');
 const manager = jetFighter.script.create(AnnotationManager);
 
-// set default values for controls
+// Set default values for controls
 data.set('data', {
     hotspotSize: 25,
     hotspotColor: [0.8, 0.8, 0.8],
@@ -162,7 +162,7 @@ data.set('data', {
     behindOpacity: 0.25
 });
 
-// handle control changes - update the manager directly
+// Handle control changes - update the manager directly
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const prop = path.split('.')[1];
     if (prop === 'hotspotSize') {
@@ -198,7 +198,7 @@ const createAnnotation = (position, label, title, text) => {
     return entity;
 };
 
-// add annotations to the jet fighter
+// Add annotations to the jet fighter
 jetFighter.addChild(
     createAnnotation(
         new pc.Vec3(5.5, 1.2, 0),
@@ -262,7 +262,7 @@ jetFighter.addChild(
     )
 );
 
-// create shadow catcher
+// Create shadow catcher
 const shadowCatcher = new pc.Entity('shadowCatcher');
 shadowCatcher.addComponent('script');
 shadowCatcher.script.create(ShadowCatcher, {

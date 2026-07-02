@@ -13,7 +13,7 @@ import { deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// a simple render pass that renders a quad with a shader. the shader tints the source texture.
+// A simple render pass that renders a quad with a shader. The shader tints the source texture.
 class RenderPassTint extends pc.RenderPassShaderQuad {
     constructor(device, sourceTexture) {
         super(device);
@@ -94,11 +94,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -123,7 +123,7 @@ const boardEntity = assets.board.resource.instantiateRenderEntity({
 });
 app.root.addChild(boardEntity);
 
-// create an entity with a camera component, and attach postprocessing effects scripts on it
+// Create an Entity with a camera component, and attach postprocessing effects scripts on it
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),

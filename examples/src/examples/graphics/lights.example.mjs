@@ -62,11 +62,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Cub
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -90,7 +90,7 @@ const entity = assets.statue.resource.instantiateRenderEntity();
 
 app.root.addChild(entity);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
@@ -119,7 +119,7 @@ material.metalness = 0.5;
 material.useMetalness = true;
 material.update();
 
-// create an entity for the ground
+// Create an Entity for the ground
 const ground = new pc.Entity();
 ground.addComponent('render', {
     type: 'box',
@@ -153,7 +153,7 @@ data.set('lights', {
 /** @type {{[key: string]: pc.Entity }} */
 const lights = {};
 
-// create an spot light
+// Create an spot light
 lights.spot = new pc.Entity();
 lights.spot.addComponent('light', {
     ...{
@@ -183,7 +183,7 @@ lights.spot.addChild(cone);
 app.root.addChild(lights.spot);
 
 // construct the cubemap asset for the omni light cookie texture
-// note: the textures array could contain 6 texture asset names to load instead as well
+// Note: the textures array could contain 6 texture asset names to load instead as well
 const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
     textures: [
         assets.xmas_posx.id,
@@ -197,7 +197,7 @@ const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
 cubemapAsset.loadFaces = true;
 app.assets.add(cubemapAsset);
 
-// create a omni light
+// Create a omni light
 lights.omni = new pc.Entity();
 lights.omni.addComponent('light', {
     ...{
@@ -221,7 +221,7 @@ lights.omni.addComponent('render', {
 });
 app.root.addChild(lights.omni);
 
-// create a directional light
+// Create a directional light
 lights.directional = new pc.Entity();
 lights.directional.addComponent('light', {
     ...{
@@ -237,7 +237,7 @@ lights.directional.addComponent('light', {
 });
 app.root.addChild(lights.directional);
 
-// allow user to toggle individual lights
+// Allow user to toggle individual lights
 app.keyboard.on(
     'keydown',
     (e) => {
@@ -258,7 +258,7 @@ app.keyboard.on(
     this
 );
 
-// simple update loop to rotate the light
+// Simple update loop to rotate the light
 let angleRad = 1;
 app.on('update', (dt) => {
     angleRad += 0.3 * dt;

@@ -70,11 +70,11 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -96,7 +96,7 @@ app.scene.setSkybox(assets.helipad.resources);
 app.scene.clusteredLightingEnabled = false;
 app.scene.skyboxIntensity = 0.1;
 
-// set the loaded area light lut data
+// set the loaded area light LUT data
 const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
@@ -148,7 +148,7 @@ app.root.addChild(occluder);
 occluder.anim.assignAnimation('Idle', assets.asset.resource.animations[0].resource);
 occluder.anim.baseLayer.weight = 1.0;
 occluder.anim.speed = 0.1;
-// const animlayer = occluder.anim.addlayer('idle', 1.0, )
+// const animLayer = occluder.anim.addLayer('Idle', 1.0, )
 
 app.scene.envAtlas = assets.helipad.resource;
 
@@ -240,7 +240,7 @@ omniShape.setLocalScale(0.2, 0.2, 0.2);
 lightOmni.addChild(omniShape);
 app.root.addChild(lightOmni);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),

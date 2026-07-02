@@ -462,49 +462,6 @@ const functionExpressionArrow = {
     }
 };
 
-const lowercaseComments = {
-    meta: {
-        type: 'layout',
-        fixable: 'code',
-        docs: {
-            description: 'require lowercase source comments'
-        },
-        messages: {
-            uppercase: 'Use lowercase source comments.'
-        }
-    },
-
-    create(context) {
-        const sourceCode = context.sourceCode;
-        const configLines = new Set();
-        const lines = sourceCode.lines;
-
-        if (configLine.test(lines[0])) {
-            for (let i = 0; i < lines.length && commentLine.test(lines[i]); i++) {
-                configLines.add(i + 1);
-            }
-        }
-
-        return {
-            Program() {
-                for (const comment of sourceCode.getAllComments()) {
-                    if (comment.type !== 'Line' ||
-                        configLines.has(comment.loc.start.line) ||
-                        !/[A-Z]/.test(comment.value)) {
-                        continue;
-                    }
-
-                    context.report({
-                        loc: comment.loc,
-                        messageId: 'uppercase',
-                        fix: fixer => fixer.replaceText(comment, `//${comment.value.toLowerCase()}`)
-                    });
-                }
-            }
-        };
-    }
-};
-
 const importOrder = ['error', {
     groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'unknown'],
     pathGroups: [
@@ -578,21 +535,9 @@ export default [
     },
     {
         files: ['src/examples/**/*.{mjs,jsx}'],
-        plugins: {
-            examples: {
-                rules: {
-                    'config-block-at-top': configBlockAtTop,
-                    'config-block-shape': configBlockShape,
-                    'asset-loader-top-level-await': assetLoaderTopLevelAwait,
-                    'function-expression-arrow': functionExpressionArrow,
-                    'lowercase-comments': lowercaseComments
-                }
-            }
-        },
         rules: {
             'arrow-parens': 'off',
             curly: 'error',
-            'examples/lowercase-comments': 'error',
             'implicit-arrow-linebreak': 'off',
             'indent': 'off',
             'no-confusing-arrow': 'off',
@@ -628,6 +573,16 @@ export default [
     },
     {
         files: ['src/examples/**/*.example.mjs'],
+        plugins: {
+            examples: {
+                rules: {
+                    'config-block-at-top': configBlockAtTop,
+                    'config-block-shape': configBlockShape,
+                    'asset-loader-top-level-await': assetLoaderTopLevelAwait,
+                    'function-expression-arrow': functionExpressionArrow
+                }
+            }
+        },
         rules: {
             'examples/asset-loader-top-level-await': 'error',
             'examples/config-block-at-top': 'error',

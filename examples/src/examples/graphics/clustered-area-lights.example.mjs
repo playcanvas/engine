@@ -23,7 +23,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable hdr rendering if supported
+    // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
@@ -46,11 +46,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -196,14 +196,14 @@ function createAreaLight(type, shape, position, scale, color, intensity, range) 
     return light;
 }
 
-// set the loaded area light lut data
+// set the loaded area light LUT data
 const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // create ground plane
 const ground = createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(45, 1, 45), assets);
 
-// create the camera, which renders entities
+// Create the camera, which renders entities
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.05, 0.05, 0.05),
@@ -233,7 +233,7 @@ cameraFrame.bloom.intensity = 0.01;
 cameraFrame.bloom.blurLevel = 4;
 cameraFrame.update();
 
-// if the device renders in hdr mode, disable tone mapping to output hdr values without any processing
+// if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
 cameraFrame.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_NEUTRAL;
 
 // generate a grid of area lights of sphere, disk and rect shapes
@@ -252,7 +252,7 @@ for (let x = -20; x <= 20; x += 5) {
     }
 }
 
-// handle hud changes - update properties on the material
+// handle HUD changes - update properties on the material
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     if (pathArray[2] === 'gloss') groundMaterial.gloss = value;

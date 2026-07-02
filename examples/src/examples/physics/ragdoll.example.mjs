@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -77,7 +77,7 @@ const blue = createMaterial(new pc.Color(0.3, 0.5, 0.9));
 const skin = createMaterial(new pc.Color(0.9, 0.7, 0.55));
 const red = createMaterial(new pc.Color(1, 0.3, 0.3));
 
-// ***********    floor, obstacle, light and camera   *******************
+// ***********    Floor, obstacle, light and camera   *******************
 
 const floor = new pc.Entity('floor');
 floor.addComponent('render', { type: 'box', material: gray });
@@ -117,7 +117,7 @@ app.root.addChild(camera);
 camera.translate(0, 3.5, 10);
 camera.lookAt(0, 1, 0);
 
-// ***********    ragdoll template   *******************
+// ***********    Ragdoll template   *******************
 
 /**
  * Creates a ragdoll body part with render, collision and rigidbody components, parented to the
@@ -182,7 +182,7 @@ function createRagdollTemplate() {
     const torso = createPart(root, 'torso', new pc.Vec3(0.36, 0.46, 0.22), new pc.Vec3(0, 1.26, 0), 10, blue);
     const head = createPart(root, 'head', new pc.Vec3(0.22, 0.24, 0.24), new pc.Vec3(0, 1.66, 0), 3, skin);
 
-    // a ball joint spine with tight limits and a freer ball joint neck - their x (twist) axes
+    // a ball joint spine with tight limits and a freer ball joint neck - their X (twist) axes
     // point up
     createJoint(root, 'spine', new pc.Vec3(0, 1.02, 0), new pc.Vec3(0, 0, 90), {
         type: pc.JOINTTYPE_BALL,
@@ -207,7 +207,7 @@ function createRagdollTemplate() {
         const prefix = side < 0 ? 'l-' : 'r-';
 
         // legs hang down - the hip twist axis points down the thigh, swinging further forwards
-        // and backwards (z) than sideways (y)
+        // and backwards (Z) than sideways (Y)
         const thigh = createPart(
             root,
             `${prefix}thigh`,
@@ -235,7 +235,7 @@ function createRagdollTemplate() {
             twistLimit: 20
         });
 
-        // the knee hinge axis points along world x, so positive rotation folds the shin
+        // the knee hinge axis points along world X, so positive rotation folds the shin
         // backwards
         createJoint(root, `${prefix}knee`, new pc.Vec3(side * 0.11, 0.4, 0), new pc.Vec3(0, 0, 0), {
             type: pc.JOINTTYPE_HINGE,
@@ -245,7 +245,7 @@ function createRagdollTemplate() {
             limits: new pc.Vec2(0, 140)
         });
 
-        // arms extend sideways in a t-pose - the shoulder twist axis points along the arm
+        // arms extend sideways in a T-pose - the shoulder twist axis points along the arm
         const upperArm = createPart(
             root,
             `${prefix}upper-arm`,
@@ -329,7 +329,7 @@ spawnRagdoll(-2.2, 1.3, 35);
 spawnRagdoll(0, 2, 0);
 spawnRagdoll(2.2, 1.5, -40);
 
-// ***********    drag bodies with the pointer, or shoot balls   *******************
+// ***********    Drag bodies with the pointer, or shoot balls   *******************
 
 // the grab anchor is a kinematic body that collides with nothing - the grabbed part is jointed
 // to it and follows as the anchor is moved under the pointer

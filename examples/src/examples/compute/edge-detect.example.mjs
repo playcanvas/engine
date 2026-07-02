@@ -61,7 +61,7 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -73,11 +73,11 @@ let storageTexture = null;
 let rtWidth = 0;
 let rtHeight = 0;
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => {
     app.resizeCanvas();
 
-    // resize render target and storage texture to match new screen size
+    // Resize render target and storage texture to match new screen size
     if (renderTarget && storageTexture) {
         rtWidth = device.width;
         rtHeight = Math.floor(device.height / 2);
@@ -91,22 +91,22 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// create a layer for the render target
+// Create a layer for the render target
 const rtLayer = new pc.Layer({ name: 'RTLayer' });
 app.scene.layers.push(rtLayer);
 
-// load assets and create the scene
+// Load assets and create the scene
 await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-// set up environment lighting
+// Set up environment lighting
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// create a directional light
+// Create a directional light
 const light = new pc.Entity('light');
 light.addComponent('light', {
     type: 'directional',
@@ -116,7 +116,7 @@ light.addComponent('light', {
 light.setEulerAngles(45, 45, 0);
 app.root.addChild(light);
 
-// create main camera (for final view)
+// Create main camera (for final view)
 const mainCamera = new pc.Entity('mainCamera');
 mainCamera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.3)
@@ -124,13 +124,13 @@ mainCamera.addComponent('camera', {
 mainCamera.setPosition(0, 0, 0);
 app.root.addChild(mainCamera);
 
-// create the render target with msaa support
+// Create the render target with MSAA support
 const createRenderTarget = (useMsaa) => {
-    // use screen dimensions (half height for each texture)
+    // Use screen dimensions (half height for each texture)
     rtWidth = device.width;
     rtHeight = Math.floor(device.height / 2);
 
-    // create a single-sample texture that will receive the resolved result
+    // Create a single-sample texture that will receive the resolved result
     const texture = new pc.Texture(device, {
         name: 'RT-Texture',
         width: rtWidth,
@@ -143,8 +143,8 @@ const createRenderTarget = (useMsaa) => {
         addressV: pc.ADDRESS_CLAMP_TO_EDGE
     });
 
-    // create render target with optional msaa
-    // when samples > 1, playcanvas creates internal msaa buffers and resolves to the colorbuffer
+    // Create render target with optional MSAA
+    // When samples > 1, PlayCanvas creates internal MSAA buffers and resolves to the colorBuffer
     const rt = new pc.RenderTarget({
         name: 'MSAA-RT',
         colorBuffer: texture,
@@ -155,7 +155,7 @@ const createRenderTarget = (useMsaa) => {
     return rt;
 };
 
-// create storage texture for compute output
+// Create storage texture for compute output
 const createStorageTexture = () => {
     return new pc.Texture(device, {
         name: 'Storage-Texture',
@@ -171,12 +171,12 @@ const createStorageTexture = () => {
     });
 };
 
-// create the compute shader
+// Create the compute shader
 const createComputeShader = () => {
     if (!device.supportsCompute) return null;
 
-    // no computebindgroupformat is provided - the input texture (+ sampler) and the output
-    // storage texture use the simplified wgsl syntax and are reflected automatically by the
+    // No computeBindGroupFormat is provided - the input texture (+ sampler) and the output
+    // storage texture use the simplified WGSL syntax and are reflected automatically by the
     // engine from the shader source.
     return new pc.Shader(device, {
         name: 'EdgeDetect-Shader',
@@ -185,7 +185,7 @@ const createComputeShader = () => {
     });
 };
 
-// create camera that renders to the render target
+// Create camera that renders to the render target
 let cameraAngle = 0;
 const createRTCamera = (rt) => {
     const cam = new pc.Entity('rtCamera');
@@ -195,14 +195,14 @@ const createRTCamera = (rt) => {
         farClip: 500,
         layers: [rtLayer.id]
     });
-    // position like in multi-view example
+    // Position like in multi-view example
     cam.setLocalPosition(100, 35, 0);
     cam.lookAt(pc.Vec3.ZERO);
     app.root.addChild(cam);
     return cam;
 };
 
-// create the chess board entity - only render in rt layer
+// Create the chess board entity - only render in RT layer
 const boardEntity = assets.board.resource.instantiateRenderEntity({
     castShadows: true,
     receiveShadows: true,
@@ -210,30 +210,30 @@ const boardEntity = assets.board.resource.instantiateRenderEntity({
 });
 app.root.addChild(boardEntity);
 
-// create the compute shader (only once)
+// Create the compute shader (only once)
 computeShader = createComputeShader();
 
-// create resources with msaa enabled
+// Create resources with MSAA enabled
 renderTarget = createRenderTarget(true);
 rtCamera = createRTCamera(renderTarget);
 storageTexture = createStorageTexture();
 
-// create compute instance if supported
+// Create compute instance if supported
 if (device.supportsCompute && computeShader) {
     compute = new pc.Compute(device, computeShader, 'EdgeDetect');
 
-    // set up the compute parameters
-    // note: sampler is automatically handled by playcanvas when hassampler: true
+    // Set up the compute parameters
+    // Note: sampler is automatically handled by PlayCanvas when hasSampler: true
     compute.setParameter('inputTexture', renderTarget.colorBuffer);
     compute.setParameter('outputTexture', storageTexture);
 }
 
-// update loop
+// Update loop
 let time = 0;
 app.on('update', (dt) => {
     time += dt;
 
-    // orbit camera around the scene
+    // Orbit camera around the scene
     if (rtCamera) {
         cameraAngle = time * 0.2;
         rtCamera.setLocalPosition(100 * Math.sin(cameraAngle), 35, 100 * Math.cos(cameraAngle));
@@ -241,20 +241,20 @@ app.on('update', (dt) => {
     }
 
     if (device.supportsCompute && compute && renderTarget) {
-        // set up dispatch dimensions (workgroup size is 8x8 in shader)
+        // Set up dispatch dimensions (workgroup size is 8x8 in shader)
         const workgroupsX = Math.ceil(rtWidth / 8);
         const workgroupsY = Math.ceil(rtHeight / 8);
         compute.setupDispatch(workgroupsX, workgroupsY, 1);
 
-        // dispatch the compute shader
+        // Dispatch the compute shader
         device.computeDispatch([compute], 'EdgeDetect-Dispatch');
 
         const gap = 0.02;
 
-        // top half: original rt texture
+        // Top half: original RT texture
         app.drawTexture(0, 0.5 - gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, renderTarget.colorBuffer);
 
-        // bottom half: compute-processed texture
+        // Bottom half: compute-processed texture
         app.drawTexture(0, -0.5 + gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, storageTexture);
     }
 });

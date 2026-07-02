@@ -20,14 +20,14 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// physics engine (ammo) - required for the character controller and the mesh collider
+// physics engine (Ammo) - required for the character controller and the mesh collider
 pc.WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
-// draco decoder - the proxy and collision meshes are draco-compressed glbs
+// Draco decoder - the proxy and collision meshes are Draco-compressed glbs
 pc.WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -46,8 +46,8 @@ await Promise.all([
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // the scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
-    // to avoid the additional cost. gaussian splats do not benefit from msaa either.
+    // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
+    // to avoid the additional cost. Gaussian splats do not benefit from MSAA either.
     antialias: false
 };
 
@@ -75,11 +75,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -105,26 +105,26 @@ app.systems.rigidbody?.gravity.set(0, -10, 0);
 // cap the number of rendered splats - lower on mobile to keep performance up
 app.scene.gsplat.splatBudget = (pc.platform.mobile ? 1 : 3) * 1000000;
 
-// use the gpu-sort raster renderer on webgpu, cpu-sort on webgl
+// use the GPU-sort raster renderer on WebGPU, CPU-sort on WebGL
 app.scene.gsplat.renderer = device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT;
 
-// ------ content root ------
-// the splat and the proxy / collision meshes share the same coordinate space, so we parent
+// ------ Content root ------
+// The splat and the proxy / collision meshes share the same coordinate space, so we parent
 // them to a single entity to keep them aligned.
 const content = new pc.Entity('content');
 app.root.addChild(content);
 
-// ------ gaussian splat ------
-// the splat is rendered as usual, in the transparent sublayer of the world layer.
+// ------ Gaussian Splat ------
+// The splat is rendered as usual, in the transparent sublayer of the world layer.
 const splat = new pc.Entity('splat');
 splat.addComponent('gsplat', {
     asset: assets.island
 });
 content.addChild(splat);
 
-// fast time to first frame: start by loading only the coarsest lod level so the splat appears
-// almost immediately. once it is on screen, restore the full lod range (so higher detail
-// streams in) and enable depth of field at the same time.
+// Fast time to first frame: start by loading only the coarsest LOD level so the splat appears
+// almost immediately. Once it is on screen, restore the full LOD range (so higher detail
+// streams in) and enable Depth of Field at the same time.
 const lodLevels = splat.gsplat.resource?.octree?.lodLevels;
 if (lodLevels) {
     splat.gsplat.lodRangeMin = lodLevels - 1;
@@ -142,10 +142,10 @@ const onFrameReady = (camera, layer, ready, loadingCount) => {
 };
 app.systems.gsplat.on('frame:ready', onFrameReady);
 
-// ------ proxy geometry (depth only) ------
-// a detailed mesh approximating the splat geometry. it writes depth and so feeds the camera
-// depth prepass used by dof, but we exclude it from the forward (color) pass via the mesh
-// instance shaderpassmask, so it contributes depth only and is never visible.
+// ------ Proxy geometry (depth only) ------
+// A detailed mesh approximating the splat geometry. It writes depth and so feeds the camera
+// depth prepass used by DOF, but we exclude it from the forward (color) pass via the mesh
+// instance shaderPassMask, so it contributes depth only and is never visible.
 const proxy = assets.proxy.resource.instantiateRenderEntity();
 // the reconstructed mesh is flipped relative to the splat, so flip just the proxy to match
 proxy.setLocalEulerAngles(180, 0, 0);
@@ -158,8 +158,8 @@ proxy.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render
     });
 });
 
-// ------ collision geometry ------
-// a simplified, positions-only mesh used purely as a static triangle-mesh collider. it is
+// ------ Collision geometry ------
+// A simplified, positions-only mesh used purely as a static triangle-mesh collider. It is
 // flipped to match the splat (like the proxy) and its rendering is disabled - it only provides
 // the surface the character controller walks on.
 const collision = assets.collision.resource.instantiateRenderEntity();
@@ -179,7 +179,7 @@ collision.findComponents('render').forEach((/** @type {pc.RenderComponent} */ re
 });
 content.addChild(collision);
 
-// ------ first-person character controller ------
+// ------ First-person character controller ------
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.55, 0.7),
@@ -189,11 +189,11 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(0, 0.35, 0);
 
-// the cave interior is only ~3.4 units tall (floor ≈ -0.9, ceiling ≈ 2.5). a small capsule that
+// The cave interior is only ~3.4 units tall (floor ≈ -0.9, ceiling ≈ 2.5). A small capsule that
 // sits just above the floor - spawning higher would straddle the ceiling and the physics solver
 // would eject the body out of the world.
 const characterController = new pc.Entity('character-controller');
-// camera sits 0.35 above the controller, so the controller y is the desired eye y minus 0.35
+// camera sits 0.35 above the controller, so the controller Y is the desired eye Y minus 0.35
 characterController.setPosition(0.1, -0.45, 0.06);
 characterController.addChild(camera);
 characterController.addComponent('collision', {
@@ -227,10 +227,10 @@ const fpc = /** @type {any} */ (
 fpc._angles.set(-10.2, 35.3, 0);
 app.root.addChild(characterController);
 
-// ------ camera frame with depth of field ------
-// enabling dof automatically enables the camera depth prepass. the prepass renders opaque
+// ------ Camera frame with Depth of Field ------
+// Enabling DOF automatically enables the camera depth prepass. The prepass renders opaque
 // world-layer meshes that write depth (our proxy mesh) into a linear depth texture, which the
-// dof effect samples. the transparent splat is then blurred according to the proxy depth.
+// DOF effect samples. The transparent splat is then blurred according to the proxy depth.
 const cameraFrame = new pc.CameraFrame(app, camera.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
 cameraFrame.rendering.samples = 4;
@@ -249,19 +249,19 @@ const applySettings = () => {
     cameraFrame.dof.blurRadius = data.get('data.dof.blurRadius');
     cameraFrame.dof.blurRings = data.get('data.dof.blurRings');
     cameraFrame.dof.blurRingPoints = data.get('data.dof.blurRingPoints');
-    // enable sharpening together with dof (both kick in on the first ready frame)
+    // enable sharpening together with DOF (both kick in on the first ready frame)
     cameraFrame.rendering.sharpness = dofEnabled ? 1 : 0;
     cameraFrame.update();
 };
 
-// apply ui changes
+// apply UI changes
 data.on('*:set', () => {
     applySettings();
 });
 
-// ------ autofocus ------
-// raycast the physics (collision) mesh straight ahead from the camera and focus dof on the hit
-// point. a small html reticle marks the focus point at the center of the screen.
+// ------ Autofocus ------
+// Raycast the physics (collision) mesh straight ahead from the camera and focus DOF on the hit
+// point. A small HTML reticle marks the focus point at the center of the screen.
 const focusReticle = document.createElement('div');
 focusReticle.style.cssText =
     'position:absolute;left:50%;top:50%;width:28px;height:28px;' +

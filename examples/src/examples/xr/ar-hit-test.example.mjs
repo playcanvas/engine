@@ -43,7 +43,7 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -100,7 +100,7 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
-                // if not in vr, activate
+                // if not in VR, activate
                 activate();
             } else {
                 // otherwise reset camera
@@ -112,7 +112,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard esc
+    // end session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();

@@ -44,18 +44,18 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// auto resolution: treat dpr >= 2 as high-dpi (drops to half)
+// auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
     device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
 };
 applyResolution();
 
-// ensure dpr and canvas are updated when window changes size
+// Ensure DPR and canvas are updated when window changes size
 const resize = () => {
     applyResolution();
     app.resizeCanvas();
@@ -66,7 +66,7 @@ app.on('destroy', () => {
 });
 
 // configuration for grid instances
-const GRID_SIZE = 20; // n x n grid
+const GRID_SIZE = 20; // N x N grid
 const GRID_SPACING = 2; // spacing between instances in world units
 
 const assets = {
@@ -79,7 +79,7 @@ const assets = {
     )
 };
 
-// work buffer modifier to write component id uniform to splatid stream
+// Work buffer modifier to write component ID uniform to splatId stream
 const workBufferModifier = {
     glsl: `
         uniform uint uComponentId;
@@ -101,8 +101,8 @@ const workBufferModifier = {
     `
 };
 
-// render modifier to read splatid and look up color from texture
-// only colorize splats with y > 0.2 to tint the robot but not the ground
+// Render modifier to read splatId and look up color from texture
+// Only colorize splats with y > 0.2 to tint the robot but not the ground
 const glslRenderModifier = `
     uniform sampler2D uColorLookup;
 
@@ -144,10 +144,10 @@ app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxMip = 3;
 app.scene.exposure = 1.5;
 
-// add custom splatid stream to work buffer format (r32u)
+// Add custom splatId stream to work buffer format (R32U)
 app.scene.gsplat.format.addExtraStreams([{ name: 'splatId', format: pc.PIXELFORMAT_R32U }]);
 
-// create color lookup texture (grid_size*grid_size x 1, rgba32f) with random colors
+// Create color lookup texture (GRID_SIZE*GRID_SIZE x 1, RGBA32F) with random colors
 const colorTexture = new pc.Texture(device, {
     name: 'ColorLookup',
     width: GRID_SIZE * GRID_SIZE,
@@ -160,13 +160,13 @@ const colorTexture = new pc.Texture(device, {
     addressV: pc.ADDRESS_CLAMP_TO_EDGE
 });
 
-// pre-compute random base hues for each component (0 to 1)
+// Pre-compute random base hues for each component (0 to 1)
 const baseHues = new Float32Array(GRID_SIZE * GRID_SIZE);
 for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
     baseHues[i] = Math.random();
 }
 
-// hsl to rgb conversion (attempt h in 0-1, s in 0-1, l in 0-1)
+// HSL to RGB conversion (attempt h in 0-1, s in 0-1, l in 0-1)
 const hslToRgb = (h, s, l) => {
     let r, g, b;
     if (s === 0) {
@@ -189,10 +189,10 @@ const hslToRgb = (h, s, l) => {
     return [r, g, b];
 };
 
-// set color lookup texture parameter
+// Set color lookup texture parameter
 app.scene.gsplat.material.setParameter('uColorLookup', colorTexture);
 
-// function to apply or remove colorization shader (for both glsl and wgsl)
+// Function to apply or remove colorization shader (for both GLSL and WGSL)
 const applyColorize = (enabled) => {
     if (enabled) {
         app.scene.gsplat.material.getShaderChunks('glsl').set('gsplatModifyVS', glslRenderModifier);
@@ -213,7 +213,7 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
-// initialize colorize setting (enabled by default)
+// Initialize colorize setting (enabled by default)
 data.set('colorize', data.get('colorize') !== false);
 applyColorize(data.get('colorize'));
 
@@ -221,19 +221,19 @@ data.on('colorize:set', () => {
     applyColorize(data.get('colorize'));
 });
 
-// enable rotation-based lod updates and behind-camera penalty
+// enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 4;
 
-// allow rendering with lower lod quality when optimal is not yet loaded
+// allow rendering with lower LOD quality when optimal is not yet loaded
 app.scene.gsplat.lodUnderfillLimit = 10;
 
 data.set('splatBudget', pc.platform.mobile ? 1 : 3);
 
-// create grid of instances centered around origin on xz plane
+// create grid of instances centered around origin on XZ plane
 const half = (GRID_SIZE - 1) * 0.5;
 
-// create a grid of playbot instances
+// Create a grid of playbot instances
 let componentIndex = 0;
 for (let z = 0; z < GRID_SIZE; z++) {
     for (let x = 0; x < GRID_SIZE; x++) {
@@ -262,7 +262,7 @@ const applySplatBudget = () => {
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
-// create a camera with fly controls
+// Create a camera with fly controls
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -284,17 +284,17 @@ Object.assign(cc, {
     focusPoint: new pc.Vec3(2, 0.6, 0)
 });
 
-// update hud stats and animate colors every frame
+// update HUD stats and animate colors every frame
 let currentTime = 0;
 app.on('update', (dt) => {
     currentTime += dt;
 
-    // animate color texture using hsl hue rotation for saturated colors
+    // Animate color texture using HSL hue rotation for saturated colors
     const colorData = colorTexture.lock();
-    const hueShift = currentTime * 0.1; // rotate hue over time
+    const hueShift = currentTime * 0.1; // Rotate hue over time
     for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
         const hue = (baseHues[i] + hueShift) % 1.0;
-        const rgb = hslToRgb(hue, 1.0, 0.2); // full saturation, low lightness
+        const rgb = hslToRgb(hue, 1.0, 0.2); // Full saturation, low lightness
         colorData[i * 4 + 0] = rgb[0] * 2.0;
         colorData[i * 4 + 1] = rgb[1] * 2.0;
         colorData[i * 4 + 2] = rgb[2] * 2.0;

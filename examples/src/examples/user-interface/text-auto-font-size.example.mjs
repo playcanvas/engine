@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -54,14 +54,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create a camera
+// Create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// create a 2d screen
+// Create a 2D screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -71,7 +71,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// create a container entity with an image component
+// Create a container entity with an image component
 const autoFontSizeContainer = new pc.Entity();
 autoFontSizeContainer.addComponent('element', {
     pivot: new pc.Vec2(0.5, 0.5),
@@ -81,7 +81,7 @@ autoFontSizeContainer.addComponent('element', {
     color: new pc.Color(60 / 255, 60 / 255, 60 / 255),
     type: pc.ELEMENTTYPE_IMAGE
 });
-// create a text element with auto font size, and place it inside the container
+// Create a text element with auto font size, and place it inside the container
 const autoFontSizeText = new pc.Entity();
 autoFontSizeText.addComponent('element', {
     // place the text taking the entire parent space

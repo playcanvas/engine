@@ -42,11 +42,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -78,7 +78,7 @@ app.scene.skyboxMip = 3;
 app.scene.skyboxIntensity = 0.1;
 app.scene.envAtlas = assets.helipad.resource;
 
-// enabled clustered lighting. this is a temporary api and will change in the future
+// enabled clustered lighting. This is a temporary API and will change in the future
 app.scene.clusteredLightingEnabled = true;
 
 // adjust default clustered lighting parameters to handle many lights
@@ -235,7 +235,7 @@ for (let i = 0; i < count; i++) {
 }
 updateLightCount();
 
-// create an entity with a camera component
+// Create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -258,7 +258,7 @@ camera.script.create('orbitCamera', {
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-// handle hud changes - update properties on the scene
+// handle HUD changes - update properties on the scene
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     if (pathArray[1] === 'static') {
@@ -288,7 +288,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
 });
 
 function updateLightCount() {
-    // update the number on hud
+    // update the number on HUD
     data.set('settings.numLights', spotLightList.length);
 
     // shadow update mode (need to force render shadow when we add / remove light, as they all move)
@@ -315,7 +315,7 @@ data.on('remove', () => {
     }
 });
 
-// set an update function on the app's update event
+// Set an update function on the app's update event
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     // don't move lights around when they're static

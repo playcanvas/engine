@@ -30,11 +30,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -47,7 +47,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0, 0, 0.05)
@@ -55,7 +55,7 @@ cameraEntity.addComponent('camera', {
 cameraEntity.rotateLocal(0, 0, 0);
 cameraEntity.translateLocal(0, 0, 10);
 
-// create a directional light
+// Create a directional light
 const lightDirEntity = new pc.Entity();
 lightDirEntity.addComponent('light', {
     type: 'directional',
@@ -64,11 +64,11 @@ lightDirEntity.addComponent('light', {
 });
 lightDirEntity.setLocalEulerAngles(45, 0, 0);
 
-// add entities into the scene hierarchy
+// Add Entities into the scene hierarchy
 app.root.addChild(cameraEntity);
 app.root.addChild(lightDirEntity);
 
-// offset position
+// Offset position
 const localPosCurve = new pc.CurveSet([
     [0, 0, 1, 4],
     [0, 0, 1, 3],
@@ -108,7 +108,7 @@ const colorCurve = new pc.CurveSet([
     [0, 0, 1, 0]
 ]);
 
-// create entity for particle system
+// Create entity for particle system
 const entity = new pc.Entity('Sparks');
 app.root.addChild(entity);
 entity.setLocalPosition(0, 0, 0);

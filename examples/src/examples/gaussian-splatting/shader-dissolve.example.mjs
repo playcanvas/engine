@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -61,7 +61,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// style configurations for the dissolve effect
+// Style configurations for the dissolve effect
 const styleConfigs = {
     ember: {
         aabbMin: new pc.Vec3(-1, -1.6, -1),
@@ -121,14 +121,14 @@ data.on('renderer:set', () => {
     }
 });
 
-// default to enabled
+// Default to enabled
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('enabled', true);
 data.set('style', 'ember');
 data.set('loop', true);
 data.set('wholeRoom', false);
 
-// create hotel gsplat
+// Create hotel gsplat
 const hotel = new pc.Entity('hotel');
 hotel.addComponent('gsplat', {
     asset: assets.hotel
@@ -136,13 +136,13 @@ hotel.addComponent('gsplat', {
 hotel.setLocalEulerAngles(180, 0, 0);
 app.root.addChild(hotel);
 
-// add script component to the hotel entity
+// Add script component to the hotel entity
 hotel.addComponent('script');
 
-// create the dissolve effect script
+// Create the dissolve effect script
 const dissolveScript = hotel.script?.create(GsplatDissolveShaderEffect);
 
-// wire up parameter sliders - each updates the script live
+// Wire up parameter sliders - each updates the script live
 /** @type {Record<string, (value: any) => void>} */
 const paramHandlers = {
     duration: (v) => dissolveScript && (dissolveScript.duration = v),
@@ -156,8 +156,8 @@ Object.keys(paramHandlers).forEach((key) => {
     data.on(`${key}:set`, () => paramHandlers[key](data.get(key)));
 });
 
-// edge color is exposed as a normalized color picker plus a glow intensity multiplier,
-// combined into the hdr edge color
+// Edge color is exposed as a normalized color picker plus a glow intensity multiplier,
+// combined into the HDR edge color
 const updateEdgeColor = () => {
     const c = data.get('edgeColor');
     const glow = data.get('glow');
@@ -168,11 +168,11 @@ const updateEdgeColor = () => {
 data.on('edgeColor:set', updateEdgeColor);
 data.on('glow:set', updateEdgeColor);
 
-// room-sized bounds used when the whole-room toggle is on
+// Room-sized bounds used when the whole-room toggle is on
 const roomAabbMin = new pc.Vec3(-50, -5, -50);
 const roomAabbMax = new pc.Vec3(50, 5, 50);
 
-// crop away the fuzzy skydome shell around the scan, so dissolving the room reveals a
+// Crop away the fuzzy skydome shell around the scan, so dissolving the room reveals a
 // clear background instead of distant blurry splats
 if (dissolveScript) {
     dissolveScript.cropEnabled = true;
@@ -180,7 +180,7 @@ if (dissolveScript) {
     dissolveScript.cropAabbMax.copy(roomAabbMax);
 }
 
-// apply either the style's statue aabb or the room aabb based on the toggle
+// Apply either the style's statue AABB or the room AABB based on the toggle
 const applyAabb = () => {
     const config = styleConfigs[/** @type {keyof typeof styleConfigs} */ (data.get('style'))];
     if (!dissolveScript || !config) return;
@@ -194,7 +194,7 @@ const applyAabb = () => {
     }
 };
 
-// helper function to apply style configuration - pushes values into the observer so the
+// Helper function to apply style configuration - pushes values into the observer so the
 // control panel reflects them, which in turn updates the script via the handlers above
 /**
  * @param {any} config - The style configuration object
@@ -202,11 +202,11 @@ const applyAabb = () => {
 const applyStyleConfig = (config) => {
     if (!dissolveScript) return;
 
-    // not exposed in controls - set directly
+    // Not exposed in controls - set directly
     applyAabb();
     dissolveScript.liftDirection.copy(config.liftDirection);
 
-    // split hdr edge color into normalized color and glow intensity
+    // Split HDR edge color into normalized color and glow intensity
     const { r, g, b } = config.edgeColor;
     const glow = Math.max(r, g, b, 1);
     data.set('edgeColor', [r / glow, g / glow, b / glow]);
@@ -220,7 +220,7 @@ const applyStyleConfig = (config) => {
     data.set('waveFrequency', config.waveFrequency);
 };
 
-// helper function to restart the effect (resets effecttime)
+// Helper function to restart the effect (resets effectTime)
 const restartEffect = () => {
     if (dissolveScript && data.get('enabled')) {
         dissolveScript.enabled = false;
@@ -228,10 +228,10 @@ const restartEffect = () => {
     }
 };
 
-// apply initial configuration
+// Apply initial configuration
 applyStyleConfig(styleConfigs[/** @type {keyof typeof styleConfigs} */ (data.get('style'))]);
 
-// handle style changes - apply config and restart from a dissolve
+// Handle style changes - apply config and restart from a dissolve
 data.on('style:set', () => {
     const config = styleConfigs[/** @type {keyof typeof styleConfigs} */ (data.get('style'))];
     if (dissolveScript && config) {
@@ -241,7 +241,7 @@ data.on('style:set', () => {
     }
 });
 
-// handle whole-room toggle - swap aabb and restart from a dissolve
+// Handle whole-room toggle - swap AABB and restart from a dissolve
 data.on('wholeRoom:set', () => {
     if (dissolveScript) {
         applyAabb();
@@ -250,7 +250,7 @@ data.on('wholeRoom:set', () => {
     }
 });
 
-// restart button - restart from a dissolve
+// Restart button - restart from a dissolve
 data.on('restart', () => {
     if (dissolveScript) {
         dissolveScript.dissolve = true;
@@ -258,7 +258,7 @@ data.on('restart', () => {
     }
 });
 
-// handle enable/disable toggle
+// Handle enable/disable toggle
 data.on('enabled:set', () => {
     const enabled = data.get('enabled');
     if (dissolveScript) {
@@ -266,7 +266,7 @@ data.on('enabled:set', () => {
     }
 });
 
-// when looping, alternate between dissolve and reassemble after a short hold
+// When looping, alternate between dissolve and reassemble after a short hold
 const holdTime = 0.8;
 app.on('update', () => {
     if (!dissolveScript?.enabled || !data.get('loop')) return;
@@ -277,7 +277,7 @@ app.on('update', () => {
     }
 });
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: pc.Color.BLACK,
@@ -299,19 +299,19 @@ camera.script?.create('orbitCameraInputMouse');
 camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// auto-rotate camera when idle
+// Auto-rotate camera when idle
 let autoRotateEnabled = true;
 let lastInteractionTime = 0;
 const autoRotateDelay = 2; // seconds of inactivity before auto-rotate resumes
 const autoRotateSpeed = 10; // degrees per second
 
-// detect user interaction (click/touch only, not mouse movement)
+// Detect user interaction (click/touch only, not mouse movement)
 const onUserInteraction = () => {
     autoRotateEnabled = false;
     lastInteractionTime = Date.now();
 };
 
-// listen for click and touch events only
+// Listen for click and touch events only
 if (app.mouse) {
     app.mouse.on('mousedown', onUserInteraction);
     app.mouse.on('mousewheel', onUserInteraction);
@@ -320,14 +320,14 @@ if (app.touch) {
     app.touch.on('touchstart', onUserInteraction);
 }
 
-// auto-rotate update
+// Auto-rotate update
 app.on('update', (dt) => {
-    // re-enable auto-rotate after delay
+    // Re-enable auto-rotate after delay
     if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
         autoRotateEnabled = true;
     }
 
-    // apply auto-rotation
+    // Apply auto-rotation
     if (autoRotateEnabled) {
         const orbitCamera = camera.script?.get('orbitCamera');
         if (orbitCamera) {

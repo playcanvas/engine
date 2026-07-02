@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -124,7 +124,7 @@ function createJoint(name, position, eulerAngles, data) {
     return entity;
 }
 
-// ***********    floor, light and camera   *******************
+// ***********    Floor, light and camera   *******************
 
 const floor = createBox('floor', new pc.Vec3(26, 1, 10), new pc.Vec3(0, 0, 0), gray, 'static', 0);
 floor.rigidbody.restitution = 0.4;
@@ -151,12 +151,12 @@ app.root.addChild(camera);
 camera.translate(0, 6, 18);
 camera.lookAt(0, 2, 0);
 
-// ***********    hinge joint: a door with rotation limits   *******************
+// ***********    Hinge joint: a door with rotation limits   *******************
 
 const doorFrame = createBox('door-frame', new pc.Vec3(0.25, 3, 0.25), new pc.Vec3(-10.5, 2, 0), wood, 'static', 0);
 const door = createBox('door', new pc.Vec3(1.6, 2.4, 0.12), new pc.Vec3(-9.55, 1.95, 0), green, 'dynamic', 20);
 
-// the hinge sits at the door frame and its x axis points up - the door swings about it,
+// the hinge sits at the door frame and its X axis points up - the door swings about it,
 // limited to 110 degrees of opening
 createJoint('door-hinge', new pc.Vec3(-10.35, 1.95, 0), new pc.Vec3(0, 0, 90), {
     type: pc.JOINTTYPE_HINGE,
@@ -166,12 +166,12 @@ createJoint('door-hinge', new pc.Vec3(-10.35, 1.95, 0), new pc.Vec3(0, 0, 90), {
     limits: new pc.Vec2(0, 110)
 });
 
-// ***********    hinge joint: a motor driven windmill   *******************
+// ***********    Hinge joint: a motor driven windmill   *******************
 
 const pole = createBox('pole', new pc.Vec3(0.25, 4, 0.25), new pc.Vec3(-5.5, 2, 0), wood, 'static', 0);
 const rotor = createBox('rotor', new pc.Vec3(3.5, 0.35, 0.15), new pc.Vec3(-5.5, 4, 0.3), blue, 'dynamic', 10);
 
-// the hinge axis points at the camera (world z) and the motor spins the rotor at a constant
+// the hinge axis points at the camera (world Z) and the motor spins the rotor at a constant
 // angular speed
 createJoint('windmill-hinge', new pc.Vec3(-5.5, 4, 0.3), new pc.Vec3(0, -90, 0), {
     type: pc.JOINTTYPE_HINGE,
@@ -181,7 +181,7 @@ createJoint('windmill-hinge', new pc.Vec3(-5.5, 4, 0.3), new pc.Vec3(0, -90, 0),
     maxMotorForce: 100
 });
 
-// ***********    ball joints: a hanging chain with asymmetric swing limits   *******************
+// ***********    Ball joints: a hanging chain with asymmetric swing limits   *******************
 
 const links = [];
 for (let i = 0; i < 6; i++) {
@@ -195,9 +195,9 @@ for (let i = 0; i < 6; i++) {
     );
     links.push(link);
 
-    // each ball joint sits at the top of its link with its x axis pointing down the chain and
-    // its y axis along world x - the chain can swing widely left and right (swinglimity) but
-    // barely forwards and backwards (swinglimitz)
+    // each ball joint sits at the top of its link with its X axis pointing down the chain and
+    // its Y axis along world X - the chain can swing widely left and right (swingLimitY) but
+    // barely forwards and backwards (swingLimitZ)
     createJoint(`chain-joint-${i}`, new pc.Vec3(-2, 5.5 - i * 0.5, 0), new pc.Vec3(0, 0, -90), {
         type: pc.JOINTTYPE_BALL,
         entityA: link,
@@ -212,7 +212,7 @@ for (let i = 0; i < 6; i++) {
 // start the chain swinging
 links[5].rigidbody.applyImpulse(8, 0, 8);
 
-// ***********    slider joint: a platform patrolling a rail   *******************
+// ***********    Slider joint: a platform patrolling a rail   *******************
 
 // the rail is a visual guide only
 const rail = new pc.Entity('rail');
@@ -226,8 +226,8 @@ app.root.addChild(rail);
 
 const platform = createBox('platform', new pc.Vec3(0.8, 0.25, 0.6), new pc.Vec3(1.5, 0.85, 0), green, 'dynamic', 10);
 
-// the slider is pinned to the world (entityb is null) - the platform can only translate along
-// the joint's x axis, driven back and forth by the motor (active because maxmotorforce > 0)
+// the slider is pinned to the world (entityB is null) - the platform can only translate along
+// the joint's X axis, driven back and forth by the motor (active because maxMotorForce > 0)
 const sliderJoint = createJoint('slider', new pc.Vec3(1.5, 0.85, 0), new pc.Vec3(0, 0, 0), {
     type: pc.JOINTTYPE_SLIDER,
     entityA: platform,
@@ -257,7 +257,7 @@ crate.rigidbody.linearDamping = 0.2;
 
 // the anchor entity itself holds the joint - the crate hangs below it on a sprung, vertical
 // degree of freedom (a spring acts on any axis with a stiffness greater than 0). 6dof offsets
-// measure entityb (here the world anchor) relative to entitya (the crate), so a positive
+// measure entityB (here the world anchor) relative to entityA (the crate), so a positive
 // equilibrium rests the crate below the anchor
 anchor.addComponent('joint', {
     type: pc.JOINTTYPE_6DOF,
@@ -267,7 +267,7 @@ anchor.addComponent('joint', {
     linearEquilibrium: new pc.Vec3(0, 1.2, 0)
 });
 
-// ***********    fixed joints: a breakable tower   *******************
+// ***********    Fixed joints: a breakable tower   *******************
 
 const towerBoxes = [];
 for (let i = 0; i < 4; i++) {
@@ -294,7 +294,7 @@ for (let i = 0; i < 3; i++) {
     });
 }
 
-// ***********    click to shoot balls   *******************
+// ***********    Click to shoot balls   *******************
 
 app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
     const ball = new pc.Entity('ball');
@@ -319,7 +319,7 @@ app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
     ball.rigidbody.linearVelocity = direction.mulScalar(35);
 });
 
-// ***********    update   *******************
+// ***********    Update   *******************
 
 // reverse the slider motor at each end of the rail to patrol back and forth
 let patrolTimer = 0;

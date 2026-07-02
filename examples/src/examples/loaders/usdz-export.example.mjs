@@ -13,7 +13,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// add ar button to download the usdz file
+// add AR button to download the usdz file
 const appInner = /** @type {HTMLElement} */ (document.getElementById('appInner'));
 const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
@@ -50,11 +50,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -71,7 +71,7 @@ app.start();
 const entity = assets.bench.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.1, 0.1),
@@ -98,16 +98,16 @@ new pc.UsdzExporter()
     .build(entity, options)
     .then((arrayBuffer) => {
         const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
-        // on iphone safari, this link creates a clickable ar link on the screen. when this is clicked,
-        // the download of the .asdz file triggers its opening in quicklook at mode.
-        // in other browsers, this simply downloads the generated .asdz file.
+        // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
+        // the download of the .asdz file triggers its opening in QuickLook AT mode.
+        // In other browsers, this simply downloads the generated .asdz file.
 
         // @ts-ignore
         link.href = URL.createObjectURL(blob);
     })
     .catch(console.error);
 
-// when clicking on the download ui button, trigger the download
+// when clicking on the download UI button, trigger the download
 data.on('download', () => {
     link.click();
 });

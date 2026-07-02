@@ -36,11 +36,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -53,14 +53,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create a camera
+// Create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// create a 2d screen
+// Create a 2D screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -70,7 +70,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// create a simple panel
+// Create a simple panel
 const panel = new pc.Entity();
 panel.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
@@ -83,7 +83,7 @@ panel.addComponent('element', {
 });
 screen.addChild(panel);
 
-// create a label for the panel
+// Create a label for the panel
 const label = new pc.Entity();
 label.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
@@ -99,13 +99,13 @@ label.addComponent('element', {
 });
 panel.addChild(label);
 
-// create entity for particle system
+// Create entity for particle system
 const particles = new pc.Entity();
 
-// insert sparks as a child of the panel, but before label - that is the order for rendering
+// insert sparks as a child of the panel, but before Label - that is the order for rendering
 panel.insertChild(particles, 0);
 
-// particles will render in ui layer
+// particles will render in UI layer
 const UILayer = app.scene.layers.getLayerByName('UI');
 
 // particle size

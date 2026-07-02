@@ -45,11 +45,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Ani
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -65,7 +65,7 @@ app.scene.exposure = 2;
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
@@ -73,7 +73,7 @@ cameraEntity.addComponent('camera', {
 cameraEntity.translate(0, 0.75, 3);
 app.root.addChild(cameraEntity);
 
-// create an entity with a light component
+// Create an entity with a light component
 const lightEntity = new pc.Entity();
 lightEntity.addComponent('light', {
     castShadows: true,
@@ -171,13 +171,13 @@ locomotionLayer.assignAnimation('Travel.Walk', assets.walkAnim.resource.animatio
 locomotionLayer.assignAnimation('Travel.WalkBackwards', assets.walkAnim.resource.animations[0].resource);
 locomotionLayer.assignAnimation('Travel.Jog', assets.jogAnim.resource.animations[0].resource);
 
-// initialize observer data
+// Initialize observer data
 data.set('data', {
     pos: { x: 0, y: 0 },
     animPoints: []
 });
 
-// helper to update animation points for visualization
+// Helper to update animation points for visualization
 const updateAnimPoints = () => {
     const points = locomotionLayer._controller._states.Travel.animations.map((animNode) => ({
         x: animNode.point?.x ?? 0,
@@ -187,14 +187,14 @@ const updateAnimPoints = () => {
     data.set('data.animPoints', points);
 };
 
-// set initial animation points
+// Set initial animation points
 updateAnimPoints();
 
-// listen for position changes from controls
+// Listen for position changes from controls
 data.on('data.pos:set', (value) => {
     modelEntity.anim.setFloat('posX', value.x);
     modelEntity.anim.setFloat('posY', value.y);
-    // update animation points when position changes (weights recalculate)
+    // Update animation points when position changes (weights recalculate)
     updateAnimPoints();
 });
 

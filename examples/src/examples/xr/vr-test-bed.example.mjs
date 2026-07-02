@@ -31,8 +31,8 @@ const message = (msg) => {
 const gfxOptions = {
     deviceTypes: [deviceType],
     alpha: true,
-    // disable msaa so xr fixed foveation actually has an effect on rendering. xrmanager warns
-    // when graphicsdevice.samples > 1 because the msaa resolve undoes the foveation density map.
+    // Disable MSAA so XR fixed foveation actually has an effect on rendering. XrManager warns
+    // when graphicsDevice.samples > 1 because the MSAA resolve undoes the foveation density map.
     antialias: false
 };
 
@@ -64,7 +64,7 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -96,7 +96,7 @@ app.scene.exposure = 0.5;
 const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
 app.root.addChild(galleryEntity);
 
-// initial camera (desktop / before xr): offset to the side and higher than default eye height.
+// Initial camera (desktop / before XR): offset to the side and higher than default eye height.
 const camX = 1.35;
 const camY = 2.45;
 const camZ = 3.0;
@@ -121,17 +121,17 @@ l.addComponent('light', {
 l.translate(0, 10, 0);
 app.root.addChild(l);
 
-// in-vr debug hud: shows current fixed-foveation value with +/- controls and an exit button.
-// the menu is always visible and follows the camera, biased to the right of the eye line.
+// In-VR debug HUD: shows current fixed-foveation value with +/- controls and an exit button.
+// The menu is always visible and follows the camera, biased to the right of the eye line.
 const menuEntity = new pc.Entity('XrMenu');
 menuEntity.addComponent('script');
 menuEntity.script.create(XrMenu, {
     properties: {
         menuItems: [
-            // foveation row doubles as a toggle button: clicking enables/disables foveation,
+            // Foveation row doubles as a toggle button: clicking enables/disables foveation,
             // remembering the last non-zero value set via + / -.
-            // note: on quest 3 with webgpu, writing fixedfoveation kills the renderer (quest
-            // browser bug). on webgl it works as expected.
+            // Note: on Quest 3 with WebGPU, writing fixedFoveation kills the renderer (Quest
+            // browser bug). On WebGL it works as expected.
             { label: 'FOVEATION: ---', eventName: 'fov:toggle' },
             { label: '-', eventName: 'fov:dec' },
             { label: '+', eventName: 'fov:inc' },
@@ -141,7 +141,7 @@ menuEntity.script.create(XrMenu, {
         alwaysVisible: true,
         followDistance: 0.6,
         followOffset: new pc.Vec2(0.25, -0.15),
-        // wider rows so "foveation: 0.50" fits on a single line (default 0.075 truncates it).
+        // Wider rows so "FOVEATION: 0.50" fits on a single line (default 0.075 truncates it).
         buttonWidth: 0.13
     }
 });
@@ -156,11 +156,11 @@ const refreshFovLabel = () => {
     const suffix = fovSupported ? '' : ' [N/A]';
     xrMenu.setItemLabel(0, `FOVEATION: ${fov.toFixed(2)}${suffix}`);
 };
-refreshFovLabel(); // seed the label so it shows "0.00" before the xr session starts
+refreshFovLabel(); // seed the label so it shows "0.00" before the XR session starts
 
-// single setter that clamps, remembers the last non-zero value (so toggle can restore it),
-// applies it to the live xr layer, and refreshes the label. + / - / toggle all funnel here.
-// when the runtime reports fixedfoveation as unsupported, fov is force-clamped to 0 so the
+// Single setter that clamps, remembers the last non-zero value (so toggle can restore it),
+// applies it to the live XR layer, and refreshes the label. + / - / toggle all funnel here.
+// When the runtime reports fixedFoveation as unsupported, fov is force-clamped to 0 so the
 // button still flashes (click feedback) but the value visibly never moves off 0.00.
 const setFov = (newFov) => {
     const requested = pc.math.clamp(newFov, 0, 1);
@@ -190,9 +190,9 @@ app.on('fov:dec', () => setFov(fov - 0.1));
 app.on('fov:toggle', () => setFov(fov > 0 ? 0 : lastNonZeroFov));
 app.on('xr:end', () => app.xr.end());
 
-// draw a debug aim ray from each tracked-pointer xr input source (controllers, hand pointers)
-// every frame so the user can see where they're pointing at the menu buttons. interaction
-// itself is wired through pc.elementinput on the canvas — these lines are purely visual.
+// Draw a debug aim ray from each tracked-pointer XR input source (controllers, hand pointers)
+// every frame so the user can see where they're pointing at the menu buttons. Interaction
+// itself is wired through pc.ElementInput on the canvas — these lines are purely visual.
 const rayColor = new pc.Color(0.4, 0.8, 1, 1);
 const rayEnd = new pc.Vec3();
 const rayLength = 2.0;

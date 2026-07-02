@@ -42,9 +42,9 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // the scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
-    // to avoid the additional cost. this is only used for the ui which renders on top of the
-    // post-processed scene, and we're typically happy with some aliasing on the ui.
+    // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
+    // to avoid the additional cost. This is only used for the UI which renders on top of the
+    // post-processed scene, and we're typically happy with some aliasing on the UI.
     antialias: false
 };
 
@@ -70,11 +70,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -145,7 +145,7 @@ const boxes = [
     createBox(90, 20, -80, 1, 1, 0.25, 50, 'boxYellow')
 ];
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     farClip: 500,
@@ -171,7 +171,7 @@ cameraEntity.setLocalPosition(0, 40, -220);
 cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
-// create a 2d screen to place ui on
+// Create a 2D screen to place UI on
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -204,8 +204,8 @@ const addLabel = (name, text, x, y, layer) => {
     label.addComponent('element', {
         text: text,
 
-        // very bright color to affect the bloom - this is not correct, as this is srgb color that
-        // is valid only in 0..1 range, but ui does not expose emissive intensity currently
+        // very bright color to affect the bloom - this is not correct, as this is sRGB color that
+        // is valid only in 0..1 range, but UI does not expose emissive intensity currently
         color: new pc.Color(18, 15, 5),
 
         anchor: new pc.Vec4(x, y, 0.5, 0.5),
@@ -223,11 +223,11 @@ const addLabel = (name, text, x, y, layer) => {
 const worldLayer = app.scene.layers.getLayerByName('World');
 addLabel('WorldUI', 'Text on the World layer affected by post-processing', 0.1, 0.9, worldLayer);
 
-// add a label on the ui layer, which will be rendered after the post-processing
+// add a label on the UI layer, which will be rendered after the post-processing
 const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
 addLabel('TopUI', 'Text on theUI layer after the post-processing', 0.1, 0.1, uiLayer);
 
-// ------ custom render passes set up ------
+// ------ Custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.sceneColorMap = true;
@@ -253,15 +253,15 @@ const applySettings = () => {
     // enabled
     cameraFrame.enabled = data.get('data.enabled');
 
-    // scene
+    // Scene
     cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
     cameraFrame.rendering.toneMapping = data.get('data.scene.tonemapping');
 
-    // taa
+    // TAA
     cameraFrame.taa.enabled = data.get('data.taa.enabled');
     cameraFrame.taa.jitter = data.get('data.taa.jitter');
 
-    // bloom
+    // Bloom
     cameraFrame.bloom.intensity = data.get('data.bloom.enabled')
         ? pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100)
         : 0;
@@ -273,7 +273,7 @@ const applySettings = () => {
     cameraFrame.grading.brightness = data.get('data.grading.brightness');
     cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
-    // colorenhance
+    // colorEnhance
     cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
     if (cameraFrame.colorEnhance.enabled) {
         cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
@@ -316,7 +316,7 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// apply ui changes
+// apply UI changes
 data.on('*:set', () => {
     applySettings();
 });
@@ -380,6 +380,6 @@ app.on('update', (/** @type {number} */ dt) => {
         boxes[i].setLocalScale(scale, scale, scale);
     }
 
-    // rotate the mosquitoentity
+    // rotate the mosquitoEntity
     mosquitoEntity.setLocalEulerAngles(0, angle * 30, 0);
 });

@@ -46,11 +46,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -63,13 +63,13 @@ await new Promise((resolve) => {
 
 app.start();
 
-// set skybox - this dds file was 'prefiltered' in the playcanvas editor and then downloaded.
+// set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 app.scene.skyboxIntensity = 0.7;
 
 ////////////////////////////////
-// script to rotate the scene //
+// Script to rotate the scene //
 ////////////////////////////////
 const Rotator = pc.createScript('rotator');
 
@@ -81,7 +81,7 @@ Rotator.prototype.update = function (/** @type {number} */ dt) {
 };
 
 //////////////////////////////////////////////////
-// script to set up rendering the portal itself //
+// Script to set up rendering the portal itself //
 //////////////////////////////////////////////////
 const Portal = pc.createScript('portal');
 
@@ -100,7 +100,7 @@ Portal.prototype.initialize = function () {
             const mat = meshInstance.material;
             mat.stencilBack = mat.stencilFront = stencil;
 
-            // we only want to write to the stencil buffer
+            // We only want to write to the stencil buffer
             mat.depthWrite = false;
             mat.redWrite = mat.greenWrite = mat.blueWrite = mat.alphaWrite = false;
             mat.update();
@@ -109,7 +109,7 @@ Portal.prototype.initialize = function () {
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// script to set stencil options for entities inside or outside the portal //
+// Script to set stencil options for entities inside or outside the portal //
 /////////////////////////////////////////////////////////////////////////////
 
 const PortalGeometry = pc.createScript('portalGeometry');
@@ -153,7 +153,7 @@ const uiLayer = app.scene.layers.getLayerByName('UI');
 const portalLayer = new pc.Layer({ name: 'Portal' });
 app.scene.layers.insert(portalLayer, 0);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 // this camera renders both world and portal layers
 const camera = new pc.Entity();
 camera.addComponent('camera', {
@@ -164,7 +164,7 @@ camera.setLocalPosition(7, 5.5, 7.1);
 camera.setLocalEulerAngles(-27, 45, 0);
 app.root.addChild(camera);
 
-// ------ camera frame (optional), stencil + msaa — default off ------
+// ------ Camera frame (optional), stencil + MSAA — default off ------
 
 /** @type {pc.CameraFrame|null} */
 let cameraFrame = null;
@@ -188,7 +188,7 @@ data.on('cameraFrame:set', () => {
 
 // ------------------------------------------
 
-// create an entity with a directional light component
+// Create an Entity with a directional light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -197,16 +197,16 @@ light.addComponent('light', {
 light.setEulerAngles(45, 35, 0);
 app.root.addChild(light);
 
-// create a root for the graphical scene
+// Create a root for the graphical scene
 const group = new pc.Entity();
 group.addComponent('script');
 group.script.create('rotator');
 app.root.addChild(group);
 
-// create the portal entity - this plane is written to stencil buffer,
-// which is then used to test for inside / outside. this needs to render
-// before all elements requiring stencil buffer, so add to to a portallayer.
-// this is the plane that fills the inside of the portal geometry.
+// Create the portal entity - this plane is written to stencil buffer,
+// which is then used to test for inside / outside. This needs to render
+// before all elements requiring stencil buffer, so add to to a portalLayer.
+// This is the plane that fills the inside of the portal geometry.
 const portal = new pc.Entity('Portal');
 portal.addComponent('render', {
     type: 'plane',
@@ -220,13 +220,13 @@ portal.setLocalEulerAngles(90, 0, 0);
 portal.setLocalScale(3.7, 1, 6.7);
 group.addChild(portal);
 
-// create the portal visual geometry
+// Create the portal visual geometry
 const portalEntity = assets.portal.resource.instantiateRenderEntity();
 portalEntity.setLocalPosition(0, -3, 0);
 portalEntity.setLocalScale(0.02, 0.02, 0.02);
 group.addChild(portalEntity);
 
-// create a statue entity, which is visible inside the portal only
+// Create a statue entity, which is visible inside the portal only
 const statue = assets.statue.resource.instantiateRenderEntity();
 statue.addComponent('script');
 statue.script.create('portalGeometry', {
@@ -238,7 +238,7 @@ statue.setLocalPosition(0, -1, -2);
 statue.setLocalScale(0.25, 0.25, 0.25);
 group.addChild(statue);
 
-// create a bitmoji entity, which is visible outside the portal only
+// Create a bitmoji entity, which is visible outside the portal only
 const bitmoji = assets.bitmoji.resource.instantiateRenderEntity();
 bitmoji.addComponent('script');
 bitmoji.script.create('portalGeometry', {

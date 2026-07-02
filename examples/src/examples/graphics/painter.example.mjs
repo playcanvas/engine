@@ -31,11 +31,11 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -103,7 +103,7 @@ function getBrush() {
     let brush;
     if (brushes.length === 0) {
         // create new brush - use sphere primitive, but could use plane with a texture as well
-        // note: plane would need to be rotated by -90 degrees along x-axis to face camera and be visible
+        // Note: plane would need to be rotated by -90 degrees along x-axis to face camera and be visible
         brush = createPrimitive('sphere', new pc.Vec3(2, 1, 0), new pc.Vec3(1, 1, 1), [paintLayer.id], brushMaterial);
     } else {
         // reuse already allocated brush
@@ -113,7 +113,7 @@ function getBrush() {
     return brush;
 }
 
-// create orthographic camera, which renders brushes in paintlayer, and renders before the main camera
+// Create orthographic camera, which renders brushes in paintLayer, and renders before the main camera
 const paintCamera = new pc.Entity();
 paintCamera.addComponent('camera', {
     clearColorBuffer: false,
@@ -128,7 +128,7 @@ paintCamera.setLocalPosition(0, 0, -10);
 paintCamera.lookAt(pc.Vec3.ZERO);
 app.root.addChild(paintCamera);
 
-// create main camera, which renders entities in world layer - this is where we show the render target on the box
+// Create main camera, which renders entities in world layer - this is where we show the render target on the box
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2)

@@ -3,13 +3,13 @@
  * These chunks override StandardMaterial default behavior to create animated trees with fog.
  */
 
-// fragment chunk to add custom uniforms
+// Fragment chunk to add custom uniforms
 export const litUserDeclarationPS = /* wgsl */ `
     uniform myTime: f32;
     uniform myFogParams: vec2f;
 `;
 
-// override existing diffuse fragment chunk to blend between two colors based on time
+// Override existing diffuse fragment chunk to blend between two colors based on time
 export const diffusePS = /* wgsl */ `
 fn getAlbedo() {
     let blend: f32 = 0.5 + 0.5 * sin(uniform.myTime * 0.5);
@@ -19,7 +19,7 @@ fn getAlbedo() {
 }
 `;
 
-// fragment chunk that runs at the end of the main function to apply ground fog
+// Fragment chunk that runs at the end of the main function to apply ground fog
 export const litUserMainEndPS = /* wgsl */ `
     let fogColor: vec3f = vec3f(1.0, 1.0, 1.0);
     let fogStart: f32 = uniform.myFogParams.x;
@@ -30,7 +30,7 @@ export const litUserMainEndPS = /* wgsl */ `
     output.color = vec4f(mix(fogColor, output.color.rgb, fogFactor), output.color.a);
 `;
 
-// vertex shader chunk to customize vertex position with wind sway animation
+// Vertex shader chunk to customize vertex position with wind sway animation
 export const transformCoreVS = /* wgsl */ `
 
     uniform myTime: f32;   // add time uniform to vertex shader

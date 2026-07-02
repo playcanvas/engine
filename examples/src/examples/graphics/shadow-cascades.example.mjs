@@ -60,20 +60,20 @@ data.set('settings', {
         cascadeDistribution: 0.5, // distribution of cascade distances to prefer sharpness closer to the camera
         cascadeBlend: 0.1, // blend between cascades
         shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
-        vsmBlurSize: 11, // shader filter blur size for vsm shadows
-        penumbraSize: 0.02, // pcss world-space light area size
-        penumbraFalloff: 4, // pcss softening curve falloff
-        shadowSamples: 16, // pcss filter samples
-        shadowBlockerSamples: 16, // pcss blocker search samples
+        vsmBlurSize: 11, // shader filter blur size for VSM shadows
+        penumbraSize: 0.02, // PCSS world-space light area size
+        penumbraFalloff: 4, // PCSS softening curve falloff
+        shadowSamples: 16, // PCSS filter samples
+        shadowBlockerSamples: 16, // PCSS blocker search samples
         everyFrame: true // true if all cascades update every frame
     }
 });
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -125,7 +125,7 @@ clouds.sort(() => Math.random() - 0.5);
 // @ts-ignore
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
-// create an entity with a camera component
+// create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.9, 0.9, 0.9),
@@ -149,7 +149,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// create a directional light casting cascaded shadows
+// Create a directional light casting cascaded shadows
 const dirLight = new pc.Entity('Cascaded Light');
 dirLight.addComponent('light', {
     ...{
@@ -171,7 +171,7 @@ dirLight.setLocalEulerAngles(45, 350, 20);
 // update mode of cascades
 let updateEveryFrame = true;
 
-// handle hud changes - update properties on the light
+// handle HUD changes - update properties on the light
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
 

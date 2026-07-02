@@ -16,7 +16,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable hdr rendering if supported
+    // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -63,7 +63,7 @@ const spotLightList = [];
 /** @type {pc.Entity|null} */
 let dirLight = null;
 
-// enabled clustered lighting. this is a temporary api and will change in the future
+// enabled clustered lighting. This is a temporary API and will change in the future
 app.scene.clusteredLightingEnabled = true;
 
 // adjust default clustered lighting parameters to handle many lights
@@ -127,7 +127,7 @@ for (let i = 0; i < count; i++) {
     // attach a render component with a small sphere to each light
     const material = new pc.StandardMaterial();
     material.emissive = color;
-    material.emissiveIntensity = 10; // bright emissive to make it really bright on hdr displays
+    material.emissiveIntensity = 10; // bright emissive to make it really bright on HDR displays
     material.update();
 
     lightPoint.addComponent('render', {
@@ -160,7 +160,7 @@ for (let i = 0; i < count; i++) {
     // attach a render component with a small cone to each light
     material = new pc.StandardMaterial();
     material.emissive = color;
-    material.emissiveIntensity = 10; // bright emissive to make it really bright on hdr displays
+    material.emissiveIntensity = 10; // bright emissive to make it really bright on HDR displays
     material.update();
 
     lightSpot.addComponent('render', {
@@ -175,7 +175,7 @@ for (let i = 0; i < count; i++) {
     spotLightList.push(lightSpot);
 }
 
-// create a single directional light which casts shadows
+// Create a single directional light which casts shadows
 dirLight = new pc.Entity();
 dirLight.addComponent('light', {
     type: 'directional',
@@ -189,14 +189,14 @@ dirLight.addComponent('light', {
 });
 app.root.addChild(dirLight);
 
-// create an entity with a camera component
+// Create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.05, 0.05, 0.05),
     farClip: 500,
     nearClip: 0.1,
 
-    // if the device renders in hdr mode, disable tone mapping to output hdr values without any processing
+    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
     toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
     gammaCorrection: pc.GAMMA_SRGB
 });
@@ -217,7 +217,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// set an update function on the app's update event
+// Set an update function on the app's update event
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;

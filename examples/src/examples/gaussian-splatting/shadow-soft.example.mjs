@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -91,7 +91,7 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
-// bicycle gsplat, casting shadows
+// Bicycle gsplat, casting shadows
 const bicycle = new pc.Entity('Bicycle');
 bicycle.addComponent('gsplat', {
     asset: assets.bicycle,
@@ -102,7 +102,7 @@ bicycle.setLocalPosition(-1.0, 0, 0);
 bicycle.setLocalEulerAngles(0, 0, 180);
 app.root.addChild(bicycle);
 
-// second bicycle gsplat, casting shadows
+// Second bicycle gsplat, casting shadows
 const bicycle2 = new pc.Entity('Bicycle2');
 bicycle2.addComponent('gsplat', {
     asset: assets.bicycle,
@@ -114,12 +114,12 @@ bicycle2.setLocalEulerAngles(180, 50, 0);
 bicycle2.setLocalScale(1.2, 1.2, 1.2);
 app.root.addChild(bicycle2);
 
-// white ground plane receiving shadows
+// White ground plane receiving shadows
 const groundMaterial = new pc.StandardMaterial();
 groundMaterial.diffuse = new pc.Color(1, 1, 1);
 groundMaterial.update();
 
-// white ground receiving shadows - a very flat, finely triangulated cylinder (disc)
+// White ground receiving shadows - a very flat, finely triangulated cylinder (disc)
 const groundGeometry = new pc.CylinderGeometry({
     radius: 5,
     height: 0.1,
@@ -137,7 +137,7 @@ ground.addComponent('render', {
 ground.setLocalPosition(0, -0.05, 0);
 app.root.addChild(ground);
 
-// camera with orbit controls
+// Camera with orbit controls
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.9, 0.9, 0.9),
@@ -160,7 +160,7 @@ app.root.addChild(camera);
 // orbit around the scene center (the bikes' average center / cylinder center)
 camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(-3, 2, 4), new pc.Vec3(0, 0, 0));
 
-// single directional light casting soft shadows
+// Single directional light casting soft shadows
 const dirLight = new pc.Entity('MainLight');
 dirLight.addComponent('light', {
     ...{
@@ -179,7 +179,7 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(55, 30, 0);
 
-// handle hud changes - update properties on the light
+// handle HUD changes - update properties on the light
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     if (pathArray[0] !== 'settings' || pathArray[1] !== 'light' || pathArray.length < 3) {
@@ -192,7 +192,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 });
 
-// orbit the light around the scene
+// Orbit the light around the scene
 let lightAngle = 0;
 app.on('update', (/** @type {number} */ dt) => {
     lightAngle += dt * 20;

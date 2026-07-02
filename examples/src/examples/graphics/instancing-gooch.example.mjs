@@ -47,11 +47,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Ani
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -79,7 +79,7 @@ const applyMaterial = (entity, materials) => {
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
@@ -128,10 +128,10 @@ const meshInstance = forest.findComponent('render').meshInstances[0];
 const material = createGoochMaterial(meshInstance.material.diffuseMap);
 meshInstance.material = material;
 
-// initialize instancing using the vertex buffer on meshinstance
+// initialize instancing using the vertex buffer on meshInstance
 meshInstance.setInstancing(vertexBuffer);
 
-// create an entity for the ground - this is a static geometry. create a new instance of the gooch material,
+// Create an Entity for the ground - this is a static geometry. Create a new instance of the gooch material,
 // without a texture.
 const ground = new pc.Entity('Ground');
 const groundMaterial = createGoochMaterial(null, [0.13, 0.55, 0.13]); // no texture
@@ -158,7 +158,7 @@ bitmojiEntity.addComponent('anim', { activate: true });
 const walkTrack = assets.danceAnim.resource.animations[0].resource;
 bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
-// set an update function on the app's update event
+// Set an update function on the app's update event
 let time = 0;
 app.on('update', (dt) => {
     time += dt;

@@ -13,7 +13,7 @@ pc.basisInitialize({
 });
 
 // one texture per supported format, to exercise each texture parser (img / dds / ktx2 / basis / hdr).
-// png, dds and ktx2 are the same source image (the playcanvas logo) in three encodings.
+// png, dds and ktx2 are the same source image (the PlayCanvas logo) in three encodings.
 const assets = {
     png: new pc.Asset('png', 'texture', { url: './assets/textures/playcanvas.png' }, { srgb: true }),
     dds: new pc.Asset('dds', 'texture', { url: './assets/textures/playcanvas.dds' }, { srgb: true }),
@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -62,7 +62,7 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// grid layout (screen-space ndc, -1..1), one tile per format
+// grid layout (screen-space NDC, -1..1), one tile per format
 const grid = [
     { asset: assets.png, x: -0.5, y: 0.42 },
     { asset: assets.dds, x: 0.0, y: 0.42 },

@@ -37,14 +37,14 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => {
     app.resizeCanvas();
-    // on-demand rendering (autorender is set to false once the splat is ready): a resize is a
+    // On-demand rendering (autoRender is set to false once the splat is ready): a resize is a
     // viewport change the app makes itself — it does not raise 'frame:request' — so request a
     // render to redraw the scene at the new canvas size.
     app.renderNextFrame = true;
@@ -65,9 +65,9 @@ await new Promise((resolve) => {
 
 app.start();
 
-// switching renderer recreates the work buffer, which raises 'frame:request' on its own — so it
-// needs no explicit render. the alphaclip / alphaclipforward controls only change material
-// parameters; that is a draw-state change that does not raise 'frame:request', so each requests
+// Switching renderer recreates the work buffer, which raises 'frame:request' on its own — so it
+// needs no explicit render. The alphaClip / alphaClipForward controls only change material
+// parameters; that is a draw-state change that does NOT raise 'frame:request', so each requests
 // a render explicitly for on-demand rendering.
 data.on('renderer:set', () => {
     app.scene.gsplat.renderer = data.get('renderer');
@@ -107,7 +107,7 @@ const ORBIT_DISTANCE = 4;
 const ORBIT_INITIAL_YAW = 32;
 const ORBIT_INITIAL_PITCH = -10;
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -152,7 +152,7 @@ ground.setLocalPosition(0, -0.45, 0);
 app.root.addChild(ground);
 
 // shadow casting directional light
-// note: it does not affect gsplat, as lighting is not supported there currently
+// Note: it does not affect gsplat, as lighting is not supported there currently
 const directionalLight = new pc.Entity();
 directionalLight.addComponent('light', {
     type: 'directional',
@@ -173,25 +173,25 @@ directionalLight.addComponent('light', {
 directionalLight.setEulerAngles(55, 0, 20);
 app.root.addChild(directionalLight);
 
-// --- on-demand rendering ----------------------------------------------------------------
-// this splat is a single fixed asset (no lod streaming), so once it has loaded, sorted and
-// drawn there is nothing new to show until the camera moves or a setting changes. we render
-// every frame until the first complete frame is ready, then render only on demand. even
-// without streaming, the gsplat system still ticks every frame (e.g. to apply an async cpu
-// sort result), so background work keeps progressing while the gpu stays idle.
+// --- On-demand rendering ----------------------------------------------------------------
+// This splat is a single fixed asset (no LOD streaming), so once it has loaded, sorted and
+// drawn there is nothing new to show until the camera moves or a setting changes. We render
+// every frame until the first complete frame is ready, then render only on demand. Even
+// without streaming, the gsplat system still ticks every frame (e.g. to apply an async CPU
+// sort result), so background work keeps progressing while the GPU stays idle.
 
 let renderOnDemand = false;
 const lastCamPos = new pc.Vec3();
 const lastCamRot = new pc.Quat();
 
 // the gsplat system asks for a render when it has new data to show — here, the initial load
-// and sort, or an async cpu sort result becoming ready to apply after a camera move
+// and sort, or an async CPU sort result becoming ready to apply after a camera move
 app.systems.gsplat.on('frame:request', () => {
     app.renderNextFrame = true;
 });
 
 // once the splat has loaded, sorted and drawn its first complete frame, switch to on-demand.
-// this also guarantees the one render needed to register the camera before going idle.
+// This also guarantees the one render needed to register the camera before going idle.
 const onFrameReady = (
     /** @type {any} */ cam,
     /** @type {any} */ layer,

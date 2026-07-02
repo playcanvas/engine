@@ -61,11 +61,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -78,17 +78,17 @@ await new Promise((resolve) => {
 
 app.start();
 
-// skybox
+// Skybox
 app.scene.skyboxMip = 0;
 app.scene.exposure = 0.4;
 app.scene.skyboxHighlightMultiplier = 50; // extra brightness for the clipped sun in the skybox to make it bloom more
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 10, 0);
 
-// gravity (increase for more realistic jumping)
+// Gravity (increase for more realistic jumping)
 app.systems.rigidbody?.gravity.set(0, -18, 0);
 
-// camera
+// Camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     farClip: 100,
@@ -96,7 +96,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(0, 0.5, 0);
 
-// custom render passes
+// Custom render passes
 const cameraFrame = new pc.CameraFrame(app, camera.camera);
 cameraFrame.rendering.samples = 4;
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
@@ -104,7 +104,7 @@ cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.update();
 
-// level
+// Level
 const map = assets.map.resource.instantiateRenderEntity();
 map.setLocalScale(2, 2, 2);
 map.setLocalEulerAngles(-90, 0, 0);
@@ -122,7 +122,7 @@ const level = new pc.Entity();
 level.addChild(map);
 app.root.addChild(level);
 
-// character controller
+// Character controller
 const characterController = new pc.Entity('cc');
 characterController.setPosition(5, 2, 10);
 characterController.addChild(camera);
@@ -213,6 +213,6 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
     document.body.append(base, stick);
 };
 
-// create joystick ui
+// Create joystick UI
 createJoystickUI('left');
 createJoystickUI('right');

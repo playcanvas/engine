@@ -67,7 +67,7 @@ app.start();
 
 const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
 
-// lod streaming settings
+// LOD streaming settings
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.radialSorting = true;
@@ -75,7 +75,7 @@ app.scene.gsplat.lodUpdateDistance = 0.5;
 app.scene.gsplat.lodUnderfillLimit = 5;
 app.scene.gsplat.splatBudget = pc.platform.mobile ? 1000000 : 4000000;
 
-// camera
+// Camera
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.6, 0.65, 0.75),
@@ -96,7 +96,7 @@ Object.assign(cc, {
     focusPoint: new pc.Vec3(12, 3, 0)
 });
 
-// load the gsplat scene
+// Load the gsplat scene
 const gsplatEntity = new pc.Entity('Roman-Parish');
 gsplatEntity.addComponent('gsplat', {
     asset: assets.scene
@@ -107,7 +107,7 @@ app.root.addChild(gsplatEntity);
 gsplatEntity.gsplat.lodBaseDistance = 5;
 gsplatEntity.gsplat.lodMultiplier = 4;
 
-// procedural weather
+// Procedural weather
 const weatherEntity = new pc.Entity('Weather');
 weatherEntity.addComponent('script');
 const weather = /** @type {GsplatWeather} */ (
@@ -124,7 +124,7 @@ const weather = /** @type {GsplatWeather} */ (
 );
 app.root.addChild(weatherEntity);
 
-// particle size slider mapping: 0..1 slider ↔ 0.0001..0.04 world units
+// Particle size slider mapping: 0..1 slider ↔ 0.0001..0.04 world units
 const PSIZE_LO = 0.0001,
     PSIZE_HI = 0.04,
     PSIZE_RANGE = PSIZE_HI - PSIZE_LO;
@@ -215,7 +215,7 @@ data.on('renderer:set', () => {
     }
 });
 
-// initialize ui data
+// Initialize UI data
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('exposure', 1);
 data.set('useFog', true);
@@ -225,15 +225,15 @@ data.set('extents', [weather.extents.x, weather.extents.y, weather.extents.z]);
 data.set('density', weather.density);
 data.set('particles', weather.numParticles.toLocaleString());
 
-// preset dropdown
+// Preset dropdown
 data.on('preset:set', () => applyPreset(data.get('preset')));
 
-// angle tilts the entity so particles fall at an angle
+// Angle tilts the entity so particles fall at an angle
 data.on('angle:set', () => {
     weatherEntity.setLocalEulerAngles(data.get('angle'), 0, 0);
 });
 
-// runtime uniforms — applied directly each frame
+// Runtime uniforms — applied directly each frame
 data.on('speed:set', () => {
     weather.speed = data.get('speed');
 });
@@ -265,7 +265,7 @@ data.on('useFog:set', () => {
     app.scene.gsplat.useFog = data.get('useFog');
 });
 
-// grid config — requires rebuild
+// Grid config — requires rebuild
 const rebuild = () => {
     const ext = data.get('extents');
     weather.extents.set(ext[0], ext[1], ext[2]);

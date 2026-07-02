@@ -2,9 +2,9 @@ import * as pc from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
-// the example demonstrates loading multiple assets from a single bundle file
+// The example demonstrates loading multiple assets from a single bundle file
 
-// this tar file has been created by a command line:
+// This tar file has been created by a command line:
 // : cd engine/examples/
 // : tar cvf assets/bundles/bundle.tar assets/models/geometry-camera-light.glb assets/models/torus.png
 
@@ -17,7 +17,7 @@ const assets = {
     torus: new pc.Asset('torus', 'container', { url: './assets/models/torus.glb' })
 };
 
-// bundle should list asset ids in its data
+// Bundle should list asset IDs in its data
 assets.bundle.data = { assets: [assets.scene.id, assets.torus.id] };
 
 const gfxOptions = {
@@ -36,11 +36,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
