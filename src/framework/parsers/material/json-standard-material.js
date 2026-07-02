@@ -3,6 +3,7 @@ import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Texture } from '../../../platform/graphics/texture.js';
+import { Http } from '../../../platform/net/http.js';
 
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
@@ -18,6 +19,37 @@ import { standardMaterialParameterTypes } from '../../../scene/materials/standar
 class JsonStandardMaterialParser {
     constructor() {
         this._validator = null;
+    }
+
+    canParse() {
+        // json is the only built-in material format; it acts as the catch-all, so any material
+        // asset resolves to it unless a more specific parser is registered
+        return true;
+    }
+
+    load(url, callback, asset) {
+        this.handler.fetch(url, Http.ResponseType.JSON, (err, response) => {
+            if (err) {
+                callback(`Error loading material: ${url.original} [${err}]`);
+            } else {
+                // loading from a url is an engine-only path - tag the data so open/patch can copy
+                // it into the asset (in the editor, material data always comes from the asset)
+                response._engine = true;
+                callback(null, response);
+            }
+        }, asset);
+    }
+
+    open(url, data) {
+        const material = this.parse(data);
+
+        // temp storage for engine-only as we need this during patching
+        if (data._engine) {
+            material._data = data;
+            delete data._engine;
+        }
+
+        return material;
     }
 
     parse(input) {
