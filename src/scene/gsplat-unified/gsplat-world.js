@@ -447,6 +447,19 @@ class GSplatWorld {
         result.overdrawDirty = false;
         result.sortNeeded = false;
 
+        // Drop instances whose octree was destroyed (e.g. the asset was unloaded) before the
+        // layer placement change reaches reconcile - they can no longer stream and their
+        // resources are gone, so letting them run this update would assert and crash the
+        // budget pass. Mirrors the removal branch in reconcile.
+        for (const [placement, inst] of this._octreeInstances) {
+            if (inst.octree.destroyed) {
+                this._octreeInstances.delete(placement);
+                this._layerPlacementsDirty = true;
+                this._placementSetChanged = true;
+                this._octreeInstancesToDestroy.push(inst);
+            }
+        }
+
         // Cadence: a free-running metronome raises a latched request every 10 frames.
         if (--this._framesTillFullUpdate <= 0) {
             this._framesTillFullUpdate = 10;
