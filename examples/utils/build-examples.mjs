@@ -29,7 +29,6 @@ import { isModuleWithExternalDependencies, parseConfig, stripConfig } from './ex
 
 /**
  * @typedef {object} ExampleTargets
- * @property {Record<string, string>} local - bundled module entries.
  * @property {CopyTarget[]} sources - transformed source files.
  * @property {CopyTarget[]} assets - copied asset files.
  * @property {ExampleHtmlTarget[]} html - iframe html targets.
@@ -74,10 +73,6 @@ export const STATIC_TARGETS = [
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
     { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
 ];
-export const EXTERNAL_LOCAL = [
-    'playcanvas'
-];
-
 /**
  * @returns {Promise<ExampleMetadata[]>} loaded metadata.
  */
@@ -199,13 +194,6 @@ export const getFiles = ({ path: dir, exampleNameKebab }) => {
 };
 
 /**
- * @param {string} name - target name.
- * @param {string} file - file name.
- * @returns {string} entry key.
- */
-export const entryKey = (name, file) => `${name}.${file.replace(/\.(?:mjs|js)$/, '')}`;
-
-/**
  * @param {ExampleMetadata} item - example metadata.
  * @returns {Promise<ExampleConfig>} parsed example config.
  */
@@ -293,7 +281,6 @@ export const writeShareHtml = async (item) => {
  * @returns {ExampleTargets} example build targets.
  */
 export const getExampleTargets = () => {
-    const local = {};
     const sources = [];
     const assets = [];
     const html = [];
@@ -310,19 +297,15 @@ export const getExampleTargets = () => {
             const file = files[j];
             const input = getExamplePath(item, file);
             const output = `${IFRAME_DIR}/${name}.${file}`;
-            if (!/\.(?:mjs|js)$/.test(file)) {
-                assets.push({ src: input, dest: output });
-                continue;
-            }
-            if (file === 'example.mjs') {
+            if (/\.(?:mjs|js)$/.test(file)) {
                 sources.push({ src: input, dest: output });
                 continue;
             }
-            local[entryKey(name, file)] = input;
+            assets.push({ src: input, dest: output });
         }
     }
 
-    return { local, sources, assets, html, share };
+    return { sources, assets, html, share };
 };
 
 /**

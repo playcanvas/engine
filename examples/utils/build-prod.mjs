@@ -1,14 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import esbuild from 'esbuild';
 import { build as viteBuild } from 'vite';
 
 import {
     BUILD_TYPES,
-    EXAMPLE_TARGET,
     EXAMPLE_TEMPLATE,
-    EXTERNAL_LOCAL,
     IFRAME_DIR,
     STATIC_TARGETS,
     TARGET,
@@ -29,7 +26,6 @@ import { revision, version } from '../../utils/rollup-version-revision.mjs';
 import { buildTypes } from '../../utils/types-build-target.mjs';
 
 /**
- * @import { BuildOptions as EsbuildOptions, Plugin as EsbuildPlugin } from 'esbuild'
  * @import { InlineConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
  * @import { CopyTarget } from './build-examples.mjs'
  */
@@ -45,16 +41,6 @@ const ENGINE_OUTPUT = {
     dbg: 'playcanvas.dbg.mjs',
     prf: 'playcanvas.prf.mjs'
 };
-const TEXT_LOADERS = {
-    '.frag': 'text',
-    '.vert': 'text',
-    '.wgsl': 'text',
-    '.glsl': 'text',
-    '.html': 'text',
-    '.css': 'text',
-    '.txt': 'text'
-};
-
 /**
  * @template T
  * @param {string} input - source label.
@@ -84,54 +70,6 @@ const writeSources = async (sources) => {
         const source = await fs.promises.readFile(src, 'utf8');
         await fs.promises.writeFile(dest, transformSource(source));
     }));
-};
-
-/**
- * @returns {EsbuildPlugin} esbuild plugin.
- */
-const urlExternalPlugin = () => {
-    return {
-        name: 'url-external',
-        setup(build) {
-            build.onResolve({ filter: /^https?:\/\// }, args => ({
-                path: args.path,
-                external: true
-            }));
-        }
-    };
-};
-
-/**
- * @param {Record<string, string>} entryPoints - entry point map.
- * @param {string[]} external - external modules.
- * @returns {EsbuildOptions} esbuild options.
- */
-const exampleOptions = (entryPoints, external) => ({
-    entryPoints,
-    bundle: true,
-    format: 'esm',
-    platform: 'browser',
-    target: EXAMPLE_TARGET,
-    outdir: IFRAME_DIR,
-    outExtension: {
-        '.js': '.mjs'
-    },
-    loader: TEXT_LOADERS,
-    external,
-    plugins: [
-        urlExternalPlugin()
-    ],
-    logLevel: 'warning'
-});
-
-/**
- * @returns {Promise<void>} completion promise.
- */
-const buildExampleJs = async () => {
-    const { local } = getExampleTargets();
-    if (Object.keys(local).length) {
-        await timed('src/examples modules', `${IFRAME_DIR} modules`, () => esbuild.build(exampleOptions(local, EXTERNAL_LOCAL)));
-    }
 };
 
 /**
@@ -298,7 +236,6 @@ export const buildProd = async () => {
     await timed('static files', 'dist static files', () => copyTargets(STATIC_TARGETS, false));
     await Promise.all([
         buildExampleSupport(),
-        buildExampleJs(),
         buildEngine(),
         buildApp()
     ]);
