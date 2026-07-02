@@ -131,21 +131,21 @@ Rotator.prototype.update = function (/** @type {number} */ dt) {
 };
 
 // a compute shader that will compute the histogram of the input texture and write the result to the storage buffer
-const shader = device.supportsCompute ?
-    new Shader(device, {
-        name: 'ComputeShader',
-        shaderLanguage: SHADERLANGUAGE_WGSL,
-        cshader: computeShaderWgsl,
+const shader = device.supportsCompute
+    ? new Shader(device, {
+          name: 'ComputeShader',
+          shaderLanguage: SHADERLANGUAGE_WGSL,
+          cshader: computeShaderWgsl,
 
-        // format of a bind group, providing resources for the compute shader
-        computeBindGroupFormat: new BindGroupFormat(device, [
-            // input texture - the scene color map, without a sampler
-            new BindTextureFormat('uSceneColorMap', SHADERSTAGE_COMPUTE, undefined, undefined, false),
-            // output storage buffer
-            new BindStorageBufferFormat('outBuffer', SHADERSTAGE_COMPUTE)
-        ])
-    }) :
-    null;
+          // format of a bind group, providing resources for the compute shader
+          computeBindGroupFormat: new BindGroupFormat(device, [
+              // input texture - the scene color map, without a sampler
+              new BindTextureFormat('uSceneColorMap', SHADERSTAGE_COMPUTE, undefined, undefined, false),
+              // output storage buffer
+              new BindStorageBufferFormat('outBuffer', SHADERSTAGE_COMPUTE)
+          ])
+      })
+    : null;
 
 // Create a storage buffer to which the compute shader will write the histogram values.
 const numBins = 256;

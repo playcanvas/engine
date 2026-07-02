@@ -128,7 +128,7 @@ laboratoryEntity.findComponents('render').forEach((render) => {
 });
 
 // add lights to the torches
-const torches = laboratoryEntity.find(node => node.name.indexOf('Fackel') !== -1);
+const torches = laboratoryEntity.find((node) => node.name.indexOf('Fackel') !== -1);
 torches.forEach((torch) => {
     const light = new Entity('Omni');
     light.addComponent('light', {

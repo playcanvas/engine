@@ -266,7 +266,7 @@ const HOLD_SECONDS = 1.5;
 const CROSSFADE_SECONDS = 1.5;
 const CYCLE_SECONDS = HOLD_SECONDS + CROSSFADE_SECONDS;
 const randomKey = (excludeKey) => {
-    const choices = animatableKeys.filter(k => k !== excludeKey);
+    const choices = animatableKeys.filter((k) => k !== excludeKey);
     return choices[Math.floor(Math.random() * choices.length)];
 };
 let animClock = 0;

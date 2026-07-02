@@ -119,13 +119,13 @@ const numParticles = 1024 * 1024;
 // or uniform buffer formats are provided - the loose uniforms (count, dt, sphereCount) and the
 // storage buffers (particles, spheres) use the simplified WGSL syntax and are reflected
 // automatically by the engine from the shader source.
-const shader = device.supportsCompute ?
-    new Shader(device, {
-        name: 'SimulationShader',
-        shaderLanguage: SHADERLANGUAGE_WGSL,
-        cshader: shaderSharedWgsl + shaderSimulationWgsl
-    }) :
-    null;
+const shader = device.supportsCompute
+    ? new Shader(device, {
+          name: 'SimulationShader',
+          shaderLanguage: SHADERLANGUAGE_WGSL,
+          cshader: shaderSharedWgsl + shaderSimulationWgsl
+      })
+    : null;
 
 // Create a storage buffer to store particles
 // see the particle size / alignment / padding here: https://tinyurl.com/particle-structure

@@ -158,42 +158,42 @@ const sphereMeshInst = sphere.render.meshInstances[0];
 sphereMeshInst.setInstancing(vertexBuffer);
 
 // create a compute shader which will be used to update the number of instances to be rendered each frame
-const shader = device.supportsCompute ?
-    new Shader(device, {
-        name: 'ComputeShader',
-        shaderLanguage: SHADERLANGUAGE_WGSL,
-        cshader: computeShaderWgsl,
+const shader = device.supportsCompute
+    ? new Shader(device, {
+          name: 'ComputeShader',
+          shaderLanguage: SHADERLANGUAGE_WGSL,
+          cshader: computeShaderWgsl,
 
-        // include all WGSL chunks to be available for including in the compute shader
-        cincludes: ShaderChunks.get(device, SHADERLANGUAGE_WGSL),
+          // include all WGSL chunks to be available for including in the compute shader
+          cincludes: ShaderChunks.get(device, SHADERLANGUAGE_WGSL),
 
-        // format of a uniform buffer used by the compute shader
-        computeUniformBufferFormats: {
-            ub: new UniformBufferFormat(device, [
-                // metadata about the mesh (how many indicies it has and similar, used to generate draw call parameters)
-                new UniformFormat('indirectMetaData', UNIFORMTYPE_IVEC4),
+          // format of a uniform buffer used by the compute shader
+          computeUniformBufferFormats: {
+              ub: new UniformBufferFormat(device, [
+                  // metadata about the mesh (how many indicies it has and similar, used to generate draw call parameters)
+                  new UniformFormat('indirectMetaData', UNIFORMTYPE_IVEC4),
 
-                // time to animate number of visible instances
-                new UniformFormat('time', UNIFORMTYPE_FLOAT),
+                  // time to animate number of visible instances
+                  new UniformFormat('time', UNIFORMTYPE_FLOAT),
 
-                // maximum number of instances
-                new UniformFormat('maxInstanceCount', UNIFORMTYPE_UINT),
+                  // maximum number of instances
+                  new UniformFormat('maxInstanceCount', UNIFORMTYPE_UINT),
 
-                // indirect slot into storage buffer which stored draw call parameters
-                new UniformFormat('indirectSlot', UNIFORMTYPE_UINT)
-            ])
-        },
+                  // indirect slot into storage buffer which stored draw call parameters
+                  new UniformFormat('indirectSlot', UNIFORMTYPE_UINT)
+              ])
+          },
 
-        // format of a bind group, providing resources for the compute shader
-        computeBindGroupFormat: new BindGroupFormat(device, [
-            // a uniform buffer we provided format for
-            new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
+          // format of a bind group, providing resources for the compute shader
+          computeBindGroupFormat: new BindGroupFormat(device, [
+              // a uniform buffer we provided format for
+              new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
 
-            // the buffer with indirect draw arguments
-            new BindStorageBufferFormat('indirectDrawBuffer', SHADERSTAGE_COMPUTE)
-        ])
-    }) :
-    null;
+              // the buffer with indirect draw arguments
+              new BindStorageBufferFormat('indirectDrawBuffer', SHADERSTAGE_COMPUTE)
+          ])
+      })
+    : null;
 
 // Create an instance of the compute shader, and provide it with uniform values that do not change each frame
 const compute = new Compute(device, shader, 'ComputeModifyVB');

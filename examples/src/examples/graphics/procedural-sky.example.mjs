@@ -131,25 +131,25 @@ laboratoryEntity.findComponents('render').forEach((render) => {
 const torchIntensity = 60;
 const torchLights = [];
 laboratoryEntity
-.find(node => node.name.indexOf('Fackel') !== -1)
-.forEach((torch) => {
-    const render = torch.findComponent('render');
-    if (!render) return;
+    .find((node) => node.name.indexOf('Fackel') !== -1)
+    .forEach((torch) => {
+        const render = torch.findComponent('render');
+        if (!render) return;
 
-    const light = new Entity('Torch');
-    light.addComponent('light', {
-        type: 'omni',
-        color: new Color(1.0, 0.55, 0.2),
-        intensity: 0,
-        range: 480,
-        // keep the warm light contained to the torch's surroundings
-        falloffMode: LIGHTFALLOFF_INVERSESQUARED
+        const light = new Entity('Torch');
+        light.addComponent('light', {
+            type: 'omni',
+            color: new Color(1.0, 0.55, 0.2),
+            intensity: 0,
+            range: 480,
+            // keep the warm light contained to the torch's surroundings
+            falloffMode: LIGHTFALLOFF_INVERSESQUARED
+        });
+        // place at the flame's world-space position
+        light.setPosition(render.meshInstances[0].aabb.center);
+        app.root.addChild(light);
+        torchLights.push(light);
     });
-    // place at the flame's world-space position
-    light.setPosition(render.meshInstances[0].aabb.center);
-    app.root.addChild(light);
-    torchLights.push(light);
-});
 
 // use the dry-sand terrain as the ground. Instantiate it, measure its native bounds, scale it
 // up to cover the scene out to the horizon, and drop it so its surface sits where the lab rests.
@@ -160,7 +160,7 @@ const terrain = assets.terrain.resource.instantiateRenderEntity({
 app.root.addChild(terrain);
 
 // accumulate the native (unscaled) world bounds of all the terrain mesh instances
-const terrainMeshes = terrain.findComponents('render').flatMap(render => render.meshInstances);
+const terrainMeshes = terrain.findComponents('render').flatMap((render) => render.meshInstances);
 const terrainAabb = new BoundingBox();
 terrainMeshes.forEach((mi, i) => (i === 0 ? terrainAabb.copy(mi.aabb) : terrainAabb.add(mi.aabb)));
 

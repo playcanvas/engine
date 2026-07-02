@@ -240,7 +240,7 @@ htmlPanel.style.background = 'rgba(15, 15, 25, 0.375)';
 htmlPanel.style.backdropFilter = 'blur(12px)';
 htmlPanel.style.webkitBackdropFilter = 'blur(12px)';
 htmlPanel.style.borderRadius = '20px';
-htmlPanel.style.fontFamily = '\'Segoe UI\', Arial, sans-serif';
+htmlPanel.style.fontFamily = "'Segoe UI', Arial, sans-serif";
 htmlPanel.style.color = 'white';
 htmlPanel.style.display = 'flex';
 htmlPanel.style.flexDirection = 'column';
@@ -283,8 +283,8 @@ const updatePanel = () => {
         <div style="font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Shoe Style</div>
         <div style="font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 8px;">Click to change variant</div>
         ${variants
-    .map(
-        v => `
+            .map(
+                (v) => `
             <div data-variant="${v}" class="variant-btn${v === activeVariant ? ' active' : ''}" style="
                 padding: 14px 16px;
                 border-radius: 12px;
@@ -310,8 +310,8 @@ const updatePanel = () => {
                 ${v.charAt(0).toUpperCase() + v.slice(1)}
             </div>
         `
-    )
-    .join('')}
+            )
+            .join('')}
         <div style="margin-top: auto; font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; letter-spacing: 1px;">
             Powered by HTML-in-Canvas
         </div>

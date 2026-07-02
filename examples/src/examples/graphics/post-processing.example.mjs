@@ -139,7 +139,7 @@ const emissiveMaterials = [];
 const emissiveNames = new Set(['Light_Upper_Light-Upper_0', 'Emissive_Cyan__0']);
 platformEntity.findComponents('render').forEach((render) => {
     if (emissiveNames.has(render.entity.name)) {
-        render.meshInstances.forEach(meshInstance => emissiveMaterials.push(meshInstance.material));
+        render.meshInstances.forEach((meshInstance) => emissiveMaterials.push(meshInstance.material));
     }
 });
 
@@ -296,9 +296,9 @@ const applySettings = () => {
     cameraFrame.taa.jitter = data.get('data.taa.jitter');
 
     // Bloom
-    cameraFrame.bloom.intensity = data.get('data.bloom.enabled') ?
-        math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100) :
-        0;
+    cameraFrame.bloom.intensity = data.get('data.bloom.enabled')
+        ? math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100)
+        : 0;
     cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
 
     // grading
