@@ -1197,7 +1197,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     // buffer data must have finished loading in order to create meshes and animations
     const bufferViewData = await Promise.all(bufferViews);
     const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, options);
-    const gsplats = createGSplats(device, gltf, bufferViewData);
+    const gsplats = options.skipMeshes ? [] : createGSplats(device, gltf, bufferViewData);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
     createInstancing(device, gltf, nodeInstancingMap, bufferViewData);
 

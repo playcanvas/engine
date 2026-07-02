@@ -42,9 +42,16 @@ const createGSplatData = (primitive, accessors, bufferViews) => {
     });
 
     const attributes = primitive.attributes;
+    const numSplats = accessors[attributes.POSITION]?.count ?? 0;
+
+    // reads attribute data, returns null when the attribute is missing, its accessor is invalid
+    // or its element count does not match the splat count
     const readAttribute = (name) => {
-        const index = attributes[name];
-        return index === undefined ? null : GltfAccessor.getDataFloat32(accessors[index], bufferViews);
+        const accessor = accessors[attributes[name]];
+        if (!accessor || accessor.count !== numSplats) {
+            return null;
+        }
+        return GltfAccessor.getDataFloat32(accessor, bufferViews);
     };
 
     const positions = readAttribute('POSITION');
@@ -53,12 +60,10 @@ const createGSplatData = (primitive, accessors, bufferViews) => {
     const opacities = readAttribute(`${extensionName}:OPACITY`);
     const sh0 = readAttribute(`${extensionName}:SH_DEGREE_0_COEF_0`);
 
-    if (!positions || !rotations || !scales || !opacities || !sh0) {
-        Debug.error(`glTF ${extensionName} primitive is missing required attributes and is skipped.`);
+    if (!numSplats || !positions || !rotations || !scales || !opacities || !sh0) {
+        Debug.error(`glTF ${extensionName} primitive is missing required attributes or their data is invalid, the primitive is skipped.`);
         return null;
     }
-
-    const numSplats = accessors[attributes.POSITION].count;
 
     const properties = [];
     const addProp = (name, storage) => {
@@ -110,7 +115,12 @@ const createGSplatData = (primitive, accessors, bufferViews) => {
         let k = 0;
         for (let d = 1; d <= bands; d++) {
             for (let c = 0; c < shDegreeCoefCounts[d - 1]; c++) {
-                const source = readAttribute(`${extensionName}:SH_DEGREE_${d}_COEF_${c}`);
+                const name = `${extensionName}:SH_DEGREE_${d}_COEF_${c}`;
+                const source = readAttribute(name);
+                if (!source) {
+                    Debug.error(`glTF ${extensionName} primitive has an invalid ${name} attribute, the primitive is skipped.`);
+                    return null;
+                }
                 rest[k] = GltfAccessor.extractComponent(source, 3, 0, numSplats);
                 rest[numCoefs + k] = GltfAccessor.extractComponent(source, 3, 1, numSplats);
                 rest[numCoefs * 2 + k] = GltfAccessor.extractComponent(source, 3, 2, numSplats);

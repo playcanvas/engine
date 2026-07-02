@@ -151,8 +151,8 @@ class ContainerResource {
  * [options.morphPreferHighPrecision] - When true, high precision storage for morph targets should
  * be preferred. This is faster to create and allows higher precision, but takes more memory and
  * might be slower to render. Defaults to false.
- * [options.skipMeshes] - When true, the meshes from the container are not created. This can be
- * useful if you only need access to textures or animations and similar.
+ * [options.skipMeshes] - When true, the meshes and gaussian splats from the container are not
+ * created. This can be useful if you only need access to textures or animations and similar.
  *
  * For example, to receive a texture preprocess callback:
  *
