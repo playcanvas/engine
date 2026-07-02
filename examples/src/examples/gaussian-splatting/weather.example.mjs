@@ -156,8 +156,8 @@ app.root.addChild(weatherEntity);
 const PSIZE_LO = 0.0001,
     PSIZE_HI = 0.04,
     PSIZE_RANGE = PSIZE_HI - PSIZE_LO;
-const sizeToSlider = (v) => (v - PSIZE_LO) / PSIZE_RANGE;
-const sliderToSize = (v) => PSIZE_LO + v * PSIZE_RANGE;
+const sizeToSlider = v => (v - PSIZE_LO) / PSIZE_RANGE;
+const sliderToSize = v => PSIZE_LO + v * PSIZE_RANGE;
 
 const presets = {
     none: {

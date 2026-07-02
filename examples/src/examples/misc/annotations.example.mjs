@@ -225,7 +225,7 @@ jetFighter.addChild(
         new Vec3(5.5, 1.2, 0),
         '1',
         'Cockpit Canopy',
-        "Transparent canopy offering visibility and housing the pilot's controls."
+        'Transparent canopy offering visibility and housing the pilot\'s controls.'
     )
 );
 

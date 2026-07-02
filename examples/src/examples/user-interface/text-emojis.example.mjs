@@ -157,7 +157,7 @@ debugText.addComponent('element', {
     anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
     fontAsset: assets.font.id,
     fontSize: elSize,
-    text: "The following are the CanvasFont's Texture Atlases,\ncontaining all the rendered characters:",
+    text: 'The following are the CanvasFont\'s Texture Atlases,\ncontaining all the rendered characters:',
     type: ELEMENTTYPE_TEXT
 });
 screen.addChild(debugText);

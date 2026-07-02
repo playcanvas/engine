@@ -187,9 +187,9 @@ plane.setLocalEulerAngles(90, 0, 0);
 plane.enabled = false;
 camera.addChild(plane);
 
-const touchToStartMsg = depthPlaneGlOnly
-    ? 'Touch screen to start AR session (depth texture preview is WebGL-only on WebGPU; check console for depthGpuOptimized / depthPixelFormat).'
-    : 'Touch screen to start AR session';
+const touchToStartMsg = depthPlaneGlOnly ?
+    'Touch screen to start AR session (depth texture preview is WebGL-only on WebGPU; check console for depthGpuOptimized / depthPixelFormat).' :
+    'Touch screen to start AR session';
 
 if (app.xr.supported) {
     const activate = () => {

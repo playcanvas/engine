@@ -211,7 +211,7 @@ const handlePointer = (x, y) => {
                 if (meshInstances.length > 0) {
                     const meshInstance = meshInstances[0];
                     // find entity with matching mesh instance
-                    const entity = entities.find((e) => e.entity.gsplat.instance.meshInstance === meshInstance);
+                    const entity = entities.find(e => e.entity.gsplat.instance.meshInstance === meshInstance);
                     if (entity) {
                         // trigger the visual effect only if not already animating
                         if (entity.fade === 0) {
