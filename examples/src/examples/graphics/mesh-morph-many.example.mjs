@@ -6,7 +6,26 @@
 // source: https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/MorphStressTest/README.md
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -14,37 +33,37 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    morph: new pc.Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' })
+    morph: new Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -54,7 +73,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -72,7 +91,7 @@ app.root.addChild(morphEntity);
 const morphInstance = morphEntity.render.meshInstances[1].morphInstance;
 
 // Create an entity with a directional light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
     castShadows: true,
@@ -84,13 +103,13 @@ app.root.addChild(light);
 light.setLocalEulerAngles(45, 45, 0);
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera');
 app.root.addChild(camera);
 
 // position the camera
 camera.setLocalPosition(0, 4, 9);
-camera.lookAt(pc.Vec3.ZERO);
+camera.lookAt(Vec3.ZERO);
 
 // update function called once per frame
 let time = 0;

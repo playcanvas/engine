@@ -10,7 +10,34 @@
 // source: https://polyhaven.com/a/st_peters_square_night
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOW_PCF5_16F,
+    SKYTYPE_DOME,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -28,29 +55,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -60,13 +87,13 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
-    hdri: new pc.Asset('hdri', 'texture', { url: './assets/hdri/st-peters-square.hdr' }, { mipmaps: false }),
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    biker: new Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    hdri: new Asset('hdri', 'texture', { url: './assets/hdri/st-peters-square.hdr' }, { mipmaps: false }),
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -75,21 +102,21 @@ app.start();
 const hdriTexture = assets.hdri.resource;
 
 // Generate high resolution cubemap for skybox
-const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriTexture);
+const skybox = EnvLighting.generateSkyboxCubemap(hdriTexture);
 app.scene.skybox = skybox;
 
 // Generate env-atlas for lighting
-const lighting = pc.EnvLighting.generateLightingSource(hdriTexture);
-const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+const lighting = EnvLighting.generateLightingSource(hdriTexture);
+const envAtlas = EnvLighting.generateAtlas(lighting);
 lighting.destroy();
 app.scene.envAtlas = envAtlas;
 
 // Set exposure and projected dome
 app.scene.exposure = 0.4;
-app.scene.sky.type = pc.SKYTYPE_DOME;
-app.scene.sky.node.setLocalScale(new pc.Vec3(50, 50, 50));
-app.scene.sky.node.setLocalPosition(pc.Vec3.ZERO);
-app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
+app.scene.sky.type = SKYTYPE_DOME;
+app.scene.sky.node.setLocalScale(new Vec3(50, 50, 50));
+app.scene.sky.node.setLocalPosition(Vec3.ZERO);
+app.scene.sky.center = new Vec3(0, 0.05, 0);
 
 data.on('renderer:set', () => {
     app.scene.gsplat.renderer = data.get('renderer');
@@ -98,7 +125,7 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 data.on('alphaClip:set', () => {
     app.scene.gsplat.alphaClip = data.get('alphaClip');
@@ -124,7 +151,7 @@ applyCustomShader(false);
 data.set('shader', false);
 
 // Create first splat entity
-const biker = new pc.Entity('biker');
+const biker = new Entity('biker');
 biker.addComponent('gsplat', {
     asset: assets.biker,
     castShadows: true
@@ -135,7 +162,7 @@ biker.setLocalScale(0.7, 0.7, 0.7);
 app.root.addChild(biker);
 
 // Create second splat entity
-const biker2 = new pc.Entity('biker2');
+const biker2 = new Entity('biker2');
 biker2.addComponent('gsplat', {
     asset: assets.biker,
     castShadows: true
@@ -146,10 +173,10 @@ biker2.setLocalScale(0.7, 0.7, 0.7);
 app.root.addChild(biker2);
 
 // Create camera
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(1, 1, 1),
-    toneMapping: pc.TONEMAP_ACES,
+    clearColor: new Color(1, 1, 1),
+    toneMapping: TONEMAP_ACES,
     fov: 60
 });
 camera.setLocalPosition(-3, 2, 4);
@@ -169,11 +196,11 @@ camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create shadow catcher
-const shadowCatcher = new pc.Entity('ShadowCatcher');
+const shadowCatcher = new Entity('ShadowCatcher');
 shadowCatcher.addComponent('script');
 const shadowCatcherScript = shadowCatcher.script?.create(ShadowCatcher);
 if (shadowCatcherScript) {
-    shadowCatcherScript.scale = new pc.Vec3(10, 10, 10);
+    shadowCatcherScript.scale = new Vec3(10, 10, 10);
 }
 app.root.addChild(shadowCatcher);
 
@@ -185,10 +212,10 @@ app.root.addChild(shadowCatcher);
 // intentionally not symmetrical.
 const lightBaseAzimuths = [30, 210, 90, 270, 150, 330];
 const lights = lightBaseAzimuths.map((azimuth, i) => {
-    const light = new pc.Entity(`light${i}`);
+    const light = new Entity(`light${i}`);
     light.addComponent('light', {
         type: 'directional',
-        color: pc.Color.WHITE,
+        color: Color.WHITE,
         castShadows: true,
         intensity: 1,
         shadowBias: 0.1,
@@ -196,7 +223,7 @@ const lights = lightBaseAzimuths.map((azimuth, i) => {
         shadowDistance: 20,
         shadowIntensity: 0.5,
         shadowResolution: 2048,
-        shadowType: pc.SHADOW_PCF5_16F
+        shadowType: SHADOW_PCF5_16F
     });
     light.setEulerAngles(55, azimuth, 0);
     app.root.addChild(light);

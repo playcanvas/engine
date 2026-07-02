@@ -1,4 +1,31 @@
-import * as pc from 'playcanvas';
+import {
+    AnimClipHandler,
+    AnimComponentSystem,
+    AnimEvents,
+    AnimStateGraphHandler,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_NEUTRAL,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,42 +33,42 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
-    helipad: new pc.Asset(
+    model: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    walkAnim: new Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.AnimComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    AnimComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.AnimClipHandler, pc.AnimStateGraphHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AnimClipHandler, AnimStateGraphHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -51,7 +78,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 // setup skydome
@@ -61,16 +88,16 @@ app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxIntensity = 0.4; // make it darker
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new Color(0.1, 0.1, 0.1)
 });
 cameraEntity.translate(0, 1, 0);
 
 // ------ Custom render passes set up ------
 
-const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 cameraFrame.rendering.samples = 4;
 cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
@@ -81,20 +108,20 @@ cameraFrame.update();
 app.root.addChild(cameraEntity);
 
 const boxes = {};
-/** @type {pc.Entity[]} */
+/** @type {Entity[]} */
 const highlightedBoxes = [];
 
 // create a floor made up of box models
 for (let i = -5; i <= 5; i++) {
     for (let j = -5; j <= 5; j++) {
-        const material = new pc.StandardMaterial();
-        material.diffuse = new pc.Color(0.7, 0.7, 0.7);
+        const material = new StandardMaterial();
+        material.diffuse = new Color(0.7, 0.7, 0.7);
         material.gloss = 0.3;
         material.metalness = 0.2;
         material.useMetalness = true;
         material.update();
 
-        const box = new pc.Entity();
+        const box = new Entity();
         boxes[`${i}${j}`] = box;
         box.addComponent('render', {
             type: 'box',
@@ -109,15 +136,15 @@ for (let i = -5; i <= 5; i++) {
 /**
  * Light up a box at the given position with a random color using the emissive material property.
  *
- * @param {pc.Vec3} pos - The position of the box to light up.
+ * @param {Vec3} pos - The position of the box to light up.
  */
 const highlightBox = (pos) => {
     const i = Math.floor(pos.x + 0.5);
     const j = Math.floor(pos.z + 0.5);
-    const colorVec = new pc.Vec3(Math.random(), Math.random(), Math.random());
+    const colorVec = new Vec3(Math.random(), Math.random(), Math.random());
     colorVec.mulScalar(1 / colorVec.length());
     const material = boxes[`${i}${j}`].render.material;
-    material.emissive = new pc.Color(colorVec.x, colorVec.y, colorVec.z);
+    material.emissive = new Color(colorVec.x, colorVec.y, colorVec.z);
     material.emissiveIntensity = 50;
     highlightedBoxes.push(boxes[`${i}${j}`]);
 };
@@ -133,7 +160,7 @@ modelEntity.addComponent('anim', {
 });
 modelEntity.setLocalPosition(-3, 0, 0);
 
-const modelEntityParent = new pc.Entity();
+const modelEntityParent = new Entity();
 modelEntityParent.addChild(modelEntity);
 
 app.root.addChild(modelEntityParent);
@@ -146,7 +173,7 @@ app.on('update', (/** @type {number} */ dt) => {
 const walkTrack = assets.walkAnim.resource.animations[0].resource;
 
 // Add two anim events to the walk animation, one for each foot step. These events should occur just as each foot touches the ground
-walkTrack.events = new pc.AnimEvents([
+walkTrack.events = new AnimEvents([
     {
         time: walkTrack.duration * 0.1,
         name: 'foot_step',

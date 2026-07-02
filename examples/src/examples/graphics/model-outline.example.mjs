@@ -1,4 +1,29 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    Keyboard,
+    Layer,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RenderTarget,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    Texture,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,63 +31,63 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    outline: new pc.Asset('outline', 'script', { url: './scripts/posteffects/posteffect-outline.js' })
+    outline: new Asset('outline', 'script', { url: './scripts/posteffects/posteffect-outline.js' })
 };
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: './assets/wasm/glslang/glslang.js',
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.ScriptHandler];
+createOptions.resourceHandlers = [ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 /**
  * Helper function to create a primitive with shape type, position, scale, color and layer.
  *
  * @param {string} primitiveType - The primitive type.
- * @param {number | pc.Vec3} position - The position.
- * @param {number | pc.Vec3} scale - The scale.
- * @param {pc.Color} color - The color.
+ * @param {number | Vec3} position - The position.
+ * @param {number | Vec3} scale - The scale.
+ * @param {Color} color - The color.
  * @param {number[]} layer - The layer.
- * @returns {pc.Entity} The new primitive entity.
+ * @returns {Entity} The new primitive entity.
  */
 function createPrimitive(primitiveType, position, scale, color, layer) {
     // create material of specified color
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     material.update();
 
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         layers: layer,
@@ -79,16 +104,16 @@ function createPrimitive(primitiveType, position, scale, color, layer) {
 
 // create texture and render target for rendering into, including depth buffer
 function createRenderTarget() {
-    const texture = new pc.Texture(app.graphicsDevice, {
+    const texture = new Texture(app.graphicsDevice, {
         name: 'OutlineObjects',
         width: app.graphicsDevice.width,
         height: app.graphicsDevice.height,
-        format: pc.PIXELFORMAT_RGBA8,
+        format: PIXELFORMAT_RGBA8,
         mipmaps: false,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR
     });
-    return new pc.RenderTarget({
+    return new RenderTarget({
         colorBuffer: texture,
         depth: true
     });
@@ -97,7 +122,7 @@ function createRenderTarget() {
 let renderTarget = createRenderTarget();
 
 // create a layer for rendering to texture, and add it to the layers
-const outlineLayer = new pc.Layer({ name: 'OutlineLayer' });
+const outlineLayer = new Layer({ name: 'OutlineLayer' });
 app.scene.layers.push(outlineLayer);
 
 // get existing layers
@@ -105,27 +130,24 @@ const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
 // create ground plane and 3 primitives, visible in both layers
-createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [worldLayer.id]);
-createPrimitive('sphere', new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(1, 0, 0), [worldLayer.id]);
-createPrimitive('box', new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(1, 1, 0), [
-    worldLayer.id,
-    outlineLayer.id
-]);
-createPrimitive('cone', new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), new pc.Color(0, 1, 1), [worldLayer.id]);
+createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), new Color(0.3, 0.5, 0.3), [worldLayer.id]);
+createPrimitive('sphere', new Vec3(-2, 1, 0), new Vec3(2, 2, 2), new Color(1, 0, 0), [worldLayer.id]);
+createPrimitive('box', new Vec3(2, 1, 0), new Vec3(2, 2, 2), new Color(1, 1, 0), [worldLayer.id, outlineLayer.id]);
+createPrimitive('cone', new Vec3(0, 1, -2), new Vec3(2, 2, 2), new Color(0, 1, 1), [worldLayer.id]);
 
 // Create main camera, which renders entities in world layer
-const camera = new pc.Entity('MainCamera');
+const camera = new Entity('MainCamera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.4),
+    clearColor: new Color(0.2, 0.2, 0.4),
     layers: [worldLayer.id, uiLayer.id]
 });
 camera.translate(0, 20, 25);
-camera.lookAt(pc.Vec3.ZERO);
+camera.lookAt(Vec3.ZERO);
 
 // Create outline camera, which renders entities in outline layer into the render target
-const outlineCamera = new pc.Entity('Outline Camera');
+const outlineCamera = new Entity('Outline Camera');
 outlineCamera.addComponent('camera', {
-    clearColor: new pc.Color(0.0, 0.0, 0.0, 0.0),
+    clearColor: new Color(0.0, 0.0, 0.0, 0.0),
     layers: [outlineLayer.id],
     renderTarget: renderTarget,
 
@@ -137,17 +159,17 @@ app.root.addChild(outlineCamera);
 
 // @ts-ignore engine-tsd
 const outline = new OutlineEffect(app.graphicsDevice, 3);
-outline.color = new pc.Color(0, 0.5, 1, 1);
+outline.color = new Color(0, 0.5, 1, 1);
 outline.texture = renderTarget.colorBuffer;
 camera.camera.postEffects.addEffect(outline);
 
 app.root.addChild(camera);
 
 // Create an Entity with a omni light component and add it to both layers
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     range: 20,
     castShadows: true,
     shadowBias: 0.05,
@@ -180,7 +202,7 @@ app.on('update', (dt) => {
 
     // rotate the camera around the objects
     camera.setLocalPosition(12 * Math.sin(time), 5, 12 * Math.cos(time));
-    camera.lookAt(pc.Vec3.ZERO);
+    camera.lookAt(Vec3.ZERO);
 
     // outline camera needs to match the main camera
     outlineCamera.setLocalPosition(camera.getLocalPosition());

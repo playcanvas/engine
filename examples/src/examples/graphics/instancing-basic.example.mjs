@@ -3,7 +3,28 @@
 // This example shows how to use the instancing feature of a StandardMaterial to render multiple copies
 // of a mesh.
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Mat4,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    Vec3,
+    VertexBuffer,
+    VertexFormat,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -11,11 +32,11 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -23,21 +44,21 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -47,7 +68,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -57,12 +78,12 @@ app.scene.skyboxMip = 2;
 app.scene.exposure = 0.3;
 app.scene.envAtlas = assets.helipad.resource;
 
-app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+app.scene.ambientLight = new Color(0.1, 0.1, 0.1);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 app.root.addChild(camera);
 
@@ -70,14 +91,14 @@ app.root.addChild(camera);
 camera.translate(0, 0, 10);
 
 // create standard material and enable instancing on it
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.gloss = 0.6;
 material.metalness = 0.7;
 material.useMetalness = true;
 material.update();
 
 // Create a Entity with a cylinder render component and the instancing material
-const cylinder = new pc.Entity('InstancingEntity');
+const cylinder = new Entity('InstancingEntity');
 cylinder.addComponent('render', {
     material: material,
     type: 'cylinder'
@@ -94,10 +115,10 @@ const matrices = new Float32Array(instanceCount * 16);
 let matrixIndex = 0;
 
 const radius = 5;
-const pos = new pc.Vec3();
-const rot = new pc.Quat();
-const scl = new pc.Vec3();
-const matrix = new pc.Mat4();
+const pos = new Vec3();
+const rot = new Quat();
+const scl = new Vec3();
+const matrix = new Mat4();
 
 for (let i = 0; i < instanceCount; i++) {
     // generate random positions / scales and rotations
@@ -115,8 +136,8 @@ for (let i = 0; i < instanceCount; i++) {
 }
 
 // create static vertex buffer containing the matrices
-const vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
-const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
+const vbFormat = VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+const vertexBuffer = new VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
     data: matrices
 });
 
@@ -130,5 +151,5 @@ app.on('update', (dt) => {
     // orbit camera around
     angle += dt * 0.2;
     camera.setLocalPosition(8 * Math.sin(angle), 0, 8 * Math.cos(angle));
-    camera.lookAt(pc.Vec3.ZERO);
+    camera.lookAt(Vec3.ZERO);
 });

@@ -1,35 +1,71 @@
-import * as pc from 'playcanvas';
+import {
+    ANIM_EQUAL_TO,
+    ANIM_GREATER_THAN,
+    ANIM_LESS_THAN,
+    ANIM_LESS_THAN_EQUAL_TO,
+    ANIM_PARAMETER_INTEGER,
+    ANIM_PARAMETER_TRIGGER,
+    AnimClipHandler,
+    AnimComponentSystem,
+    AnimStateGraphHandler,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice,
+    createScript
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve());
+    WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', {
+    playcanvasGreyTexture: new Asset('playcanvasGreyTexture', 'texture', {
         url: './assets/textures/playcanvas-grey.png'
     }),
-    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
-    jogAnim: new pc.Asset('jogAnim', 'container', { url: './assets/animations/bitmoji/run.glb' }),
-    jumpAnim: new pc.Asset('jumpAnim', 'container', {
+    model: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    idleAnim: new Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
+    walkAnim: new Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
+    jogAnim: new Asset('jogAnim', 'container', { url: './assets/animations/bitmoji/run.glb' }),
+    jumpAnim: new Asset('jumpAnim', 'container', {
         url: './assets/animations/bitmoji/jump-flip.glb'
     }),
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -37,38 +73,38 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.AnimComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    AnimComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem
 ];
 createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.AnimClipHandler,
-    pc.AnimStateGraphHandler
+    TextureHandler,
+    ContainerHandler,
+    ScriptHandler,
+    AnimClipHandler,
+    AnimStateGraphHandler
 ];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -78,7 +114,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 // setup skydome
@@ -87,11 +123,11 @@ app.scene.skyboxIntensity = 0.7;
 app.scene.envAtlas = assets.helipad.resource;
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.name = 'Camera';
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.15, 0.2),
-    toneMapping: pc.TONEMAP_ACES
+    clearColor: new Color(0.1, 0.15, 0.2),
+    toneMapping: TONEMAP_ACES
 });
 
 cameraEntity.translateLocal(0.5, 3, 8);
@@ -99,10 +135,10 @@ cameraEntity.rotateLocal(-30, 0, 0);
 app.root.addChild(cameraEntity);
 
 // Create an entity with a light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     castShadows: true,
     intensity: 2,
     shadowBias: 0.2,
@@ -113,7 +149,7 @@ light.addComponent('light', {
 light.setLocalEulerAngles(60, 30, 0);
 app.root.addChild(light);
 
-const characterEntity = new pc.Entity();
+const characterEntity = new Entity();
 
 // create an entity from the loaded model using the render component
 const renderEntity = assets.model.resource.instantiateRenderEntity({
@@ -174,7 +210,7 @@ const animStateGraphData = {
                     conditions: [
                         {
                             parameterName: 'speed',
-                            predicate: pc.ANIM_GREATER_THAN,
+                            predicate: ANIM_GREATER_THAN,
                             value: 0
                         }
                     ]
@@ -187,7 +223,7 @@ const animStateGraphData = {
                     conditions: [
                         {
                             parameterName: 'jump',
-                            predicate: pc.ANIM_EQUAL_TO,
+                            predicate: ANIM_EQUAL_TO,
                             value: true
                         }
                     ]
@@ -214,7 +250,7 @@ const animStateGraphData = {
                     conditions: [
                         {
                             parameterName: 'speed',
-                            predicate: pc.ANIM_LESS_THAN_EQUAL_TO,
+                            predicate: ANIM_LESS_THAN_EQUAL_TO,
                             value: 0
                         }
                     ]
@@ -227,7 +263,7 @@ const animStateGraphData = {
                     conditions: [
                         {
                             parameterName: 'speed',
-                            predicate: pc.ANIM_GREATER_THAN,
+                            predicate: ANIM_GREATER_THAN,
                             value: 1
                         }
                     ]
@@ -240,7 +276,7 @@ const animStateGraphData = {
                     conditions: [
                         {
                             parameterName: 'speed',
-                            predicate: pc.ANIM_LESS_THAN,
+                            predicate: ANIM_LESS_THAN,
                             value: 2
                         }
                     ]
@@ -251,12 +287,12 @@ const animStateGraphData = {
     parameters: {
         speed: {
             name: 'speed',
-            type: pc.ANIM_PARAMETER_INTEGER,
+            type: ANIM_PARAMETER_INTEGER,
             value: 0
         },
         jump: {
             name: 'jump',
-            type: pc.ANIM_PARAMETER_TRIGGER,
+            type: ANIM_PARAMETER_TRIGGER,
             value: false
         }
     }
@@ -274,21 +310,21 @@ locomotionLayer.assignAnimation('Jump', assets.jumpAnim.resource.animations[0].r
 
 app.root.addChild(characterEntity);
 
-const planeEntity = new pc.Entity();
+const planeEntity = new Entity();
 planeEntity.name = 'Plane';
 planeEntity.addComponent('render', {
     type: 'plane'
 });
 planeEntity.addComponent('collision', {
     type: 'box',
-    halfExtents: new pc.Vec3(7.5, 0, 7.5)
+    halfExtents: new Vec3(7.5, 0, 7.5)
 });
 planeEntity.addComponent('rigidbody', {
     type: 'static'
 });
 planeEntity.setLocalScale(15, 1, 15);
 planeEntity.setPosition(0, 0, 0);
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.diffuseMap = assets.playcanvasGreyTexture.resource;
 material.update();
 planeEntity.render.meshInstances[0].material = material;
@@ -302,16 +338,16 @@ data.on('jump', () => {
 });
 
 // create a Locomotion script and initialize some variables
-const Locomotion = pc.createScript('Locomotion');
+const Locomotion = createScript('Locomotion');
 
 let characterDirection;
-/** @type {pc.Vec3} */
+/** @type {Vec3} */
 let targetPosition;
 
 // initialize code called once per entity
 Locomotion.prototype.initialize = function () {
-    characterDirection = new pc.Vec3(1, 0, 0);
-    targetPosition = new pc.Vec3(2, 0, 2);
+    characterDirection = new Vec3(1, 0, 0);
+    targetPosition = new Vec3(2, 0, 2);
     document.addEventListener('mousedown', this.onMouseDown);
     this.on('destroy', this.destroy, this);
 };
@@ -320,13 +356,13 @@ Locomotion.prototype.initialize = function () {
 Locomotion.prototype.onMouseDown = function (event) {
     if (event.button !== 0) return;
     // Set the character target position to a position on the plane that the user has clicked
-    /** @type {pc.Entity} */
+    /** @type {Entity} */
     const cameraEntity = app.root.findByName('Camera');
     const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
     const far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
     const result = app.systems.rigidbody.raycastFirst(far, near);
     if (result) {
-        targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
+        targetPosition = new Vec3(result.point.x, 0, result.point.z);
         characterEntity.anim.setInteger('speed', data.get('jogToggle') ? 2 : 1);
     }
 };
@@ -354,7 +390,7 @@ function speedForState(state) {
     }
 }
 
-const currentPosition = new pc.Vec3(0, 0, 0);
+const currentPosition = new Vec3(0, 0, 0);
 
 // update code called every frame
 Locomotion.prototype.update = function (/** @type {number} */ dt) {
@@ -369,7 +405,7 @@ Locomotion.prototype.update = function (/** @type {number} */ dt) {
         }
         const distance = targetPosition.clone().sub(currentPosition);
         const direction = distance.clone().normalize();
-        characterDirection = new pc.Vec3().sub(direction);
+        characterDirection = new Vec3().sub(direction);
         const movement = direction.clone().mulScalar(dt * moveSpeed);
         if (movement.length() < distance.length()) {
             currentPosition.add(movement);

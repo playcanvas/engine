@@ -1,4 +1,28 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    ModelComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TextureHandler,
+    TouchDevice,
+    XRSPACE_LOCAL,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -24,29 +48,29 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.ModelComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
+    RenderComponentSystem,
+    ModelComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -56,23 +80,23 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    glb: new pc.Asset('glb', 'container', { url: './assets/models/vr-controller.glb' })
+    glb: new Asset('glb', 'container', { url: './assets/models/vr-controller.glb' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // create camera
-const c = new pc.Entity();
+const c = new Entity();
 c.addComponent('camera', {
-    clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255)
+    clearColor: new Color(44 / 255, 62 / 255, 80 / 255)
 });
 app.root.addChild(c);
 
-const l = new pc.Entity();
+const l = new Entity();
 l.addComponent('light', {
     type: 'directional',
     castShadows: true,
@@ -89,10 +113,10 @@ app.root.addChild(l);
  * @param {number} z - The z coordinate.
  */
 const createCube = (x, y, z) => {
-    const cube = new pc.Entity();
+    const cube = new Entity();
     cube.addComponent('render', {
         type: 'box',
-        material: new pc.StandardMaterial()
+        material: new StandardMaterial()
     });
     cube.translate(x, y, z);
     app.root.addChild(cube);
@@ -101,7 +125,7 @@ const createCube = (x, y, z) => {
 const controllers = [];
 // create controller model
 const createController = (inputSource) => {
-    const entity = new pc.Entity();
+    const entity = new Entity();
     entity.addComponent('model', {
         type: 'asset',
         asset: assets.glb.resource.model,
@@ -130,8 +154,8 @@ for (let x = 0; x <= SIZE; x++) {
 
 if (app.xr.supported) {
     const activate = () => {
-        if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
+        if (app.xr.isAvailable(XRTYPE_VR)) {
+            c.camera.startXr(XRTYPE_VR, XRSPACE_LOCAL, {
                 callback: (err) => {
                     if (err) message(`Immersive VR failed to start: ${err.message}`);
                 }
@@ -162,7 +186,7 @@ if (app.xr.supported) {
 
     // end session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });

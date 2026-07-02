@@ -12,23 +12,60 @@
 // author: SpAItial AI
 // source: https://spaitial.ai/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    CollisionComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSplatComponentSystem,
+    GSplatHandler,
+    GamePads,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    SHADER_FORWARD,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // physics engine (Ammo) - required for the character controller and the mesh collider
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 // Draco decoder - the proxy and collision meshes are Draco-compressed glbs
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
@@ -36,10 +73,10 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 
 await Promise.all([
     new Promise((resolve) => {
-        pc.WasmModule.getInstance('Ammo', () => resolve(true));
+        WasmModule.getInstance('Ammo', () => resolve(true));
     }),
     new Promise((resolve) => {
-        pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
+        WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
 
@@ -51,33 +88,33 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.gamepads = new pc.GamePads();
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(window);
+createOptions.gamepads = new GamePads();
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -87,15 +124,15 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    island: new pc.Asset('gsplat', 'gsplat', {
+    island: new Asset('gsplat', 'gsplat', {
         url: 'https://code.playcanvas.com/examples_data/example_cave_01/lod-meta.json'
     }),
-    proxy: new pc.Asset('proxy', 'container', { url: './assets/models/cave.glb' }),
-    collision: new pc.Asset('collision', 'container', { url: './assets/models/cave-collision.glb' })
+    proxy: new Asset('proxy', 'container', { url: './assets/models/cave.glb' }),
+    collision: new Asset('collision', 'container', { url: './assets/models/cave-collision.glb' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -103,20 +140,20 @@ app.start();
 app.systems.rigidbody?.gravity.set(0, -10, 0);
 
 // cap the number of rendered splats - lower on mobile to keep performance up
-app.scene.gsplat.splatBudget = (pc.platform.mobile ? 1 : 3) * 1000000;
+app.scene.gsplat.splatBudget = (platform.mobile ? 1 : 3) * 1000000;
 
 // use the GPU-sort raster renderer on WebGPU, CPU-sort on WebGL
-app.scene.gsplat.renderer = device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT;
+app.scene.gsplat.renderer = device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
 
 // ------ Content root ------
 // The splat and the proxy / collision meshes share the same coordinate space, so we parent
 // them to a single entity to keep them aligned.
-const content = new pc.Entity('content');
+const content = new Entity('content');
 app.root.addChild(content);
 
 // ------ Gaussian Splat ------
 // The splat is rendered as usual, in the transparent sublayer of the world layer.
-const splat = new pc.Entity('splat');
+const splat = new Entity('splat');
 splat.addComponent('gsplat', {
     asset: assets.island
 });
@@ -151,10 +188,10 @@ const proxy = assets.proxy.resource.instantiateRenderEntity();
 proxy.setLocalEulerAngles(180, 0, 0);
 content.addChild(proxy);
 
-proxy.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+proxy.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     render.meshInstances.forEach((mi) => {
         // keep the mesh in the depth prepass but exclude it from the forward (color) pass
-        mi.shaderPassMask &= ~(1 << pc.SHADER_FORWARD);
+        mi.shaderPassMask &= ~(1 << SHADER_FORWARD);
     });
 });
 
@@ -164,7 +201,7 @@ proxy.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render
 // the surface the character controller walks on.
 const collision = assets.collision.resource.instantiateRenderEntity();
 collision.setLocalEulerAngles(180, 0, 0);
-collision.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+collision.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     const entity = render.entity;
     entity.addComponent('rigidbody', {
         type: 'static',
@@ -180,19 +217,19 @@ collision.findComponents('render').forEach((/** @type {pc.RenderComponent} */ re
 content.addChild(collision);
 
 // ------ First-person character controller ------
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.55, 0.7),
+    clearColor: new Color(0.4, 0.55, 0.7),
     farClip: 1000,
     fov: 75,
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 camera.setLocalPosition(0, 0.35, 0);
 
 // The cave interior is only ~3.4 units tall (floor ≈ -0.9, ceiling ≈ 2.5). A small capsule that
 // sits just above the floor - spawning higher would straddle the ceiling and the physics solver
 // would eject the body out of the world.
-const characterController = new pc.Entity('character-controller');
+const characterController = new Entity('character-controller');
 // camera sits 0.35 above the controller, so the controller Y is the desired eye Y minus 0.35
 characterController.setPosition(0.1, -0.45, 0.06);
 characterController.addChild(camera);
@@ -206,8 +243,8 @@ characterController.addComponent('rigidbody', {
     mass: 100,
     linearDamping: 0,
     angularDamping: 0,
-    linearFactor: pc.Vec3.ONE,
-    angularFactor: pc.Vec3.ZERO,
+    linearFactor: Vec3.ONE,
+    angularFactor: Vec3.ZERO,
     friction: 0.5,
     restitution: 0
 });
@@ -231,8 +268,8 @@ app.root.addChild(characterController);
 // Enabling DOF automatically enables the camera depth prepass. The prepass renders opaque
 // world-layer meshes that write depth (our proxy mesh) into a linear depth texture, which the
 // DOF effect samples. The transparent splat is then blurred according to the proxy depth.
-const cameraFrame = new pc.CameraFrame(app, camera.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+const cameraFrame = new CameraFrame(app, camera.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.rendering.samples = 4;
 cameraFrame.vignette.inner = 0.5;
 cameraFrame.vignette.outer = 1.4;
@@ -270,9 +307,9 @@ focusReticle.style.cssText =
 document.body.appendChild(focusReticle);
 app.on('destroy', () => focusReticle.remove());
 
-const rayStart = new pc.Vec3();
-const rayDir = new pc.Vec3();
-const rayEnd = new pc.Vec3();
+const rayStart = new Vec3();
+const rayDir = new Vec3();
+const rayEnd = new Vec3();
 
 // smoothed focus distance, eased toward the ray hit for a cinematic focus pull (~0.5s settle)
 let smoothedFocus = 5;

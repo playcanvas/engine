@@ -10,7 +10,35 @@
 // author: Andrii Shramko
 // source: https://www.linkedin.com/in/andrii-shramko/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FOG_EXP,
+    FOG_NONE,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    MiniStats,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatWeather } from 'playcanvas/scripts/esm/gsplat/gsplat-weather.mjs';
 
@@ -24,28 +52,28 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -54,18 +82,18 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    scene: new pc.Asset('gsplat', 'gsplat', {
+    scene: new Asset('gsplat', 'gsplat', {
         url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json'
     })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
 
 // LOD streaming settings
 app.scene.gsplat.lodUpdateAngle = 90;
@@ -73,14 +101,14 @@ app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.radialSorting = true;
 app.scene.gsplat.lodUpdateDistance = 0.5;
 app.scene.gsplat.lodUnderfillLimit = 5;
-app.scene.gsplat.splatBudget = pc.platform.mobile ? 1000000 : 4000000;
+app.scene.gsplat.splatBudget = platform.mobile ? 1000000 : 4000000;
 
 // Camera
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.6, 0.65, 0.75),
+    clearColor: new Color(0.6, 0.65, 0.75),
     fov: 75,
-    toneMapping: pc.TONEMAP_LINEAR
+    toneMapping: TONEMAP_LINEAR
 });
 camera.setLocalPosition(10.3, 2, -10);
 app.root.addChild(camera);
@@ -93,11 +121,11 @@ Object.assign(cc, {
     moveFastSpeed: 15,
     enableOrbit: false,
     enablePan: false,
-    focusPoint: new pc.Vec3(12, 3, 0)
+    focusPoint: new Vec3(12, 3, 0)
 });
 
 // Load the gsplat scene
-const gsplatEntity = new pc.Entity('Roman-Parish');
+const gsplatEntity = new Entity('Roman-Parish');
 gsplatEntity.addComponent('gsplat', {
     asset: assets.scene
 });
@@ -108,7 +136,7 @@ gsplatEntity.gsplat.lodBaseDistance = 5;
 gsplatEntity.gsplat.lodMultiplier = 4;
 
 // Procedural weather
-const weatherEntity = new pc.Entity('Weather');
+const weatherEntity = new Entity('Weather');
 weatherEntity.addComponent('script');
 const weather = /** @type {GsplatWeather} */ (
     weatherEntity.script.create(GsplatWeather, {
@@ -172,11 +200,11 @@ const presets = {
 
 const applyFog = (density) => {
     if (density > 0) {
-        app.scene.fog.type = pc.FOG_EXP;
+        app.scene.fog.type = FOG_EXP;
         app.scene.fog.density = density;
         app.scene.fog.color.set(1, 1, 1);
     } else {
-        app.scene.fog.type = pc.FOG_NONE;
+        app.scene.fog.type = FOG_NONE;
     }
 };
 
@@ -216,7 +244,7 @@ data.on('renderer:set', () => {
 });
 
 // Initialize UI data
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('exposure', 1);
 data.set('useFog', true);
 data.set('preset', 'snow');

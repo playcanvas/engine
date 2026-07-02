@@ -2,15 +2,48 @@
 //
 // Animated 2D sprite using SpriteComponent. Arrow keys walk, Space jumps, Z rolls, X attacks.
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_NEAREST,
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_SPACE,
+    KEY_X,
+    KEY_Z,
+    Keyboard,
+    PROJECTION_ORTHOGRAPHIC,
+    RESOLUTION_AUTO,
+    SPRITETYPE_ANIMATED,
+    SPRITETYPE_SIMPLE,
+    SPRITE_RENDERMODE_SIMPLE,
+    Sprite,
+    SpriteComponentSystem,
+    TextureAtlas,
+    TextureHandler,
+    Vec2,
+    Vec4,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
+
+/**
+ * @import { Texture } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    caveman: new pc.Asset(
+    caveman: new Asset(
         'caveman',
         'texture',
         {
@@ -18,7 +51,7 @@ const assets = {
         },
         { srgb: true }
     ),
-    tileset: new pc.Asset(
+    tileset: new Asset(
         'tileset',
         'texture',
         {
@@ -32,21 +65,21 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(window);
+createOptions.keyboard = new Keyboard(window);
 
-createOptions.componentSystems = [pc.CameraComponentSystem, pc.SpriteComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.componentSystems = [CameraComponentSystem, SpriteComponentSystem];
+createOptions.resourceHandlers = [TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -55,16 +88,16 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // create an orthographic camera centered on the origin
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.55, 0.7),
-    projection: pc.PROJECTION_ORTHOGRAPHIC,
+    clearColor: new Color(0.4, 0.55, 0.7),
+    projection: PROJECTION_ORTHOGRAPHIC,
     orthoHeight: 1.5
 });
 camera.setPosition(0, 0.5, 5);
@@ -76,32 +109,32 @@ const PIXELS_PER_UNIT = 100;
 /**
  * Configure a texture for crisp pixel-art rendering.
  *
- * @param {pc.Texture} t - The texture to configure.
+ * @param {Texture} t - The texture to configure.
  */
 const configurePixelArt = (t) => {
-    t.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-    t.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-    t.minFilter = pc.FILTER_NEAREST;
-    t.magFilter = pc.FILTER_NEAREST;
+    t.addressU = ADDRESS_CLAMP_TO_EDGE;
+    t.addressV = ADDRESS_CLAMP_TO_EDGE;
+    t.minFilter = FILTER_NEAREST;
+    t.magFilter = FILTER_NEAREST;
 };
 
 /**
  * Build a sprite asset that references one or more frames from an atlas.
  *
  * @param {string} name - Name of the sprite asset.
- * @param {pc.TextureAtlas} spriteAtlas - The atlas containing the frames.
+ * @param {TextureAtlas} spriteAtlas - The atlas containing the frames.
  * @param {string[]} frameKeys - Frame keys to include, in playback order.
- * @returns {pc.Asset} The created sprite asset, already added to `app.assets`.
+ * @returns {Asset} The created sprite asset, already added to `app.assets`.
  */
 const createSpriteAsset = (name, spriteAtlas, frameKeys) => {
-    const sprite = new pc.Sprite(app.graphicsDevice, {
+    const sprite = new Sprite(app.graphicsDevice, {
         atlas: spriteAtlas,
         frameKeys: frameKeys,
         pixelsPerUnit: PIXELS_PER_UNIT,
-        renderMode: pc.SPRITE_RENDERMODE_SIMPLE
+        renderMode: SPRITE_RENDERMODE_SIMPLE
     });
 
-    const spriteAsset = new pc.Asset(name, 'sprite', { url: '' });
+    const spriteAsset = new Asset(name, 'sprite', { url: '' });
     spriteAsset.resource = sprite;
     spriteAsset.loaded = true;
     app.assets.add(spriteAsset);
@@ -110,7 +143,7 @@ const createSpriteAsset = (name, spriteAtlas, frameKeys) => {
 
 // build the caveman atlas: a regular 6x7 grid covering the whole spritesheet,
 // with frame rects computed at runtime from the texture dimensions
-const cavemanTexture = /** @type {pc.Texture} */ (assets.caveman.resource);
+const cavemanTexture = /** @type {Texture} */ (assets.caveman.resource);
 configurePixelArt(cavemanTexture);
 
 const COLS = 6;
@@ -124,7 +157,7 @@ const cellH = cavemanTexture.height / ROWS;
 const FEET_OFFSET_PX = 6;
 const feetPivotY = FEET_OFFSET_PX / cellH;
 
-const cavemanAtlas = new pc.TextureAtlas();
+const cavemanAtlas = new TextureAtlas();
 cavemanAtlas.texture = cavemanTexture;
 cavemanAtlas.frames = {};
 for (let r = 0; r < ROWS; r++) {
@@ -134,18 +167,18 @@ for (let r = 0; r < ROWS; r++) {
         const y = (ROWS - 1 - r) * cellH;
         const index = r * COLS + c;
         cavemanAtlas.frames[String(index)] = {
-            rect: new pc.Vec4(x, y, cellW, cellH),
-            pivot: new pc.Vec2(0.5, feetPivotY),
-            border: new pc.Vec4(0, 0, 0, 0)
+            rect: new Vec4(x, y, cellW, cellH),
+            pivot: new Vec2(0.5, feetPivotY),
+            border: new Vec4(0, 0, 0, 0)
         };
     }
 }
 
 // create the caveman entity and add animation clips from contiguous frame
 // ranges in the spritesheet; walk faces right and is flipped via entity scale for left
-const caveman = new pc.Entity('caveman');
+const caveman = new Entity('caveman');
 caveman.addComponent('sprite', {
-    type: pc.SPRITETYPE_ANIMATED
+    type: SPRITETYPE_ANIMATED
 });
 const clipDefs = [
     { name: 'idle', start: 0, count: 6, fps: 6, loop: true },
@@ -169,20 +202,20 @@ app.root.addChild(caveman);
 
 // build a sprite for a single 48x48 grass-topped ground tile from the
 // tileset, and spawn a row of them under the caveman's feet
-const tilesetTexture = /** @type {pc.Texture} */ (assets.tileset.resource);
+const tilesetTexture = /** @type {Texture} */ (assets.tileset.resource);
 configurePixelArt(tilesetTexture);
 
 const TILE_PX = 48;
-const tilesetAtlas = new pc.TextureAtlas();
+const tilesetAtlas = new TextureAtlas();
 tilesetAtlas.texture = tilesetTexture;
 tilesetAtlas.frames = {
     ground: {
         // rect uses the atlas's bottom-left origin (same convention as
         // the caveman atlas above)
-        rect: new pc.Vec4(704, 256, TILE_PX, TILE_PX),
+        rect: new Vec4(704, 256, TILE_PX, TILE_PX),
         // origin at top-center so y = 0 places the tile's surface on the ground line
-        pivot: new pc.Vec2(0.5, 1),
-        border: new pc.Vec4(0, 0, 0, 0)
+        pivot: new Vec2(0.5, 1),
+        border: new Vec4(0, 0, 0, 0)
     }
 };
 const groundSpriteAsset = createSpriteAsset('ground', tilesetAtlas, ['ground']);
@@ -190,9 +223,9 @@ const groundSpriteAsset = createSpriteAsset('ground', tilesetAtlas, ['ground']);
 const tileWorld = TILE_PX / PIXELS_PER_UNIT;
 const tileSpan = 10;
 for (let i = -tileSpan; i <= tileSpan; i++) {
-    const tile = new pc.Entity(`ground-${i}`);
+    const tile = new Entity(`ground-${i}`);
     tile.addComponent('sprite', {
-        type: pc.SPRITETYPE_SIMPLE,
+        type: SPRITETYPE_SIMPLE,
         spriteAsset: groundSpriteAsset.id
     });
     tile.setPosition(i * tileWorld, 0, 0);
@@ -223,12 +256,12 @@ caveman.sprite.on('end', (clip) => {
     }
 });
 
-const keyboard = /** @type {pc.Keyboard} */ (app.keyboard);
+const keyboard = /** @type {Keyboard} */ (app.keyboard);
 
 app.on('update', (/** @type {number} */ dt) => {
     // horizontal input
-    const left = keyboard.isPressed(pc.KEY_LEFT);
-    const right = keyboard.isPressed(pc.KEY_RIGHT);
+    const left = keyboard.isPressed(KEY_LEFT);
+    const right = keyboard.isPressed(KEY_RIGHT);
     const dir = (right ? 1 : 0) - (left ? 1 : 0);
 
     // input handling: locked out while attacking, and partially while rolling
@@ -242,20 +275,20 @@ app.on('update', (/** @type {number} */ dt) => {
         }
 
         // jump input (only when grounded)
-        if (grounded && keyboard.isPressed(pc.KEY_SPACE)) {
+        if (grounded && keyboard.isPressed(KEY_SPACE)) {
             velocityY = jumpSpeed;
             grounded = false;
         }
 
         // roll input (only when grounded, single-shot per key press)
-        if (grounded && keyboard.wasPressed(pc.KEY_Z)) {
+        if (grounded && keyboard.wasPressed(KEY_Z)) {
             rolling = true;
             caveman.sprite.play('roll');
             currentClip = 'roll';
         }
 
         // attack input (only when grounded, single-shot per key press)
-        if (grounded && keyboard.wasPressed(pc.KEY_X)) {
+        if (grounded && keyboard.wasPressed(KEY_X)) {
             attacking = true;
             caveman.sprite.play('attack');
             currentClip = 'attack';

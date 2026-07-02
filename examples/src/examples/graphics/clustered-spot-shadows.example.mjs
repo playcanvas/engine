@@ -1,21 +1,49 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOWUPDATE_REALTIME,
+    SHADOWUPDATE_THISFRAME,
+    SHADOW_PCF3_32F,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { Material } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const observer = data;
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    channels: new pc.Asset('channels', 'texture', { url: './assets/textures/channels.png' }),
-    heart: new pc.Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
-    helipad: new pc.Asset(
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    channels: new Asset('channels', 'texture', { url: './assets/textures/channels.png' }),
+    heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -23,28 +51,28 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -54,14 +82,14 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 data.set('settings', {
     shadowAtlasResolution: 1024, // shadow map resolution storing all shadows
-    shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
+    shadowType: SHADOW_PCF3_32F, // shadow filter type
     shadowsEnabled: true,
     cookiesEnabled: true,
     shadowIntensity: 1,
@@ -85,7 +113,7 @@ app.scene.clusteredLightingEnabled = true;
 const lighting = app.scene.lighting;
 
 // 1) subdivide space with lights into this many cells
-lighting.cells = new pc.Vec3(12, 4, 12);
+lighting.cells = new Vec3(12, 4, 12);
 
 // 2) and allow this many lights per cell
 const maxLights = 24;
@@ -115,7 +143,7 @@ let lightsStatic = false;
 let debugAtlas = false;
 
 // ground material
-const groundMaterial = new pc.StandardMaterial();
+const groundMaterial = new StandardMaterial();
 groundMaterial.gloss = 0.55;
 groundMaterial.metalness = 0.4;
 groundMaterial.useMetalness = true;
@@ -125,7 +153,7 @@ groundMaterial.bumpiness = 0.5;
 groundMaterial.update();
 
 // cube material
-const cubeMaterial = new pc.StandardMaterial();
+const cubeMaterial = new StandardMaterial();
 cubeMaterial.gloss = 0.55;
 cubeMaterial.metalness = 0.4;
 cubeMaterial.useMetalness = true;
@@ -137,14 +165,14 @@ cubeMaterial.update();
 /**
  * Helper function to create a 3d primitive including its material.
  * @param {string} primitiveType - The primitive type.
- * @param {pc.Vec3} position - The position.
- * @param {pc.Vec3} scale - The scale.
- * @param {pc.Material} mat - The material.
- * @returns {pc.Entity} The returned entity.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
+ * @param {Material} mat - The material.
+ * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, mat) {
     // create the primitive using the material
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         castShadows: true,
@@ -160,7 +188,7 @@ function createPrimitive(primitiveType, position, scale, mat) {
 }
 
 // create some visible geometry
-const ground = createPrimitive('box', new pc.Vec3(0, 0, 0), new pc.Vec3(500, 1, 500), groundMaterial);
+const ground = createPrimitive('box', new Vec3(0, 0, 0), new Vec3(500, 1, 500), groundMaterial);
 
 const numTowers = 8;
 for (let i = 0; i < numTowers; i++) {
@@ -170,13 +198,13 @@ for (let i = 0; i < numTowers; i++) {
     const numCubes = 12;
     for (let y = 0; y <= 10; y++) {
         const elevationRadius = radius * (1 - y / numCubes);
-        const pos = new pc.Vec3(elevationRadius * Math.sin(fraction), y * 6, elevationRadius * Math.cos(fraction));
-        const prim = createPrimitive('box', pos, new pc.Vec3(scale, scale, scale), cubeMaterial);
+        const pos = new Vec3(elevationRadius * Math.sin(fraction), y * 6, elevationRadius * Math.cos(fraction));
+        const prim = createPrimitive('box', pos, new Vec3(scale, scale, scale), cubeMaterial);
         prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
     }
     scale -= 1.5;
 }
-/** @type {pc.Entity[]} */
+/** @type {Entity[]} */
 const spotLightList = [];
 const cookieChannels = ['r', 'g', 'b', 'a', 'rgb'];
 
@@ -186,8 +214,8 @@ const cookieChannels = ['r', 'g', 'b', 'a', 'rgb'];
  */
 function createLight(index) {
     const intensity = 1.5;
-    const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
-    const lightSpot = new pc.Entity(`Spot-${index}`);
+    const color = new Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+    const lightSpot = new Entity(`Spot-${index}`);
     const heartTexture = Math.random() < 0.5;
     const cookieTexture = heartTexture ? assets.heart : assets.channels;
     const cookieChannel = heartTexture ? 'a' : cookieChannels[Math.floor(Math.random() * cookieChannels.length)];
@@ -205,7 +233,7 @@ function createLight(index) {
         shadowResolution: 512, // only used when clustering is off
 
         // when lights are static, only render shadows one time (or as needed when they use different atlas slot)
-        shadowUpdateMode: lightsStatic ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_REALTIME,
+        shadowUpdateMode: lightsStatic ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_REALTIME,
 
         // cookie texture
         cookie: cookieTexture.resource,
@@ -214,7 +242,7 @@ function createLight(index) {
     });
 
     // attach a render component with a small cone to each light
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.emissive = color;
     material.update();
 
@@ -236,9 +264,9 @@ for (let i = 0; i < count; i++) {
 updateLightCount();
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    clearColor: new Color(0.2, 0.2, 0.2),
     farClip: 2000,
     nearClip: 1
 });
@@ -293,7 +321,7 @@ function updateLightCount() {
 
     // shadow update mode (need to force render shadow when we add / remove light, as they all move)
     spotLightList.forEach((spot) => {
-        spot.light.shadowUpdateMode = lightsStatic ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_REALTIME;
+        spot.light.shadowUpdateMode = lightsStatic ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_REALTIME;
     });
 }
 
@@ -324,7 +352,7 @@ app.on('update', (/** @type {number} */ dt) => {
     }
 
     // rotate spot lights around
-    const lightPos = new pc.Vec3();
+    const lightPos = new Vec3();
     spotLightList.forEach((spotlight, i) => {
         const angle = (i / spotLightList.length) * Math.PI * 2;
         const x = 130 * Math.sin(angle + time);
@@ -333,7 +361,7 @@ app.on('update', (/** @type {number} */ dt) => {
         spotlight.setLocalPosition(lightPos);
 
         lightPos.y = 0;
-        spotlight.lookAt(lightPos, pc.Vec3.RIGHT);
+        spotlight.lookAt(lightPos, Vec3.RIGHT);
 
         spotlight.rotateLocal(90, 0, 0);
     });

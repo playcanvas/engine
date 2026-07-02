@@ -1,4 +1,37 @@
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CULLFACE_NONE,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_NEAREST,
+    FILTER_NEAREST_MIPMAP_NEAREST,
+    Keyboard,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    Mouse,
+    PIXELFORMAT_SRGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_NORMAL,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ScriptComponentSystem,
+    ScriptHandler,
+    ShaderMaterial,
+    Texture,
+    TextureHandler,
+    TorusGeometry,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -52,60 +85,60 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset(
+    rockyTrail: new Asset(
         'rockyTrail',
         'texture',
         { url: './assets/textures/rocky_trail_diff_1k.jpg' },
         { srgb: true }
     ),
-    rockBoulder: new pc.Asset(
+    rockBoulder: new Asset(
         'rockBoulder',
         'texture',
         { url: './assets/textures/rock_boulder_cracked_diff_1k.jpg' },
         { srgb: true }
     ),
-    coastSand: new pc.Asset(
+    coastSand: new Asset(
         'coastSand',
         'texture',
         { url: './assets/textures/coast_sand_rocks_02_diff_1k.jpg' },
         { srgb: true }
     ),
-    aerialRocks: new pc.Asset(
+    aerialRocks: new Asset(
         'aeralRocks',
         'texture',
         { url: './assets/textures/aerial_rocks_02_diff_1k.jpg' },
         { srgb: true }
     ),
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -115,14 +148,14 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // Create directional light
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional'
 });
@@ -130,15 +163,15 @@ light.setLocalEulerAngles(45, 0, 45);
 
 const textureArrayOptions = {
     name: 'textureArrayImages',
-    format: pc.PIXELFORMAT_SRGBA8,
+    format: PIXELFORMAT_SRGBA8,
     width: 1024,
     height: 1024,
     arrayLength: 4, // array texture with 4 textures
-    magFilter: pc.FILTER_NEAREST,
-    minFilter: pc.FILTER_NEAREST_MIPMAP_NEAREST,
+    magFilter: FILTER_NEAREST,
+    minFilter: FILTER_NEAREST_MIPMAP_NEAREST,
     mipmaps: true,
-    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-    addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+    addressU: ADDRESS_CLAMP_TO_EDGE,
+    addressV: ADDRESS_CLAMP_TO_EDGE,
     levels: [
         [
             assets.rockyTrail.resource.getSource(),
@@ -149,7 +182,7 @@ const textureArrayOptions = {
     ]
 };
 
-const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
+const textureArray = new Texture(app.graphicsDevice, textureArrayOptions);
 
 // generate mipmaps for visualization
 const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);
@@ -162,43 +195,43 @@ const levels = mipmaps.map((data) => {
 });
 textureArrayOptions.levels = levels;
 textureArrayOptions.name = 'textureArrayData';
-const mipmapTextureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
+const mipmapTextureArray = new Texture(app.graphicsDevice, textureArrayOptions);
 
 // Create a new material with the new shader
-const material = new pc.ShaderMaterial({
+const material = new ShaderMaterial({
     uniqueName: 'MyShader',
     vertexGLSL: shaderGlslVert,
     fragmentGLSL: shaderGlslFrag,
     vertexWGSL: shaderWgslVert,
     fragmentWGSL: shaderWgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0,
-        aNormal: pc.SEMANTIC_NORMAL
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0,
+        aNormal: SEMANTIC_NORMAL
     }
 });
 material.setParameter('uDiffuseMap', textureArray);
 material.update();
 
 // Create a another material with the new shader
-const groundMaterial = new pc.ShaderMaterial({
+const groundMaterial = new ShaderMaterial({
     uniqueName: 'MyShaderGround',
     vertexGLSL: shaderGlslVert,
     fragmentGLSL: groundGlslFrag,
     vertexWGSL: shaderWgslVert,
     fragmentWGSL: groundWgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0,
-        aNormal: pc.SEMANTIC_NORMAL
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0,
+        aNormal: SEMANTIC_NORMAL
     }
 });
-groundMaterial.cull = pc.CULLFACE_NONE;
+groundMaterial.cull = CULLFACE_NONE;
 groundMaterial.setParameter('uDiffuseMap', textureArray);
 groundMaterial.update();
 
 // Create an Entity for the ground
-const ground = new pc.Entity();
+const ground = new Entity();
 ground.addComponent('render', {
     type: 'box',
     material: groundMaterial
@@ -207,27 +240,27 @@ ground.setLocalScale(4, 4, 4);
 ground.setLocalPosition(0, -7, 0);
 app.root.addChild(ground);
 
-const torus = pc.Mesh.fromGeometry(
+const torus = Mesh.fromGeometry(
     app.graphicsDevice,
-    new pc.TorusGeometry({
+    new TorusGeometry({
         tubeRadius: 0.2,
         ringRadius: 0.3,
         radialSegments: 50,
         tubularSegments: 40
     })
 );
-const shape = new pc.Entity();
+const shape = new Entity();
 shape.addComponent('render', {
     material: material,
-    meshInstances: [new pc.MeshInstance(torus, material)]
+    meshInstances: [new MeshInstance(torus, material)]
 });
 shape.setPosition(0, -2, 0);
 shape.setLocalScale(4, 4, 4);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2)
+    clearColor: new Color(0.2, 0.2, 0.2)
 });
 
 // Adjust the camera position

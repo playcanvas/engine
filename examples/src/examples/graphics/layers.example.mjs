@@ -1,4 +1,18 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    BLEND_NORMAL,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Layer,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -9,20 +23,20 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -33,10 +47,10 @@ app.on('destroy', () => {
 
 app.start();
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // Create a new layer to put in front of everything
-const layer = new pc.Layer({
+const layer = new Layer({
     name: 'Front Layer'
 });
 
@@ -49,9 +63,9 @@ app.scene.layers.insert(layer, idx + 1);
 
 // Create an Entity with a camera component
 // Make sure it renders both World and Front Layer
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    clearColor: new Color(0.4, 0.45, 0.5),
     layers: [worldLayer.id, layer.id]
 });
 camera.translate(0, 0, 24);
@@ -59,10 +73,10 @@ app.root.addChild(camera);
 
 // Create an Entity with a omni light component
 // Make sure it lights both World and Front Layer
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     range: 100,
     layers: [worldLayer.id, layer.id]
 });
@@ -70,20 +84,20 @@ light.translate(5, 0, 15);
 app.root.addChild(light);
 
 // red material is semi-transparent
-const red = new pc.StandardMaterial();
+const red = new StandardMaterial();
 red.diffuse.set(1, 0, 0);
-red.blendType = pc.BLEND_NORMAL;
+red.blendType = BLEND_NORMAL;
 red.opacity = 0.5;
 red.update();
 
 // blue material does not test the existing depth buffer
-const blue = new pc.StandardMaterial();
+const blue = new StandardMaterial();
 blue.diffuse.set(0, 0, 1);
 blue.depthTest = false;
 blue.update();
 
 // red box is rendered first in World layer
-const redBox = new pc.Entity();
+const redBox = new Entity();
 redBox.addComponent('render', {
     type: 'box',
     material: red
@@ -95,7 +109,7 @@ app.root.addChild(redBox);
 // because it does not test for depth
 // and is in a later layer
 // it is visible even though it should be inside the red box
-const blueBox = new pc.Entity();
+const blueBox = new Entity();
 blueBox.addComponent('render', {
     type: 'box',
     material: blue,

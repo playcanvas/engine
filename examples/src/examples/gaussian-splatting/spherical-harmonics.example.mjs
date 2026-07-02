@@ -2,7 +2,33 @@
 //
 // Shows view-dependent color effects using spherical harmonics with Gaussian Splats.
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOW_PCSS_32F,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -16,29 +42,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -48,12 +74,12 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    skull: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/skull.compressed.ply' }),
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    skull: new Asset('gsplat', 'gsplat', { url: './assets/splats/skull.compressed.ply' }),
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -65,10 +91,10 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // create a splat entity and place it in the world
-const skull = new pc.Entity();
+const skull = new Entity();
 skull.addComponent('gsplat', {
     asset: assets.skull,
     castShadows: true
@@ -78,7 +104,7 @@ skull.setLocalEulerAngles(180, 90, 0);
 skull.setLocalScale(0.7, 0.7, 0.7);
 app.root.addChild(skull);
 
-const ORBIT_PIVOT = new pc.Vec3().copy(skull.getPosition());
+const ORBIT_PIVOT = new Vec3().copy(skull.getPosition());
 ORBIT_PIVOT.y += 0.2;
 const ORBIT_DISTANCE = 4;
 const ORBIT_INITIAL_YAW = 32;
@@ -88,10 +114,10 @@ const ORBIT_INITIAL_PITCH = -10;
 app.scene.gsplat.alphaClip = 0.1;
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
-    toneMapping: pc.TONEMAP_ACES
+    clearColor: new Color(0.2, 0.2, 0.2),
+    toneMapping: TONEMAP_ACES
 });
 app.root.addChild(camera);
 
@@ -114,14 +140,14 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
 // create ground to receive shadows
-const material = new pc.StandardMaterial();
-material.diffuse = new pc.Color(0.5, 0.5, 0.4);
+const material = new StandardMaterial();
+material.diffuse = new Color(0.5, 0.5, 0.4);
 material.gloss = 0.2;
 material.metalness = 0.5;
 material.useMetalness = true;
 material.update();
 
-const ground = new pc.Entity();
+const ground = new Entity();
 ground.addComponent('render', {
     type: 'box',
     material: material,
@@ -133,10 +159,10 @@ app.root.addChild(ground);
 
 // shadow casting directional light
 // Note: it does not affect gsplat, as lighting is not supported there currently
-const directionalLight = new pc.Entity();
+const directionalLight = new Entity();
 directionalLight.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     castShadows: true,
     intensity: 1,
     shadowBias: 0.2,
@@ -144,7 +170,7 @@ directionalLight.addComponent('light', {
     shadowDistance: 10,
     shadowIntensity: 0.5,
     shadowResolution: 2048,
-    shadowType: pc.SHADOW_PCSS_32F,
+    shadowType: SHADOW_PCSS_32F,
     penumbraSize: 0.05,
     penumbraFalloff: 4,
     shadowSamples: 16,

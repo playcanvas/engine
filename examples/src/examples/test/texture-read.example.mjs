@@ -4,7 +4,19 @@
 //
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    FILLMODE_FILL_WINDOW,
+    FILTER_NEAREST,
+    PIXELFORMAT_R8,
+    PIXELFORMAT_RG8,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    Texture,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -17,7 +29,7 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // Create device info overlay (top center)
@@ -83,9 +95,9 @@ const TEX_HEIGHT = 4;
 // Note: RG8S is excluded because it's not renderable in WebGPU (RG8Snorm doesn't support RenderAttachment)
 // Note: RGB8 is excluded because WebGPU doesn't support it (maps to rgba8unorm internally)
 const formatsToTest = [
-    { format: pc.PIXELFORMAT_R8, name: 'R8', channels: 1, arrayType: Uint8Array },
-    { format: pc.PIXELFORMAT_RG8, name: 'RG8', channels: 2, arrayType: Uint8Array },
-    { format: pc.PIXELFORMAT_RGBA8, name: 'RGBA8', channels: 4, arrayType: Uint8Array }
+    { format: PIXELFORMAT_R8, name: 'R8', channels: 1, arrayType: Uint8Array },
+    { format: PIXELFORMAT_RG8, name: 'RG8', channels: 2, arrayType: Uint8Array },
+    { format: PIXELFORMAT_RGBA8, name: 'RGBA8', channels: 4, arrayType: Uint8Array }
 ];
 
 /**
@@ -144,16 +156,16 @@ async function testFormat(formatInfo) {
 
     try {
         // Create texture
-        const texture = new pc.Texture(device, {
+        const texture = new Texture(device, {
             name: `Test_${name}`,
             width: TEX_WIDTH,
             height: TEX_HEIGHT,
             format: format,
             mipmaps: false,
-            minFilter: pc.FILTER_NEAREST,
-            magFilter: pc.FILTER_NEAREST,
-            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
         // Generate test data
@@ -246,15 +258,15 @@ async function runTests() {
 }
 
 // Create minimal app for the example framework
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);

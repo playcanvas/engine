@@ -1,7 +1,36 @@
 // @config
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_ADDITIVE,
+    BLEND_ADDITIVEALPHA,
+    BLEND_NONE,
+    BLEND_NORMAL,
+    BLEND_SCREEN,
+    CULLFACE_NONE,
+    CameraComponentSystem,
+    Color,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    LightComponentSystem,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -9,45 +38,45 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
-    rocks: new pc.Asset(
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    rocks: new Asset(
         'rocks',
         'texture',
         { url: './assets/textures/seaside-rocks01-diffuse-alpha.png' },
         { srgb: true }
     ),
 
-    opacity: new pc.Asset('rocks', 'texture', { url: './assets/textures/seaside-rocks01-roughness.jpg' })
+    opacity: new Asset('rocks', 'texture', { url: './assets/textures/seaside-rocks01-roughness.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ElementComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.LightComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ElementComponentSystem,
+    ScriptComponentSystem,
+    LightComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -57,15 +86,15 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1, 1)
+    clearColor: new Color(0.1, 0.1, 0.1, 1)
 });
 camera.translate(10, 6, 22);
 
@@ -86,19 +115,19 @@ app.root.addChild(camera);
 const NUM_BOXES = 5;
 
 // alpha blend modes for individual rows
-const blendModes = [pc.BLEND_ADDITIVE, pc.BLEND_ADDITIVEALPHA, pc.BLEND_SCREEN, pc.BLEND_NORMAL, pc.BLEND_NONE];
+const blendModes = [BLEND_ADDITIVE, BLEND_ADDITIVEALPHA, BLEND_SCREEN, BLEND_NORMAL, BLEND_NONE];
 
 /**
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 const createPrimitive = (x, y, z) => {
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
 
     // emissive color
-    material.emissive = new pc.Color(x, y, 1 - y);
+    material.emissive = new Color(x, y, 1 - y);
 
     // emissive texture
     material.emissiveMap = assets.rocks.resource;
@@ -108,7 +137,7 @@ const createPrimitive = (x, y, z) => {
     material.opacityMapChannel = 'r';
 
     // disable culling to see back faces as well
-    material.cull = pc.CULLFACE_NONE;
+    material.cull = CULLFACE_NONE;
 
     // set up alpha test value
     material.alphaTest = (x + 1) / (NUM_BOXES + 1) - 0.1;
@@ -116,7 +145,7 @@ const createPrimitive = (x, y, z) => {
     // alpha blend mode
     material.blendType = blendModes[y];
 
-    const box = new pc.Entity();
+    const box = new Entity();
     box.addComponent('render', {
         material: material,
         type: 'box',
@@ -129,7 +158,7 @@ const createPrimitive = (x, y, z) => {
     return box;
 };
 
-/** @type {Array<pc.Entity>} */
+/** @type {Array<Entity>} */
 const boxes = [];
 for (let i = 0; i < NUM_BOXES; i++) {
     for (let j = 0; j < NUM_BOXES; j++) {
@@ -137,7 +166,7 @@ for (let i = 0; i < NUM_BOXES; i++) {
     }
 }
 /**
- * @param {pc.Asset} fontAsset - The font asset.
+ * @param {Asset} fontAsset - The font asset.
  * @param {string} message - The message.
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
@@ -146,14 +175,14 @@ for (let i = 0; i < NUM_BOXES; i++) {
  */
 const createText = (fontAsset, message, x, y, z, rot) => {
     // Create a text element-based entity
-    const text = new pc.Entity();
+    const text = new Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         fontAsset: fontAsset,
         fontSize: 0.5,
         pivot: [0.5, 0.5],
         text: message,
-        type: pc.ELEMENTTYPE_TEXT
+        type: ELEMENTTYPE_TEXT
     });
     text.setLocalPosition(x, y, z);
     text.setLocalEulerAngles(0, 0, rot);
@@ -164,14 +193,14 @@ createText(assets.font, 'Alpha Test', 0, (NUM_BOXES + 1) * 0.5, 0, 0);
 createText(assets.font, 'Alpha Blend', -(NUM_BOXES + 1) * 0.5, 0, 0, 90);
 
 // ground
-const groundMaterial = new pc.StandardMaterial();
-groundMaterial.diffuse = new pc.Color(0.5, 0.5, 0.5);
+const groundMaterial = new StandardMaterial();
+groundMaterial.diffuse = new Color(0.5, 0.5, 0.5);
 groundMaterial.gloss = 0.4;
 groundMaterial.metalness = 0.5;
 groundMaterial.useMetalness = true;
 groundMaterial.update();
 
-const ground = new pc.Entity();
+const ground = new Entity();
 ground.addComponent('render', {
     type: 'box',
     material: groundMaterial
@@ -181,10 +210,10 @@ ground.setLocalPosition(0, -3, 0);
 app.root.addChild(ground);
 
 // light
-const directionalLight = new pc.Entity();
+const directionalLight = new Entity();
 directionalLight.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     castShadows: true,
     shadowDistance: 20,
     intensity: 1,
@@ -197,7 +226,7 @@ app.root.addChild(directionalLight);
 
 // Set an update function on the app's update event
 let time = 0;
-const rot = new pc.Quat();
+const rot = new Quat();
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
 

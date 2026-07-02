@@ -3,7 +3,28 @@
 // A static GSplatContainer with custom data format, rendered as multiple instances. Per-instance color
 // tints are animated via shader uniforms using setParameter.
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    BoundingBox,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatContainer,
+    GSplatFormat,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    TONEMAP_ACES,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -17,28 +38,28 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    GSplatComponentSystem
 ];
 createOptions.resourceHandlers = [];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -56,7 +77,7 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // Grid bounds for position denormalization
 const gridSize = 10;
@@ -64,11 +85,11 @@ const posScale = (gridSize / 2) * 0.5; // positions range from -posScale to +pos
 
 // Create custom format with single RGBA8 texture (RGB=normalized position, A=brightness)
 // and custom uTint/uTint2 uniforms for per-instance color gradient
-const format = new pc.GSplatFormat(
+const format = new GSplatFormat(
     device,
     [
         // this line gives us 'loadData' function in the shader, returning vec4
-        { name: 'data', format: pc.PIXELFORMAT_RGBA8 }
+        { name: 'data', format: PIXELFORMAT_RGBA8 }
     ],
     {
         readGLSL: `
@@ -112,7 +133,7 @@ const format = new pc.GSplatFormat(
 
 // Create container with max capacity
 const maxSplats = gridSize ** 3;
-const container = new pc.GSplatContainer(device, maxSplats, format);
+const container = new GSplatContainer(device, maxSplats, format);
 
 // Fill data texture (RGBA8: RGB=normalized position 0-1, A=brightness 0-1)
 const textureData = container.getTexture('data').lock();
@@ -163,10 +184,10 @@ container.getTexture('data').unlock();
 
 // Set bounding box for culling
 const halfSize = (gridSize / 2) * 0.5;
-container.aabb = new pc.BoundingBox(pc.Vec3.ZERO, new pc.Vec3(halfSize, halfSize, halfSize));
+container.aabb = new BoundingBox(Vec3.ZERO, new Vec3(halfSize, halfSize, halfSize));
 
 // Create parent entity for the 2x2 grid
-const parent = new pc.Entity('splatParent');
+const parent = new Entity('splatParent');
 app.root.addChild(parent);
 
 // Create 2x2x2 grid of splat entities, all sharing the same container
@@ -210,13 +231,13 @@ const tintPairs = [
     ] // bright orange ↔ aqua
 ];
 
-/** @type {pc.Entity[]} */
+/** @type {Entity[]} */
 const children = [];
 let tintIndex = 0;
 for (let gx = 0; gx < 2; gx++) {
     for (let gy = 0; gy < 2; gy++) {
         for (let gz = 0; gz < 2; gz++) {
-            const child = new pc.Entity(`splat_${gx}_${gy}_${gz}`);
+            const child = new Entity(`splat_${gx}_${gy}_${gz}`);
             child.addComponent('gsplat', {
                 resource: container
             });
@@ -234,10 +255,10 @@ for (let gx = 0; gx < 2; gx++) {
 }
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1),
-    toneMapping: pc.TONEMAP_ACES
+    clearColor: new Color(0.1, 0.1, 0.1),
+    toneMapping: TONEMAP_ACES
 });
 camera.setLocalPosition(0, 0, spacing * 3);
 app.root.addChild(camera);

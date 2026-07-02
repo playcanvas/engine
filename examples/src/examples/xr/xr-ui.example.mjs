@@ -1,4 +1,38 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    Color,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    KEY_ESCAPE,
+    Keyboard,
+    LayoutChildComponentSystem,
+    LayoutGroupComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScreenComponentSystem,
+    ScriptComponentSystem,
+    ScrollViewComponentSystem,
+    ScrollbarComponentSystem,
+    TemplateHandler,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    XRSPACE_LOCALFLOOR,
+    XRTARGETRAY_POINTER,
+    XRTYPE_AR,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -27,8 +61,8 @@ const message = (msg) => {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' }),
-    monitor: new pc.Asset('monitor', 'template', { url: './assets/templates/monitor.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' }),
+    monitor: new Asset('monitor', 'template', { url: './assets/templates/monitor.json' })
 };
 
 assets.font.id = 42;
@@ -38,37 +72,37 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.LayoutGroupComponentSystem,
-    pc.LayoutChildComponentSystem,
-    pc.ButtonComponentSystem,
-    pc.ScrollViewComponentSystem,
-    pc.ScrollbarComponentSystem,
-    pc.ElementComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScreenComponentSystem,
+    LayoutGroupComponentSystem,
+    LayoutChildComponentSystem,
+    ButtonComponentSystem,
+    ScrollViewComponentSystem,
+    ScrollbarComponentSystem,
+    ElementComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler, pc.TemplateHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler, TemplateHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -80,16 +114,16 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-const colorCamera = new pc.Color(44 / 255, 62 / 255, 80 / 255);
-const colorTransparent = new pc.Color(0, 0, 0, 0);
+const colorCamera = new Color(44 / 255, 62 / 255, 80 / 255);
+const colorTransparent = new Color(0, 0, 0, 0);
 
 // create camera
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
     clearColor: colorCamera
 });
@@ -112,16 +146,16 @@ const entityFps = monitor.findByName('FPS');
 let ticks = 0;
 let fpsTime = 0;
 
-const vec3A = new pc.Vec3();
+const vec3A = new Vec3();
 
 if (app.xr.supported) {
     // XR availability
     document
         .querySelector('.container > .button[data-xr="immersive-ar"]')
-        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+        ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_AR));
     document
         .querySelector('.container > .button[data-xr="immersive-vr"]')
-        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+        ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_VR));
 
     // XR availability events
     app.xr.on('available', (type, available) => {
@@ -141,9 +175,9 @@ if (app.xr.supported) {
 
         const type = button.getAttribute('data-xr');
 
-        cameraEntity.camera.clearColor = type === pc.XRTYPE_AR ? colorTransparent : colorCamera;
+        cameraEntity.camera.clearColor = type === XRTYPE_AR ? colorTransparent : colorCamera;
 
-        app.xr.start(cameraEntity.camera, type, pc.XRSPACE_LOCALFLOOR, {
+        app.xr.start(cameraEntity.camera, type, XRSPACE_LOCALFLOOR, {
             callback: (err) => {
                 if (err) message(`XR ${type} failed to start: ${err.message}`);
             }
@@ -158,7 +192,7 @@ if (app.xr.supported) {
 
     // end session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
@@ -178,9 +212,9 @@ if (app.xr.supported) {
             const inputSource = app.xr.input.inputSources[i];
 
             // draw ray
-            if (inputSource.targetRayMode === pc.XRTARGETRAY_POINTER) {
+            if (inputSource.targetRayMode === XRTARGETRAY_POINTER) {
                 vec3A.copy(inputSource.getDirection()).mulScalar(10).add(inputSource.getOrigin());
-                const color = inputSource.selecting ? pc.Color.GREEN : pc.Color.WHITE;
+                const color = inputSource.selecting ? Color.GREEN : Color.WHITE;
                 app.drawLine(inputSource.getOrigin(), vec3A, color);
             }
         }
@@ -192,13 +226,13 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive XR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_AR}`, (available) => {
         message(`Immersive XR is ${available ? 'available' : 'unavailable'}`);
     });
 
-    if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
+    if (!app.xr.isAvailable(XRTYPE_VR)) {
         message('Immersive VR is not available');
-    } else if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
+    } else if (!app.xr.isAvailable(XRTYPE_AR)) {
         message('Immersive AR is not available');
     }
 } else {

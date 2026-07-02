@@ -6,7 +6,29 @@
 // source: https://sketchfab.com/3d-models/house-03-pbr-c56521b89188460a99235dec8bcd0ed3
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -14,14 +36,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    house: new pc.Asset('house', 'container', { url: './assets/models/pbr-house.glb' }),
-    cube: new pc.Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
-    envatlas: new pc.Asset(
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    house: new Asset('house', 'container', { url: './assets/models/pbr-house.glb' }),
+    cube: new Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -32,28 +54,28 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -63,7 +85,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -79,7 +101,7 @@ houseEntity.setLocalScale(100, 100, 100);
 app.root.addChild(houseEntity);
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
     nearClip: 10,
     farClip: 600,
@@ -103,8 +125,8 @@ cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
 // add a shadow casting directional light
-const lightColor = new pc.Color(1, 1, 1);
-const light = new pc.Entity();
+const lightColor = new Color(1, 1, 1);
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
     color: lightColor,
@@ -125,8 +147,8 @@ app.root.addChild(cubeEntity);
 
 // ------ Custom render passes set up ------
 
-const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.bloom.intensity = 0.02;
 cameraFrame.update();
 

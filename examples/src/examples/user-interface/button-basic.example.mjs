@@ -1,4 +1,28 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    Color,
+    ELEMENTTYPE_IMAGE,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SCALEMODE_BLEND,
+    ScreenComponentSystem,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,37 +30,37 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ButtonComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScreenComponentSystem,
+    ButtonComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -46,52 +70,52 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Create a camera
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
+    clearColor: new Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
 // Create a 2D screen
-const screen = new pc.Entity();
+const screen = new Entity();
 screen.addComponent('screen', {
-    referenceResolution: new pc.Vec2(1280, 720),
+    referenceResolution: new Vec2(1280, 720),
     scaleBlend: 0.5,
-    scaleMode: pc.SCALEMODE_BLEND,
+    scaleMode: SCALEMODE_BLEND,
     screenSpace: true
 });
 app.root.addChild(screen);
 
 // Button
-const button = new pc.Entity();
+const button = new Entity();
 button.addComponent('button');
 button.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
     height: 40,
     pivot: [0.5, 0.5],
-    type: pc.ELEMENTTYPE_IMAGE,
+    type: ELEMENTTYPE_IMAGE,
     width: 175,
     useInput: true
 });
 screen.addChild(button);
 
 // Create a label for the button
-const label = new pc.Entity();
+const label = new Entity();
 label.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
-    color: new pc.Color(0, 0, 0),
+    color: new Color(0, 0, 0),
     fontAsset: assets.font.id,
     fontSize: 32,
     height: 64,
     pivot: [0.5, 0.5],
     text: 'CLICK ME',
-    type: pc.ELEMENTTYPE_TEXT,
+    type: ELEMENTTYPE_TEXT,
     width: 128,
     wrapLines: true
 });
@@ -99,5 +123,5 @@ button.addChild(label);
 
 // Change the background color every time the button is clicked
 button.button.on('click', () => {
-    camera.camera.clearColor = new pc.Color(Math.random(), Math.random(), Math.random());
+    camera.camera.clearColor = new Color(Math.random(), Math.random(), Math.random());
 });

@@ -1,7 +1,33 @@
 // @config
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    JsonHandler,
+    Keyboard,
+    LightComponentSystem,
+    LitMaterial,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SPECOCC_AO,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -9,53 +35,47 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    helipad: new pc.Asset(
+    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
-    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.JsonHandler,
-    pc.FontHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -65,7 +85,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -73,9 +93,9 @@ app.start();
 app.scene.envAtlas = assets.helipad.resource;
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5)
+    clearColor: new Color(0.4, 0.45, 0.5)
 });
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
@@ -92,17 +112,17 @@ camera.lookAt(0, 0, 0);
 app.root.addChild(camera);
 
 // Create an Entity with a omni light component and a sphere model component.
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: pc.Color.RED,
+    color: Color.RED,
     intensity: 2,
     range: 10
 });
 light.translate(0, 1, 0);
 app.root.addChild(light);
 
-const material = new pc.LitMaterial();
+const material = new LitMaterial();
 material.setParameter('texture_envAtlas', assets.helipad.resource);
 material.setParameter('material_reflectivity', 1.0);
 material.setParameter('material_normalMapIntensity', 1.0);
@@ -117,7 +137,7 @@ material.hasSpecularityFactor = true;
 material.hasNormals = true;
 //    material.hasMetalness = true;
 material.hasMetalness = false;
-material.occludeSpecular = pc.SPECOCC_AO;
+material.occludeSpecular = SPECOCC_AO;
 
 // shadows not ported yet
 app.scene.lighting.shadowsEnabled = false;
@@ -183,7 +203,7 @@ material.shaderChunkWGSL = /* wgsl */ `
 material.update();
 
 // create primitive
-const primitive = new pc.Entity();
+const primitive = new Entity();
 primitive.addComponent('render', {
     type: 'sphere',
     material: material

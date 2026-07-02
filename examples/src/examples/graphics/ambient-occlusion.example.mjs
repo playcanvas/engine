@@ -6,7 +6,38 @@
 // source: https://sketchfab.com/3d-models/laboratory-e860e49837c044478db650868866a448
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_NONE,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    DepthState,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_RGBA16F,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOWUPDATE_THISFRAME,
+    SSAOTYPE_LIGHTING,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_NEUTRAL,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -14,21 +45,21 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    laboratory: new pc.Asset('statue', 'container', { url: './assets/models/laboratory.glb' }),
-    orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    ssao: new pc.Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
-    helipad: new pc.Asset(
+    laboratory: new Asset('statue', 'container', { url: './assets/models/laboratory.glb' }),
+    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    ssao: new Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -36,26 +67,26 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-const createOptions = new pc.AppOptions();
+const device = await createGraphicsDevice(canvas, gfxOptions);
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.ContainerHandler, pc.FontHandler];
+createOptions.resourceHandlers = [ScriptHandler, TextureHandler, ContainerHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -65,7 +96,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -87,8 +118,8 @@ app.root.addChild(laboratoryEntity);
 laboratoryEntity.findComponents('render').forEach((render) => {
     render.meshInstances.forEach((meshInstance) => {
         // disable blending / enable depth writes
-        meshInstance.material.depthState = pc.DepthState.DEFAULT;
-        meshInstance.material.blendType = pc.BLEND_NONE;
+        meshInstance.material.depthState = DepthState.DEFAULT;
+        meshInstance.material.blendType = BLEND_NONE;
 
         // disable baked AO map as we want to use SSAO only
         meshInstance.material.aoMap = null;
@@ -99,37 +130,37 @@ laboratoryEntity.findComponents('render').forEach((render) => {
 // add lights to the torches
 const torches = laboratoryEntity.find((node) => node.name.indexOf('Fackel') !== -1);
 torches.forEach((torch) => {
-    const light = new pc.Entity('Omni');
+    const light = new Entity('Omni');
     light.addComponent('light', {
         type: 'omni',
-        color: new pc.Color(1, 0.75, 0),
+        color: new Color(1, 0.75, 0),
         intensity: 3,
         range: 100,
         castShadows: true,
         shadowBias: 0.2,
         normalOffsetBias: 0.2,
-        shadowUpdateMode: pc.SHADOWUPDATE_THISFRAME
+        shadowUpdateMode: SHADOWUPDATE_THISFRAME
     });
     light.setLocalPosition(torch.children[0].render.meshInstances[0].aabb.center);
     app.root.addChild(light);
 });
 
 // add a ground plane
-const planeMaterial = new pc.StandardMaterial();
-planeMaterial.diffuse = new pc.Color(0.2, 0.2, 0.2);
+const planeMaterial = new StandardMaterial();
+planeMaterial.diffuse = new Color(0.2, 0.2, 0.2);
 planeMaterial.update();
 
-const primitive = new pc.Entity();
+const primitive = new Entity();
 primitive.addComponent('render', {
     type: 'plane',
     material: planeMaterial
 });
-primitive.setLocalScale(new pc.Vec3(400, 1, 400));
+primitive.setLocalScale(new Vec3(400, 1, 400));
 primitive.setLocalPosition(0, -40, 0);
 app.root.addChild(primitive);
 
 // Create a directional light
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
     intensity: 1,
@@ -138,18 +169,18 @@ light.addComponent('light', {
     shadowBias: 0.4,
     normalOffsetBias: 0.06,
     shadowDistance: 600,
-    shadowUpdateMode: pc.SHADOWUPDATE_THISFRAME
+    shadowUpdateMode: SHADOWUPDATE_THISFRAME
 });
 app.root.addChild(light);
 light.setLocalEulerAngles(35, 30, 0);
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    clearColor: new Color(0.4, 0.45, 0.5),
     nearClip: 1,
     farClip: 600,
-    toneMapping: pc.TONEMAP_NEUTRAL
+    toneMapping: TONEMAP_NEUTRAL
 });
 
 // add orbit camera script
@@ -170,11 +201,11 @@ app.root.addChild(cameraEntity);
 
 // ------ Custom render passes set up ------
 
-const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 
 // use 16but render target for better precision, improves quality with TAA and randomized SSAO
-cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
+cameraFrame.rendering.renderFormats = [PIXELFORMAT_RGBA16F];
 
 const applySettings = () => {
     // enabled
@@ -221,7 +252,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
 data.set('data', {
     enabled: true,
     ssao: {
-        type: pc.SSAOTYPE_LIGHTING,
+        type: SSAOTYPE_LIGHTING,
         blurEnabled: true,
         radius: 30,
         samples: 12,

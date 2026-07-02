@@ -1,4 +1,28 @@
-import * as pc from 'playcanvas';
+import {
+    ANIM_LAYER_ADDITIVE,
+    ANIM_LAYER_OVERWRITE,
+    AnimClipHandler,
+    AnimComponentSystem,
+    AnimStateGraphHandler,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOW_PCF5_32F,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -6,20 +30,20 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
-    idleEagerAnim: new pc.Asset('idleEagerAnim', 'container', {
+    model: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    idleAnim: new Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
+    idleEagerAnim: new Asset('idleEagerAnim', 'container', {
         url: './assets/animations/bitmoji/idle-eager.glb'
     }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
-    danceAnim: new pc.Asset('danceAnim', 'container', {
+    walkAnim: new Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
+    danceAnim: new Asset('danceAnim', 'container', {
         url: './assets/animations/bitmoji/win-dance.glb'
     }),
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -27,28 +51,28 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.AnimComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    AnimComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.AnimClipHandler, pc.AnimStateGraphHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AnimClipHandler, AnimStateGraphHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -58,17 +82,17 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 // setup data
 data.set('fullBodyLayer', {
     state: 'Idle',
-    blendType: pc.ANIM_LAYER_OVERWRITE
+    blendType: ANIM_LAYER_OVERWRITE
 });
 data.set('upperBodyLayer', {
     state: 'Eager',
-    blendType: pc.ANIM_LAYER_ADDITIVE,
+    blendType: ANIM_LAYER_ADDITIVE,
     useMask: true
 });
 data.set('options', {
@@ -82,20 +106,20 @@ app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new Color(0.1, 0.1, 0.1)
 });
 cameraEntity.translate(0, 0.75, 3);
 app.root.addChild(cameraEntity);
 
 // Create an entity with a light component
-const lightEntity = new pc.Entity();
+const lightEntity = new Entity();
 lightEntity.addComponent('light', {
     castShadows: true,
     intensity: 1.5,
     normalOffsetBias: 0.02,
-    shadowType: pc.SHADOW_PCF5_32F,
+    shadowType: SHADOW_PCF5_32F,
     shadowDistance: 6,
     shadowResolution: 2048,
     shadowBias: 0.02
@@ -176,16 +200,16 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 });
 
 /**
- * @param {pc.Entity} entity - The entity to draw the skeleton for.
+ * @param {Entity} entity - The entity to draw the skeleton for.
  */
 const drawSkeleton = (entity) => {
-    entity.children.forEach((/** @type {pc.Entity} */ c) => {
+    entity.children.forEach((/** @type {Entity} */ c) => {
         const target = modelEntity.anim._targets[`${entity.path}/graph/localPosition`];
         if (target) {
             app.drawLine(
                 entity.getPosition(),
                 c.getPosition(),
-                new pc.Color(target.getWeight(0), 0, target.getWeight(1), 1),
+                new Color(target.getWeight(0), 0, target.getWeight(1), 1),
                 false
             );
         }

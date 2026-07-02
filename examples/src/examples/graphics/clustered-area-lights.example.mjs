@@ -1,4 +1,34 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    DISPLAYFORMAT_HDR,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    JsonHandler,
+    LIGHTFALLOFF_INVERSESQUARED,
+    LIGHTSHAPE_DISK,
+    LIGHTSHAPE_RECT,
+    LIGHTSHAPE_SPHERE,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TONEMAP_NEUTRAL,
+    TONEMAP_NONE,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -13,42 +43,42 @@ data.set('settings', {
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
-    luts: new pc.Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
 
     // enable HDR rendering if supported
-    displayFormat: pc.DISPLAYFORMAT_HDR
+    displayFormat: DISPLAYFORMAT_HDR
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.JsonHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -58,7 +88,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -67,7 +97,7 @@ app.start();
 const lighting = app.scene.lighting;
 
 // 1) subdivide space with lights into this many cells
-lighting.cells = new pc.Vec3(30, 2, 30);
+lighting.cells = new Vec3(30, 2, 30);
 
 // 2) and allow this many lights per cell
 lighting.maxLightsPerCell = 20;
@@ -76,14 +106,14 @@ lighting.areaLightsEnabled = true;
 lighting.shadowsEnabled = false;
 
 // pure black material - used on back side of light objects
-const blackMaterial = new pc.StandardMaterial();
-blackMaterial.diffuse = new pc.Color(0, 0, 0);
+const blackMaterial = new StandardMaterial();
+blackMaterial.diffuse = new Color(0, 0, 0);
 blackMaterial.useLighting = false;
 blackMaterial.update();
 
 // ground material
-const groundMaterial = new pc.StandardMaterial();
-groundMaterial.diffuse = pc.Color.GRAY;
+const groundMaterial = new StandardMaterial();
+groundMaterial.diffuse = Color.GRAY;
 groundMaterial.gloss = 0.8;
 groundMaterial.metalness = 0.7;
 groundMaterial.useMetalness = true;
@@ -92,10 +122,10 @@ groundMaterial.useMetalness = true;
  * Helper function to create a primitive with shape type, position, scale and color.
  *
  * @param {string} primitiveType - The type of the primitive.
- * @param {pc.Vec3} position - The position.
- * @param {pc.Vec3} scale - The scale.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
  * @param {*} assetManifest - The asset manifest.
- * @returns {pc.Entity} The new primitive entity.
+ * @returns {Entity} The new primitive entity.
  */
 function createPrimitive(primitiveType, position, scale, assetManifest) {
     if (assetManifest) {
@@ -111,7 +141,7 @@ function createPrimitive(primitiveType, position, scale, assetManifest) {
     groundMaterial.update();
 
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: groundMaterial
@@ -130,21 +160,21 @@ function createPrimitive(primitiveType, position, scale, assetManifest) {
  *
  * @param {string} type - The light component's type.
  * @param {number} shape - The light component's shape.
- * @param {pc.Vec3} position - The position.
- * @param {pc.Vec3} scale - The scale.
- * @param {pc.Color} color - The color.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
+ * @param {Color} color - The color.
  * @param {number} intensity - The light component's intensity.
  * @param {number} range - The light component's range.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 function createAreaLight(type, shape, position, scale, color, intensity, range) {
-    const light = new pc.Entity();
+    const light = new Entity();
     light.addComponent('light', {
         type: type,
         shape: shape,
         color: color,
         intensity: intensity,
-        falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
+        falloffMode: LIGHTFALLOFF_INVERSESQUARED,
         range: range,
         innerConeAngle: 88,
         outerConeAngle: 89
@@ -158,21 +188,20 @@ function createAreaLight(type, shape, position, scale, color, intensity, range) 
     app.root.addChild(light);
 
     // emissive material that is the light source color
-    const brightMaterial = new pc.StandardMaterial();
+    const brightMaterial = new StandardMaterial();
     brightMaterial.emissive = color;
     brightMaterial.emissiveIntensity = intensity * 10;
     brightMaterial.useLighting = false;
     brightMaterial.update();
 
     // primitive shape that matches light source shape
-    const lightPrimitive =
-        shape === pc.LIGHTSHAPE_SPHERE ? 'sphere' : shape === pc.LIGHTSHAPE_DISK ? 'cylinder' : 'box';
+    const lightPrimitive = shape === LIGHTSHAPE_SPHERE ? 'sphere' : shape === LIGHTSHAPE_DISK ? 'cylinder' : 'box';
 
     // primitive scale - flatten it to disk / rectangle
-    const primitiveScale = new pc.Vec3(1, shape !== pc.LIGHTSHAPE_SPHERE ? 0.001 : 1, 1);
+    const primitiveScale = new Vec3(1, shape !== LIGHTSHAPE_SPHERE ? 0.001 : 1, 1);
 
     // bright primitive representing the area light source
-    const brightShape = new pc.Entity();
+    const brightShape = new Entity();
     brightShape.addComponent('render', {
         type: lightPrimitive,
         material: brightMaterial
@@ -182,7 +211,7 @@ function createAreaLight(type, shape, position, scale, color, intensity, range) 
 
     // black primitive representing the back of the light source which is not emitting light
     if (type === 'spot') {
-        const blackShape = new pc.Entity();
+        const blackShape = new Entity();
         blackShape.addComponent('render', {
             type: lightPrimitive,
             material: blackMaterial
@@ -201,12 +230,12 @@ const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // create ground plane
-const ground = createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(45, 1, 45), assets);
+const ground = createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(45, 1, 45), assets);
 
 // Create the camera, which renders entities
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.05, 0.05, 0.05),
+    clearColor: new Color(0.05, 0.05, 0.05),
     fov: 60,
     farClip: 1000
 });
@@ -227,27 +256,27 @@ camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // custom render passes
-const cameraFrame = new pc.CameraFrame(app, camera.camera);
+const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.samples = 4;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.bloom.blurLevel = 4;
 cameraFrame.update();
 
 // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-cameraFrame.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_NEUTRAL;
+cameraFrame.rendering.toneMapping = device.isHdr ? TONEMAP_NONE : TONEMAP_NEUTRAL;
 
 // generate a grid of area lights of sphere, disk and rect shapes
 for (let x = -20; x <= 20; x += 5) {
     for (let y = -20; y <= 20; y += 5) {
-        const pos = new pc.Vec3(x, 0.6, y);
-        const color = new pc.Color(Math.random() * 0.7, Math.random() * 0.7, Math.random() * 0.7);
+        const pos = new Vec3(x, 0.6, y);
+        const color = new Color(Math.random() * 0.7, Math.random() * 0.7, Math.random() * 0.7);
         const rand = Math.random();
         if (rand < 0.3) {
-            createAreaLight('omni', pc.LIGHTSHAPE_SPHERE, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 4, 6);
+            createAreaLight('omni', LIGHTSHAPE_SPHERE, pos, new Vec3(1.5, 1.5, 1.5), color, 4, 6);
         } else if (rand < 0.6) {
-            createAreaLight('spot', pc.LIGHTSHAPE_DISK, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 4, 5);
+            createAreaLight('spot', LIGHTSHAPE_DISK, pos, new Vec3(1.5, 1.5, 1.5), color, 4, 5);
         } else {
-            createAreaLight('spot', pc.LIGHTSHAPE_RECT, pos, new pc.Vec3(2, 1, 1), color, 4, 5);
+            createAreaLight('spot', LIGHTSHAPE_RECT, pos, new Vec3(2, 1, 1), color, 4, 5);
         }
     }
 }

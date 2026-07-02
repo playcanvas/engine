@@ -7,7 +7,40 @@
 // source: https://sketchfab.com/3d-models/terrain-low-poly-248b21331315466e98d20c441935d99d
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Curve,
+    CurveSet,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FOG_LINEAR,
+    GAMMA_NONE,
+    GAMMA_SRGB,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    LitMaterial,
+    Mouse,
+    ParticleSystemComponentSystem,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOW_PCF3_32F,
+    SPECOCC_AO,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
 import { data, deviceType } from 'examples/context';
@@ -16,14 +49,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    terrain: new pc.Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
-    helipad: new pc.Asset(
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
+    biker: new Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -31,36 +64,36 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem,
-    pc.ParticleSystemComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem,
+    ParticleSystemComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -72,18 +105,18 @@ app.on('destroy', () => {
 // setup skydome
 app.scene.skyboxMip = 0;
 app.scene.envAtlas = assets.helipad.resource;
-app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, -70, 0);
 
 // STANDARD MATERIAL ----------
 
-/** @type {pc.Entity} */
+/** @type {Entity} */
 const terrain = assets.terrain.resource.instantiateRenderEntity();
 terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
 // GSPLAT MATERIAL ----------
 
-const biker = new pc.Entity();
+const biker = new Entity();
 biker.addComponent('gsplat', {
     asset: assets.biker
 });
@@ -94,7 +127,7 @@ app.root.addChild(biker);
 
 // SHADER MATERIAL ----------
 
-const box = new pc.Entity('ShaderMaterial');
+const box = new Entity('ShaderMaterial');
 const boxMaterial = createGoochMaterial(null, [0.13, 0.55, 0.13]);
 box.addComponent('render', {
     type: 'box',
@@ -106,7 +139,7 @@ app.root.addChild(box);
 
 // LIT MATERIAL ----------
 
-const material = new pc.LitMaterial();
+const material = new LitMaterial();
 material.setParameter('texture_envAtlas', assets.helipad.resource);
 material.setParameter('material_reflectivity', 1.0);
 material.useSkybox = true;
@@ -114,7 +147,7 @@ material.hasSpecular = true;
 material.hasSpecularityFactor = true;
 material.hasNormals = true;
 material.hasMetalness = true;
-material.occludeSpecular = pc.SPECOCC_AO;
+material.occludeSpecular = SPECOCC_AO;
 
 material.shaderChunkGLSL = `
         #include "litShaderCorePS"
@@ -143,7 +176,7 @@ material.shaderChunkWGSL = `
 material.update();
 
 // create primitive
-const primitive = new pc.Entity();
+const primitive = new Entity();
 primitive.addComponent('render', {
     type: 'sphere',
     material: material
@@ -155,24 +188,24 @@ app.root.addChild(primitive);
 
 // PARTICLE SYSTEM ----------
 
-const localVelocityCurve = new pc.CurveSet([
+const localVelocityCurve = new CurveSet([
     [0, 0, 0.5, 30],
     [0, 0, 0.5, 30],
     [0, 0, 0.5, 30]
 ]);
-const localVelocityCurve2 = new pc.CurveSet([
+const localVelocityCurve2 = new CurveSet([
     [0, 0, 0.5, -30],
     [0, 0, 0.5, -30],
     [0, 0, 0.5, -30]
 ]);
-const worldVelocityCurve = new pc.CurveSet([
+const worldVelocityCurve = new CurveSet([
     [0, 0],
     [0, 0, 0.2, 6, 1, 300],
     [0, 0]
 ]);
 
 // Create entity for particle system
-const entity = new pc.Entity('ParticleSystem');
+const entity = new Entity('ParticleSystem');
 app.root.addChild(entity);
 entity.setLocalPosition(0, 20, 0);
 
@@ -181,11 +214,11 @@ entity.addComponent('particlesystem', {
     numParticles: 200,
     lifetime: 1,
     rate: 0.01,
-    scaleGraph: new pc.Curve([0, 10]),
+    scaleGraph: new Curve([0, 10]),
     velocityGraph: worldVelocityCurve,
     localVelocityGraph: localVelocityCurve,
     localVelocityGraph2: localVelocityCurve2,
-    colorGraph: new pc.CurveSet([
+    colorGraph: new CurveSet([
         [0, 1, 0.25, 1],
         [0, 0, 0.25, 0.3],
         [0, 0, 1, 0]
@@ -195,17 +228,17 @@ entity.addComponent('particlesystem', {
 // --------
 
 // create an Entity with a camera component
-const camera = new pc.Entity('MainCamera');
+const camera = new Entity('MainCamera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.9, 0.9, 0.9),
+    clearColor: new Color(0.9, 0.9, 0.9),
     farClip: 1000,
-    toneMapping: pc.TONEMAP_ACES,
+    toneMapping: TONEMAP_ACES,
     fog: {
-        color: new pc.Color(0.8, 0.8, 0.8),
+        color: new Color(0.8, 0.8, 0.8),
         start: 400,
         end: 800,
         density: 0.001,
-        type: pc.FOG_LINEAR
+        type: FOG_LINEAR
     }
 });
 
@@ -225,17 +258,17 @@ camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create a directional light casting soft shadows
-const dirLight = new pc.Entity('Cascaded Light');
+const dirLight = new Entity('Cascaded Light');
 dirLight.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     shadowBias: 0.3,
     normalOffsetBias: 0.2,
     intensity: 1.0,
 
     // enable shadow casting
     castShadows: true,
-    shadowType: pc.SHADOW_PCF3_32F,
+    shadowType: SHADOW_PCF3_32F,
     shadowDistance: 1000,
     shadowResolution: 2048
 });
@@ -253,13 +286,13 @@ data.on('*:set', (path, value) => {
         camera.camera.fog.type = value;
     }
     if (propertyName === 'gamma') {
-        camera.camera.gammaCorrection = value ? pc.GAMMA_SRGB : pc.GAMMA_NONE;
+        camera.camera.gammaCorrection = value ? GAMMA_SRGB : GAMMA_NONE;
     }
 });
 
 // initial values
 data.set('data', {
-    tonemapping: pc.TONEMAP_ACES,
-    fog: pc.FOG_LINEAR,
+    tonemapping: TONEMAP_ACES,
+    fog: FOG_LINEAR,
     gamma: true
 });

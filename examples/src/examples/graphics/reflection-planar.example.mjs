@@ -1,4 +1,28 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Layer,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ScriptComponentSystem,
+    ScriptHandler,
+    ShaderMaterial,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -7,39 +31,43 @@ import shaderGlslVert from './shader.glsl.vert';
 import shaderWgslFrag from './shader.wgsl.frag';
 import shaderWgslVert from './shader.wgsl.vert';
 
+/**
+ * @import { Material } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    envatlas: new pc.Asset(
+    envatlas: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    script: new pc.Asset('script', 'script', { url: './scripts/utils/planar-renderer.js' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    script: new Asset('script', 'script', { url: './scripts/utils/planar-renderer.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.ScriptComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, ScriptComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -49,7 +77,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -63,17 +91,17 @@ app.scene.skyboxIntensity = 1.7; // make it brighter
  * Helper function to create a primitive with shape type, position, scale, color and layer.
  *
  * @param {string} primitiveType - Type of the primitive to create.
- * @param {pc.Vec3} position - The position of the primitive.
- * @param {pc.Vec3} scale - The scale of the primitive.
- * @param {pc.Color} color - The color of the primitive.
+ * @param {Vec3} position - The position of the primitive.
+ * @param {Vec3} scale - The scale of the primitive.
+ * @param {Color} color - The color of the primitive.
  * @param {number[]} layer - The layer to render the primitive into.
- * @param {pc.Material | pc.StandardMaterial | null} [material] - The material to use for the primitive.
- * @returns {pc.Entity} The created entity.
+ * @param {Material | StandardMaterial | null} [material] - The material to use for the primitive.
+ * @returns {Entity} The created entity.
  */
 function createPrimitive(primitiveType, position, scale, color, layer, material = null) {
     // create material of specified color
     if (!material) {
-        const standardMaterial = new pc.StandardMaterial();
+        const standardMaterial = new StandardMaterial();
         standardMaterial.diffuse = color;
         standardMaterial.gloss = 0.6;
         standardMaterial.metalness = 0.7;
@@ -83,7 +111,7 @@ function createPrimitive(primitiveType, position, scale, color, layer, material 
     }
 
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         layers: layer,
@@ -104,28 +132,28 @@ const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
 // create a layer for objects that do not render into texture
-const excludedLayer = new pc.Layer({ name: 'Excluded' });
+const excludedLayer = new Layer({ name: 'Excluded' });
 app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
 // Create the shader from the vertex and fragment shaders
 // reflective ground
 // This is in the excluded layer so it does not render into reflection texture
-const groundMaterial = new pc.ShaderMaterial({
+const groundMaterial = new ShaderMaterial({
     uniqueName: 'MyShader',
     vertexGLSL: shaderGlslVert,
     fragmentGLSL: shaderGlslFrag,
     vertexWGSL: shaderWgslVert,
     fragmentWGSL: shaderWgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
     }
 });
 createPrimitive(
     'plane',
-    new pc.Vec3(0, 0, 0),
-    new pc.Vec3(40, 1, 40),
-    new pc.Color(0.5, 0.5, 0.5),
+    new Vec3(0, 0, 0),
+    new Vec3(40, 1, 40),
+    new Color(0.5, 0.5, 0.5),
     [excludedLayer.id],
     groundMaterial
 );
@@ -136,32 +164,32 @@ app.root.addChild(statueEntity);
 
 /**
  * create few random primitives in the world layer
- * @type {pc.Entity[]}
+ * @type {Entity[]}
  */
 const entities = [];
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 for (let i = 0; i < 6; i++) {
     const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
-    const color = new pc.Color(Math.random(), Math.random(), Math.random());
-    entities.push(createPrimitive(shapeName, pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), color, [worldLayer.id]));
+    const color = new Color(Math.random(), Math.random(), Math.random());
+    entities.push(createPrimitive(shapeName, Vec3.ZERO, new Vec3(3, 3, 3), color, [worldLayer.id]));
 }
 
 // Create main camera, which renders entities in world, excluded and skybox layers
-const camera = new pc.Entity('MainCamera');
+const camera = new Entity('MainCamera');
 camera.addComponent('camera', {
     fov: 60,
     layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id],
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 app.root.addChild(camera);
 
 // create reflection camera, which renders entities in world and skybox layers only
-const reflectionCamera = new pc.Entity('ReflectionCamera');
+const reflectionCamera = new Entity('ReflectionCamera');
 reflectionCamera.addComponent('camera', {
     fov: 60,
     layers: [worldLayer.id, skyboxLayer.id],
     priority: -1, // render reflections before the main camera
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 
 // add planarRenderer script which renders the reflection texture
@@ -172,8 +200,8 @@ reflectionCamera.script.create('planarRenderer', {
         scale: 1,
         mipmaps: false,
         depth: true,
-        planePoint: pc.Vec3.ZERO,
-        planeNormal: pc.Vec3.UP
+        planePoint: Vec3.ZERO,
+        planeNormal: Vec3.UP
     }
 });
 app.root.addChild(reflectionCamera);
@@ -193,7 +221,7 @@ app.on('update', (dt) => {
 
     // slowly orbit camera around
     camera.setLocalPosition(30 * Math.cos(time * 0.2), 10, 30 * Math.sin(time * 0.2));
-    camera.lookAt(pc.Vec3.ZERO);
+    camera.lookAt(Vec3.ZERO);
 
     // animate FOV
     camera.camera.fov = 60 + 20 * Math.sin(time * 0.5);

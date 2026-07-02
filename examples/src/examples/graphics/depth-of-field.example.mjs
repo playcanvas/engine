@@ -18,7 +18,30 @@
 // source: https://sketchfab.com/3d-models/egyptian-cat-statue-02b0456362f9442da46d39fb34b3ee5b
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Kernel,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -26,15 +49,15 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    apartment: new pc.Asset('apartment', 'container', { url: './assets/models/apartment.glb' }),
-    love: new pc.Asset('love', 'container', { url: './assets/models/love.glb' }),
-    cat: new pc.Asset('cat', 'container', { url: './assets/models/cat.glb' }),
-    helipad: new pc.Asset(
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    apartment: new Asset('apartment', 'container', { url: './assets/models/apartment.glb' }),
+    love: new Asset('love', 'container', { url: './assets/models/love.glb' }),
+    cat: new Asset('cat', 'container', { url: './assets/models/cat.glb' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -47,29 +70,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(window);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(window);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -79,7 +102,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -118,7 +141,7 @@ cat.setLocalScale(80, 80, 80);
 app.root.addChild(cat);
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
     farClip: 1500,
     fov: 80
@@ -143,8 +166,8 @@ app.root.addChild(cameraEntity);
 
 // ------ Custom render passes set up ------
 
-const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.rendering.samples = 4;
 cameraFrame.bloom.intensity = 0.03;
 cameraFrame.bloom.blurLevel = 7;
@@ -173,7 +196,7 @@ const applySettings = () => {
     cameraFrame.dof.highQuality = data.get('data.dof.highQuality');
 
     // display number of bluring samples are used
-    const kernel = pc.Kernel.concentric(cameraFrame.dof.blurRings, cameraFrame.dof.blurRingPoints);
+    const kernel = Kernel.concentric(cameraFrame.dof.blurRings, cameraFrame.dof.blurRingPoints);
     data.set('data.stats.blurSamples', `${kernel.length >> 1}`);
 
     // debug

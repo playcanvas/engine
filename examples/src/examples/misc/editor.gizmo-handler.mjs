@@ -1,4 +1,8 @@
-import * as pc from 'playcanvas';
+import { Gizmo, RotateGizmo, ScaleGizmo, TranslateGizmo } from 'playcanvas';
+
+/**
+ * @import { CameraComponent, GraphNode, MeshInstance, TransformGizmo } from 'playcanvas'
+ */
 
 class GizmoHandler {
     /**
@@ -12,7 +16,7 @@ class GizmoHandler {
     /**
      * Object to reference each gizmo.
      *
-     * @type {Record<string, pc.TransformGizmo>}
+     * @type {Record<string, TransformGizmo>}
      * @private
      */
     _gizmos;
@@ -20,26 +24,26 @@ class GizmoHandler {
     /**
      * Nodes to attach to active gizmo.
      *
-     * @type {pc.GraphNode[]}
+     * @type {GraphNode[]}
      * @private
      */
     _nodes = [];
 
     /**
-     * @param {pc.CameraComponent} camera - The camera component.
+     * @param {CameraComponent} camera - The camera component.
      */
     constructor(camera) {
         const app = camera.system.app;
-        const layer = pc.Gizmo.createLayer(app);
+        const layer = Gizmo.createLayer(app);
         this._gizmos = {
-            translate: new pc.TranslateGizmo(camera, layer),
-            rotate: new pc.RotateGizmo(camera, layer),
-            scale: new pc.ScaleGizmo(camera, layer)
+            translate: new TranslateGizmo(camera, layer),
+            rotate: new RotateGizmo(camera, layer),
+            scale: new ScaleGizmo(camera, layer)
         };
 
         for (const type in this._gizmos) {
             const gizmo = this._gizmos[type];
-            gizmo.on('pointer:down', (_x, _y, /** @type {pc.MeshInstance} */ meshInstance) => {
+            gizmo.on('pointer:down', (_x, _y, /** @type {MeshInstance} */ meshInstance) => {
                 app.fire('gizmo:pointer', !!meshInstance);
             });
             gizmo.on('pointer:up', () => {
@@ -69,7 +73,7 @@ class GizmoHandler {
     /**
      * Adds single node to active gizmo.
      *
-     * @param {pc.GraphNode} node - The node to add.
+     * @param {GraphNode} node - The node to add.
      * @param {boolean} clear - To clear the node array.
      */
     add(node, clear = false) {

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import * as pc from 'playcanvas';
+import { Vec2 } from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -20,7 +20,7 @@ export function Controls({ observer }) {
             return;
         }
 
-        const position = new pc.Vec2();
+        const position = new Vec2();
 
         // width follows the control panel and is read fresh so resizes are tracked
         const width = () => {
@@ -43,12 +43,12 @@ export function Controls({ observer }) {
                         e.targetTouches[0].clientY - offset.y
                     )
                     .mulScalar(1 / (w / 2))
-                    .sub(pc.Vec2.ONE);
+                    .sub(Vec2.ONE);
             } else if (e.buttons) {
                 position
                     .set(e.offsetX, e.offsetY)
                     .mulScalar(1 / (w / 2))
-                    .sub(pc.Vec2.ONE);
+                    .sub(Vec2.ONE);
             } else {
                 return;
             }

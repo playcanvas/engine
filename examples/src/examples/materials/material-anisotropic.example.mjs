@@ -1,4 +1,25 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,41 +27,41 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -50,7 +71,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -59,16 +80,16 @@ app.scene.skyboxMip = 1;
 app.scene.envAtlas = assets.helipad.resource;
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 camera.translate(0, 9, 9);
 camera.rotate(-48, 0, 0);
 app.root.addChild(camera);
 
 // Create an entity with a directional light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional'
 });
@@ -84,7 +105,7 @@ const NUM_SPHERES_Z = 6;
  * @param {number} z - The z coordinate.
  */
 const createSphere = (x, y, z) => {
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.metalness = 1.0;
     material.gloss = z / (NUM_SPHERES_Z - 1);
     material.useMetalness = true;
@@ -93,7 +114,7 @@ const createSphere = (x, y, z) => {
     material.enableGGXSpecular = true;
     material.update();
 
-    const sphere = new pc.Entity();
+    const sphere = new Entity();
 
     sphere.addComponent('render', {
         material: material,
@@ -104,7 +125,7 @@ const createSphere = (x, y, z) => {
     app.root.addChild(sphere);
 };
 /**
- * @param {pc.Asset} fontAsset - The font asset.
+ * @param {Asset} fontAsset - The font asset.
  * @param {string} message - The message.
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
@@ -114,14 +135,14 @@ const createSphere = (x, y, z) => {
  */
 const createText = (fontAsset, message, x, y, z, rotx, roty) => {
     // Create a text element-based entity
-    const text = new pc.Entity();
+    const text = new Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         fontAsset: fontAsset,
         fontSize: 0.5,
         pivot: [0.5, 0.5],
         text: message,
-        type: pc.ELEMENTTYPE_TEXT
+        type: ELEMENTTYPE_TEXT
     });
     text.setLocalPosition(x, y, z);
     text.setLocalEulerAngles(rotx, roty, 0);

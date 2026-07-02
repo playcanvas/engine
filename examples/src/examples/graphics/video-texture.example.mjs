@@ -1,4 +1,26 @@
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    LightComponentSystem,
+    MOUSEBUTTON_LEFT,
+    Mouse,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    Texture,
+    TextureHandler,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -9,31 +31,31 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    tv: new pc.Asset('tv', 'container', { url: './assets/models/tv.glb' })
+    tv: new Asset('tv', 'container', { url: './assets/models/tv.glb' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -42,20 +64,20 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5)
+    clearColor: new Color(0.4, 0.45, 0.5)
 });
 camera.translate(0, 0, 15);
 
 // Create an Entity with a omni light
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     range: 30
 });
 light.translate(5, 5, 10);
@@ -64,13 +86,13 @@ app.root.addChild(camera);
 app.root.addChild(light);
 
 // Create a texture to hold the video frame data
-const videoTexture = new pc.Texture(app.graphicsDevice, {
-    format: pc.PIXELFORMAT_RGBA8,
+const videoTexture = new Texture(app.graphicsDevice, {
+    format: PIXELFORMAT_RGBA8,
     mipmaps: false,
-    minFilter: pc.FILTER_LINEAR,
-    magFilter: pc.FILTER_LINEAR,
-    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-    addressV: pc.ADDRESS_CLAMP_TO_EDGE
+    minFilter: FILTER_LINEAR,
+    magFilter: FILTER_LINEAR,
+    addressU: ADDRESS_CLAMP_TO_EDGE,
+    addressV: ADDRESS_CLAMP_TO_EDGE
 });
 
 // Create our HTML element with the video
@@ -112,10 +134,10 @@ const entity = assets.tv.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
 // Create a material that will use our video texture
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.useLighting = false;
 material.emissiveMap = videoTexture;
-material.emissive = pc.Color.WHITE;
+material.emissive = Color.WHITE;
 material.update();
 
 // set the material on the screen mesh
@@ -123,9 +145,9 @@ entity.render.meshInstances[1].material = material;
 
 video.load();
 
-const mouse = new pc.Mouse(document.body);
+const mouse = new Mouse(document.body);
 mouse.on('mousedown', (event) => {
-    if (entity && event.buttons[pc.MOUSEBUTTON_LEFT]) {
+    if (entity && event.buttons[MOUSEBUTTON_LEFT]) {
         video.muted = !video.muted;
     }
 });

@@ -25,7 +25,46 @@
 // author: Christoph Schindelar
 // source: https://superspl.at/user?id=schindelar3d
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    GSPLATDATA_COMPACT,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScreenComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    XRSPACE_LOCALFLOOR,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice,
+    math,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
@@ -42,46 +81,46 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
 // Enable GPU timing (timestamp queries) so the HUD can show total GPU time per frame
 // (sum of all compute + render passes), same source MiniStats uses.
 device.gpuProfiler.enabled = true;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(window);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(window);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem,
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem,
     // UI systems required by the in-XR HUD (XrMenu builds screen/element/button components).
-    pc.ScreenComponentSystem,
-    pc.ElementComponentSystem,
-    pc.ButtonComponentSystem
+    ScreenComponentSystem,
+    ElementComponentSystem,
+    ButtonComponentSystem
 ];
 createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.GSplatHandler,
+    TextureHandler,
+    ContainerHandler,
+    ScriptHandler,
+    GSplatHandler,
     // Required to load the HUD font asset.
-    pc.FontHandler
+    FontHandler
 ];
-createOptions.xr = pc.XrManager;
+createOptions.xr = XrManager;
 // Enables element click events (desktop fallback); XR ray/finger picking is handled inside XrMenu.
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.elementInput = new ElementInput(canvas);
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const dpr = window.devicePixelRatio || 1;
 device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
@@ -129,12 +168,12 @@ const LOD_PRESETS = {
     }
 };
 
-const lodPresetKey = pc.platform.mobile ? 'mobile' : 'desktop';
+const lodPresetKey = platform.mobile ? 'mobile' : 'desktop';
 
 const assets = {
-    church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
+    church: new Asset('gsplat', 'gsplat', { url: config.url }),
     // Monospace font for the in-XR debug HUD (XrMenu) text rendering.
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 /**
@@ -189,7 +228,7 @@ const createEnterVrButton = (onClick) => {
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -202,8 +241,8 @@ app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 app.scene.gsplat.minPixelSize = 2;
 app.scene.gsplat.alphaClipForward = 1 / 255;
 app.scene.gsplat.minContribution = 3;
-app.scene.gsplat.dataFormat = pc.GSPLATDATA_COMPACT;
-app.scene.gsplat.debug = pc.GSPLAT_DEBUG_NONE;
+app.scene.gsplat.dataFormat = GSPLATDATA_COMPACT;
+app.scene.gsplat.debug = GSPLAT_DEBUG_NONE;
 app.scene.gsplat.fisheye = 0;
 app.scene.exposure = 1;
 
@@ -216,7 +255,7 @@ data.on('renderer:set', () => {
 });
 
 // Pick the renderer per backend: GPU-sort (compute) on WebGPU, CPU-sort raster on WebGL.
-data.set('renderer', device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT);
+data.set('renderer', device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT);
 data.set('splatBudget', 2);
 // XR framebuffer scale factor (applied only when starting an XR session; does not affect 2D).
 data.set('framebufferScaleFactor', 1);
@@ -227,23 +266,23 @@ data.set('data.stats.resolution', '—');
 
 const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 
-const cameraRig = new pc.Entity('camera-rig');
+const cameraRig = new Entity('camera-rig');
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 cameraRig.setLocalPosition(camX, camY, camZ);
 app.root.addChild(cameraRig);
 
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(1, 1, 1),
+    clearColor: new Color(1, 1, 1),
     fov: 75,
-    toneMapping: pc.TONEMAP_LINEAR,
+    toneMapping: TONEMAP_LINEAR,
     farClip: 10000
 });
 camera.setLocalPosition(0, 0, 0);
 cameraRig.addChild(camera);
 
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
-const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
+const focusPoint = new Vec3(focusX, focusY, focusZ);
 
 camera.addComponent('script');
 const cc = /** @type { CameraControls } */ (/** @type {any} */ (camera.script).create(CameraControls));
@@ -279,7 +318,7 @@ const xrNavigation = /** @type {any} */ (
 // act as live readouts updated each frame via setItemLabel. Starting with FPS.
 // Base scale at full framebuffer resolution; scaled up at lower resolutions for readability.
 const HUD_BASE_SCALE = 1.2;
-const menuEntity = new pc.Entity('XrHud');
+const menuEntity = new Entity('XrHud');
 menuEntity.addComponent('script');
 menuEntity.script.create(XrMenu, {
     properties: {
@@ -309,7 +348,7 @@ menuEntity.script.create(XrMenu, {
         fontAsset: assets.font,
         alwaysVisible: true,
         followDistance: 0.6,
-        followOffset: new pc.Vec2(0.1, -0.1),
+        followOffset: new Vec2(0.1, -0.1),
         menuScale: HUD_BASE_SCALE,
         buttonWidth: 0.13
     }
@@ -323,7 +362,7 @@ const xrHud = /** @type {any} */ (menuEntity.script).xrMenu;
 // locomotion. A pinch moves a fixed distance along the head's horizontal forward, keeping the
 // current elevation (XZ only). The menu veto is preserved so pinches on the HUD just click.
 const MOVE_STEP = 1.5; // metres per pinch
-const moveDir = new pc.Vec3();
+const moveDir = new Vec3();
 xrNavigation.tryTeleport = () => {
     if (xrHud?.isPointerOverMenu) return;
 
@@ -420,7 +459,7 @@ app.on('fovcull:inc', () => {
 });
 applyFovCull(); // seed the engine value and readout
 
-/** @type {pc.Entity|null} */
+/** @type {Entity|null} */
 let gsplatEntity = null;
 /** @type {any} */
 let gsplatGs = null;
@@ -444,7 +483,7 @@ const loadGsplat = (scene) => {
 
     const asset = scene.asset;
 
-    gsplatEntity = new pc.Entity(config.name || 'gsplat');
+    gsplatEntity = new Entity(config.name || 'gsplat');
     gsplatEntity.addComponent('gsplat', {
         asset: asset,
         unified: true
@@ -494,17 +533,17 @@ const loadGsplat = (scene) => {
 // Selectable scenes via the in-XR SCENE number row: 0 = the cave from the
 // gaussian-splatting/depth-of-field example, 1 = original. The cave splat is unrotated (its proxy
 // is what's flipped in that example), whereas the original needs a 180° flip.
-const caveAsset = new pc.Asset('gsplat-cave', 'gsplat', {
+const caveAsset = new Asset('gsplat-cave', 'gsplat', {
     url: 'https://code.playcanvas.com/examples_data/example_cave_01/lod-meta.json'
 });
 app.assets.add(caveAsset);
 
-const skateparkAsset = new pc.Asset('gsplat-skatepark', 'gsplat', {
+const skateparkAsset = new Asset('gsplat-skatepark', 'gsplat', {
     url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json'
 });
 app.assets.add(skateparkAsset);
 
-const apartmentAsset = new pc.Asset('gsplat-apartment', 'gsplat', {
+const apartmentAsset = new Asset('gsplat-apartment', 'gsplat', {
     url: './assets/splats/apartment.sog'
 });
 app.assets.add(apartmentAsset);
@@ -540,7 +579,7 @@ const placeForSceneXr = (scene) => {
 };
 
 const setScene = (index) => {
-    sceneIndex = pc.math.clamp(index, 0, SCENES.length - 1);
+    sceneIndex = math.clamp(index, 0, SCENES.length - 1);
     xrHud?.setItemValue(SCENE_ROW, `${sceneIndex}`);
     const scene = SCENES[sceneIndex];
 
@@ -552,7 +591,7 @@ const setScene = (index) => {
         const p = scene.pos;
         const f = scene.focus;
         cameraRig.setLocalPosition(p[0], p[1], p[2]);
-        cc.reset(new pc.Vec3(f[0], f[1], f[2]), new pc.Vec3(p[0], p[1], p[2]));
+        cc.reset(new Vec3(f[0], f[1], f[2]), new Vec3(p[0], p[1], p[2]));
     }
 
     if (scene.asset.loaded) {
@@ -586,7 +625,7 @@ const tryStartVr = () => {
         setMessage('WebXR is not supported');
         return;
     }
-    if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+    if (app.xr.isAvailable(XRTYPE_VR)) {
         // local-floor: WebXR puts the local-space origin at the floor below the viewer at
         // session start, so the camera (child of the rig) ends up at rig + ~1.6 m on Y.
         // `local` would put the head at rig.y, sinking the viewpoint into the scene floor.
@@ -594,7 +633,7 @@ const tryStartVr = () => {
         // Start XR directly (rather than firing 'vr:start') so we can pass framebufferScaleFactor
         // from the controls — it is read-only once a session is running. XrSession still performs
         // its rig setup, as that is bound to the xr 'start' event, not the start call.
-        camera.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
+        camera.camera.startXr(XRTYPE_VR, XRSPACE_LOCALFLOOR, {
             framebufferScaleFactor: data.get('framebufferScaleFactor'),
             callback: (err) => {
                 if (err) setMessage(`Failed to start VR: ${err.message}`);
@@ -610,7 +649,7 @@ const tryStartVr = () => {
 const enterVrButton = createEnterVrButton(tryStartVr);
 
 const updateEnterVrButton = () => {
-    const show = app.xr.supported && app.xr.isAvailable(pc.XRTYPE_VR) && !app.xr.active;
+    const show = app.xr.supported && app.xr.isAvailable(XRTYPE_VR) && !app.xr.active;
     enterVrButton.style.display = show ? 'block' : 'none';
 };
 
@@ -651,13 +690,13 @@ if (app.xr.supported) {
             updateEnterVrButton();
         });
     });
-    app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_VR}`, (available) => {
         updateEnterVrButton();
         setMessage(available ? 'Click Enter VR to start' : 'Immersive VR is unavailable');
     });
 
     updateEnterVrButton();
-    if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
+    if (!app.xr.isAvailable(XRTYPE_VR)) {
         setMessage('Immersive VR is not available');
     } else {
         setMessage('Click Enter VR to start');

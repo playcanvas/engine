@@ -1,53 +1,80 @@
 // @config
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { Material } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    fly: new pc.Asset('fly', 'script', { url: './scripts/camera/fly-camera.js' }),
-    helipad: new pc.Asset(
+    fly: new Asset('fly', 'script', { url: './scripts/camera/fly-camera.js' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/morning-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    height: new pc.Asset('height', 'texture', { url: './assets/textures/seaside-rocks01-height.jpg' }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' })
+    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    height: new Asset('height', 'texture', { url: './assets/textures/seaside-rocks01-height.jpg' }),
+    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -57,7 +84,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -66,9 +93,9 @@ app.scene.envAtlas = assets.helipad.resource;
 app.scene.exposure = 1;
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    toneMapping: pc.TONEMAP_ACES,
+    toneMapping: TONEMAP_ACES,
     fov: 75
 });
 camera.translate(0, 0, 3);
@@ -83,10 +110,10 @@ camera.script.create('flyCamera', {
 });
 
 // Create an entity with an omni light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     intensity: 2,
     castShadows: false,
     range: 800
@@ -100,7 +127,7 @@ app.root.addChild(light);
 
 // material with parallax mapping
 const tiling = 3;
-const parallaxMaterial = new pc.StandardMaterial();
+const parallaxMaterial = new StandardMaterial();
 parallaxMaterial.diffuseMap = assets.diffuse.resource;
 parallaxMaterial.normalMap = assets.normal.resource;
 parallaxMaterial.heightMap = assets.height.resource;
@@ -115,13 +142,13 @@ parallaxMaterial.update();
  * Helper function to create a 3d primitive including its material.
  *
  * @param {string} primitiveType - The primitive type.
- * @param {pc.Vec3} position - The position.
- * @param {pc.Vec3} scale - The scale.
- * @param {pc.Material} material - The material.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
+ * @param {Material} material - The material.
  */
 function createPrimitive(primitiveType, position, scale, material) {
     // create the primitive using the material
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: material,
@@ -136,14 +163,14 @@ function createPrimitive(primitiveType, position, scale, material) {
 }
 
 // create the ground plane from the boxes
-createPrimitive('box', new pc.Vec3(0, -200, 0), new pc.Vec3(800, 2, 800), parallaxMaterial);
-createPrimitive('box', new pc.Vec3(0, 200, 0), new pc.Vec3(800, 2, 800), parallaxMaterial);
+createPrimitive('box', new Vec3(0, -200, 0), new Vec3(800, 2, 800), parallaxMaterial);
+createPrimitive('box', new Vec3(0, 200, 0), new Vec3(800, 2, 800), parallaxMaterial);
 
 // walls
-createPrimitive('box', new pc.Vec3(400, 0, 0), new pc.Vec3(2, 400, 800), parallaxMaterial);
-createPrimitive('box', new pc.Vec3(-400, 0, 0), new pc.Vec3(2, 400, 800), parallaxMaterial);
-createPrimitive('box', new pc.Vec3(0, 0, -400), new pc.Vec3(800, 400, 0), parallaxMaterial);
-createPrimitive('box', new pc.Vec3(0, 0, 400), new pc.Vec3(800, 400, 0), parallaxMaterial);
+createPrimitive('box', new Vec3(400, 0, 0), new Vec3(2, 400, 800), parallaxMaterial);
+createPrimitive('box', new Vec3(-400, 0, 0), new Vec3(2, 400, 800), parallaxMaterial);
+createPrimitive('box', new Vec3(0, 0, -400), new Vec3(800, 400, 0), parallaxMaterial);
+createPrimitive('box', new Vec3(0, 0, 400), new Vec3(800, 400, 0), parallaxMaterial);
 
 // initial values
 data.set('data', {

@@ -1,4 +1,26 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_NORMAL,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -7,35 +29,39 @@ import shaderGlslVert from './shader.glsl.vert';
 import shaderWgslFrag from './shader.wgsl.frag';
 import shaderWgslVert from './shader.wgsl.vert';
 
+/**
+ * @import { RenderComponent, Texture } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -45,25 +71,25 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5)
+    clearColor: new Color(0.4, 0.45, 0.5)
 });
 camera.translate(0, 7, 24);
 
 // Create an Entity with a omni light component and a sphere model component.
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     radius: 10
 });
 light.translate(0, 1, 0);
@@ -73,16 +99,16 @@ app.root.addChild(camera);
 app.root.addChild(light);
 
 // Create a new material with a custom shader
-const material = new pc.ShaderMaterial({
+const material = new ShaderMaterial({
     uniqueName: 'toon',
     vertexGLSL: shaderGlslVert,
     fragmentGLSL: shaderGlslFrag,
     vertexWGSL: shaderWgslVert,
     fragmentWGSL: shaderWgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aNormal: pc.SEMANTIC_NORMAL,
-        aUv: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aNormal: SEMANTIC_NORMAL,
+        aUv: SEMANTIC_TEXCOORD0
     }
 });
 
@@ -92,9 +118,9 @@ app.root.addChild(entity);
 
 /**
  * Set the new material on all meshes in the model, and use original texture from the model on the new material
- * @type {pc.Texture | null}
+ * @type {Texture | null}
  */
-/** @type {Array<pc.RenderComponent>} */
+/** @type {Array<RenderComponent>} */
 const renders = entity.findComponents('render');
 renders.forEach((render) => {
     render.meshInstances.forEach((meshInstance) => {

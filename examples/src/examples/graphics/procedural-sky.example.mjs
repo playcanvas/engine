@@ -12,7 +12,42 @@
 // source: https://sketchfab.com/3d-models/free-dry-sand-terrain-56c551e472b942de806afe90b1b9cdda
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_NONE,
+    BoundingBox,
+    CURVE_SMOOTHSTEP,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Curve,
+    DepthState,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LIGHTFALLOFF_INVERSESQUARED,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_RGBA16F,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOWUPDATE_REALTIME,
+    SHADOW_PCSS_32F,
+    SSAOTYPE_LIGHTING,
+    SSAOTYPE_NONE,
+    ScriptComponentSystem,
+    TONEMAP_NEUTRAL,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 
@@ -22,43 +57,43 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    laboratory: new pc.Asset('statue', 'container', { url: './assets/models/laboratory.glb' }),
-    terrain: new pc.Asset('terrain', 'container', { url: './assets/models/dry-sand-terrain.glb' })
+    laboratory: new Asset('statue', 'container', { url: './assets/models/laboratory.glb' }),
+    terrain: new Asset('terrain', 'container', { url: './assets/models/dry-sand-terrain.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -68,7 +103,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -84,8 +119,8 @@ app.root.addChild(laboratoryEntity);
 // set up materials to use SSAO only (disable baked AO map)
 laboratoryEntity.findComponents('render').forEach((render) => {
     render.meshInstances.forEach((meshInstance) => {
-        meshInstance.material.depthState = pc.DepthState.DEFAULT;
-        meshInstance.material.blendType = pc.BLEND_NONE;
+        meshInstance.material.depthState = DepthState.DEFAULT;
+        meshInstance.material.blendType = BLEND_NONE;
         meshInstance.material.aoMap = null;
         meshInstance.material.update();
     });
@@ -101,14 +136,14 @@ laboratoryEntity
         const render = torch.findComponent('render');
         if (!render) return;
 
-        const light = new pc.Entity('Torch');
+        const light = new Entity('Torch');
         light.addComponent('light', {
             type: 'omni',
-            color: new pc.Color(1.0, 0.55, 0.2),
+            color: new Color(1.0, 0.55, 0.2),
             intensity: 0,
             range: 480,
             // keep the warm light contained to the torch's surroundings
-            falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED
+            falloffMode: LIGHTFALLOFF_INVERSESQUARED
         });
         // place at the flame's world-space position
         light.setPosition(render.meshInstances[0].aabb.center);
@@ -126,7 +161,7 @@ app.root.addChild(terrain);
 
 // accumulate the native (unscaled) world bounds of all the terrain mesh instances
 const terrainMeshes = terrain.findComponents('render').flatMap((render) => render.meshInstances);
-const terrainAabb = new pc.BoundingBox();
+const terrainAabb = new BoundingBox();
 terrainMeshes.forEach((mi, i) => (i === 0 ? terrainAabb.copy(mi.aabb) : terrainAabb.add(mi.aabb)));
 
 // scale so the terrain spans ~3000 units (out to the camera far clip), then centre it on the lab
@@ -155,13 +190,13 @@ terrain.findComponents('render').forEach((render) => {
 
 // a single directional light, kept in sync with the sun by the procedural sky script. It uses
 // PCSS soft shadows so the shadow penumbra reacts to the (moving) sun.
-const sunLight = new pc.Entity('Sun');
+const sunLight = new Entity('Sun');
 sunLight.addComponent('light', {
     type: 'directional',
     castShadows: true,
     // daytime peak intensity - the procedural sky captures this and fades it across the day/night cycle
     intensity: 6,
-    shadowType: pc.SHADOW_PCSS_32F,
+    shadowType: SHADOW_PCSS_32F,
     penumbraSize: 0.03,
     penumbraFalloff: 2.1,
     shadowSamples: 16,
@@ -176,24 +211,24 @@ sunLight.addComponent('light', {
     shadowDistance: 2400,
     // the sun moves every frame, so the shadow map must be re-rendered in realtime
     // (SHADOWUPDATE_THISFRAME would render it once and then stop)
-    shadowUpdateMode: pc.SHADOWUPDATE_REALTIME
+    shadowUpdateMode: SHADOWUPDATE_REALTIME
 });
 app.root.addChild(sunLight);
 
 // procedural sky - renders the visible sky and generates the image-based lighting, driving the
 // sun light's direction, color and intensity
-const sky = new pc.Entity('ProceduralSky');
+const sky = new Entity('ProceduralSky');
 sky.addComponent('script');
 const skyScript = sky.script.create(ProceduralSky);
 skyScript.sunLight = sunLight;
 app.root.addChild(sky);
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity('Camera');
+const cameraEntity = new Entity('Camera');
 cameraEntity.addComponent('camera', {
     farClip: 3000,
     fov: 80, // wide angle so more of the sky is visible
-    toneMapping: pc.TONEMAP_NEUTRAL
+    toneMapping: TONEMAP_NEUTRAL
 });
 cameraEntity.setLocalPosition(240, 85, 240);
 cameraEntity.addComponent('script');
@@ -201,20 +236,20 @@ app.root.addChild(cameraEntity);
 
 // add camera controls, framing the model with the sky behind it
 const cc = /** @type {any} */ (cameraEntity.script.create(CameraControls));
-cc.focusPoint = new pc.Vec3(0, 25, 0);
+cc.focusPoint = new Vec3(0, 25, 0);
 // limit how far the camera can orbit out, keeping it in the sharp near-cascade zone (x = min, y = max)
-cc.zoomRange = new pc.Vec2(1, 500);
+cc.zoomRange = new Vec2(1, 500);
 
 // ------ Custom render passes set up ------
 
-const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 
 // 16bit render target for HDR, so the bright sun blooms and SSAO has better precision
-cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
+cameraFrame.rendering.renderFormats = [PIXELFORMAT_RGBA16F];
 
 // SSAO, applied to the ambient lighting (not as a post-process), toggled from the UI
-cameraFrame.ssao.type = pc.SSAOTYPE_LIGHTING;
+cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
 cameraFrame.ssao.blurEnabled = true;
 cameraFrame.ssao.intensity = 0.4;
 cameraFrame.ssao.power = 6;
@@ -230,7 +265,7 @@ cameraFrame.update();
 
 // SSAO toggles the CameraFrame SSAO type, which needs an explicit update()
 data.on('data.effects.ssao:set', (/** @type {boolean} */ value) => {
-    cameraFrame.ssao.type = value ? pc.SSAOTYPE_LIGHTING : pc.SSAOTYPE_NONE;
+    cameraFrame.ssao.type = value ? SSAOTYPE_LIGHTING : SSAOTYPE_NONE;
     cameraFrame.update();
 });
 
@@ -290,10 +325,10 @@ data.set('data', {
     }
 });
 
-// build a pc.Curve from an array of [x, y] keyframe pairs (as edited in the inspector)
+// build a Curve from an array of [x, y] keyframe pairs (as edited in the inspector)
 const buildCurve = (pairs) => {
-    const curve = new pc.Curve(pairs.flat());
-    curve.type = pc.CURVE_SMOOTHSTEP;
+    const curve = new Curve(pairs.flat());
+    curve.type = CURVE_SMOOTHSTEP;
     return curve;
 };
 
@@ -351,7 +386,7 @@ app.on('update', (dt) => {
     }
 
     // torches glow between sunset and sunrise
-    const nightFactor = 1 - pc.math.smoothstep(-3, 3, elevation);
+    const nightFactor = 1 - math.smoothstep(-3, 3, elevation);
     for (let i = 0; i < torchLights.length; i++) {
         torchLights[i].light.intensity = torchIntensity * nightFactor;
     }

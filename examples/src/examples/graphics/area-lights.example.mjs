@@ -1,4 +1,34 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CULLFACE_BACK,
+    CULLFACE_NONE,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    CubemapHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    JsonHandler,
+    LIGHTFALLOFF_INVERSESQUARED,
+    LIGHTSHAPE_DISK,
+    LIGHTSHAPE_RECT,
+    LIGHTSHAPE_SPHERE,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,16 +36,16 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    luts: new pc.Asset('luts', 'json', { url: './assets/json/area-light-luts.json' }),
-    helipad: new pc.Asset(
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -23,23 +53,23 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.JsonHandler, pc.CubemapHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, JsonHandler, CubemapHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -49,20 +79,20 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 /**
  * helper function to create a primitive with shape type, position, scale, color
  * @param {string} primitiveType - The primitive type.
- * @param {pc.Vec3} position - The position.
- * @param {pc.Vec3} scale - The scale.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
  * @param {any} assetManifest - The asset manifest.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, assetManifest) {
     // create material of specified color
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.gloss = 0.8;
     material.useMetalness = true;
 
@@ -80,7 +110,7 @@ function createPrimitive(primitiveType, position, scale, assetManifest) {
     material.update();
 
     // create primitive
-    const primitive = new pc.Entity(primitiveType);
+    const primitive = new Entity(primitiveType);
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
@@ -98,26 +128,26 @@ function createPrimitive(primitiveType, position, scale, assetManifest) {
  * Helper function to create area light including its visual representation in the world.
  * @param {string} type - The light component's type.
  * @param {number} shape - The light component's shape.
- * @param {pc.Vec3} position - The position.
+ * @param {Vec3} position - The position.
  * @param {number} scale - The scale.
- * @param {pc.Color} color - The color.
+ * @param {Color} color - The color.
  * @param {number} intensity - The light component's intensity.
  * @param {boolean} shadows - Casting shadows or not.
  * @param {number} range - The light component's range.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 function createAreaLight(type, shape, position, scale, color, intensity, shadows, range) {
-    const lightParent = new pc.Entity();
+    const lightParent = new Entity();
     lightParent.translate(position);
     app.root.addChild(lightParent);
 
-    const light = new pc.Entity();
+    const light = new Entity();
     light.addComponent('light', {
         type: type,
         shape: shape,
         color: color,
         intensity: intensity,
-        falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
+        falloffMode: LIGHTFALLOFF_INVERSESQUARED,
         range: range,
         castShadows: shadows,
         innerConeAngle: 80,
@@ -131,22 +161,22 @@ function createAreaLight(type, shape, position, scale, color, intensity, shadows
     lightParent.addChild(light);
 
     // emissive material that is the light source color
-    const brightMaterial = new pc.StandardMaterial();
+    const brightMaterial = new StandardMaterial();
     brightMaterial.emissive = color;
     brightMaterial.useLighting = false;
-    brightMaterial.cull = shape === pc.LIGHTSHAPE_RECT ? pc.CULLFACE_NONE : pc.CULLFACE_BACK;
+    brightMaterial.cull = shape === LIGHTSHAPE_RECT ? CULLFACE_NONE : CULLFACE_BACK;
     brightMaterial.update();
 
-    const brightShape = new pc.Entity();
+    const brightShape = new Entity();
     // primitive shape that matches light source shape
     brightShape.addComponent('render', {
-        type: shape === pc.LIGHTSHAPE_SPHERE ? 'sphere' : shape === pc.LIGHTSHAPE_DISK ? 'cone' : 'plane',
+        type: shape === LIGHTSHAPE_SPHERE ? 'sphere' : shape === LIGHTSHAPE_DISK ? 'cone' : 'plane',
         material: brightMaterial,
         castShadows: type !== 'directional'
     });
     brightShape.setLocalScale(
         type === 'directional' ? scale * range : scale,
-        shape === pc.LIGHTSHAPE_DISK ? 0.001 : type === 'directional' ? scale * range : scale,
+        shape === LIGHTSHAPE_DISK ? 0.001 : type === 'directional' ? scale * range : scale,
         type === 'directional' ? scale * range : scale
     );
     lightParent.addChild(brightShape);
@@ -154,15 +184,15 @@ function createAreaLight(type, shape, position, scale, color, intensity, shadows
     // add black primitive shape if not omni-directional or global directional
     if (type === 'spot') {
         // black material
-        const blackMaterial = new pc.StandardMaterial();
-        blackMaterial.diffuse = new pc.Color(0, 0, 0);
+        const blackMaterial = new StandardMaterial();
+        blackMaterial.diffuse = new Color(0, 0, 0);
         blackMaterial.useLighting = false;
-        blackMaterial.cull = shape === pc.LIGHTSHAPE_RECT ? pc.CULLFACE_NONE : pc.CULLFACE_BACK;
+        blackMaterial.cull = shape === LIGHTSHAPE_RECT ? CULLFACE_NONE : CULLFACE_BACK;
         blackMaterial.update();
 
-        const blackShape = new pc.Entity();
+        const blackShape = new Entity();
         blackShape.addComponent('render', {
-            type: shape === pc.LIGHTSHAPE_SPHERE ? 'sphere' : shape === pc.LIGHTSHAPE_DISK ? 'cone' : 'plane',
+            type: shape === LIGHTSHAPE_SPHERE ? 'sphere' : shape === LIGHTSHAPE_DISK ? 'cone' : 'plane',
             material: blackMaterial
         });
         blackShape.setLocalPosition(0, 0.01 / scale, 0);
@@ -190,7 +220,7 @@ app.scene.skyboxIntensity = 0.4; // make it darker
 app.scene.envAtlas = assets.helipad.resource;
 
 // create ground plane
-createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), assets);
+createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), assets);
 
 // get the instance of the statue and set up with render component
 const statue = assets.statue.resource.instantiateRenderEntity();
@@ -198,44 +228,26 @@ statue.setLocalScale(0.4, 0.4, 0.4);
 app.root.addChild(statue);
 
 // Create the camera, which renders entities
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    clearColor: new Color(0.2, 0.2, 0.2),
     fov: 60,
     farClip: 100000,
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 app.root.addChild(camera);
 camera.setLocalPosition(0, 2.5, 12);
 camera.lookAt(0, 0, 0);
 
 // Create lights with light source shape
-const light1 = createAreaLight(
-    'spot',
-    pc.LIGHTSHAPE_RECT,
-    new pc.Vec3(-3, 4, 0),
-    4,
-    new pc.Color(1, 1, 1),
-    2,
-    true,
-    10
-);
-const light2 = createAreaLight(
-    'omni',
-    pc.LIGHTSHAPE_SPHERE,
-    new pc.Vec3(5, 2, -2),
-    2,
-    new pc.Color(1, 1, 0),
-    2,
-    false,
-    10
-);
+const light1 = createAreaLight('spot', LIGHTSHAPE_RECT, new Vec3(-3, 4, 0), 4, new Color(1, 1, 1), 2, true, 10);
+const light2 = createAreaLight('omni', LIGHTSHAPE_SPHERE, new Vec3(5, 2, -2), 2, new Color(1, 1, 0), 2, false, 10);
 const light3 = createAreaLight(
     'directional',
-    pc.LIGHTSHAPE_DISK,
-    new pc.Vec3(0, 0, 0),
+    LIGHTSHAPE_DISK,
+    new Vec3(0, 0, 0),
     0.2,
-    new pc.Color(0.7, 0.7, 1),
+    new Color(0.7, 0.7, 1),
     10,
     true,
     far
@@ -251,16 +263,16 @@ app.on('update', (/** @type {number} */ dt) => {
     const factor3 = (Math.sin(time * 0.4) + 1) * 0.5;
 
     if (light1) {
-        light1.setLocalEulerAngles(pc.math.lerp(-90, 110, factor1), 0, 90);
-        light1.setLocalPosition(-4, pc.math.lerp(2, 4, factor3), pc.math.lerp(-2, 2, factor2));
+        light1.setLocalEulerAngles(math.lerp(-90, 110, factor1), 0, 90);
+        light1.setLocalPosition(-4, math.lerp(2, 4, factor3), math.lerp(-2, 2, factor2));
     }
 
     if (light2) {
-        light2.setLocalPosition(5, pc.math.lerp(1, 3, factor1), pc.math.lerp(-2, 2, factor2));
+        light2.setLocalPosition(5, math.lerp(1, 3, factor1), math.lerp(-2, 2, factor2));
     }
 
     if (light3) {
-        light3.setLocalEulerAngles(pc.math.lerp(230, 310, factor2), pc.math.lerp(-30, 0, factor3), 90);
+        light3.setLocalEulerAngles(math.lerp(230, 310, factor2), math.lerp(-30, 0, factor3), 90);
 
         const dir = light3.getWorldTransform().getY();
         const campos = camera.getPosition();

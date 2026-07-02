@@ -1,4 +1,26 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Curve,
+    CurveSet,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    ParticleSystemComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -6,43 +28,43 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    snowflake: new pc.Asset('snowflake', 'texture', { url: './assets/textures/snowflake.png' }, { srgb: true })
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    snowflake: new Asset('snowflake', 'texture', { url: './assets/textures/snowflake.png' }, { srgb: true })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ParticleSystemComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ParticleSystemComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -52,9 +74,9 @@ app.on('destroy', () => {
 });
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color(0, 0, 0)
+    clearColor: new Color(0, 0, 0)
 });
 cameraEntity.rotateLocal(0, 0, 0);
 cameraEntity.translateLocal(0, 7, 10);
@@ -72,10 +94,10 @@ cameraEntity.script.create('orbitCameraInputMouse');
 cameraEntity.script.create('orbitCameraInputTouch');
 
 // Create a directional light
-const lightDirEntity = new pc.Entity();
+const lightDirEntity = new Entity();
 lightDirEntity.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     intensity: 1
 });
 lightDirEntity.setLocalEulerAngles(45, 0, 0);
@@ -85,26 +107,26 @@ app.root.addChild(cameraEntity);
 app.root.addChild(lightDirEntity);
 
 // set up random downwards velocity from -0.4 to -0.7
-const velocityCurve = new pc.CurveSet([
+const velocityCurve = new CurveSet([
     [0, 0], // x
     [0, -0.7], // y
     [0, 0] // z
 ]);
-const velocityCurve2 = new pc.CurveSet([
+const velocityCurve2 = new CurveSet([
     [0, 0], // x
     [0, -0.4], // y
     [0, 0] // z
 ]);
 
 // set up random rotation speed from -100 to 100 degrees per second
-const rotCurve = new pc.Curve([0, 100]);
-const rotCurve2 = new pc.Curve([0, -100]);
+const rotCurve = new Curve([0, 100]);
+const rotCurve2 = new Curve([0, -100]);
 
 // scale is constant at 0.1
-const scaleCurve = new pc.Curve([0, 0.2]);
+const scaleCurve = new Curve([0, 0.2]);
 
 // Create entity for particle system
-const entity = new pc.Entity();
+const entity = new Entity();
 app.root.addChild(entity);
 entity.setLocalPosition(0, 5, 0);
 
@@ -114,7 +136,7 @@ entity.addComponent('particlesystem', {
     rate: 0.1,
     startAngle: 360,
     startAngle2: -360,
-    emitterExtents: new pc.Vec3(7, 2, 7),
+    emitterExtents: new Vec3(7, 2, 7),
     velocityGraph: velocityCurve,
     velocityGraph2: velocityCurve2,
     scaleGraph: scaleCurve,
@@ -125,7 +147,7 @@ entity.addComponent('particlesystem', {
 });
 
 // Create an Entity for the ground
-const ground = new pc.Entity();
+const ground = new Entity();
 ground.addComponent('render', {
     type: 'cylinder'
 });

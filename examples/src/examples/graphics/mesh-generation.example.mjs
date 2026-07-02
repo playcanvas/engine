@@ -1,4 +1,26 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    PRIMITIVE_TRIANGLES,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TextureHandler,
+    Vec2,
+    Vec3,
+    calculateNormals,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,7 +28,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvasGrey: new pc.Asset('playcanvasGrey', 'texture', {
+    playcanvasGrey: new Asset('playcanvasGrey', 'texture', {
         url: './assets/textures/playcanvas-grey.png'
     })
 };
@@ -15,21 +37,21 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -39,22 +61,22 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+app.scene.ambientLight = new Color(0.1, 0.1, 0.1);
 
 /**
  * helper function to create a light
- * @param {pc.Color} color - The color.
+ * @param {Color} color - The color.
  * @param {number} scale - The scale.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 function createLight(color, scale) {
     // Create an Entity with a omni light component, which is casting shadows (using rendering to cubemap)
-    const light = new pc.Entity();
+    const light = new Entity();
     light.addComponent('light', {
         type: 'omni',
         color: color,
@@ -63,7 +85,7 @@ function createLight(color, scale) {
     });
 
     // create material of specified color
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.emissive = color;
     material.update();
 
@@ -82,16 +104,16 @@ function createLight(color, scale) {
 
 // create 4 lights that will move in the scene and deform the mesh as well
 const lights = [
-    { radius: 7, speed: 1.0, scale: 2.5, light: createLight(new pc.Color(0.3, 0.9, 0.6), 1.0) },
-    { radius: 3, speed: 1.2, scale: 3.0, light: createLight(new pc.Color(0.7, 0.2, 0.3), 1.3) },
-    { radius: 5, speed: -0.8, scale: 4.0, light: createLight(new pc.Color(0.2, 0.2, 0.9), 1.5) },
-    { radius: 4, speed: -0.3, scale: 5.5, light: createLight(new pc.Color(0.8, 0.9, 0.4), 1.7) }
+    { radius: 7, speed: 1.0, scale: 2.5, light: createLight(new Color(0.3, 0.9, 0.6), 1.0) },
+    { radius: 3, speed: 1.2, scale: 3.0, light: createLight(new Color(0.7, 0.2, 0.3), 1.3) },
+    { radius: 5, speed: -0.8, scale: 4.0, light: createLight(new Color(0.2, 0.2, 0.9), 1.5) },
+    { radius: 4, speed: -0.3, scale: 5.5, light: createLight(new Color(0.8, 0.9, 0.4), 1.7) }
 ];
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2)
+    clearColor: new Color(0.2, 0.2, 0.2)
 });
 
 // Add the new Entity to the hierarchy
@@ -99,7 +121,7 @@ app.root.addChild(camera);
 
 // Position the camera
 camera.translate(0, 5, 20);
-camera.lookAt(pc.Vec3.ZERO);
+camera.lookAt(Vec3.ZERO);
 
 // Generate a 3D grid plane with world size of 20, and resolution of 60
 const resolution = 60;
@@ -139,14 +161,14 @@ for (let x = 0; x < resolution - 1; x++) {
 
 /**
  * helper function to update required vertex / index streams
- * @param {pc.Mesh} mesh - The mesh.
+ * @param {Mesh} mesh - The mesh.
  * @param {boolean} [initAll] - Also set UV's and indices.
  */
 function updateMesh(mesh, initAll) {
     // Set updated positions and normal each frame
     mesh.setPositions(positions);
     // @ts-ignore engine-tsd
-    mesh.setNormals(pc.calculateNormals(positions, indexArray));
+    mesh.setNormals(calculateNormals(positions, indexArray));
 
     // update mesh Uvs and Indices only one time, as they do not change each frame
     if (initAll) {
@@ -155,16 +177,16 @@ function updateMesh(mesh, initAll) {
     }
 
     // Let mesh update Vertex and Index buffer as needed
-    mesh.update(pc.PRIMITIVE_TRIANGLES);
+    mesh.update(PRIMITIVE_TRIANGLES);
 }
 
 // Create a mesh with dynamic vertex buffer and static index buffer
-const mesh = new pc.Mesh(app.graphicsDevice);
+const mesh = new Mesh(app.graphicsDevice);
 mesh.clear(true, false);
 updateMesh(mesh, true);
 
 // create material
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.diffuseMap = assets.playcanvasGrey.resource;
 material.gloss = 0.5;
 material.metalness = 0.3;
@@ -172,10 +194,10 @@ material.useMetalness = true;
 material.update();
 
 // Create the mesh instance
-const meshInstance = new pc.MeshInstance(mesh, material);
+const meshInstance = new MeshInstance(mesh, material);
 
 // Create the entity with render component using meshInstances
-const entity = new pc.Entity();
+const entity = new Entity();
 entity.addComponent('render', {
     meshInstances: [meshInstance]
 });
@@ -190,7 +212,7 @@ app.on('update', (dt) => {
     const lightPositions = [];
     for (let l = 0; l < lights.length; l++) {
         const element = lights[l];
-        const lightPos = new pc.Vec2(
+        const lightPos = new Vec2(
             element.radius * Math.sin(time * element.speed),
             element.radius * Math.cos(time * element.speed)
         );
@@ -209,8 +231,8 @@ app.on('update', (dt) => {
                 const dx = positions[index] - lightPositions[l].x;
                 const dz = positions[index + 2] - lightPositions[l].y;
                 let dist = Math.sqrt(dx * dx + dz * dz);
-                dist = pc.math.clamp(dist, 0, lights[l].scale);
-                dist = pc.math.smoothstep(0, lights[l].scale, dist);
+                dist = math.clamp(dist, 0, lights[l].scale);
+                dist = math.smoothstep(0, lights[l].scale, dist);
                 elevation += 1 - dist;
             }
 

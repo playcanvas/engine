@@ -1,44 +1,80 @@
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    Layer,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    PIXELFORMAT_RGB8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    SphereGeometry,
+    StandardMaterial,
+    TEXTUREPROJECTION_EQUIRECT,
+    TEXTUREPROJECTION_OCTAHEDRAL,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    Texture,
+    TextureHandler,
+    Vec3,
+    createGraphicsDevice,
+    reprojectTexture
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
+
+/**
+ * @import { Material } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script: new pc.Asset('script', 'script', { url: './scripts/utils/cubemap-renderer.js' })
+    script: new Asset('script', 'script', { url: './scripts/utils/cubemap-renderer.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -48,7 +84,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -60,26 +96,23 @@ app.scene.skyboxIntensity = 2; // make it brighter
 
 /**
  * helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
- * @param {pc.Material} material - The material.
+ * @param {Material} material - The material.
  * @param {number[]} layer - The render component's layers.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 const createHighQualitySphere = (material, layer) => {
     // Create Entity and add it to the scene
-    const entity = new pc.Entity('ShinyBall');
+    const entity = new Entity('ShinyBall');
     app.root.addChild(entity);
 
     // create hight resolution sphere
-    const mesh = pc.Mesh.fromGeometry(
-        app.graphicsDevice,
-        new pc.SphereGeometry({ latitudeBands: 200, longitudeBands: 200 })
-    );
+    const mesh = Mesh.fromGeometry(app.graphicsDevice, new SphereGeometry({ latitudeBands: 200, longitudeBands: 200 }));
 
     // Add a render component with the mesh
     entity.addComponent('render', {
         type: 'asset',
         layers: layer,
-        meshInstances: [new pc.MeshInstance(mesh, material)]
+        meshInstances: [new MeshInstance(mesh, material)]
     });
 
     return entity;
@@ -88,15 +121,15 @@ const createHighQualitySphere = (material, layer) => {
 /**
  * helper function to create a primitive with shape type, position, scale, color and layer
  * @param {string} primitiveType - The primitive type.
- * @param {number | pc.Vec3} position - The entity's position.
- * @param {number | pc.Vec3} scale - The entisy's scale.
- * @param {pc.Color} color - The color.
+ * @param {number | Vec3} position - The entity's position.
+ * @param {number | Vec3} scale - The entisy's scale.
+ * @param {Color} color - The color.
  * @param {number[]} layer - The render component's layers.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, color, layer) {
     // create material of specified color
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     material.gloss = 0.6;
     material.metalness = 0.7;
@@ -104,7 +137,7 @@ function createPrimitive(primitiveType, position, scale, color, layer) {
     material.update();
 
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         layers: layer,
@@ -126,11 +159,11 @@ const immediateLayer = app.scene.layers.getLayerByName('Immediate');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
 // create a layer for object that do not render into texture
-const excludedLayer = new pc.Layer({ name: 'Excluded' });
+const excludedLayer = new Layer({ name: 'Excluded' });
 app.scene.layers.push(excludedLayer);
 
 // create material for the shiny ball
-const shinyMat = new pc.StandardMaterial();
+const shinyMat = new StandardMaterial();
 
 // create shiny ball mesh - this is on excluded layer as it does not render to cubemap
 const shinyBall = createHighQualitySphere(shinyMat, [excludedLayer.id]);
@@ -152,7 +185,7 @@ shinyBall.addComponent('camera', {
     // disable as this is not a camera that renders cube map but only a container for properties for cube map rendering
     enabled: false,
 
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 
 // add cubemapRenderer script component which takes care of rendering dynamic cubemap
@@ -166,7 +199,7 @@ shinyBall.script.create('cubemapRenderer', {
 });
 
 // finish set up of shiny material - make reflection a bit darker
-shinyMat.diffuse = new pc.Color(0.6, 0.6, 0.6);
+shinyMat.diffuse = new Color(0.6, 0.6, 0.6);
 
 // use cubemap which is generated by cubemapRenderer instead of global skybox cubemap
 shinyMat.useSkybox = false;
@@ -180,33 +213,33 @@ shinyMat.update();
 
 /**
  * create few random primitives in the world layer
- * @type {pc.Entity[]}
+ * @type {Entity[]}
  */
 const entities = [];
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 for (let i = 0; i < 6; i++) {
     const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
-    const color = new pc.Color(Math.random(), Math.random(), Math.random());
-    entities.push(createPrimitive(shapeName, pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), color, [worldLayer.id]));
+    const color = new Color(Math.random(), Math.random(), Math.random());
+    entities.push(createPrimitive(shapeName, Vec3.ZERO, new Vec3(3, 3, 3), color, [worldLayer.id]));
 }
 
 // create green plane as a base to cast shadows on
-createPrimitive('plane', new pc.Vec3(0, -8, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [worldLayer.id]);
+createPrimitive('plane', new Vec3(0, -8, 0), new Vec3(20, 20, 20), new Color(0.3, 0.5, 0.3), [worldLayer.id]);
 
 // Create main camera, which renders entities in world, excluded and skybox layers
-const camera = new pc.Entity('MainCamera');
+const camera = new Entity('MainCamera');
 camera.addComponent('camera', {
     fov: 60,
     layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id],
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 app.root.addChild(camera);
 
 // Create an Entity with a directional light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
-    color: pc.Color.YELLOW,
+    color: Color.YELLOW,
     range: 40,
     castShadows: true,
     layers: [worldLayer.id],
@@ -221,30 +254,30 @@ app.root.addChild(light);
  * helper function to create a texture that can be used to project cubemap to
  * @param {string} projection - The texture's projection.
  * @param {number} size - Width and height of texture.
- * @returns {pc.Texture} The texture.
+ * @returns {Texture} The texture.
  */
 function createReprojectionTexture(projection, size) {
-    return new pc.Texture(app.graphicsDevice, {
+    return new Texture(app.graphicsDevice, {
         width: size,
         height: size,
-        format: pc.PIXELFORMAT_RGB8,
+        format: PIXELFORMAT_RGB8,
         mipmaps: false,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE,
         projection: projection
     });
 }
 
 // create 2 uqirect and 2 octahedral textures
-const textureEqui = createReprojectionTexture(pc.TEXTUREPROJECTION_EQUIRECT, 256);
-const textureEqui2 = createReprojectionTexture(pc.TEXTUREPROJECTION_EQUIRECT, 256);
-const textureOcta = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 64);
-const textureOcta2 = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 32);
+const textureEqui = createReprojectionTexture(TEXTUREPROJECTION_EQUIRECT, 256);
+const textureEqui2 = createReprojectionTexture(TEXTUREPROJECTION_EQUIRECT, 256);
+const textureOcta = createReprojectionTexture(TEXTUREPROJECTION_OCTAHEDRAL, 64);
+const textureOcta2 = createReprojectionTexture(TEXTUREPROJECTION_OCTAHEDRAL, 32);
 
 // create one envAtlas texture
-const textureAtlas = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 512);
+const textureAtlas = createReprojectionTexture(TEXTUREPROJECTION_OCTAHEDRAL, 512);
 
 // update things each frame
 let time = 0;
@@ -261,28 +294,28 @@ app.on('update', (dt) => {
 
     // slowly orbit camera around
     camera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
-    camera.lookAt(pc.Vec3.ZERO);
+    camera.lookAt(Vec3.ZERO);
 
     // project textures, and display them on the screen
     // @ts-ignore engine-tsd
     const srcCube = shinyBall.script.cubemapRenderer.cubeMap;
 
     // cube -> equi1
-    pc.reprojectTexture(srcCube, textureEqui, {
+    reprojectTexture(srcCube, textureEqui, {
         numSamples: 1
     });
     // @ts-ignore engine-tsd
     app.drawTexture(-0.6, 0.7, 0.6, 0.3, textureEqui);
 
     // cube -> octa1
-    pc.reprojectTexture(srcCube, textureOcta, {
+    reprojectTexture(srcCube, textureOcta, {
         numSamples: 1
     });
     // @ts-ignore engine-tsd
     app.drawTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
 
     // equi1 -> octa2
-    pc.reprojectTexture(textureEqui, textureOcta2, {
+    reprojectTexture(textureEqui, textureOcta2, {
         specularPower: 32,
         numSamples: 1024
     });
@@ -290,7 +323,7 @@ app.on('update', (dt) => {
     app.drawTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
 
     // octa1 -> equi2
-    pc.reprojectTexture(textureOcta, textureEqui2, {
+    reprojectTexture(textureOcta, textureEqui2, {
         specularPower: 16,
         numSamples: 512
     });
@@ -298,7 +331,7 @@ app.on('update', (dt) => {
     app.drawTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
 
     // cube -> envAtlas
-    pc.EnvLighting.generateAtlas(srcCube, {
+    EnvLighting.generateAtlas(srcCube, {
         target: textureAtlas
     });
     // @ts-ignore engine-tsd

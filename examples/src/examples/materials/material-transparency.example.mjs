@@ -1,4 +1,29 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_NORMAL,
+    CameraComponentSystem,
+    Color,
+    DISPLAYFORMAT_LDR_SRGB,
+    DITHER_BAYER8,
+    DITHER_BLUENOISE,
+    DITHER_IGNNOISE,
+    DITHER_NONE,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,7 +31,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
@@ -16,31 +41,31 @@ const gfxOptions = {
     antialias: false,
 
     // use sRGB for display format (only supported on WebGPU, fallbacks to LDR on WebGL2)
-    displayFormat: pc.DISPLAYFORMAT_LDR_SRGB
+    displayFormat: DISPLAYFORMAT_LDR_SRGB
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
 // make dithering more pronounced by rendering to lower resolution
 device.maxPixelRatio = 1;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -50,16 +75,16 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: pc.Color.BLACK,
-    toneMapping: pc.TONEMAP_LINEAR
+    clearColor: Color.BLACK,
+    toneMapping: TONEMAP_LINEAR
 });
 camera.translate(0, -0.5, 14);
 camera.rotate(0, 0, 0);
@@ -68,24 +93,24 @@ app.root.addChild(camera);
 const NUM_SPHERES_X = 4;
 const NUM_SPHERES_Z = 10;
 
-const ditherOptions = [pc.DITHER_NONE, pc.DITHER_BAYER8, pc.DITHER_BLUENOISE, pc.DITHER_IGNNOISE];
+const ditherOptions = [DITHER_NONE, DITHER_BAYER8, DITHER_BLUENOISE, DITHER_IGNNOISE];
 
 /**
  * @param {number} x - The x coordinate.
  * @param {number} z - The z coordinate.
  */
 const createSphere = (x, z) => {
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.name = `material-${ditherOptions[x]}-${z}`;
-    material.emissive = new pc.Color(1, 0, 0);
-    material.specular = new pc.Color(1, 1, 1);
+    material.emissive = new Color(1, 0, 0);
+    material.specular = new Color(1, 1, 1);
     material.metalness = 0.0;
     material.gloss = 0.5;
     material.useMetalness = true;
 
-    if (ditherOptions[x] === pc.DITHER_NONE) {
+    if (ditherOptions[x] === DITHER_NONE) {
         // alpha blending material
-        material.blendType = pc.BLEND_NORMAL;
+        material.blendType = BLEND_NORMAL;
     } else {
         // alpha dithering material
         material.opacityDither = ditherOptions[x];
@@ -99,7 +124,7 @@ const createSphere = (x, z) => {
 
     material.update();
 
-    const sphere = new pc.Entity(`entity-${ditherOptions[x]}-${z}`);
+    const sphere = new Entity(`entity-${ditherOptions[x]}-${z}`);
     sphere.addComponent('render', {
         material: material,
         type: 'sphere'
@@ -109,21 +134,21 @@ const createSphere = (x, z) => {
     app.root.addChild(sphere);
 };
 /**
- * @param {pc.Asset} fontAsset - The font asset.
+ * @param {Asset} fontAsset - The font asset.
  * @param {string} message - The message.
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
  */
 const createText = (fontAsset, message, x, y) => {
     // Create a text element-based entity
-    const text = new pc.Entity();
+    const text = new Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         fontAsset: fontAsset,
         fontSize: 0.3,
         pivot: [0.5, 0.5],
         text: message,
-        type: pc.ELEMENTTYPE_TEXT
+        type: ELEMENTTYPE_TEXT
     });
     text.setLocalPosition(x, y, 0);
     app.root.addChild(text);

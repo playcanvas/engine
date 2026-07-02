@@ -1,7 +1,45 @@
 // @config
 // @flag WEBGL_DISABLED
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BindGroupFormat,
+    BindStorageBufferFormat,
+    BindUniformBufferFormat,
+    CameraComponentSystem,
+    Color,
+    Compute,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    Mouse,
+    RENDERSTYLE_SOLID,
+    RENDERSTYLE_WIREFRAME,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_NORMAL,
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_WGSL,
+    SHADERSTAGE_COMPUTE,
+    ScriptComponentSystem,
+    ScriptHandler,
+    Shader,
+    SphereGeometry,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    UNIFORMTYPE_FLOAT,
+    UNIFORMTYPE_UINT,
+    UniformBufferFormat,
+    UniformFormat,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -11,15 +49,15 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    helipad: new pc.Asset(
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -27,29 +65,29 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
 
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -59,7 +97,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -70,36 +108,36 @@ app.scene.exposure = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
 // sphere material
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.diffuseMap = assets.color.resource;
 material.normalMap = assets.normal.resource;
 material.glossMap = assets.gloss.resource;
 material.update();
 
 // sphere mesh and entity
-const entity = new pc.Entity('Sphere');
+const entity = new Entity('Sphere');
 app.root.addChild(entity);
 
-const geom = new pc.SphereGeometry({
+const geom = new SphereGeometry({
     radius: 1,
     latitudeBands: 100,
     longitudeBands: 100
 });
 
-const mesh = pc.Mesh.fromGeometry(device, geom, {
+const mesh = Mesh.fromGeometry(device, geom, {
     storageVertex: true // allow vertex buffer to be accessible by compute shader
 });
 
 // Add a render component with the mesh
 entity.addComponent('render', {
-    meshInstances: [new pc.MeshInstance(mesh, material)]
+    meshInstances: [new MeshInstance(mesh, material)]
 });
 app.root.addChild(entity);
 
 // Create an orbit camera
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5)
+    clearColor: new Color(0.4, 0.45, 0.5)
 });
 cameraEntity.translate(0, 0, 5);
 
@@ -117,27 +155,27 @@ app.root.addChild(cameraEntity);
 
 // a compute shader that will modify the vertex buffer of the mesh every frame
 const shader = device.supportsCompute
-    ? new pc.Shader(device, {
+    ? new Shader(device, {
           name: 'ComputeShader',
-          shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+          shaderLanguage: SHADERLANGUAGE_WGSL,
           cshader: computeShaderWgsl,
 
           // format of a uniform buffer used by the compute shader
           computeUniformBufferFormats: {
-              ub: new pc.UniformBufferFormat(device, [
-                  new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
-                  new pc.UniformFormat('positionOffset', pc.UNIFORMTYPE_UINT),
-                  new pc.UniformFormat('normalOffset', pc.UNIFORMTYPE_UINT),
-                  new pc.UniformFormat('time', pc.UNIFORMTYPE_FLOAT)
+              ub: new UniformBufferFormat(device, [
+                  new UniformFormat('count', UNIFORMTYPE_UINT),
+                  new UniformFormat('positionOffset', UNIFORMTYPE_UINT),
+                  new UniformFormat('normalOffset', UNIFORMTYPE_UINT),
+                  new UniformFormat('time', UNIFORMTYPE_FLOAT)
               ])
           },
 
           // format of a bind group, providing resources for the compute shader
-          computeBindGroupFormat: new pc.BindGroupFormat(device, [
+          computeBindGroupFormat: new BindGroupFormat(device, [
               // a uniform buffer we provided format for
-              new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
+              new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
               // the vertex buffer we want to modify
-              new pc.BindStorageBufferFormat('vb', pc.SHADERSTAGE_COMPUTE)
+              new BindStorageBufferFormat('vb', SHADERSTAGE_COMPUTE)
           ])
       })
     : null;
@@ -146,11 +184,11 @@ const shader = device.supportsCompute
 // Note: data is stored non-interleaved, positions together, normals together, so no need
 // to worry about stride
 const format = mesh.vertexBuffer.format;
-const positionElement = format.elements.find((e) => e.name === pc.SEMANTIC_POSITION);
-const normalElement = format.elements.find((e) => e.name === pc.SEMANTIC_NORMAL);
+const positionElement = format.elements.find((e) => e.name === SEMANTIC_POSITION);
+const normalElement = format.elements.find((e) => e.name === SEMANTIC_NORMAL);
 
 // create an instance of the compute shader, and provide it the mesh vertex buffer
-const compute = new pc.Compute(device, shader, 'ComputeModifyVB');
+const compute = new Compute(device, shader, 'ComputeModifyVB');
 compute.setParameter('vb', mesh.vertexBuffer);
 compute.setParameter('count', mesh.vertexBuffer.numVertices);
 compute.setParameter('positionOffset', positionElement?.offset / 4); // number of floats offset
@@ -170,6 +208,6 @@ app.on('update', (dt) => {
         device.computeDispatch([compute], 'ModifyVBDispatch');
 
         // solid / wireframe
-        entity.render.renderStyle = Math.floor(time * 0.5) % 2 ? pc.RENDERSTYLE_WIREFRAME : pc.RENDERSTYLE_SOLID;
+        entity.render.renderStyle = Math.floor(time * 0.5) % 2 ? RENDERSTYLE_WIREFRAME : RENDERSTYLE_SOLID;
     }
 });

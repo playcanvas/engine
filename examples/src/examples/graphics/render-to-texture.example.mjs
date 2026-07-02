@@ -1,4 +1,37 @@
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Curve,
+    CurveSet,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Keyboard,
+    Layer,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_SRGBA8,
+    PROJECTION_ORTHOGRAPHIC,
+    PROJECTION_PERSPECTIVE,
+    ParticleSystemComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RenderTarget,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    Texture,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -15,14 +48,14 @@ window.focus();
 // - camera - this camera renders into main framebuffer, objects from World, Excluded and also Skybox layers
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }),
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }),
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
@@ -38,30 +71,30 @@ const gfxOptions = {
     transientDepth: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ParticleSystemComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ParticleSystemComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -71,7 +104,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -79,20 +112,20 @@ app.start();
 /**
  * helper function to create a primitive with shape type, position, scale, color and layer
  * @param {string} primitiveType - The primitive type.
- * @param {number | pc.Vec3} position - The position.
- * @param {number | pc.Vec3} scale - The scale.
- * @param {pc.Color} color - The color.
+ * @param {number | Vec3} position - The position.
+ * @param {number | Vec3} scale - The scale.
+ * @param {Color} color - The color.
  * @param {number[]} layer - The render component's layers.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, color, layer) {
     // create material of specified color
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     material.update();
 
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         layers: layer,
@@ -109,30 +142,30 @@ function createPrimitive(primitiveType, position, scale, color, layer) {
 
 /**
  * helper function to create a basic particle system
- * @param {pc.Vec3} position - The position.
+ * @param {Vec3} position - The position.
  */
 function createParticleSystem(position) {
     // make particles move in different directions
-    const localVelocityCurve = new pc.CurveSet([
+    const localVelocityCurve = new CurveSet([
         [0, 0, 0.5, 8],
         [0, 0, 0.5, 8],
         [0, 0, 0.5, 8]
     ]);
-    const localVelocityCurve2 = new pc.CurveSet([
+    const localVelocityCurve2 = new CurveSet([
         [0, 0, 0.5, -8],
         [0, 0, 0.5, -8],
         [0, 0, 0.5, -8]
     ]);
 
     // increasing gravity
-    const worldVelocityCurve = new pc.CurveSet([
+    const worldVelocityCurve = new CurveSet([
         [0, 0],
         [0, 0, 0.2, 6, 1, -48],
         [0, 0]
     ]);
 
     // Create entity for particle system
-    const entity = new pc.Entity();
+    const entity = new Entity();
     app.root.addChild(entity);
     entity.setLocalPosition(position);
 
@@ -141,7 +174,7 @@ function createParticleSystem(position) {
         numParticles: 200,
         lifetime: 1,
         rate: 0.01,
-        scaleGraph: new pc.Curve([0, 0.5]),
+        scaleGraph: new Curve([0, 0.5]),
         velocityGraph: worldVelocityCurve,
         localVelocityGraph: localVelocityCurve,
         localVelocityGraph2: localVelocityCurve2
@@ -149,15 +182,15 @@ function createParticleSystem(position) {
 }
 
 // create texture and render target for rendering into, including depth buffer
-const texture = new pc.Texture(app.graphicsDevice, {
+const texture = new Texture(app.graphicsDevice, {
     width: 512,
     height: 256,
-    format: pc.PIXELFORMAT_SRGBA8,
+    format: PIXELFORMAT_SRGBA8,
     mipmaps: true,
-    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-    addressV: pc.ADDRESS_CLAMP_TO_EDGE
+    addressU: ADDRESS_CLAMP_TO_EDGE,
+    addressV: ADDRESS_CLAMP_TO_EDGE
 });
-const renderTarget = new pc.RenderTarget({
+const renderTarget = new RenderTarget({
     name: 'RT',
     colorBuffer: texture,
     depth: true,
@@ -176,7 +209,7 @@ const renderTarget = new pc.RenderTarget({
 });
 
 // create a layer for object that do not render into texture, add it right after the world layer
-const excludedLayer = new pc.Layer({ name: 'Excluded' });
+const excludedLayer = new Layer({ name: 'Excluded' });
 app.scene.layers.insert(excludedLayer, 1);
 
 // get existing layers
@@ -185,29 +218,27 @@ const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
 // create ground plane and 3 primitives, visible in world layer
-const plane = createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(3, 4, 2), [
-    worldLayer.id
-]);
-/** @type {pc.StandardMaterial} */
+const plane = createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), new Color(3, 4, 2), [worldLayer.id]);
+/** @type {StandardMaterial} */
 const planeMaterial = plane.render.meshInstances[0].material;
 
 // make the texture tiles and use anisotropic filtering to prevent blurring
 planeMaterial.diffuseMap = assets.checkerboard.resource;
 planeMaterial.diffuseMapTiling.set(10, 10);
 
-createPrimitive('sphere', new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.RED, [worldLayer.id]);
-createPrimitive('cone', new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), pc.Color.CYAN, [worldLayer.id]);
-createPrimitive('box', new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.YELLOW, [worldLayer.id]);
+createPrimitive('sphere', new Vec3(-2, 1, 0), new Vec3(2, 2, 2), Color.RED, [worldLayer.id]);
+createPrimitive('cone', new Vec3(0, 1, -2), new Vec3(2, 2, 2), Color.CYAN, [worldLayer.id]);
+createPrimitive('box', new Vec3(2, 1, 0), new Vec3(2, 2, 2), Color.YELLOW, [worldLayer.id]);
 
 // particle system
-createParticleSystem(new pc.Vec3(2, 3, 0));
+createParticleSystem(new Vec3(2, 3, 0));
 
 // Create main camera, which renders entities in world, excluded and skybox layers
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
     fov: 100,
     layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id],
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 camera.translate(0, 9, 15);
 camera.lookAt(1, 4, 0);
@@ -227,10 +258,10 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
 // Create texture camera, which renders entities in world and skybox layers into the texture
-const textureCamera = new pc.Entity('TextureCamera');
+const textureCamera = new Entity('TextureCamera');
 textureCamera.addComponent('camera', {
     layers: [worldLayer.id, skyboxLayer.id],
-    toneMapping: pc.TONEMAP_ACES,
+    toneMapping: TONEMAP_ACES,
 
     // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
     // to make it rendered first each frame
@@ -247,10 +278,10 @@ textureCamera.addComponent('render', {
 app.root.addChild(textureCamera);
 
 // Create an Entity with a omni light component and add it to world layer (and so used by both cameras)
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     range: 200,
     castShadows: true,
     layers: [worldLayer.id]
@@ -260,15 +291,15 @@ app.root.addChild(light);
 
 // create a plane called tv which we use to display rendered texture
 // this is only added to excluded Layer, so it does not render into texture
-const tv = createPrimitive('plane', new pc.Vec3(6, 8, -5), new pc.Vec3(20, 10, 10), pc.Color.BLACK, [excludedLayer.id]);
+const tv = createPrimitive('plane', new Vec3(6, 8, -5), new Vec3(20, 10, 10), Color.BLACK, [excludedLayer.id]);
 tv.setLocalEulerAngles(90, 0, 0);
 tv.render.castShadows = false;
 tv.render.receiveShadows = false;
 
-/** @type {pc.StandardMaterial} */
+/** @type {StandardMaterial} */
 const material = tv.render.material;
 material.emissiveMap = texture; // assign the rendered texture as an emissive texture
-material.emissive = pc.Color.WHITE;
+material.emissive = Color.WHITE;
 material.update();
 
 // setup skydome, use top mipmap level of cubemap (full resolution)
@@ -282,16 +313,16 @@ app.on('update', (dt) => {
     // rotate texture camera around the objects
     time += dt;
     textureCamera.setLocalPosition(12 * Math.sin(time), 3, 12 * Math.cos(time));
-    textureCamera.lookAt(pc.Vec3.ZERO);
+    textureCamera.lookAt(Vec3.ZERO);
 
     // every 5 seconds switch texture camera between perspective and orthographic projection
     switchTime += dt;
     if (switchTime > 5) {
         switchTime = 0;
-        if (textureCamera.camera.projection === pc.PROJECTION_ORTHOGRAPHIC) {
-            textureCamera.camera.projection = pc.PROJECTION_PERSPECTIVE;
+        if (textureCamera.camera.projection === PROJECTION_ORTHOGRAPHIC) {
+            textureCamera.camera.projection = PROJECTION_PERSPECTIVE;
         } else {
-            textureCamera.camera.projection = pc.PROJECTION_ORTHOGRAPHIC;
+            textureCamera.camera.projection = PROJECTION_ORTHOGRAPHIC;
             textureCamera.camera.orthoHeight = 5;
         }
     }

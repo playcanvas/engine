@@ -6,7 +6,44 @@
 // source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    KEY_1,
+    KEY_2,
+    KEY_3,
+    KEY_4,
+    KEY_5,
+    KEY_6,
+    Keyboard,
+    LAYERID_UI,
+    LightComponentSystem,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SCALEMODE_BLEND,
+    ScreenComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    Vec2,
+    Vec3,
+    Vec4,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -14,27 +51,27 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    board: new pc.Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
-    bloom: new pc.Asset('bloom', 'script', { url: './scripts/posteffects/posteffect-bloom.js' }),
-    bokeh: new pc.Asset('bokeh', 'script', { url: './scripts/posteffects/posteffect-bokeh.js' }),
-    sepia: new pc.Asset('sepia', 'script', { url: './scripts/posteffects/posteffect-sepia.js' }),
-    vignette: new pc.Asset('vignette', 'script', {
+    board: new Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
+    bloom: new Asset('bloom', 'script', { url: './scripts/posteffects/posteffect-bloom.js' }),
+    bokeh: new Asset('bokeh', 'script', { url: './scripts/posteffects/posteffect-bokeh.js' }),
+    sepia: new Asset('sepia', 'script', { url: './scripts/posteffects/posteffect-sepia.js' }),
+    vignette: new Asset('vignette', 'script', {
         url: './scripts/posteffects/posteffect-vignette.js'
     }),
-    ssao: new pc.Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
-    helipad: new pc.Asset(
+    ssao: new Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -44,29 +81,29 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ScreenComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.ContainerHandler, pc.FontHandler];
+createOptions.resourceHandlers = [ScriptHandler, TextureHandler, ContainerHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -76,7 +113,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -89,23 +126,23 @@ app.scene.exposure = 1;
 /**
  * helper function to create a 3d primitive including its material
  * @param {string} primitiveType - The primitive type.
- * @param {pc.Vec3} position - The position (unused).
- * @param {pc.Vec3} scale - The scale.
+ * @param {Vec3} position - The position (unused).
+ * @param {Vec3} scale - The scale.
  * @param {number} brightness - The brightness (unused).
  * @param {boolean} [_allowEmissive] - Allow emissive (unused).
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, brightness, _allowEmissive = true) {
     // create a material
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.gloss = 0.4;
     material.metalness = 0.6;
     material.useMetalness = true;
-    material.emissive = pc.Color.YELLOW;
+    material.emissive = Color.YELLOW;
     material.update();
 
     // create the primitive using the material
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: material,
@@ -128,13 +165,13 @@ const boardEntity = assets.board.resource.instantiateRenderEntity({
 app.root.addChild(boardEntity);
 
 // create a sphere which represents the point of focus for the bokeh filter
-const focusPrimitive = createPrimitive('sphere', pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), 1.5, false);
+const focusPrimitive = createPrimitive('sphere', Vec3.ZERO, new Vec3(3, 3, 3), 1.5, false);
 
 // add an omni light as a child of this sphere
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: pc.Color.YELLOW,
+    color: Color.YELLOW,
     intensity: 2,
     range: 150,
     shadowDistance: 150,
@@ -143,9 +180,9 @@ light.addComponent('light', {
 focusPrimitive.addChild(light);
 
 // Create an Entity with a camera component, and attach postprocessing effects scripts on it
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    clearColor: new Color(0.4, 0.45, 0.5),
     farClip: 500
 });
 camera.addComponent('script');
@@ -197,22 +234,22 @@ app.keyboard.on(
         // if the user is editing an input field, ignore key presses
         if (e.element.constructor.name === 'HTMLInputElement') return;
         switch (e.key) {
-            case pc.KEY_1:
+            case KEY_1:
                 data.set('scripts.bloom.enabled', !data.get('scripts.bloom.enabled'));
                 break;
-            case pc.KEY_2:
+            case KEY_2:
                 data.set('scripts.sepia.enabled', !data.get('scripts.sepia.enabled'));
                 break;
-            case pc.KEY_3:
+            case KEY_3:
                 data.set('scripts.vignette.enabled', !data.get('scripts.vignette.enabled'));
                 break;
-            case pc.KEY_4:
+            case KEY_4:
                 data.set('scripts.bokeh.enabled', !data.get('scripts.bokeh.enabled'));
                 break;
-            case pc.KEY_5:
+            case KEY_5:
                 data.set('scripts.ssao.enabled', !data.get('scripts.ssao.enabled'));
                 break;
-            case pc.KEY_6:
+            case KEY_6:
                 data.set('data.postProcessUI.enabled', !data.get('data.postProcessUI.enabled'));
                 break;
         }
@@ -221,24 +258,24 @@ app.keyboard.on(
 );
 
 // Create a 2D screen to place UI on
-const screen = new pc.Entity();
+const screen = new Entity();
 screen.addComponent('screen', {
-    referenceResolution: new pc.Vec2(1280, 720),
+    referenceResolution: new Vec2(1280, 720),
     scaleBlend: 0.5,
-    scaleMode: pc.SCALEMODE_BLEND,
+    scaleMode: SCALEMODE_BLEND,
     screenSpace: true
 });
 app.root.addChild(screen);
 
 // create a text element to show which effects are enabled
-const text = new pc.Entity();
+const text = new Entity();
 text.addComponent('element', {
-    anchor: new pc.Vec4(0.1, 0.1, 0.5, 0.5),
+    anchor: new Vec4(0.1, 0.1, 0.5, 0.5),
     fontAsset: assets.font,
     fontSize: 28,
-    pivot: new pc.Vec2(0.5, 0.1),
-    type: pc.ELEMENTTYPE_TEXT,
-    alignment: pc.Vec2.ZERO
+    pivot: new Vec2(0.5, 0.1),
+    type: ELEMENTTYPE_TEXT,
+    alignment: Vec2.ZERO
 });
 screen.addChild(text);
 
@@ -251,10 +288,10 @@ app.on('update', (/** @type {number} */ dt) => {
     angle += dt;
 
     // rotate the skydome
-    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, angle * 20, 0);
+    app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, angle * 20, 0);
 
     // move the focus sphere in the world
-    const focusPosition = new pc.Vec3(0, 30, Math.sin(1 + angle * 0.3) * 90);
+    const focusPosition = new Vec3(0, 30, Math.sin(1 + angle * 0.3) * 90);
     focusPrimitive.setPosition(focusPosition);
 
     // set the focus distance to the bokeh effect
@@ -279,6 +316,6 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         camera.script[pathArray[1]][pathArray[2]] = value;
     } else {
         camera.camera.disablePostEffectsLayer =
-            camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
+            camera.camera.disablePostEffectsLayer === LAYERID_UI ? undefined : LAYERID_UI;
     }
 });

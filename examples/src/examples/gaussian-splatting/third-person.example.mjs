@@ -8,23 +8,69 @@
 // source: https://superspl.at/scene/d5d397aa
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    ANIM_EQUAL_TO,
+    ANIM_GREATER_THAN,
+    ANIM_LESS_THAN,
+    ANIM_LESS_THAN_EQUAL_TO,
+    ANIM_PARAMETER_INTEGER,
+    ANIM_PARAMETER_TRIGGER,
+    AnimClipHandler,
+    AnimComponentSystem,
+    AnimStateGraphHandler,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    Color,
+    ContainerHandler,
+    EVENT_KEYDOWN,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    GamePads,
+    KEY_Q,
+    Keyboard,
+    LAYERID_SKYBOX,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 import { ThirdPersonController } from 'playcanvas/scripts/esm/third-person-controller.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { KeyboardEvent, RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 // the collision GLB uses Draco-compressed meshes, so the Draco decoder is required
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
@@ -32,10 +78,10 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 
 await Promise.all([
     new Promise((resolve) => {
-        pc.WasmModule.getInstance('Ammo', () => resolve(true));
+        WasmModule.getInstance('Ammo', () => resolve(true));
     }),
     new Promise((resolve) => {
-        pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
+        WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
 
@@ -46,40 +92,40 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.gamepads = new pc.GamePads();
-createOptions.keyboard = new pc.Keyboard(window);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.gamepads = new GamePads();
+createOptions.keyboard = new Keyboard(window);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.AnimComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    AnimComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem,
+    GSplatComponentSystem
 ];
 createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.AnimClipHandler,
-    pc.AnimStateGraphHandler,
-    pc.GSplatHandler
+    TextureHandler,
+    ContainerHandler,
+    ScriptHandler,
+    AnimClipHandler,
+    AnimStateGraphHandler,
+    GSplatHandler
 ];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -88,28 +134,28 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', {
+    splat: new Asset('sunnyvale-splat', 'gsplat', {
         url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog'
     }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', {
+    collision: new Asset('sunnyvale-collision', 'container', {
         url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb'
     }),
-    character: new pc.Asset('character', 'container', { url: './assets/models/bitmoji.glb' }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
-    jogAnim: new pc.Asset('jogAnim', 'container', { url: './assets/animations/bitmoji/run.glb' }),
-    jumpAnim: new pc.Asset('jumpAnim', 'container', { url: './assets/animations/bitmoji/jump-flip.glb' }),
-    danceAnim: new pc.Asset('danceAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
-    envAtlas: new pc.Asset(
+    character: new Asset('character', 'container', { url: './assets/models/bitmoji.glb' }),
+    idleAnim: new Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
+    walkAnim: new Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
+    jogAnim: new Asset('jogAnim', 'container', { url: './assets/animations/bitmoji/run.glb' }),
+    jumpAnim: new Asset('jumpAnim', 'container', { url: './assets/animations/bitmoji/jump-flip.glb' }),
+    danceAnim: new Asset('danceAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
+    envAtlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/morning-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -120,7 +166,7 @@ app.start();
 // visible background.
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxIntensity = 0.5;
-app.scene.layers.getLayerById(pc.LAYERID_SKYBOX).enabled = false;
+app.scene.layers.getLayerById(LAYERID_SKYBOX).enabled = false;
 
 // Register the renderer handler before setting the initial value, so the initial
 // AUTO selection is resolved to the concrete renderer and shown in the dropdown.
@@ -133,7 +179,7 @@ data.on('renderer:set', () => {
 });
 
 // Initial control values
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('splatBudget', 4);
 data.set('cameraDistance', 5);
 data.set('cameraHeight', 1.2);
@@ -153,10 +199,10 @@ data.on('splatBudget:set', applySplatBudget);
 app.systems.rigidbody?.gravity.set(0, -10, 0);
 
 // Directional light - both lights the character and feeds the shadow catcher
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     castShadows: true,
     intensity: 2,
     shadowBias: 0.2,
@@ -172,10 +218,10 @@ app.root.addChild(light);
 // from the directional light, multiplied onto the gsplat ground behind it.
 // It lives at the world root and is repositioned each frame to follow the
 // character on the ground (raycast down to find ground Y).
-const shadowCatcher = new pc.Entity('shadow-catcher');
+const shadowCatcher = new Entity('shadow-catcher');
 shadowCatcher.addComponent('script').create(ShadowCatcher, {
     properties: {
-        scale: new pc.Vec3(12, 12, 12),
+        scale: new Vec3(12, 12, 12),
         // drawBucket 0 makes the catcher render AFTER the gsplat ground so
         // its shadow can darken the gsplat
         drawBucket: 0
@@ -183,30 +229,30 @@ shadowCatcher.addComponent('script').create(ShadowCatcher, {
 });
 
 // Camera (standalone - not parented to the character; positioned by the controller)
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    clearColor: new Color(0.1, 0.1, 0.1),
     farClip: 1000,
     fov: 60,
-    toneMapping: pc.TONEMAP_LINEAR
+    toneMapping: TONEMAP_LINEAR
 });
 app.root.addChild(camera);
 
 // Parent that holds both the splat and the collision mesh, keeping them aligned.
 // The splat data is authored upside-down relative to PlayCanvas's Y-up convention,
 // so a 180° rotation around Z flips both the visual and the collision together.
-const sceneRoot = new pc.Entity('sunnyvale');
+const sceneRoot = new Entity('sunnyvale');
 sceneRoot.setLocalEulerAngles(0, 0, 180);
 app.root.addChild(sceneRoot);
 
-const splat = new pc.Entity('sunnyvale-gsplat');
+const splat = new Entity('sunnyvale-gsplat');
 splat.addComponent('gsplat', {
     asset: assets.splat
 });
 sceneRoot.addChild(splat);
 
 const collisionRoot = assets.collision.resource.instantiateRenderEntity();
-collisionRoot.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+collisionRoot.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     const entity = render.entity;
     entity.addComponent('rigidbody', {
         type: 'static',
@@ -225,7 +271,7 @@ sceneRoot.addChild(collisionRoot);
 // The third-person controller acts on `characterController` (capsule + dynamic
 // rigidbody). The visible bitmoji mesh is a child entity (`characterModel`) so
 // the controller can rotate it independently from the capsule.
-const characterController = new pc.Entity('character-controller');
+const characterController = new Entity('character-controller');
 characterController.setPosition(0, 1.2, 0);
 characterController.addComponent('collision', {
     type: 'capsule',
@@ -237,8 +283,8 @@ characterController.addComponent('rigidbody', {
     mass: 100,
     linearDamping: 0,
     angularDamping: 0,
-    linearFactor: pc.Vec3.ONE,
-    angularFactor: pc.Vec3.ZERO,
+    linearFactor: Vec3.ONE,
+    angularFactor: Vec3.ZERO,
     friction: 0.5,
     restitution: 0
 });
@@ -250,14 +296,14 @@ app.root.addChild(characterController);
 // the ground when the character jumps rather than rising with them.
 app.root.addChild(shadowCatcher);
 
-const _scRayStart = new pc.Vec3();
-const _scRayEnd = new pc.Vec3();
-const _scPos = new pc.Vec3();
+const _scRayStart = new Vec3();
+const _scRayEnd = new Vec3();
+const _scPos = new Vec3();
 let _scLastY = 0;
 // Exclude the character's own collision so the raycast always hits actual
 // ground geometry, never the character's capsule.
 const _scRayOpts = {
-    filterCallback: (/** @type {pc.Entity} */ entity) => entity !== characterController
+    filterCallback: (/** @type {Entity} */ entity) => entity !== characterController
 };
 const updateShadowCatcher = () => {
     const cp = characterController.getPosition();
@@ -277,7 +323,7 @@ const updateShadowCatcher = () => {
 // Visible character (rotated by the controller). The bitmoji model's pivot is
 // at the feet, so offset down by half capsule height (1.0) to align feet with
 // the bottom of the capsule.
-const characterModel = new pc.Entity('character-model');
+const characterModel = new Entity('character-model');
 characterModel.setLocalPosition(0, -1, 0);
 characterModel.setLocalScale(1.5, 1.5, 1.5);
 characterController.addChild(characterModel);
@@ -310,35 +356,35 @@ characterModel.anim.loadStateGraph({
                     to: 'Walk',
                     time: 0.1,
                     priority: 0,
-                    conditions: [{ parameterName: 'speed', predicate: pc.ANIM_GREATER_THAN, value: 0 }]
+                    conditions: [{ parameterName: 'speed', predicate: ANIM_GREATER_THAN, value: 0 }]
                 },
                 {
                     from: 'Walk',
                     to: 'Idle',
                     time: 0.1,
                     priority: 0,
-                    conditions: [{ parameterName: 'speed', predicate: pc.ANIM_LESS_THAN_EQUAL_TO, value: 0 }]
+                    conditions: [{ parameterName: 'speed', predicate: ANIM_LESS_THAN_EQUAL_TO, value: 0 }]
                 },
                 {
                     from: 'Walk',
                     to: 'Jog',
                     time: 0.1,
                     priority: 0,
-                    conditions: [{ parameterName: 'speed', predicate: pc.ANIM_GREATER_THAN, value: 1 }]
+                    conditions: [{ parameterName: 'speed', predicate: ANIM_GREATER_THAN, value: 1 }]
                 },
                 {
                     from: 'Jog',
                     to: 'Walk',
                     time: 0.1,
                     priority: 0,
-                    conditions: [{ parameterName: 'speed', predicate: pc.ANIM_LESS_THAN, value: 2 }]
+                    conditions: [{ parameterName: 'speed', predicate: ANIM_LESS_THAN, value: 2 }]
                 },
                 {
                     from: 'ANY',
                     to: 'Jump',
                     time: 0.1,
                     priority: 0,
-                    conditions: [{ parameterName: 'jump', predicate: pc.ANIM_EQUAL_TO, value: true }]
+                    conditions: [{ parameterName: 'jump', predicate: ANIM_EQUAL_TO, value: true }]
                 },
                 { from: 'Jump', to: 'Idle', time: 0.2, priority: 0, exitTime: 0.8 },
                 { from: 'Jump', to: 'Walk', time: 0.2, priority: 0, exitTime: 0.8 },
@@ -347,7 +393,7 @@ characterModel.anim.loadStateGraph({
                     to: 'Dance',
                     time: 0.2,
                     priority: 0,
-                    conditions: [{ parameterName: 'dance', predicate: pc.ANIM_EQUAL_TO, value: true }]
+                    conditions: [{ parameterName: 'dance', predicate: ANIM_EQUAL_TO, value: true }]
                 },
                 // exit dance as soon as the player starts moving again
                 {
@@ -355,15 +401,15 @@ characterModel.anim.loadStateGraph({
                     to: 'Walk',
                     time: 0.2,
                     priority: 0,
-                    conditions: [{ parameterName: 'speed', predicate: pc.ANIM_GREATER_THAN, value: 0 }]
+                    conditions: [{ parameterName: 'speed', predicate: ANIM_GREATER_THAN, value: 0 }]
                 }
             ]
         }
     ],
     parameters: {
-        speed: { name: 'speed', type: pc.ANIM_PARAMETER_INTEGER, value: 0 },
-        jump: { name: 'jump', type: pc.ANIM_PARAMETER_TRIGGER, value: false },
-        dance: { name: 'dance', type: pc.ANIM_PARAMETER_TRIGGER, value: false }
+        speed: { name: 'speed', type: ANIM_PARAMETER_INTEGER, value: 0 },
+        jump: { name: 'jump', type: ANIM_PARAMETER_TRIGGER, value: false },
+        dance: { name: 'dance', type: ANIM_PARAMETER_TRIGGER, value: false }
     }
 });
 
@@ -408,8 +454,8 @@ tpc.on('jump', () => {
 
 // Q triggers the dance animation. It exits as soon as the player moves again
 // (via the `speed > 0` transition in the state graph).
-app.keyboard.on(pc.EVENT_KEYDOWN, (/** @type {pc.KeyboardEvent} */ evt) => {
-    if (evt.key === pc.KEY_Q) {
+app.keyboard.on(EVENT_KEYDOWN, (/** @type {KeyboardEvent} */ evt) => {
+    if (evt.key === KEY_Q) {
         characterModel.anim.setTrigger('dance');
     }
 });

@@ -1,4 +1,26 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    JsonHandler,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TextureHandler,
+    Vec3,
+    Vec4,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -8,35 +30,35 @@ window.focus();
 await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
-    script: new pc.Asset('script', 'script', { url: './scripts/animation/tween.js' })
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    script: new Asset('script', 'script', { url: './scripts/animation/tween.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler, pc.JsonHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler, JsonHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -46,7 +68,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -54,7 +76,7 @@ app.start();
 /**
  * Utility function to create a text element-based entity
  *
- * @param {pc.Asset} fontAsset - The font asset to use.
+ * @param {Asset} fontAsset - The font asset to use.
  * @param {string} message - The message to display.
  * @param {number} x - The x position.
  * @param {number} y - The y position.
@@ -62,14 +84,14 @@ app.start();
  * @param {number} rot - The rotation.
  */
 const createText = (fontAsset, message, x, y, z, rot) => {
-    const text = new pc.Entity();
+    const text = new Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         fontAsset: fontAsset,
         fontSize: 0.5,
         pivot: [1, 0.5],
         text: message,
-        type: pc.ELEMENTTYPE_TEXT
+        type: ELEMENTTYPE_TEXT
     });
     text.setLocalPosition(x, y, z);
     text.setLocalEulerAngles(0, 0, rot);
@@ -89,14 +111,14 @@ const easingFunctions = [
     'Back',
     'Bounce'
 ];
-/** @type {Array<pc.Vec3>} */
+/** @type {Array<Vec3>} */
 const points = [];
-/** @type {Array<pc.Color>} */
+/** @type {Array<Color>} */
 const colors = [];
 
 for (let i = 0; i < easingFunctions.length; i++) {
     // Create an entity with a sphere render component
-    const sphere = new pc.Entity();
+    const sphere = new Entity();
 
     sphere.addComponent('render', {
         type: 'sphere'
@@ -116,11 +138,11 @@ for (let i = 0; i < easingFunctions.length; i++) {
                     duration: 1500, // 2 seconds
                     easingFunction: i,
                     easingType: 2, // InOut type
-                    end: new pc.Vec4(4, -i, 0, 0),
+                    end: new Vec4(4, -i, 0, 0),
                     path: 'localPosition', // Update the entity's local position
                     repeat: -1, // Repeat infinitely
                     repeatDelay: 0, // No delay between repeats
-                    start: new pc.Vec4(0, -i, 0, 0),
+                    start: new Vec4(0, -i, 0, 0),
                     yoyo: true // Ping pong between start and end values
                 }
             ]
@@ -131,15 +153,15 @@ for (let i = 0; i < easingFunctions.length; i++) {
     app.root.addChild(sphere);
 
     // Add a line for the path of the sphere
-    points.push(new pc.Vec3(0, -i, 0), new pc.Vec3(4, -i, 0));
-    colors.push(pc.Color.WHITE, pc.Color.WHITE);
+    points.push(new Vec3(0, -i, 0), new Vec3(4, -i, 0));
+    colors.push(Color.WHITE, Color.WHITE);
 
     // Create a text label for the sphere
     createText(assets.font, easingFunctions[i], -0.5, -i, 0, 0);
 }
 
 // Create an entity with a directional light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional'
 });
@@ -147,9 +169,9 @@ light.setLocalEulerAngles(70, 30, 0);
 app.root.addChild(light);
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5)
+    clearColor: new Color(0.4, 0.45, 0.5)
 });
 camera.translate(0.65, -5.5, 20);
 app.root.addChild(camera);

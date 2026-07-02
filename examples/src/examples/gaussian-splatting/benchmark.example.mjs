@@ -12,7 +12,34 @@
 // author: Andrii Shramko
 // source: https://www.linkedin.com/in/andrii-shramko/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TextureHandler,
+    Vec3,
+    WebglGraphicsDevice,
+    WebgpuGraphicsDevice
+} from 'playcanvas';
+
+/**
+ * @import { GraphicsDevice } from 'playcanvas'
+ */
 
 const WARMUP_FRAMES = 10;
 const MEASURE_FRAMES = 60;
@@ -25,15 +52,15 @@ const CAMERA_SIDE_STEP =
     MEASURE_FRAMES > 0 ? CAMERA_SIDE_TRANSLATE_UNITS / MEASURE_FRAMES : CAMERA_SIDE_TRANSLATE_UNITS;
 
 /** Camera pivot rest position (world == local under root). */
-const benchPivotBasePos = new pc.Vec3(10.3, 2, -10);
+const benchPivotBasePos = new Vec3(10.3, 2, -10);
 
 /** Wall-clock duration for idle rAF sampling before any benchmark run (reference FPS). */
 const IDLE_FPS_SAMPLE_MS = 1000;
 
 const RENDERERS = [
-    { device: 'webgl2', renderer: pc.GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGL2 CPU Sort', shortLabel: 'GL2 CPU' },
-    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGPU CPU Sort', shortLabel: 'GPU CPU' },
-    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_GPU_SORT, label: 'WebGPU GPU Sort', shortLabel: 'GPU Sort' }
+    { device: 'webgl2', renderer: GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGL2 CPU Sort', shortLabel: 'GL2 CPU' },
+    { device: 'webgpu', renderer: GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGPU CPU Sort', shortLabel: 'GPU CPU' },
+    { device: 'webgpu', renderer: GSPLAT_RENDERER_RASTER_GPU_SORT, label: 'WebGPU GPU Sort', shortLabel: 'GPU Sort' }
 ];
 
 const BUDGETS = [1, 2, 3, 4, 6, 8, 10, 15, 20, 25, 30, 35]; // millions
@@ -546,20 +573,20 @@ if (existingCanvas) {
 /**
  * @param {HTMLCanvasElement} canvas - The canvas.
  * @param {string} deviceType - 'webgpu' or 'webgl2'.
- * @returns {Promise<pc.GraphicsDevice>} The device.
+ * @returns {Promise<GraphicsDevice>} The device.
  */
 async function createDevice(canvas, deviceType) {
     const opts = { antialias: false };
     if (deviceType === 'webgpu') {
-        const device = new pc.WebgpuGraphicsDevice(canvas, opts);
+        const device = new WebgpuGraphicsDevice(canvas, opts);
         await device.initWebGpu('./assets/wasm/glslang/glslang.js', './assets/wasm/twgsl/twgsl.js');
         return device;
     }
-    return new pc.WebglGraphicsDevice(canvas, opts);
+    return new WebglGraphicsDevice(canvas, opts);
 }
 
 /**
- * @param {pc.GraphicsDevice} device - The device.
+ * @param {GraphicsDevice} device - The device.
  * @returns {string} GPU info summary.
  */
 function getGpuInfo(device) {
@@ -580,8 +607,8 @@ function getGpuInfo(device) {
 }
 
 /**
- * @param {pc.AppBase} app - The app.
- * @param {pc.GraphicsDevice} device - The device.
+ * @param {AppBase} app - The app.
+ * @param {GraphicsDevice} device - The device.
  * @param {string} label - Status label.
  * @param {string} budgetLabel - Budget label.
  * @param {boolean} gpuTimingSupported - False disables GPU timer collection (WebGL without disjoint timer query).
@@ -649,7 +676,7 @@ function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
 
 /**
  * @param {any} gsplatSystem - The gsplat system.
- * @param {pc.AppBase} app - The app.
+ * @param {AppBase} app - The app.
  * @param {string} statusPrefix - Prefix for status message.
  * @param {number} [timeoutMs] - Max wait in ms.
  * @returns {Promise<void>}
@@ -728,21 +755,21 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         syncBenchBanner();
     }
 
-    const createOptions = new pc.AppOptions();
+    const createOptions = new AppOptions();
     createOptions.graphicsDevice = device;
     createOptions.componentSystems = [
-        pc.RenderComponentSystem,
-        pc.CameraComponentSystem,
-        pc.LightComponentSystem,
-        pc.ScriptComponentSystem,
-        pc.GSplatComponentSystem
+        RenderComponentSystem,
+        CameraComponentSystem,
+        LightComponentSystem,
+        ScriptComponentSystem,
+        GSplatComponentSystem
     ];
-    createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+    createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-    const app = new pc.AppBase(canvas);
+    const app = new AppBase(canvas);
     app.init(createOptions);
-    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+    app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+    app.setCanvasResolution(RESOLUTION_AUTO);
 
     const resize = () => app.resizeCanvas();
     window.addEventListener('resize', resize);
@@ -756,51 +783,51 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         device.gpuProfiler.enabled = true;
     }
 
-    const bicycleAsset = new pc.Asset('bicycle', 'gsplat', {
+    const bicycleAsset = new Asset('bicycle', 'gsplat', {
         url: './assets/splats/bicycle.sog'
     });
-    const logoAsset = new pc.Asset('logo', 'gsplat', {
+    const logoAsset = new Asset('logo', 'gsplat', {
         url: './assets/splats/playcanvas-logo/meta.json'
     });
-    const churchAsset = new pc.Asset('church', 'gsplat', {
+    const churchAsset = new Asset('church', 'gsplat', {
         url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json'
     });
 
     setStatus(`${config.label}  Loading assets...`);
     await new Promise((resolve) => {
-        new pc.AssetListLoader([bicycleAsset, logoAsset, churchAsset], app.assets).load(resolve);
+        new AssetListLoader([bicycleAsset, logoAsset, churchAsset], app.assets).load(resolve);
     });
 
-    const bicycle = new pc.Entity('bicycle');
+    const bicycle = new Entity('bicycle');
     bicycle.addComponent('gsplat', { asset: bicycleAsset });
     bicycle.setLocalPosition(11.2, 0, -3.5);
     bicycle.setLocalEulerAngles(0, 90, 180);
     bicycle.setLocalScale(2, 2, 2);
     app.root.addChild(bicycle);
 
-    const logo = new pc.Entity('logo');
+    const logo = new Entity('logo');
     logo.addComponent('gsplat', { asset: logoAsset });
     logo.setLocalPosition(8, 0, 2.6);
     logo.setLocalEulerAngles(180, 0, 0);
     logo.setLocalScale(2, 2, 2);
     app.root.addChild(logo);
 
-    const church = new pc.Entity('church');
+    const church = new Entity('church');
     church.addComponent('gsplat', { asset: churchAsset });
     church.setLocalEulerAngles(-90, 0, 0);
     app.root.addChild(church);
 
-    const cameraPivot = new pc.Entity('cameraPivot');
+    const cameraPivot = new Entity('cameraPivot');
     cameraPivot.setLocalPosition(benchPivotBasePos.x, benchPivotBasePos.y, benchPivotBasePos.z);
     app.root.addChild(cameraPivot);
 
-    const camera = new pc.Entity('camera');
+    const camera = new Entity('camera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1),
+        clearColor: new Color(0.1, 0.1, 0.1),
         fov: 75
     });
     cameraPivot.addChild(camera);
-    camera.lookAt(new pc.Vec3(12, 3, 0));
+    camera.lookAt(new Vec3(12, 3, 0));
 
     app.start();
     app.resizeCanvas();
@@ -811,7 +838,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     let benchMotionFrame = 0;
     let benchLateralAccum = 0;
     let benchLateralCaptured = false;
-    const benchLateralDir = new pc.Vec3();
+    const benchLateralDir = new Vec3();
 
     /**
      * Warmup (measureFrames): camera frozen. Measure phase: yaw + lateral together each frameend (fixed steps, no dt).

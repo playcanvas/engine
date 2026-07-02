@@ -2,12 +2,36 @@
 //
 // `WASDQE` Move · Hold `Shift` Move fast · Hold `Ctrl` Move slow · `LMB` / `RMB` Orbit / fly · Hold `Shift` / `MMB` Pan · `Wheel` / `Pinch` Zoom · `F` Focus · `R` Reset
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BoundingBox,
+    CameraComponentSystem,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
-const tmpVa = new pc.Vec2();
+/**
+ * @import { MeshInstance } from 'playcanvas'
+ */
+
+const tmpVa = new Vec2();
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -20,35 +44,35 @@ const gfxOptions = {
 };
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -58,7 +82,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -70,7 +94,7 @@ app.scene.skyboxIntensity = 0.4;
 app.scene.envAtlas = assets.helipad.resource;
 
 // Create a directional light
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light');
 light.setLocalEulerAngles(45, 30, 0);
 app.root.addChild(light);
@@ -82,25 +106,25 @@ app.root.addChild(statue);
 /**
  * Calculate the bounding box of an entity.
  *
- * @param {pc.BoundingBox} bbox - The bounding box.
- * @param {pc.Entity} entity - The entity.
- * @returns {pc.BoundingBox} The bounding box.
+ * @param {BoundingBox} bbox - The bounding box.
+ * @param {Entity} entity - The entity.
+ * @returns {BoundingBox} The bounding box.
  */
 const calcEntityAABB = (bbox, entity) => {
     bbox.center.set(0, 0, 0);
     bbox.halfExtents.set(0, 0, 0);
     entity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+        render.meshInstances.forEach((/** @type {MeshInstance} */ mi) => {
             bbox.add(mi.aabb);
         });
     });
     return bbox;
 };
 
-const start = new pc.Vec3(0, 20, 30);
-const bbox = calcEntityAABB(new pc.BoundingBox(), statue);
+const start = new Vec3(0, 20, 30);
+const bbox = calcEntityAABB(new BoundingBox(), statue);
 
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera');
 camera.addComponent('script');
 camera.setPosition(start);
@@ -228,7 +252,7 @@ data.set(
     ].reduce((/** @type {Record<string, any>} */ obj, key) => {
         const value = cc[key];
 
-        if (value instanceof pc.Vec2) {
+        if (value instanceof Vec2) {
             obj[key] = [value.x, value.y];
             return obj;
         }
