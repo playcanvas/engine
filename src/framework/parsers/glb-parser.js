@@ -3,7 +3,6 @@ import { path } from '../../core/path.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
-import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
@@ -49,6 +48,8 @@ import { Asset } from '../asset/asset.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { dracoDecode } from './draco-decoder.js';
+import { glbMaterialExtensions } from './glb/extensions/index.js';
+import { extractTextureTransform } from './glb/extensions/khr-texture-transform.js';
 import { Quat } from '../../core/math/quat.js';
 
 // resources loaded from GLB file that the parser returns
@@ -848,297 +849,6 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
     return meshes;
 };
 
-const extractTextureTransform = (source, material, maps) => {
-    let map;
-
-    const texCoord = source.texCoord;
-    if (texCoord) {
-        for (map = 0; map < maps.length; ++map) {
-            material[`${maps[map]}MapUv`] = texCoord;
-        }
-    }
-
-    const zeros = [0, 0];
-    const ones = [1, 1];
-    const textureTransform = source.extensions?.KHR_texture_transform;
-    if (textureTransform) {
-        const offset = textureTransform.offset || zeros;
-        const scale = textureTransform.scale || ones;
-        const rotation = textureTransform.rotation ? (-textureTransform.rotation * math.RAD_TO_DEG) : 0;
-
-        const tilingVec = new Vec2(scale[0], scale[1]);
-        const offsetVec = new Vec2(offset[0], 1.0 - scale[1] - offset[1]);
-
-        for (map = 0; map < maps.length; ++map) {
-            material[`${maps[map]}MapTiling`] = tilingVec;
-            material[`${maps[map]}MapOffset`] = offsetVec;
-            material[`${maps[map]}MapRotation`] = rotation;
-        }
-    }
-};
-
-const extensionPbrSpecGlossiness = (data, material, textures) => {
-    let texture;
-    if (data.hasOwnProperty('diffuseFactor')) {
-        const [r, g, b, a] = data.diffuseFactor;
-        material.diffuse.set(r, g, b).gamma();
-        material.opacity = a;
-    } else {
-        material.diffuse.set(1, 1, 1);
-        material.opacity = 1;
-    }
-    if (data.hasOwnProperty('diffuseTexture')) {
-        const diffuseTexture = data.diffuseTexture;
-        texture = textures[diffuseTexture.index];
-
-        material.diffuseMap = texture;
-        material.diffuseMapChannel = 'rgb';
-        material.opacityMap = texture;
-        material.opacityMapChannel = 'a';
-
-        extractTextureTransform(diffuseTexture, material, ['diffuse', 'opacity']);
-    }
-    material.useMetalness = false;
-    if (data.hasOwnProperty('specularFactor')) {
-        const [r, g, b] = data.specularFactor;
-        material.specular.set(r, g, b).gamma();
-    } else {
-        material.specular.set(1, 1, 1);
-    }
-    if (data.hasOwnProperty('glossinessFactor')) {
-        material.gloss = data.glossinessFactor;
-    } else {
-        material.gloss = 1.0;
-    }
-    if (data.hasOwnProperty('specularGlossinessTexture')) {
-        const specularGlossinessTexture = data.specularGlossinessTexture;
-        material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
-        material.specularMapChannel = 'rgb';
-        material.glossMapChannel = 'a';
-
-        extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
-    }
-};
-
-const extensionClearCoat = (data, material, textures) => {
-    if (data.hasOwnProperty('clearcoatFactor')) {
-        material.clearCoat = data.clearcoatFactor * 0.25; // TODO: remove temporary workaround for replicating glTF clear-coat visuals
-    } else {
-        material.clearCoat = 0;
-    }
-    if (data.hasOwnProperty('clearcoatTexture')) {
-        const clearcoatTexture = data.clearcoatTexture;
-        material.clearCoatMap = textures[clearcoatTexture.index];
-        material.clearCoatMapChannel = 'r';
-
-        extractTextureTransform(clearcoatTexture, material, ['clearCoat']);
-    }
-    if (data.hasOwnProperty('clearcoatRoughnessFactor')) {
-        material.clearCoatGloss = data.clearcoatRoughnessFactor;
-    } else {
-        material.clearCoatGloss = 0;
-    }
-    if (data.hasOwnProperty('clearcoatRoughnessTexture')) {
-        const clearcoatRoughnessTexture = data.clearcoatRoughnessTexture;
-        material.clearCoatGlossMap = textures[clearcoatRoughnessTexture.index];
-        material.clearCoatGlossMapChannel = 'g';
-
-        extractTextureTransform(clearcoatRoughnessTexture, material, ['clearCoatGloss']);
-    }
-    if (data.hasOwnProperty('clearcoatNormalTexture')) {
-        const clearcoatNormalTexture = data.clearcoatNormalTexture;
-        material.clearCoatNormalMap = textures[clearcoatNormalTexture.index];
-
-        extractTextureTransform(clearcoatNormalTexture, material, ['clearCoatNormal']);
-
-        if (clearcoatNormalTexture.hasOwnProperty('scale')) {
-            material.clearCoatBumpiness = clearcoatNormalTexture.scale;
-        } else {
-            material.clearCoatBumpiness = 1;
-        }
-    }
-
-    material.clearCoatGlossInvert = true;
-};
-
-const extensionUnlit = (data, material, textures) => {
-    material.useLighting = false;
-
-    // copy diffuse into emissive
-    material.emissive.copy(material.diffuse);
-    material.emissiveMap = material.diffuseMap;
-    material.emissiveMapUv = material.diffuseMapUv;
-    material.emissiveMapTiling.copy(material.diffuseMapTiling);
-    material.emissiveMapOffset.copy(material.diffuseMapOffset);
-    material.emissiveMapRotation = material.diffuseMapRotation;
-    material.emissiveMapChannel = material.diffuseMapChannel;
-    material.emissiveVertexColor = material.diffuseVertexColor;
-    material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;
-
-    // disable lighting and skybox
-    material.useLighting = false;
-    material.useSkybox = false;
-
-    // blank diffuse
-    material.diffuse.set(1, 1, 1);
-    material.diffuseMap = null;
-    material.diffuseVertexColor = false;
-};
-
-const extensionSpecular = (data, material, textures) => {
-    material.useMetalnessSpecularColor = true;
-
-    if (data.hasOwnProperty('specularColorTexture')) {
-        material.specularMap = textures[data.specularColorTexture.index];
-        material.specularMapChannel = 'rgb';
-        extractTextureTransform(data.specularColorTexture, material, ['specular']);
-    }
-
-    if (data.hasOwnProperty('specularColorFactor')) {
-        const [r, g, b] = data.specularColorFactor;
-        material.specular.set(r, g, b).gamma();
-    } else {
-        material.specular.set(1, 1, 1);
-    }
-
-    if (data.hasOwnProperty('specularFactor')) {
-        material.specularityFactor = data.specularFactor;
-    } else {
-        material.specularityFactor = 1;
-    }
-
-    if (data.hasOwnProperty('specularTexture')) {
-        material.specularityFactorMapChannel = 'a';
-        material.specularityFactorMap = textures[data.specularTexture.index];
-        extractTextureTransform(data.specularTexture, material, ['specularityFactor']);
-    }
-};
-
-const extensionIor = (data, material, textures) => {
-    if (data.hasOwnProperty('ior')) {
-        material.refractionIndex = 1.0 / data.ior;
-    }
-};
-
-const extensionDispersion = (data, material, textures) => {
-    if (data.hasOwnProperty('dispersion')) {
-        material.dispersion = data.dispersion;
-    }
-};
-
-const extensionTransmission = (data, material, textures) => {
-    material.blendType = BLEND_NORMAL;
-    material.useDynamicRefraction = true;
-
-    if (data.hasOwnProperty('transmissionFactor')) {
-        material.refraction = data.transmissionFactor;
-    }
-    if (data.hasOwnProperty('transmissionTexture')) {
-        material.refractionMapChannel = 'r';
-        material.refractionMap = textures[data.transmissionTexture.index];
-        extractTextureTransform(data.transmissionTexture, material, ['refraction']);
-    }
-};
-
-const extensionSheen = (data, material, textures) => {
-    material.useSheen = true;
-    if (data.hasOwnProperty('sheenColorFactor')) {
-        const [r, g, b] = data.sheenColorFactor;
-        material.sheen.set(r, g, b).gamma();
-    } else {
-        material.sheen.set(1, 1, 1);
-    }
-    if (data.hasOwnProperty('sheenColorTexture')) {
-        material.sheenMap = textures[data.sheenColorTexture.index];
-        extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
-    }
-
-    material.sheenGloss = data.hasOwnProperty('sheenRoughnessFactor') ? data.sheenRoughnessFactor : 0.0;
-
-    if (data.hasOwnProperty('sheenRoughnessTexture')) {
-        material.sheenGlossMap = textures[data.sheenRoughnessTexture.index];
-        material.sheenGlossMapChannel = 'a';
-        extractTextureTransform(data.sheenRoughnessTexture, material, ['sheenGloss']);
-    }
-
-    material.sheenGlossInvert = true;
-};
-
-const extensionVolume = (data, material, textures) => {
-    material.blendType = BLEND_NORMAL;
-    material.useDynamicRefraction = true;
-    if (data.hasOwnProperty('thicknessFactor')) {
-        material.thickness = data.thicknessFactor;
-    }
-    if (data.hasOwnProperty('thicknessTexture')) {
-        material.thicknessMap = textures[data.thicknessTexture.index];
-        material.thicknessMapChannel = 'g';
-        extractTextureTransform(data.thicknessTexture, material, ['thickness']);
-    }
-    if (data.hasOwnProperty('attenuationDistance')) {
-        material.attenuationDistance = data.attenuationDistance;
-    }
-    if (data.hasOwnProperty('attenuationColor')) {
-        const [r, g, b] = data.attenuationColor;
-        material.attenuation.set(r, g, b).gamma();
-    }
-};
-
-const extensionEmissiveStrength = (data, material, textures) => {
-    if (data.hasOwnProperty('emissiveStrength')) {
-        material.emissiveIntensity = data.emissiveStrength;
-    }
-};
-
-const extensionIridescence = (data, material, textures) => {
-    material.useIridescence = true;
-    if (data.hasOwnProperty('iridescenceFactor')) {
-        material.iridescence = data.iridescenceFactor;
-    }
-    if (data.hasOwnProperty('iridescenceTexture')) {
-        material.iridescenceMapChannel = 'r';
-        material.iridescenceMap = textures[data.iridescenceTexture.index];
-        extractTextureTransform(data.iridescenceTexture, material, ['iridescence']);
-
-    }
-    if (data.hasOwnProperty('iridescenceIor')) {
-        material.iridescenceRefractionIndex = data.iridescenceIor;
-    }
-    if (data.hasOwnProperty('iridescenceThicknessMinimum')) {
-        material.iridescenceThicknessMin = data.iridescenceThicknessMinimum;
-    }
-    if (data.hasOwnProperty('iridescenceThicknessMaximum')) {
-        material.iridescenceThicknessMax = data.iridescenceThicknessMaximum;
-    }
-    if (data.hasOwnProperty('iridescenceThicknessTexture')) {
-        material.iridescenceThicknessMapChannel = 'g';
-        material.iridescenceThicknessMap = textures[data.iridescenceThicknessTexture.index];
-        extractTextureTransform(data.iridescenceThicknessTexture, material, ['iridescenceThickness']);
-    }
-};
-
-const extensionAnisotropy = (data, material, textures) => {
-
-    material.enableGGXSpecular = true;
-
-    if (data.hasOwnProperty('anisotropyStrength')) {
-        material.anisotropyIntensity = data.anisotropyStrength;
-    } else {
-        material.anisotropyIntensity = 0;
-    }
-    if (data.hasOwnProperty('anisotropyTexture')) {
-        const anisotropyTexture = data.anisotropyTexture;
-        material.anisotropyMap = textures[anisotropyTexture.index];
-
-        extractTextureTransform(anisotropyTexture, material, ['anisotropy']);
-    }
-    if (data.hasOwnProperty('anisotropyRotation')) {
-        material.anisotropyRotation = data.anisotropyRotation * math.RAD_TO_DEG;
-    } else {
-        material.anisotropyRotation = 0;
-    }
-};
-
 const createMaterial = (gltfMaterial, textures) => {
     const material = new StandardMaterial();
 
@@ -1260,28 +970,12 @@ const createMaterial = (gltfMaterial, textures) => {
         material.cull = CULLFACE_BACK;
     }
 
-    // Provide list of supported extensions and their functions
-    const extensions = {
-        'KHR_materials_clearcoat': extensionClearCoat,
-        'KHR_materials_emissive_strength': extensionEmissiveStrength,
-        'KHR_materials_ior': extensionIor,
-        'KHR_materials_dispersion': extensionDispersion,
-        'KHR_materials_iridescence': extensionIridescence,
-        'KHR_materials_pbrSpecularGlossiness': extensionPbrSpecGlossiness,
-        'KHR_materials_sheen': extensionSheen,
-        'KHR_materials_specular': extensionSpecular,
-        'KHR_materials_transmission': extensionTransmission,
-        'KHR_materials_unlit': extensionUnlit,
-        'KHR_materials_volume': extensionVolume,
-        'KHR_materials_anisotropy': extensionAnisotropy
-    };
-
     // Handle extensions
     if (gltfMaterial.hasOwnProperty('extensions')) {
         for (const key in gltfMaterial.extensions) {
-            const extensionFunc = extensions[key];
-            if (extensionFunc !== undefined) {
-                extensionFunc(gltfMaterial.extensions[key], material, textures);
+            const extension = glbMaterialExtensions[key];
+            if (extension !== undefined) {
+                extension.apply(gltfMaterial.extensions[key], material, textures);
             }
         }
     }
@@ -2121,32 +1815,16 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                     set.add(getTextureSource(gltfTexture));
                 }
 
+                // color textures used by material extensions
                 if (gltfMaterial.hasOwnProperty('extensions')) {
-
-                    // sheen
-                    const sheen = gltfMaterial.extensions.KHR_materials_sheen;
-                    if (sheen) {
-                        if (sheen.hasOwnProperty('sheenColorTexture')) {
-                            const gltfTexture = gltf.textures[sheen.sheenColorTexture.index];
-                            set.add(getTextureSource(gltfTexture));
-                        }
-                    }
-
-                    // specular glossiness
-                    const specularGlossiness = gltfMaterial.extensions.KHR_materials_pbrSpecularGlossiness;
-                    if (specularGlossiness) {
-                        if (specularGlossiness.hasOwnProperty('specularGlossinessTexture')) {
-                            const gltfTexture = gltf.textures[specularGlossiness.specularGlossinessTexture.index];
-                            set.add(getTextureSource(gltfTexture));
-                        }
-                    }
-
-                    // specular
-                    const specular = gltfMaterial.extensions.KHR_materials_specular;
-                    if (specular) {
-                        if (specular.hasOwnProperty('specularColorTexture')) {
-                            const gltfTexture = gltf.textures[specular.specularColorTexture.index];
-                            set.add(getTextureSource(gltfTexture));
+                    for (const key in gltfMaterial.extensions) {
+                        const extension = glbMaterialExtensions[key];
+                        if (extension?.getColorTextures) {
+                            const textureInfos = extension.getColorTextures(gltfMaterial.extensions[key]);
+                            for (const textureInfo of textureInfos) {
+                                const gltfTexture = gltf.textures[textureInfo.index];
+                                set.add(getTextureSource(gltfTexture));
+                            }
                         }
                     }
                 }
