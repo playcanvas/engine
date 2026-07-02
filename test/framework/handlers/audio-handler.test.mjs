@@ -52,6 +52,20 @@ describe('AudioHandler', function () {
         expect(warnStub.called).to.be.true;
     });
 
+    it('accepts supported formats regardless of extension case', function () {
+        const handler = createHandler();
+        stub(http, 'get').callsFake((url, options, callback) => {
+            callback(null, new ArrayBuffer(8));
+        });
+
+        let result;
+        handler.load({ load: 'SOUND.MP3', original: 'SOUND.MP3' }, (err, res) => {
+            expect(err).to.equal(null);
+            result = res;
+        });
+        expect(result).to.be.an.instanceof(Sound);
+    });
+
     it('requests an ArrayBuffer for blob urls', function () {
         const handler = createHandler();
         let requestOptions;
@@ -68,6 +82,18 @@ describe('AudioHandler', function () {
         const manager = {};
         const handler = new AudioHandler({ soundManager: manager });
         stub(console, 'warn');
+
+        let err;
+        handler.load({ load: 'x.mp3', original: 'x.mp3' }, (e) => {
+            err = e;
+        });
+        expect(err).to.equal('Error loading audio url: x.mp3: Audio manager has no audio context');
+    });
+
+    it('reports an error instead of throwing when there is no sound manager', function () {
+        stub(console, 'error'); // the debug-build assert in the handler constructor
+        stub(console, 'warn');
+        const handler = new AudioHandler({});
 
         let err;
         handler.load({ load: 'x.mp3', original: 'x.mp3' }, (e) => {

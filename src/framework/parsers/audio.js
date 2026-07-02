@@ -47,8 +47,9 @@ class AudioParser {
             return;
         }
 
+        // guard a missing sound manager too (the handler only asserts it in debug builds)
         const manager = this.handler.manager;
-        if (!manager.context) {
+        if (!manager?.context) {
             error('Audio manager has no audio context');
             return;
         }
@@ -64,7 +65,7 @@ class AudioParser {
     }
 
     _isSupported(url) {
-        const ext = path.getExtension(url);
+        const ext = path.getExtension(url).toLowerCase();
 
         return supportedExtensions.indexOf(ext) > -1;
     }
