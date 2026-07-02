@@ -151,5 +151,6 @@ jobs:
         working-directory: ./examples
         run: |
           npm clean-install --progress=false --no-fund
-          npm run fmt:check
+          npm run fmt
+          npm run lint
           npm run build
