@@ -136,7 +136,7 @@ let scaleYDirection = 1;
 const scaleXSpeed = 3;
 const scaleYSpeed = 1.5;
 
-app.on('update', (dt) => {
+app.on('update', (_dt) => {
     const currentWidth = panel.element.width;
     const currentHeight = panel.element.height;
 

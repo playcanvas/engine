@@ -111,7 +111,7 @@ outlineRenderer.addEntity(laboratoryEntity.findByName('Weltkugel'), pc.Color.RED
 outlineRenderer.addEntity(laboratoryEntity.findByName('Stuhl'), pc.Color.WHITE);
 outlineRenderer.addEntity(laboratoryEntity.findByName('Teleskop'), pc.Color.GREEN);
 
-app.on('update', (/** @type {number} */ dt) => {
+app.on('update', (/** @type {number} */ _dt) => {
     // update the outline renderer each frame, and render the outlines inside the opaque sub-layer
     // of the immediate layer
     const immediateLayer = app.scene.layers.getLayerByName('Immediate');

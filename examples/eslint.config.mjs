@@ -1,4 +1,5 @@
 import playcanvasConfig from '@playcanvas/eslint-config';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 
 import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from './utils/inline-markdown.mjs';
@@ -572,6 +573,10 @@ export default [
         }
     },
     {
+        ...eslintConfigPrettier,
+        files: ['src/examples/**/*.{mjs,jsx}']
+    },
+    {
         files: ['src/examples/**/*.{mjs,jsx}'],
         plugins: {
             examples: {
@@ -586,10 +591,17 @@ export default [
         },
         rules: {
             'arrow-parens': 'off',
+            curly: 'error',
             'examples/lowercase-comments': 'error',
             'implicit-arrow-linebreak': 'off',
             'indent': 'off',
             'no-confusing-arrow': 'off',
+            'no-unused-vars': ['error', {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_'
+            }],
+            'object-curly-spacing': ['error', 'always'],
             'operator-linebreak': 'off',
             'quotes': 'off'
         }

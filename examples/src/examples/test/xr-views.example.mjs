@@ -259,7 +259,7 @@ if (device.isWebGPU) {
 const projMat = new pc.Mat4();
 const viewInvMat = new pc.Mat4();
 
-app.on('update', (/** @type {number} */ dt) => {
+app.on('update', (/** @type {number} */ _dt) => {
     const width = canvas.width;
     const height = canvas.height;
     const isWebgpu = device.isWebGPU;

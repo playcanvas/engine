@@ -133,7 +133,7 @@ ground.setLocalScale(10, 0.01, 10);
 ground.setLocalPosition(0, 0, 0);
 app.root.addChild(ground);
 
-data.on('*:set', (/** @type {string} */ path, value) => {
+data.on('*:set', (/** @type {string} */ _path, _value) => {
     // toggle the depth softening on the particle system and the depth texture on the camera
     const soft = data.get('data.soft');
     entity.particlesystem.depthSoftening = soft ? 0.08 : 0;
