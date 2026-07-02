@@ -1,4 +1,32 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    Color,
+    Curve,
+    CurveSet,
+    ELEMENTTYPE_IMAGE,
+    ELEMENTTYPE_TEXT,
+    EMITTERSHAPE_SPHERE,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    Mouse,
+    ParticleSystemComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SCALEMODE_BLEND,
+    ScreenComponentSystem,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,39 +34,39 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' }),
-    spark: new pc.Asset('spark', 'texture', { url: './assets/textures/spark.png' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' }),
+    spark: new Asset('spark', 'texture', { url: './assets/textures/spark.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ButtonComponentSystem,
-    pc.ElementComponentSystem,
-    pc.ParticleSystemComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScreenComponentSystem,
+    ButtonComponentSystem,
+    ElementComponentSystem,
+    ParticleSystemComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -48,59 +76,59 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Create a camera
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
+    clearColor: new Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
 // Create a 2D screen
-const screen = new pc.Entity();
+const screen = new Entity();
 screen.addComponent('screen', {
-    referenceResolution: new pc.Vec2(1280, 720),
+    referenceResolution: new Vec2(1280, 720),
     scaleBlend: 0.5,
-    scaleMode: pc.SCALEMODE_BLEND,
+    scaleMode: SCALEMODE_BLEND,
     screenSpace: true
 });
 app.root.addChild(screen);
 
 // Create a simple panel
-const panel = new pc.Entity();
+const panel = new Entity();
 panel.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
-    color: new pc.Color(0.4, 0.4, 0.4),
+    color: new Color(0.4, 0.4, 0.4),
     height: 40,
     pivot: [0.5, 0.5],
-    type: pc.ELEMENTTYPE_IMAGE,
+    type: ELEMENTTYPE_IMAGE,
     width: 175,
     useInput: true
 });
 screen.addChild(panel);
 
 // Create a label for the panel
-const label = new pc.Entity();
+const label = new Entity();
 label.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
-    color: new pc.Color(1, 1, 0),
+    color: new Color(1, 1, 0),
     fontAsset: assets.font.id,
     fontSize: 36,
     height: 64,
     pivot: [0.5, 0.5],
     text: 'LABEL',
-    type: pc.ELEMENTTYPE_TEXT,
+    type: ELEMENTTYPE_TEXT,
     width: 128,
     wrapLines: true
 });
 panel.addChild(label);
 
 // Create entity for particle system
-const particles = new pc.Entity();
+const particles = new Entity();
 
 // insert sparks as a child of the panel, but before Label - that is the order for rendering
 panel.insertChild(particles, 0);
@@ -109,24 +137,24 @@ panel.insertChild(particles, 0);
 const UILayer = app.scene.layers.getLayerByName('UI');
 
 // particle size
-const scaleCurve = new pc.Curve([0, 0.03]);
+const scaleCurve = new Curve([0, 0.03]);
 
 // color changes throughout lifetime
-const colorCurve = new pc.CurveSet([
+const colorCurve = new CurveSet([
     [0, 1, 0.25, 1, 0.375, 0.5, 0.5, 0],
     [0, 0, 0.125, 0.25, 0.25, 0.5, 0.375, 0.75, 0.5, 1],
     [0, 0, 1, 0]
 ]);
 
 // increasing gravity to get them to move
-const worldVelocityCurve = new pc.CurveSet([
+const worldVelocityCurve = new CurveSet([
     [0, 0],
     [0, 0, 0.1, 0.1, 0.1, -0.1],
     [0, 0]
 ]);
 
 // rotate sparks 360 degrees per second
-const angleCurve = new pc.Curve([0, 360]);
+const angleCurve = new Curve([0, 360]);
 
 // when texture is loaded add particlesystem component to entity
 particles.addComponent('particlesystem', {
@@ -138,7 +166,7 @@ particles.addComponent('particlesystem', {
     localSpace: true,
     screenSpace: true,
 
-    emitterShape: pc.EMITTERSHAPE_SPHERE,
+    emitterShape: EMITTERSHAPE_SPHERE,
     emitterRadius: 100,
 
     scaleGraph: scaleCurve,

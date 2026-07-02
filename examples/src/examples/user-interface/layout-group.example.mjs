@@ -1,4 +1,33 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    Color,
+    ELEMENTTYPE_GROUP,
+    ELEMENTTYPE_IMAGE,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FITTING_BOTH,
+    FontHandler,
+    LayoutChildComponentSystem,
+    LayoutGroupComponentSystem,
+    Mouse,
+    ORIENTATION_HORIZONTAL,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SCALEMODE_BLEND,
+    ScreenComponentSystem,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,39 +35,39 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ButtonComponentSystem,
-    pc.ElementComponentSystem,
-    pc.LayoutGroupComponentSystem,
-    pc.LayoutChildComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScreenComponentSystem,
+    ButtonComponentSystem,
+    ElementComponentSystem,
+    LayoutGroupComponentSystem,
+    LayoutChildComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -48,33 +77,33 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Create a camera
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
+    clearColor: new Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
 // Create a 2D screen
-const screen = new pc.Entity();
+const screen = new Entity();
 screen.addComponent('screen', {
-    referenceResolution: new pc.Vec2(1280, 720),
+    referenceResolution: new Vec2(1280, 720),
     scaleBlend: 0.5,
-    scaleMode: pc.SCALEMODE_BLEND,
+    scaleMode: SCALEMODE_BLEND,
     screenSpace: true
 });
 app.root.addChild(screen);
 
 // Create Layout Group Entity
-const group = new pc.Entity();
+const group = new Entity();
 group.addComponent('element', {
     // a Layout Group needs a 'group' element component
-    type: pc.ELEMENTTYPE_GROUP,
+    type: ELEMENTTYPE_GROUP,
     anchor: [0.5, 0.5, 0.5, 0.5],
     pivot: [0.5, 0.5],
     // the element's width and height dictate the group's bounds
@@ -82,11 +111,11 @@ group.addComponent('element', {
     height: 150
 });
 group.addComponent('layoutgroup', {
-    orientation: pc.ORIENTATION_HORIZONTAL,
-    spacing: new pc.Vec2(10, 10),
+    orientation: ORIENTATION_HORIZONTAL,
+    spacing: new Vec2(10, 10),
     // fit_both for width and height, making all child elements take the entire space
-    widthFitting: pc.FITTING_BOTH,
-    heightFitting: pc.FITTING_BOTH,
+    widthFitting: FITTING_BOTH,
+    heightFitting: FITTING_BOTH,
     // wrap children
     wrap: true
 });
@@ -95,12 +124,12 @@ screen.addChild(group);
 // create 15 children to show off the layout group
 for (let i = 0; i < 15; ++i) {
     // create a random-colored panel
-    const child = new pc.Entity();
+    const child = new Entity();
     child.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         pivot: [0.5, 0.5],
-        color: new pc.Color(Math.random(), Math.random(), Math.random()),
-        type: pc.ELEMENTTYPE_IMAGE
+        color: new Color(Math.random(), Math.random(), Math.random()),
+        type: ELEMENTTYPE_IMAGE
     });
     child.addComponent('layoutchild', {
         excludeFromLayout: false
@@ -108,17 +137,17 @@ for (let i = 0; i < 15; ++i) {
     group.addChild(child);
 
     // add a text label
-    const childLabel = new pc.Entity();
+    const childLabel = new Entity();
     childLabel.addComponent('element', {
         // center-position and attach to the borders of parent
         // meaning this text element will scale along with parent
         anchor: [0, 0, 1, 1],
         margin: [0, 0, 0, 0],
         pivot: [0.5, 0.5],
-        color: new pc.Color(1, 1, 1),
+        color: new Color(1, 1, 1),
         fontAsset: assets.font.id,
         text: `${i + 1}`,
-        type: pc.ELEMENTTYPE_TEXT,
+        type: ELEMENTTYPE_TEXT,
         // auto font size
         autoWidth: false,
         autoHeight: false,

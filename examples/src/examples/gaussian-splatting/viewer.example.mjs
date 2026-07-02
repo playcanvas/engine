@@ -6,9 +6,44 @@
 // source: https://polyhaven.com/a/wide_street_02
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BoundingBox,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    GSPLATDATA_COMPACT,
+    GSPLATDATA_LARGE,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_111110F,
+    PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_RGBA32F,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { MeshInstance } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -51,29 +86,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -84,12 +119,12 @@ app.on('destroy', () => {
 
 // Load orbit camera script and HDRI
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    hdri: new pc.Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false })
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    hdri: new Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -103,15 +138,15 @@ app.scene.gsplat.minContribution = 2;
 /**
  * Calculate the bounding box of an entity.
  *
- * @param {pc.BoundingBox} bbox - The bounding box.
- * @param {pc.Entity} entity - The entity.
- * @returns {pc.BoundingBox} The bounding box.
+ * @param {BoundingBox} bbox - The bounding box.
+ * @param {Entity} entity - The entity.
+ * @returns {BoundingBox} The bounding box.
  */
 const calcEntityAABB = (bbox, entity) => {
     bbox.center.set(0, 0, 0);
     bbox.halfExtents.set(0, 0, 0);
     entity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+        render.meshInstances.forEach((/** @type {MeshInstance} */ mi) => {
             bbox.add(mi.aabb);
         });
     });
@@ -119,9 +154,9 @@ const calcEntityAABB = (bbox, entity) => {
 };
 
 // Create camera at startup so skydome is visible before dropping files
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0, 0, 0),
+    clearColor: new Color(0, 0, 0),
     fov: 60,
     farClip: 1000
 });
@@ -129,10 +164,10 @@ camera.setLocalPosition(0, 2, 5);
 app.root.addChild(camera);
 
 // Create directional light for GLB model illumination
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     intensity: 1,
     castShadows: true,
     shadowBias: 0.2,
@@ -143,8 +178,8 @@ light.setLocalEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
 // Setup CameraFrame
-const cameraFrame = new pc.CameraFrame(app, camera.camera);
-cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F, pc.PIXELFORMAT_RGBA32F, pc.PIXELFORMAT_111110F];
+const cameraFrame = new CameraFrame(app, camera.camera);
+cameraFrame.rendering.renderFormats = [PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_111110F];
 cameraFrame.rendering.samples = 1;
 cameraFrame.grading.enabled = true;
 
@@ -155,12 +190,12 @@ const applySkydome = () => {
         const hdriTexture = assets.hdri.resource;
 
         // Generate high resolution cubemap for skybox
-        const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriTexture);
+        const skybox = EnvLighting.generateSkyboxCubemap(hdriTexture);
         app.scene.skybox = skybox;
 
         // Generate env-atlas for lighting
-        const lighting = pc.EnvLighting.generateLightingSource(hdriTexture);
-        const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+        const lighting = EnvLighting.generateLightingSource(hdriTexture);
+        const envAtlas = EnvLighting.generateAtlas(lighting);
         lighting.destroy();
         app.scene.envAtlas = envAtlas;
     } else {
@@ -175,7 +210,7 @@ data.set('data', {
     compact: false,
     antialias: false,
     orientation: 180,
-    tonemapping: pc.TONEMAP_LINEAR,
+    tonemapping: TONEMAP_LINEAR,
     grading: {
         exposure: 0, // 0 EV = no change
         contrast: 1
@@ -237,14 +272,14 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // Listen for changes
 data.on('*:set', (/** @type {string} */ path) => {
     if (path === 'data.skydome') {
         applySkydome();
     } else if (path === 'data.compact') {
-        app.scene.gsplat.dataFormat = data.get('data.compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
+        app.scene.gsplat.dataFormat = data.get('data.compact') ? GSPLATDATA_COMPACT : GSPLATDATA_LARGE;
     } else if (path === 'data.antialias') {
         app.scene.gsplat.antiAlias = data.get('data.antialias');
     } else if (path === 'data.orientation') {
@@ -303,7 +338,7 @@ canvas.addEventListener('drop', async (e) => {
         const metaBlobUrl = URL.createObjectURL(metaFile);
 
         // Create gsplat asset manually so we can pass the mapUrl option
-        const asset = new pc.Asset(
+        const asset = new Asset(
             metaFile.name,
             'gsplat',
             {
@@ -325,7 +360,7 @@ canvas.addEventListener('drop', async (e) => {
         });
 
         // Create gsplat entity
-        entity = new pc.Entity(metaFile.name);
+        entity = new Entity(metaFile.name);
         entity.addComponent('gsplat', {
             asset: asset
         });
@@ -360,7 +395,7 @@ canvas.addEventListener('drop', async (e) => {
         });
 
         // Create gsplat entity
-        entity = new pc.Entity(file.name);
+        entity = new Entity(file.name);
         entity.addComponent('gsplat', {
             asset: asset
         });
@@ -409,7 +444,7 @@ canvas.addEventListener('drop', async (e) => {
         app.root.addChild(entity);
 
         // Calculate bounds from mesh instances
-        aabb = calcEntityAABB(new pc.BoundingBox(), entity);
+        aabb = calcEntityAABB(new BoundingBox(), entity);
     }
 
     const center = aabb.center;

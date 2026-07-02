@@ -9,7 +9,39 @@
 // source: https://superspl.at/view?id=ee6d8bc4
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_NEAREST,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_R32U,
+    PIXELFORMAT_RGBA32F,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    Texture,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -24,29 +56,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
@@ -70,12 +102,12 @@ const GRID_SIZE = 20; // N x N grid
 const GRID_SPACING = 2; // spacing between instances in world units
 
 const assets = {
-    playbot: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/playbot/lod-meta.json' }),
-    envatlas: new pc.Asset(
+    playbot: new Asset('gsplat', 'gsplat', { url: './assets/splats/playbot/lod-meta.json' }),
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -134,7 +166,7 @@ const wgslRenderModifier = `
 `;
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -145,19 +177,19 @@ app.scene.skyboxMip = 3;
 app.scene.exposure = 1.5;
 
 // Add custom splatId stream to work buffer format (R32U)
-app.scene.gsplat.format.addExtraStreams([{ name: 'splatId', format: pc.PIXELFORMAT_R32U }]);
+app.scene.gsplat.format.addExtraStreams([{ name: 'splatId', format: PIXELFORMAT_R32U }]);
 
 // Create color lookup texture (GRID_SIZE*GRID_SIZE x 1, RGBA32F) with random colors
-const colorTexture = new pc.Texture(device, {
+const colorTexture = new Texture(device, {
     name: 'ColorLookup',
     width: GRID_SIZE * GRID_SIZE,
     height: 1,
-    format: pc.PIXELFORMAT_RGBA32F,
+    format: PIXELFORMAT_RGBA32F,
     mipmaps: false,
-    minFilter: pc.FILTER_NEAREST,
-    magFilter: pc.FILTER_NEAREST,
-    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-    addressV: pc.ADDRESS_CLAMP_TO_EDGE
+    minFilter: FILTER_NEAREST,
+    magFilter: FILTER_NEAREST,
+    addressU: ADDRESS_CLAMP_TO_EDGE,
+    addressV: ADDRESS_CLAMP_TO_EDGE
 });
 
 // Pre-compute random base hues for each component (0 to 1)
@@ -211,7 +243,7 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // Initialize colorize setting (enabled by default)
 data.set('colorize', data.get('colorize') !== false);
@@ -228,7 +260,7 @@ app.scene.gsplat.lodBehindPenalty = 4;
 // allow rendering with lower LOD quality when optimal is not yet loaded
 app.scene.gsplat.lodUnderfillLimit = 10;
 
-data.set('splatBudget', pc.platform.mobile ? 1 : 3);
+data.set('splatBudget', platform.mobile ? 1 : 3);
 
 // create grid of instances centered around origin on XZ plane
 const half = (GRID_SIZE - 1) * 0.5;
@@ -237,7 +269,7 @@ const half = (GRID_SIZE - 1) * 0.5;
 let componentIndex = 0;
 for (let z = 0; z < GRID_SIZE; z++) {
     for (let x = 0; x < GRID_SIZE; x++) {
-        const entity = new pc.Entity(`playbot-${x}-${z}`);
+        const entity = new Entity(`playbot-${x}-${z}`);
         entity.addComponent('gsplat', {
             asset: assets.playbot
         });
@@ -263,11 +295,11 @@ applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
 // Create a camera with fly controls
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    clearColor: new Color(0.2, 0.2, 0.2),
     fov: 75,
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 
 camera.setLocalPosition(4, 2.6, 4);
@@ -281,7 +313,7 @@ Object.assign(cc, {
     moveFastSpeed: 5,
     enableOrbit: false,
     enablePan: false,
-    focusPoint: new pc.Vec3(2, 0.6, 0)
+    focusPoint: new Vec3(2, 0.6, 0)
 });
 
 // update HUD stats and animate colors every frame

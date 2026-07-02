@@ -6,7 +6,32 @@
 // source: https://sketchfab.com/3d-models/terrain-low-poly-248b21331315466e98d20c441935d99d
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOWUPDATE_NONE,
+    SHADOWUPDATE_THISFRAME,
+    SHADOW_PCF3_32F,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -14,13 +39,13 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    terrain: new pc.Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
-    helipad: new pc.Asset(
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -28,27 +53,27 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -59,7 +84,7 @@ data.set('settings', {
         shadowResolution: 2048, // shadow map resolution storing 4 cascades
         cascadeDistribution: 0.5, // distribution of cascade distances to prefer sharpness closer to the camera
         cascadeBlend: 0.1, // blend between cascades
-        shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
+        shadowType: SHADOW_PCF3_32F, // shadow filter type
         vsmBlurSize: 11, // shader filter blur size for VSM shadows
         penumbraSize: 0.02, // PCSS world-space light area size
         penumbraFalloff: 4, // PCSS softening curve falloff
@@ -70,8 +95,8 @@ data.set('settings', {
 });
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -83,16 +108,16 @@ app.on('destroy', () => {
 // setup skydome
 app.scene.skyboxMip = 3;
 app.scene.envAtlas = assets.helipad.resource;
-app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, -70, 0);
 
 // instantiate the terrain
-/** @type {pc.Entity} */
+/** @type {Entity} */
 const terrain = assets.terrain.resource.instantiateRenderEntity();
 terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
 // get the clouds so that we can animate them
-/** @type {Array<pc.Entity>} */
+/** @type {Array<Entity>} */
 const srcClouds = terrain.find((node) => {
     const isCloud = node.name.includes('Icosphere');
 
@@ -105,13 +130,13 @@ const srcClouds = terrain.find((node) => {
 });
 
 // clone some additional clouds
-/** @type {Array<pc.Entity>} */
+/** @type {Array<Entity>} */
 const clouds = [];
 srcClouds.forEach((cloud) => {
     clouds.push(cloud);
 
     for (let i = 0; i < 3; i++) {
-        /** @type {pc.Entity} */
+        /** @type {Entity} */
         const clone = cloud.clone();
         cloud.parent.addChild(clone);
         clouds.push(clone);
@@ -126,11 +151,11 @@ clouds.sort(() => Math.random() - 0.5);
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
 // create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.9, 0.9, 0.9),
+    clearColor: new Color(0.9, 0.9, 0.9),
     farClip: 1000,
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 
 // and position it in the world
@@ -150,11 +175,11 @@ camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create a directional light casting cascaded shadows
-const dirLight = new pc.Entity('Cascaded Light');
+const dirLight = new Entity('Cascaded Light');
 dirLight.addComponent('light', {
     ...{
         type: 'directional',
-        color: pc.Color.WHITE,
+        color: Color.WHITE,
         shadowBias: 0.3,
         normalOffsetBias: 0.2,
         intensity: 1.0,
@@ -201,10 +226,10 @@ app.on('update', (/** @type {number} */ dt) => {
     } else {
         // set up shadow update overrides, nearest cascade updates each frame, then next one every 5 and so on
         dirLight.light.shadowUpdateOverrides = [
-            pc.SHADOWUPDATE_THISFRAME,
-            frameNumber % 5 === 0 ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_NONE,
-            frameNumber % 10 === 0 ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_NONE,
-            frameNumber % 15 === 0 ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_NONE
+            SHADOWUPDATE_THISFRAME,
+            frameNumber % 5 === 0 ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_NONE,
+            frameNumber % 10 === 0 ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_NONE,
+            frameNumber % 15 === 0 ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_NONE
         ];
     }
 

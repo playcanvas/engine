@@ -18,11 +18,64 @@
 // source: https://polyhaven.com
 // license: CC0
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    FOG_EXP,
+    FOG_NONE,
+    GSPLATDATA_COMPACT,
+    GSPLATDATA_LARGE,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Gizmo,
+    Keyboard,
+    LightComponentSystem,
+    MiniStats,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RotateGizmo,
+    SHADOWUPDATE_REALTIME,
+    SHADOWUPDATE_THISFRAME,
+    SHADOW_PCF3_32F,
+    SHADOW_PCSS_32F,
+    SKYTYPE_INFINITE,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_LINEAR,
+    TRACEID_BUFFERS,
+    TRACEID_TEXTURES,
+    TextureHandler,
+    TouchDevice,
+    Tracing,
+    TranslateGizmo,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRelighting } from 'playcanvas/scripts/esm/gsplat/gsplat-relighting.mjs';
 
 import { data, deviceType, win } from 'examples/context';
+
+/**
+ * @import { Layer, LightComponent, MeshInstance, RenderComponent, Texture } from 'playcanvas'
+ */
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/relighting?url=https://example.com/scene/lod-meta.json&orientation=90
@@ -35,14 +88,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // Set up and load draco module, as the mesh glb we load is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
+    WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
 });
 
 const gfxOptions = {
@@ -52,29 +105,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // High Res toggle (false by default): when false, use half native DPR; when true, use min(DPR, 2)
 data.set('highRes', !!data.get('highRes'));
@@ -152,28 +205,28 @@ const LOD_PRESETS = {
 };
 
 const assets = {
-    church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
+    church: new Asset('gsplat', 'gsplat', { url: config.url }),
 
     // draco compressed mesh matching the splat scene, with positions and normals
-    mesh: new pc.Asset('mesh', 'container', {
+    mesh: new Asset('mesh', 'container', {
         url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/roman-parish-mesh.glb'
     }),
 
-    envatlas: new pc.Asset(
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
 // enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
@@ -207,7 +260,7 @@ data.on('debug:set', () => {
     app.scene.gsplat.debug = data.get('debug');
 });
 data.on('compact:set', () => {
-    app.scene.gsplat.dataFormat = data.get('compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
+    app.scene.gsplat.dataFormat = data.get('compact') ? GSPLATDATA_COMPACT : GSPLATDATA_LARGE;
 });
 
 const MAX_PERSPECTIVE_FOV = 140;
@@ -216,18 +269,18 @@ const MAX_PERSPECTIVE_FOV = 140;
 const initialSettings = {
     fisheye: 0,
     cameraFov: 75,
-    toneMapping: pc.TONEMAP_LINEAR,
+    toneMapping: TONEMAP_LINEAR,
     exposure: 0.3,
     minPixelSize: 2,
     alphaClipForward: 1 / 255,
     minContribution: 3,
     radialSorting: true,
-    renderer: pc.GSPLAT_RENDERER_AUTO,
+    renderer: GSPLAT_RENDERER_AUTO,
     culling: device.isWebGPU,
     compact: true,
-    debug: pc.GSPLAT_DEBUG_NONE,
-    lodPreset: pc.platform.mobile ? 'mobile' : 'desktop',
-    splatBudget: pc.platform.mobile ? 1 : 4,
+    debug: GSPLAT_DEBUG_NONE,
+    lodPreset: platform.mobile ? 'mobile' : 'desktop',
+    splatBudget: platform.mobile ? 1 : 4,
     environment: 'rosendal',
     fogDensity: 0,
     url: paramUrl || '',
@@ -251,16 +304,16 @@ Object.entries(initialSettings).forEach(([key, value]) => data.set(key, value));
 const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 
 // Create a camera with fly controls
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(1, 1, 1),
+    clearColor: new Color(1, 1, 1),
     fov: 75,
-    toneMapping: pc.TONEMAP_LINEAR
+    toneMapping: TONEMAP_LINEAR
 });
 
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
-const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
+const focusPoint = new Vec3(focusX, focusY, focusZ);
 
 camera.setLocalPosition(camX, camY, camZ);
 app.root.addChild(camera);
@@ -288,7 +341,7 @@ const relighting = /** @type {GsplatRelighting} */ (
         }
     })
 );
-const relightLayer = /** @type {pc.Layer} */ (relighting.layer);
+const relightLayer = /** @type {Layer} */ (relighting.layer);
 
 data.on('textureScale:set', () => {
     relighting.textureScale = data.get('textureScale');
@@ -301,14 +354,14 @@ data.on('brightness:set', () => {
 });
 
 // Directional light with PCSS soft shadows, lighting the proxy mesh on the relighting layer
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     intensity: data.get('lightIntensity'),
     layers: [relightLayer.id],
     castShadows: !!data.get('shadows'),
-    shadowType: pc.SHADOW_PCSS_32F,
+    shadowType: SHADOW_PCSS_32F,
     shadowResolution: 4096,
     shadowDistance: 150,
     shadowBias: 0.3,
@@ -323,15 +376,15 @@ light.setEulerAngles(-20, 30, 0);
 light.enabled = data.get('lightIntensity') > 0;
 app.root.addChild(light);
 
-const gizmoLayer = pc.Gizmo.createLayer(app);
+const gizmoLayer = Gizmo.createLayer(app);
 
 // rotation gizmo to orient the directional light; disable camera controls while dragging it
-const lightGizmo = new pc.RotateGizmo(camera.camera, gizmoLayer);
+const lightGizmo = new RotateGizmo(camera.camera, gizmoLayer);
 lightGizmo.size = 0.5;
 lightGizmo.attach(light);
 lightGizmo.on(
     'pointer:down',
-    (/** @type {number} */ _x, /** @type {number} */ _y, /** @type {pc.MeshInstance} */ meshInstance) => {
+    (/** @type {number} */ _x, /** @type {number} */ _y, /** @type {MeshInstance} */ meshInstance) => {
         if (meshInstance) cc.enabled = false;
     }
 );
@@ -354,7 +407,7 @@ data.on('lightIntensity:set', () => {
 
 data.on('lightColor:set', () => {
     const c = data.get('lightColor');
-    light.light.color = new pc.Color(c[0], c[1], c[2]);
+    light.light.color = new Color(c[0], c[1], c[2]);
 });
 
 data.on('shadows:set', () => {
@@ -371,9 +424,9 @@ const OMNI_LIGHTS = [
     { position: [-6.58, 0.52, -7.01], radius: 12.9, intensity: 3.67, color: [0.97, 0.72, 0.72] }
 ];
 
-/** @type {pc.Entity[]} */
+/** @type {Entity[]} */
 const omniLights = [];
-/** @type {pc.TranslateGizmo[]} */
+/** @type {TranslateGizmo[]} */
 const omniGizmos = [];
 
 // Color / radius edits apply to all lights until one is moved using its gizmo - from then on
@@ -381,28 +434,28 @@ const omniGizmos = [];
 let selectedOmni = -1;
 
 OMNI_LIGHTS.forEach((def, index) => {
-    const entity = new pc.Entity(`omni-light-${index}`);
+    const entity = new Entity(`omni-light-${index}`);
     entity.addComponent('light', {
         type: 'omni',
-        color: new pc.Color(def.color[0], def.color[1], def.color[2]),
+        color: new Color(def.color[0], def.color[1], def.color[2]),
         intensity: def.intensity * data.get('omniIntensity'),
         range: def.radius,
         layers: [relightLayer.id],
         castShadows: !!data.get('omniShadows'),
-        shadowType: pc.SHADOW_PCF3_32F,
+        shadowType: SHADOW_PCF3_32F,
         shadowResolution: 1024,
         shadowBias: 0.2,
         normalOffsetBias: 0.05,
 
         // the lights are static unless moved by their gizmo, so render their shadows once
-        shadowUpdateMode: pc.SHADOWUPDATE_THISFRAME
+        shadowUpdateMode: SHADOWUPDATE_THISFRAME
     });
     entity.setLocalPosition(def.position[0], def.position[1], def.position[2]);
     app.root.addChild(entity);
     omniLights.push(entity);
 
     // translate gizmo to position the light; disable camera controls while dragging it
-    const gizmo = new pc.TranslateGizmo(camera.camera, gizmoLayer);
+    const gizmo = new TranslateGizmo(camera.camera, gizmoLayer);
     gizmo.size = 0.5;
 
     // double the size of the plane-movement squares
@@ -410,18 +463,18 @@ OMNI_LIGHTS.forEach((def, index) => {
     gizmo.attach(entity);
     gizmo.on(
         'pointer:down',
-        (/** @type {number} */ _x, /** @type {number} */ _y, /** @type {pc.MeshInstance} */ meshInstance) => {
+        (/** @type {number} */ _x, /** @type {number} */ _y, /** @type {MeshInstance} */ meshInstance) => {
             if (meshInstance) {
                 cc.enabled = false;
 
                 // select this light for color / radius edits and sync the UI to its values
                 selectedOmni = index;
-                const lightComponent = /** @type {pc.LightComponent} */ (entity.light);
+                const lightComponent = /** @type {LightComponent} */ (entity.light);
                 data.set('omniColor', [lightComponent.color.r, lightComponent.color.g, lightComponent.color.b]);
                 data.set('omniRadius', lightComponent.range);
 
                 // update shadows every frame while the light is being moved
-                lightComponent.shadowUpdateMode = pc.SHADOWUPDATE_REALTIME;
+                lightComponent.shadowUpdateMode = SHADOWUPDATE_REALTIME;
             }
         }
     );
@@ -429,7 +482,7 @@ OMNI_LIGHTS.forEach((def, index) => {
         cc.enabled = true;
 
         // render the shadows once more, then stop updating them
-        entity.light.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
+        entity.light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
     });
     omniGizmos.push(gizmo);
 });
@@ -443,7 +496,7 @@ const applyOmniIntensity = () => {
         entity.enabled = multiplier > 0;
         if (multiplier > 0) {
             // refresh the static shadows after re-enabling
-            entity.light.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
+            entity.light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
         }
     });
     omniGizmos.forEach((gizmo, index) => {
@@ -463,7 +516,7 @@ data.on('omniRadius:set', () => {
             entity.light.range = radius;
 
             // radius affects the shadow projection, refresh the static shadows
-            entity.light.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
+            entity.light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
         }
     });
 });
@@ -471,7 +524,7 @@ data.on('omniColor:set', () => {
     const c = data.get('omniColor');
     omniLights.forEach((entity, index) => {
         if (selectedOmni === -1 || selectedOmni === index) {
-            entity.light.color = new pc.Color(c[0], c[1], c[2]);
+            entity.light.color = new Color(c[0], c[1], c[2]);
         }
     });
 });
@@ -481,13 +534,13 @@ data.on('omniShadows:set', () => {
         entity.light.castShadows = castShadows;
         if (castShadows) {
             // render the newly enabled shadows once
-            entity.light.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
+            entity.light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
         }
     });
 });
 
 // Rotation of the image based lighting around the Y axis
-const envRotationQuat = new pc.Quat();
+const envRotationQuat = new Quat();
 const applyEnvRotation = () => {
     app.scene.skyboxRotation = envRotationQuat.setFromEulerAngles(0, data.get('envRotation'), 0);
 };
@@ -509,11 +562,11 @@ app.scene.envAtlas = assets.envatlas.resource;
 // Instantiate the draco compressed proxy mesh matching the splat scene. It renders only to
 // the relighting layer, with a lit gray material configured to write a coverage mask to alpha.
 const meshEntity = assets.mesh.resource.instantiateRenderEntity();
-const meshMaterial = new pc.StandardMaterial();
-meshMaterial.diffuse = new pc.Color(0.5, 0.5, 0.5);
+const meshMaterial = new StandardMaterial();
+meshMaterial.diffuse = new Color(0.5, 0.5, 0.5);
 meshMaterial.update();
 relighting.configureMaterial(meshMaterial);
-meshEntity.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+meshEntity.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     render.layers = [relightLayer.id];
     render.meshInstances.forEach((meshInstance) => {
         meshInstance.material = meshMaterial;
@@ -521,13 +574,13 @@ meshEntity.findComponents('render').forEach((/** @type {pc.RenderComponent} */ r
 });
 
 // wrap in a parent so the same orientation as the splat can be applied
-const meshParent = new pc.Entity('mesh-parent');
+const meshParent = new Entity('mesh-parent');
 meshParent.addChild(meshEntity);
 meshParent.setLocalEulerAngles(data.get('orientation'), 0, 0);
 app.root.addChild(meshParent);
 
 // CameraFrame for HDR linear rendering (created lazily on first enable)
-/** @type {pc.CameraFrame|null} */
+/** @type {CameraFrame|null} */
 let cameraFrame = null;
 
 const applyToneMapping = () => {
@@ -544,7 +597,7 @@ data.set('cameraFrame', false);
 data.on('cameraFrame:set', () => {
     if (data.get('cameraFrame')) {
         if (!cameraFrame) {
-            cameraFrame = new pc.CameraFrame(app, camera.camera);
+            cameraFrame = new CameraFrame(app, camera.camera);
             cameraFrame.rendering.toneMapping = data.get('toneMapping');
         }
         cameraFrame.enabled = true;
@@ -576,16 +629,16 @@ app.scene.exposure = data.get('exposure');
 data.on('fogDensity:set', () => {
     const density = data.get('fogDensity');
     if (density > 0) {
-        app.scene.fog.type = pc.FOG_EXP;
+        app.scene.fog.type = FOG_EXP;
         app.scene.fog.density = density;
         app.scene.fog.color.copy(camera.camera.clearColor);
     } else {
-        app.scene.fog.type = pc.FOG_NONE;
+        app.scene.fog.type = FOG_NONE;
     }
 });
 
 // HDRI environment loading
-/** @type {Map<string, { skybox: pc.Texture, envAtlas: pc.Texture }>} */
+/** @type {Map<string, { skybox: Texture, envAtlas: Texture }>} */
 const hdriCache = new Map();
 
 const applyEnvironment = async (/** @type {string} */ name) => {
@@ -598,7 +651,7 @@ const applyEnvironment = async (/** @type {string} */ name) => {
     }
 
     if (!hdriCache.has(url)) {
-        const asset = new pc.Asset('hdri', 'texture', { url: url }, { mipmaps: false });
+        const asset = new Asset('hdri', 'texture', { url: url }, { mipmaps: false });
         await new Promise((resolve, reject) => {
             asset.on('load', resolve);
             asset.on('error', (/** @type {string} */ err) => {
@@ -610,17 +663,17 @@ const applyEnvironment = async (/** @type {string} */ name) => {
         });
 
         const source = asset.resource;
-        const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
-        const lighting = pc.EnvLighting.generateLightingSource(source);
-        const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+        const skybox = EnvLighting.generateSkyboxCubemap(source);
+        const lighting = EnvLighting.generateLightingSource(source);
+        const envAtlas = EnvLighting.generateAtlas(lighting);
         lighting.destroy();
         hdriCache.set(url, { skybox, envAtlas });
     }
 
-    const cached = /** @type {{ skybox: pc.Texture, envAtlas: pc.Texture }} */ (hdriCache.get(url));
+    const cached = /** @type {{ skybox: Texture, envAtlas: Texture }} */ (hdriCache.get(url));
     app.scene.skybox = cached.skybox;
     app.scene.envAtlas = cached.envAtlas;
-    app.scene.sky.type = pc.SKYTYPE_INFINITE;
+    app.scene.sky.type = SKYTYPE_INFINITE;
 };
 
 data.on('environment:set', () => {
@@ -635,11 +688,11 @@ applyEnvironment(data.get('environment')).catch((err) => {
 });
 
 // Gsplat loading state
-/** @type {pc.Entity|null} */
+/** @type {Entity|null} */
 let gsplatEntity = null;
 /** @type {any} */
 let gsplatGs = null;
-/** @type {pc.Asset|null} */
+/** @type {Asset|null} */
 let customAsset = null;
 
 const applyPreset = () => {
@@ -668,10 +721,10 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
         customAsset = null;
     }
 
-    /** @type {pc.Asset} */
+    /** @type {Asset} */
     let asset;
     if (url) {
-        asset = new pc.Asset('gsplat', 'gsplat', { url: url });
+        asset = new Asset('gsplat', 'gsplat', { url: url });
         app.assets.add(asset);
         await new Promise((resolve, reject) => {
             asset.on('load', resolve);
@@ -686,7 +739,7 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
         asset = assets.church;
     }
 
-    gsplatEntity = new pc.Entity(config.name || 'gsplat'); // eslint-disable-line require-atomic-updates
+    gsplatEntity = new Entity(config.name || 'gsplat'); // eslint-disable-line require-atomic-updates
     gsplatEntity.addComponent('gsplat', {
         asset: asset
     });
@@ -776,10 +829,10 @@ app.on('update', () => {
     }
 
     // log textures for one frame if requested
-    pc.Tracing.set(pc.TRACEID_TEXTURES, logTexturesRequested);
+    Tracing.set(TRACEID_TEXTURES, logTexturesRequested);
     logTexturesRequested = false;
 
-    pc.Tracing.set(pc.TRACEID_BUFFERS, logBuffersRequested);
+    Tracing.set(TRACEID_BUFFERS, logBuffersRequested);
     logBuffersRequested = false;
 
     data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());

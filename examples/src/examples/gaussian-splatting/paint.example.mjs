@@ -10,9 +10,48 @@
 // source: https://superspl.at/view?id=cdcec084
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BlendState,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    EVENT_MOUSEDOWN,
+    EVENT_MOUSEMOVE,
+    EVENT_MOUSEUP,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSPLAT_STREAM_INSTANCE,
+    GSplatComponentSystem,
+    GSplatHandler,
+    GSplatProcessor,
+    LightComponentSystem,
+    MOUSEBUTTON_RIGHT,
+    Mat4,
+    Mouse,
+    PIXELFORMAT_RGBA8,
+    Picker,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WORKBUFFER_UPDATE_ONCE,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { GSplatResource } from 'playcanvas'
+ */
 
 // Shader options for GSplatProcessor - paints splats inside brush sphere
 const shaderOptions = {
@@ -103,29 +142,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -140,13 +179,13 @@ data.set('paintIntensity', 0.5);
 data.set('brushSize', 0.15);
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    biker: new pc.Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
-    apartment: new pc.Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    biker: new Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    apartment: new Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -158,14 +197,14 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // Store all paintable entities
 const paintables = [];
 
 // Creates a paintable gsplat entity with position, rotation, scale, and sets up processing
 const createPaintableSplat = (name, asset, position, rotation, scale) => {
-    const entity = new pc.Entity(name);
+    const entity = new Entity(name);
     const gsplatComponent = entity.addComponent('gsplat', { asset });
     entity.setLocalPosition(...position);
     entity.setLocalEulerAngles(...rotation);
@@ -173,17 +212,17 @@ const createPaintableSplat = (name, asset, position, rotation, scale) => {
     app.root.addChild(entity);
 
     // Add customColor stream if not already present on the resource
-    const resource = /** @type {pc.GSplatResource} */ (asset.resource);
+    const resource = /** @type {GSplatResource} */ (asset.resource);
     if (resource.format.extraStreams.length === 0) {
         resource.format.addExtraStreams([
-            { name: 'customColor', format: pc.PIXELFORMAT_RGBA8, storage: pc.GSPLAT_STREAM_INSTANCE }
+            { name: 'customColor', format: PIXELFORMAT_RGBA8, storage: GSPLAT_STREAM_INSTANCE }
         ]);
     }
 
     // Create processor for this entity's instance texture
     // This processor will read from the default stream and write to the customColor stream. It will
     // use brush sphere to determine which splats to colorize.
-    const processor = new pc.GSplatProcessor(
+    const processor = new GSplatProcessor(
         device,
         { component: gsplatComponent },
         { component: gsplatComponent, streams: ['customColor'] },
@@ -198,7 +237,7 @@ const createPaintableSplat = (name, asset, position, rotation, scale) => {
 
     // Use alpha blending: new color replaces old based on intensity (alpha)
 
-    processor.blendState = pc.BlendState.ALPHABLEND;
+    processor.blendState = BlendState.ALPHABLEND;
 
     // Set up workBufferModifier to read customColor and blend with original
     // This modification is used when the gsplat data are written to the global workbuffer, and
@@ -215,15 +254,15 @@ createPaintableSplat('biker2', assets.biker, [-3, -0.5, -0.5], [180, 180, 0], [0
 createPaintableSplat('apartment', assets.apartment, [0, -0.5, -3], [180, 0, 0], [0.5, 0.5, 0.5]);
 
 // Camera positions
-const cameraPos = new pc.Vec3(-0.98, 0.28, -2.31);
-const focusPos = new pc.Vec3(-1.1, 0.13, -1.56);
+const cameraPos = new Vec3(-0.98, 0.28, -2.31);
+const focusPos = new Vec3(-1.1, 0.13, -1.56);
 
 // Create camera with orbit camera script
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
     fov: 90,
-    clearColor: new pc.Color(0, 0, 0),
-    toneMapping: pc.TONEMAP_LINEAR
+    clearColor: new Color(0, 0, 0),
+    toneMapping: TONEMAP_LINEAR
 });
 camera.setLocalPosition(cameraPos);
 camera.lookAt(focusPos);
@@ -269,7 +308,7 @@ data.on('paintColor:set', updatePaintColor);
 data.on('paintIntensity:set', updatePaintColor);
 
 // Create picker for world position (with depth enabled)
-const picker = new pc.Picker(app, 1, 1, true);
+const picker = new Picker(app, 1, 1, true);
 const worldLayer = app.scene.layers.getLayerByName('World');
 
 // Prepare picker (re-prepare when camera moves)
@@ -285,8 +324,8 @@ const preparePicker = () => {
 const pendingPaints = [];
 
 // Temp vectors for coordinate transformation
-const invMat = new pc.Mat4();
-const modelPoint = new pc.Vec3();
+const invMat = new Mat4();
+const modelPoint = new Vec3();
 
 // Process pending paint requests in update loop
 app.on('update', () => {
@@ -305,7 +344,7 @@ app.on('update', () => {
             paintable.processor.process();
 
             // Trigger work buffer update for next frame to reflect the paint changes
-            paintable.entity.gsplat.workBufferUpdate = pc.WORKBUFFER_UPDATE_ONCE;
+            paintable.entity.gsplat.workBufferUpdate = WORKBUFFER_UPDATE_ONCE;
         }
     }
 });
@@ -327,8 +366,8 @@ const paintAt = (x, y) => {
 };
 
 // RMB paint - disable orbit input while painting (orbit-camera handles LMB/MMB/wheel natively)
-app.mouse.on(pc.EVENT_MOUSEDOWN, (e) => {
-    if (e.button === pc.MOUSEBUTTON_RIGHT) {
+app.mouse.on(EVENT_MOUSEDOWN, (e) => {
+    if (e.button === MOUSEBUTTON_RIGHT) {
         isPainting = true;
         pickerDirty = true;
         orbitInput.enabled = false;
@@ -337,12 +376,12 @@ app.mouse.on(pc.EVENT_MOUSEDOWN, (e) => {
     }
 });
 
-app.mouse.on(pc.EVENT_MOUSEMOVE, (e) => {
+app.mouse.on(EVENT_MOUSEMOVE, (e) => {
     if (isPainting) paintAt(e.x, e.y);
 });
 
-app.mouse.on(pc.EVENT_MOUSEUP, (e) => {
-    if (e.button === pc.MOUSEBUTTON_RIGHT) {
+app.mouse.on(EVENT_MOUSEUP, (e) => {
+    if (e.button === MOUSEBUTTON_RIGHT) {
         isPainting = false;
         orbitInput.enabled = true;
     }

@@ -6,7 +6,40 @@
 // source: https://sketchfab.com/3d-models/xr-vr-gallery-space-873a1808080e47d2a804f3c991e33b4f
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScreenComponentSystem,
+    ScriptComponentSystem,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    XRSPACE_LOCALFLOOR,
+    XRTARGETRAY_POINTER,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
 
 import { deviceType } from 'examples/context';
@@ -36,33 +69,33 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ElementComponentSystem,
-    pc.ButtonComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScreenComponentSystem,
+    ElementComponentSystem,
+    ButtonComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -72,18 +105,18 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: './assets/models/xr_gallery.glb' }),
-    envatlas: new pc.Asset(
+    gallery: new Asset('gallery', 'container', { url: './assets/models/xr_gallery.glb' }),
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/roboto-extralight.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-extralight.json' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -104,16 +137,16 @@ const lookX = 0;
 const lookY = 1.25;
 const lookZ = 0;
 
-const c = new pc.Entity();
+const c = new Entity();
 c.addComponent('camera', {
-    clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
+    clearColor: new Color(44 / 255, 62 / 255, 80 / 255),
     farClip: 10000
 });
 c.setLocalPosition(camX, camY, camZ);
 c.lookAt(lookX, lookY, lookZ);
 app.root.addChild(c);
 
-const l = new pc.Entity();
+const l = new Entity();
 l.addComponent('light', {
     type: 'spot',
     range: 30
@@ -123,7 +156,7 @@ app.root.addChild(l);
 
 // In-VR debug HUD: shows current fixed-foveation value with +/- controls and an exit button.
 // The menu is always visible and follows the camera, biased to the right of the eye line.
-const menuEntity = new pc.Entity('XrMenu');
+const menuEntity = new Entity('XrMenu');
 menuEntity.addComponent('script');
 menuEntity.script.create(XrMenu, {
     properties: {
@@ -140,7 +173,7 @@ menuEntity.script.create(XrMenu, {
         fontAsset: assets.font,
         alwaysVisible: true,
         followDistance: 0.6,
-        followOffset: new pc.Vec2(0.25, -0.15),
+        followOffset: new Vec2(0.25, -0.15),
         // Wider rows so "FOVEATION: 0.50" fits on a single line (default 0.075 truncates it).
         buttonWidth: 0.13
     }
@@ -163,7 +196,7 @@ refreshFovLabel(); // seed the label so it shows "0.00" before the XR session st
 // When the runtime reports fixedFoveation as unsupported, fov is force-clamped to 0 so the
 // button still flashes (click feedback) but the value visibly never moves off 0.00.
 const setFov = (newFov) => {
-    const requested = pc.math.clamp(newFov, 0, 1);
+    const requested = math.clamp(newFov, 0, 1);
     fov = fovSupported ? requested : 0;
     if (fov > 0) lastNonZeroFov = fov;
     if (app.xr.active && fovSupported) {
@@ -192,14 +225,14 @@ app.on('xr:end', () => app.xr.end());
 
 // Draw a debug aim ray from each tracked-pointer XR input source (controllers, hand pointers)
 // every frame so the user can see where they're pointing at the menu buttons. Interaction
-// itself is wired through pc.ElementInput on the canvas — these lines are purely visual.
-const rayColor = new pc.Color(0.4, 0.8, 1, 1);
-const rayEnd = new pc.Vec3();
+// itself is wired through ElementInput on the canvas — these lines are purely visual.
+const rayColor = new Color(0.4, 0.8, 1, 1);
+const rayEnd = new Vec3();
 const rayLength = 2.0;
 app.on('update', () => {
     if (!app.xr.active) return;
     for (const source of app.xr.input.inputSources) {
-        if (source.targetRayMode !== pc.XRTARGETRAY_POINTER) continue;
+        if (source.targetRayMode !== XRTARGETRAY_POINTER) continue;
         const origin = source.getOrigin();
         const direction = source.getDirection();
         rayEnd.copy(direction).mulScalar(rayLength).add(origin);
@@ -209,8 +242,8 @@ app.on('update', () => {
 
 if (app.xr.supported) {
     const activate = () => {
-        if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
+        if (app.xr.isAvailable(XRTYPE_VR)) {
+            c.camera.startXr(XRTYPE_VR, XRSPACE_LOCALFLOOR, {
                 callback: (err) => {
                     if (err) message(`WebXR Immersive VR failed to start: ${err.message}`);
                 }
@@ -238,7 +271,7 @@ if (app.xr.supported) {
     }
 
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
@@ -249,11 +282,11 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive VR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_VR}`, (available) => {
         message(`Immersive VR is ${available ? 'available' : 'unavailable'}`);
     });
 
-    if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
+    if (!app.xr.isAvailable(XRTYPE_VR)) {
         message('Immersive VR is not available');
     }
 } else {

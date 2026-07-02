@@ -7,7 +7,7 @@ import {
     SliderInput
 } from '@playcanvas/pcui/react';
 
-import * as pc from 'playcanvas';
+import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -47,10 +47,10 @@ export function Controls({ observer }) {
                 <LabelGroup text='blend type'>
                     <SelectInput
                         options={[
-                            { v: pc.ANIM_LAYER_OVERWRITE, t: 'Overwrite' },
-                            { v: pc.ANIM_LAYER_ADDITIVE, t: 'Additive' }
+                            { v: ANIM_LAYER_OVERWRITE, t: 'Overwrite' },
+                            { v: ANIM_LAYER_ADDITIVE, t: 'Additive' }
                         ]}
-                        value={pc.ANIM_LAYER_ADDITIVE}
+                        value={ANIM_LAYER_ADDITIVE}
                         binding={new BindingTwoWay()}
                         link={{
                             observer,

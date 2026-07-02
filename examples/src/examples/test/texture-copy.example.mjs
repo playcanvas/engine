@@ -6,7 +6,29 @@
 //
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ELEMENTTYPE_IMAGE,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_NEAREST,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SCALEMODE_BLEND,
+    ScreenComponentSystem,
+    Texture,
+    TextureHandler,
+    Vec2,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -14,7 +36,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvas: new pc.Asset('playcanvas', 'texture', { url: './assets/textures/playcanvas.png' })
+    playcanvas: new Asset('playcanvas', 'texture', { url: './assets/textures/playcanvas.png' })
 };
 
 const gfxOptions = {
@@ -23,23 +45,23 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScreenComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.resourceHandlers = [TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -65,7 +87,7 @@ resultOverlay.style.cssText = `
     z-index: 1000; white-space: pre-wrap; text-align: center;`;
 document.body.appendChild(resultOverlay);
 
-const RGBA8 = pc.PIXELFORMAT_RGBA8;
+const RGBA8 = PIXELFORMAT_RGBA8;
 
 /**
  * Create an RGBA8 texture, optionally with custom per-mip-level data.
@@ -73,26 +95,26 @@ const RGBA8 = pc.PIXELFORMAT_RGBA8;
  * @param {string} name - Texture name.
  * @param {number} size - Width and height.
  * @param {boolean} mipmaps - Whether to allocate a full mip chain.
- * @returns {pc.Texture} The created texture.
+ * @returns {Texture} The created texture.
  */
 function createTexture(name, size, mipmaps) {
-    return new pc.Texture(device, {
+    return new Texture(device, {
         name,
         width: size,
         height: size,
         format: RGBA8,
         mipmaps,
-        minFilter: pc.FILTER_NEAREST,
-        magFilter: pc.FILTER_NEAREST,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+        minFilter: FILTER_NEAREST,
+        magFilter: FILTER_NEAREST,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE
     });
 }
 
 /**
  * Fill a mip level of a texture with a flat RGBA color.
  *
- * @param {pc.Texture} texture - The texture.
+ * @param {Texture} texture - The texture.
  * @param {number} level - The mip level.
  * @param {number[]} rgba - The color, 4 values 0-255.
  */
@@ -110,7 +132,7 @@ function fillLevel(texture, level, rgba) {
 /**
  * Fill a mip level with a 2x2 quadrant pattern (4 distinct colors), to make region copies visible.
  *
- * @param {pc.Texture} texture - The texture.
+ * @param {Texture} texture - The texture.
  * @param {number} size - The level dimension.
  * @param {number[][]} colors - Four RGBA colors for TL, TR, BL, BR quadrants.
  */
@@ -131,10 +153,10 @@ function fillQuadrants(texture, size, colors) {
 }
 
 // create a 2D screen for displaying the textures
-const screen = new pc.Entity();
+const screen = new Entity();
 screen.addComponent('screen', {
-    referenceResolution: new pc.Vec2(960, 720),
-    scaleMode: pc.SCALEMODE_BLEND,
+    referenceResolution: new Vec2(960, 720),
+    scaleMode: SCALEMODE_BLEND,
     scaleBlend: 0.5,
     screenSpace: true
 });
@@ -147,14 +169,14 @@ let rowY = 70;
 /**
  * Add an image element showing a texture at a grid cell.
  *
- * @param {pc.Texture} texture - The texture to show.
+ * @param {Texture} texture - The texture to show.
  * @param {number} col - Column index (0 = source, 1 = copy).
  * @param {number} y - Top y position in reference pixels.
  */
 function addImage(texture, col, y) {
-    const e = new pc.Entity();
+    const e = new Entity();
     e.addComponent('element', {
-        type: pc.ELEMENTTYPE_IMAGE,
+        type: ELEMENTTYPE_IMAGE,
         anchor: [0, 1, 0, 1],
         pivot: [0, 1],
         width: DISPLAY,
@@ -181,15 +203,15 @@ function equalPixels(a, b) {
 }
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // orthographic camera so the screen renders
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new Color(0.1, 0.1, 0.1)
 });
 app.root.addChild(camera);
 
@@ -199,8 +221,8 @@ const results = [];
  * Run one test row: display source + copy, then verify the copy via readback.
  *
  * @param {string} label - Row label.
- * @param {pc.Texture} source - Source texture (shown left).
- * @param {pc.Texture} dest - Destination texture (shown right).
+ * @param {Texture} source - Source texture (shown left).
+ * @param {Texture} dest - Destination texture (shown right).
  * @param {object} options - Copy options.
  * @param {Uint8Array} expected - Expected destination pixels (mip 0 of the copied region).
  * @param {number} readW - Width to read back from dest.
@@ -235,16 +257,16 @@ const YELLOW = [230, 220, 40, 255];
     const src = assets.playcanvas.resource;
     const w = src.width;
     const h = src.height;
-    const dst = new pc.Texture(device, {
+    const dst = new Texture(device, {
         name: 'copy-loaded',
         width: w,
         height: h,
         format: src.format,
         mipmaps: false,
-        minFilter: pc.FILTER_NEAREST,
-        magFilter: pc.FILTER_NEAREST,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+        minFilter: FILTER_NEAREST,
+        magFilter: FILTER_NEAREST,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE
     });
     const expected = await src.read(0, 0, w, h, { immediate: true });
     await runRow('loaded texture, full copy', src, dst, {}, expected, w, h);

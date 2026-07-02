@@ -1,4 +1,28 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_NORMAL,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LAYERID_DEPTH,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -11,13 +35,13 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
-    roughness: new pc.Asset('roughness', 'texture', { url: './assets/textures/pc-gray.png' }),
-    helipad: new pc.Asset(
+    normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
+    roughness: new Asset('roughness', 'texture', { url: './assets/textures/pc-gray.png' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -25,23 +49,23 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -51,7 +75,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -63,7 +87,7 @@ app.scene.envAtlas = assets.helipad.resource;
 
 // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
 // Move the depth layer to take place after World and Skydome layers, to capture both of them.
-const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+const depthLayer = app.scene.layers.getLayerById(LAYERID_DEPTH);
 app.scene.layers.remove(depthLayer);
 app.scene.layers.insertOpaque(depthLayer, 2);
 
@@ -71,14 +95,14 @@ app.scene.layers.insertOpaque(depthLayer, 2);
  * Helper function to create a primitive with shape type, position, scale, color.
  *
  * @param {string} primitiveType - The primitive type.
- * @param {pc.Vec3} position - The position.
- * @param {pc.Vec3} scale - The scale.
- * @param {pc.Color} color - The color.
- * @returns {pc.Entity} - The created primitive entity.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
+ * @param {Color} color - The color.
+ * @returns {Entity} - The created primitive entity.
  */
 function createPrimitive(primitiveType, position, scale, color) {
     // create material of specified color
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     material.gloss = 0.6;
     material.metalness = 0.4;
@@ -86,7 +110,7 @@ function createPrimitive(primitiveType, position, scale, color) {
     material.update();
 
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
@@ -102,47 +126,47 @@ function createPrimitive(primitiveType, position, scale, color) {
 
 /**
  * create few primitives, keep their references to rotate them later
- * @type {pc.Entity[]}
+ * @type {Entity[]}
  */
 const primitives = [];
 const count = 7;
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 for (let i = 0; i < count; i++) {
     const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
-    const color = new pc.Color(Math.random(), Math.random(), Math.random());
+    const color = new Color(Math.random(), Math.random(), Math.random());
     const angle = (2 * Math.PI * i) / count;
-    const pos = new pc.Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
-    primitives.push(createPrimitive(shapeName, pos, new pc.Vec3(4, 8, 4), color));
+    const pos = new Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
+    primitives.push(createPrimitive(shapeName, pos, new Vec3(4, 8, 4), color));
 }
 
 // Create the camera, which renders entities
-const camera = new pc.Entity('SceneCamera');
+const camera = new Entity('SceneCamera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
-    toneMapping: pc.TONEMAP_ACES
+    clearColor: new Color(0.2, 0.2, 0.2),
+    toneMapping: TONEMAP_ACES
 });
 app.root.addChild(camera);
 camera.setLocalPosition(0, 10, 20);
-camera.lookAt(pc.Vec3.ZERO);
+camera.lookAt(Vec3.ZERO);
 
 // enable the camera to render the scene's color map.
 camera.camera.requestSceneColorMap(true);
 
 // create a primitive which uses refraction shader to distort the view behind it
-const glass = createPrimitive('box', new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
+const glass = createPrimitive('box', new Vec3(1, 3, 0), new Vec3(10, 10, 10), new Color(1, 1, 1));
 glass.render.castShadows = false;
 glass.render.receiveShadows = false;
 
 // reflection material using the shader
-const refractionMaterial = new pc.ShaderMaterial({
+const refractionMaterial = new ShaderMaterial({
     uniqueName: 'RefractionShader',
     vertexGLSL: shaderGlslVert,
     fragmentGLSL: shaderGlslFrag,
     vertexWGSL: shaderWgslVert,
     fragmentWGSL: shaderWgslFrag,
     attributes: {
-        vertex_position: pc.SEMANTIC_POSITION,
-        vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
+        vertex_position: SEMANTIC_POSITION,
+        vertex_texCoord0: SEMANTIC_TEXCOORD0
     }
 });
 glass.render.material = refractionMaterial;
@@ -173,7 +197,7 @@ refractionMaterial.setParameter(
 );
 
 // transparency
-refractionMaterial.blendType = pc.BLEND_NORMAL;
+refractionMaterial.blendType = BLEND_NORMAL;
 refractionMaterial.update();
 
 // update things each frame
@@ -190,5 +214,5 @@ app.on('update', (dt) => {
 
     // orbit the camera
     camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
-    camera.lookAt(new pc.Vec3(0, 2, 0));
+    camera.lookAt(new Vec3(0, 2, 0));
 });

@@ -24,7 +24,38 @@
 // source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/StainedGlassLamp
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    JsonHandler,
+    Keyboard,
+    LAYERID_DEPTH,
+    LightComponentSystem,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_NEUTRAL,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -32,55 +63,49 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    helipad: new pc.Asset(
+    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    dish: new pc.Asset('dish', 'container', { url: './assets/models/IridescentDishWithOlives.glb' }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
-    sheen: new pc.Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
-    lamp: new pc.Asset('lamp', 'container', { url: './assets/models/StainedGlassLamp.glb' }),
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' })
+    dish: new Asset('dish', 'container', { url: './assets/models/IridescentDishWithOlives.glb' }),
+    mosquito: new Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
+    sheen: new Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
+    lamp: new Asset('lamp', 'container', { url: './assets/models/StainedGlassLamp.glb' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.JsonHandler,
-    pc.FontHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -90,32 +115,32 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
 // Move the depth layer to take place after World and Skydome layers, to capture both of them.
-const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+const depthLayer = app.scene.layers.getLayerById(LAYERID_DEPTH);
 app.scene.layers.remove(depthLayer);
 app.scene.layers.insertOpaque(depthLayer, 2);
 /**
- * @param {pc.Asset} fontAsset - The font asset.
+ * @param {Asset} fontAsset - The font asset.
  * @param {string} message - The message.
  * @param {number} x - The x coordinate.
  * @param {number} z - The z coordinate.
  */
 const createText = (fontAsset, message, x, z) => {
     // Create a text element-based entity
-    const text = new pc.Entity();
+    const text = new Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         fontAsset: fontAsset,
         fontSize: 0.2,
         pivot: [0.5, 0.5],
         text: message,
-        type: pc.ELEMENTTYPE_TEXT
+        type: ELEMENTTYPE_TEXT
     });
     text.setLocalPosition(x, -0.9, z);
     text.setLocalEulerAngles(-90, 0, 0);
@@ -124,9 +149,9 @@ const createText = (fontAsset, message, x, z) => {
 
 /**
  * @param {any} resource - The asset resource.
- * @param {pc.Vec3} pos - The position.
+ * @param {Vec3} pos - The position.
  * @param {number} scale - The scale.
- * @returns {pc.Entity} The returned entity.
+ * @returns {Entity} The returned entity.
  */
 const createVisual = (resource, pos, scale) => {
     const entity = resource.instantiateRenderEntity({
@@ -142,10 +167,10 @@ const createVisual = (resource, pos, scale) => {
 let currentAssetIndex = 0;
 
 // create the scene by instantiating glbs
-const mosquito = createVisual(assets.mosquito.resource, new pc.Vec3(0, 0.5, 0), 25);
+const mosquito = createVisual(assets.mosquito.resource, new Vec3(0, 0.5, 0), 25);
 createText(assets.font, 'KHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission', 0, 2);
 
-const dish = createVisual(assets.dish.resource, new pc.Vec3(-4, -0.5, 0), 9);
+const dish = createVisual(assets.dish.resource, new Vec3(-4, -0.5, 0), 9);
 createText(
     assets.font,
     'KHR_materials_iridescence\nKHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission',
@@ -153,18 +178,18 @@ createText(
     2
 );
 
-const sheen1 = createVisual(assets.sheen.resource, new pc.Vec3(8, -1.0, 0), 4);
+const sheen1 = createVisual(assets.sheen.resource, new Vec3(8, -1.0, 0), 4);
 createText(assets.font, 'Mango Velvet', 8, 1);
 
-const sheen2 = createVisual(assets.sheen.resource, new pc.Vec3(4, -1.0, 0), 4);
+const sheen2 = createVisual(assets.sheen.resource, new Vec3(4, -1.0, 0), 4);
 assets.sheen.resource.applyMaterialVariant(sheen2, 'Peacock Velvet');
 createText(assets.font, 'KHR_materials_sheen\nKHR_materials_variants', 5.5, 2);
 createText(assets.font, 'Peacock Velvet', 4, 1);
 
-const lamp = createVisual(assets.lamp.resource, new pc.Vec3(-8, -1.0, 0), 5);
+const lamp = createVisual(assets.lamp.resource, new Vec3(-8, -1.0, 0), 5);
 createText(assets.font, 'Lamp on', -8, 1);
 
-const lamp2 = createVisual(assets.lamp.resource, new pc.Vec3(-11, -1.0, 0), 5);
+const lamp2 = createVisual(assets.lamp.resource, new Vec3(-11, -1.0, 0), 5);
 assets.lamp.resource.applyMaterialVariant(lamp2, 'Lamp off');
 createText(assets.font, 'Lamp off', -11, 1);
 createText(
@@ -176,23 +201,23 @@ createText(
 
 const assetList = [lamp2, lamp, dish, mosquito, sheen2, sheen1];
 
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.diffuseMap = assets.checkerboard.resource;
-material.diffuseMapTiling = new pc.Vec2(16, 6);
+material.diffuseMapTiling = new Vec2(16, 6);
 material.update();
-const plane = new pc.Entity();
+const plane = new Entity();
 plane.addComponent('render', {
     type: 'plane',
     material: material
 });
-plane.setLocalScale(new pc.Vec3(25, 0, 10));
+plane.setLocalScale(new Vec3(25, 0, 10));
 plane.setLocalPosition(0, -1.0, 0);
 app.root.addChild(plane);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    toneMapping: pc.TONEMAP_NEUTRAL
+    toneMapping: TONEMAP_NEUTRAL
 });
 camera.setLocalPosition(0, 55, 160);
 
@@ -209,10 +234,10 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-const directionalLight = new pc.Entity();
+const directionalLight = new Entity();
 directionalLight.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     castShadows: true,
     intensity: 1,
     shadowBias: 0.2,
@@ -224,7 +249,7 @@ app.root.addChild(directionalLight);
 
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
-app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, 70, 0);
 app.scene.skyboxIntensity = 1.5;
 
 window.addEventListener(
@@ -255,7 +280,7 @@ function jumpToAsset(offset) {
     if (currentAssetIndex > count) currentAssetIndex = 0;
 
     const pos = assetList[currentAssetIndex].getLocalPosition();
-    const newPos = new pc.Vec3(0, 2.0, 6.0).add(pos);
+    const newPos = new Vec3(0, 2.0, 6.0).add(pos);
     camera.setLocalPosition(newPos);
 
     // @ts-ignore engine-tsd

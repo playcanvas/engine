@@ -11,7 +11,35 @@
 // source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Compute,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    Layer,
+    LightComponentSystem,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RenderTarget,
+    SHADERLANGUAGE_WGSL,
+    ScriptComponentSystem,
+    Shader,
+    TEXTURETYPE_RGBP,
+    Texture,
+    TextureHandler,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -21,23 +49,23 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
+    WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
 const assets = {
-    board: new pc.Asset('board', 'container', { url: './assets/models/chess-board.glb' }),
-    helipad: new pc.Asset(
+    board: new Asset('board', 'container', { url: './assets/models/chess-board.glb' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -45,25 +73,25 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 let renderTarget = null;
 let rtCamera = null;
@@ -92,12 +120,12 @@ app.on('destroy', () => {
 });
 
 // Create a layer for the render target
-const rtLayer = new pc.Layer({ name: 'RTLayer' });
+const rtLayer = new Layer({ name: 'RTLayer' });
 app.scene.layers.push(rtLayer);
 
 // Load assets and create the scene
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -107,19 +135,19 @@ app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
 // Create a directional light
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     intensity: 1
 });
 light.setEulerAngles(45, 45, 0);
 app.root.addChild(light);
 
 // Create main camera (for final view)
-const mainCamera = new pc.Entity('mainCamera');
+const mainCamera = new Entity('mainCamera');
 mainCamera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.3)
+    clearColor: new Color(0.2, 0.2, 0.3)
 });
 mainCamera.setPosition(0, 0, 0);
 app.root.addChild(mainCamera);
@@ -131,21 +159,21 @@ const createRenderTarget = (useMsaa) => {
     rtHeight = Math.floor(device.height / 2);
 
     // Create a single-sample texture that will receive the resolved result
-    const texture = new pc.Texture(device, {
+    const texture = new Texture(device, {
         name: 'RT-Texture',
         width: rtWidth,
         height: rtHeight,
-        format: pc.PIXELFORMAT_RGBA8,
+        format: PIXELFORMAT_RGBA8,
         mipmaps: false,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE
     });
 
     // Create render target with optional MSAA
     // When samples > 1, PlayCanvas creates internal MSAA buffers and resolves to the colorBuffer
-    const rt = new pc.RenderTarget({
+    const rt = new RenderTarget({
         name: 'MSAA-RT',
         colorBuffer: texture,
         depth: true,
@@ -157,16 +185,16 @@ const createRenderTarget = (useMsaa) => {
 
 // Create storage texture for compute output
 const createStorageTexture = () => {
-    return new pc.Texture(device, {
+    return new Texture(device, {
         name: 'Storage-Texture',
         width: rtWidth,
         height: rtHeight,
-        format: pc.PIXELFORMAT_RGBA8,
+        format: PIXELFORMAT_RGBA8,
         mipmaps: false,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE,
         storage: true
     });
 };
@@ -178,9 +206,9 @@ const createComputeShader = () => {
     // No computeBindGroupFormat is provided - the input texture (+ sampler) and the output
     // storage texture use the simplified WGSL syntax and are reflected automatically by the
     // engine from the shader source.
-    return new pc.Shader(device, {
+    return new Shader(device, {
         name: 'EdgeDetect-Shader',
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+        shaderLanguage: SHADERLANGUAGE_WGSL,
         cshader: computeShaderWgsl
     });
 };
@@ -188,16 +216,16 @@ const createComputeShader = () => {
 // Create camera that renders to the render target
 let cameraAngle = 0;
 const createRTCamera = (rt) => {
-    const cam = new pc.Entity('rtCamera');
+    const cam = new Entity('rtCamera');
     cam.addComponent('camera', {
-        clearColor: new pc.Color(1, 1, 1),
+        clearColor: new Color(1, 1, 1),
         renderTarget: rt,
         farClip: 500,
         layers: [rtLayer.id]
     });
     // Position like in multi-view example
     cam.setLocalPosition(100, 35, 0);
-    cam.lookAt(pc.Vec3.ZERO);
+    cam.lookAt(Vec3.ZERO);
     app.root.addChild(cam);
     return cam;
 };
@@ -220,7 +248,7 @@ storageTexture = createStorageTexture();
 
 // Create compute instance if supported
 if (device.supportsCompute && computeShader) {
-    compute = new pc.Compute(device, computeShader, 'EdgeDetect');
+    compute = new Compute(device, computeShader, 'EdgeDetect');
 
     // Set up the compute parameters
     // Note: sampler is automatically handled by PlayCanvas when hasSampler: true
@@ -237,7 +265,7 @@ app.on('update', (dt) => {
     if (rtCamera) {
         cameraAngle = time * 0.2;
         rtCamera.setLocalPosition(100 * Math.sin(cameraAngle), 35, 100 * Math.cos(cameraAngle));
-        rtCamera.lookAt(pc.Vec3.ZERO);
+        rtCamera.lookAt(Vec3.ZERO);
     }
 
     if (device.supportsCompute && compute && renderTarget) {

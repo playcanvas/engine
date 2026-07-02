@@ -1,12 +1,38 @@
 // @config
 // @flag WEBGPU_DISABLED
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    BLENDMODE_ONE_MINUS_DST_ALPHA,
+    CULLFACE_NONE,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    PRIMITIVE_POINTS,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_COLOR,
+    SEMANTIC_POSITION,
+    ShaderMaterial,
+    TextureHandler,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
 import shaderFrag from './shader.frag';
 import shaderVert from './shader.vert';
+
+/**
+ * @import { GraphicsDevice } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -32,22 +58,22 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-/** @type {pc.GraphicsDevice} */
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+/** @type {GraphicsDevice} */
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -76,38 +102,38 @@ async function loadModel(url) {
     }
 
     // based on the loaded data, create the mesh with position and color vertex data
-    const mesh = new pc.Mesh(app.graphicsDevice);
+    const mesh = new Mesh(app.graphicsDevice);
     mesh.clear(true, false);
     mesh.setPositions(modelData.attributes.POSITION.value, modelData.attributes.POSITION.size);
     mesh.setColors32(colors32);
-    mesh.update(pc.PRIMITIVE_POINTS);
+    mesh.update(PRIMITIVE_POINTS);
 
     // create material using the shader
-    const material = new pc.ShaderMaterial({
+    const material = new ShaderMaterial({
         uniqueName: 'MyShader',
         vertexGLSL: shaderVert,
         fragmentGLSL: shaderFrag,
         attributes: {
-            aPosition: pc.SEMANTIC_POSITION,
-            aColor: pc.SEMANTIC_COLOR
+            aPosition: SEMANTIC_POSITION,
+            aColor: SEMANTIC_COLOR
         }
     });
-    material.blendType = pc.BLENDMODE_ONE_MINUS_DST_ALPHA;
-    material.cull = pc.CULLFACE_NONE;
+    material.blendType = BLENDMODE_ONE_MINUS_DST_ALPHA;
+    material.cull = CULLFACE_NONE;
 
     // Add an entity with a render component to render the mesh
-    const entity = new pc.Entity();
+    const entity = new Entity();
     entity.addComponent('render', {
         material: material,
-        meshInstances: [new pc.MeshInstance(mesh, material)]
+        meshInstances: [new MeshInstance(mesh, material)]
     });
 
     app.root.addChild(entity);
 }
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    clearColor: new Color(0.1, 0.1, 0.1),
     farClip: 100
 });
 camera.translate(-20, 15, 20);
@@ -122,6 +148,6 @@ app.on('update', (dt) => {
     // orbit the camera
     if (camera) {
         camera.setLocalPosition(40 * Math.sin(time * 0.5), 10, 20 * Math.cos(time * 0.5));
-        camera.lookAt(pc.Vec3.ZERO);
+        camera.lookAt(Vec3.ZERO);
     }
 });

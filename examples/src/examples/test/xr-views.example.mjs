@@ -7,7 +7,38 @@
 // source: https://sketchfab.com/3d-models/terrain-low-poly-248b21331315466e98d20c441935d99d
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    LightComponentSystem,
+    Mat4,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RenderPassShaderQuad,
+    RenderView,
+    SEMANTIC_POSITION,
+    ScriptComponentSystem,
+    ScriptHandler,
+    ShaderUtils,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    Texture,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -15,13 +46,13 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    terrain: new pc.Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
-    helipad: new pc.Asset(
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -29,38 +60,38 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Composite pass that samples a 4-layer texture array and writes the layers into a 2x2 grid on
 // the canvas backbuffer. Used by the WebGPU branch to visualise the per-eye renders produced by
 // FramePassMultiView.
-class CompositeArrayPass extends pc.RenderPassShaderQuad {
+class CompositeArrayPass extends RenderPassShaderQuad {
     constructor(graphicsDevice, sourceTexture, numViews) {
         super(graphicsDevice);
         this.name = 'CompositeArrayPass';
         this.sourceTexture = sourceTexture;
         this.numViews = numViews;
 
-        this.shader = pc.ShaderUtils.createShader(graphicsDevice, {
+        this.shader = ShaderUtils.createShader(graphicsDevice, {
             uniqueName: 'XrViewsCompositeShader',
-            attributes: { aPosition: pc.SEMANTIC_POSITION },
+            attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'quadVS',
 
             fragmentWGSL: /* wgsl */ `
@@ -128,14 +159,14 @@ class CompositeArrayPass extends pc.RenderPassShaderQuad {
 }
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -147,19 +178,19 @@ app.on('destroy', () => {
 // setup skydome
 app.scene.skyboxMip = 3;
 app.scene.envAtlas = assets.helipad.resource;
-app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, -70, 0);
 
 // instantiate the terrain
-/** @type {pc.Entity} */
+/** @type {Entity} */
 const terrain = assets.terrain.resource.instantiateRenderEntity();
 terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
 // Create a directional light
-const dirLight = new pc.Entity('Cascaded Light');
+const dirLight = new Entity('Cascaded Light');
 dirLight.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     shadowBias: 0.3,
     normalOffsetBias: 0.2,
     intensity: 1.0,
@@ -170,11 +201,11 @@ app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(75, 120, 20);
 
 // create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.9, 0.9, 0.9),
+    clearColor: new Color(0.9, 0.9, 0.9),
     farClip: 1000,
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 
 // and position it in the world
@@ -201,7 +232,7 @@ app.root.addChild(camera);
 const numViews = 4;
 const viewsList = [];
 for (let i = 0; i < numViews; i++) {
-    viewsList.push(new pc.RenderView());
+    viewsList.push(new RenderView());
 }
 
 // simulate an active XR session by handing the camera the per-view array directly. On a real
@@ -223,27 +254,27 @@ let arrayTex = null;
 let compositeCamera = null;
 if (device.isWebGPU) {
     const createArrayTexture = (w, h) =>
-        new pc.Texture(device, {
+        new Texture(device, {
             name: 'XrViewsArrayTexture',
             format: device.backBufferFormat,
             arrayLength: numViews,
             width: w,
             height: h,
             mipmaps: false,
-            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE,
-            minFilter: pc.FILTER_LINEAR,
-            magFilter: pc.FILTER_LINEAR
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            minFilter: FILTER_LINEAR,
+            magFilter: FILTER_LINEAR
         });
 
     arrayTex = createArrayTexture(Math.max(canvas.width, 1), Math.max(canvas.height, 1));
 
     // composite camera renders second (higher priority) and only runs the composite pass that
     // samples the four rendered layers and lays them out as a 2x2 grid on the canvas
-    compositeCamera = new pc.Entity('XrViewsCompositeCamera');
+    compositeCamera = new Entity('XrViewsCompositeCamera');
     compositeCamera.addComponent('camera', {
         priority: 1,
-        clearColor: new pc.Color(0, 0, 0, 0),
+        clearColor: new Color(0, 0, 0, 0),
         clearColorBuffer: false,
         clearDepthBuffer: false,
         clearStencilBuffer: false
@@ -256,8 +287,8 @@ if (device.isWebGPU) {
 }
 
 // reused each frame; setView/setViewport copy the data into each view
-const projMat = new pc.Mat4();
-const viewInvMat = new pc.Mat4();
+const projMat = new Mat4();
+const viewInvMat = new Mat4();
 
 app.on('update', (/** @type {number} */ _dt) => {
     const width = canvas.width;
@@ -274,9 +305,9 @@ app.on('update', (/** @type {number} */ _dt) => {
 
         // Rotate each view by 10 degrees * view index around UP axis
         const angle = 10 * viewIndex;
-        const upRotation = new pc.Quat().setFromAxisAngle(pc.Vec3.UP, angle);
-        const combinedRot = new pc.Quat().mul2(upRotation, rot);
-        viewInvMat.setTRS(pos, combinedRot, pc.Vec3.ONE);
+        const upRotation = new Quat().setFromAxisAngle(Vec3.UP, angle);
+        const combinedRot = new Quat().mul2(upRotation, rot);
+        viewInvMat.setTRS(pos, combinedRot, Vec3.ONE);
 
         // supply the view's projection and pose; the renderer derives the rest each frame
         view.setView(projMat.data, viewInvMat.data);

@@ -1,9 +1,31 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    RENDERSTYLE_POINTS,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial,
+    TextureHandler,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
 import shaderFrag from './shader.frag';
 import shaderVert from './shader.vert';
+
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -14,29 +36,29 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -46,9 +68,9 @@ app.on('destroy', () => {
 });
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new Color(0.1, 0.1, 0.1)
 });
 camera.translate(0, 7, 24);
 
@@ -61,13 +83,13 @@ const entity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
 // Create a new material with a custom shader
-const material = new pc.ShaderMaterial({
+const material = new ShaderMaterial({
     uniqueName: 'MyShader',
     vertexGLSL: shaderVert,
     fragmentGLSL: shaderFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
     }
 });
 
@@ -75,14 +97,14 @@ const material = new pc.ShaderMaterial({
 const renderComponents = entity.findComponents('render');
 
 // for all render components
-renderComponents.forEach((/** @type {pc.RenderComponent} */ render) => {
+renderComponents.forEach((/** @type {RenderComponent} */ render) => {
     // For all meshes in the render component, assign new material
     render.meshInstances.forEach((meshInstance) => {
         meshInstance.material = material;
     });
 
     // set it to render as points
-    render.renderStyle = pc.RENDERSTYLE_POINTS;
+    render.renderStyle = RENDERSTYLE_POINTS;
 });
 
 let currentTime = 0;

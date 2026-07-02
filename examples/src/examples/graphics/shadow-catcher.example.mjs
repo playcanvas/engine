@@ -6,7 +6,36 @@
 // source: https://polyhaven.com/a/st_peters_square_night
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    DISPLAYFORMAT_HDR,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    GAMMA_SRGB,
+    LAYERID_DEPTH,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOW_PCSS_32F,
+    SKYTYPE_DOME,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_ACES,
+    TONEMAP_NONE,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -15,40 +44,40 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    hdri_street: new pc.Asset('hdri', 'texture', { url: './assets/hdri/st-peters-square.hdr' }, { mipmaps: false })
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    hdri_street: new Asset('hdri', 'texture', { url: './assets/hdri/st-peters-square.hdr' }, { mipmaps: false })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
 
     // enable HDR rendering if supported
-    displayFormat: pc.DISPLAYFORMAT_HDR
+    displayFormat: DISPLAYFORMAT_HDR
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.LightComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScriptComponentSystem,
+    LightComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -58,14 +87,14 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Depth layer is where prepass finishes rendering. Move the depth layer to take place after
 // World and Skydome layers, to capture both of them in depth buffer, to be used by Depth of Field
-const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+const depthLayer = app.scene.layers.getLayerById(LAYERID_DEPTH);
 app.scene.layers.remove(depthLayer);
 app.scene.layers.insertOpaque(depthLayer, 2);
 
@@ -77,14 +106,14 @@ statueEntity.rotate(0, 140, 0);
 app.root.addChild(statueEntity);
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
     farClip: 500,
     fov: 60,
 
     // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
-    gammaCorrection: pc.GAMMA_SRGB
+    toneMapping: device.isHdr ? TONEMAP_NONE : TONEMAP_ACES,
+    gammaCorrection: GAMMA_SRGB
 });
 
 // add orbit camera script with a mouse and a touch support
@@ -109,13 +138,13 @@ app.root.addChild(cameraEntity);
 const applyHdri = (source) => {
     // convert it to high resolution cubemap for the skybox
     // this is optional in case you want a really high resolution skybox
-    const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
+    const skybox = EnvLighting.generateSkyboxCubemap(source);
     app.scene.skybox = skybox;
 
     // generate env-atlas texture for the lighting
     // this would also be used as low resolution skybox if high resolution is not available
-    const lighting = pc.EnvLighting.generateLightingSource(source);
-    const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+    const lighting = EnvLighting.generateLightingSource(source);
+    const envAtlas = EnvLighting.generateAtlas(lighting);
     lighting.destroy();
     app.scene.envAtlas = envAtlas;
 };
@@ -127,26 +156,26 @@ device.on('devicerestored', () => {
 
 applyHdri(assets.hdri_street.resource);
 app.scene.exposure = 0.4;
-app.scene.sky.type = pc.SKYTYPE_DOME;
-app.scene.sky.node.setLocalScale(new pc.Vec3(200, 200, 200));
-app.scene.sky.node.setLocalPosition(pc.Vec3.ZERO);
-app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
+app.scene.sky.type = SKYTYPE_DOME;
+app.scene.sky.node.setLocalScale(new Vec3(200, 200, 200));
+app.scene.sky.node.setLocalPosition(Vec3.ZERO);
+app.scene.sky.center = new Vec3(0, 0.05, 0);
 
 // enable depth writing for the sky, for DOF to work on it
 app.scene.sky.depthWrite = true;
 
 // create two directional lights which cast shadows
-const light1 = new pc.Entity('Light1');
+const light1 = new Entity('Light1');
 light1.addComponent('light', {
     type: 'directional',
-    color: pc.Color.YELLOW,
+    color: Color.YELLOW,
     castShadows: true,
     shadowBias: 0.1,
     normalOffsetBias: 0.3,
     shadowDistance: 50,
     shadowResolution: 1024,
     shadowIntensity: 0.4,
-    shadowType: pc.SHADOW_PCSS_32F,
+    shadowType: SHADOW_PCSS_32F,
     penumbraSize: 0.05,
     penumbraFalloff: 4,
     shadowSamples: 10,
@@ -155,10 +184,10 @@ light1.addComponent('light', {
 light1.setLocalEulerAngles(55, -90, 0);
 app.root.addChild(light1);
 
-const light2 = new pc.Entity('Light2');
+const light2 = new Entity('Light2');
 light2.addComponent('light', {
     type: 'directional',
-    color: pc.Color.RED,
+    color: Color.RED,
     castShadows: true,
     shadowBias: 0.1,
     normalOffsetBias: 0.3,
@@ -171,10 +200,10 @@ app.root.addChild(light2);
 
 // Create an entity with a shadow catcher script, and create a shadow catcher geometry plane
 // with a specified scale
-const shadowCatcher = new pc.Entity('ShadowCatcher');
+const shadowCatcher = new Entity('ShadowCatcher');
 shadowCatcher.addComponent('script').create(ShadowCatcher, {
     properties: {
-        scale: new pc.Vec3(50, 50, 50)
+        scale: new Vec3(50, 50, 50)
     }
 });
 
@@ -193,8 +222,8 @@ data.set('data', {
 });
 
 // set up CameraFrame rendering, to give us access to Depth of Field
-const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.dof.enabled = true;
 cameraFrame.dof.nearBlur = true;
 cameraFrame.dof.focusDistance = 30;

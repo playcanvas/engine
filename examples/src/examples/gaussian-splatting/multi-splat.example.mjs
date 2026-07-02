@@ -8,7 +8,31 @@
 // source: https://sketchfab.com/3d-models/vr-gallery-1e087aa25dc742e680accb15249bd6be
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -24,29 +48,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -56,15 +80,15 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/guitar.compressed.ply' }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
-    skull: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/skull.sog' }),
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    gallery: new Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' }),
+    guitar: new Asset('gsplat', 'gsplat', { url: './assets/splats/guitar.compressed.ply' }),
+    biker: new Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    skull: new Asset('gsplat', 'gsplat', { url: './assets/splats/skull.sog' }),
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -76,10 +100,10 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // camera placement
-const ORBIT_PIVOT = new pc.Vec3(0, 0.8, 0);
+const ORBIT_PIVOT = new Vec3(0, 0.8, 0);
 const ORBIT_DISTANCE = 5;
 const ORBIT_INITIAL_YAW = 28;
 const ORBIT_INITIAL_PITCH = -8;
@@ -89,13 +113,13 @@ const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
 app.root.addChild(galleryEntity);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
-    toneMapping: pc.TONEMAP_ACES
+    clearColor: new Color(0.2, 0.2, 0.2),
+    toneMapping: TONEMAP_ACES
 });
 
-const guitar = new pc.Entity('guitar');
+const guitar = new Entity('guitar');
 guitar.addComponent('gsplat', {
     asset: assets.guitar
 });
@@ -105,7 +129,7 @@ guitar.setLocalScale(0.4, 0.4, 0.4);
 app.root.addChild(guitar);
 
 const createSplatInstance = (name, asset, px, py, pz, scale) => {
-    const entity = new pc.Entity(name);
+    const entity = new Entity(name);
     entity.addComponent('gsplat', {
         asset
     });

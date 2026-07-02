@@ -5,7 +5,37 @@
 //
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    EVENT_MOUSEDOWN,
+    EVENT_TOUCHSTART,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    Picker,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TONEMAP_NEUTRAL,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -18,29 +48,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -50,18 +80,18 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    logo: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    helipad: new pc.Asset(
+    logo: new Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/morning-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -75,7 +105,7 @@ app.scene.skyboxIntensity = 0.1;
 const entities = [];
 for (let i = 0; i < 7; i++) {
     // create a splat entity and place it in the world
-    const splat = new pc.Entity(`splat-${i}`);
+    const splat = new Entity(`splat-${i}`);
     splat.addComponent('gsplat', {
         asset: assets.logo,
         castShadows: false,
@@ -91,10 +121,10 @@ for (let i = 0; i < 7; i++) {
 }
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
-    toneMapping: pc.TONEMAP_ACES
+    clearColor: new Color(0.2, 0.2, 0.2),
+    toneMapping: TONEMAP_ACES
 });
 camera.setLocalPosition(-2, -0.5, 2);
 
@@ -112,18 +142,18 @@ camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Set camera position looking at origin
-camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(10, 4, 10), pc.Vec3.ZERO);
+camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(10, 4, 10), Vec3.ZERO);
 
 // Custom render passes set up with bloom
-const cameraFrame = new pc.CameraFrame(app, camera.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
+const cameraFrame = new CameraFrame(app, camera.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 cameraFrame.rendering.samples = 1;
 cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.update();
 
 // Create an instance of the picker class with depth enabled
-const picker = new pc.Picker(app, 1, 1, true);
+const picker = new Picker(app, 1, 1, true);
 
 // update things each frame
 let time = 0;
@@ -189,13 +219,13 @@ const handlePointer = (x, y) => {
                         }
 
                         // create a new marker sphere at the picked point with random color
-                        const markerMaterial = new pc.StandardMaterial();
-                        markerMaterial.emissive = new pc.Color(Math.random(), Math.random(), Math.random());
+                        const markerMaterial = new StandardMaterial();
+                        markerMaterial.emissive = new Color(Math.random(), Math.random(), Math.random());
                         markerMaterial.emissiveIntensity = 300;
                         markerMaterial.useLighting = false;
                         markerMaterial.update();
 
-                        const markerSphere = new pc.Entity('marker');
+                        const markerSphere = new Entity('marker');
                         markerSphere.addComponent('render', {
                             type: 'sphere',
                             material: markerMaterial
@@ -213,11 +243,11 @@ const handlePointer = (x, y) => {
     });
 };
 
-app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
+app.mouse.on(EVENT_MOUSEDOWN, (event) => {
     handlePointer(event.x, event.y);
 });
 
-app.touch.on(pc.EVENT_TOUCHSTART, (event) => {
+app.touch.on(EVENT_TOUCHSTART, (event) => {
     const touch = event.touches[0];
     handlePointer(touch.x, touch.y);
 });

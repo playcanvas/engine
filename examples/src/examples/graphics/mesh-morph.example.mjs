@@ -1,4 +1,25 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    Morph,
+    MorphInstance,
+    MorphTarget,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SphereGeometry,
+    StandardMaterial,
+    Vec3,
+    calculateNormals,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -9,22 +30,22 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically
 // change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -34,7 +55,7 @@ app.on('destroy', () => {
 });
 
 // Create an entity with a directional light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional'
 });
@@ -42,9 +63,9 @@ app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new Color(0.1, 0.1, 0.1)
 });
 app.root.addChild(camera);
 
@@ -74,7 +95,7 @@ const shortestDistance = (x, y, z, a, b, c) => {
  * @param {number} nx - The plane normal's x coordinate.
  * @param {number} ny - The plane normal's y coordinate.
  * @param {number} nz - The plane normal's z coordinate.
- * @returns {pc.MorphTarget} The morph target.
+ * @returns {MorphTarget} The morph target.
  */
 const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
     // modify vertices to separate array
@@ -91,7 +112,7 @@ const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
         dist = shortestDistance(positions[i], positions[i + 1], positions[i + 2], nx, ny, nz);
 
         // modify distance to displacement amount - displace nearby points more than distant points
-        displacement = pc.math.smoothstep(0, limit, dist);
+        displacement = math.smoothstep(0, limit, dist);
         displacement = 1 - displacement;
 
         // generate new position by extruding vertex along normal by displacement
@@ -102,7 +123,7 @@ const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
 
     // generate normals based on modified positions and indices
     // @ts-ignore engine-tsd
-    const modifiedNormals = new Float32Array(pc.calculateNormals(modifiedPositions, indices));
+    const modifiedNormals = new Float32Array(calculateNormals(modifiedPositions, indices));
 
     // generate delta positions and normals - as morph targets store delta between base position / normal and modified position / normal
     for (i = 0; i < modifiedNormals.length; i++) {
@@ -112,7 +133,7 @@ const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
 
     // create a morph target
     // @ts-ignore engine-tsd
-    return new pc.MorphTarget({
+    return new MorphTarget({
         deltaPositions: modifiedPositions,
         deltaNormals: modifiedNormals
     });
@@ -122,14 +143,11 @@ const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
- * @returns {pc.MorphInstance} The morph instance.
+ * @returns {MorphInstance} The morph instance.
  */
 const createMorphInstance = (x, y, z) => {
     // create the base mesh - a sphere, with higher amount of vertices / triangles
-    const mesh = pc.Mesh.fromGeometry(
-        app.graphicsDevice,
-        new pc.SphereGeometry({ latitudeBands: 200, longitudeBands: 200 })
-    );
+    const mesh = Mesh.fromGeometry(app.graphicsDevice, new SphereGeometry({ latitudeBands: 200, longitudeBands: 200 }));
 
     // obtain base mesh vertex / index data
     /** @type {number[]} */
@@ -149,18 +167,18 @@ const createMorphInstance = (x, y, z) => {
     targets.push(createMorphTarget(srcPositions, srcNormals, indices, 0, 0, 1));
 
     // create a morph using these 3 targets
-    mesh.morph = new pc.Morph(targets, app.graphicsDevice);
+    mesh.morph = new Morph(targets, app.graphicsDevice);
 
     // Create the mesh instance
-    const material = new pc.StandardMaterial();
-    const meshInstance = new pc.MeshInstance(mesh, material);
+    const material = new StandardMaterial();
+    const meshInstance = new MeshInstance(mesh, material);
 
     // add morph instance - this is where currently set weights are stored
-    const morphInstance = new pc.MorphInstance(mesh.morph);
+    const morphInstance = new MorphInstance(mesh.morph);
     meshInstance.morphInstance = morphInstance;
 
     // Create Entity and add it to the scene
-    const entity = new pc.Entity();
+    const entity = new Entity();
     entity.setLocalPosition(x, y, z);
     app.root.addChild(entity);
 
@@ -174,7 +192,7 @@ const createMorphInstance = (x, y, z) => {
 };
 
 // create 3 morph instances
-/** @type {pc.MorphInstance[]} */
+/** @type {MorphInstance[]} */
 const morphInstances = [];
 for (let k = 0; k < 3; k++) {
     morphInstances.push(createMorphInstance(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 6 - 3));
@@ -194,5 +212,5 @@ app.on('update', (dt) => {
 
     // orbit camera around
     camera.setLocalPosition(16 * Math.sin(time * 0.2), 4, 16 * Math.cos(time * 0.2));
-    camera.lookAt(pc.Vec3.ZERO);
+    camera.lookAt(Vec3.ZERO);
 });

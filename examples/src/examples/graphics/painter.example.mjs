@@ -1,4 +1,30 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    Keyboard,
+    Layer,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_RGB8,
+    PROJECTION_ORTHOGRAPHIC,
+    ParticleSystemComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RenderTarget,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    Texture,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -9,31 +35,31 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ParticleSystemComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ParticleSystemComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -45,15 +71,15 @@ app.on('destroy', () => {
 /**
  * helper function to create a primitive with shape type, position, scale, color and layer
  * @param {string} primitiveType - The primitive type.
- * @param {number | pc.Vec3} position - The entity's position.
- * @param {number | pc.Vec3} scale - The entity's scale.
+ * @param {number | Vec3} position - The entity's position.
+ * @param {number | Vec3} scale - The entity's scale.
  * @param {number[]} layer - The render component's layers.
- * @param {pc.StandardMaterial} material - The render component's material.
- * @returns {pc.Entity} The returned entity.
+ * @param {StandardMaterial} material - The render component's material.
+ * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, layer, material) {
     // create primitive
-    const primitive = new pc.Entity(`Brush-${primitiveType}`);
+    const primitive = new Entity(`Brush-${primitiveType}`);
     primitive.addComponent('render', {
         type: primitiveType,
         layers: layer,
@@ -71,40 +97,40 @@ function createPrimitive(primitiveType, position, scale, layer, material) {
 }
 
 // create texture and render target for rendering into
-const texture = new pc.Texture(app.graphicsDevice, {
+const texture = new Texture(app.graphicsDevice, {
     width: 1024,
     height: 1024,
-    format: pc.PIXELFORMAT_RGB8,
+    format: PIXELFORMAT_RGB8,
     mipmaps: false,
-    minFilter: pc.FILTER_LINEAR,
-    magFilter: pc.FILTER_LINEAR
+    minFilter: FILTER_LINEAR,
+    magFilter: FILTER_LINEAR
 });
-const renderTarget = new pc.RenderTarget({
+const renderTarget = new RenderTarget({
     colorBuffer: texture,
     depth: false
 });
 
 // create a layer for rendering to texture, and add it to the beginning of layers to render into it first
-const paintLayer = new pc.Layer({ name: 'paintLayer' });
+const paintLayer = new Layer({ name: 'paintLayer' });
 app.scene.layers.insert(paintLayer, 0);
 
 // create a material we use for the paint brush - it uses emissive color to control its color, which is assigned later
-const brushMaterial = new pc.StandardMaterial();
+const brushMaterial = new StandardMaterial();
 brushMaterial.useLighting = false;
 brushMaterial.update();
 
 /**
  * we render multiple brush imprints each frame to make smooth lines, and set up pool to reuse them each frame
- * @type {pc.Entity[]}
+ * @type {Entity[]}
  */
 const brushes = [];
 function getBrush() {
-    /** @type {pc.Entity} */
+    /** @type {Entity} */
     let brush;
     if (brushes.length === 0) {
         // create new brush - use sphere primitive, but could use plane with a texture as well
         // Note: plane would need to be rotated by -90 degrees along x-axis to face camera and be visible
-        brush = createPrimitive('sphere', new pc.Vec3(2, 1, 0), new pc.Vec3(1, 1, 1), [paintLayer.id], brushMaterial);
+        brush = createPrimitive('sphere', new Vec3(2, 1, 0), new Vec3(1, 1, 1), [paintLayer.id], brushMaterial);
     } else {
         // reuse already allocated brush
         brush = brushes.pop();
@@ -114,10 +140,10 @@ function getBrush() {
 }
 
 // Create orthographic camera, which renders brushes in paintLayer, and renders before the main camera
-const paintCamera = new pc.Entity();
+const paintCamera = new Entity();
 paintCamera.addComponent('camera', {
     clearColorBuffer: false,
-    projection: pc.PROJECTION_ORTHOGRAPHIC,
+    projection: PROJECTION_ORTHOGRAPHIC,
     layers: [paintLayer.id],
     renderTarget: renderTarget,
     priority: -1
@@ -125,39 +151,39 @@ paintCamera.addComponent('camera', {
 
 // make it look at the center of the render target, some distance away
 paintCamera.setLocalPosition(0, 0, -10);
-paintCamera.lookAt(pc.Vec3.ZERO);
+paintCamera.lookAt(Vec3.ZERO);
 app.root.addChild(paintCamera);
 
 // Create main camera, which renders entities in world layer - this is where we show the render target on the box
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2)
+    clearColor: new Color(0.2, 0.2, 0.2)
 });
 camera.translate(0, 0, 30);
-camera.lookAt(pc.Vec3.ZERO);
+camera.lookAt(Vec3.ZERO);
 app.root.addChild(camera);
 
 // material used to add render target into the world
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.name = 'EmissiveMaterial';
 material.emissiveMap = texture;
-material.emissive = pc.Color.WHITE;
+material.emissive = Color.WHITE;
 material.useLighting = false;
 material.update();
 
 // create a box which we use to display rendered texture in the world layer
 const worldLayer = app.scene.layers.getLayerByName('World');
-const box = createPrimitive('box', new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15), [worldLayer.id], material);
+const box = createPrimitive('box', new Vec3(0, 0, 0), new Vec3(15, 15, 15), [worldLayer.id], material);
 
 let progress = 1;
 /** @type {number | undefined} */
 let scale;
-/** @type {pc.Vec3 | undefined} */
+/** @type {Vec3 | undefined} */
 let startPos;
-/** @type {pc.Vec3 | undefined} */
+/** @type {Vec3 | undefined} */
 let endPos;
-const pos = new pc.Vec3();
-/** @type {pc.Entity[]} */
+const pos = new Vec3();
+/** @type {Entity[]} */
 const usedBrushes = [];
 
 // update things each frame
@@ -167,14 +193,14 @@ app.on('update', (dt) => {
         progress = 0;
 
         // generate start and end position for the stroke
-        startPos = new pc.Vec3(Math.random() * 20 - 10, Math.random() * 20 - 10, 0);
-        endPos = new pc.Vec3(Math.random() * 20 - 10, Math.random() * 20 - 10, 0);
+        startPos = new Vec3(Math.random() * 20 - 10, Math.random() * 20 - 10, 0);
+        endPos = new Vec3(Math.random() * 20 - 10, Math.random() * 20 - 10, 0);
 
         // random width (scale)
         scale = 0.1 + Math.random();
 
         // assign random color to the brush
-        brushMaterial.emissive = new pc.Color(Math.random(), Math.random(), Math.random());
+        brushMaterial.emissive = new Color(Math.random(), Math.random(), Math.random());
         brushMaterial.update();
     }
 

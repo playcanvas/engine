@@ -7,7 +7,34 @@
 // author: Christoph Schindelar
 // source: https://superspl.at/user?id=schindelar3d
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -22,28 +49,28 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is updated when window changes size
 const onResize = () => app.resizeCanvas();
@@ -80,20 +107,20 @@ const LOD_PRESETS = {
 };
 
 const assets = {
-    skatepark: new pc.Asset('skatepark', 'gsplat', { url: config.url }),
-    logo: new pc.Asset('logo', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
-    biker: new pc.Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    skatepark: new Asset('skatepark', 'gsplat', { url: config.url }),
+    logo: new Asset('logo', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
+    biker: new Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
 
-    envatlas: new pc.Asset(
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -122,9 +149,9 @@ data.on('renderer:set', () => {
 });
 
 // initialize UI settings
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-data.set('debug', pc.GSPLAT_DEBUG_NONE);
-data.set('splatBudget', pc.platform.mobile ? 1 : 4);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
+data.set('debug', GSPLAT_DEBUG_NONE);
+data.set('splatBudget', platform.mobile ? 1 : 4);
 
 data.on('debug:set', () => {
     app.scene.gsplat.debug = data.get('debug');
@@ -139,11 +166,11 @@ applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
 // Auto-select LOD preset based on device
-const preset = pc.platform.mobile ? 'mobile' : 'desktop';
+const preset = platform.mobile ? 'mobile' : 'desktop';
 const presetData = LOD_PRESETS[preset];
 
 // Create skatepark entity
-const skatepark = new pc.Entity('Skatepark');
+const skatepark = new Entity('Skatepark');
 skatepark.addComponent('gsplat', {
     asset: assets.skatepark,
     lodRangeMin: presetData.range[0],
@@ -174,7 +201,7 @@ data.on('lodMultiplier:set', () => {
 const worldCenter = { x: 18, y: -1.3, z: 13.5 };
 
 // Create biker entity at center, ground level
-const biker = new pc.Entity('Biker');
+const biker = new Entity('Biker');
 biker.addComponent('gsplat', {
     asset: assets.biker
 });
@@ -184,7 +211,7 @@ biker.setLocalScale(1, 1, 1);
 app.root.addChild(biker);
 
 // Create first orbiting logo
-const logo1 = new pc.Entity('Logo1');
+const logo1 = new Entity('Logo1');
 logo1.addComponent('gsplat', {
     asset: assets.logo
 });
@@ -192,7 +219,7 @@ logo1.setLocalEulerAngles(180, 90, 0);
 app.root.addChild(logo1);
 
 // Create second orbiting logo
-const logo2 = new pc.Entity('Logo2');
+const logo2 = new Entity('Logo2');
 logo2.addComponent('gsplat', {
     asset: assets.logo
 });
@@ -201,17 +228,17 @@ logo2.setLocalScale(0.5, 0.5, 0.5);
 app.root.addChild(logo2);
 
 // Create camera
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    clearColor: new Color(0.2, 0.2, 0.2),
     fov: 75,
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 
 // Set camera position
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint);
-const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
+const focusPoint = new Vec3(focusX, focusY, focusZ);
 camera.setLocalPosition(camX, camY, camZ);
 app.root.addChild(camera);
 
@@ -234,7 +261,7 @@ data.on('orbitCamera:set', () => {
     cc.enablePan = orbit;
     cc.enableFly = !orbit;
     if (orbit) {
-        cc.focusPoint = new pc.Vec3(worldCenter.x, worldCenter.y, worldCenter.z);
+        cc.focusPoint = new Vec3(worldCenter.x, worldCenter.y, worldCenter.z);
     }
 });
 
@@ -247,7 +274,7 @@ const orbitHeight = 3;
 
 // Animation update
 let time = 0;
-const centerVec = new pc.Vec3(worldCenter.x, worldCenter.y + orbitHeight, worldCenter.z);
+const centerVec = new Vec3(worldCenter.x, worldCenter.y + orbitHeight, worldCenter.z);
 const rollSpeed1 = 90; // degrees per second
 const rollSpeed2 = 120; // degrees per second
 app.on('update', (dt) => {

@@ -5,7 +5,28 @@
 // @flag WEBGL_DISABLED
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    BUFFERUSAGE_COPY_DST,
+    BUFFERUSAGE_COPY_SRC,
+    CameraComponentSystem,
+    Color,
+    ComputeRadixSort,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    PROJECTION_ORTHOGRAPHIC,
+    RADIX_SORT_ONESWEEP,
+    RADIX_SORT_PORTABLE,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial,
+    StorageBuffer,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -21,7 +42,7 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // Create device info overlay (top center)
@@ -105,21 +126,21 @@ document.body.appendChild(benchResults);
 // Track sort failure count and verification state
 let sortFailureCount = 0;
 let verificationPending = false;
-/** @type {{sortedIndices: pc.StorageBuffer, originalValues: number[], numElements: number}|null} */
+/** @type {{sortedIndices: StorageBuffer, originalValues: number[], numElements: number}|null} */
 let pendingVerification = null;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
 createOptions.resourceHandlers = [];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -132,9 +153,9 @@ app.on('destroy', () => {
 let currentNumElements = 0;
 /** @type {number} */
 let currentNumBits = 0;
-/** @type {pc.StorageBuffer|null} */
+/** @type {StorageBuffer|null} */
 let keysBuffer = null;
-/** @type {pc.StorageBuffer|null} */
+/** @type {StorageBuffer|null} */
 let sortedIndicesBuffer = null;
 /** @type {number[]} */
 let originalValues = [];
@@ -152,8 +173,8 @@ let needsRegen = true;
 //     heavy validation load), so it is selectable manually but restricted
 //     to NVIDIA in the benchmark / validation sweeps.
 const RADIX_MODES = {
-    '4-shared-mem': { kind: pc.RADIX_SORT_PORTABLE },
-    onesweep: { kind: pc.RADIX_SORT_ONESWEEP }
+    '4-shared-mem': { kind: RADIX_SORT_PORTABLE },
+    onesweep: { kind: RADIX_SORT_ONESWEEP }
 };
 const DEFAULT_MODE = '4-shared-mem';
 
@@ -161,7 +182,7 @@ const DEFAULT_MODE = '4-shared-mem';
 // Instances are created on first use and retained, so subsequent toggles
 // between configurations are free (no shader rebuild). Each instance grows
 // its internal buffers on demand.
-/** @type {Map<string, pc.ComputeRadixSort>} */
+/** @type {Map<string, ComputeRadixSort>} */
 const radixSortCache = new Map();
 
 /**
@@ -169,14 +190,14 @@ const radixSortCache = new Map();
  * selection. Falls back to safe defaults if the observer value is not yet
  * populated.
  *
- * @returns {pc.ComputeRadixSort} The active radix sort instance.
+ * @returns {ComputeRadixSort} The active radix sort instance.
  */
 function getActiveRadixSort() {
     const mode = data.get('options.mode') ?? DEFAULT_MODE;
     const modeCfg = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
     let inst = radixSortCache.get(mode);
     if (!inst) {
-        inst = new pc.ComputeRadixSort(device, { kind: modeCfg.kind });
+        inst = new ComputeRadixSort(device, { kind: modeCfg.kind });
         radixSortCache.set(mode, inst);
     }
     return inst;
@@ -235,25 +256,25 @@ updateDeviceInfo();
 // ==================== MATERIALS ====================
 
 // Create unsorted visualization material (WGSL only for WebGPU)
-const unsortedMaterial = new pc.ShaderMaterial({
+const unsortedMaterial = new ShaderMaterial({
     uniqueName: 'UnsortedVizMaterialCompute',
     vertexWGSL: vertWgsl,
     fragmentWGSL: wgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
     }
 });
 
 // Create sorted visualization material (WGSL only for WebGPU)
 // Uses same shader as unsorted but with SORTED define
-const sortedMaterial = new pc.ShaderMaterial({
+const sortedMaterial = new ShaderMaterial({
     uniqueName: 'SortedVizMaterialCompute',
     vertexWGSL: vertWgsl,
     fragmentWGSL: wgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
     }
 });
 sortedMaterial.setDefine('SORTED', true);
@@ -261,17 +282,17 @@ sortedMaterial.setDefine('SORTED', true);
 // ==================== SCENE SETUP ====================
 
 // Create camera entity
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.15),
-    projection: pc.PROJECTION_ORTHOGRAPHIC,
+    clearColor: new Color(0.1, 0.1, 0.15),
+    projection: PROJECTION_ORTHOGRAPHIC,
     orthoHeight: 1
 });
 camera.setPosition(0, 0, 1);
 app.root.addChild(camera);
 
 // Create unsorted visualization plane (top half)
-const unsortedPlane = new pc.Entity('unsortedPlane');
+const unsortedPlane = new Entity('unsortedPlane');
 unsortedPlane.addComponent('render', {
     type: 'plane',
     material: unsortedMaterial,
@@ -285,7 +306,7 @@ unsortedPlane.enabled = false;
 app.root.addChild(unsortedPlane);
 
 // Create sorted visualization plane (bottom half)
-const sortedPlane = new pc.Entity('sortedPlane');
+const sortedPlane = new Entity('sortedPlane');
 sortedPlane.addComponent('render', {
     type: 'plane',
     material: sortedMaterial,
@@ -299,7 +320,7 @@ sortedPlane.enabled = false;
 app.root.addChild(sortedPlane);
 
 // Create spinning cube for visual frame rate indicator
-const cube = new pc.Entity('cube');
+const cube = new Entity('cube');
 cube.addComponent('render', {
     type: 'box'
 });
@@ -308,7 +329,7 @@ cube.setLocalScale(0.15, 0.15, 0.15);
 app.root.addChild(cube);
 
 // Create directional light for the cube
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light');
 light.setEulerAngles(45, 30, 0);
 app.root.addChild(light);
@@ -341,7 +362,7 @@ function regenerateData() {
     }
 
     // Create storage buffer for keys
-    keysBuffer = new pc.StorageBuffer(device, numElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+    keysBuffer = new StorageBuffer(device, numElements * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
     // Generate random test data
     const keysData = new Uint32Array(numElements);
@@ -414,7 +435,7 @@ function updateMaterialParameters() {
 /**
  * Downloads and verifies the sorted results against CPU-sorted reference.
  *
- * @param {pc.StorageBuffer} sortedIndices - The sorted indices buffer to verify.
+ * @param {StorageBuffer} sortedIndices - The sorted indices buffer to verify.
  */
 function verifyResults(sortedIndices) {
     // If verification already in progress, queue this one (replacing any previously queued)
@@ -455,7 +476,7 @@ function processNextVerification() {
 /**
  * Performs the actual verification with pre-captured data.
  *
- * @param {pc.StorageBuffer} sortedIndices - The sorted indices buffer.
+ * @param {StorageBuffer} sortedIndices - The sorted indices buffer.
  * @param {number[]} capturedOriginalValues - Copy of original values at sort time.
  * @param {number} capturedNumElements - Number of elements at sort time.
  */
@@ -614,8 +635,8 @@ const BENCH_EXCLUDED_PASSES = new Set(['Forward']);
  *     frame: number,
  *     frameTimes: number[],
  *     passAccum: Map<string, number[]>,
- *     sortInst: pc.ComputeRadixSort | null,
- *     keysBuf: pc.StorageBuffer | null,
+ *     sortInst: ComputeRadixSort | null,
+ *     keysBuf: StorageBuffer | null,
  *     results: {size: number, configLabel: string, frameMs: number, passMs: Map<string, number>}[],
  *     saved: {elementsK: any, bits: any, mode: any, render: any, validation: any, profilerEnabled: boolean}
  * }}
@@ -640,11 +661,11 @@ function fmtN(n) {
  * interactive UI state.
  *
  * @param {string} modeKey - Entry key into RADIX_MODES.
- * @returns {pc.ComputeRadixSort} Sort instance.
+ * @returns {ComputeRadixSort} Sort instance.
  */
 function createBenchSort(modeKey) {
     const modeCfg = RADIX_MODES[modeKey];
-    return new pc.ComputeRadixSort(device, { kind: modeCfg.kind });
+    return new ComputeRadixSort(device, { kind: modeCfg.kind });
 }
 
 /**
@@ -652,11 +673,11 @@ function createBenchSort(modeKey) {
  * sized to numElements and uploads it.
  *
  * @param {number} numElements - Number of elements.
- * @returns {pc.StorageBuffer} Uploaded keys buffer.
+ * @returns {StorageBuffer} Uploaded keys buffer.
  */
 function createBenchKeys(numElements) {
     const maxValue = (1 << BENCH_BITS) - 1;
-    const buf = new pc.StorageBuffer(device, numElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+    const buf = new StorageBuffer(device, numElements * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
     const keysData = new Uint32Array(numElements);
     for (let i = 0; i < numElements; i++) {
         keysData[i] = Math.floor(Math.random() * maxValue);
@@ -1460,11 +1481,7 @@ async function runValidation() {
                 // this (size, run) so mismatches can be directly compared.
                 const keysCpu = generateValidateKeys(size);
                 const cpuSorted = keysCpu.slice().sort();
-                const keysBuf = new pc.StorageBuffer(
-                    device,
-                    size * 4,
-                    pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST
-                );
+                const keysBuf = new StorageBuffer(device, size * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
                 keysBuf.write(0, keysCpu);
 
                 for (const cfg of BENCH_CONFIGS) {

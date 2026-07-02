@@ -2,7 +2,30 @@
 //
 // This example demonstrates shader effects for gaussian splats.
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -17,29 +40,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -49,12 +72,12 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -62,102 +85,102 @@ app.start();
 // Effect configurations
 const effectConfigs = {
     reveal: {
-        aabbMin: new pc.Vec3(-1, -1.6, -1),
-        aabbMax: new pc.Vec3(1, 2, 1),
-        direction: new pc.Vec3(0, 1, 0), // bottom to top
+        aabbMin: new Vec3(-1, -1.6, -1),
+        aabbMax: new Vec3(1, 2, 1),
+        direction: new Vec3(0, 1, 0), // bottom to top
         duration: 1.0,
         visibleStart: false,
         visibleEnd: true,
         interval: 0.1,
-        baseTint: new pc.Color(1, 1, 1), // white (no base tint)
-        edgeTint: new pc.Color(5, 0, 0), // red
-        tint: new pc.Color(1, 1, 1) // white
+        baseTint: new Color(1, 1, 1), // white (no base tint)
+        edgeTint: new Color(5, 0, 0), // red
+        tint: new Color(1, 1, 1) // white
     },
     hide: {
-        aabbMin: new pc.Vec3(-1, -1.6, -1),
-        aabbMax: new pc.Vec3(1, 2, 1),
-        direction: new pc.Vec3(0, -1, 0), // top to bottom
+        aabbMin: new Vec3(-1, -1.6, -1),
+        aabbMax: new Vec3(1, 2, 1),
+        direction: new Vec3(0, -1, 0), // top to bottom
         duration: 1.0,
         visibleStart: true,
         visibleEnd: false,
         interval: 0.1,
-        baseTint: new pc.Color(1, 1, 1), // white (no base tint)
-        edgeTint: new pc.Color(5, 0, 0), // red
-        tint: new pc.Color(1, 1, 1) // white
+        baseTint: new Color(1, 1, 1), // white (no base tint)
+        edgeTint: new Color(5, 0, 0), // red
+        tint: new Color(1, 1, 1) // white
     },
     tint: {
-        aabbMin: new pc.Vec3(-1, -1.6, -1),
-        aabbMax: new pc.Vec3(1, 2, 1),
-        direction: new pc.Vec3(1, 0, 0), // left to right
+        aabbMin: new Vec3(-1, -1.6, -1),
+        aabbMax: new Vec3(1, 2, 1),
+        direction: new Vec3(1, 0, 0), // left to right
         duration: 2.0,
         visibleStart: true,
         visibleEnd: true,
         interval: 0.05,
-        baseTint: new pc.Color(1, 1, 1), // white (no base tint)
-        edgeTint: new pc.Color(5, 0, 0), // red
-        tint: new pc.Color(1, 1, 0) // yellow
+        baseTint: new Color(1, 1, 1), // white (no base tint)
+        edgeTint: new Color(5, 0, 0), // red
+        tint: new Color(1, 1, 0) // yellow
     },
     untint: {
-        aabbMin: new pc.Vec3(-1, -1.6, -1),
-        aabbMax: new pc.Vec3(1, 2, 1),
-        direction: new pc.Vec3(-1, 0, 0), // right to left (reverse of tint)
+        aabbMin: new Vec3(-1, -1.6, -1),
+        aabbMax: new Vec3(1, 2, 1),
+        direction: new Vec3(-1, 0, 0), // right to left (reverse of tint)
         duration: 2.0,
         visibleStart: true,
         visibleEnd: true,
         interval: 0.05,
         invertTint: true, // apply tint ahead instead of behind
-        baseTint: new pc.Color(1, 1, 1), // white (target/original state)
-        edgeTint: new pc.Color(5, 0, 0), // red
-        tint: new pc.Color(1, 1, 0) // yellow (applied ahead to preserve)
+        baseTint: new Color(1, 1, 1), // white (target/original state)
+        edgeTint: new Color(5, 0, 0), // red
+        tint: new Color(1, 1, 0) // yellow (applied ahead to preserve)
     },
     roomReveal: {
-        aabbMin: new pc.Vec3(-50, -5, -50),
-        aabbMax: new pc.Vec3(50, 5, 50),
-        direction: new pc.Vec3(0, 1, 0), // bottom to top
+        aabbMin: new Vec3(-50, -5, -50),
+        aabbMax: new Vec3(50, 5, 50),
+        direction: new Vec3(0, 1, 0), // bottom to top
         duration: 1.0,
         visibleStart: false,
         visibleEnd: true,
         interval: 0.1,
-        baseTint: new pc.Color(1, 1, 1), // white (no base tint)
-        edgeTint: new pc.Color(5, 5, 0), // bright yellow
-        tint: new pc.Color(1, 1, 1) // white
+        baseTint: new Color(1, 1, 1), // white (no base tint)
+        edgeTint: new Color(5, 5, 0), // bright yellow
+        tint: new Color(1, 1, 1) // white
     },
     roomHide: {
-        aabbMin: new pc.Vec3(-50, -5, -50),
-        aabbMax: new pc.Vec3(50, 5, 50),
-        direction: new pc.Vec3(0, -1, 0), // top to bottom
+        aabbMin: new Vec3(-50, -5, -50),
+        aabbMax: new Vec3(50, 5, 50),
+        direction: new Vec3(0, -1, 0), // top to bottom
         duration: 1.0,
         visibleStart: true,
         visibleEnd: false,
         interval: 0.1,
-        baseTint: new pc.Color(1, 1, 1), // white (no base tint)
-        edgeTint: new pc.Color(5, 5, 0), // bright yellow
-        tint: new pc.Color(1, 1, 1) // white
+        baseTint: new Color(1, 1, 1), // white (no base tint)
+        edgeTint: new Color(5, 5, 0), // bright yellow
+        tint: new Color(1, 1, 1) // white
     },
     roomTint: {
-        aabbMin: new pc.Vec3(-50, -5, -50),
-        aabbMax: new pc.Vec3(50, 5, 50),
-        direction: new pc.Vec3(1, 0, 0), // left to right
+        aabbMin: new Vec3(-50, -5, -50),
+        aabbMax: new Vec3(50, 5, 50),
+        direction: new Vec3(1, 0, 0), // left to right
         duration: 2.0,
         visibleStart: true,
         visibleEnd: true,
         interval: 0.05,
-        baseTint: new pc.Color(1, 1, 1), // white (no base tint)
-        edgeTint: new pc.Color(5, 5, 0), // bright yellow
-        tint: new pc.Color(0, 1, 1) // cyan
+        baseTint: new Color(1, 1, 1), // white (no base tint)
+        edgeTint: new Color(5, 5, 0), // bright yellow
+        tint: new Color(0, 1, 1) // cyan
     },
     roomUntint: {
-        aabbMin: new pc.Vec3(-50, -5, -50),
-        aabbMax: new pc.Vec3(50, 5, 50),
-        direction: new pc.Vec3(-1, 0, 0), // right to left (reverse of tint)
+        aabbMin: new Vec3(-50, -5, -50),
+        aabbMax: new Vec3(50, 5, 50),
+        direction: new Vec3(-1, 0, 0), // right to left (reverse of tint)
         duration: 2.0,
         visibleStart: true,
         visibleEnd: true,
         interval: 0.05,
         invertTint: true, // apply tint ahead instead of behind
-        baseTint: new pc.Color(1, 1, 1), // white (target/original state)
-        edgeTint: new pc.Color(5, 5, 0), // bright yellow
-        tint: new pc.Color(0, 1, 1) // cyan (applied ahead to preserve)
+        baseTint: new Color(1, 1, 1), // white (target/original state)
+        edgeTint: new Color(5, 5, 0), // bright yellow
+        tint: new Color(0, 1, 1) // cyan (applied ahead to preserve)
     }
 };
 
@@ -170,12 +193,12 @@ data.on('renderer:set', () => {
 });
 
 // Default to enabled
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('enabled', true);
 data.set('effect', 'hide');
 
 // Create hotel gsplat
-const hotel = new pc.Entity('hotel');
+const hotel = new Entity('hotel');
 hotel.addComponent('gsplat', {
     asset: assets.hotel
 });
@@ -269,9 +292,9 @@ data.on('enabled:set', () => {
 });
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: pc.Color.BLACK,
+    clearColor: Color.BLACK,
     fov: 80
 });
 camera.setLocalPosition(3, 1, 0.5);

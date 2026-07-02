@@ -6,56 +6,88 @@
 // source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/SheenChair
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CULLFACE_NONE,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    JsonHandler,
+    Keyboard,
+    LIGHTFALLOFF_INVERSESQUARED,
+    LIGHTSHAPE_RECT,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType, win } from 'examples/context';
+
+/**
+ * @import { LightComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    helipad: new pc.Asset(
+    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    lights: new pc.Asset('lights', 'container', { url: './assets/models/Lights.glb' }),
-    sheen: new pc.Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
-    color: new pc.Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
-    luts: new pc.Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
+    lights: new Asset('lights', 'container', { url: './assets/models/Lights.glb' }),
+    sheen: new Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
+    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(document.body);
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.JsonHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -65,7 +97,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -84,14 +116,14 @@ app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 const sheen1 = assets.sheen.resource.instantiateRenderEntity({
     castShadows: true
 });
-sheen1.setLocalScale(new pc.Vec3(3, 3, 3));
+sheen1.setLocalScale(new Vec3(3, 3, 3));
 sheen1.setLocalPosition(7, -1.0, 0);
 app.root.addChild(sheen1);
 
 const sheen2 = assets.sheen.resource.instantiateRenderEntity({
     castShadows: true
 });
-sheen2.setLocalScale(new pc.Vec3(3, 3, 3));
+sheen2.setLocalScale(new Vec3(3, 3, 3));
 sheen2.setLocalPosition(4, -1.0, 0);
 assets.sheen.resource.applyMaterialVariant(sheen2, 'Peacock Velvet');
 app.root.addChild(sheen2);
@@ -100,7 +132,7 @@ const lights = assets.lights.resource.instantiateRenderEntity({
     castShadows: true
 });
 // enable all lights from the glb
-/** @type {Array<pc.LightComponent>} */
+/** @type {Array<LightComponent>} */
 const lightComponents = lights.findComponents('light');
 lightComponents.forEach((component) => {
     component.enabled = true;
@@ -108,7 +140,7 @@ lightComponents.forEach((component) => {
 lights.setLocalPosition(10, 0, 0);
 app.root.addChild(lights);
 
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.diffuseMap = assets.color.resource;
 material.normalMap = assets.normal.resource;
 material.gloss = 0.8;
@@ -121,12 +153,12 @@ material.normalMapTiling.set(17, 17);
 material.glossMapTiling.set(17, 17);
 material.update();
 
-const plane = new pc.Entity();
+const plane = new Entity();
 plane.addComponent('render', {
     type: 'plane',
     material: material
 });
-plane.setLocalScale(new pc.Vec3(100, 0, 100));
+plane.setLocalScale(new Vec3(100, 0, 100));
 plane.setLocalPosition(0, -1.0, 0);
 app.root.addChild(plane);
 
@@ -152,7 +184,7 @@ data.set('script', {
         shutter: 1000,
         sensitivity: 1000,
         animate: false,
-        toneMapping: pc.TONEMAP_ACES
+        toneMapping: TONEMAP_ACES
     },
     scene: {
         physicalUnits: true,
@@ -165,10 +197,10 @@ app.scene.envAtlas = assets.helipad.resource;
 
 app.scene.skyboxLuminance = data.get('script.sky.luminance');
 
-const directionalLight = new pc.Entity();
+const directionalLight = new Entity();
 directionalLight.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     castShadows: true,
     luminance: data.get('script.sun.luminance'),
     shadowBias: 0.2,
@@ -178,10 +210,10 @@ directionalLight.addComponent('light', {
 directionalLight.setEulerAngles(45, 35, 0);
 app.root.addChild(directionalLight);
 
-const omniLight = new pc.Entity();
+const omniLight = new Entity();
 omniLight.addComponent('light', {
     type: 'omni',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     castShadows: false,
     luminance: data.get('script.point.luminance'),
     shadowBias: 0.2,
@@ -191,10 +223,10 @@ omniLight.addComponent('light', {
 omniLight.setLocalPosition(0, 5, 0);
 app.root.addChild(omniLight);
 
-const spotLight = new pc.Entity();
+const spotLight = new Entity();
 spotLight.addComponent('light', {
     type: 'spot',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     castShadows: false,
     luminance: data.get('script.spot.luminance'),
     shadowBias: 0.2,
@@ -207,14 +239,14 @@ spotLight.setEulerAngles(0, 0, 0);
 spotLight.setLocalPosition(10, 5, 5);
 app.root.addChild(spotLight);
 
-const areaLight = new pc.Entity();
+const areaLight = new Entity();
 areaLight.addComponent('light', {
     type: 'spot',
-    shape: pc.LIGHTSHAPE_RECT,
-    color: pc.Color.YELLOW,
+    shape: LIGHTSHAPE_RECT,
+    color: Color.YELLOW,
     range: 9999,
     luminance: data.get('script.rect.luminance'),
-    falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
+    falloffMode: LIGHTFALLOFF_INVERSESQUARED,
     innerConeAngle: 80,
     outerConeAngle: 85,
     normalOffsetBias: 0.1
@@ -224,14 +256,14 @@ areaLight.setEulerAngles(70, 180, 0);
 areaLight.setLocalPosition(5, 3, -5);
 
 // emissive material that is the light source color
-const brightMaterial = new pc.StandardMaterial();
-brightMaterial.emissive = pc.Color.YELLOW;
+const brightMaterial = new StandardMaterial();
+brightMaterial.emissive = Color.YELLOW;
 brightMaterial.emissiveIntensity = areaLight.light.luminance;
 brightMaterial.useLighting = false;
-brightMaterial.cull = pc.CULLFACE_NONE;
+brightMaterial.cull = CULLFACE_NONE;
 brightMaterial.update();
 
-const brightShape = new pc.Entity();
+const brightShape = new Entity();
 // primitive shape that matches light source shape
 brightShape.addComponent('render', {
     type: 'plane',
@@ -242,9 +274,9 @@ areaLight.addChild(brightShape);
 app.root.addChild(areaLight);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    clearColor: new Color(0.4, 0.45, 0.5),
     aperture: data.get('script.camera.aperture'),
     shutter: 1 / data.get('script.camera.shutter'),
     sensitivity: data.get('script.camera.sensitivity')

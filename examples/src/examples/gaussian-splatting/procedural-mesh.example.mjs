@@ -9,7 +9,31 @@
 // source: https://sketchfab.com/3d-models/terrain-low-poly-248b21331315466e98d20c441935d99d
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_NORMAL,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 import { GsplatMesh } from 'playcanvas/scripts/esm/gsplat/gsplat-mesh.mjs';
 import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
@@ -19,13 +43,13 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    terrain: new pc.Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
-    helipad: new pc.Asset(
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -35,28 +59,28 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -67,7 +91,7 @@ app.on('destroy', () => {
 
 // Load assets
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -79,21 +103,21 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // Setup skydome
 app.scene.skyboxMip = 3;
 app.scene.envAtlas = assets.helipad.resource;
-app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, -70, 0);
 
 // Instantiate the terrain and add to scene
-/** @type {pc.Entity} */
+/** @type {Entity} */
 const terrain = assets.terrain.resource.instantiateRenderEntity();
 terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
 // Find source clouds (Icosphere nodes)
-/** @type {Array<pc.Entity>} */
+/** @type {Array<Entity>} */
 const srcClouds = terrain.find((node) => {
     return node.name.includes('Icosphere');
 });
@@ -106,7 +130,7 @@ srcClouds.forEach((cloud) => {
 
 // Create gsplat entity for terrain (without clouds) - attach as child of terrain
 // so it inherits the terrain's transform (scale 30)
-const gsplatTerrain = new pc.Entity('GsplatTerrain');
+const gsplatTerrain = new Entity('GsplatTerrain');
 gsplatTerrain.addComponent('script');
 terrain.addChild(gsplatTerrain);
 
@@ -138,7 +162,7 @@ terrainRenders.forEach((node) => {
 
 // Create gsplat entities for each source cloud (bake once per cloud)
 // Then create additional entities sharing the same gsplat container
-/** @type {Array<pc.Entity>} */
+/** @type {Array<Entity>} */
 const clouds = [];
 
 srcClouds.forEach((srcCloud, srcIndex) => {
@@ -151,7 +175,7 @@ srcClouds.forEach((srcCloud, srcIndex) => {
     if (srcCloud.render) {
         srcCloud.render.meshInstances.forEach((mi) => {
             if (mi.material) {
-                mi.material.blendType = pc.BLEND_NORMAL;
+                mi.material.blendType = BLEND_NORMAL;
                 mi.material.opacity = 0.2;
             }
         });
@@ -159,7 +183,7 @@ srcClouds.forEach((srcCloud, srcIndex) => {
 
     // Create the first gsplat entity with script to build the gsplat
     // Position it same as the source cloud
-    const gsplatCloud = new pc.Entity(`GsplatCloud-${srcIndex}-0`);
+    const gsplatCloud = new Entity(`GsplatCloud-${srcIndex}-0`);
     gsplatCloud.addComponent('script');
     cloudParent.addChild(gsplatCloud);
 
@@ -181,7 +205,7 @@ srcClouds.forEach((srcCloud, srcIndex) => {
 
     // Create 3 more gsplat entities sharing the same container
     for (let i = 1; i < 4; i++) {
-        const cloneCloud = new pc.Entity(`GsplatCloud-${srcIndex}-${i}`);
+        const cloneCloud = new Entity(`GsplatCloud-${srcIndex}-${i}`);
         cloneCloud.addComponent('gsplat', {
             resource: container
         });
@@ -198,9 +222,9 @@ clouds.sort(() => Math.random() - 0.5);
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
 // Create camera with orbit controls (same setup as shadow-cascades)
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.9, 0.9, 0.9),
+    clearColor: new Color(0.9, 0.9, 0.9),
     farClip: 1000
 });
 

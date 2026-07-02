@@ -6,49 +6,80 @@
 // source: https://sketchfab.com/3d-models/portal-frame-da34b37a224e4e49b307c0b17a50af2c
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FUNC_EQUAL,
+    FUNC_NOTEQUAL,
+    Layer,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    STENCILOP_INCREMENT,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    StencilParameters,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    createGraphicsDevice,
+    createScript
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    portal: new pc.Asset('portal', 'container', { url: './assets/models/portal.glb' }),
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    bitmoji: new pc.Asset('bitmoji', 'container', { url: './assets/models/bitmoji.glb' })
+    portal: new Asset('portal', 'container', { url: './assets/models/portal.glb' }),
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    bitmoji: new Asset('bitmoji', 'container', { url: './assets/models/bitmoji.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -58,7 +89,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -71,7 +102,7 @@ app.scene.skyboxIntensity = 0.7;
 ////////////////////////////////
 // Script to rotate the scene //
 ////////////////////////////////
-const Rotator = pc.createScript('rotator');
+const Rotator = createScript('rotator');
 
 let t = 0;
 
@@ -83,17 +114,17 @@ Rotator.prototype.update = function (/** @type {number} */ dt) {
 //////////////////////////////////////////////////
 // Script to set up rendering the portal itself //
 //////////////////////////////////////////////////
-const Portal = pc.createScript('portal');
+const Portal = createScript('portal');
 
 // initialize code called once per entity
 Portal.prototype.initialize = function () {
     // increment value in stencil (from 0 to 1) for stencil geometry
-    const stencil = new pc.StencilParameters({
-        zpass: pc.STENCILOP_INCREMENT
+    const stencil = new StencilParameters({
+        zpass: STENCILOP_INCREMENT
     });
 
     // set the stencil and other parameters on all materials
-    /** @type {Array<pc.RenderComponent>} */
+    /** @type {Array<RenderComponent>} */
     const renders = this.entity.findComponents('render');
     renders.forEach((render) => {
         for (const meshInstance of render.meshInstances) {
@@ -112,7 +143,7 @@ Portal.prototype.initialize = function () {
 // Script to set stencil options for entities inside or outside the portal //
 /////////////////////////////////////////////////////////////////////////////
 
-const PortalGeometry = pc.createScript('portalGeometry');
+const PortalGeometry = createScript('portalGeometry');
 
 PortalGeometry.attributes.add('inside', {
     type: 'boolean',
@@ -123,13 +154,13 @@ PortalGeometry.attributes.add('inside', {
 PortalGeometry.prototype.initialize = function () {
     // based on value in the stencil buffer (0 outside, 1 inside), either render
     // the geometry when the value is equal, or not equal to zero.
-    const stencil = new pc.StencilParameters({
-        func: this.inside ? pc.FUNC_NOTEQUAL : pc.FUNC_EQUAL,
+    const stencil = new StencilParameters({
+        func: this.inside ? FUNC_NOTEQUAL : FUNC_EQUAL,
         ref: 0
     });
 
     // set the stencil parameters on all materials
-    /** @type {Array<pc.RenderComponent>} */
+    /** @type {Array<RenderComponent>} */
     const renders = this.entity.findComponents('render');
     renders.forEach((render) => {
         for (const meshInstance of render.meshInstances) {
@@ -150,15 +181,15 @@ const uiLayer = app.scene.layers.getLayerByName('UI');
 
 // portal layer - this is where the portal geometry is written to the stencil
 // buffer, and this needs to render first, so insert it before the world layer
-const portalLayer = new pc.Layer({ name: 'Portal' });
+const portalLayer = new Layer({ name: 'Portal' });
 app.scene.layers.insert(portalLayer, 0);
 
 // Create an Entity with a camera component
 // this camera renders both world and portal layers
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
     layers: [worldLayer.id, portalLayer.id, skyboxLayer.id, uiLayer.id],
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 camera.setLocalPosition(7, 5.5, 7.1);
 camera.setLocalEulerAngles(-27, 45, 0);
@@ -166,14 +197,14 @@ app.root.addChild(camera);
 
 // ------ Camera frame (optional), stencil + MSAA — default off ------
 
-/** @type {pc.CameraFrame|null} */
+/** @type {CameraFrame|null} */
 let cameraFrame = null;
 
 data.set('cameraFrame', false);
 data.on('cameraFrame:set', () => {
     if (data.get('cameraFrame')) {
         if (!cameraFrame) {
-            cameraFrame = new pc.CameraFrame(app, camera.camera);
+            cameraFrame = new CameraFrame(app, camera.camera);
             cameraFrame.rendering.stencil = true;
             cameraFrame.rendering.samples = 4;
             cameraFrame.rendering.toneMapping = camera.camera.toneMapping;
@@ -189,16 +220,16 @@ data.on('cameraFrame:set', () => {
 // ------------------------------------------
 
 // Create an Entity with a directional light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1)
+    color: new Color(1, 1, 1)
 });
 light.setEulerAngles(45, 35, 0);
 app.root.addChild(light);
 
 // Create a root for the graphical scene
-const group = new pc.Entity();
+const group = new Entity();
 group.addComponent('script');
 group.script.create('rotator');
 app.root.addChild(group);
@@ -207,10 +238,10 @@ app.root.addChild(group);
 // which is then used to test for inside / outside. This needs to render
 // before all elements requiring stencil buffer, so add to to a portalLayer.
 // This is the plane that fills the inside of the portal geometry.
-const portal = new pc.Entity('Portal');
+const portal = new Entity('Portal');
 portal.addComponent('render', {
     type: 'plane',
-    material: new pc.StandardMaterial(),
+    material: new StandardMaterial(),
     layers: [portalLayer.id]
 });
 portal.addComponent('script');

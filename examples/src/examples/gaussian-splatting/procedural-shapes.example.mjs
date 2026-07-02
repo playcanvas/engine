@@ -7,7 +7,26 @@
 // author: Stéphane Agullo
 // source: https://www.stephane-agullo.fr/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    TextureHandler,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatImage } from 'playcanvas/scripts/esm/gsplat/gsplat-image.mjs';
 import { GsplatLines } from 'playcanvas/scripts/esm/gsplat/gsplat-lines.mjs';
@@ -26,26 +45,26 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -55,10 +74,10 @@ app.on('destroy', () => {
 });
 
 // Create an Entity with a camera component
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
     fov: 30,
-    clearColor: new pc.Color(0.2, 0.2, 0.2)
+    clearColor: new Color(0.2, 0.2, 0.2)
 });
 camera.setLocalPosition(-3, 1.5, -3);
 
@@ -68,26 +87,26 @@ camera.script.create(CameraControls, {
     properties: {
         enableFly: false,
         enablePan: true,
-        focusPoint: new pc.Vec3(0, 0.3, 0),
-        zoomRange: new pc.Vec2(1, 10)
+        focusPoint: new Vec3(0, 0.3, 0),
+        zoomRange: new Vec2(1, 10)
     }
 });
 app.root.addChild(camera);
 
 const assets = {
-    bicycle: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' }),
-    groundTexture: new pc.Asset('ground', 'texture', { url: './assets/textures/colors.webp' }),
-    gearTexture: new pc.Asset('gear', 'texture', { url: './assets/textures/gear.png' })
+    bicycle: new Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' }),
+    groundTexture: new Asset('ground', 'texture', { url: './assets/textures/colors.webp' }),
+    gearTexture: new Asset('gear', 'texture', { url: './assets/textures/gear.png' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Create the bicycle gsplat
-const bicycle = new pc.Entity('Bicycle');
+const bicycle = new Entity('Bicycle');
 bicycle.addComponent('gsplat', {
     asset: assets.bicycle
 });
@@ -109,7 +128,7 @@ revealScript.edgeTint.set(5, 2, 0); // orange/gold edge
 revealScript.tint.set(1, 1, 1);
 
 // Create ground entity with GsplatImage script
-const ground = new pc.Entity('Ground');
+const ground = new Entity('Ground');
 ground.addComponent('script');
 const groundImage = ground.script.create(GsplatImage);
 groundImage.imageAsset = assets.groundTexture;
@@ -118,7 +137,7 @@ ground.setLocalScale(3, 3, 3);
 app.root.addChild(ground);
 
 // Create gear wall entity with GsplatImage script (behind the bike)
-const gearWall = new pc.Entity('GearWall');
+const gearWall = new Entity('GearWall');
 gearWall.addComponent('script');
 const gearImage = gearWall.script.create(GsplatImage);
 gearImage.imageAsset = assets.gearTexture;
@@ -157,7 +176,7 @@ const widthY = bikeMaxY + dimOffset;
 const handlebarZ = -0.3; // Z position near handlebars (negative Z is front)
 
 // AABBs: [minX, minY, minZ, maxX, maxY, maxZ]
-const yellow = new pc.Color(1, 0.9, 0.2, 1);
+const yellow = new Color(1, 0.9, 0.2, 1);
 const aabbs = [
     [
         -wheelWidth,
@@ -178,7 +197,7 @@ const aabbs = [
 ];
 
 // Arrows: [startX, startY, startZ, endX, endY, endZ]
-const cyan = new pc.Color(0.2, 0.9, 1, 1);
+const cyan = new Color(0.2, 0.9, 1, 1);
 const arrows = [
     // Length (Z axis) - bidirectional
     [0, lengthY, bikeMinZ, 0, lengthY, bikeMaxZ],
@@ -192,7 +211,7 @@ const arrows = [
 ];
 
 // Extension lines: [startX, startY, startZ, endX, endY, endZ]
-const gray = new pc.Color(0.5, 0.5, 0.5, 0.8);
+const gray = new Color(0.5, 0.5, 0.5, 0.8);
 const extLines = [
     // Length extension lines (from wheel box top corners, going up)
     [0, wheelTopY, rearBoxZ, 0, lengthY + 0.05, rearBoxZ],
@@ -216,7 +235,7 @@ const textEntities = [];
 
 // Helper to create a text label
 const createTextLabel = (text, x, y, z, rotX, rotY, rotZ) => {
-    const textEntity = new pc.Entity(`Text-${text}`);
+    const textEntity = new Entity(`Text-${text}`);
     textEntity.addComponent('script');
     const textScript = textEntity.script.create(GsplatText);
     textScript.text = text;
@@ -235,7 +254,7 @@ const createTextLabel = (text, x, y, z, rotX, rotY, rotZ) => {
 
 // Function to create the lines entity with all primitives
 const createLinesEntity = () => {
-    linesEntity = new pc.Entity('Lines');
+    linesEntity = new Entity('Lines');
     linesEntity.addComponent('script');
     const lines = linesEntity.script.create(GsplatLines);
     app.root.addChild(linesEntity);
@@ -243,19 +262,13 @@ const createLinesEntity = () => {
     // Add all primitives
     const arrowHeadSize = thickness * 27; // 3x default size
     for (const a of aabbs) {
-        lines.addAABB(new pc.Vec3(a[0], a[1], a[2]), new pc.Vec3(a[3], a[4], a[5]), yellow, thickness * 0.5);
+        lines.addAABB(new Vec3(a[0], a[1], a[2]), new Vec3(a[3], a[4], a[5]), yellow, thickness * 0.5);
     }
     for (const a of arrows) {
-        lines.addArrow(
-            new pc.Vec3(a[0], a[1], a[2]),
-            new pc.Vec3(a[3], a[4], a[5]),
-            cyan,
-            thickness * 0.8,
-            arrowHeadSize
-        );
+        lines.addArrow(new Vec3(a[0], a[1], a[2]), new Vec3(a[3], a[4], a[5]), cyan, thickness * 0.8, arrowHeadSize);
     }
     for (const l of extLines) {
-        lines.addLineSimple(new pc.Vec3(l[0], l[1], l[2]), new pc.Vec3(l[3], l[4], l[5]), gray, thickness * 0.5);
+        lines.addLineSimple(new Vec3(l[0], l[1], l[2]), new Vec3(l[3], l[4], l[5]), gray, thickness * 0.5);
     }
 
     // Add text labels for each dimension
@@ -293,7 +306,7 @@ data.on('renderer:set', () => {
 });
 
 // Set default value and create initial lines
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('showLines', true);
 createLinesEntity();
 

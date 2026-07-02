@@ -3,7 +3,26 @@
 // @flag NO_MINISTATS
 // @flag WEBGPU_DISABLED
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    MiniStats,
+    ModelComponentSystem,
+    PIXELFORMAT_RGB8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    Texture,
+    Vec3,
+    VertexBuffer,
+    VertexFormat,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -14,26 +33,26 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.ModelComponentSystem,
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
+    ModelComponentSystem,
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem
 ];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -43,7 +62,7 @@ app.on('destroy', () => {
 });
 
 // set up options for mini-stats, start with the default options
-const options = pc.MiniStats.getDefaultOptions();
+const options = MiniStats.getDefaultOptions();
 
 // configure sizes
 options.sizes = [
@@ -128,10 +147,10 @@ options.stats = [
 ];
 
 // create mini-stats system
-const miniStats = new pc.MiniStats(app, options); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, options); // eslint-disable-line no-unused-vars
 
 // add directional lights to the scene
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional'
 });
@@ -139,30 +158,30 @@ app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new Color(0.1, 0.1, 0.1)
 });
 app.root.addChild(camera);
 camera.setLocalPosition(20, 10, 10);
-camera.lookAt(pc.Vec3.ZERO);
+camera.lookAt(Vec3.ZERO);
 
 /**
  * Helper function to create a primitive with shape type, position, scale.
  *
  * @param {string} primitiveType - The primitive type.
- * @param {number | pc.Vec3} position - The position.
- * @param {number | pc.Vec3} scale - The scale.
- * @returns {pc.Entity} The new primitive entity.
+ * @param {number | Vec3} position - The position.
+ * @param {number | Vec3} scale - The scale.
+ * @returns {Entity} The new primitive entity.
  */
 function createPrimitive(primitiveType, position, scale) {
     // create material of random color
-    const material = new pc.StandardMaterial();
-    material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
+    const material = new StandardMaterial();
+    material.diffuse = new Color(Math.random(), Math.random(), Math.random());
     material.update();
 
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new Entity();
     primitive.addComponent('model', {
         type: primitiveType
     });
@@ -176,7 +195,7 @@ function createPrimitive(primitiveType, position, scale) {
 }
 
 // list of all created engine resources
-/** @type {pc.Entity[]} */
+/** @type {Entity[]} */
 const entities = [];
 /** @type {any[]} */
 const vertexBuffers = [];
@@ -187,9 +206,9 @@ const textures = [];
 let adding = true;
 const step = 10,
     max = 2000;
-/** @type {pc.Entity} */
+/** @type {Entity} */
 let entity;
-/** @type {pc.VertexBuffer} */
+/** @type {VertexBuffer} */
 let vertexBuffer;
 /** @type {{ destroy: () => void}} */
 let texture;
@@ -200,9 +219,9 @@ app.on('update', () => {
         if (adding) {
             // add entity (they used shared geometry internally, and we create individual material for each)
             const shape = Math.random() < 0.5 ? 'box' : 'sphere';
-            const position = new pc.Vec3(Math.random() * 10, Math.random() * 10, Math.random() * 10);
+            const position = new Vec3(Math.random() * 10, Math.random() * 10, Math.random() * 10);
             const scale = 0.5 + Math.random();
-            entity = createPrimitive(shape, position, new pc.Vec3(scale, scale, scale));
+            entity = createPrimitive(shape, position, new Vec3(scale, scale, scale));
             entities.push(entity);
             app.root.addChild(entity);
 
@@ -214,17 +233,17 @@ app.on('update', () => {
             // add vertex buffer
             const vertexCount = 500;
             const data = new Float32Array(vertexCount * 16);
-            const format = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
-            vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, format, vertexCount, {
+            const format = VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+            vertexBuffer = new VertexBuffer(app.graphicsDevice, format, vertexCount, {
                 data: data
             });
             vertexBuffers.push(vertexBuffer);
 
             // allocate texture
-            const texture = new pc.Texture(app.graphicsDevice, {
+            const texture = new Texture(app.graphicsDevice, {
                 width: 64,
                 height: 64,
-                format: pc.PIXELFORMAT_RGB8,
+                format: PIXELFORMAT_RGB8,
                 mipmaps: false
             });
             textures.push(texture);

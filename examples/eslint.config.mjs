@@ -302,10 +302,13 @@ const assetLoaderTopLevelAwait = {
         const sourceCode = context.sourceCode;
 
         const isAssetLoader = (node) => {
-            return node?.type === 'NewExpression' &&
+            return (node?.type === 'NewExpression' &&
+                node.callee.type === 'Identifier' &&
+                node.callee.name === 'AssetListLoader') ||
+                (node?.type === 'NewExpression' &&
                 node.callee.type === 'MemberExpression' &&
                 node.callee.object.name === 'pc' &&
-                node.callee.property.name === 'AssetListLoader';
+                node.callee.property.name === 'AssetListLoader');
         };
 
         const hasReturn = (node) => {
@@ -378,6 +381,74 @@ const assetLoaderTopLevelAwait = {
                                 `await new Promise((resolve) => {\n    ${loader}.load(resolve);\n});\n\n${block}`
                             );
                         } : null
+                    });
+                }
+            }
+        };
+    }
+};
+
+const noPlaycanvasNamespace = {
+    meta: {
+        type: 'problem',
+        docs: {
+            description: 'require direct PlayCanvas imports in examples'
+        },
+        messages: {
+            namespaceImport: 'Import PlayCanvas exports directly instead of using the pc namespace.',
+            namespaceReference: 'Use the direct PlayCanvas import instead of pc.{{name}}.'
+        }
+    },
+
+    create(context) {
+        const sourceCode = context.sourceCode;
+
+        return {
+            ImportDeclaration(node) {
+                if (node.source.value !== 'playcanvas') {
+                    return;
+                }
+
+                for (const specifier of node.specifiers) {
+                    if (specifier.type === 'ImportNamespaceSpecifier') {
+                        context.report({
+                            node: specifier,
+                            messageId: 'namespaceImport'
+                        });
+                    }
+                }
+            },
+
+            MemberExpression(node) {
+                if (node.computed ||
+                    node.object.type !== 'Identifier' ||
+                    node.object.name !== 'pc' ||
+                    node.property.type !== 'Identifier') {
+                    return;
+                }
+
+                context.report({
+                    node,
+                    messageId: 'namespaceReference',
+                    data: { name: node.property.name }
+                });
+            },
+
+            Program(node) {
+                for (const comment of sourceCode.getAllComments()) {
+                    const match = /\bpc\.([A-Za-z_$][\w$]*)/.exec(comment.value);
+                    if (!match) {
+                        continue;
+                    }
+
+                    context.report({
+                        node,
+                        loc: {
+                            line: comment.loc.start.line,
+                            column: comment.loc.start.column + match.index
+                        },
+                        messageId: 'namespaceReference',
+                        data: { name: match[1] }
                     });
                 }
             }
@@ -509,6 +580,16 @@ const jsxUsesVars = {
     }
 };
 
+const examplesPlugin = {
+    rules: {
+        'config-block-at-top': configBlockAtTop,
+        'config-block-shape': configBlockShape,
+        'asset-loader-top-level-await': assetLoaderTopLevelAwait,
+        'function-expression-arrow': functionExpressionArrow,
+        'no-playcanvas-namespace': noPlaycanvasNamespace
+    }
+};
+
 export default [
     ...playcanvasConfig,
     {
@@ -535,9 +616,13 @@ export default [
     },
     {
         files: ['src/examples/**/*.{mjs,jsx}'],
+        plugins: {
+            examples: examplesPlugin
+        },
         rules: {
             'arrow-parens': 'off',
             curly: 'error',
+            'examples/no-playcanvas-namespace': 'error',
             'implicit-arrow-linebreak': 'off',
             'indent': 'off',
             'no-confusing-arrow': 'off',
@@ -573,16 +658,6 @@ export default [
     },
     {
         files: ['src/examples/**/*.example.mjs'],
-        plugins: {
-            examples: {
-                rules: {
-                    'config-block-at-top': configBlockAtTop,
-                    'config-block-shape': configBlockShape,
-                    'asset-loader-top-level-await': assetLoaderTopLevelAwait,
-                    'function-expression-arrow': functionExpressionArrow
-                }
-            }
-        },
         rules: {
             'examples/asset-loader-top-level-await': 'error',
             'examples/config-block-at-top': 'error',

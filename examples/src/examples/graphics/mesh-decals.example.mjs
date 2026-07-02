@@ -1,4 +1,28 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_ADDITIVEALPHA,
+    CameraComponentSystem,
+    Color,
+    DISPLAYFORMAT_HDR,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GAMMA_SRGB,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    PRIMITIVE_TRIANGLES,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TONEMAP_ACES,
+    TONEMAP_NONE,
+    TextureHandler,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,31 +30,31 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    heart: new pc.Asset('heart', 'texture', { url: './assets/textures/heart.png' })
+    heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
 
     // enable HDR rendering if supported
-    displayFormat: pc.DISPLAYFORMAT_HDR
+    displayFormat: DISPLAYFORMAT_HDR
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.LightComponentSystem, pc.CameraComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.componentSystems = [RenderComponentSystem, LightComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -40,15 +64,15 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // create material for the plane
-const planeMaterial = new pc.StandardMaterial();
+const planeMaterial = new StandardMaterial();
 planeMaterial.gloss = 0.6;
 planeMaterial.metalness = 0.5;
 planeMaterial.useMetalness = true;
@@ -56,21 +80,21 @@ planeMaterial.gloss = 0.6;
 planeMaterial.update();
 
 // create plane primitive
-const primitive = new pc.Entity();
+const primitive = new Entity();
 primitive.addComponent('render', {
     type: 'plane',
     material: planeMaterial
 });
 
 // set scale and add it to scene
-primitive.setLocalScale(new pc.Vec3(20, 20, 20));
+primitive.setLocalScale(new Vec3(20, 20, 20));
 app.root.addChild(primitive);
 
 // Create an Entity with a omni light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
-    color: new pc.Color(0.2, 0.2, 0.2),
+    color: new Color(0.2, 0.2, 0.2),
     intensity: 2.5,
     range: 30,
     castShadows: true,
@@ -81,20 +105,20 @@ light.translate(0, 8, 0);
 app.root.addChild(light);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    clearColor: new Color(0.2, 0.2, 0.2),
 
     // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
-    gammaCorrection: pc.GAMMA_SRGB
+    toneMapping: device.isHdr ? TONEMAP_NONE : TONEMAP_ACES,
+    gammaCorrection: GAMMA_SRGB
 });
 
 // Add the camera to the hierarchy
 app.root.addChild(camera);
 
 // Create bouncing ball model and add it to hierarchy
-const ball = new pc.Entity();
+const ball = new Entity();
 ball.addComponent('render', {
     type: 'sphere'
 });
@@ -131,7 +155,7 @@ for (let i = 0; i < numDecals; i++) {
  * Helper function to generate a decal with index i at position
  * pos. It fills up information for all 4 vertices of a quad.
  * @param {number} i - The decal index.
- * @param {pc.Vec3} pos - The position.
+ * @param {Vec3} pos - The position.
  */
 function createDecal(i, pos) {
     // random size and rotation angle
@@ -174,7 +198,7 @@ function createDecal(i, pos) {
 
 /**
  * Helper function to update required vertex streams.
- * @param {pc.Mesh} mesh - The mesh.
+ * @param {Mesh} mesh - The mesh.
  * @param {boolean} updatePositions - Update positions.
  * @param {boolean} updateColors - Update colors.
  * @param {boolean} [initAll] - Set UV's and indices.
@@ -192,23 +216,23 @@ function updateMesh(mesh, updatePositions, updateColors, initAll) {
         mesh.setUvs(0, uvs);
     }
 
-    mesh.update(pc.PRIMITIVE_TRIANGLES);
+    mesh.update(PRIMITIVE_TRIANGLES);
 }
 
 // Create a mesh with dynamic vertex buffer and static index buffer
-const mesh = new pc.Mesh(app.graphicsDevice);
+const mesh = new Mesh(app.graphicsDevice);
 mesh.clear(true, false);
 updateMesh(mesh, true, true, true);
 
 // create material
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.useLighting = false; // turn off lighting - we use emissive texture only. Also, lighting needs normal maps which we don't generate
-material.diffuse = new pc.Color(0, 0, 0);
+material.diffuse = new Color(0, 0, 0);
 material.emissiveVertexColor = true;
-material.blendType = pc.BLEND_ADDITIVEALPHA; // additive alpha blend
+material.blendType = BLEND_ADDITIVEALPHA; // additive alpha blend
 material.depthWrite = false; // optimization - no need to write to depth buffer, as decals are part of the ground plane
 material.emissiveMap = assets.heart.resource;
-material.emissive = pc.Color.WHITE;
+material.emissive = Color.WHITE;
 material.emissiveIntensity = 10; // bright emissive to make it really bright on HDR displays
 material.opacityMap = assets.heart.resource;
 material.depthBias = -0.1; // depth biases to avoid z-fighting with ground plane
@@ -216,10 +240,10 @@ material.slopeDepthBias = -0.1;
 material.update();
 
 // Create the mesh instance
-const meshInstance = new pc.MeshInstance(mesh, material);
+const meshInstance = new MeshInstance(mesh, material);
 
 // Create Entity with a render component to render the mesh instance
-const entity = new pc.Entity();
+const entity = new Entity();
 entity.addComponent('render', {
     type: 'asset',
     meshInstances: [meshInstance],
@@ -238,7 +262,7 @@ app.on('update', (/** @type {number} */ dt) => {
     const radius = Math.abs(Math.sin(time * 0.55) * 9);
     const previousElevation = 2 * Math.cos(previousTime * 7);
     const elevation = 2 * Math.cos(time * 7);
-    ball.setLocalPosition(new pc.Vec3(radius * Math.sin(time), 0.5 + Math.abs(elevation), radius * Math.cos(time)));
+    ball.setLocalPosition(new Vec3(radius * Math.sin(time), 0.5 + Math.abs(elevation), radius * Math.cos(time)));
 
     // When ball crossed the ground plane
     let positionsUpdated = false;
@@ -267,5 +291,5 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // orbit camera around
     camera.setLocalPosition(20 * Math.sin(time * 0.3), 10, 20 * Math.cos(time * 0.3));
-    camera.lookAt(pc.Vec3.ZERO);
+    camera.lookAt(Vec3.ZERO);
 });

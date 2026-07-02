@@ -1,57 +1,82 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    Color,
+    ContainerHandler,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    JsonHandler,
+    Keyboard,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TextureHandler,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
+
+/**
+ * @import { Material, RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve());
+    WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.JsonHandler,
-    pc.FontHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -61,30 +86,30 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 /**
- * @param {pc.Color} color - The color.
- * @returns {pc.StandardMaterial} - The material.
+ * @param {Color} color - The color.
+ * @returns {StandardMaterial} - The material.
  */
 function createMaterial(color) {
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     material.update();
     return material;
 }
 
 // Create a couple of materials
-const red = createMaterial(new pc.Color(1, 0, 0));
-const green = createMaterial(new pc.Color(0, 1, 0));
+const red = createMaterial(new Color(1, 0, 0));
+const green = createMaterial(new Color(0, 1, 0));
 
 // Create light
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional'
 });
@@ -93,9 +118,9 @@ app.root.addChild(light);
 light.setEulerAngles(45, 30, 0);
 
 // Create camera
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.5, 0.5, 0.8)
+    clearColor: new Color(0.5, 0.5, 0.8)
 });
 
 app.root.addChild(camera);
@@ -103,14 +128,14 @@ camera.setPosition(5, 0, 15);
 
 /**
  * @param {string} type - The shape type.
- * @param {pc.Material} material - The material.
+ * @param {Material} material - The material.
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
- * @returns {pc.Entity} - The created entity.
+ * @returns {Entity} - The created entity.
  */
 function createPhysicalShape(type, material, x, y, z) {
-    const e = new pc.Entity();
+    const e = new Entity();
 
     // Have to set the position of the entity before adding the static rigidbody
     // component because static bodies cannot be moved after creation
@@ -142,13 +167,13 @@ types.forEach((type, idx) => {
 });
 
 // Allocate some colors
-const white = new pc.Color(1, 1, 1);
-const blue = new pc.Color(0, 0, 1);
+const white = new Color(1, 1, 1);
+const blue = new Color(0, 0, 1);
 
 // Allocate some vectors
-const start = new pc.Vec3();
-const end = new pc.Vec3();
-const temp = new pc.Vec3();
+const start = new Vec3();
+const end = new Vec3();
+const temp = new Vec3();
 
 // Set an update function on the application's update event
 let time = 0;
@@ -157,7 +182,7 @@ app.on('update', (dt) => {
     time += dt;
 
     // Reset all shapes to green
-    app.root.findComponents('render').forEach((/** @type {pc.RenderComponent}*/ render) => {
+    app.root.findComponents('render').forEach((/** @type {RenderComponent}*/ render) => {
         render.material = green;
     });
 
@@ -195,7 +220,7 @@ app.on('update', (dt) => {
 });
 
 /**
- * @param {pc.Asset} fontAsset - The font asset.
+ * @param {Asset} fontAsset - The font asset.
  * @param {string} message - The message.
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
@@ -204,14 +229,14 @@ app.on('update', (dt) => {
  */
 const createText = (fontAsset, message, x, y, z, rot) => {
     // Create a text element-based entity
-    const text = new pc.Entity();
+    const text = new Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         fontAsset: fontAsset,
         fontSize: 0.5,
         pivot: [0, 0.5],
         text: message,
-        type: pc.ELEMENTTYPE_TEXT
+        type: ELEMENTTYPE_TEXT
     });
     text.setLocalPosition(x, y, z);
     text.setLocalEulerAngles(0, 0, rot);

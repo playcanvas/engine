@@ -1,7 +1,36 @@
 // @config
 // @flag ENGINE=performance
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    CylinderGeometry,
+    DISPLAYFORMAT_HDR,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GAMMA_SRGB,
+    LIGHTFALLOFF_INVERSESQUARED,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TONEMAP_ACES,
+    TONEMAP_NONE,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -9,39 +38,39 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    normal: new pc.Asset('normal', 'texture', { url: './assets/textures/normal-map.png' })
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
 
     // enable HDR rendering if supported
-    displayFormat: pc.DISPLAYFORMAT_HDR
+    displayFormat: DISPLAYFORMAT_HDR
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -51,16 +80,16 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-/** @type {Array<pc.Entity>} */
+/** @type {Array<Entity>} */
 const pointLightList = [];
-/** @type {Array<pc.Entity>} */
+/** @type {Array<Entity>} */
 const spotLightList = [];
-/** @type {pc.Entity|null} */
+/** @type {Entity|null} */
 let dirLight = null;
 
 // enabled clustered lighting. This is a temporary API and will change in the future
@@ -70,7 +99,7 @@ app.scene.clusteredLightingEnabled = true;
 const lighting = app.scene.lighting;
 
 // 1) subdivide space with lights into this many cells
-lighting.cells = new pc.Vec3(12, 16, 12);
+lighting.cells = new Vec3(12, 16, 12);
 
 // 2) and allow this many lights per cell
 lighting.maxLightsPerCell = 48;
@@ -78,7 +107,7 @@ lighting.maxLightsPerCell = 48;
 lighting.shadowsEnabled = false;
 
 // material with tiled normal map
-let material = new pc.StandardMaterial();
+let material = new StandardMaterial();
 material.normalMap = assets.normal.resource;
 material.normalMapTiling.set(5, 5);
 material.bumpiness = 1;
@@ -91,7 +120,7 @@ material.useMetalness = true;
 material.update();
 
 // ground plane
-const ground = new pc.Entity();
+const ground = new Entity();
 ground.addComponent('render', {
     type: 'plane',
     material: material
@@ -100,10 +129,10 @@ ground.setLocalScale(150, 150, 150);
 app.root.addChild(ground);
 
 // high polycount cylinder
-const cylinderMesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.CylinderGeometry({ capSegments: 200 }));
-const cylinder = new pc.Entity();
+const cylinderMesh = Mesh.fromGeometry(app.graphicsDevice, new CylinderGeometry({ capSegments: 200 }));
+const cylinder = new Entity();
 cylinder.addComponent('render', {
-    meshInstances: [new pc.MeshInstance(cylinderMesh, material)],
+    meshInstances: [new MeshInstance(cylinderMesh, material)],
     castShadows: true
 });
 app.root.addChild(cylinder);
@@ -113,19 +142,19 @@ cylinder.setLocalScale(50, 100, 50);
 // create many omni lights that do not cast shadows
 let count = 30;
 for (let i = 0; i < count; i++) {
-    const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
-    const lightPoint = new pc.Entity();
+    const color = new Color(Math.random(), Math.random(), Math.random(), 1);
+    const lightPoint = new Entity();
     lightPoint.addComponent('light', {
         type: 'omni',
         color: color,
         intensity: 2,
         range: 12,
         castShadows: false,
-        falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED
+        falloffMode: LIGHTFALLOFF_INVERSESQUARED
     });
 
     // attach a render component with a small sphere to each light
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.emissive = color;
     material.emissiveIntensity = 10; // bright emissive to make it really bright on HDR displays
     material.update();
@@ -145,8 +174,8 @@ for (let i = 0; i < count; i++) {
 // create many spot lights
 count = 16;
 for (let i = 0; i < count; i++) {
-    const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
-    const lightSpot = new pc.Entity();
+    const color = new Color(Math.random(), Math.random(), Math.random(), 1);
+    const lightSpot = new Entity();
     lightSpot.addComponent('light', {
         type: 'spot',
         color: color,
@@ -158,7 +187,7 @@ for (let i = 0; i < count; i++) {
     });
 
     // attach a render component with a small cone to each light
-    material = new pc.StandardMaterial();
+    material = new StandardMaterial();
     material.emissive = color;
     material.emissiveIntensity = 10; // bright emissive to make it really bright on HDR displays
     material.update();
@@ -170,16 +199,16 @@ for (let i = 0; i < count; i++) {
     lightSpot.setLocalScale(5, 5, 5);
 
     lightSpot.setLocalPosition(100, 50, 70);
-    lightSpot.lookAt(new pc.Vec3(100, 60, 70));
+    lightSpot.lookAt(new Vec3(100, 60, 70));
     app.root.addChild(lightSpot);
     spotLightList.push(lightSpot);
 }
 
 // Create a single directional light which casts shadows
-dirLight = new pc.Entity();
+dirLight = new Entity();
 dirLight.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     intensity: 0.15,
     range: 300,
     shadowDistance: 600,
@@ -190,18 +219,18 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.05, 0.05, 0.05),
+    clearColor: new Color(0.05, 0.05, 0.05),
     farClip: 500,
     nearClip: 0.1,
 
     // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
-    gammaCorrection: pc.GAMMA_SRGB
+    toneMapping: device.isHdr ? TONEMAP_NONE : TONEMAP_ACES,
+    gammaCorrection: GAMMA_SRGB
 });
 camera.setLocalPosition(140, 140, 140);
-camera.lookAt(new pc.Vec3(0, 40, 0));
+camera.lookAt(new Vec3(0, 40, 0));
 
 // add orbit camera script with mouse and touch support
 camera.addComponent('script');
@@ -233,7 +262,7 @@ app.on('update', (/** @type {number} */ dt) => {
     spotLightList.forEach((spotlight, i) => {
         const angle = (i / spotLightList.length) * Math.PI * 2;
         spotlight.setLocalPosition(40 * Math.sin(time + angle), 5, 40 * Math.cos(time + angle));
-        spotlight.lookAt(pc.Vec3.ZERO);
+        spotlight.lookAt(Vec3.ZERO);
         spotlight.rotateLocal(90, 0, 0);
     });
 

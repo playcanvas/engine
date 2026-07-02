@@ -1,8 +1,37 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    Gizmo,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    PROJECTION_PERSPECTIVE,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RotateGizmo,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TextureHandler,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { AssetRegistry, MeshInstance } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -11,41 +40,41 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.keyboard = new pc.Keyboard(window);
+createOptions.mouse = new Mouse(document.body);
+createOptions.keyboard = new Keyboard(window);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 /**
- * @param {pc.Asset[] | number[]} assetList - The asset list.
- * @param {pc.AssetRegistry} assetRegistry - The asset registry.
+ * @param {Asset[] | number[]} assetList - The asset list.
+ * @param {AssetRegistry} assetRegistry - The asset registry.
  * @returns {Promise<void>} The promise.
  */
 function loadAssets(assetList, assetRegistry) {
     return new Promise((resolve) => {
-        const assetListLoader = new pc.AssetListLoader(assetList, assetRegistry);
+        const assetListLoader = new AssetListLoader(assetList, assetRegistry);
         assetListLoader.load(resolve);
     });
 }
@@ -54,10 +83,10 @@ await loadAssets(Object.values(assets), app.assets);
 app.start();
 
 // scene settings
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // create entities
-const box = new pc.Entity('box');
+const box = new Entity('box');
 box.addComponent('render', {
     type: 'box'
 });
@@ -65,15 +94,15 @@ app.root.addChild(box);
 
 // camera
 data.set('camera', {
-    proj: pc.PROJECTION_PERSPECTIVE + 1,
+    proj: PROJECTION_PERSPECTIVE + 1,
     dist: 1,
     fov: 45,
     orthoHeight: 10
 });
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('script');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    clearColor: new Color(0.1, 0.1, 0.1),
     farClip: 1000
 });
 const cameraOffset = 4 * camera.camera.aspectRatio;
@@ -83,13 +112,13 @@ app.root.addChild(camera);
 // camera controls
 const cc = /** @type {CameraControls} */ (camera.script.create(CameraControls));
 Object.assign(cc, {
-    focusPoint: pc.Vec3.ZERO,
+    focusPoint: Vec3.ZERO,
     sceneSize: 5,
     rotateDamping: 0.95,
     moveDamping: 0.95,
     zoomDamping: 0.95,
-    pitchRange: new pc.Vec2(-89.999, 89.999),
-    zoomRange: new pc.Vec2(2, 10),
+    pitchRange: new Vec2(-89.999, 89.999),
+    zoomRange: new Vec2(2, 10),
     enableFly: false
 });
 app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
@@ -97,15 +126,15 @@ app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
 });
 
 // create light entity
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
 // create gizmo
-const layer = pc.Gizmo.createLayer(app);
-const gizmo = new pc.RotateGizmo(camera.camera, layer);
-gizmo.on('pointer:down', (_x, _y, /** @type {pc.MeshInstance} */ meshInstance) => {
+const layer = Gizmo.createLayer(app);
+const gizmo = new RotateGizmo(camera.camera, layer);
+gizmo.on('pointer:down', (_x, _y, /** @type {MeshInstance} */ meshInstance) => {
     app.fire('gizmo:pointer', !!meshInstance);
 });
 gizmo.on('pointer:up', () => {
@@ -152,14 +181,14 @@ data.set('gizmo', {
 });
 
 // create grid
-const gridEntity = new pc.Entity('grid');
+const gridEntity = new Entity('grid');
 gridEntity.setLocalScale(4, 1, 4);
 app.root.addChild(gridEntity);
 gridEntity.addComponent('script');
 gridEntity.script.create(Grid);
 
 // controls hook
-const tmpC = new pc.Color();
+const tmpC = new Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key, ...parts] = path.split('.');
     switch (category) {

@@ -1,4 +1,23 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    Vec3,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,11 +25,11 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -18,21 +37,21 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -42,7 +61,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -51,37 +70,37 @@ app.start();
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.2;
 app.scene.envAtlas = assets.helipad.resource;
-app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 30, 0);
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, 30, 0);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new Color(0.1, 0.1, 0.1)
 });
 camera.setLocalPosition(80, 40, 80);
-camera.lookAt(new pc.Vec3(0, -35, 0));
+camera.lookAt(new Vec3(0, -35, 0));
 app.root.addChild(camera);
 
 // Create a directional light
-const directionallight = new pc.Entity();
+const directionallight = new Entity();
 directionallight.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     castShadows: false
 });
 app.root.addChild(directionallight);
 
 // create a circle of meshes
-/** @type {Array<pc.Entity>} */
+/** @type {Array<Entity>} */
 const meshes = [];
 const numMeshes = 10;
 for (let i = 0; i < numMeshes; i++) {
-    const entity = new pc.Entity();
+    const entity = new Entity();
     entity.setLocalScale(4, 4, 4);
 
     // use material with random color
-    const material = new pc.StandardMaterial();
-    material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
+    const material = new StandardMaterial();
+    material.diffuse = new Color(Math.random(), Math.random(), Math.random());
     material.update();
 
     // create render component
@@ -114,11 +133,11 @@ function groundElevation(time, x, z) {
 /**
  * helper function to generate a color for 3d point by lerping between green and red color
  * based on its y coordinate
- * @param {pc.Color} color - The color.
- * @param {pc.Vec3} point - The point.
+ * @param {Color} color - The color.
+ * @param {Vec3} point - The point.
  */
 function groundColor(color, point) {
-    color.lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));
+    color.lerp(Color.GREEN, Color.RED, math.clamp((point.y + 3) * 0.25, 0, 1));
 }
 
 // Set an update function on the app's update event
@@ -132,12 +151,12 @@ app.on('update', (dt) => {
     const colors = [];
 
     // temporary instances for calculations
-    const pt1 = new pc.Vec3();
-    const pt2 = new pc.Vec3();
-    const pt3 = new pc.Vec3();
-    const c1 = new pc.Color();
-    const c2 = new pc.Color();
-    const c3 = new pc.Color();
+    const pt1 = new Vec3();
+    const pt2 = new Vec3();
+    const pt3 = new Vec3();
+    const c1 = new Color();
+    const c2 = new Color();
+    const c3 = new Color();
 
     for (let x = 1; x < 60; x++) {
         for (let z = 1; z < 60; z++) {
@@ -188,11 +207,11 @@ app.on('update', (dt) => {
 
         // draw a single magenta line from this mesh to the next mesh
         const nextEntity = meshes[(i + 1) % meshes.length];
-        app.drawLine(entity.getPosition(), nextEntity.getPosition(), pc.Color.MAGENTA);
+        app.drawLine(entity.getPosition(), nextEntity.getPosition(), Color.MAGENTA);
 
         // store positions and colors of lines connecting objects to a center point
-        grayLinePositions.push(entity.getPosition(), new pc.Vec3(0, 10, 0));
-        grayLineColors.push(pc.Color.GRAY, pc.Color.GRAY);
+        grayLinePositions.push(entity.getPosition(), new Vec3(0, 10, 0));
+        grayLineColors.push(Color.GRAY, Color.GRAY);
     }
 
     // render all gray lines

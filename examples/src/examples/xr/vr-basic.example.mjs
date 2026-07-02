@@ -6,7 +6,30 @@
 // source: https://sketchfab.com/3d-models/xr-vr-gallery-space-873a1808080e47d2a804f3c991e33b4f
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    XRSPACE_LOCALFLOOR,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -32,24 +55,24 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -59,17 +82,17 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: './assets/models/xr_gallery.glb' }),
-    envatlas: new pc.Asset(
+    gallery: new Asset('gallery', 'container', { url: './assets/models/xr_gallery.glb' }),
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -90,16 +113,16 @@ const lookX = 0;
 const lookY = 1.25;
 const lookZ = 0;
 
-const c = new pc.Entity();
+const c = new Entity();
 c.addComponent('camera', {
-    clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
+    clearColor: new Color(44 / 255, 62 / 255, 80 / 255),
     farClip: 10000
 });
 c.setLocalPosition(camX, camY, camZ);
 c.lookAt(lookX, lookY, lookZ);
 app.root.addChild(c);
 
-const l = new pc.Entity();
+const l = new Entity();
 l.addComponent('light', {
     type: 'spot',
     range: 30
@@ -109,8 +132,8 @@ app.root.addChild(l);
 
 if (app.xr.supported) {
     const activate = () => {
-        if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
+        if (app.xr.isAvailable(XRTYPE_VR)) {
+            c.camera.startXr(XRTYPE_VR, XRSPACE_LOCALFLOOR, {
                 callback: (err) => {
                     if (err) message(`WebXR Immersive VR failed to start: ${err.message}`);
                 }
@@ -138,7 +161,7 @@ if (app.xr.supported) {
     }
 
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
@@ -149,11 +172,11 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive VR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_VR}`, (available) => {
         message(`Immersive VR is ${available ? 'available' : 'unavailable'}`);
     });
 
-    if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
+    if (!app.xr.isAvailable(XRTYPE_VR)) {
         message('Immersive VR is not available');
     }
 } else {

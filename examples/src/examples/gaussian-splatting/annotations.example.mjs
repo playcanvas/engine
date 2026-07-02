@@ -8,7 +8,26 @@
 // author: Stéphane Agullo
 // source: https://www.stephane-agullo.fr/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    TextureHandler,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 import { Annotation, AnnotationManager } from 'playcanvas/scripts/esm/annotations.mjs';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { CameraFrame } from 'playcanvas/scripts/esm/camera-frame.mjs';
@@ -25,26 +44,26 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -54,7 +73,7 @@ app.on('destroy', () => {
 });
 
 // Create an Entity with a camera component
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
     fov: 30
 });
@@ -66,15 +85,15 @@ camera.script.create(CameraControls, {
     properties: {
         enableFly: false,
         enablePan: false,
-        focusPoint: new pc.Vec3(0, 0.575, 0),
-        zoomRange: new pc.Vec2(1, 5)
+        focusPoint: new Vec3(0, 0.575, 0),
+        zoomRange: new Vec2(1, 5)
     }
 });
 camera.script.create(CameraFrame, {
     properties: {
         vignette: {
             enabled: true,
-            color: pc.Color.BLACK,
+            color: Color.BLACK,
             curvature: 0.5,
             intensity: 0.5,
             inner: 0.5,
@@ -85,11 +104,11 @@ camera.script.create(CameraFrame, {
 app.root.addChild(camera);
 
 const assets = {
-    bicycle: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' })
+    bicycle: new Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -101,10 +120,10 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // Create the bicycle gsplat
-const bicycle = new pc.Entity('Bicycle');
+const bicycle = new Entity('Bicycle');
 bicycle.addComponent('gsplat', {
     asset: assets.bicycle
 });
@@ -130,7 +149,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     if (prop === 'hotspotSize') {
         manager.hotspotSize = value;
     } else if (prop === 'hotspotColor' || prop === 'hoverColor') {
-        manager[prop] = new pc.Color(value[0], value[1], value[2]);
+        manager[prop] = new Color(value[0], value[1], value[2]);
     } else if (prop === 'opacity') {
         manager.opacity = value;
     } else if (prop === 'behindOpacity') {
@@ -193,7 +212,7 @@ const annotations = [
 ];
 
 annotations.forEach(({ pos, title, text }, index) => {
-    const annotation = new pc.Entity(title);
+    const annotation = new Entity(title);
     annotation.setLocalPosition(pos[0], pos[1], pos[2]);
     annotation.addComponent('script');
     annotation.script.create(Annotation, {

@@ -1,4 +1,32 @@
-import * as pc from 'playcanvas';
+import {
+    AnimComponentSystem,
+    AnimationComponentSystem,
+    AnimationHandler,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    AudioHandler,
+    AudioListenerComponentSystem,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    JsonHandler,
+    LightComponentSystem,
+    MaterialHandler,
+    ModelComponentSystem,
+    ModelHandler,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SoundComponentSystem,
+    SoundManager,
+    StandardMaterial,
+    TextureHandler,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -9,39 +37,39 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.soundManager = new pc.SoundManager();
+createOptions.soundManager = new SoundManager();
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.SoundComponentSystem,
-    pc.AnimationComponentSystem,
-    pc.AnimComponentSystem,
-    pc.ModelComponentSystem,
-    pc.AudioListenerComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    SoundComponentSystem,
+    AnimationComponentSystem,
+    AnimComponentSystem,
+    ModelComponentSystem,
+    AudioListenerComponentSystem
 ];
 createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.AudioHandler,
-    pc.JsonHandler,
-    pc.AnimationHandler,
-    pc.ModelHandler,
-    pc.MaterialHandler
+    TextureHandler,
+    ContainerHandler,
+    AudioHandler,
+    JsonHandler,
+    AnimationHandler,
+    ModelHandler,
+    MaterialHandler
 ];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -51,21 +79,21 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    model: new pc.Asset('model', 'model', { url: './assets/models/playbot/playbot.json' }),
-    runAnim: new pc.Asset('runAnim', 'animation', {
+    model: new Asset('model', 'model', { url: './assets/models/playbot/playbot.json' }),
+    runAnim: new Asset('runAnim', 'animation', {
         url: './assets/animations/playbot/playbot-run.json'
     }),
-    gravel: new pc.Asset('gravel', 'audio', { url: './assets/sounds/footsteps.mp3' })
+    gravel: new Asset('gravel', 'audio', { url: './assets/sounds/footsteps.mp3' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(1, 0, 0)
+    clearColor: new Color(1, 0, 0)
 });
 camera.addComponent('audiolistener');
 camera.rotateLocal(-30, 0, 0);
@@ -73,11 +101,11 @@ camera.translateLocal(0, 0, 5);
 app.root.addChild(camera);
 
 // Create an Entity for the ground
-const material = new pc.StandardMaterial();
-material.diffuse = pc.Color.GRAY;
+const material = new StandardMaterial();
+material.diffuse = Color.GRAY;
 material.update();
 
-const ground = new pc.Entity();
+const ground = new Entity();
 ground.addComponent('render', {
     type: 'box',
     material: material
@@ -87,10 +115,10 @@ ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
 // Create an entity with a light component
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     castShadows: true,
     intensity: 2,
     shadowBias: 0.2,
@@ -104,7 +132,7 @@ app.root.addChild(light);
 app.start();
 
 // Create walking dude
-const entity = new pc.Entity();
+const entity = new Entity();
 
 // add sound component
 entity.addComponent('sound', {
@@ -144,9 +172,9 @@ app.on('update', (dt) => {
         angle -= 360;
     }
     entity.setLocalPosition(
-        radius * Math.sin(angle * pc.math.DEG_TO_RAD),
+        radius * Math.sin(angle * math.DEG_TO_RAD),
         height,
-        radius * Math.cos(angle * pc.math.DEG_TO_RAD)
+        radius * Math.cos(angle * math.DEG_TO_RAD)
     );
     entity.setLocalEulerAngles(0, angle + 90, 0);
 });

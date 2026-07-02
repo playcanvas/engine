@@ -18,7 +18,38 @@
 // source: https://github.com/spite/cross-hatching
 // license: MIT
 
-import * as pc from 'playcanvas';
+import {
+    AnimClipHandler,
+    AnimComponentSystem,
+    AnimStateGraphHandler,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CULLFACE_NONE,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    DomeGeometry,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FOG_LINEAR,
+    FOG_NONE,
+    Keyboard,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';
 import { data, deviceType } from 'examples/context';
@@ -27,61 +58,61 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    board: new pc.Asset('board', 'container', { url: './assets/models/chess-board.glb' }),
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    board: new Asset('board', 'container', { url: './assets/models/chess-board.glb' }),
 
-    bitmoji: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
-    danceAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
-    morph: new pc.Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' }),
+    bitmoji: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    danceAnim: new Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
+    morph: new Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' }),
 
     // hatch textures, sorted from light to dark
-    hatch0: new pc.Asset('hatch0', 'texture', { url: './assets/textures/hatch-0.jpg' }, { srgb: true }),
-    hatch1: new pc.Asset('hatch1', 'texture', { url: './assets/textures/hatch-1.jpg' }, { srgb: true }),
-    hatch2: new pc.Asset('hatch2', 'texture', { url: './assets/textures/hatch-2.jpg' }, { srgb: true }),
-    hatch3: new pc.Asset('hatch3', 'texture', { url: './assets/textures/hatch-3.jpg' }, { srgb: true }),
-    hatch4: new pc.Asset('hatch4', 'texture', { url: './assets/textures/hatch-4.jpg' }, { srgb: true }),
-    hatch5: new pc.Asset('hatch5', 'texture', { url: './assets/textures/hatch-5.jpg' }, { srgb: true })
+    hatch0: new Asset('hatch0', 'texture', { url: './assets/textures/hatch-0.jpg' }, { srgb: true }),
+    hatch1: new Asset('hatch1', 'texture', { url: './assets/textures/hatch-1.jpg' }, { srgb: true }),
+    hatch2: new Asset('hatch2', 'texture', { url: './assets/textures/hatch-2.jpg' }, { srgb: true }),
+    hatch3: new Asset('hatch3', 'texture', { url: './assets/textures/hatch-3.jpg' }, { srgb: true }),
+    hatch4: new Asset('hatch4', 'texture', { url: './assets/textures/hatch-4.jpg' }, { srgb: true }),
+    hatch5: new Asset('hatch5', 'texture', { url: './assets/textures/hatch-5.jpg' }, { srgb: true })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const createOptions = new pc.AppOptions();
-createOptions.graphicsDevice = await pc.createGraphicsDevice(canvas, gfxOptions);
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = await createGraphicsDevice(canvas, gfxOptions);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.AnimComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    AnimComponentSystem
 ];
 
 createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.AnimClipHandler,
-    pc.AnimStateGraphHandler
+    TextureHandler,
+    ContainerHandler,
+    ScriptHandler,
+    AnimClipHandler,
+    AnimStateGraphHandler
 ];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -91,7 +122,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -146,20 +177,20 @@ applyMaterial(morphEntity, morphMaterial);
 const skyMaterial = material.clone();
 materials.push(skyMaterial);
 skyMaterial.setParameter('uColor', [0.53, 0.81, 0.92]);
-skyMaterial.cull = pc.CULLFACE_NONE;
+skyMaterial.cull = CULLFACE_NONE;
 skyMaterial.update();
 
-const skyMesh = pc.Mesh.fromGeometry(
+const skyMesh = Mesh.fromGeometry(
     app.graphicsDevice,
-    new pc.DomeGeometry({
+    new DomeGeometry({
         latitudeBands: 50,
         longitudeBands: 50
     })
 );
 
-const sky = new pc.Entity('Sky');
+const sky = new Entity('Sky');
 sky.addComponent('render', {
-    meshInstances: [new pc.MeshInstance(skyMesh, skyMaterial)]
+    meshInstances: [new MeshInstance(skyMesh, skyMaterial)]
 });
 sky.setLocalScale(1000, 1000, 1000);
 app.root.addChild(sky);
@@ -182,9 +213,9 @@ const walkTrack = assets.danceAnim.resource.animations[0].resource;
 bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5)
+    clearColor: new Color(0.4, 0.45, 0.5)
 });
 camera.setLocalPosition(30, 30, 30);
 
@@ -207,7 +238,7 @@ app.on('update', (dt) => {
     time += dt;
 
     // generate a light direction that rotates around the scene, and set it on the materials
-    const lightDir = new pc.Vec3(Math.sin(time), -0.5, Math.cos(time)).normalize();
+    const lightDir = new Vec3(Math.sin(time), -0.5, Math.cos(time)).normalize();
     const lightDirArray = [-lightDir.x, -lightDir.y, -lightDir.z];
 
     materials.forEach((mat) => {
@@ -229,8 +260,8 @@ data.on('*:set', (path, value) => {
     }
     if (propertyName === 'fog') {
         // turn on/off fog and set up its properties
-        app.scene.fog.type = value ? pc.FOG_LINEAR : pc.FOG_NONE;
-        app.scene.fog.color = new pc.Color(0.8, 0.8, 0.8);
+        app.scene.fog.type = value ? FOG_LINEAR : FOG_NONE;
+        app.scene.fog.color = new Color(0.8, 0.8, 0.8);
         app.scene.fog.start = 100;
         app.scene.fog.end = 300;
     }

@@ -1,7 +1,35 @@
 // @config
 // @flag WEBGPU_DISABLED
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_ADDITIVEALPHA,
+    BoundingBox,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    LightComponentSystem,
+    Mesh,
+    MeshInstance,
+    PIXELFORMAT_RGBA8,
+    PRIMITIVE_POINTS,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    ShaderMaterial,
+    Texture,
+    TextureHandler,
+    TransformFeedback,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -16,31 +44,31 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -49,7 +77,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // create small 2D texture representing movement direction (wind)
 const textureResolution = 10;
@@ -66,16 +94,16 @@ for (let i = 0; i < textureResolution * textureResolution; i++) {
 }
 
 // create texture
-const texture = new pc.Texture(app.graphicsDevice, {
+const texture = new Texture(app.graphicsDevice, {
     width: textureResolution,
     height: textureResolution,
-    format: pc.PIXELFORMAT_RGBA8,
+    format: PIXELFORMAT_RGBA8,
     cubemap: false,
     mipmaps: false,
-    minFilter: pc.FILTER_LINEAR,
-    magFilter: pc.FILTER_LINEAR,
-    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-    addressV: pc.ADDRESS_CLAMP_TO_EDGE
+    minFilter: FILTER_LINEAR,
+    magFilter: FILTER_LINEAR,
+    addressU: ADDRESS_CLAMP_TO_EDGE,
+    addressV: ADDRESS_CLAMP_TO_EDGE
 });
 
 // initialize it with data
@@ -84,9 +112,9 @@ pixels.set(textureData);
 texture.unlock();
 
 // Create main camera, which renders the world
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new Color(0.1, 0.1, 0.1)
 });
 app.root.addChild(camera);
 
@@ -117,29 +145,29 @@ if (app.graphicsDevice.isWebGL2) {
     }
 
     // store these in a vertex buffer of a mesh
-    const mesh = new pc.Mesh(app.graphicsDevice);
+    const mesh = new Mesh(app.graphicsDevice);
     mesh.setPositions(positions, 4);
-    mesh.update(pc.PRIMITIVE_POINTS, false);
+    mesh.update(PRIMITIVE_POINTS, false);
 
     // set large bounding box so we don't need to update it each frame
-    mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(100, 100, 100));
+    mesh.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(100, 100, 100));
 
     // Create the material from the vertex and fragment shaders which is used to render point sprites
-    const material = new pc.ShaderMaterial({
+    const material = new ShaderMaterial({
         uniqueName: 'TransformFeerback',
         vertexGLSL: shaderCloudVert,
         fragmentGLSL: shaderCloudFrag,
-        attributes: { aPosition: pc.SEMANTIC_POSITION }
+        attributes: { aPosition: SEMANTIC_POSITION }
     });
 
-    material.blendType = pc.BLEND_ADDITIVEALPHA;
+    material.blendType = BLEND_ADDITIVEALPHA;
     material.depthWrite = false;
 
     // Create the mesh instance
-    const meshInstance = new pc.MeshInstance(mesh, material);
+    const meshInstance = new MeshInstance(mesh, material);
 
     // create an entity used to render the mesh instance using a render component
-    const entity = new pc.Entity();
+    const entity = new Entity();
     entity.addComponent('render', {
         type: 'asset',
         meshInstances: [meshInstance]
@@ -147,8 +175,8 @@ if (app.graphicsDevice.isWebGL2) {
     app.root.addChild(entity);
 
     // set up transform feedback. This creates a clone of the vertex buffer, and sets up rendering to ping pong between them
-    tf = new pc.TransformFeedback(mesh.vertexBuffer);
-    shader = pc.TransformFeedback.createShader(app.graphicsDevice, shaderFeedbackVert, 'transformShaderExample', [
+    tf = new TransformFeedback(mesh.vertexBuffer);
+    shader = TransformFeedback.createShader(app.graphicsDevice, shaderFeedbackVert, 'transformShaderExample', [
         'updated_vertex_position'
     ]);
 }
@@ -159,7 +187,7 @@ app.on('update', (dt) => {
     // rotate camera around
     time += dt;
     camera.setLocalPosition(9 * Math.sin(time * 0.2), 6, 25 * Math.cos(time * 0.2));
-    camera.lookAt(new pc.Vec3(0, 3, 0));
+    camera.lookAt(new Vec3(0, 3, 0));
 
     // if transform feedback was initialized
     if (tf) {

@@ -1,7 +1,21 @@
 // @config
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    TextureHandler,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
 import { deviceType } from 'examples/context';
@@ -13,27 +27,27 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -43,7 +57,7 @@ app.on('destroy', () => {
 });
 
 // create box entity
-const box = new pc.Entity('cube');
+const box = new Entity('cube');
 box.addComponent('render', {
     type: 'box'
 });
@@ -52,15 +66,15 @@ box.script.create(Rotator);
 app.root.addChild(box);
 
 // create camera entity
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.5, 0.6, 0.9)
+    clearColor: new Color(0.5, 0.6, 0.9)
 });
 app.root.addChild(camera);
 camera.setPosition(0, 0, 3);
 
 // create directional light entity
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(45, 0, 0);

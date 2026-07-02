@@ -10,7 +10,45 @@
 // source: https://superspl.at/view?id=cdcec084
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BoundingBox,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_NEAREST,
+    GSPLAT_RENDERER_AUTO,
+    GSPLAT_STREAM_INSTANCE,
+    GSplatComponentSystem,
+    GSplatContainer,
+    GSplatFormat,
+    GSplatHandler,
+    GSplatProcessor,
+    Gizmo,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_R32U,
+    PIXELFORMAT_R8,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    Texture,
+    TextureHandler,
+    TouchDevice,
+    TranslateGizmo,
+    Vec3,
+    WORKBUFFER_UPDATE_ONCE,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -18,6 +56,10 @@ import { copyProcessor } from './copy-processor.mjs';
 import { deleteProcessor } from './delete-processor.mjs';
 import { selectionProcessor } from './selection-processor.mjs';
 import { workBufferModifier } from './workbuffer-modifier.mjs';
+
+/**
+ * @import { GSplatResource } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -27,28 +69,28 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -60,13 +102,13 @@ app.on('destroy', () => {
 data.set('boxSize', 0.67);
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    biker: new pc.Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
-    apartment: new pc.Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    biker: new Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
+    apartment: new Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -78,7 +120,7 @@ data.on('renderer:set', () => {
         setTimeout(() => data.set('renderer', current), 0);
     }
 });
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 
 // Store all editable gsplat entities
 const editables = [];
@@ -92,7 +134,7 @@ let gizmo = null;
 // Selection box state
 let selectionBox = null;
 let selectionBoxVisible = false;
-const selectionBoxEntity = new pc.Entity('SelectionBox');
+const selectionBoxEntity = new Entity('SelectionBox');
 app.root.addChild(selectionBoxEntity);
 
 // Inject CSS styles for UI
@@ -210,14 +252,14 @@ const setupEditableProcessors = (gsplatComponent) => {
     selectionTexture.unlock();
 
     // Create processors
-    const selectionProc = new pc.GSplatProcessor(
+    const selectionProc = new GSplatProcessor(
         device,
         { component: gsplatComponent },
         { component: gsplatComponent, streams: ['splatSelection'] },
         selectionProcessor
     );
 
-    const deleteProc = new pc.GSplatProcessor(
+    const deleteProc = new GSplatProcessor(
         device,
         { component: gsplatComponent },
         { component: gsplatComponent, streams: ['splatVisible'] },
@@ -232,20 +274,20 @@ const setupEditableProcessors = (gsplatComponent) => {
 
 // Creates an editable gsplat entity with splatVisible and splatSelection streams
 const createEditableSplat = (name, asset, position, rotation, scale) => {
-    const entity = new pc.Entity(name);
+    const entity = new Entity(name);
     const gsplatComponent = entity.addComponent('gsplat', { asset });
     entity.setLocalPosition(...position);
     entity.setLocalEulerAngles(...rotation);
     entity.setLocalScale(...scale);
     app.root.addChild(entity);
 
-    const resource = /** @type {pc.GSplatResource} */ (asset.resource);
+    const resource = /** @type {GSplatResource} */ (asset.resource);
 
     // Add splatVisible and splatSelection streams if not present
     if (!resource.format.getStream('splatVisible')) {
         resource.format.addExtraStreams([
-            { name: 'splatVisible', format: pc.PIXELFORMAT_R8, storage: pc.GSPLAT_STREAM_INSTANCE },
-            { name: 'splatSelection', format: pc.PIXELFORMAT_R8, storage: pc.GSPLAT_STREAM_INSTANCE }
+            { name: 'splatVisible', format: PIXELFORMAT_R8, storage: GSPLAT_STREAM_INSTANCE },
+            { name: 'splatSelection', format: PIXELFORMAT_R8, storage: GSPLAT_STREAM_INSTANCE }
         ]);
     }
 
@@ -273,23 +315,23 @@ const createClonedSplat = (selectedData, aabbCenter) => {
     if (totalCount === 0) return null;
 
     // Use built-in default format for full visual preservation
-    const format = pc.GSplatFormat.createDefaultFormat(device);
+    const format = GSplatFormat.createDefaultFormat(device);
 
     // Add visibility and selection streams (with instance storage)
     format.addExtraStreams([
-        { name: 'splatVisible', format: pc.PIXELFORMAT_R8, storage: pc.GSPLAT_STREAM_INSTANCE },
-        { name: 'splatSelection', format: pc.PIXELFORMAT_R8, storage: pc.GSPLAT_STREAM_INSTANCE }
+        { name: 'splatVisible', format: PIXELFORMAT_R8, storage: GSPLAT_STREAM_INSTANCE },
+        { name: 'splatSelection', format: PIXELFORMAT_R8, storage: GSPLAT_STREAM_INSTANCE }
     ]);
 
-    const container = new pc.GSplatContainer(device, totalCount, format);
+    const container = new GSplatContainer(device, totalCount, format);
     const dstTextureSize = container.textureDimensions.x;
 
     // Run GSplatProcessor per source editable to copy data
     for (const mapping of mappings) {
         // Extract source entity's transform
         const worldTransform = mapping.editable.entity.getWorldTransform();
-        const modelScale = new pc.Vec3();
-        const modelRotation = new pc.Quat();
+        const modelScale = new Vec3();
+        const modelRotation = new Quat();
         worldTransform.getScale(modelScale);
         modelRotation.setFromMat4(worldTransform);
         if (modelRotation.w < 0) {
@@ -297,16 +339,16 @@ const createClonedSplat = (selectedData, aabbCenter) => {
         }
 
         // Create remapping texture for this source
-        const remapTexture = new pc.Texture(device, {
+        const remapTexture = new Texture(device, {
             name: 'RemapTexture',
             width: dstTextureSize,
             height: dstTextureSize,
-            format: pc.PIXELFORMAT_R32U,
+            format: PIXELFORMAT_R32U,
             mipmaps: false,
-            minFilter: pc.FILTER_NEAREST,
-            magFilter: pc.FILTER_NEAREST,
-            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
         // Fill remapping texture on CPU
@@ -318,7 +360,7 @@ const createClonedSplat = (selectedData, aabbCenter) => {
         remapTexture.unlock();
 
         // Create processor to copy data from source to destination
-        const copyProc = new pc.GSplatProcessor(
+        const copyProc = new GSplatProcessor(
             device,
             { component: mapping.editable.component }, // source
             { resource: container, streams: ['dataColor', 'dataCenter', 'dataScale', 'dataRotation'] },
@@ -347,7 +389,7 @@ const createClonedSplat = (selectedData, aabbCenter) => {
     container.centers.set(localCenters);
 
     // Make aabb local too
-    const localAabb = new pc.BoundingBox();
+    const localAabb = new BoundingBox();
     localAabb.center.sub2(aabb.center, aabbCenter);
     localAabb.halfExtents.copy(aabb.halfExtents);
     container.aabb.copy(localAabb);
@@ -355,7 +397,7 @@ const createClonedSplat = (selectedData, aabbCenter) => {
     // Create entity at aabbCenter position (with small offset to make clone visible)
     cloneCounter++;
     const name = `clone${cloneCounter}`;
-    const entity = new pc.Entity(name);
+    const entity = new Entity(name);
     const gsplatComponent = entity.addComponent('gsplat', {
         resource: container
     });
@@ -437,9 +479,9 @@ const collectSelectedData = async () => {
 
     // Collect centers (still needed for aabb/sorting)
     const centers = new Float32Array(totalCount * 3);
-    const aabb = new pc.BoundingBox();
-    const tempBox = new pc.BoundingBox();
-    const point = new pc.Vec3();
+    const aabb = new BoundingBox();
+    const tempBox = new BoundingBox();
+    const point = new Vec3();
     let offset = 0;
 
     for (const mapping of mappings) {
@@ -477,22 +519,22 @@ createEditableSplat('biker2', assets.biker, [-3, -0.5, -0.5], [180, 180, 0], [0.
 createEditableSplat('apartment', assets.apartment, [0, -0.5, -3], [180, 0, 0], [0.5, 0.5, 0.5]);
 
 // Camera setup
-const cameraPos = new pc.Vec3(-0.98, 0.28, -2.31);
-const focusPos = new pc.Vec3(-1.1, 0.13, -1.56);
+const cameraPos = new Vec3(-0.98, 0.28, -2.31);
+const focusPos = new Vec3(-1.1, 0.13, -1.56);
 
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
     fov: 90,
-    clearColor: new pc.Color(0, 0, 0),
-    toneMapping: pc.TONEMAP_LINEAR
+    clearColor: new Color(0, 0, 0),
+    toneMapping: TONEMAP_LINEAR
 });
 camera.setLocalPosition(cameraPos);
 camera.lookAt(focusPos);
 app.root.addChild(camera);
 
 // Create gizmo now that camera exists
-gizmoLayer = pc.Gizmo.createLayer(app);
-gizmo = new pc.TranslateGizmo(camera.camera, gizmoLayer);
+gizmoLayer = Gizmo.createLayer(app);
+gizmo = new TranslateGizmo(camera.camera, gizmoLayer);
 
 camera.addComponent('script');
 const orbitCamera = camera.script.create('orbitCamera', {
@@ -521,7 +563,7 @@ app.on('update', () => {
     // Sync selection box center with entity position (gizmo moves the entity)
     if (selectionBox && selectionBoxVisible) {
         selectionBox.center.copy(selectionBoxEntity.getPosition());
-        app.drawWireAlignedBox(selectionBox.getMin(), selectionBox.getMax(), pc.Color.YELLOW);
+        app.drawWireAlignedBox(selectionBox.getMin(), selectionBox.getMax(), Color.YELLOW);
 
         // Update selection highlighting for all editables
         const boxMin = selectionBox.getMin();
@@ -533,19 +575,19 @@ app.on('update', () => {
             editable.selectionProcessor.setParameter('uBoxMax', [boxMax.x, boxMax.y, boxMax.z]);
             editable.selectionProcessor.setParameter('matrix_model', editable.entity.getWorldTransform().data);
             editable.selectionProcessor.process();
-            editable.component.workBufferUpdate = pc.WORKBUFFER_UPDATE_ONCE;
+            editable.component.workBufferUpdate = WORKBUFFER_UPDATE_ONCE;
         }
     }
 });
 
 // Select button handler - show/create selection box
-const defaultBoxCenter = new pc.Vec3(-1.695, -0.302, -0.721);
+const defaultBoxCenter = new Vec3(-1.695, -0.302, -0.721);
 data.on('select', () => {
     const boxSize = data.get('boxSize');
     const halfSize = boxSize / 2;
 
     if (!selectionBox) {
-        selectionBox = new pc.BoundingBox(defaultBoxCenter.clone(), new pc.Vec3(halfSize, halfSize, halfSize));
+        selectionBox = new BoundingBox(defaultBoxCenter.clone(), new Vec3(halfSize, halfSize, halfSize));
     } else {
         selectionBox.halfExtents.set(halfSize, halfSize, halfSize);
     }
@@ -577,7 +619,7 @@ const clearSelection = () => {
             selectionData.fill(0);
             selectionTexture.lock().set(selectionData);
             selectionTexture.unlock();
-            editable.component.workBufferUpdate = pc.WORKBUFFER_UPDATE_ONCE;
+            editable.component.workBufferUpdate = WORKBUFFER_UPDATE_ONCE;
         }
     }
 };
@@ -595,7 +637,7 @@ data.on('deleteSelected', () => {
         editable.deleteProcessor.setParameter('uBoxMax', [boxMax.x, boxMax.y, boxMax.z]);
         editable.deleteProcessor.setParameter('matrix_model', editable.entity.getWorldTransform().data);
         editable.deleteProcessor.process();
-        editable.component.workBufferUpdate = pc.WORKBUFFER_UPDATE_ONCE;
+        editable.component.workBufferUpdate = WORKBUFFER_UPDATE_ONCE;
     }
 
     clearSelection();

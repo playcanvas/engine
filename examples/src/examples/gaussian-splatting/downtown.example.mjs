@@ -18,7 +18,43 @@
 // source: https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
 // license: CC0
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BoundingBox,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    GSPLATDATA_COMPACT,
+    GSPLAT_DEBUG_LOD,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    LightComponentSystem,
+    MiniStats,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SKYTYPE_INFINITE,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice,
+    math,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
@@ -34,29 +70,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
@@ -107,21 +143,21 @@ const config = {
 };
 
 const assets = {
-    ssog0: new pc.Asset('ssog0', 'gsplat', { url: config.urls[0] }),
-    ssog1: new pc.Asset('ssog1', 'gsplat', { url: config.urls[1] }),
-    ssog2: new pc.Asset('ssog2', 'gsplat', { url: config.urls[2] }),
-    ssog3: new pc.Asset('ssog3', 'gsplat', { url: config.urls[3] }),
-    sky: new pc.Asset('hdri', 'texture', { url: config.skyUrl }, { mipmaps: false })
+    ssog0: new Asset('ssog0', 'gsplat', { url: config.urls[0] }),
+    ssog1: new Asset('ssog1', 'gsplat', { url: config.urls[1] }),
+    ssog2: new Asset('ssog2', 'gsplat', { url: config.urls[2] }),
+    ssog3: new Asset('ssog3', 'gsplat', { url: config.urls[3] }),
+    sky: new Asset('hdri', 'texture', { url: config.skyUrl }, { mipmaps: false })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // custom mini stats showing gsplat counts
-const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
 const pieces = [assets.ssog0, assets.ssog1, assets.ssog2, assets.ssog3];
 
@@ -134,21 +170,21 @@ app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 app.scene.gsplat.minPixelSize = 2;
 app.scene.gsplat.alphaClipForward = 1 / 255;
 app.scene.gsplat.minContribution = 3;
-app.scene.gsplat.dataFormat = pc.GSPLATDATA_COMPACT;
+app.scene.gsplat.dataFormat = GSPLATDATA_COMPACT;
 
 // Colorize LODs debug toggle (off by default)
 data.set('colorizeLods', false);
 const applyColorizeLods = () => {
-    app.scene.gsplat.debug = data.get('colorizeLods') ? pc.GSPLAT_DEBUG_LOD : pc.GSPLAT_DEBUG_NONE;
+    app.scene.gsplat.debug = data.get('colorizeLods') ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
 };
 applyColorizeLods();
 data.on('colorizeLods:set', applyColorizeLods);
 
 // Renderer: CPU-sort raster on WebGL, GPU-sort raster on WebGPU
-app.scene.gsplat.renderer = device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT;
+app.scene.gsplat.renderer = device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
 
 // --- create the 4 streamed pieces under a single root (shared coordinate frame) ---
-const root = new pc.Entity('downtown');
+const root = new Entity('downtown');
 root.setLocalEulerAngles(config.sceneRotation[0], config.sceneRotation[1], config.sceneRotation[2]);
 app.root.addChild(root);
 
@@ -157,7 +193,7 @@ const gsInstances = [];
 let totalSplats = 0;
 let lodLevels = 1;
 for (let i = 0; i < pieces.length; i++) {
-    const entity = new pc.Entity(`${config.name}-${i}`);
+    const entity = new Entity(`${config.name}-${i}`);
     entity.addComponent('gsplat', { asset: pieces[i] });
     root.addChild(entity);
     gsInstances.push(/** @type {any} */ (entity.gsplat));
@@ -170,10 +206,10 @@ const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
 data.set('data.stats.splatsTotal', toM(totalSplats));
 
 // combined world-space bounds, for framing the camera
-const worldAabb = new pc.BoundingBox();
+const worldAabb = new BoundingBox();
 root.children.forEach((entity, i) => {
     const res = /** @type {any} */ (pieces[i].resource);
-    const b = new pc.BoundingBox();
+    const b = new BoundingBox();
     b.setFromTransformedAabb(res.aabb, entity.getWorldTransform());
     if (i === 0) worldAabb.copy(b);
     else worldAabb.add(b);
@@ -185,9 +221,9 @@ const radius = worldAabb.halfExtents.length();
 // in from the INITIAL CAMERA POSITION. Runs on the shared (unified) gsplat material, so one
 // instance drives all four pieces. While loading, the effect time is pinned negative
 // (everything hidden, see the update loop); it is released on frame:ready below. ---
-const camStart = new pc.Vec3(config.cameraPosition[0], config.cameraPosition[1], config.cameraPosition[2]);
+const camStart = new Vec3(config.cameraPosition[0], config.cameraPosition[1], config.cameraPosition[2]);
 const revealReach = camStart.distance(center) + radius; // furthest splat from the camera start
-const revealHost = /** @type {pc.Entity} */ (root.children[0]);
+const revealHost = /** @type {Entity} */ (root.children[0]);
 revealHost.addComponent('script');
 const reveal = /** @type {any} */ (/** @type {any} */ (revealHost.script).create(GsplatRevealRadial));
 reveal.center.copy(camStart);
@@ -206,8 +242,8 @@ let revealStarted = false;
 // scene.envAtlas — the splats are pre-lit, so the sky contributes no lighting, just a backdrop.
 // Generated up front but revealed together with the scene (on frame:ready), so it doesn't pop
 // in before the splats.
-const skyboxCubemap = pc.EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
-app.scene.sky.type = pc.SKYTYPE_INFINITE;
+const skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+app.scene.sky.type = SKYTYPE_INFINITE;
 
 // Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some
 // nearby detail, then open up to the full range once the first frame's data is ready.
@@ -238,11 +274,11 @@ const onFrameReady = (
 gsplatSystem.on('frame:ready', onFrameReady);
 
 // --- fly camera, framed on the combined scene bounds ---
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.11, 0.13),
+    clearColor: new Color(0.1, 0.11, 0.13),
     fov: 75,
-    toneMapping: pc.TONEMAP_LINEAR,
+    toneMapping: TONEMAP_LINEAR,
     farClip: Math.max(10000, radius * 20)
 });
 camera.setLocalPosition(config.cameraPosition[0], config.cameraPosition[1], config.cameraPosition[2]);
@@ -274,12 +310,12 @@ Object.assign(cc, {
 // Base distance is fixed (config.lodBaseDistance); the multiplier interpolates 1.5 (at 2M) to
 // 2.5 (at the Extreme budget), clamped — coarser falloff as the budget grows. Default to the
 // Medium quality preset (desktop 8M / mobile 2M), so a quality button is lit at launch. ---
-const extremeBudget = pc.platform.mobile ? 8 : 25;
-data.set('splatBudget', pc.platform.mobile ? 4 : 8);
+const extremeBudget = platform.mobile ? 8 : 25;
+data.set('splatBudget', platform.mobile ? 4 : 8);
 const applySplatBudget = () => {
     const budget = data.get('splatBudget');
     app.scene.gsplat.splatBudget = Math.round(budget * 1000000);
-    const t = pc.math.clamp((budget - 2) / (extremeBudget - 2), 0, 1);
+    const t = math.clamp((budget - 2) / (extremeBudget - 2), 0, 1);
     const mult = 1.5 + t * (2.5 - 1.5);
     for (let i = 0; i < gsInstances.length; i++) {
         gsInstances[i].lodBaseDistance = config.lodBaseDistance;
@@ -292,7 +328,7 @@ data.on('splatBudget:set', applySplatBudget);
 // --- on-screen quality buttons: each sets the splat budget. The Splat Budget slider in the
 // controls stays two-way bound to the same value, so it tracks the buttons and can still be
 // dragged; clicking a button just resets the value. ---
-const QUALITY = pc.platform.mobile
+const QUALITY = platform.mobile
     ? [
           ['Low', 2],
           ['Medium', 4],
@@ -357,8 +393,8 @@ app.systems.gsplat.on('frame:request', () => {
 });
 
 let onDemand = false;
-const lastCamPos = new pc.Vec3();
-const lastCamRot = new pc.Quat();
+const lastCamPos = new Vec3();
+const lastCamRot = new Quat();
 
 // --- Stats + on-demand driver ---
 app.on('update', () => {

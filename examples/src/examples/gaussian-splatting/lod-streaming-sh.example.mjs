@@ -7,7 +7,36 @@
 // author: Christoph Schindelar
 // source: https://superspl.at/user?id=schindelar3d
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 
@@ -23,29 +52,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is updated when window changes size
 const onResize = () => {
@@ -97,18 +126,18 @@ const LOD_PRESETS = {
 };
 
 const assets = {
-    church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
+    church: new Asset('gsplat', 'gsplat', { url: config.url }),
 
-    envatlas: new pc.Asset(
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -136,16 +165,16 @@ data.on('renderer:set', () => {
 });
 
 // initialize UI settings
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-data.set('debug', pc.GSPLAT_DEBUG_NONE);
-data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
-data.set('splatBudget', pc.platform.mobile ? 1 : 3);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
+data.set('debug', GSPLAT_DEBUG_NONE);
+data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
+data.set('splatBudget', platform.mobile ? 1 : 3);
 
 data.on('debug:set', () => {
     app.scene.gsplat.debug = data.get('debug');
 });
 
-const entity = new pc.Entity(config.name || 'gsplat');
+const entity = new Entity(config.name || 'gsplat');
 entity.addComponent('gsplat', {
     asset: assets.church
 });
@@ -187,17 +216,17 @@ applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
 // Create a camera with fly controls
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    clearColor: new Color(0.2, 0.2, 0.2),
     fov: 75,
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 
 // Set camera position
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
-const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
+const focusPoint = new Vec3(focusX, focusY, focusZ);
 
 camera.setLocalPosition(camX, camY, camZ);
 
@@ -240,8 +269,8 @@ app.systems.gsplat.on('frame:request', () => {
 });
 
 let revealPlaying = true;
-const lastCamPos = new pc.Vec3();
-const lastCamRot = new pc.Quat();
+const lastCamPos = new Vec3();
+const lastCamRot = new Quat();
 
 app.on('update', () => {
     // update HUD stats

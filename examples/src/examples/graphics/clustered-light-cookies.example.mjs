@@ -10,7 +10,34 @@
 // source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_ACES,
+    Texture,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -18,47 +45,47 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // set up and load draco module, as the chess board glb is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
+    WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    board: new pc.Asset('board', 'container', { url: './assets/models/chess-board.glb' })
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    board: new Asset('board', 'container', { url: './assets/models/chess-board.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -68,7 +95,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -96,16 +123,16 @@ app.root.addChild(board);
 // ----- cookie 1: a procedurally generated texture, regenerated every few frames -----
 
 const cookieSize = 256;
-const proceduralCookie = new pc.Texture(app.graphicsDevice, {
+const proceduralCookie = new Texture(app.graphicsDevice, {
     name: 'proceduralCookie',
     width: cookieSize,
     height: cookieSize,
-    format: pc.PIXELFORMAT_RGBA8,
+    format: PIXELFORMAT_RGBA8,
     mipmaps: false,
-    minFilter: pc.FILTER_LINEAR,
-    magFilter: pc.FILTER_LINEAR,
-    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-    addressV: pc.ADDRESS_CLAMP_TO_EDGE
+    minFilter: FILTER_LINEAR,
+    magFilter: FILTER_LINEAR,
+    addressU: ADDRESS_CLAMP_TO_EDGE,
+    addressV: ADDRESS_CLAMP_TO_EDGE
 });
 
 // fill the procedural cookie with an animated radial pattern - 'phase' shifts each regeneration
@@ -128,7 +155,7 @@ const updateProceduralCookie = (phase) => {
             // circular vignette so the cookie fades to black at the edges
             v *= Math.max(0, 1.0 - dist);
 
-            const c = Math.floor(pc.math.clamp(v, 0, 1) * 255);
+            const c = Math.floor(math.clamp(v, 0, 1) * 255);
             const i = (y * cookieSize + x) * 4;
             pixels[i] = c;
             pixels[i + 1] = c;
@@ -142,14 +169,14 @@ updateProceduralCookie(0);
 
 // ----- cookie 2: a video texture, uploaded every frame -----
 
-const videoCookie = new pc.Texture(app.graphicsDevice, {
+const videoCookie = new Texture(app.graphicsDevice, {
     name: 'videoCookie',
-    format: pc.PIXELFORMAT_RGBA8,
+    format: PIXELFORMAT_RGBA8,
     mipmaps: false,
-    minFilter: pc.FILTER_LINEAR,
-    magFilter: pc.FILTER_LINEAR,
-    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-    addressV: pc.ADDRESS_CLAMP_TO_EDGE
+    minFilter: FILTER_LINEAR,
+    magFilter: FILTER_LINEAR,
+    addressU: ADDRESS_CLAMP_TO_EDGE,
+    addressV: ADDRESS_CLAMP_TO_EDGE
 });
 
 /** @type {HTMLVideoElement} */
@@ -186,13 +213,13 @@ app.on('destroy', () => {
 const quadrantOffset = 11;
 const lightHeight = 20;
 const quadrants = [
-    { x: 1, z: 1, cookie: proceduralCookie, color: new pc.Color(1.0, 0.6, 0.3) },
-    { x: -1, z: -1, cookie: proceduralCookie, color: new pc.Color(1.0, 0.6, 0.3) },
-    { x: 1, z: -1, cookie: videoCookie, color: pc.Color.WHITE },
-    { x: -1, z: 1, cookie: videoCookie, color: pc.Color.WHITE }
+    { x: 1, z: 1, cookie: proceduralCookie, color: new Color(1.0, 0.6, 0.3) },
+    { x: -1, z: -1, cookie: proceduralCookie, color: new Color(1.0, 0.6, 0.3) },
+    { x: 1, z: -1, cookie: videoCookie, color: Color.WHITE },
+    { x: -1, z: 1, cookie: videoCookie, color: Color.WHITE }
 ];
 quadrants.forEach((q, i) => {
-    const spot = new pc.Entity(`Spot-${i}`);
+    const spot = new Entity(`Spot-${i}`);
     spot.addComponent('light', {
         type: 'spot',
         color: q.color,
@@ -211,18 +238,18 @@ quadrants.forEach((q, i) => {
     const x = q.x * quadrantOffset;
     const z = q.z * quadrantOffset;
     spot.setLocalPosition(x, lightHeight, z);
-    spot.lookAt(new pc.Vec3(x, 0, z), pc.Vec3.RIGHT);
+    spot.lookAt(new Vec3(x, 0, z), Vec3.RIGHT);
     spot.rotateLocal(90, 0, 0);
     app.root.addChild(spot);
 });
 
 // Create an entity with a camera component
-const camera = new pc.Entity('Camera');
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.05, 0.05, 0.05),
+    clearColor: new Color(0.05, 0.05, 0.05),
     farClip: 500,
     nearClip: 0.1,
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 camera.setLocalPosition(0, 50, 70);
 

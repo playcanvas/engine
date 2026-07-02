@@ -1,4 +1,21 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial,
+    TextureHandler,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -11,34 +28,34 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    diffuse: new pc.Asset('color', 'texture', { url: './assets/textures/playcanvas.png' })
+    diffuse: new Asset('color', 'texture', { url: './assets/textures/playcanvas.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -47,15 +64,15 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const material = new pc.ShaderMaterial({
+const material = new ShaderMaterial({
     uniqueName: 'ShaderMaterialExample',
     vertexGLSL: shaderGlslVert,
     fragmentGLSL: shaderGlslFrag,
     vertexWGSL: shaderWgslVert,
     fragmentWGSL: shaderWgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
     }
 });
 
@@ -63,7 +80,7 @@ material.setParameter('diffuseTexture', assets.diffuse.resource);
 material.update();
 
 // create box entity
-const box = new pc.Entity('cube');
+const box = new Entity('cube');
 box.addComponent('render', {
     type: 'box',
     material: material
@@ -71,9 +88,9 @@ box.addComponent('render', {
 app.root.addChild(box);
 
 // create camera entity
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.5, 0.6, 0.9)
+    clearColor: new Color(0.5, 0.6, 0.9)
 });
 app.root.addChild(camera);
 camera.setPosition(0, 0, 3);

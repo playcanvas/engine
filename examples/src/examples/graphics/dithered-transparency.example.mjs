@@ -11,23 +11,55 @@
 // source: https://sketchfab.com/3d-models/low-poly-glass-table-6acac6d9201e448b92dff859b6f63aad
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_NONE,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    DITHER_BAYER8,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOW_VSM_16F,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { Material } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    envAtlas: new pc.Asset(
+    envAtlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    table: new pc.Asset('table', 'container', { url: './assets/models/glass-table.glb' }),
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    diffuse: new pc.Asset('color', 'texture', { url: './assets/textures/playcanvas.png' })
+    table: new Asset('table', 'container', { url: './assets/models/glass-table.glb' }),
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    diffuse: new Asset('color', 'texture', { url: './assets/textures/playcanvas.png' })
 };
 
 const gfxOptions = {
@@ -37,32 +69,32 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 // render at full native resolution
 device.maxPixelRatio = window.devicePixelRatio;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler, pc.ContainerHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -72,7 +104,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -86,20 +118,20 @@ app.scene.exposure = 4.5;
  * Helper function to create a primitive with shape type, position, scale, color and layer.
  *
  * @param {string} primitiveType - The primitive type.
- * @param {number | pc.Vec3} position - The position.
- * @param {number | pc.Vec3} scale - The scale.
- * @param {pc.Color} color - The color.
- * @returns {pc.Material} The returned entity.
+ * @param {number | Vec3} position - The position.
+ * @param {number | Vec3} scale - The scale.
+ * @param {Color} color - The color.
+ * @returns {Material} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, color) {
     // create material of specified color
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     material.diffuseMap = assets.diffuse.resource;
     material.update();
 
     // create primitive
-    const primitive = new pc.Entity(primitiveType);
+    const primitive = new Entity(primitiveType);
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
@@ -114,14 +146,14 @@ function createPrimitive(primitiveType, position, scale, color) {
 }
 
 // create a ground plane
-createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(60, 1, 30), new pc.Color(0.8, 0.8, 0.8));
+createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(60, 1, 30), new Color(0.8, 0.8, 0.8));
 
 /**
  * Instantiate the glass table, collect its alpha-blended materials. Each blended material is
  * cloned so the two tables can be configured independently.
  *
- * @param {pc.Vec3} position - The world-space position to place the table at.
- * @returns {pc.StandardMaterial[]} The alpha-blended materials of the instantiated table.
+ * @param {Vec3} position - The world-space position to place the table at.
+ * @returns {StandardMaterial[]} The alpha-blended materials of the instantiated table.
  */
 const spawnTable = (position) => {
     const entity = assets.table.resource.instantiateRenderEntity();
@@ -132,7 +164,7 @@ const spawnTable = (position) => {
     const materials = [];
     entity.findComponents('render').forEach((render) => {
         render.meshInstances.forEach((meshInstance) => {
-            if (meshInstance.material.blendType !== pc.BLEND_NONE) {
+            if (meshInstance.material.blendType !== BLEND_NONE) {
                 meshInstance.material = meshInstance.material.clone();
                 materials.push(meshInstance.material);
             }
@@ -143,20 +175,20 @@ const spawnTable = (position) => {
 
 // LEFT — BC demo: alphaDither stays untouched (implicit) so opacity drives both blend
 // strength and dither density, exactly like the legacy engine
-const leftMaterials = spawnTable(new pc.Vec3(-7, 0, 0));
+const leftMaterials = spawnTable(new Vec3(-7, 0, 0));
 
 // RIGHT — new feature: alphaDither set explicitly from the slider, decoupled from opacity
-const rightMaterials = spawnTable(new pc.Vec3(7, 0, 0));
+const rightMaterials = spawnTable(new Vec3(7, 0, 0));
 
 // Create an Entity with a directional light, casting soft VSM shadow
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
-    color: pc.Color.WHITE,
+    color: Color.WHITE,
     range: 200,
     castShadows: true,
     shadowResolution: 2048,
-    shadowType: pc.SHADOW_VSM_16F,
+    shadowType: SHADOW_VSM_16F,
     vsmBlurSize: 20,
     shadowBias: 0.1,
     normalOffsetBias: 0.1
@@ -165,7 +197,7 @@ light.setLocalEulerAngles(75, 120, 20);
 app.root.addChild(light);
 
 // Create the camera
-const cameraEntity = new pc.Entity('Camera');
+const cameraEntity = new Entity('Camera');
 cameraEntity.addComponent('camera', {
     fov: 70
 });
@@ -187,8 +219,8 @@ cameraEntity.script.create('orbitCameraInputTouch');
 
 // ------ Custom render passes set up ------
 
-const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.rendering.sceneColorMap = true;
 cameraFrame.taa.jitter = 1;
 cameraFrame.update();
@@ -226,6 +258,6 @@ data.set('data', {
     taa: false,
     opacity: 0.5,
     alphaDither: 0.5,
-    opacityDither: pc.DITHER_BAYER8,
-    opacityShadowDither: pc.DITHER_BAYER8
+    opacityDither: DITHER_BAYER8,
+    opacityShadowDither: DITHER_BAYER8
 });

@@ -9,7 +9,31 @@
 // source: https://www.motionforgepictures.com/height-maps/
 // license: CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Mesh,
+    MeshInstance,
+    PlaneGeometry,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    Vec2,
+    Vec3,
+    calculateNormals,
+    createGraphicsDevice
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
@@ -18,34 +42,34 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    height: new pc.Asset('height', 'texture', { url: './assets/textures/terrain/Canyon-Height.jpg' }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: './assets/textures/terrain/Canyon-Diffuse.jpg' })
+    height: new Asset('height', 'texture', { url: './assets/textures/terrain/Canyon-Height.jpg' }),
+    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/terrain/Canyon-Diffuse.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.ScriptComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, ScriptComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -53,7 +77,7 @@ window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -62,23 +86,23 @@ app.start();
 app.scene.skyboxMip = 2;
 app.scene.exposure = 1;
 app.scene.envAtlas = assets.helipad.resource;
-app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+app.scene.ambientLight = new Color(0.1, 0.1, 0.1);
 
 // camera
-const camera = new pc.Entity();
-camera.addComponent('camera', { toneMapping: pc.TONEMAP_ACES });
+const camera = new Entity();
+camera.addComponent('camera', { toneMapping: TONEMAP_ACES });
 camera.addComponent('script');
 app.root.addChild(camera);
 camera.translate(0, 150, 80);
-camera.lookAt(pc.Vec3.ZERO);
+camera.lookAt(Vec3.ZERO);
 const cc = /** @type { any } */ (camera.script.create(CameraControls));
 Object.assign(cc, {
-    // focusPoint: pc.Vec3.ZERO,
+    // focusPoint: Vec3.ZERO,
     enableFly: false
 });
 
 // material
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.diffuseMap = assets.diffuse.resource;
 material.update();
 
@@ -105,8 +129,8 @@ const buffer = ctx.getImageData(0, 0, bufferWidth, bufferHeight).data;
 // reusable patch geometry (unit patch centered on origin with given size/segments)
 const patchWidth = terrainWidth / patchesX;
 const patchDepth = terrainDepth / patchesZ;
-const patchGeom = new pc.PlaneGeometry({
-    halfExtents: new pc.Vec2(patchWidth * 0.5, patchDepth * 0.5),
+const patchGeom = new PlaneGeometry({
+    halfExtents: new Vec2(patchWidth * 0.5, patchDepth * 0.5),
     widthSegments: patchSegments,
     lengthSegments: patchSegments
 });
@@ -165,10 +189,10 @@ for (let pz = 0; pz < patchesZ; pz++) {
 }
 
 // normals after displacement
-const normals = pc.calculateNormals(positions, indices);
+const normals = calculateNormals(positions, indices);
 
 // create a single mesh from all patches
-const mesh = new pc.Mesh(app.graphicsDevice);
+const mesh = new Mesh(app.graphicsDevice);
 mesh.setPositions(positions);
 mesh.setNormals(normals);
 mesh.setUvs(0, uvs);
@@ -176,10 +200,10 @@ mesh.setIndices(indices);
 mesh.update();
 
 // MeshInstance
-const meshInst = new pc.MeshInstance(mesh, material);
+const meshInst = new MeshInstance(mesh, material);
 
 // entity to render our MeshInstance
-const entity = new pc.Entity('TerrainEntity');
+const entity = new Entity('TerrainEntity');
 entity.addComponent('render', { meshInstances: [meshInst] });
 app.root.addChild(entity);
 

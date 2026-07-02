@@ -12,7 +12,41 @@
 // source: https://sketchfab.com/3d-models/scifi-platform-stage-scene-baked-64adb59a716d43e5a8705ff6fe86c0ce
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    Keyboard,
+    LAYERID_UI,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SCALEMODE_BLEND,
+    ScreenComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec4,
+    WasmModule,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -20,22 +54,22 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    platform: new pc.Asset('statue', 'container', { url: './assets/models/scifi-platform.glb' }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' }),
-    helipad: new pc.Asset(
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    platform: new Asset('statue', 'container', { url: './assets/models/scifi-platform.glb' }),
+    mosquito: new Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -48,31 +82,31 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(window);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(window);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ScreenComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -82,7 +116,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -118,14 +152,14 @@ app.root.addChild(mosquitoEntity);
 // helper function to create a box primitive
 const createBox = (x, y, z, r, g, b, emissive, name) => {
     // create material of random color
-    const material = new pc.StandardMaterial();
-    material.diffuse = pc.Color.BLACK;
-    material.emissive = new pc.Color(r, g, b);
+    const material = new StandardMaterial();
+    material.diffuse = Color.BLACK;
+    material.emissive = new Color(r, g, b);
     material.emissiveIntensity = emissive;
     material.update();
 
     // create primitive
-    const primitive = new pc.Entity(name);
+    const primitive = new Entity(name);
     primitive.addComponent('render', {
         type: 'box',
         material: material
@@ -146,7 +180,7 @@ const boxes = [
 ];
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
     farClip: 500,
     fov: 80
@@ -172,18 +206,18 @@ cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
 // Create a 2D screen to place UI on
-const screen = new pc.Entity();
+const screen = new Entity();
 screen.addComponent('screen', {
-    referenceResolution: new pc.Vec2(1280, 720),
+    referenceResolution: new Vec2(1280, 720),
     scaleBlend: 0.5,
-    scaleMode: pc.SCALEMODE_BLEND,
+    scaleMode: SCALEMODE_BLEND,
     screenSpace: true
 });
 app.root.addChild(screen);
 
 // add a shadow casting directional light
-const lightColor = new pc.Color(1, 0.7, 0.1);
-const light = new pc.Entity();
+const lightColor = new Color(1, 0.7, 0.1);
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
     color: lightColor,
@@ -200,20 +234,20 @@ light.setLocalEulerAngles(80, 10, 0);
 
 // a helper function to add a label to the screen
 const addLabel = (name, text, x, y, layer) => {
-    const label = new pc.Entity(name);
+    const label = new Entity(name);
     label.addComponent('element', {
         text: text,
 
         // very bright color to affect the bloom - this is not correct, as this is sRGB color that
         // is valid only in 0..1 range, but UI does not expose emissive intensity currently
-        color: new pc.Color(18, 15, 5),
+        color: new Color(18, 15, 5),
 
-        anchor: new pc.Vec4(x, y, 0.5, 0.5),
+        anchor: new Vec4(x, y, 0.5, 0.5),
         fontAsset: assets.font,
         fontSize: 28,
-        pivot: new pc.Vec2(0.5, 0.1),
-        type: pc.ELEMENTTYPE_TEXT,
-        alignment: pc.Vec2.ZERO,
+        pivot: new Vec2(0.5, 0.1),
+        type: ELEMENTTYPE_TEXT,
+        alignment: Vec2.ZERO,
         layers: [layer.id]
     });
     screen.addChild(label);
@@ -224,19 +258,19 @@ const worldLayer = app.scene.layers.getLayerByName('World');
 addLabel('WorldUI', 'Text on the World layer affected by post-processing', 0.1, 0.9, worldLayer);
 
 // add a label on the UI layer, which will be rendered after the post-processing
-const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
+const uiLayer = app.scene.layers.getLayerById(LAYERID_UI);
 addLabel('TopUI', 'Text on theUI layer after the post-processing', 0.1, 0.1, uiLayer);
 
 // ------ Custom render passes set up ------
 
-const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.sceneColorMap = true;
 cameraFrame.update();
 
 const applySettings = () => {
     // background
     const background = data.get('data.scene.background');
-    cameraEntity.camera.clearColor = new pc.Color(
+    cameraEntity.camera.clearColor = new Color(
         lightColor.r * background,
         lightColor.g * background,
         lightColor.b * background
@@ -263,7 +297,7 @@ const applySettings = () => {
 
     // Bloom
     cameraFrame.bloom.intensity = data.get('data.bloom.enabled')
-        ? pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100)
+        ? math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100)
         : 0;
     cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
 
@@ -328,7 +362,7 @@ data.set('data', {
         scale: 1.8,
         background: 6,
         emissive: 200,
-        tonemapping: pc.TONEMAP_ACES,
+        tonemapping: TONEMAP_ACES,
         debug: 0
     },
     bloom: {

@@ -6,52 +6,80 @@
 // source: https://sketchfab.com/3d-models/house-scene-52772448c62348e0a4951b51758d5587
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BAKE_COLOR,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    CubemapHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Lightmapper,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOW_PCF3_32F,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    house: new pc.Asset('house', 'container', { url: './assets/models/house.glb' }),
-    script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    house: new Asset('house', 'container', { url: './assets/models/house.glb' }),
+    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
-createOptions.lightmapper = pc.Lightmapper;
+createOptions.lightmapper = Lightmapper;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.ContainerHandler, pc.CubemapHandler];
+createOptions.resourceHandlers = [ScriptHandler, TextureHandler, ContainerHandler, CubemapHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -61,7 +89,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -72,7 +100,7 @@ app.scene.skyboxIntensity = 0.6;
 app.scene.envAtlas = assets.helipad.resource;
 
 // if skydome cubemap is disabled using HUD, a constant ambient color is used instead
-app.scene.ambientLight = new pc.Color(0.1, 0.3, 0.4);
+app.scene.ambientLight = new Color(0.1, 0.3, 0.4);
 
 // instantiate the house model, which has unwrapped texture coordinates for lightmap in UV1
 const house = assets.house.resource.instantiateRenderEntity();
@@ -80,7 +108,7 @@ house.setLocalScale(100, 100, 100);
 app.root.addChild(house);
 
 // change its materials to lightmapping
-/** @type {Array<pc.RenderComponent>} */
+/** @type {Array<RenderComponent>} */
 const renders = house.findComponents('render');
 renders.forEach((render) => {
     render.castShadows = true;
@@ -89,7 +117,7 @@ renders.forEach((render) => {
 });
 
 // directional light
-const lightDirectional = new pc.Entity('Directional');
+const lightDirectional = new Entity('Directional');
 lightDirectional.addComponent('light', {
     type: 'directional',
 
@@ -103,15 +131,15 @@ lightDirectional.addComponent('light', {
     shadowBias: 0.2,
     shadowDistance: 100,
     shadowResolution: 2048,
-    shadowType: pc.SHADOW_PCF3_32F,
-    color: new pc.Color(0.7, 0.7, 0.5),
+    shadowType: SHADOW_PCF3_32F,
+    color: new Color(0.7, 0.7, 0.5),
     intensity: 1.6
 });
 app.root.addChild(lightDirectional);
 lightDirectional.setLocalEulerAngles(-55, 0, -30);
 
 // Create an entity with a omni light component that is configured as a baked light
-const lightOmni = new pc.Entity('Omni');
+const lightOmni = new Entity('Omni');
 lightOmni.addComponent('light', {
     type: 'omni',
     affectDynamic: false,
@@ -122,8 +150,8 @@ lightOmni.addComponent('light', {
     shadowBias: 0.2,
     shadowDistance: 25,
     shadowResolution: 512,
-    shadowType: pc.SHADOW_PCF3_32F,
-    color: pc.Color.YELLOW,
+    shadowType: SHADOW_PCF3_32F,
+    color: Color.YELLOW,
     range: 25,
     intensity: 0.9
 });
@@ -131,7 +159,7 @@ lightOmni.setLocalPosition(-4, 10, 5);
 app.root.addChild(lightOmni);
 
 // Create an entity with a spot light component that is configured as a baked light
-const lightSpot = new pc.Entity('Spot');
+const lightSpot = new Entity('Spot');
 lightSpot.addComponent('light', {
     type: 'spot',
     affectDynamic: false,
@@ -142,8 +170,8 @@ lightSpot.addComponent('light', {
     shadowBias: 0.2,
     shadowDistance: 50,
     shadowResolution: 512,
-    shadowType: pc.SHADOW_PCF3_32F,
-    color: pc.Color.RED,
+    shadowType: SHADOW_PCF3_32F,
+    color: Color.RED,
     range: 10,
     intensity: 2.5
 });
@@ -151,9 +179,9 @@ lightSpot.setLocalPosition(-5, 10, -7.5);
 app.root.addChild(lightSpot);
 
 // Create an entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    clearColor: new Color(0.4, 0.45, 0.5),
     farClip: 100,
     nearClip: 1
 });
@@ -173,7 +201,7 @@ camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // lightmap baking properties
-const bakeType = pc.BAKE_COLOR;
+const bakeType = BAKE_COLOR;
 app.scene.lightmapMode = bakeType;
 app.scene.lightmapMaxResolution = 1024;
 

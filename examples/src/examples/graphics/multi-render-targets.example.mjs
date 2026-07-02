@@ -6,30 +6,67 @@
 // source: https://sketchfab.com/3d-models/chess-board-901eeeca884f4622ac37b7e8f7cb82c3
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    ContainerHandler,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    FILTER_LINEAR_MIPMAP_LINEAR,
+    FontHandler,
+    Keyboard,
+    Layer,
+    LightComponentSystem,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RenderTarget,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL,
+    ScreenComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    Texture,
+    TextureHandler,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
 import outputGlslFrag from './output-glsl.frag';
 import outputWgslFrag from './output-wgsl.frag';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
 const assets = {
-    board: new pc.Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
-    helipad: new pc.Asset(
+    board: new Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -37,29 +74,29 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ScreenComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.ContainerHandler, pc.FontHandler];
+createOptions.resourceHandlers = [ScriptHandler, TextureHandler, ContainerHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -69,7 +106,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -84,7 +121,7 @@ const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
 // create a layer for object that render into texture, add it right after the world layer
-const rtLayer = new pc.Layer({ name: 'RTLayer' });
+const rtLayer = new Layer({ name: 'RTLayer' });
 app.scene.layers.insert(rtLayer, 1);
 
 /**
@@ -92,19 +129,19 @@ app.scene.layers.insert(rtLayer, 1);
  * @param {string} name - The name.
  * @param {number} width - The width.
  * @param {number} height - The height.
- * @returns {pc.Texture} The returned texture.
+ * @returns {Texture} The returned texture.
  */
 const createTexture = (name, width, height) => {
-    return new pc.Texture(app.graphicsDevice, {
+    return new Texture(app.graphicsDevice, {
         name: name,
         width: width,
         height: height,
-        format: pc.PIXELFORMAT_RGBA8,
+        format: PIXELFORMAT_RGBA8,
         mipmaps: true,
-        minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+        minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE
     });
 };
 
@@ -115,7 +152,7 @@ const texture2 = createTexture('RT-texture-2', 512, 512);
 
 // render to multiple targets if supported
 const colorBuffers = [texture0, texture1, texture2];
-const renderTarget = new pc.RenderTarget({
+const renderTarget = new RenderTarget({
     name: 'MRT',
     colorBuffers: colorBuffers,
     depth: true,
@@ -124,11 +161,11 @@ const renderTarget = new pc.RenderTarget({
 });
 
 // Create texture camera, which renders entities in RTLayer into the texture
-const textureCamera = new pc.Entity('TextureCamera');
+const textureCamera = new Entity('TextureCamera');
 textureCamera.addComponent('camera', {
     layers: [rtLayer.id],
     farClip: 500,
-    toneMapping: pc.TONEMAP_ACES,
+    toneMapping: TONEMAP_ACES,
 
     // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
     // to make it rendered first each frame
@@ -150,20 +187,20 @@ app.root.addChild(boardEntity);
 
 // override output shader chunk for the material of the chess board, to inject our custom shader
 // chunk which outputs to multiple render targets during our custom shader pass
-/** @type {Array<pc.RenderComponent>} */
+/** @type {Array<RenderComponent>} */
 const renders = boardEntity.findComponents('render');
 renders.forEach((render) => {
     const meshInstances = render.meshInstances;
     for (let i = 0; i < meshInstances.length; i++) {
         const material = meshInstances[i].material;
-        material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('outputPS', outputGlslFrag);
-        material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('outputPS', outputWgslFrag);
+        material.getShaderChunks(SHADERLANGUAGE_GLSL).set('outputPS', outputGlslFrag);
+        material.getShaderChunks(SHADERLANGUAGE_WGSL).set('outputPS', outputWgslFrag);
         material.shaderChunksVersion = '2.8';
     }
 });
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
     layers: [worldLayer.id, skyboxLayer.id, uiLayer.id]
 });
@@ -176,7 +213,7 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // orbit the camera around
     textureCamera.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));
-    textureCamera.lookAt(pc.Vec3.ZERO);
+    textureCamera.lookAt(Vec3.ZERO);
 
     const gd = app.graphicsDevice;
     const ratio = gd.width / gd.height;

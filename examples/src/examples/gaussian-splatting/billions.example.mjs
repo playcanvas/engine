@@ -12,7 +12,42 @@
 // author: Andrii Shramko
 // source: https://www.linkedin.com/in/andrii-shramko/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    GSPLATDATA_COMPACT,
+    GSPLAT_DEBUG_LOD,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    LightComponentSystem,
+    MiniStats,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SKYTYPE_INFINITE,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice,
+    math,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -39,29 +74,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
@@ -126,22 +161,22 @@ const DEFAULT_INSTANCES_MOBILE = 2;
 // Mobile uses the aggressive 1.6 falloff (~3M active at 20 instances) to keep the load light;
 // desktop uses a gentler 1.8 so distant tiles stay more detailed (~6M active at 20 instances).
 const DEFAULT_LOD_BASE_DISTANCE = 40;
-const DEFAULT_LOD_MULTIPLIER = pc.platform.mobile ? 1.6 : 1.8;
+const DEFAULT_LOD_MULTIPLIER = platform.mobile ? 1.6 : 1.8;
 
 const assets = {
-    scene: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
+    scene: new Asset('gsplat', 'gsplat', { url: config.url }),
     // equirectangular (360) LDR backdrop image
-    sky: new pc.Asset('sky', 'texture', { url: './assets/hdri/space.webp' }, { mipmaps: false })
+    sky: new Asset('sky', 'texture', { url: './assets/hdri/space.webp' }, { mipmaps: false })
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // custom mini stats showing gsplat counts
-const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
 // --- infinite skybox backdrop from the equirectangular LDR image ---
 // The built-in infinite sky samples a cubemap, so the equirect is reprojected once into a
@@ -153,14 +188,14 @@ const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats
 // Generated up front (one-off GPU work) but NOT assigned to scene.skybox yet — the backdrop is
 // revealed together with the splats once their first (worst-LOD) frame is ready (see below),
 // so the sky doesn't pop in before the scene.
-const skyboxCubemap = pc.EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
-app.scene.sky.type = pc.SKYTYPE_INFINITE;
+const skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+app.scene.sky.type = SKYTYPE_INFINITE;
 
 // Sky rotation (degrees about the vertical axis), exposed in the UI to aim a feature of the
 // backdrop (e.g. the planet) into view rather than behind the tiles.
 data.set('skyRotation', 100);
 const applySkyRotation = () => {
-    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get('skyRotation'), 0);
+    app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, data.get('skyRotation'), 0);
 };
 applySkyRotation();
 data.on('skyRotation:set', applySkyRotation);
@@ -174,21 +209,21 @@ app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 app.scene.gsplat.minPixelSize = 2;
 app.scene.gsplat.alphaClipForward = 1 / 255;
 app.scene.gsplat.minContribution = 3;
-app.scene.gsplat.dataFormat = pc.GSPLATDATA_COMPACT;
+app.scene.gsplat.dataFormat = GSPLATDATA_COMPACT;
 
 // Colorize LODs debug toggle (off by default)
 data.set('colorizeLods', false);
 const applyColorizeLods = () => {
-    app.scene.gsplat.debug = data.get('colorizeLods') ? pc.GSPLAT_DEBUG_LOD : pc.GSPLAT_DEBUG_NONE;
+    app.scene.gsplat.debug = data.get('colorizeLods') ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
 };
 applyColorizeLods();
 data.on('colorizeLods:set', applyColorizeLods);
 
 // Renderer: CPU-sort raster on WebGL, GPU-sort raster on WebGPU
-app.scene.gsplat.renderer = device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT;
+app.scene.gsplat.renderer = device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
 
 // --- gsplat instances, all sharing the same streamed asset; count is observer-driven ---
-/** @type {pc.Entity[]} */
+/** @type {Entity[]} */
 const instanceEntities = [];
 /** @type {any[]} */
 const gsInstances = [];
@@ -264,7 +299,7 @@ const layoutForIndex = (idx) => {
     const theta = s / bendRadius; // arc angle for this tile
     const z = bendRadius * Math.sin(theta);
     const y = bendRadius * (1 - Math.cos(theta)); // ground lifts toward the ends
-    const eulerX = 180 - theta * pc.math.RAD_TO_DEG; // tilt to stay tangent to the surface
+    const eulerX = 180 - theta * math.RAD_TO_DEG; // tilt to stay tangent to the surface
     return { pos: [x, y, z], eulerX };
 };
 
@@ -292,7 +327,7 @@ const rebuildInstances = () => {
 
     while (instanceEntities.length < N) {
         const idx = instanceEntities.length;
-        const entity = new pc.Entity(`${config.name}-${idx}`);
+        const entity = new Entity(`${config.name}-${idx}`);
         entity.addComponent('gsplat', { asset: assets.scene });
         const { pos, eulerX } = layoutForIndex(idx);
         entity.setLocalEulerAngles(eulerX, 0, 0);
@@ -314,7 +349,7 @@ const rebuildInstances = () => {
     data.set('data.stats.splatsTotal', toB(numSplatsPerInstance * N));
 };
 
-data.set('instances', pc.platform.mobile ? DEFAULT_INSTANCES_MOBILE : DEFAULT_INSTANCES_DESKTOP);
+data.set('instances', platform.mobile ? DEFAULT_INSTANCES_MOBILE : DEFAULT_INSTANCES_DESKTOP);
 rebuildInstances();
 data.on('instances:set', rebuildInstances);
 
@@ -343,13 +378,13 @@ const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config
 // (absolute) elevation rather than the tile's mid-height, so it starts above the ground.
 const tile0Center = instanceEntities[0]
     .getWorldTransform()
-    .transformPoint(new pc.Vec3((mn.x + mx.x) * 0.5, (mn.y + mx.y) * 0.5, (mn.z + mx.z) * 0.5), new pc.Vec3());
+    .transformPoint(new Vec3((mn.x + mx.x) * 0.5, (mn.y + mx.y) * 0.5, (mn.z + mx.z) * 0.5), new Vec3());
 
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0, 0, 0),
+    clearColor: new Color(0, 0, 0),
     fov: 75,
-    toneMapping: pc.TONEMAP_LINEAR,
+    toneMapping: TONEMAP_LINEAR,
     // huge world — extend the far clip so distant instances are not culled
     farClip: 100000
 });
@@ -383,7 +418,7 @@ if (USE_CYLINDER_CONTROLLER) {
         moveDamping: 0.995,
         enableOrbit: false,
         enablePan: false,
-        focusPoint: new pc.Vec3(tile0Center.x + focusX, focusY, tile0Center.z + focusZ)
+        focusPoint: new Vec3(tile0Center.x + focusX, focusY, tile0Center.z + focusZ)
     });
 }
 

@@ -9,7 +9,30 @@
 // source: https://sketchfab.com/3d-models/low-poly-tree-with-twisting-branches-4e2589134f2442bcbdab51c1f306cd58
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AnimClipHandler,
+    AnimComponentSystem,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_ATTR12,
+    SEMANTIC_ATTR13,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TYPE_FLOAT32,
+    TextureHandler,
+    Vec3,
+    VertexBuffer,
+    VertexFormat,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
 import { deviceType } from 'examples/context';
@@ -18,16 +41,16 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('cube', 'container', { url: './assets/models/low-poly-tree.glb' }),
+    tree: new Asset('cube', 'container', { url: './assets/models/low-poly-tree.glb' }),
 
-    bitmoji: new pc.Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
-    danceAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
+    bitmoji: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
+    danceAnim: new Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
 
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -35,21 +58,21 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.AnimComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.AnimClipHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, AnimComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AnimClipHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -59,7 +82,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -80,9 +103,9 @@ app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    toneMapping: pc.TONEMAP_ACES
+    toneMapping: TONEMAP_ACES
 });
 app.root.addChild(camera);
 
@@ -90,9 +113,9 @@ app.root.addChild(camera);
 const instanceCount = 500;
 
 // create static vertex buffer containing the instancing data
-const vbFormat = new pc.VertexFormat(app.graphicsDevice, [
-    { semantic: pc.SEMANTIC_ATTR12, components: 3, type: pc.TYPE_FLOAT32 }, // position
-    { semantic: pc.SEMANTIC_ATTR13, components: 1, type: pc.TYPE_FLOAT32 } // scale
+const vbFormat = new VertexFormat(app.graphicsDevice, [
+    { semantic: SEMANTIC_ATTR12, components: 3, type: TYPE_FLOAT32 }, // position
+    { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_FLOAT32 } // scale
 ]);
 
 // store data for individual instances into array, 4 floats each
@@ -114,7 +137,7 @@ for (let i = 0; i < instanceCount; i++) {
     data[offset + 3] = 0.03 + Math.random() * 0.25; // scale
 }
 
-const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
+const vertexBuffer = new VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
     data: data
 });
 
@@ -133,7 +156,7 @@ meshInstance.setInstancing(vertexBuffer);
 
 // Create an Entity for the ground - this is a static geometry. Create a new instance of the gooch material,
 // without a texture.
-const ground = new pc.Entity('Ground');
+const ground = new Entity('Ground');
 const groundMaterial = createGoochMaterial(null, [0.13, 0.55, 0.13]); // no texture
 ground.addComponent('render', {
     type: 'box',
@@ -164,7 +187,7 @@ app.on('update', (dt) => {
     time += dt;
 
     // generate a light direction that rotates around the scene, and set it on the materials
-    const lightDir = new pc.Vec3(Math.sin(time), -0.5, Math.cos(time)).normalize();
+    const lightDir = new Vec3(Math.sin(time), -0.5, Math.cos(time)).normalize();
     const lightDirArray = [-lightDir.x, -lightDir.y, -lightDir.z];
 
     materials.forEach((mat) => {
@@ -174,5 +197,5 @@ app.on('update', (dt) => {
 
     // orbit the camera
     camera.setLocalPosition(8 * Math.sin(time * 0.01), 3, 8 * Math.cos(time * 0.01));
-    camera.lookAt(new pc.Vec3(0, 1, 0));
+    camera.lookAt(new Vec3(0, 1, 0));
 });

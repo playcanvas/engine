@@ -1,57 +1,82 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    Color,
+    ContainerHandler,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    JsonHandler,
+    Keyboard,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TextureHandler,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
+
+/**
+ * @import { RigidBodyComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve());
+    WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    torus: new pc.Asset('torus', 'container', { url: './assets/models/torus.glb' })
+    torus: new Asset('torus', 'container', { url: './assets/models/torus.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.JsonHandler,
-    pc.FontHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -61,21 +86,21 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // Set the gravity for our rigid bodies
 app.systems.rigidbody.gravity.set(0, -9.81, 0);
 /**
- * @param {pc.Color} color - The color of the material.
- * @returns {pc.StandardMaterial} The new material.
+ * @param {Color} color - The color of the material.
+ * @returns {StandardMaterial} The new material.
  */
 function createMaterial(color) {
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     // we need to call material.update when we change its properties
     material.update();
@@ -83,12 +108,12 @@ function createMaterial(color) {
 }
 
 // create a few materials for our objects
-const red = createMaterial(new pc.Color(1, 0.3, 0.3));
-const gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
+const red = createMaterial(new Color(1, 0.3, 0.3));
+const gray = createMaterial(new Color(0.7, 0.7, 0.7));
 
 // ***********    Create our floor   *******************
 
-const floor = new pc.Entity();
+const floor = new Entity();
 floor.addComponent('render', {
     type: 'box',
     material: gray
@@ -106,7 +131,7 @@ floor.addComponent('rigidbody', {
 // add a collision component
 floor.addComponent('collision', {
     type: 'box',
-    halfExtents: new pc.Vec3(5, 0.5, 5)
+    halfExtents: new Vec3(5, 0.5, 5)
 });
 
 // add the floor to the hierarchy
@@ -115,10 +140,10 @@ app.root.addChild(floor);
 // ***********    Create lights   *******************
 
 // make our scene prettier by adding a directional light
-const light = new pc.Entity();
+const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
-    color: new pc.Color(1, 1, 1),
+    color: new Color(1, 1, 1),
     castShadows: true,
     shadowBias: 0.2,
     shadowDistance: 25,
@@ -135,9 +160,9 @@ app.root.addChild(light);
 // ***********    Create camera    *******************
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.5, 0.5, 0.8),
+    clearColor: new Color(0.5, 0.5, 0.8),
     farClip: 50
 });
 
@@ -153,13 +178,13 @@ camera.lookAt(0, 2, 0);
  *
  * @param {string} type - The render component type.
  * @param {object} collisionOptions - The options for the collision component.
- * @param {pc.Entity} [template] - The template entity to use.
- * @returns {pc.Entity} The new template entity.
+ * @param {Entity} [template] - The template entity to use.
+ * @returns {Entity} The new template entity.
  */
 const createTemplate = (type, collisionOptions, template) => {
     // add a render component (visible mesh)
     if (!template) {
-        template = new pc.Entity();
+        template = new Entity();
         template.addComponent('render', {
             type: type
         });
@@ -183,7 +208,7 @@ const createTemplate = (type, collisionOptions, template) => {
 // Create a template for a falling box
 const boxTemplate = createTemplate('box', {
     type: 'box',
-    halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
+    halfExtents: new Vec3(0.5, 0.5, 0.5)
 });
 
 // A sphere...
@@ -252,8 +277,8 @@ app.on('update', (dt) => {
 
             app.root.addChild(clone);
 
-            clone.rigidbody.teleport(pc.math.random(-1, 1), 10, pc.math.random(-1, 1));
-            clone.rigidbody.angularVelocity = new pc.Vec3(
+            clone.rigidbody.teleport(math.random(-1, 1), 10, math.random(-1, 1));
+            clone.rigidbody.angularVelocity = new Vec3(
                 Math.random() * 10 - 5,
                 Math.random() * 10 - 5,
                 Math.random() * 10 - 5
@@ -262,7 +287,7 @@ app.on('update', (dt) => {
     }
 
     // Show active bodies in red and frozen bodies in gray
-    app.root.findComponents('rigidbody').forEach((/** @type {pc.RigidBodyComponent} */ body) => {
+    app.root.findComponents('rigidbody').forEach((/** @type {RigidBodyComponent} */ body) => {
         body.entity.render.meshInstances[0].material = body.isActive() ? red : gray;
     });
 });

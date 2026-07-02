@@ -9,11 +9,54 @@
 // author: Andrii Shramko
 // source: https://www.linkedin.com/in/andrii-shramko/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    FOG_EXP,
+    FOG_NONE,
+    GSPLATDATA_COMPACT,
+    GSPLATDATA_LARGE,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    LightComponentSystem,
+    MiniStats,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SKYTYPE_INFINITE,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_LINEAR,
+    TRACEID_BUFFERS,
+    TRACEID_TEXTURES,
+    TextureHandler,
+    TouchDevice,
+    Tracing,
+    Vec3,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
 import { data, deviceType, win } from 'examples/context';
+
+/**
+ * @import { Texture } from 'playcanvas'
+ */
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
@@ -32,29 +75,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // High Res toggle (false by default): when false, use half native DPR; when true, use min(DPR, 2)
 data.set('highRes', !!data.get('highRes'));
@@ -156,23 +199,23 @@ const LOD_PRESETS = {
 };
 
 const assets = {
-    church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
+    church: new Asset('gsplat', 'gsplat', { url: config.url }),
 
-    envatlas: new pc.Asset(
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
 // enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
@@ -206,7 +249,7 @@ data.on('debug:set', () => {
     app.scene.gsplat.debug = data.get('debug');
 });
 data.on('compact:set', () => {
-    app.scene.gsplat.dataFormat = data.get('compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
+    app.scene.gsplat.dataFormat = data.get('compact') ? GSPLATDATA_COMPACT : GSPLATDATA_LARGE;
 });
 
 const MAX_PERSPECTIVE_FOV = 140;
@@ -214,18 +257,18 @@ const MAX_PERSPECTIVE_FOV = 140;
 // initialize UI settings (must be after observer registration)
 data.set('fisheye', 0);
 data.set('cameraFov', 75);
-data.set('toneMapping', pc.TONEMAP_LINEAR);
+data.set('toneMapping', TONEMAP_LINEAR);
 data.set('exposure', 1);
 data.set('minPixelSize', 2);
 data.set('alphaClipForward', 1 / 255);
 data.set('minContribution', 3);
 data.set('radialSorting', true);
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('culling', device.isWebGPU);
 data.set('compact', true);
-data.set('debug', pc.GSPLAT_DEBUG_NONE);
-data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
-data.set('splatBudget', pc.platform.mobile ? 1 : 4);
+data.set('debug', GSPLAT_DEBUG_NONE);
+data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
+data.set('splatBudget', platform.mobile ? 1 : 4);
 data.set('environment', 'none');
 data.set('fogDensity', 0);
 data.set('url', paramUrl || '');
@@ -234,16 +277,16 @@ data.set('orientation', paramOrientation ? parseFloat(paramOrientation) : 270);
 const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 
 // Create a camera with fly controls
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(1, 1, 1),
+    clearColor: new Color(1, 1, 1),
     fov: 75,
-    toneMapping: pc.TONEMAP_LINEAR
+    toneMapping: TONEMAP_LINEAR
 });
 
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
-const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
+const focusPoint = new Vec3(focusX, focusY, focusZ);
 
 camera.setLocalPosition(camX, camY, camZ);
 app.root.addChild(camera);
@@ -260,7 +303,7 @@ Object.assign(cc, {
 });
 
 // CameraFrame for HDR linear rendering (created lazily on first enable)
-/** @type {pc.CameraFrame|null} */
+/** @type {CameraFrame|null} */
 let cameraFrame = null;
 
 const applyToneMapping = () => {
@@ -277,7 +320,7 @@ data.set('cameraFrame', false);
 data.on('cameraFrame:set', () => {
     if (data.get('cameraFrame')) {
         if (!cameraFrame) {
-            cameraFrame = new pc.CameraFrame(app, camera.camera);
+            cameraFrame = new CameraFrame(app, camera.camera);
             cameraFrame.rendering.toneMapping = data.get('toneMapping');
         }
         cameraFrame.enabled = true;
@@ -308,11 +351,11 @@ data.on('exposure:set', () => {
 data.on('fogDensity:set', () => {
     const density = data.get('fogDensity');
     if (density > 0) {
-        app.scene.fog.type = pc.FOG_EXP;
+        app.scene.fog.type = FOG_EXP;
         app.scene.fog.density = density;
         app.scene.fog.color.copy(camera.camera.clearColor);
     } else {
-        app.scene.fog.type = pc.FOG_NONE;
+        app.scene.fog.type = FOG_NONE;
     }
 });
 
@@ -343,7 +386,7 @@ document.body.appendChild(phCredit);
 app.on('destroy', () => phCredit.remove());
 
 // HDRI environment loading
-/** @type {Map<string, { skybox: pc.Texture, envAtlas: pc.Texture }>} */
+/** @type {Map<string, { skybox: Texture, envAtlas: Texture }>} */
 const hdriCache = new Map();
 
 const applyEnvironment = async (/** @type {string} */ name) => {
@@ -357,7 +400,7 @@ const applyEnvironment = async (/** @type {string} */ name) => {
     }
 
     if (!hdriCache.has(preset.url)) {
-        const asset = new pc.Asset('hdri', 'texture', { url: preset.url }, { mipmaps: false });
+        const asset = new Asset('hdri', 'texture', { url: preset.url }, { mipmaps: false });
         await new Promise((resolve, reject) => {
             asset.on('load', resolve);
             asset.on('error', (/** @type {string} */ err) => {
@@ -369,17 +412,17 @@ const applyEnvironment = async (/** @type {string} */ name) => {
         });
 
         const source = asset.resource;
-        const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
-        const lighting = pc.EnvLighting.generateLightingSource(source);
-        const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+        const skybox = EnvLighting.generateSkyboxCubemap(source);
+        const lighting = EnvLighting.generateLightingSource(source);
+        const envAtlas = EnvLighting.generateAtlas(lighting);
         lighting.destroy();
         hdriCache.set(preset.url, { skybox, envAtlas });
     }
 
-    const cached = /** @type {{ skybox: pc.Texture, envAtlas: pc.Texture }} */ (hdriCache.get(preset.url));
+    const cached = /** @type {{ skybox: Texture, envAtlas: Texture }} */ (hdriCache.get(preset.url));
     app.scene.skybox = cached.skybox;
     app.scene.envAtlas = cached.envAtlas;
-    app.scene.sky.type = pc.SKYTYPE_INFINITE;
+    app.scene.sky.type = SKYTYPE_INFINITE;
     data.set('exposure', preset.exposure ?? 1);
     phCredit.style.display = 'block';
 };
@@ -391,11 +434,11 @@ data.on('environment:set', () => {
 });
 
 // Gsplat loading state
-/** @type {pc.Entity|null} */
+/** @type {Entity|null} */
 let gsplatEntity = null;
 /** @type {any} */
 let gsplatGs = null;
-/** @type {pc.Asset|null} */
+/** @type {Asset|null} */
 let customAsset = null;
 
 const applyPreset = () => {
@@ -424,10 +467,10 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
         customAsset = null;
     }
 
-    /** @type {pc.Asset} */
+    /** @type {Asset} */
     let asset;
     if (url) {
-        asset = new pc.Asset('gsplat', 'gsplat', { url: url });
+        asset = new Asset('gsplat', 'gsplat', { url: url });
         app.assets.add(asset);
         await new Promise((resolve, reject) => {
             asset.on('load', resolve);
@@ -442,7 +485,7 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
         asset = assets.church;
     }
 
-    gsplatEntity = new pc.Entity(config.name || 'gsplat'); // eslint-disable-line require-atomic-updates
+    gsplatEntity = new Entity(config.name || 'gsplat'); // eslint-disable-line require-atomic-updates
     gsplatEntity.addComponent('gsplat', {
         asset: asset
     });
@@ -537,10 +580,10 @@ data.on('logBuffers', () => {
 
 app.on('update', () => {
     // log textures for one frame if requested
-    pc.Tracing.set(pc.TRACEID_TEXTURES, logTexturesRequested);
+    Tracing.set(TRACEID_TEXTURES, logTexturesRequested);
     logTexturesRequested = false;
 
-    pc.Tracing.set(pc.TRACEID_BUFFERS, logBuffersRequested);
+    Tracing.set(TRACEID_BUFFERS, logBuffersRequested);
     logBuffersRequested = false;
 
     data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());

@@ -3,7 +3,28 @@
 // This example demonstrates how to use the Anim Component to animate the properties of other
 // Components.
 
-import * as pc from 'playcanvas';
+import {
+    AnimClipHandler,
+    AnimComponentSystem,
+    AnimStateGraphHandler,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -11,7 +32,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', {
+    playcanvasGreyTexture: new Asset('playcanvasGreyTexture', 'texture', {
         url: './assets/textures/playcanvas-grey.png'
     })
 };
@@ -19,29 +40,29 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.AnimComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    AnimComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.AnimClipHandler, pc.AnimStateGraphHandler];
+createOptions.resourceHandlers = [TextureHandler, AnimClipHandler, AnimStateGraphHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -51,7 +72,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 // create the animation data for two static spot lights
@@ -160,32 +181,32 @@ const animClipFlashingLightData = {
     ]
 };
 
-const animClipHandler = new pc.AnimClipHandler(app);
+const animClipHandler = new AnimClipHandler(app);
 const animClipStaticLight = animClipHandler.open(undefined, animClipStaticLightData);
 const animClipFlashingLight = animClipHandler.open(undefined, animClipFlashingLightData);
 
 // Create an Entity with a camera component
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.name = 'camera';
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color(0, 0, 0.0)
+    clearColor: new Color(0, 0, 0.0)
 });
 cameraEntity.translateLocal(7, 10, 7);
 cameraEntity.lookAt(0, 0, 0);
 
-const boxEntity = new pc.Entity();
+const boxEntity = new Entity();
 boxEntity.addComponent('render', {
     type: 'box'
 });
 boxEntity.name = 'model';
 boxEntity.setPosition(0, 0.25, 0);
 boxEntity.setLocalScale(0.5, 0.5, 0.5);
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.diffuseMap = assets.playcanvasGreyTexture.resource;
 material.update();
 boxEntity.render.meshInstances[0].material = material;
 
-const planeEntity = new pc.Entity();
+const planeEntity = new Entity();
 planeEntity.name = 'plane';
 planeEntity.addComponent('render', {
     type: 'plane'
@@ -194,14 +215,14 @@ planeEntity.setLocalScale(15, 1, 15);
 planeEntity.setPosition(0, 0, 0);
 
 // Create the animatible lights
-const lightsEntity = new pc.Entity();
+const lightsEntity = new Entity();
 lightsEntity.name = 'lights';
 
-const light1 = new pc.Entity();
+const light1 = new Entity();
 light1.name = 'spotLight1';
 light1.addComponent('light', {
     type: 'spot',
-    color: new pc.Color(0.0, 0.0, 0.0, 1.0),
+    color: new Color(0.0, 0.0, 0.0, 1.0),
     intensity: 1,
     range: 15,
     innerConeAngle: 5,
@@ -209,11 +230,11 @@ light1.addComponent('light', {
 });
 light1.setPosition(0, 10, 0);
 
-const light2 = new pc.Entity();
+const light2 = new Entity();
 light2.name = 'spotLight2';
 light2.addComponent('light', {
     type: 'spot',
-    color: new pc.Color(0.0, 0.0, 0.0, 1.0),
+    color: new Color(0.0, 0.0, 0.0, 1.0),
     intensity: 1,
     range: 15,
     innerConeAngle: 5,

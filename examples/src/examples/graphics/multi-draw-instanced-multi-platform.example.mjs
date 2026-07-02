@@ -4,7 +4,40 @@
 // firstInstance for sub-draws, so instance data lives in a data texture and is fetched in the vertex
 // shader via base[gl_DrawID] + gl_InstanceID — portable and fast workaround.
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BoxGeometry,
+    CameraComponentSystem,
+    Color,
+    CylinderGeometry,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_NEAREST,
+    Geometry,
+    Mat4,
+    Mesh,
+    MeshInstance,
+    PIXELFORMAT_RGBA32F,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_ATTR11,
+    SphereGeometry,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TYPE_INT32,
+    Texture,
+    TextureHandler,
+    Vec3,
+    VertexBuffer,
+    VertexFormat,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -14,11 +47,11 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -26,20 +59,20 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -47,7 +80,7 @@ window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -56,27 +89,27 @@ app.start();
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.3;
 app.scene.envAtlas = assets.helipad.resource;
-app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+app.scene.ambientLight = new Color(0.1, 0.1, 0.1);
 
 // camera
-const camera = new pc.Entity();
-camera.addComponent('camera', { toneMapping: pc.TONEMAP_ACES });
+const camera = new Entity();
+camera.addComponent('camera', { toneMapping: TONEMAP_ACES });
 app.root.addChild(camera);
 camera.translate(0, 0, 16);
 
 // material
-const material = new pc.StandardMaterial();
+const material = new StandardMaterial();
 material.gloss = 0.6;
 material.metalness = 0.7;
 material.useMetalness = true;
 
 // build 3 primitive geometries (unit size)
-const sphereGeom = new pc.SphereGeometry({ radius: 0.5, latitudeBands: 24, longitudeBands: 24 });
-const boxGeom = new pc.BoxGeometry();
-const cylGeom = new pc.CylinderGeometry({ radius: 0.5, height: 1, heightSegments: 1, radialSegments: 32 });
+const sphereGeom = new SphereGeometry({ radius: 0.5, latitudeBands: 24, longitudeBands: 24 });
+const boxGeom = new BoxGeometry();
+const cylGeom = new CylinderGeometry({ radius: 0.5, height: 1, heightSegments: 1, radialSegments: 32 });
 
 // combine into single geometry
-const combine = new pc.Geometry();
+const combine = new Geometry();
 const pushGeom = (g, vertexOffset) => {
     // positions / normals / uvs
     combine.positions.push(...g.positions);
@@ -108,13 +141,13 @@ pushGeom(boxGeom, vtxCounts[0]);
 pushGeom(cylGeom, vtxCounts[0] + vtxCounts[1]);
 
 // create mesh
-const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, combine);
+const mesh = Mesh.fromGeometry(app.graphicsDevice, combine);
 
 // MeshInstance
-const meshInst = new pc.MeshInstance(mesh, material);
+const meshInst = new MeshInstance(mesh, material);
 
 // entity to render our MeshInstance
-const entity = new pc.Entity('MultiDrawEntity');
+const entity = new Entity('MultiDrawEntity');
 entity.addComponent('render', { meshInstances: [meshInst] });
 app.root.addChild(entity);
 
@@ -127,10 +160,10 @@ const instanceIndexes = new Uint32Array(totalInstances);
 const drawOffsets = new Float32Array(ringCounts.length);
 
 // populate matrices on 3 concentric rings; assign groups sequentially
-const tmpPos = new pc.Vec3();
-const tmpRot = new pc.Quat();
-const tmpScl = new pc.Vec3(1, 1, 1);
-const m = new pc.Mat4();
+const tmpPos = new Vec3();
+const tmpRot = new Quat();
+const tmpScl = new Vec3(1, 1, 1);
+const m = new Mat4();
 
 let write = 0;
 let indexCounter = 0;
@@ -162,39 +195,39 @@ if (app.graphicsDevice.isWebGL2 && app.graphicsDevice.supportsMultiDraw) {
     material.shaderChunks.glsl.set('transformInstancingVS', transformInstancingVert);
 
     // store matrices in texture
-    const matricesDataTexture = new pc.Texture(app.graphicsDevice, {
+    const matricesDataTexture = new Texture(app.graphicsDevice, {
         width: (totalInstances * 16) / 4, // write rbga as vec4
         height: 1,
-        format: pc.PIXELFORMAT_RGBA32F,
-        minFilter: pc.FILTER_NEAREST,
-        magFilter: pc.FILTER_NEAREST,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        format: PIXELFORMAT_RGBA32F,
+        minFilter: FILTER_NEAREST,
+        magFilter: FILTER_NEAREST,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE,
         mipmaps: false,
         numLevels: 1,
         levels: [matrices]
     });
 
     vbData = instanceIndexes;
-    vbFormat = new pc.VertexFormat(app.graphicsDevice, [
+    vbFormat = new VertexFormat(app.graphicsDevice, [
         {
-            semantic: pc.SEMANTIC_ATTR11,
+            semantic: SEMANTIC_ATTR11,
             components: 1,
-            type: pc.TYPE_INT32,
+            type: TYPE_INT32,
             asInt: true
         }
     ]);
 
-    material.setAttribute('aInstanceId', pc.SEMANTIC_ATTR11);
+    material.setAttribute('aInstanceId', SEMANTIC_ATTR11);
     material.setParameter('uDrawOffsets[0]', drawOffsets);
     material.setParameter('uInstanceMatrices', matricesDataTexture);
     material.update();
 } else {
     vbData = matrices;
-    vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+    vbFormat = VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
 }
 
-const vb = new pc.VertexBuffer(app.graphicsDevice, vbFormat, totalInstances, { data: vbData });
+const vb = new VertexBuffer(app.graphicsDevice, vbFormat, totalInstances, { data: vbData });
 meshInst.setInstancing(vb);
 
 // multi-draw: 3 draws (sphere, box, cylinder) with different instance counts
@@ -209,7 +242,7 @@ cmd.update(3);
 // draw helper lines around each ring to visualize distribution
 const linesPositions = [];
 const linesColors = [];
-const ringColor = [pc.Color.RED, pc.Color.GREEN, pc.Color.YELLOW];
+const ringColor = [Color.RED, Color.GREEN, Color.YELLOW];
 for (let ring = 0; ring < 3; ring++) {
     const n = ringCounts[ring];
     const r = radii[ring];
@@ -217,8 +250,8 @@ for (let ring = 0; ring < 3; ring++) {
     for (let i = 0; i < n; i++) {
         const a0 = (i / n) * Math.PI * 2;
         const a1 = (((i + 1) % n) / n) * Math.PI * 2;
-        const p0 = new pc.Vec3(Math.cos(a0) * r, 0, Math.sin(a0) * r);
-        const p1 = new pc.Vec3(Math.cos(a1) * r, 0, Math.sin(a1) * r);
+        const p0 = new Vec3(Math.cos(a0) * r, 0, Math.sin(a0) * r);
+        const p1 = new Vec3(Math.cos(a1) * r, 0, Math.sin(a1) * r);
         linesPositions.push(p0, p1);
         linesColors.push(col, col);
     }
@@ -229,7 +262,7 @@ let angle = 0;
 app.on('update', (dt) => {
     angle += dt * 0.2;
     camera.setLocalPosition(15 * Math.sin(angle), 7, 15 * Math.cos(angle));
-    camera.lookAt(pc.Vec3.ZERO);
+    camera.lookAt(Vec3.ZERO);
 
     app.drawLines(linesPositions, linesColors);
 });
