@@ -602,11 +602,15 @@ body {
 
 #controlPanel .pcui-label-group > .pcui-label {
     font-size: 14px;
-    max-width: 35%;
+    width: 42%;
+    max-width: 42%;
+    /* PCUI defaults to nowrap + ellipsis, which truncates longer labels (#7308) */
+    white-space: normal;
+    line-height: 1.1;
 }
 
 #controlPanel .pcui-label-group > .pcui-slider > .pcui-numeric-input {
-    min-width: 46px;
+    min-width: 52px;
 }
 
 #controlPanel > .pcui-panel-content {
