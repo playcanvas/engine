@@ -208,6 +208,12 @@ class TextureHandler extends ResourceHandler {
                 // basis normalmaps flag the variant as swizzled
                 options.type = TEXTURETYPE_SWIZZLEGGGR;
             }
+
+            // per-load creation options (raw Texture constructor options, for example
+            // { mipmaps: false, minFilter: FILTER_LINEAR }) override the asset-derived options
+            if (asset.options?.texture) {
+                Object.assign(options, asset.options.texture);
+            }
         }
 
         return options;

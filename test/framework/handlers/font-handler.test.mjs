@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { FILTER_LINEAR } from '../../../src/platform/graphics/constants.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -31,6 +32,31 @@ describe('FontHandler', function () {
             const font = asset.resource;
             expect(font).to.exist;
             expect(font.textures).to.be.an('array').with.lengthOf(1);
+            done();
+        });
+
+        asset.on('error', err => done(new Error(err)));
+    });
+
+    // regression test for https://github.com/playcanvas/engine/issues/8997 - MSDF atlases must
+    // load without mipmaps and with a non-mip minFilter: mip levels average the distance-field
+    // channels, corrupting the median under minification (visible as faint flickering artifacts
+    // below thin strokes on small text)
+    it('loads MSDF atlas textures without mipmaps', function (done) {
+        const asset = new Asset('arial', 'font', {
+            url: 'http://localhost:3210/test/assets/fonts/arial.json'
+        });
+
+        app.assets.add(asset);
+        app.assets.load(asset);
+
+        asset.ready(function () {
+            const textures = asset.resource.textures;
+            expect(textures).to.have.lengthOf(1);
+            textures.forEach((texture) => {
+                expect(texture.mipmaps).to.equal(false);
+                expect(texture.minFilter).to.equal(FILTER_LINEAR);
+            });
             done();
         });
 
