@@ -153,7 +153,7 @@ let needsRegen = true;
 //     to NVIDIA in the benchmark / validation sweeps.
 const RADIX_MODES = {
     '4-shared-mem': { kind: pc.RADIX_SORT_PORTABLE },
-    'onesweep': { kind: pc.RADIX_SORT_ONESWEEP }
+    onesweep: { kind: pc.RADIX_SORT_ONESWEEP }
 };
 const DEFAULT_MODE = '4-shared-mem';
 
@@ -210,7 +210,7 @@ function buildGpuLine(sep) {
         const maxSg = device.maxSubgroupSize;
         const minSg = device.minSubgroupSize;
         if (device.supportsSubgroups && maxSg) {
-            const range = (minSg && minSg !== maxSg) ? `${minSg}-${maxSg}` : `${maxSg}`;
+            const range = minSg && minSg !== maxSg ? `${minSg}-${maxSg}` : `${maxSg}`;
             line += `  ${sep}  subgroup: ${range}`;
         } else if (device.supportsSubgroups) {
             line += `  ${sep}  subgroup: yes`;
@@ -333,7 +333,7 @@ function calcTextureSize(numElements) {
 function regenerateData() {
     const numElements = currentNumElements;
     const numBits = currentNumBits;
-    const maxValue = numBits >= 32 ? 0xFFFFFFFF : (1 << numBits) - 1;
+    const maxValue = numBits >= 32 ? 0xffffffff : (1 << numBits) - 1;
 
     // Destroy old buffer
     if (keysBuffer) {
@@ -392,7 +392,7 @@ function updateMaterialParameters() {
         return;
     }
 
-    const maxValue = currentNumBits >= 32 ? 0xFFFFFFFF : (1 << currentNumBits) - 1;
+    const maxValue = currentNumBits >= 32 ? 0xffffffff : (1 << currentNumBits) - 1;
     const { width, height } = calcTextureSize(currentNumElements);
 
     // Update unsorted material
@@ -446,7 +446,9 @@ function processNextVerification() {
         const pending = pendingVerification;
         pendingVerification = null;
         verificationPending = true;
-        doVerification(pending.sortedIndices, pending.originalValues, pending.numElements).then(processNextVerification);
+        doVerification(pending.sortedIndices, pending.originalValues, pending.numElements).then(
+            processNextVerification
+        );
     }
 }
 
@@ -501,7 +503,9 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
 
     if (errorCount > 0) {
         sortFailureCount++;
-        console.error(`✗ [${device.deviceType}] Array is NOT correctly sorted (${errorCount} errors, ${(errorCount / capturedNumElements * 100).toFixed(2)}%)`);
+        console.error(
+            `✗ [${device.deviceType}] Array is NOT correctly sorted (${errorCount} errors, ${((errorCount / capturedNumElements) * 100).toFixed(2)}%)`
+        );
         for (const e of firstErrors) {
             console.error(`  First mismatch at index ${e.i}: GPU=${e.gpu}, expected=${e.expected}`);
         }
@@ -539,7 +543,8 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         // Snap to a multiple of 8 so the bit count is compatible with both
         // 4-bit and 8-bit radix modes without realignment at sort time.
         const validBits = [8, 16, 24, 32];
-        const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev)
+        const nearest = validBits.reduce((prev, curr) =>
+            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
         );
         if (nearest !== currentNumBits) {
             currentNumBits = nearest;
@@ -574,9 +579,8 @@ data.set('options', {
 // 100K and 500K expose per-dispatch fixed-cost floors; 30M+ probes DRAM
 // bandwidth ceilings. 24-bit keys is the gsplat-representative bit width.
 const BENCH_SIZES = [
-    100_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 4_000_000,
-    5_000_000, 6_000_000, 8_000_000, 10_000_000, 15_000_000,
-    20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
+    100_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000, 8_000_000, 10_000_000,
+    15_000_000, 20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
 ];
 // The benchmark and validation matrix mirrors the production decision:
 //   - 4-bit is the universal portable fallback (every non-NVIDIA device:
@@ -935,7 +939,8 @@ function renderBenchResults(results, onClose) {
 
     // Line chart placeholder; filled in by drawBenchChart() after the
     // overlay HTML is committed to the DOM.
-    html += '<canvas id="bench-chart" width="700" height="320" style="display:block;background:#1a1a2e;border-radius:4px;width:100%;max-width:700px;margin-bottom:14px;"></canvas>';
+    html +=
+        '<canvas id="bench-chart" width="700" height="320" style="display:block;background:#1a1a2e;border-radius:4px;width:100%;max-width:700px;margin-bottom:14px;"></canvas>';
 
     html += `<table style="border-collapse:collapse;margin-bottom:14px;width:100%;color:${TXT};">`;
     html += `<thead><tr style="background:${HDR_BG};">`;
@@ -968,7 +973,7 @@ function renderBenchResults(results, onClose) {
             const v = row.get(cfg.label)?.frameMs ?? 0;
             html += `<td ${td}>${v ? v.toFixed(2) : '—'}</td>`;
             if (c > 0) {
-                const speedup = (b > 0 && v > 0) ? (b / v) : 0;
+                const speedup = b > 0 && v > 0 ? b / v : 0;
                 const spColor = speedup >= 1 ? '#78e37a' : '#e87878';
                 html += `<td style="text-align:right;padding:3px 10px;color:${spColor};">${speedup ? `${speedup.toFixed(2)}×` : '—'}</td>`;
             }
@@ -1001,8 +1006,10 @@ function renderBenchResults(results, onClose) {
     html += '</tbody></table>';
 
     html += '<div style="margin-top:14px;display:flex;gap:8px;">';
-    html += '<button id="bench-save-btn" style="background:#3a8a3a;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Save to file</button>';
-    html += '<button id="bench-close-btn" style="background:#4a9eff;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Close</button>';
+    html +=
+        '<button id="bench-save-btn" style="background:#3a8a3a;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Save to file</button>';
+    html +=
+        '<button id="bench-close-btn" style="background:#4a9eff;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Close</button>';
     html += '</div>';
     html += '</div>';
 
@@ -1018,7 +1025,7 @@ function renderBenchResults(results, onClose) {
     // Wire up per-row toggles. Each button flips the matching detail row
     // and swaps its caret glyph.
     const toggles = benchResults.querySelectorAll('button[data-toggle]');
-    toggles.forEach((btn) => {
+    toggles.forEach(btn => {
         const b = /** @type {HTMLButtonElement} */ (btn);
         b.onclick = () => {
             const idx = b.getAttribute('data-toggle');
@@ -1099,7 +1106,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
      * @param {number} v - Value in ms.
      * @returns {number} Pixel Y.
      */
-    const yOf = (v) => {
+    const yOf = v => {
         const lv = Math.log10(Math.max(v, 10 ** (logMin - 2)));
         return H - PAD.bottom - ((lv - logMin) / logRange) * plotH;
     };
@@ -1321,9 +1328,12 @@ function benchFilename() {
     let tag = device.deviceType || 'gpu';
     if (device.isWebGPU && dev.gpuAdapter?.info) {
         const info = dev.gpuAdapter.info;
-        tag = (info.architecture || info.device || info.vendor || 'gpu');
+        tag = info.architecture || info.device || info.vendor || 'gpu';
     }
-    tag = String(tag).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    tag = String(tag)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
     const d = new Date();
     const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
     const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
@@ -1437,7 +1447,10 @@ async function runValidation() {
             for (const cfg of BENCH_CONFIGS) {
                 if (skipLabels.has(cfg.label)) {
                     results.set(key(size, cfg.label), {
-                        passed: 0, failed: 0, skipped: true, firstFailure: null
+                        passed: 0,
+                        failed: 0,
+                        skipped: true,
+                        firstFailure: null
                     });
                 }
             }
@@ -1457,9 +1470,7 @@ async function runValidation() {
                 for (const cfg of BENCH_CONFIGS) {
                     if (skipLabels.has(cfg.label)) continue;
 
-                    showBenchStatus(
-                        `Validating [${cfg.label}]  ${fmtN(size)}  run ${run + 1}/${VALIDATE_RUNS}`
-                    );
+                    showBenchStatus(`Validating [${cfg.label}]  ${fmtN(size)}  run ${run + 1}/${VALIDATE_RUNS}`);
 
                     const sort = createBenchSort(cfg.modeKey);
                     const alignedBits = Math.ceil(BENCH_BITS / sort.radixBits) * sort.radixBits;
@@ -1495,7 +1506,7 @@ async function runValidation() {
                     // Yield a frame so the engine can flush the GPU queue
                     // between sorts and the status overlay updates live.
                     // eslint-disable-next-line no-await-in-loop
-                    await new Promise((resolve) => {
+                    await new Promise(resolve => {
                         requestAnimationFrame(() => resolve(undefined));
                     });
                 }
@@ -1604,8 +1615,10 @@ function renderValidateResults(results, sizes, onClose) {
     html += '</tbody></table>';
 
     html += '<div style="margin-top:14px;display:flex;gap:8px;">';
-    html += '<button id="validate-save" style="background:#2a6;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Save to file</button>';
-    html += '<button id="validate-close" style="background:#48a;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Close</button>';
+    html +=
+        '<button id="validate-save" style="background:#2a6;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Save to file</button>';
+    html +=
+        '<button id="validate-close" style="background:#48a;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Close</button>';
     html += '</div>';
 
     benchResults.innerHTML = html;
@@ -1613,7 +1626,7 @@ function renderValidateResults(results, sizes, onClose) {
 
     // Wire toggle buttons.
     const toggles = benchResults.querySelectorAll('button[data-toggle]');
-    toggles.forEach((btn) => {
+    toggles.forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = btn.getAttribute('data-toggle');
             const row = /** @type {HTMLElement|null} */ (
@@ -1724,9 +1737,12 @@ function validateFilename() {
     let tag = device.deviceType || 'gpu';
     if (device.isWebGPU && dev.gpuAdapter?.info) {
         const info = dev.gpuAdapter.info;
-        tag = (info.architecture || info.device || info.vendor || 'gpu');
+        tag = info.architecture || info.device || info.vendor || 'gpu';
     }
-    tag = String(tag).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    tag = String(tag)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
     const d = new Date();
     const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
     const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;

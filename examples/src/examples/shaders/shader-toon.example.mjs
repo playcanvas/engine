@@ -44,69 +44,70 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
+app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5)
+});
+camera.translate(0, 7, 24);
+
+// Create an Entity with a omni light component and a sphere model component.
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'omni',
+    color: new pc.Color(1, 1, 1),
+    radius: 10
+});
+light.translate(0, 1, 0);
+
+// Add entities into scene hierarchy
+app.root.addChild(camera);
+app.root.addChild(light);
+
+// Create a new material with a custom shader
+const material = new pc.ShaderMaterial({
+    uniqueName: 'toon',
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: shaderGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: shaderWgslFrag,
+    attributes: {
+        aPosition: pc.SEMANTIC_POSITION,
+        aNormal: pc.SEMANTIC_NORMAL,
+        aUv: pc.SEMANTIC_TEXCOORD0
+    }
+});
+
+// create a hierarchy of entities with render components, representing the statue model
+const entity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(entity);
+
+/**
+ * Set the new material on all meshes in the model, and use original texture from the model on the new material
+ * @type {pc.Texture | null}
+ */
+/** @type {Array<pc.RenderComponent>} */
+const renders = entity.findComponents('render');
+renders.forEach(render => {
+    render.meshInstances.forEach(meshInstance => {
+        meshInstance.material = material;
     });
-    camera.translate(0, 7, 24);
+});
 
-    // Create an Entity with a omni light component and a sphere model component.
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'omni',
-        color: new pc.Color(1, 1, 1),
-        radius: 10
-    });
-    light.translate(0, 1, 0);
+// material parameters
+const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
+material.setParameter('uLightPos', lightPosArray);
+material.update();
 
-    // Add entities into scene hierarchy
-    app.root.addChild(camera);
-    app.root.addChild(light);
-
-    // Create a new material with a custom shader
-    const material = new pc.ShaderMaterial({
-        uniqueName: 'toon',
-        vertexGLSL: shaderGlslVert,
-        fragmentGLSL: shaderGlslFrag,
-        vertexWGSL: shaderWgslVert,
-        fragmentWGSL: shaderWgslFrag,
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION,
-            aNormal: pc.SEMANTIC_NORMAL,
-            aUv: pc.SEMANTIC_TEXCOORD0
-        }
-    });
-
-    // create a hierarchy of entities with render components, representing the statue model
-    const entity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
-
-    /**
-     * Set the new material on all meshes in the model, and use original texture from the model on the new material
-     * @type {pc.Texture | null}
-     */
-    /** @type {Array<pc.RenderComponent>} */
-    const renders = entity.findComponents('render');
-    renders.forEach((render) => {
-        render.meshInstances.forEach((meshInstance) => {
-            meshInstance.material = material;
-        });
-    });
-
-    // material parameters
-    const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
-    material.setParameter('uLightPos', lightPosArray);
-    material.update();
-
-    // rotate the statue
-    app.on('update', (dt) => {
-        entity.rotate(0, 60 * dt, 0);
-    });
+// rotate the statue
+app.on('update', dt => {
+    entity.rotate(0, 60 * dt, 0);
 });

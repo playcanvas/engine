@@ -31,10 +31,10 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 });
 
 await Promise.all([
-    new Promise((resolve) => {
+    new Promise(resolve => {
         pc.WasmModule.getInstance('Ammo', () => resolve(true));
     }),
-    new Promise((resolve) => {
+    new Promise(resolve => {
         pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
@@ -88,8 +88,12 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
+    splat: new pc.Asset('sunnyvale-splat', 'gsplat', {
+        url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog'
+    }),
+    collision: new pc.Asset('sunnyvale-collision', 'container', {
+        url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb'
+    }),
     character: new pc.Asset('character', 'container', { url: './assets/models/bitmoji.glb' }),
     idleAnim: new pc.Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
     walkAnim: new pc.Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
@@ -104,7 +108,7 @@ const assets = {
     )
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -372,23 +376,25 @@ layer.assignAnimation('Dance', assets.danceAnim.resource.animations[0].resource)
 
 // Wire the third-person controller
 characterController.addComponent('script');
-const tpc = /** @type {ThirdPersonController} */ (characterController.script.create(ThirdPersonController, {
-    properties: {
-        camera,
-        characterModel,
-        jumpForce: 420,
-        speedGround: 65,
-        sprintMult: 1.73,
-        cameraDistance: data.get('cameraDistance'),
-        cameraHeight: data.get('cameraHeight'),
-        cameraPositionDamping: data.get('cameraSmoothing'),
-        lookSens: data.get('lookSens'),
-        invertLookY: true,
-        initialPitch: 17,
-        walkSpeedThreshold: 0.5,
-        jogSpeedThreshold: 4
-    }
-}));
+const tpc = /** @type {ThirdPersonController} */ (
+    characterController.script.create(ThirdPersonController, {
+        properties: {
+            camera,
+            characterModel,
+            jumpForce: 420,
+            speedGround: 65,
+            sprintMult: 1.73,
+            cameraDistance: data.get('cameraDistance'),
+            cameraHeight: data.get('cameraHeight'),
+            cameraPositionDamping: data.get('cameraSmoothing'),
+            lookSens: data.get('lookSens'),
+            invertLookY: true,
+            initialPitch: 17,
+            walkSpeedThreshold: 0.5,
+            jogSpeedThreshold: 4
+        }
+    })
+);
 
 // Drive animation parameters from controller events
 tpc.on('speed', (/** @type {number} */ bucket) => {

@@ -10,7 +10,7 @@ pc.WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -208,8 +208,22 @@ function createRagdollTemplate() {
 
         // legs hang down - the hip twist axis points down the thigh, swinging further forwards
         // and backwards (Z) than sideways (Y)
-        const thigh = createPart(root, `${prefix}thigh`, new pc.Vec3(0.13, 0.38, 0.13), new pc.Vec3(side * 0.11, 0.6, 0), 4, blue);
-        const shin = createPart(root, `${prefix}shin`, new pc.Vec3(0.12, 0.38, 0.12), new pc.Vec3(side * 0.11, 0.2, 0), 2.5, skin);
+        const thigh = createPart(
+            root,
+            `${prefix}thigh`,
+            new pc.Vec3(0.13, 0.38, 0.13),
+            new pc.Vec3(side * 0.11, 0.6, 0),
+            4,
+            blue
+        );
+        const shin = createPart(
+            root,
+            `${prefix}shin`,
+            new pc.Vec3(0.12, 0.38, 0.12),
+            new pc.Vec3(side * 0.11, 0.2, 0),
+            2.5,
+            skin
+        );
 
         createJoint(root, `${prefix}hip`, new pc.Vec3(side * 0.11, 0.8, 0), new pc.Vec3(0, 0, -90), {
             type: pc.JOINTTYPE_BALL,
@@ -232,18 +246,38 @@ function createRagdollTemplate() {
         });
 
         // arms extend sideways in a T-pose - the shoulder twist axis points along the arm
-        const upperArm = createPart(root, `${prefix}upper-arm`, new pc.Vec3(0.28, 0.12, 0.12), new pc.Vec3(side * 0.36, 1.4, 0), 1.5, skin);
-        const forearm = createPart(root, `${prefix}forearm`, new pc.Vec3(0.28, 0.11, 0.11), new pc.Vec3(side * 0.66, 1.4, 0), 1, skin);
+        const upperArm = createPart(
+            root,
+            `${prefix}upper-arm`,
+            new pc.Vec3(0.28, 0.12, 0.12),
+            new pc.Vec3(side * 0.36, 1.4, 0),
+            1.5,
+            skin
+        );
+        const forearm = createPart(
+            root,
+            `${prefix}forearm`,
+            new pc.Vec3(0.28, 0.11, 0.11),
+            new pc.Vec3(side * 0.66, 1.4, 0),
+            1,
+            skin
+        );
 
-        createJoint(root, `${prefix}shoulder`, new pc.Vec3(side * 0.21, 1.4, 0), new pc.Vec3(0, 0, side < 0 ? 180 : 0), {
-            type: pc.JOINTTYPE_BALL,
-            entityA: upperArm,
-            entityB: torso,
-            enableLimits: true,
-            swingLimitY: 80,
-            swingLimitZ: 80,
-            twistLimit: 30
-        });
+        createJoint(
+            root,
+            `${prefix}shoulder`,
+            new pc.Vec3(side * 0.21, 1.4, 0),
+            new pc.Vec3(0, 0, side < 0 ? 180 : 0),
+            {
+                type: pc.JOINTTYPE_BALL,
+                entityA: upperArm,
+                entityB: torso,
+                enableLimits: true,
+                swingLimitY: 80,
+                swingLimitZ: 80,
+                twistLimit: 30
+            }
+        );
 
         // the elbow hinge axis points up - the limits are mirrored so that each arm folds
         // towards the torso
@@ -282,7 +316,11 @@ function spawnRagdoll(x, y, yaw) {
 
     // tumble as it falls
     const pelvis = ragdoll.findByName('pelvis');
-    pelvis.rigidbody.angularVelocity = new pc.Vec3(Math.random() * 3 - 1.5, Math.random() * 2 - 1, Math.random() * 3 - 1.5);
+    pelvis.rigidbody.angularVelocity = new pc.Vec3(
+        Math.random() * 3 - 1.5,
+        Math.random() * 2 - 1,
+        Math.random() * 3 - 1.5
+    );
 
     return ragdoll;
 }
@@ -402,19 +440,19 @@ function shootBall(x, y) {
     ball.rigidbody.linearVelocity = direction.mulScalar(30);
 }
 
-app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
+app.mouse.on(pc.EVENT_MOUSEDOWN, event => {
     if (!startGrab(event.x, event.y)) {
         shootBall(event.x, event.y);
     }
 });
-app.mouse.on(pc.EVENT_MOUSEMOVE, (event) => {
+app.mouse.on(pc.EVENT_MOUSEMOVE, event => {
     moveGrab(event.x, event.y);
 });
 app.mouse.on(pc.EVENT_MOUSEUP, () => {
     endGrab();
 });
 
-app.touch.on(pc.EVENT_TOUCHSTART, (event) => {
+app.touch.on(pc.EVENT_TOUCHSTART, event => {
     const touch = event.touches[0];
     if (touch && !startGrab(touch.x, touch.y)) {
         shootBall(touch.x, touch.y);
@@ -422,7 +460,7 @@ app.touch.on(pc.EVENT_TOUCHSTART, (event) => {
     // prevent the browser generating a synthetic mousedown for this touch
     event.event.preventDefault();
 });
-app.touch.on(pc.EVENT_TOUCHMOVE, (event) => {
+app.touch.on(pc.EVENT_TOUCHMOVE, event => {
     const touch = event.touches[0];
     if (touch) {
         moveGrab(touch.x, touch.y);

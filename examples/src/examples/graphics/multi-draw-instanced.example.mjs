@@ -46,148 +46,143 @@ const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.skyboxMip = 2;
-    app.scene.exposure = 0.3;
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+app.start();
 
-    // camera
-    const camera = new pc.Entity();
-    camera.addComponent('camera', { toneMapping: pc.TONEMAP_ACES });
-    app.root.addChild(camera);
-    camera.translate(0, 0, 16);
+// setup skydome
+app.scene.skyboxMip = 2;
+app.scene.exposure = 0.3;
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
-    // material
-    const material = new pc.StandardMaterial();
-    material.gloss = 0.6;
-    material.metalness = 0.7;
-    material.useMetalness = true;
-    material.update();
+// camera
+const camera = new pc.Entity();
+camera.addComponent('camera', { toneMapping: pc.TONEMAP_ACES });
+app.root.addChild(camera);
+camera.translate(0, 0, 16);
 
-    // build 3 primitive geometries (unit size)
-    const sphereGeom = new pc.SphereGeometry({ radius: 0.5, latitudeBands: 24, longitudeBands: 24 });
-    const boxGeom = new pc.BoxGeometry();
-    const cylGeom = new pc.CylinderGeometry({ radius: 0.5, height: 1, heightSegments: 1, radialSegments: 32 });
+// material
+const material = new pc.StandardMaterial();
+material.gloss = 0.6;
+material.metalness = 0.7;
+material.useMetalness = true;
+material.update();
 
-    // combine into single geometry
-    const combine = new pc.Geometry();
-    const pushGeom = (g, vertexOffset) => {
-        // positions / normals / uvs
-        combine.positions.push(...g.positions);
-        if (g.normals) combine.normals ??= []; if (g.normals) combine.normals.push(...g.normals);
-        if (g.uvs) combine.uvs ??= []; if (g.uvs) combine.uvs.push(...g.uvs);
+// build 3 primitive geometries (unit size)
+const sphereGeom = new pc.SphereGeometry({ radius: 0.5, latitudeBands: 24, longitudeBands: 24 });
+const boxGeom = new pc.BoxGeometry();
+const cylGeom = new pc.CylinderGeometry({ radius: 0.5, height: 1, heightSegments: 1, radialSegments: 32 });
 
-        // indices with offset
-        const base = vertexOffset;
-        const srcIdx = g.indices;
-        for (let i = 0; i < srcIdx.length; i++) combine.indices.push(srcIdx[i] + base);
-    };
+// combine into single geometry
+const combine = new pc.Geometry();
+const pushGeom = (g, vertexOffset) => {
+    // positions / normals / uvs
+    combine.positions.push(...g.positions);
+    if (g.normals) combine.normals ??= [];
+    if (g.normals) combine.normals.push(...g.normals);
+    if (g.uvs) combine.uvs ??= [];
+    if (g.uvs) combine.uvs.push(...g.uvs);
 
-    // initialize arrays
-    combine.positions = [];
-    combine.normals = [];
-    combine.uvs = [];
-    combine.indices = [];
+    // indices with offset
+    const base = vertexOffset;
+    const srcIdx = g.indices;
+    for (let i = 0; i < srcIdx.length; i++) combine.indices.push(srcIdx[i] + base);
+};
 
-    // vertex offsets and firstIndex tracking (in indices)
-    const vtxCounts = [
-        sphereGeom.positions.length / 3,
-        boxGeom.positions.length / 3,
-        cylGeom.positions.length / 3
-    ];
-    const idxCounts = [
-        sphereGeom.indices.length,
-        boxGeom.indices.length,
-        cylGeom.indices.length
-    ];
-    const firstIndex = [0, idxCounts[0], idxCounts[0] + idxCounts[1]];
+// initialize arrays
+combine.positions = [];
+combine.normals = [];
+combine.uvs = [];
+combine.indices = [];
 
-    // append geometries
-    pushGeom(sphereGeom, 0);
-    pushGeom(boxGeom, vtxCounts[0]);
-    pushGeom(cylGeom, vtxCounts[0] + vtxCounts[1]);
+// vertex offsets and firstIndex tracking (in indices)
+const vtxCounts = [sphereGeom.positions.length / 3, boxGeom.positions.length / 3, cylGeom.positions.length / 3];
+const idxCounts = [sphereGeom.indices.length, boxGeom.indices.length, cylGeom.indices.length];
+const firstIndex = [0, idxCounts[0], idxCounts[0] + idxCounts[1]];
 
-    // create mesh
-    const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, combine);
+// append geometries
+pushGeom(sphereGeom, 0);
+pushGeom(boxGeom, vtxCounts[0]);
+pushGeom(cylGeom, vtxCounts[0] + vtxCounts[1]);
 
-    // MeshInstance
-    const meshInst = new pc.MeshInstance(mesh, material);
+// create mesh
+const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, combine);
 
-    // entity to render our MeshInstance
-    const entity = new pc.Entity('MultiDrawEntity');
-    entity.addComponent('render', { meshInstances: [meshInst] });
-    app.root.addChild(entity);
+// MeshInstance
+const meshInst = new pc.MeshInstance(mesh, material);
 
-    // instancing
-    const ringCounts = [8, 15, 25];
-    const totalInstances = ringCounts[0] + ringCounts[1] + ringCounts[2];
+// entity to render our MeshInstance
+const entity = new pc.Entity('MultiDrawEntity');
+entity.addComponent('render', { meshInstances: [meshInst] });
+app.root.addChild(entity);
 
-    const matrices = new Float32Array(totalInstances * 16);
-    const vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
-    const vb = new pc.VertexBuffer(app.graphicsDevice, vbFormat, totalInstances, { data: matrices });
-    meshInst.setInstancing(vb);
+// instancing
+const ringCounts = [8, 15, 25];
+const totalInstances = ringCounts[0] + ringCounts[1] + ringCounts[2];
 
-    // populate matrices on 3 concentric rings; assign groups sequentially
-    const tmpPos = new pc.Vec3();
-    const tmpRot = new pc.Quat();
-    const tmpScl = new pc.Vec3(1, 1, 1);
-    const m = new pc.Mat4();
+const matrices = new Float32Array(totalInstances * 16);
+const vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+const vb = new pc.VertexBuffer(app.graphicsDevice, vbFormat, totalInstances, { data: matrices });
+meshInst.setInstancing(vb);
 
-    let write = 0;
-    const radii = [2, 4, 6];
+// populate matrices on 3 concentric rings; assign groups sequentially
+const tmpPos = new pc.Vec3();
+const tmpRot = new pc.Quat();
+const tmpScl = new pc.Vec3(1, 1, 1);
+const m = new pc.Mat4();
+
+let write = 0;
+const radii = [2, 4, 6];
+for (let ring = 0; ring < 3; ring++) {
+    const n = ringCounts[ring];
+    const r = radii[ring];
+    for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        tmpPos.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+        tmpRot.setFromEulerAngles(0, (a * 180) / Math.PI, 0);
+        m.setTRS(tmpPos, tmpRot, tmpScl);
+        matrices.set(m.data, write);
+        write += 16;
+    }
+}
+// upload instance buffer
+vb.unlock();
+
+// multi-draw: 3 draws (sphere, box, cylinder) with different instance counts
+// provide firstInstance (instances are packed sequentially per ring) - this is WebGPU only
+const firstInstance = [0, ringCounts[0], ringCounts[0] + ringCounts[1]];
+const cmd = meshInst.setMultiDraw(null, 3);
+cmd.add(0, idxCounts[0], ringCounts[0], firstIndex[0], 0, firstInstance[0]);
+cmd.add(1, idxCounts[1], ringCounts[1], firstIndex[1], 0, firstInstance[1]);
+cmd.add(2, idxCounts[2], ringCounts[2], firstIndex[2], 0, firstInstance[2]);
+cmd.update(3);
+
+// orbit camera
+let angle = 0;
+app.on('update', dt => {
+    angle += dt * 0.2;
+    camera.setLocalPosition(15 * Math.sin(angle), 7, 15 * Math.cos(angle));
+    camera.lookAt(pc.Vec3.ZERO);
+
+    // draw helper lines around each ring to visualize distribution
+    const linesPositions = [];
+    const linesColors = [];
+    const ringColor = [pc.Color.RED, pc.Color.GREEN, pc.Color.YELLOW];
     for (let ring = 0; ring < 3; ring++) {
         const n = ringCounts[ring];
         const r = radii[ring];
+        const col = ringColor[ring];
         for (let i = 0; i < n; i++) {
-            const a = (i / n) * Math.PI * 2;
-            tmpPos.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-            tmpRot.setFromEulerAngles(0, (a * 180) / Math.PI, 0);
-            m.setTRS(tmpPos, tmpRot, tmpScl);
-            matrices.set(m.data, write);
-            write += 16;
+            const a0 = (i / n) * Math.PI * 2;
+            const a1 = (((i + 1) % n) / n) * Math.PI * 2;
+            const p0 = new pc.Vec3(Math.cos(a0) * r, 0, Math.sin(a0) * r);
+            const p1 = new pc.Vec3(Math.cos(a1) * r, 0, Math.sin(a1) * r);
+            linesPositions.push(p0, p1);
+            linesColors.push(col, col);
         }
     }
-    // upload instance buffer
-    vb.unlock();
-
-    // multi-draw: 3 draws (sphere, box, cylinder) with different instance counts
-    // provide firstInstance (instances are packed sequentially per ring) - this is WebGPU only
-    const firstInstance = [0, ringCounts[0], ringCounts[0] + ringCounts[1]];
-    const cmd = meshInst.setMultiDraw(null, 3);
-    cmd.add(0, idxCounts[0], ringCounts[0], firstIndex[0], 0, firstInstance[0]);
-    cmd.add(1, idxCounts[1], ringCounts[1], firstIndex[1], 0, firstInstance[1]);
-    cmd.add(2, idxCounts[2], ringCounts[2], firstIndex[2], 0, firstInstance[2]);
-    cmd.update(3);
-
-    // orbit camera
-    let angle = 0;
-    app.on('update', (dt) => {
-        angle += dt * 0.2;
-        camera.setLocalPosition(15 * Math.sin(angle), 7, 15 * Math.cos(angle));
-        camera.lookAt(pc.Vec3.ZERO);
-
-        // draw helper lines around each ring to visualize distribution
-        const linesPositions = [];
-        const linesColors = [];
-        const ringColor = [pc.Color.RED, pc.Color.GREEN, pc.Color.YELLOW];
-        for (let ring = 0; ring < 3; ring++) {
-            const n = ringCounts[ring];
-            const r = radii[ring];
-            const col = ringColor[ring];
-            for (let i = 0; i < n; i++) {
-                const a0 = (i / n) * Math.PI * 2;
-                const a1 = ((i + 1) % n) / n * Math.PI * 2;
-                const p0 = new pc.Vec3(Math.cos(a0) * r, 0, Math.sin(a0) * r);
-                const p1 = new pc.Vec3(Math.cos(a1) * r, 0, Math.sin(a1) * r);
-                linesPositions.push(p0, p1);
-                linesColors.push(col, col);
-            }
-        }
-        app.drawLines(linesPositions, linesColors);
-    });
+    app.drawLines(linesPositions, linesColors);
 });

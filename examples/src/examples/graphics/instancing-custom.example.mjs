@@ -48,104 +48,105 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.skyboxMip = 2;
-    app.scene.exposure = 0.8;
-    app.scene.envAtlas = assets.helipad.resource;
+app.start();
 
-    // set up some general scene rendering properties
-    app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+// setup skydome
+app.scene.skyboxMip = 2;
+app.scene.exposure = 0.8;
+app.scene.envAtlas = assets.helipad.resource;
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        toneMapping: pc.TONEMAP_ACES
-    });
-    app.root.addChild(camera);
+// set up some general scene rendering properties
+app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
-    // create static vertex buffer containing the instancing data
-    const vbFormat = new pc.VertexFormat(app.graphicsDevice, [
-        { semantic: pc.SEMANTIC_ATTR12, components: 3, type: pc.TYPE_FLOAT32 }, // position
-        { semantic: pc.SEMANTIC_ATTR13, components: 1, type: pc.TYPE_FLOAT32 }  // scale
-    ]);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    toneMapping: pc.TONEMAP_ACES
+});
+app.root.addChild(camera);
 
-    // store data for individual instances into array, 4 floats each
-    const instanceCount = 3000;
-    const data = new Float32Array(instanceCount * 4);
+// create static vertex buffer containing the instancing data
+const vbFormat = new pc.VertexFormat(app.graphicsDevice, [
+    { semantic: pc.SEMANTIC_ATTR12, components: 3, type: pc.TYPE_FLOAT32 }, // position
+    { semantic: pc.SEMANTIC_ATTR13, components: 1, type: pc.TYPE_FLOAT32 } // scale
+]);
 
-    const range = 10;
-    for (let i = 0; i < instanceCount; i++) {
-        const offset = i * 4;
-        data[offset + 0] = Math.random() * range - range * 0.5; // x
-        data[offset + 1] = Math.random() * range - range * 0.5; // y
-        data[offset + 2] = Math.random() * range - range * 0.5; // z
-        data[offset + 3] = 0.1 + Math.random() * 0.1; // scale
-    }
+// store data for individual instances into array, 4 floats each
+const instanceCount = 3000;
+const data = new Float32Array(instanceCount * 4);
 
-    const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
-        data: data
-    });
+const range = 10;
+for (let i = 0; i < instanceCount; i++) {
+    const offset = i * 4;
+    data[offset + 0] = Math.random() * range - range * 0.5; // x
+    data[offset + 1] = Math.random() * range - range * 0.5; // y
+    data[offset + 2] = Math.random() * range - range * 0.5; // z
+    data[offset + 3] = 0.1 + Math.random() * 0.1; // scale
+}
 
-    // create standard material - this will be used for instanced, but also non-instanced rendering
-    const material = new pc.StandardMaterial();
-    material.gloss = 0.5;
-    material.metalness = 1;
-    material.diffuse = new pc.Color(0.7, 0.5, 0.7);
-    material.useMetalness = true;
+const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
+    data: data
+});
 
-    // set up additional attributes needed for instancing
-    material.setAttribute('aInstPosition', pc.SEMANTIC_ATTR12);
-    material.setAttribute('aInstScale', pc.SEMANTIC_ATTR13);
+// create standard material - this will be used for instanced, but also non-instanced rendering
+const material = new pc.StandardMaterial();
+material.gloss = 0.5;
+material.metalness = 1;
+material.diffuse = new pc.Color(0.7, 0.5, 0.7);
+material.useMetalness = true;
 
-    // and a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
-    material.shaderChunksVersion = '2.8';
-    material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('transformInstancingVS', transformInstancingGlslVert);
-    material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('transformInstancingVS', transformInstancingWgslVert);
+// set up additional attributes needed for instancing
+material.setAttribute('aInstPosition', pc.SEMANTIC_ATTR12);
+material.setAttribute('aInstScale', pc.SEMANTIC_ATTR13);
 
-    material.update();
+// and a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
+material.shaderChunksVersion = '2.8';
+material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('transformInstancingVS', transformInstancingGlslVert);
+material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('transformInstancingVS', transformInstancingWgslVert);
 
-    // Create an Entity with a sphere and the instancing material
-    const instancingEntity = new pc.Entity('InstancingEntity');
-    instancingEntity.addComponent('render', {
-        material: material,
-        type: 'sphere'
-    });
-    app.root.addChild(instancingEntity);
+material.update();
 
-    // initialize instancing using the vertex buffer on meshInstance of the created mesh instance
-    const meshInst = instancingEntity.render.meshInstances[0];
-    meshInst.setInstancing(vertexBuffer);
+// Create an Entity with a sphere and the instancing material
+const instancingEntity = new pc.Entity('InstancingEntity');
+instancingEntity.addComponent('render', {
+    material: material,
+    type: 'sphere'
+});
+app.root.addChild(instancingEntity);
 
-    // add a non-instanced sphere, using the same material. A non-instanced version of the shader
-    // is automatically created by the engine
-    const sphere = new pc.Entity('sphere');
-    sphere.addComponent('render', {
-        material: material,
-        type: 'sphere'
-    });
-    sphere.setLocalScale(2, 2, 2);
-    app.root.addChild(sphere);
+// initialize instancing using the vertex buffer on meshInstance of the created mesh instance
+const meshInst = instancingEntity.render.meshInstances[0];
+meshInst.setInstancing(vertexBuffer);
 
-    // An update function executes once per frame
-    let time = 0;
-    const spherePos = new pc.Vec3();
-    app.on('update', (dt) => {
-        time += dt;
+// add a non-instanced sphere, using the same material. A non-instanced version of the shader
+// is automatically created by the engine
+const sphere = new pc.Entity('sphere');
+sphere.addComponent('render', {
+    material: material,
+    type: 'sphere'
+});
+sphere.setLocalScale(2, 2, 2);
+app.root.addChild(sphere);
 
-        // move the large sphere up and down
-        spherePos.set(0, Math.sin(time) * 2, 0);
-        sphere.setLocalPosition(spherePos);
+// An update function executes once per frame
+let time = 0;
+const spherePos = new pc.Vec3();
+app.on('update', dt => {
+    time += dt;
 
-        // update uniforms of the instancing material
-        material.setParameter('uTime', time);
-        material.setParameter('uCenter', [spherePos.x, spherePos.y, spherePos.z]);
+    // move the large sphere up and down
+    spherePos.set(0, Math.sin(time) * 2, 0);
+    sphere.setLocalPosition(spherePos);
 
-        // orbit camera around
-        camera.setLocalPosition(8 * Math.sin(time * 0.1), 0, 8 * Math.cos(time * 0.1));
-        camera.lookAt(pc.Vec3.ZERO);
-    });
+    // update uniforms of the instancing material
+    material.setParameter('uTime', time);
+    material.setParameter('uCenter', [spherePos.x, spherePos.y, spherePos.z]);
+
+    // orbit camera around
+    camera.setLocalPosition(8 * Math.sin(time * 0.1), 0, 8 * Math.cos(time * 0.1));
+    camera.lookAt(pc.Vec3.ZERO);
 });

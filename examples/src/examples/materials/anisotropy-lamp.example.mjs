@@ -56,43 +56,44 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
-    // Move the depth layer to take place after World and Skydome layers, to capture both of them.
-    const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
-    app.scene.layers.remove(depthLayer);
-    app.scene.layers.insertOpaque(depthLayer, 2);
-
-    // Setup skydome
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
-    app.scene.skyboxIntensity = 0.5;
-    app.scene.skyboxMip = 1;
-
-    const leftEntity = assets.model.resource.instantiateRenderEntity();
-    leftEntity.setLocalEulerAngles(0, 0, 0);
-    leftEntity.setPosition(0, 0, 1);
-    leftEntity.setLocalScale(0.8, 0.8, 0.8);
-    app.root.addChild(leftEntity);
-
-    // Create a camera with an orbit camera script
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
-    camera.script.orbitCamera.yaw = 90;
-    camera.script.orbitCamera.distance = 0.3;
-    camera.camera.requestSceneColorMap(true);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+// Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+// Move the depth layer to take place after World and Skydome layers, to capture both of them.
+const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+app.scene.layers.remove(depthLayer);
+app.scene.layers.insertOpaque(depthLayer, 2);
+
+// Setup skydome
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
+app.scene.skyboxIntensity = 0.5;
+app.scene.skyboxMip = 1;
+
+const leftEntity = assets.model.resource.instantiateRenderEntity();
+leftEntity.setLocalEulerAngles(0, 0, 0);
+leftEntity.setPosition(0, 0, 1);
+leftEntity.setLocalScale(0.8, 0.8, 0.8);
+app.root.addChild(leftEntity);
+
+// Create a camera with an orbit camera script
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+app.root.addChild(camera);
+camera.script.orbitCamera.yaw = 90;
+camera.script.orbitCamera.distance = 0.3;
+camera.camera.requestSceneColorMap(true);

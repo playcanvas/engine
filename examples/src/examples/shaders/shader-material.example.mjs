@@ -30,60 +30,61 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.start();
 
-    // Ensure canvas is resized when window changes size
-    const resize = () => app.resizeCanvas();
-    window.addEventListener('resize', resize);
-    app.on('destroy', () => {
-        window.removeEventListener('resize', resize);
-    });
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    const material = new pc.ShaderMaterial({
-        uniqueName: 'ShaderMaterialExample',
-        vertexGLSL: shaderGlslVert,
-        fragmentGLSL: shaderGlslFrag,
-        vertexWGSL: shaderWgslVert,
-        fragmentWGSL: shaderWgslFrag,
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0
-        }
-    });
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
 
-    material.setParameter('diffuseTexture', assets.diffuse.resource);
-    material.update();
+const material = new pc.ShaderMaterial({
+    uniqueName: 'ShaderMaterialExample',
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: shaderGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: shaderWgslFrag,
+    attributes: {
+        aPosition: pc.SEMANTIC_POSITION,
+        aUv0: pc.SEMANTIC_TEXCOORD0
+    }
+});
 
-    // create box entity
-    const box = new pc.Entity('cube');
-    box.addComponent('render', {
-        type: 'box',
-        material: material
-    });
-    app.root.addChild(box);
+material.setParameter('diffuseTexture', assets.diffuse.resource);
+material.update();
 
-    // create camera entity
-    const camera = new pc.Entity('camera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.5, 0.6, 0.9)
-    });
-    app.root.addChild(camera);
-    camera.setPosition(0, 0, 3);
+// create box entity
+const box = new pc.Entity('cube');
+box.addComponent('render', {
+    type: 'box',
+    material: material
+});
+app.root.addChild(box);
 
-    // Rotate the box according to the delta time since the last frame.
-    // Update the material's 'amount' parameter to animate the color.
-    let time = 0;
-    app.on('update', (/** @type {number} */ dt) => {
-        box.rotate(10 * dt, 20 * dt, 30 * dt);
+// create camera entity
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.5, 0.6, 0.9)
+});
+app.root.addChild(camera);
+camera.setPosition(0, 0, 3);
 
-        time += dt;
-        // animate the amount as a sine wave varying from 0 to 1
-        material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
-    });
+// Rotate the box according to the delta time since the last frame.
+// Update the material's 'amount' parameter to animate the color.
+let time = 0;
+app.on('update', (/** @type {number} */ dt) => {
+    box.rotate(10 * dt, 20 * dt, 30 * dt);
+
+    time += dt;
+    // animate the amount as a sine wave varying from 0 to 1
+    material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
 });

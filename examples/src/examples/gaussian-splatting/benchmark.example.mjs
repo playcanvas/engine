@@ -21,7 +21,8 @@ const MEASURE_FRAMES = 60;
 const CAMERA_SIDE_TRANSLATE_UNITS = 12;
 
 /** Lateral delta each measure frame (warmup: yaw only). */
-const CAMERA_SIDE_STEP = MEASURE_FRAMES > 0 ? CAMERA_SIDE_TRANSLATE_UNITS / MEASURE_FRAMES : CAMERA_SIDE_TRANSLATE_UNITS;
+const CAMERA_SIDE_STEP =
+    MEASURE_FRAMES > 0 ? CAMERA_SIDE_TRANSLATE_UNITS / MEASURE_FRAMES : CAMERA_SIDE_TRANSLATE_UNITS;
 
 /** Camera pivot rest position (world == local under root). */
 const benchPivotBasePos = new pc.Vec3(10.3, 2, -10);
@@ -69,7 +70,7 @@ let webglGpuProfilingUnavailable = false;
  */
 function getBenchmarkMaxPixelRatio() {
     const dpr = window.devicePixelRatio || 1;
-    return highRes ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
+    return highRes ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
 }
 
 /**
@@ -105,7 +106,8 @@ function formatEffectiveFpsCell(effectiveFps) {
 
 // Override main.css which sets touch-action:none on * and overflow:hidden on body
 const overrideStyle = document.createElement('style');
-overrideStyle.textContent = '*, *::before, *::after { touch-action: auto !important; } html, body { overflow: auto !important; height: auto !important; }';
+overrideStyle.textContent =
+    '*, *::before, *::after { touch-action: auto !important; } html, body { overflow: auto !important; height: auto !important; }';
 document.head.appendChild(overrideStyle);
 
 const appEl = document.getElementById('app');
@@ -127,7 +129,8 @@ Object.assign(containerEl.style, {
 document.body.appendChild(containerEl);
 
 const styleEl = document.createElement('style');
-styleEl.textContent = '.bench-cell { background: #1a1a2e; border-radius: 3px; transition: background 0.15s; } .bench-cell:hover { background: #2a2a4e; }';
+styleEl.textContent =
+    '.bench-cell { background: #1a1a2e; border-radius: 3px; transition: background 0.15s; } .bench-cell:hover { background: #2a2a4e; }';
 document.head.appendChild(styleEl);
 
 const titleEl = document.createElement('h2');
@@ -192,7 +195,15 @@ containerEl.appendChild(benchmarkLegendEl);
 
 // High Res toggle
 const highResLabel = document.createElement('label');
-Object.assign(highResLabel.style, { display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px', color: '#aaa', fontSize: '13px', cursor: 'pointer' });
+Object.assign(highResLabel.style, {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginBottom: '12px',
+    color: '#aaa',
+    fontSize: '13px',
+    cursor: 'pointer'
+});
 const highResCheckbox = document.createElement('input');
 highResCheckbox.type = 'checkbox';
 highResCheckbox.checked = highRes;
@@ -219,11 +230,14 @@ const headerBtnCss = [
     'white-space: nowrap'
 ].join(';');
 
-const compactBtnCss = headerBtnCss.replace('padding: 6px 14px', 'padding: 3px 6px').replace('font-size: 14px', 'font-size: 11px');
+const compactBtnCss = headerBtnCss
+    .replace('padding: 6px 14px', 'padding: 3px 6px')
+    .replace('font-size: 14px', 'font-size: 11px');
 const compactRowOnlyBtnCss = compactBtnCss.replace('#4a9eff', '#2fa36b');
 const compactRunAllBtnCss = compactBtnCss.replace('#4a9eff', '#e05555');
 
-const narrowCellBase = 'padding: 4px 5px; border: 1px solid #333; text-align: center; white-space: nowrap; background: #222; color: #fff;';
+const narrowCellBase =
+    'padding: 4px 5px; border: 1px solid #333; text-align: center; white-space: nowrap; background: #222; color: #fff;';
 /** Same width for Run All / budget column (left) and Only column (right). */
 const COL_EDGE_W = Math.round(58 * 1.3);
 const narrowEdgeColCss = `${narrowCellBase} box-sizing: border-box; width: ${COL_EDGE_W}px; min-width: ${COL_EDGE_W}px; max-width: ${COL_EDGE_W}px;`;
@@ -538,10 +552,7 @@ async function createDevice(canvas, deviceType) {
     const opts = { antialias: false };
     if (deviceType === 'webgpu') {
         const device = new pc.WebgpuGraphicsDevice(canvas, opts);
-        await device.initWebGpu(
-            './assets/wasm/glslang/glslang.js',
-            './assets/wasm/twgsl/twgsl.js'
-        );
+        await device.initWebGpu('./assets/wasm/glslang/glslang.js', './assets/wasm/twgsl/twgsl.js');
         return device;
     }
     return new pc.WebglGraphicsDevice(canvas, opts);
@@ -577,7 +588,7 @@ function getGpuInfo(device) {
  * @returns {Promise<{avgGpu: number, effectiveFps: number, avgSplats: number, avgPassTimings: Map<string, number>}>} Results.
  */
 function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         const gpuTimes = [];
         const splatCounts = [];
         /** @type {Map<string, number[]>} */
@@ -619,8 +630,10 @@ function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
                 const wallEnd = performance.now();
                 const wallSec = wallStart !== null ? Math.max(1e-9, (wallEnd - wallStart) / 1000) : 1e-9;
                 const effectiveFps = MEASURE_FRAMES / wallSec;
-                const avgGpu = gpuTimingSupported && gpuTimes.length === MEASURE_FRAMES ?
-                    gpuTimes.reduce((a, b) => a + b, 0) / MEASURE_FRAMES : -1;
+                const avgGpu =
+                    gpuTimingSupported && gpuTimes.length === MEASURE_FRAMES
+                        ? gpuTimes.reduce((a, b) => a + b, 0) / MEASURE_FRAMES
+                        : -1;
                 const avgSplats = splatCounts.reduce((a, b) => a + b, 0) / splatCounts.length;
                 /** @type {Map<string, number>} */
                 const avgPass = new Map();
@@ -642,11 +655,16 @@ function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
  * @returns {Promise<void>}
  */
 function waitForReady(gsplatSystem, app, statusPrefix, timeoutMs = 10000) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         let resolved = false;
         let sawNotReady = false;
 
-        const onReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
+        const onReady = (
+            /** @type {any} */ cam,
+            /** @type {any} */ layer,
+            /** @type {boolean} */ ready,
+            /** @type {number} */ loadingCount
+        ) => {
             const splats = (app.stats.frame.gsplats / 1000000).toFixed(1);
             setStatus(`${statusPrefix}  Waiting... (${splats}M splats)`);
 
@@ -700,7 +718,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 
     const device = await createDevice(canvas, config.device);
     const dpr = window.devicePixelRatio || 1;
-    device.maxPixelRatio = highRes ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
+    device.maxPixelRatio = highRes ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
     const gpuInfo = getGpuInfo(device);
 
     const extDisjointTimerQuery = /** @type {any} */ (device).extDisjointTimerQuery;
@@ -719,12 +737,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         pc.ScriptComponentSystem,
         pc.GSplatComponentSystem
     ];
-    createOptions.resourceHandlers = [
-        pc.TextureHandler,
-        pc.ContainerHandler,
-        pc.ScriptHandler,
-        pc.GSplatHandler
-    ];
+    createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
@@ -754,7 +767,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     });
 
     setStatus(`${config.label}  Loading assets...`);
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
         new pc.AssetListLoader([bicycleAsset, logoAsset, churchAsset], app.assets).load(resolve);
     });
 
@@ -878,7 +891,12 @@ async function runBenchmark(config, colIndex, budgetIndices) {
             avgPassTimings: result.avgPassTimings
         };
 
-        setBenchCells(`${millions}M:${colIndex}`, formatGpuMsCell(result.avgGpu), formatEffectiveFpsCell(result.effectiveFps), '#fff');
+        setBenchCells(
+            `${millions}M:${colIndex}`,
+            formatGpuMsCell(result.avgGpu),
+            formatEffectiveFpsCell(result.effectiveFps),
+            '#fff'
+        );
     }
 
     if (!storedGpuInfos[config.device]) storedGpuInfos[config.device] = gpuInfo;
@@ -891,7 +909,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     canvas.remove();
 
     // allow GC to reclaim GPU/asset memory before the next run (helps on mobile)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
         setTimeout(resolve, 1000);
     });
 }
@@ -918,7 +936,8 @@ function layoutBenchmarkChartCanvas(chartCanvas, sizeTable) {
     const cssW = Math.max(1, Math.ceil(tw));
     const fallbackH = Math.ceil(cssW * (CHART_REF_H / CHART_REF_W));
     const cssH = Math.max(1, th > 0 ? Math.ceil(th) : fallbackH);
-    const dpr = typeof window.devicePixelRatio === 'number' && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
+    const dpr =
+        typeof window.devicePixelRatio === 'number' && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     const pixW = Math.max(1, Math.round(cssW * dpr));
     const pixH = Math.max(1, Math.round(cssH * dpr));
 
@@ -1014,7 +1033,8 @@ function buildDownloadText() {
     let text = 'GSplat Benchmark Results\n';
     text += `${'\u2550'.repeat(lineW)}\n`;
     if (webglGpuProfilingUnavailable) {
-        text += 'Note: WebGL GPU timings unavailable (no EXT_disjoint_timer_query). WebGL GPU ms are N/A; Effective FPS is still reported.\n\n';
+        text +=
+            'Note: WebGL GPU timings unavailable (no EXT_disjoint_timer_query). WebGL GPU ms are N/A; Effective FPS is still reported.\n\n';
     }
     if (storedGpuInfos.webgl2) text += `WebGL2:  ${storedGpuInfos.webgl2}\n`;
     if (storedGpuInfos.webgpu) text += `WebGPU:  ${storedGpuInfos.webgpu}\n`;
@@ -1174,7 +1194,7 @@ async function pageToPngBlob() {
     clone.style.minHeight = `${H}px`;
     clone.style.overflow = 'visible';
 
-    clone.querySelectorAll('table').forEach((t) => {
+    clone.querySelectorAll('table').forEach(t => {
         t.style.width = 'max-content';
         t.style.maxWidth = 'none';
     });
@@ -1224,7 +1244,7 @@ async function pageToPngBlob() {
      * @param {number} i - Index into data (rgba byte index of R).
      * @returns {boolean} True if pixel is not uniform background.
      */
-    const isContent = (i) => {
+    const isContent = i => {
         if (data[i + 3] < 255) {
             return true;
         }
@@ -1264,7 +1284,7 @@ async function pageToPngBlob() {
     out.width = x1 - x0 + 1;
     out.height = y1 - y0 + 1;
     /** @type {CanvasRenderingContext2D} */ (out.getContext('2d')).drawImage(canvas, -x0, -y0);
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         out.toBlob(resolve, 'image/png');
     });
 }
@@ -1315,7 +1335,7 @@ function drawBudgetChart(chartCanvas, mode) {
      * @param {number} millions - Splat budget in millions.
      * @returns {number} Canvas x in plot area.
      */
-    const budgetToX = (millions) => {
+    const budgetToX = millions => {
         if (chartSpanM <= 0) {
             return PAD.left + plotW * 0.5;
         }
@@ -1373,11 +1393,7 @@ function drawBudgetChart(chartCanvas, mode) {
     ctx.font = `${12 * scale}px monospace`;
     ctx.textAlign = 'center';
     const yLabel = mode === 'gpu' ? 'GPU frame time (ms)' : 'Effective FPS';
-    ctx.fillText(
-        `${yLabel} vs Splat Budget (M, linear x: ${chartMinM}M–${chartMaxM}M)`,
-        W / 2,
-        18 * scale
-    );
+    ctx.fillText(`${yLabel} vs Splat Budget (M, linear x: ${chartMinM}M–${chartMaxM}M)`, W / 2, 18 * scale);
 
     for (let c = 0; c < RENDERERS.length; c++) {
         const r = storedResults[c];

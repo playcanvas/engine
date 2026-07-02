@@ -19,7 +19,12 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem, pc.ScriptComponentSystem];
+createOptions.componentSystems = [
+    pc.RenderComponentSystem,
+    pc.CameraComponentSystem,
+    pc.LightComponentSystem,
+    pc.ScriptComponentSystem
+];
 createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);

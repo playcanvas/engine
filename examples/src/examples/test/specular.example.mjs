@@ -63,42 +63,43 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    // IBL is required to see the dielectric F0 changes that the extension controls
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.exposure = 10;
-
-    const testEntity = assets.model.resource.instantiateRenderEntity();
-    app.root.addChild(testEntity);
-
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: testEntity
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
-    camera.script.orbitCamera.pitch = 0;
-    camera.script.orbitCamera.yaw = 0;
-
-    const directionalLight = new pc.Entity();
-    directionalLight.addComponent('light', {
-        type: 'directional',
-        color: pc.Color.WHITE,
-        castShadows: false,
-        intensity: 1
-    });
-    directionalLight.setEulerAngles(45, 180, 0);
-    app.root.addChild(directionalLight);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+// IBL is required to see the dielectric F0 changes that the extension controls
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.exposure = 10;
+
+const testEntity = assets.model.resource.instantiateRenderEntity();
+app.root.addChild(testEntity);
+
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: testEntity
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+app.root.addChild(camera);
+camera.script.orbitCamera.pitch = 0;
+camera.script.orbitCamera.yaw = 0;
+
+const directionalLight = new pc.Entity();
+directionalLight.addComponent('light', {
+    type: 'directional',
+    color: pc.Color.WHITE,
+    castShadows: false,
+    intensity: 1
+});
+directionalLight.setEulerAngles(45, 180, 0);
+app.root.addChild(directionalLight);

@@ -22,7 +22,7 @@ pc.WasmModule.setConfig('Ammo', {
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     pc.WasmModule.getInstance('Ammo', () => resolve(true));
 });
 
@@ -72,7 +72,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -81,7 +81,7 @@ app.start();
 // Skybox
 app.scene.skyboxMip = 0;
 app.scene.exposure = 0.4;
-app.scene.skyboxHighlightMultiplier = 50;   // extra brightness for the clipped sun in the skybox to make it bloom more
+app.scene.skyboxHighlightMultiplier = 50; // extra brightness for the clipped sun in the skybox to make it bloom more
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 10, 0);
 
@@ -142,12 +142,14 @@ characterController.addComponent('rigidbody', {
     restitution: 0
 });
 characterController.addComponent('script');
-const fpc = /** @type {FirstPersonController} */ (characterController.script.create(FirstPersonController, {
-    properties: {
-        camera,
-        jumpForce: 850
-    }
-}));
+const fpc = /** @type {FirstPersonController} */ (
+    characterController.script.create(FirstPersonController, {
+        properties: {
+            camera,
+            jumpForce: 850
+        }
+    })
+);
 app.root.addChild(characterController);
 
 /**
@@ -193,7 +195,7 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
     /**
      * @param {HTMLElement} el - The element to hide.
      */
-    const hide = (el) => {
+    const hide = el => {
         el.style.display = 'none';
     };
 

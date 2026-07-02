@@ -50,61 +50,62 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Create a camera
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
-    });
-    app.root.addChild(camera);
+app.start();
 
-    // Create a 2D screen
-    const screen = new pc.Entity();
-    screen.addComponent('screen', {
-        referenceResolution: new pc.Vec2(1280, 720),
-        scaleBlend: 0.5,
-        scaleMode: pc.SCALEMODE_BLEND,
-        screenSpace: true
-    });
-    app.root.addChild(screen);
+// Create a camera
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
+});
+app.root.addChild(camera);
 
-    // Create a new material with the new shader and additive alpha blending
-    const material = new pc.ShaderMaterial({
-        uniqueName: 'myUIShader',
-        vertexGLSL: shaderGlslVert,
-        fragmentGLSL: shaderGlslFrag,
-        vertexWGSL: shaderWgslVert,
-        fragmentWGSL: shaderWgslFrag,
-        attributes: {
-            vertex_position: pc.SEMANTIC_POSITION,
-            vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
-        }
-    });
-    material.blendType = pc.BLEND_ADDITIVEALPHA;
-    material.depthWrite = true;
-    material.setParameter('uDiffuseMap', assets.playcanvas.resource);
-    material.update();
+// Create a 2D screen
+const screen = new pc.Entity();
+screen.addComponent('screen', {
+    referenceResolution: new pc.Vec2(1280, 720),
+    scaleBlend: 0.5,
+    scaleMode: pc.SCALEMODE_BLEND,
+    screenSpace: true
+});
+app.root.addChild(screen);
 
-    // Create the UI image element with the custom material
-    const entity = new pc.Entity();
-    entity.addComponent('element', {
-        pivot: new pc.Vec2(0.5, 0.5),
-        anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-        width: 350,
-        height: 350,
-        type: pc.ELEMENTTYPE_IMAGE
-    });
-    entity.element.material = material;
-    screen.addChild(entity);
+// Create a new material with the new shader and additive alpha blending
+const material = new pc.ShaderMaterial({
+    uniqueName: 'myUIShader',
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: shaderGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: shaderWgslFrag,
+    attributes: {
+        vertex_position: pc.SEMANTIC_POSITION,
+        vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
+    }
+});
+material.blendType = pc.BLEND_ADDITIVEALPHA;
+material.depthWrite = true;
+material.setParameter('uDiffuseMap', assets.playcanvas.resource);
+material.update();
 
-    // update the material's 'amount' parameter to animate the inverse effect
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
-        // animate the amount as a sine wave varying from 0 to 1
-        material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
-    });
+// Create the UI image element with the custom material
+const entity = new pc.Entity();
+entity.addComponent('element', {
+    pivot: new pc.Vec2(0.5, 0.5),
+    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+    width: 350,
+    height: 350,
+    type: pc.ELEMENTTYPE_IMAGE
+});
+entity.element.material = material;
+screen.addChild(entity);
+
+// update the material's 'amount' parameter to animate the inverse effect
+let time = 0;
+app.on('update', dt => {
+    time += dt;
+    // animate the amount as a sine wave varying from 0 to 1
+    material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
 });

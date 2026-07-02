@@ -47,11 +47,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.ScriptHandler,
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -67,57 +63,57 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 2;
-    app.scene.exposure = 2.5;
+app.start();
 
-    // get the instance of the laboratory
-    const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity();
-    laboratoryEntity.setLocalScale(100, 100, 100);
-    app.root.addChild(laboratoryEntity);
+// setup skydome
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 2;
+app.scene.exposure = 2.5;
 
-    // Create an Entity with a camera component
-    const cameraEntity = new pc.Entity('SceneCamera');
-    cameraEntity.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5),
-        nearClip: 1,
-        farClip: 600
-    });
+// get the instance of the laboratory
+const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity();
+laboratoryEntity.setLocalScale(100, 100, 100);
+app.root.addChild(laboratoryEntity);
 
-    // add orbit camera script
-    cameraEntity.addComponent('script');
-    cameraEntity.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: laboratoryEntity,
-            distanceMax: 300
-        }
-    });
-    cameraEntity.script.create('orbitCameraInputMouse');
-    cameraEntity.script.create('orbitCameraInputTouch');
+// Create an Entity with a camera component
+const cameraEntity = new pc.Entity('SceneCamera');
+cameraEntity.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    nearClip: 1,
+    farClip: 600
+});
 
-    // position the camera in the world
-    cameraEntity.setLocalPosition(-60, 30, 60);
-    app.root.addChild(cameraEntity);
+// add orbit camera script
+cameraEntity.addComponent('script');
+cameraEntity.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: laboratoryEntity,
+        distanceMax: 300
+    }
+});
+cameraEntity.script.create('orbitCameraInputMouse');
+cameraEntity.script.create('orbitCameraInputTouch');
 
-    // create the outline renderer
-    const outlineRenderer = new pc.OutlineRenderer(app);
+// position the camera in the world
+cameraEntity.setLocalPosition(-60, 30, 60);
+app.root.addChild(cameraEntity);
 
-    // add entities to the outline renderer
-    outlineRenderer.addEntity(laboratoryEntity.findByName('Weltkugel'), pc.Color.RED);
-    outlineRenderer.addEntity(laboratoryEntity.findByName('Stuhl'), pc.Color.WHITE);
-    outlineRenderer.addEntity(laboratoryEntity.findByName('Teleskop'), pc.Color.GREEN);
+// create the outline renderer
+const outlineRenderer = new pc.OutlineRenderer(app);
 
-    app.on('update', (/** @type {number} */ dt) => {
+// add entities to the outline renderer
+outlineRenderer.addEntity(laboratoryEntity.findByName('Weltkugel'), pc.Color.RED);
+outlineRenderer.addEntity(laboratoryEntity.findByName('Stuhl'), pc.Color.WHITE);
+outlineRenderer.addEntity(laboratoryEntity.findByName('Teleskop'), pc.Color.GREEN);
 
-        // update the outline renderer each frame, and render the outlines inside the opaque sub-layer
-        // of the immediate layer
-        const immediateLayer = app.scene.layers.getLayerByName('Immediate');
-        outlineRenderer.frameUpdate(cameraEntity, immediateLayer, false);
-    });
+app.on('update', (/** @type {number} */ dt) => {
+    // update the outline renderer each frame, and render the outlines inside the opaque sub-layer
+    // of the immediate layer
+    const immediateLayer = app.scene.layers.getLayerByName('Immediate');
+    outlineRenderer.frameUpdate(cameraEntity, immediateLayer, false);
 });

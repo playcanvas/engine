@@ -34,15 +34,8 @@ createOptions.touch = new pc.TouchDevice(canvas);
 createOptions.keyboard = new pc.Keyboard(window);
 createOptions.xr = pc.XrManager;
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -121,7 +114,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', (evt) => {
+        app.touch.on('touchend', evt => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -136,7 +129,7 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', (evt) => {
+    app.keyboard.on('keydown', evt => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -147,7 +140,7 @@ if (app.xr.supported) {
     // when input source is triggers select
     // pick closest box and change its color
     const ray = new pc.Ray();
-    app.xr.input.on('select', (inputSource) => {
+    app.xr.input.on('select', inputSource => {
         let candidate = null;
         let candidateDist = Infinity;
 

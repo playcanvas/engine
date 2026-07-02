@@ -64,7 +64,8 @@ htmlElement.setAttribute('inert', '');
 htmlElement.style.width = '512px';
 htmlElement.style.height = '512px';
 htmlElement.style.padding = '10px';
-htmlElement.style.background = 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24)';
+htmlElement.style.background =
+    'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24)';
 htmlElement.style.backgroundSize = '400% 400%';
 htmlElement.style.animation = 'gradient-shift 4s ease infinite';
 htmlElement.style.borderRadius = '0';
@@ -171,9 +172,13 @@ app.on('destroy', () => {
 if (device.supportsHtmlTextures) {
     // The browser must paint the HTML element before texElementImage2D can use it.
     // Wait for the 'paint' event, then set the HTML element as the texture source.
-    canvas.addEventListener('paint', () => {
-        htmlTexture.setSource(/** @type {any} */ (htmlElement));
-    }, { once: true });
+    canvas.addEventListener(
+        'paint',
+        () => {
+            htmlTexture.setSource(/** @type {any} */ (htmlElement));
+        },
+        { once: true }
+    );
     canvas.requestPaint();
 
     // Re-upload the texture whenever the browser repaints the HTML children
@@ -182,47 +187,48 @@ if (device.supportsHtmlTextures) {
     console.warn('HTML textures are not supported - using canvas fallback');
 }
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.envAtlas = assets.envatlas.resource;
-    app.scene.skyboxMip = 0;
-    app.scene.skyboxIntensity = 2;
-    app.scene.exposure = 1.5;
+app.start();
 
-    // Create metallic material with the HTML texture for mirror-like reflections
-    const material = new pc.StandardMaterial();
-    material.diffuseMap = htmlTexture;
-    material.useMetalness = true;
-    material.metalness = 0.7;
-    material.gloss = 0.9;
-    material.update();
+// setup skydome
+app.scene.envAtlas = assets.envatlas.resource;
+app.scene.skyboxMip = 0;
+app.scene.skyboxIntensity = 2;
+app.scene.exposure = 1.5;
 
-    const box = new pc.Entity('cube');
-    box.addComponent('render', {
-        type: 'box',
-        material: material
-    });
-    app.root.addChild(box);
+// Create metallic material with the HTML texture for mirror-like reflections
+const material = new pc.StandardMaterial();
+material.diffuseMap = htmlTexture;
+material.useMetalness = true;
+material.metalness = 0.7;
+material.gloss = 0.9;
+material.update();
 
-    const camera = new pc.Entity('camera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
-    });
-    app.root.addChild(camera);
-    camera.setPosition(0, 0, 3);
+const box = new pc.Entity('cube');
+box.addComponent('render', {
+    type: 'box',
+    material: material
+});
+app.root.addChild(box);
 
-    const light = new pc.Entity('light');
-    light.addComponent('light', {
-        type: 'directional',
-        intensity: 1.5
-    });
-    app.root.addChild(light);
-    light.setEulerAngles(45, 30, 0);
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2)
+});
+app.root.addChild(camera);
+camera.setPosition(0, 0, 3);
 
-    app.on('update', (/** @type {number} */ dt) => {
-        box.rotate(3 * dt, 5 * dt, 6 * dt);
-    });
+const light = new pc.Entity('light');
+light.addComponent('light', {
+    type: 'directional',
+    intensity: 1.5
+});
+app.root.addChild(light);
+light.setEulerAngles(45, 30, 0);
+
+app.on('update', (/** @type {number} */ dt) => {
+    box.rotate(3 * dt, 5 * dt, 6 * dt);
 });

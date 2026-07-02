@@ -36,7 +36,7 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
 });
 
@@ -88,73 +88,75 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // get the instance of the bench and set up with render component
-    const entity1 = assets.bench.resource.instantiateRenderEntity();
-    entity1.setLocalPosition(0, 0, -1.5);
-    app.root.addChild(entity1);
+app.start();
 
-    // the character
-    const entity2 = assets.model.resource.instantiateRenderEntity();
-    app.root.addChild(entity2);
+// get the instance of the bench and set up with render component
+const entity1 = assets.bench.resource.instantiateRenderEntity();
+entity1.setLocalPosition(0, 0, -1.5);
+app.root.addChild(entity1);
 
-    // chess board
-    const entity3 = assets.board.resource.instantiateRenderEntity();
-    entity3.setLocalScale(0.01, 0.01, 0.01);
-    app.root.addChild(entity3);
+// the character
+const entity2 = assets.model.resource.instantiateRenderEntity();
+app.root.addChild(entity2);
 
-    const entity4 = assets.boombox.resource.instantiateRenderEntity();
-    entity4.setLocalPosition(0, 0.5, -3);
-    entity4.setLocalScale(100, 100, 100);
-    app.root.addChild(entity4);
+// chess board
+const entity3 = assets.board.resource.instantiateRenderEntity();
+entity3.setLocalScale(0.01, 0.01, 0.01);
+app.root.addChild(entity3);
 
-    // a render component with a sphere and cone primitives
-    const material = new pc.StandardMaterial();
-    material.diffuse = pc.Color.YELLOW;
-    material.diffuseMap = assets.color.resource;
-    material.update();
+const entity4 = assets.boombox.resource.instantiateRenderEntity();
+entity4.setLocalPosition(0, 0.5, -3);
+entity4.setLocalScale(100, 100, 100);
+app.root.addChild(entity4);
 
-    const entity = new pc.Entity('TwoMeshInstances');
-    entity.addComponent('render', {
-        type: 'asset',
-        meshInstances: [
-            new pc.MeshInstance(pc.Mesh.fromGeometry(app.graphicsDevice, new pc.SphereGeometry()), material),
-            new pc.MeshInstance(pc.Mesh.fromGeometry(app.graphicsDevice, new pc.ConeGeometry()), material)
-        ]
-    });
-    app.root.addChild(entity);
-    entity.setLocalPosition(0, 1.5, -1.5);
+// a render component with a sphere and cone primitives
+const material = new pc.StandardMaterial();
+material.diffuse = pc.Color.YELLOW;
+material.diffuseMap = assets.color.resource;
+material.update();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.1, 0.1),
-        farClip: 100,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(-3, 1, 2);
-    camera.lookAt(0, 0.5, 0);
-    app.root.addChild(camera);
+const entity = new pc.Entity('TwoMeshInstances');
+entity.addComponent('render', {
+    type: 'asset',
+    meshInstances: [
+        new pc.MeshInstance(pc.Mesh.fromGeometry(app.graphicsDevice, new pc.SphereGeometry()), material),
+        new pc.MeshInstance(pc.Mesh.fromGeometry(app.graphicsDevice, new pc.ConeGeometry()), material)
+    ]
+});
+app.root.addChild(entity);
+entity.setLocalPosition(0, 1.5, -1.5);
 
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 1;
-    app.scene.exposure = 1.5;
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.1, 0.1),
+    farClip: 100,
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.translate(-3, 1, 2);
+camera.lookAt(0, 0.5, 0);
+app.root.addChild(camera);
 
-    // a link element, created in the html part of the examples.
-    const link = document.getElementById('ar-link');
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
+app.scene.exposure = 1.5;
 
-    // export the whole scene into a glb format
-    const options = {
-        maxTextureSize: 1024
-    };
+// a link element, created in the html part of the examples.
+const link = document.getElementById('ar-link');
 
-    new pc.GltfExporter()
+// export the whole scene into a glb format
+const options = {
+    maxTextureSize: 1024
+};
+
+new pc.GltfExporter()
     .build(app.root, options)
-    .then((arrayBuffer) => {
+    .then(arrayBuffer => {
         const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
         // @ts-ignore
@@ -162,8 +164,7 @@ assetListLoader.load(() => {
     })
     .catch(console.error);
 
-    // when clicking on the download UI button, trigger the download
-    data.on('download', () => {
-        link.click();
-    });
+// when clicking on the download UI button, trigger the download
+data.on('download', () => {
+    link.click();
 });

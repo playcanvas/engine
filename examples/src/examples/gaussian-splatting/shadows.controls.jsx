@@ -1,4 +1,10 @@
-import { BindingTwoWay, BooleanInput, LabelGroup, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import {
+    BindingTwoWay,
+    BooleanInput,
+    LabelGroup,
+    SelectInput,
+    SliderInput
+} from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'

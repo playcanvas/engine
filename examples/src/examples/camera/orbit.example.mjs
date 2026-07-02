@@ -57,7 +57,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -89,7 +89,7 @@ app.root.addChild(statue);
 const calcEntityAABB = (bbox, entity) => {
     bbox.center.set(0, 0, 0);
     bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach((render) => {
+    entity.findComponents('render').forEach(render => {
         render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
             bbox.add(mi.aabb);
         });
@@ -138,30 +138,33 @@ app.on('destroy', () => {
 });
 
 // Bind controls to camera attributes
-data.set('attr', [
-    'rotateSpeed',
-    'moveSpeed',
-    'zoomSpeed',
-    'zoomPinchSens',
-    'focusDamping',
-    'rotateDamping',
-    'moveDamping',
-    'zoomDamping',
-    'pitchRange',
-    'yawRange',
-    'zoomRange',
-    'zoomScaleMin'
-].reduce((/** @type {Record<string, any>} */ obj, key) => {
-    const value = cc[key];
+data.set(
+    'attr',
+    [
+        'rotateSpeed',
+        'moveSpeed',
+        'zoomSpeed',
+        'zoomPinchSens',
+        'focusDamping',
+        'rotateDamping',
+        'moveDamping',
+        'zoomDamping',
+        'pitchRange',
+        'yawRange',
+        'zoomRange',
+        'zoomScaleMin'
+    ].reduce((/** @type {Record<string, any>} */ obj, key) => {
+        const value = cc[key];
 
-    if (value instanceof pc.Vec2) {
-        obj[key] = [value.x, value.y];
+        if (value instanceof pc.Vec2) {
+            obj[key] = [value.x, value.y];
+            return obj;
+        }
+
+        obj[key] = cc[key];
         return obj;
-    }
-
-    obj[key] = cc[key];
-    return obj;
-}, {}));
+    }, {})
+);
 
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key, index] = path.split('.');

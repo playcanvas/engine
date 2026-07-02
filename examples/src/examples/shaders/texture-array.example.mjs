@@ -52,10 +52,30 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: './assets/textures/rocky_trail_diff_1k.jpg' }, { srgb: true }),
-    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: './assets/textures/rock_boulder_cracked_diff_1k.jpg' }, { srgb: true }),
-    coastSand: new pc.Asset('coastSand', 'texture', { url: './assets/textures/coast_sand_rocks_02_diff_1k.jpg' }, { srgb: true }),
-    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: './assets/textures/aerial_rocks_02_diff_1k.jpg' }, { srgb: true }),
+    rockyTrail: new pc.Asset(
+        'rockyTrail',
+        'texture',
+        { url: './assets/textures/rocky_trail_diff_1k.jpg' },
+        { srgb: true }
+    ),
+    rockBoulder: new pc.Asset(
+        'rockBoulder',
+        'texture',
+        { url: './assets/textures/rock_boulder_cracked_diff_1k.jpg' },
+        { srgb: true }
+    ),
+    coastSand: new pc.Asset(
+        'coastSand',
+        'texture',
+        { url: './assets/textures/coast_sand_rocks_02_diff_1k.jpg' },
+        { srgb: true }
+    ),
+    aerialRocks: new pc.Asset(
+        'aeralRocks',
+        'texture',
+        { url: './assets/textures/aerial_rocks_02_diff_1k.jpg' },
+        { srgb: true }
+    ),
     script: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
@@ -94,152 +114,153 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Create directional light
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'directional'
-    });
-    light.setLocalEulerAngles(45, 0, 45);
+app.start();
+app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-    const textureArrayOptions = {
-        name: 'textureArrayImages',
-        format: pc.PIXELFORMAT_SRGBA8,
-        width: 1024,
-        height: 1024,
-        arrayLength: 4, // array texture with 4 textures
-        magFilter: pc.FILTER_NEAREST,
-        minFilter: pc.FILTER_NEAREST_MIPMAP_NEAREST,
-        mipmaps: true,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
-        levels: [
-            [
-                assets.rockyTrail.resource.getSource(),
-                assets.rockBoulder.resource.getSource(),
-                assets.aerialRocks.resource.getSource(),
-                assets.coastSand.resource.getSource()
-            ]
+// Create directional light
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'directional'
+});
+light.setLocalEulerAngles(45, 0, 45);
+
+const textureArrayOptions = {
+    name: 'textureArrayImages',
+    format: pc.PIXELFORMAT_SRGBA8,
+    width: 1024,
+    height: 1024,
+    arrayLength: 4, // array texture with 4 textures
+    magFilter: pc.FILTER_NEAREST,
+    minFilter: pc.FILTER_NEAREST_MIPMAP_NEAREST,
+    mipmaps: true,
+    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+    addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+    levels: [
+        [
+            assets.rockyTrail.resource.getSource(),
+            assets.rockBoulder.resource.getSource(),
+            assets.aerialRocks.resource.getSource(),
+            assets.coastSand.resource.getSource()
         ]
-    };
+    ]
+};
 
-    const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
+const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
 
-    // generate mipmaps for visualization
-    const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);
-    const levels = mipmaps.map((data) => {
-        const textures = [];
-        for (let i = 0; i < textureArrayOptions.arrayLength; i++) {
-            textures.push(data);
-        }
-        return textures;
-    });
-    textureArrayOptions.levels = levels;
-    textureArrayOptions.name = 'textureArrayData';
-    const mipmapTextureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
+// generate mipmaps for visualization
+const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);
+const levels = mipmaps.map(data => {
+    const textures = [];
+    for (let i = 0; i < textureArrayOptions.arrayLength; i++) {
+        textures.push(data);
+    }
+    return textures;
+});
+textureArrayOptions.levels = levels;
+textureArrayOptions.name = 'textureArrayData';
+const mipmapTextureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
 
-    // Create a new material with the new shader
-    const material = new pc.ShaderMaterial({
-        uniqueName: 'MyShader',
-        vertexGLSL: shaderGlslVert,
-        fragmentGLSL: shaderGlslFrag,
-        vertexWGSL: shaderWgslVert,
-        fragmentWGSL: shaderWgslFrag,
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0,
-            aNormal: pc.SEMANTIC_NORMAL
-        }
-    });
-    material.setParameter('uDiffuseMap', textureArray);
-    material.update();
+// Create a new material with the new shader
+const material = new pc.ShaderMaterial({
+    uniqueName: 'MyShader',
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: shaderGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: shaderWgslFrag,
+    attributes: {
+        aPosition: pc.SEMANTIC_POSITION,
+        aUv0: pc.SEMANTIC_TEXCOORD0,
+        aNormal: pc.SEMANTIC_NORMAL
+    }
+});
+material.setParameter('uDiffuseMap', textureArray);
+material.update();
 
-    // Create a another material with the new shader
-    const groundMaterial = new pc.ShaderMaterial({
-        uniqueName: 'MyShaderGround',
-        vertexGLSL: shaderGlslVert,
-        fragmentGLSL: groundGlslFrag,
-        vertexWGSL: shaderWgslVert,
-        fragmentWGSL: groundWgslFrag,
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0,
-            aNormal: pc.SEMANTIC_NORMAL
-        }
-    });
-    groundMaterial.cull = pc.CULLFACE_NONE;
-    groundMaterial.setParameter('uDiffuseMap', textureArray);
-    groundMaterial.update();
+// Create a another material with the new shader
+const groundMaterial = new pc.ShaderMaterial({
+    uniqueName: 'MyShaderGround',
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: groundGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: groundWgslFrag,
+    attributes: {
+        aPosition: pc.SEMANTIC_POSITION,
+        aUv0: pc.SEMANTIC_TEXCOORD0,
+        aNormal: pc.SEMANTIC_NORMAL
+    }
+});
+groundMaterial.cull = pc.CULLFACE_NONE;
+groundMaterial.setParameter('uDiffuseMap', textureArray);
+groundMaterial.update();
 
-    // Create an Entity for the ground
-    const ground = new pc.Entity();
-    ground.addComponent('render', {
-        type: 'box',
-        material: groundMaterial
-    });
-    ground.setLocalScale(4, 4, 4);
-    ground.setLocalPosition(0, -7, 0);
-    app.root.addChild(ground);
+// Create an Entity for the ground
+const ground = new pc.Entity();
+ground.addComponent('render', {
+    type: 'box',
+    material: groundMaterial
+});
+ground.setLocalScale(4, 4, 4);
+ground.setLocalPosition(0, -7, 0);
+app.root.addChild(ground);
 
-    const torus = pc.Mesh.fromGeometry(
-        app.graphicsDevice,
-        new pc.TorusGeometry({
-            tubeRadius: 0.2,
-            ringRadius: 0.3,
-            radialSegments: 50,
-            tubularSegments: 40
-        })
-    );
-    const shape = new pc.Entity();
-    shape.addComponent('render', {
-        material: material,
-        meshInstances: [new pc.MeshInstance(torus, material)]
-    });
-    shape.setPosition(0, -2, 0);
-    shape.setLocalScale(4, 4, 4);
+const torus = pc.Mesh.fromGeometry(
+    app.graphicsDevice,
+    new pc.TorusGeometry({
+        tubeRadius: 0.2,
+        ringRadius: 0.3,
+        radialSegments: 50,
+        tubularSegments: 40
+    })
+);
+const shape = new pc.Entity();
+shape.addComponent('render', {
+    material: material,
+    meshInstances: [new pc.MeshInstance(torus, material)]
+});
+shape.setPosition(0, -2, 0);
+shape.setLocalScale(4, 4, 4);
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
-    });
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2)
+});
 
-    // Adjust the camera position
-    camera.translate(3, -2, 4);
-    camera.lookAt(0, 0, 0);
+// Adjust the camera position
+camera.translate(3, -2, 4);
+camera.lookAt(0, 0, 0);
 
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2, // Override default of 0 (no inertia),
-            distanceMax: 10.0
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2, // Override default of 0 (no inertia),
+        distanceMax: 10.0
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
 
-    // Add the new Entities to the hierarchy
-    app.root.addChild(light);
-    app.root.addChild(shape);
-    app.root.addChild(camera);
+// Add the new Entities to the hierarchy
+app.root.addChild(light);
+app.root.addChild(shape);
+app.root.addChild(camera);
 
-    // Set an update function on the app's update event
-    let angle = 0;
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
-        angle = (angle + dt * 10) % 360;
+// Set an update function on the app's update event
+let angle = 0;
+let time = 0;
+app.on('update', dt => {
+    time += dt;
+    angle = (angle + dt * 10) % 360;
 
-        // Rotate the boxes
-        shape.setEulerAngles(angle, angle * 2, angle * 4);
-        shape.render.meshInstances[0].setParameter('uTime', time);
-    });
-    data.on('mipmaps:set', (/** @type {number} */ value) => {
-        groundMaterial.setParameter('uDiffuseMap', value ? mipmapTextureArray : textureArray);
-        material.setParameter('uDiffuseMap', value ? mipmapTextureArray : textureArray);
-    });
+    // Rotate the boxes
+    shape.setEulerAngles(angle, angle * 2, angle * 4);
+    shape.render.meshInstances[0].setParameter('uTime', time);
+});
+data.on('mipmaps:set', (/** @type {number} */ value) => {
+    groundMaterial.setParameter('uDiffuseMap', value ? mipmapTextureArray : textureArray);
+    material.setParameter('uDiffuseMap', value ? mipmapTextureArray : textureArray);
 });

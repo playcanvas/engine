@@ -119,7 +119,7 @@ sortElementCountBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_SRC
 // count and per-slot granularities from ComputeRadixSort#prepareIndirect()
 // to support any backend (Multipass = 1 slot, OneSweep = 2 slots).
 
-const prepareSource = /* wgsl */`
+const prepareSource = /* wgsl */ `
     @group(0) @binding(0) var<storage, read_write> sortElementCountBuf: array<u32>;
     @group(0) @binding(1) var<storage, read_write> indirectDispatchArgs: array<u32>;
     struct PrepareUniforms {
@@ -202,7 +202,7 @@ const prepareCompute = new pc.Compute(device, prepareShader, 'PrepareIndirectTes
 function regenerateData() {
     const maxElements = currentMaxElements;
     const numBits = currentNumBits;
-    const maxValue = numBits >= 32 ? 0xFFFFFFFF : (1 << numBits) - 1;
+    const maxValue = numBits >= 32 ? 0xffffffff : (1 << numBits) - 1;
 
     if (keysBuffer) {
         keysBuffer.destroy();
@@ -280,7 +280,7 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
     const sortedValues = [];
     for (let i = 0; i < visibleCount; i++) {
         const idx = indicesData[i];
-        sortedValues.push(idx < capturedValues.length ? capturedValues[idx] : 0xFFFFFFFF);
+        sortedValues.push(idx < capturedValues.length ? capturedValues[idx] : 0xffffffff);
     }
     for (let i = 1; i < visibleCount; i++) {
         if (sortedValues[i] < sortedValues[i - 1]) {
@@ -300,15 +300,26 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
         }
     }
 
-    const passed = outOfRangeCount === 0 && duplicateCount === 0 && missingCount === 0 && orderErrors === 0 && valueMismatches === 0;
+    const passed =
+        outOfRangeCount === 0 &&
+        duplicateCount === 0 &&
+        missingCount === 0 &&
+        orderErrors === 0 &&
+        valueMismatches === 0;
 
     if (passed) {
         totalPassed++;
-        log(`✓ Test ${totalTests}: sortIndirect OK — ${visibleCount}/${maxElements} elements, ${numBits} bits (${totalPassed} passed, ${totalFailed} failed)`);
+        log(
+            `✓ Test ${totalTests}: sortIndirect OK — ${visibleCount}/${maxElements} elements, ${numBits} bits (${totalPassed} passed, ${totalFailed} failed)`
+        );
     } else {
         totalFailed++;
-        logError(`✗ Test ${totalTests}: sortIndirect FAILED — ${visibleCount}/${maxElements} elements, ${numBits} bits`);
-        logError(`  outOfRange=${outOfRangeCount} duplicates=${duplicateCount} missing=${missingCount} orderErrors=${orderErrors} valueMismatches=${valueMismatches}`);
+        logError(
+            `✗ Test ${totalTests}: sortIndirect FAILED — ${visibleCount}/${maxElements} elements, ${numBits} bits`
+        );
+        logError(
+            `  outOfRange=${outOfRangeCount} duplicates=${duplicateCount} missing=${missingCount} orderErrors=${orderErrors} valueMismatches=${valueMismatches}`
+        );
         logError(`  (${totalPassed} passed, ${totalFailed} failed)`);
     }
 }
@@ -328,7 +339,9 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         // multiple would trigger the sortIndirect assert every frame.
         const rb = radixSort ? radixSort.radixBits : 4;
         const validBits = [4, 8, 12, 16, 20, 24, 28, 32].filter(b => b % rb === 0);
-        const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev));
+        const nearest = validBits.reduce((prev, curr) =>
+            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+        );
         if (nearest !== currentNumBits) {
             currentNumBits = nearest;
             needsRegen = true;
@@ -365,7 +378,7 @@ app.on('update', () => {
     const minPercent = 10;
     const maxPercent = 90;
     const percent = minPercent + (maxPercent - minPercent) * (0.5 + 0.5 * Math.sin(t));
-    varyingVisibleCount = Math.max(1, Math.floor(currentMaxElements * percent / 100));
+    varyingVisibleCount = Math.max(1, Math.floor((currentMaxElements * percent) / 100));
 
     // Override the visible count for this frame (don't use currentVisiblePercent)
     const maxElements = currentMaxElements;
@@ -399,14 +412,17 @@ app.on('update', () => {
 
     // Run indirect sort with varying visible count
     const sortedIndicesBuffer = radixSort.sortIndirect(
-        keysBuffer, maxElements, numBits, dispatchSlot, sortElementCountBuffer
+        keysBuffer,
+        maxElements,
+        numBits,
+        dispatchSlot,
+        sortElementCountBuffer
     );
 
     // Verify every 10 frames to catch intermittent failures without overwhelming readbacks
     if (frameCount % 10 === 0 && !verificationPending) {
         verificationPending = true;
-        doVerification(sortedIndicesBuffer, originalValues.slice(), maxElements, visibleCount, numBits)
-        .then(() => {
+        doVerification(sortedIndicesBuffer, originalValues.slice(), maxElements, visibleCount, numBits).then(() => {
             verificationPending = false;
         });
     }

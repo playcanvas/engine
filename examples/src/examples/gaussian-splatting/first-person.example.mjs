@@ -30,10 +30,10 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 });
 
 await Promise.all([
-    new Promise((resolve) => {
+    new Promise(resolve => {
         pc.WasmModule.getInstance('Ammo', () => resolve(true));
     }),
-    new Promise((resolve) => {
+    new Promise(resolve => {
         pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
@@ -64,12 +64,7 @@ createOptions.componentSystems = [
     pc.RigidBodyComponentSystem,
     pc.GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.GSplatHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -85,11 +80,15 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' })
+    splat: new pc.Asset('sunnyvale-splat', 'gsplat', {
+        url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog'
+    }),
+    collision: new pc.Asset('sunnyvale-collision', 'container', {
+        url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb'
+    })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 

@@ -63,112 +63,115 @@ const assets = {
     orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
-        }
+app.start();
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
+// camera placement
+const ORBIT_PIVOT = new pc.Vec3(0, 0.8, 0);
+const ORBIT_DISTANCE = 5;
+const ORBIT_INITIAL_YAW = 28;
+const ORBIT_INITIAL_PITCH = -8;
+
+// get the instance of the gallery and set up with render component
+const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
+app.root.addChild(galleryEntity);
+
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    toneMapping: pc.TONEMAP_ACES
+});
+
+const guitar = new pc.Entity('guitar');
+guitar.addComponent('gsplat', {
+    asset: assets.guitar
+});
+guitar.setLocalPosition(0, 0.8, 0);
+guitar.setLocalEulerAngles(0, 0, 180);
+guitar.setLocalScale(0.4, 0.4, 0.4);
+app.root.addChild(guitar);
+
+const createSplatInstance = (name, asset, px, py, pz, scale) => {
+    const entity = new pc.Entity(name);
+    entity.addComponent('gsplat', {
+        asset
     });
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+    entity.setLocalPosition(px, py, pz);
+    entity.setLocalEulerAngles(180, 90, 0);
+    entity.setLocalScale(scale, scale, scale);
+    app.root.addChild(entity);
 
-    // camera placement
-    const ORBIT_PIVOT = new pc.Vec3(0, 0.8, 0);
-    const ORBIT_DISTANCE = 5;
-    const ORBIT_INITIAL_YAW = 28;
-    const ORBIT_INITIAL_PITCH = -8;
+    return entity;
+};
 
-    // get the instance of the gallery and set up with render component
-    const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
-    app.root.addChild(galleryEntity);
+createSplatInstance('biker', assets.biker, -1.5, 0.05, 0, 0.7);
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        toneMapping: pc.TONEMAP_ACES
-    });
+const skull = createSplatInstance('skull', assets.skull, 1.5, 0.05, 0, 0.7);
+skull.rotate(0, 150, 0);
 
-    const guitar = new pc.Entity('guitar');
-    guitar.addComponent('gsplat', {
-        asset: assets.guitar
-    });
-    guitar.setLocalPosition(0, 0.8, 0);
-    guitar.setLocalEulerAngles(0, 0, 180);
-    guitar.setLocalScale(0.4, 0.4, 0.4);
-    app.root.addChild(guitar);
+app.root.addChild(camera);
 
-    const createSplatInstance = (name, asset, px, py, pz, scale) => {
-        const entity = new pc.Entity(name);
-        entity.addComponent('gsplat', {
-            asset
-        });
-        entity.setLocalPosition(px, py, pz);
-        entity.setLocalEulerAngles(180, 90, 0);
-        entity.setLocalScale(scale, scale, scale);
-        app.root.addChild(entity);
-
-        return entity;
-    };
-
-    createSplatInstance('biker', assets.biker, -1.5, 0.05, 0, 0.7);
-
-    const skull = createSplatInstance('skull', assets.skull, 1.5, 0.05, 0, 0.7);
-    skull.rotate(0, 150, 0);
-
-    app.root.addChild(camera);
-
-    camera.addComponent('script');
-    const orbitCam = /** @type {any} */ (camera.script.create('orbitCamera', {
+camera.addComponent('script');
+const orbitCam = /** @type {any} */ (
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             distanceMax: 60,
             frameOnStart: false
         }
-    }));
-    if (orbitCam) {
-        orbitCam.pivotPoint.copy(ORBIT_PIVOT);
-        orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
-        orbitCam._updatePosition();
+    })
+);
+if (orbitCam) {
+    orbitCam.pivotPoint.copy(ORBIT_PIVOT);
+    orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
+    orbitCam._updatePosition();
+}
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+
+const glslVs = shaderGlslVert;
+const wgslVs = shaderWgslVert;
+const sceneMat = app.scene.gsplat.material;
+
+/**
+ * @param {boolean} enabled - Whether to apply the shared gsplatModifyVS chunk.
+ */
+const applyCustomShader = enabled => {
+    if (enabled) {
+        sceneMat.getShaderChunks('glsl').set('gsplatModifyVS', glslVs);
+        sceneMat.getShaderChunks('wgsl').set('gsplatModifyVS', wgslVs);
+    } else {
+        sceneMat.getShaderChunks('glsl').delete('gsplatModifyVS');
+        sceneMat.getShaderChunks('wgsl').delete('gsplatModifyVS');
     }
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
+    sceneMat.update();
+};
 
-    const glslVs = shaderGlslVert;
-    const wgslVs = shaderWgslVert;
-    const sceneMat = app.scene.gsplat.material;
+data.on('shader:set', () => {
+    applyCustomShader(!!data.get('shader'));
+});
+applyCustomShader(false);
+data.set('shader', false);
 
-    /**
-     * @param {boolean} enabled - Whether to apply the shared gsplatModifyVS chunk.
-     */
-    const applyCustomShader = (enabled) => {
-        if (enabled) {
-            sceneMat.getShaderChunks('glsl').set('gsplatModifyVS', glslVs);
-            sceneMat.getShaderChunks('wgsl').set('gsplatModifyVS', wgslVs);
-        } else {
-            sceneMat.getShaderChunks('glsl').delete('gsplatModifyVS');
-            sceneMat.getShaderChunks('wgsl').delete('gsplatModifyVS');
-        }
-        sceneMat.update();
-    };
+let currentTime = 0;
+app.on('update', dt => {
+    currentTime += dt;
 
-    data.on('shader:set', () => {
-        applyCustomShader(!!data.get('shader'));
-    });
-    applyCustomShader(false);
-    data.set('shader', false);
+    sceneMat.setParameter('uTime', currentTime);
+    sceneMat.update();
 
-    let currentTime = 0;
-    app.on('update', (dt) => {
-        currentTime += dt;
-
-        sceneMat.setParameter('uTime', currentTime);
-        sceneMat.update();
-
-        skull.rotate(0, 80 * dt, 0);
-    });
+    skull.rotate(0, 80 * dt, 0);
 });

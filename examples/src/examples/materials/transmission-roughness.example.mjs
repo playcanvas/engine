@@ -57,55 +57,56 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    // Setup skydome - the environment is important for seeing transmission effects
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
-    app.scene.skyboxIntensity = 1.5;
-
-    // Instantiate the transmission roughness test model
-    // This model shows a grid of transmissive tiles with:
-    // - Increasing roughness along the horizontal axis
-    // - Increasing IOR along the vertical axis
-    const modelEntity = assets.model.resource.instantiateRenderEntity();
-    modelEntity.setLocalEulerAngles(0, 90, 0);
-    modelEntity.setPosition(0, 0, 0);
-    modelEntity.setLocalScale(1, 1, 1);
-    app.root.addChild(modelEntity);
-
-    // Create a camera with an orbit camera script
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1),
-        toneMapping: pc.TONEMAP_ACES
-    });
-
-    // The color grab pass is needed for transmission effects
-    camera.camera.requestSceneColorMap(true);
-
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
-    camera.script.orbitCamera.yaw = 90;
-    camera.script.orbitCamera.distance = 2;
-
-    // Add a directional light
-    const directionalLight = new pc.Entity();
-    directionalLight.addComponent('light', {
-        type: 'directional',
-        color: pc.Color.WHITE,
-        castShadows: false,
-        intensity: 1
-    });
-    directionalLight.setEulerAngles(45, 180, 0);
-    app.root.addChild(directionalLight);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+// Setup skydome - the environment is important for seeing transmission effects
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
+app.scene.skyboxIntensity = 1.5;
+
+// Instantiate the transmission roughness test model
+// This model shows a grid of transmissive tiles with:
+// - Increasing roughness along the horizontal axis
+// - Increasing IOR along the vertical axis
+const modelEntity = assets.model.resource.instantiateRenderEntity();
+modelEntity.setLocalEulerAngles(0, 90, 0);
+modelEntity.setPosition(0, 0, 0);
+modelEntity.setLocalScale(1, 1, 1);
+app.root.addChild(modelEntity);
+
+// Create a camera with an orbit camera script
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    toneMapping: pc.TONEMAP_ACES
+});
+
+// The color grab pass is needed for transmission effects
+camera.camera.requestSceneColorMap(true);
+
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+app.root.addChild(camera);
+camera.script.orbitCamera.yaw = 90;
+camera.script.orbitCamera.distance = 2;
+
+// Add a directional light
+const directionalLight = new pc.Entity();
+directionalLight.addComponent('light', {
+    type: 'directional',
+    color: pc.Color.WHITE,
+    castShadows: false,
+    intensity: 1
+});
+directionalLight.setEulerAngles(45, 180, 0);
+app.root.addChild(directionalLight);

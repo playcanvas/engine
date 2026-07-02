@@ -42,15 +42,8 @@ createOptions.touch = new pc.TouchDevice(canvas);
 createOptions.keyboard = new pc.Keyboard(window);
 createOptions.xr = pc.XrManager;
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -75,93 +68,94 @@ const assets = {
     )
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // skydome
-    app.scene.envAtlas = assets.envatlas.resource;
-    app.scene.skyboxMip = 0;
-    app.scene.exposure = 0.5;
+app.start();
 
-    const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
-    app.root.addChild(galleryEntity);
+// skydome
+app.scene.envAtlas = assets.envatlas.resource;
+app.scene.skyboxMip = 0;
+app.scene.exposure = 0.5;
 
-    // Initial camera (desktop / before XR): offset to the side and higher than default eye height.
-    const camX = 1.35;
-    const camY = 2.45;
-    const camZ = 3.0;
-    const lookX = 0;
-    const lookY = 1.25;
-    const lookZ = 0;
+const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
+app.root.addChild(galleryEntity);
 
-    const c = new pc.Entity();
-    c.addComponent('camera', {
-        clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
-        farClip: 10000
-    });
-    c.setLocalPosition(camX, camY, camZ);
-    c.lookAt(lookX, lookY, lookZ);
-    app.root.addChild(c);
+// Initial camera (desktop / before XR): offset to the side and higher than default eye height.
+const camX = 1.35;
+const camY = 2.45;
+const camZ = 3.0;
+const lookX = 0;
+const lookY = 1.25;
+const lookZ = 0;
 
-    const l = new pc.Entity();
-    l.addComponent('light', {
-        type: 'spot',
-        range: 30
-    });
-    l.translate(0, 10, 0);
-    app.root.addChild(l);
+const c = new pc.Entity();
+c.addComponent('camera', {
+    clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
+    farClip: 10000
+});
+c.setLocalPosition(camX, camY, camZ);
+c.lookAt(lookX, lookY, lookZ);
+app.root.addChild(c);
 
-    if (app.xr.supported) {
-        const activate = function () {
-            if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-                c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
-                    callback: function (err) {
-                        if (err) message(`WebXR Immersive VR failed to start: ${err.message}`);
-                    }
-                });
-            } else {
-                message('Immersive VR is not available');
-            }
-        };
+const l = new pc.Entity();
+l.addComponent('light', {
+    type: 'spot',
+    range: 30
+});
+l.translate(0, 10, 0);
+app.root.addChild(l);
 
-        app.mouse.on('mousedown', () => {
-            if (!app.xr.active) activate();
-        });
-
-        if (app.touch) {
-            app.touch.on('touchend', (evt) => {
-                if (!app.xr.active) {
-                    activate();
-                } else {
-                    c.camera.endXr();
+if (app.xr.supported) {
+    const activate = function () {
+        if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
+                callback: function (err) {
+                    if (err) message(`WebXR Immersive VR failed to start: ${err.message}`);
                 }
-
-                evt.event.preventDefault();
-                evt.event.stopPropagation();
             });
-        }
-
-        app.keyboard.on('keydown', (evt) => {
-            if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
-                app.xr.end();
-            }
-        });
-
-        app.xr.on('start', () => {
-            message('Immersive VR session has started');
-        });
-        app.xr.on('end', () => {
-            message('Immersive VR session has ended');
-        });
-        app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
-            message(`Immersive VR is ${available ? 'available' : 'unavailable'}`);
-        });
-
-        if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
+        } else {
             message('Immersive VR is not available');
         }
-    } else {
-        message('WebXR is not supported');
+    };
+
+    app.mouse.on('mousedown', () => {
+        if (!app.xr.active) activate();
+    });
+
+    if (app.touch) {
+        app.touch.on('touchend', evt => {
+            if (!app.xr.active) {
+                activate();
+            } else {
+                c.camera.endXr();
+            }
+
+            evt.event.preventDefault();
+            evt.event.stopPropagation();
+        });
     }
-});
+
+    app.keyboard.on('keydown', evt => {
+        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+            app.xr.end();
+        }
+    });
+
+    app.xr.on('start', () => {
+        message('Immersive VR session has started');
+    });
+    app.xr.on('end', () => {
+        message('Immersive VR session has ended');
+    });
+    app.xr.on(`available:${pc.XRTYPE_VR}`, available => {
+        message(`Immersive VR is ${available ? 'available' : 'unavailable'}`);
+    });
+
+    if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
+        message('Immersive VR is not available');
+    }
+} else {
+    message('WebXR is not supported');
+}

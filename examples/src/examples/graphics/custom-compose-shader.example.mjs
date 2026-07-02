@@ -59,11 +59,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -79,77 +75,81 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome with low intensity
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.exposure = 1.2;
+app.start();
 
-    // create an instance of the apartment and add it to the scene
-    const platformEntity = assets.apartment.resource.instantiateRenderEntity();
-    platformEntity.setLocalScale(30, 30, 30);
-    app.root.addChild(platformEntity);
+// setup skydome with low intensity
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.exposure = 1.2;
 
-    // load a love sign model and add it to the scene
-    const loveEntity = assets.love.resource.instantiateRenderEntity();
-    loveEntity.setLocalPosition(-80, 30, -20);
-    loveEntity.setLocalScale(130, 130, 130);
-    loveEntity.rotate(0, -90, 0);
-    app.root.addChild(loveEntity);
+// create an instance of the apartment and add it to the scene
+const platformEntity = assets.apartment.resource.instantiateRenderEntity();
+platformEntity.setLocalScale(30, 30, 30);
+app.root.addChild(platformEntity);
 
-    // make the love sign emissive to bloom
-    const loveMaterial = loveEntity.findByName('s.0009_Standard_FF00BB_0').render.meshInstances[0].material;
-    loveMaterial.emissive = pc.Color.YELLOW;
-    loveMaterial.emissiveIntensity = 200;
-    loveMaterial.update();
+// load a love sign model and add it to the scene
+const loveEntity = assets.love.resource.instantiateRenderEntity();
+loveEntity.setLocalPosition(-80, 30, -20);
+loveEntity.setLocalScale(130, 130, 130);
+loveEntity.rotate(0, -90, 0);
+app.root.addChild(loveEntity);
 
-    // adjust all materials of the love sign to disable dynamic refraction
-    loveEntity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((meshInstance) => {
-            meshInstance.material.useDynamicRefraction = false;
-        });
+// make the love sign emissive to bloom
+const loveMaterial = loveEntity.findByName('s.0009_Standard_FF00BB_0').render.meshInstances[0].material;
+loveMaterial.emissive = pc.Color.YELLOW;
+loveMaterial.emissiveIntensity = 200;
+loveMaterial.update();
+
+// adjust all materials of the love sign to disable dynamic refraction
+loveEntity.findComponents('render').forEach(render => {
+    render.meshInstances.forEach(meshInstance => {
+        meshInstance.material.useDynamicRefraction = false;
     });
+});
 
-    // Create an Entity with a camera component
-    const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent('camera', {
-        farClip: 1500,
-        fov: 80
-    });
+// Create an Entity with a camera component
+const cameraEntity = new pc.Entity();
+cameraEntity.addComponent('camera', {
+    farClip: 1500,
+    fov: 80
+});
 
-    const focusPoint = new pc.Entity();
-    focusPoint.setLocalPosition(-80, 80, -20);
+const focusPoint = new pc.Entity();
+focusPoint.setLocalPosition(-80, 80, -20);
 
-    // add orbit camera script with a mouse and a touch support
-    cameraEntity.addComponent('script');
-    cameraEntity.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: focusPoint,
-            distanceMax: 500,
-            frameOnStart: false
-        }
-    });
-    cameraEntity.script.create('orbitCameraInputMouse');
-    cameraEntity.script.create('orbitCameraInputTouch');
+// add orbit camera script with a mouse and a touch support
+cameraEntity.addComponent('script');
+cameraEntity.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: focusPoint,
+        distanceMax: 500,
+        frameOnStart: false
+    }
+});
+cameraEntity.script.create('orbitCameraInputMouse');
+cameraEntity.script.create('orbitCameraInputTouch');
 
-    cameraEntity.setLocalPosition(-50, 100, 220);
-    cameraEntity.lookAt(0, 0, 100);
-    app.root.addChild(cameraEntity);
+cameraEntity.setLocalPosition(-50, 100, 220);
+cameraEntity.lookAt(0, 0, 100);
+app.root.addChild(cameraEntity);
 
-    // ------ Custom shader chunks for the camera frame ------
+// ------ Custom shader chunks for the camera frame ------
 
-    // Note: Override these empty chunks with your own custom code. Available chunk names:
-    // - composeDeclarationsPS: declarations for your custom code
-    // - composeMainStartPS: code to run at the start of the compose code
-    // - composeMainEndPS: code to run at the end of the compose code
+// Note: Override these empty chunks with your own custom code. Available chunk names:
+// - composeDeclarationsPS: declarations for your custom code
+// - composeMainStartPS: code to run at the start of the compose code
+// - composeMainEndPS: code to run at the end of the compose code
 
-    // Pixelation shader is based on this shadertoy shader: https://www.shadertoy.com/view/4dsXWs
+// Pixelation shader is based on this shadertoy shader: https://www.shadertoy.com/view/4dsXWs
 
-    // Define the pixelation helper in declarations so it's available in main
-    pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).set('composeDeclarationsPS', `
+// Define the pixelation helper in declarations so it's available in main
+pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).set(
+    'composeDeclarationsPS',
+    `
         uniform float pixelationTilePixels;
         uniform float pixelationIntensity;
         vec3 pixelateResult(vec3 color, vec2 uv, vec2 invRes) {
@@ -164,10 +164,13 @@ assetListLoader.load(() => {
             vec3 dotResult = mix(vec3(0.0), color, mask);
             return mix(color, dotResult, pixelationIntensity);
         }
-    `);
+    `
+);
 
-    // WGSL equivalent declarations
-    pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL).set('composeDeclarationsPS', `
+// WGSL equivalent declarations
+pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL).set(
+    'composeDeclarationsPS',
+    `
         uniform pixelationTilePixels: f32;
         uniform pixelationIntensity: f32;
         fn pixelateResult(color: vec3f, uv: vec2f, invRes: vec2f) -> vec3f {
@@ -181,53 +184,59 @@ assetListLoader.load(() => {
             let dotResult = vec3f(0.0) * (1.0 - mask) + color * mask;
             return mix(color, dotResult, uniform.pixelationIntensity);
         }
-    `);
+    `
+);
 
-    // Call the helper at the end of compose to apply on top of previous effects
-    pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).set('composeMainEndPS', `
+// Call the helper at the end of compose to apply on top of previous effects
+pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).set(
+    'composeMainEndPS',
+    `
         result = pixelateResult(result, uv, sceneTextureInvRes);
-    `);
+    `
+);
 
-    // WGSL equivalent call
-    pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL).set('composeMainEndPS', `
+// WGSL equivalent call
+pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL).set(
+    'composeMainEndPS',
+    `
         result = pixelateResult(result, uv, uniform.sceneTextureInvRes);
-    `);
+    `
+);
 
-    // ------ Custom render passes set up ------
+// ------ Custom render passes set up ------
 
-    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-    cameraFrame.rendering.samples = 4;
-    cameraFrame.bloom.intensity = 0.03;
-    cameraFrame.bloom.blurLevel = 7;
-    cameraFrame.vignette.inner = 0.5;
-    cameraFrame.vignette.outer = 1;
-    cameraFrame.vignette.curvature = 0.5;
-    cameraFrame.vignette.intensity = 0.8;
+const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.samples = 4;
+cameraFrame.bloom.intensity = 0.03;
+cameraFrame.bloom.blurLevel = 7;
+cameraFrame.vignette.inner = 0.5;
+cameraFrame.vignette.outer = 1;
+cameraFrame.vignette.curvature = 0.5;
+cameraFrame.vignette.intensity = 0.8;
 
-    cameraFrame.update();
+cameraFrame.update();
 
-    // apply UI changes (tone mapping only)
-    data.on('*:set', (/** @type {string} */ path, value) => {
-        if (path === 'data.sceneTonemapping') {
-            // postprocessing tone mapping
-            cameraFrame.rendering.toneMapping = value;
-            cameraFrame.update();
-        }
+// apply UI changes (tone mapping only)
+data.on('*:set', (/** @type {string} */ path, value) => {
+    if (path === 'data.sceneTonemapping') {
+        // postprocessing tone mapping
+        cameraFrame.rendering.toneMapping = value;
+        cameraFrame.update();
+    }
 
-        if (path === 'data.pixelSize') {
-            // global uniform for pixelation tile size
-            device.scope.resolve('pixelationTilePixels').setValue(value);
-        }
+    if (path === 'data.pixelSize') {
+        // global uniform for pixelation tile size
+        device.scope.resolve('pixelationTilePixels').setValue(value);
+    }
 
-        if (path === 'data.pixelationIntensity') {
-            device.scope.resolve('pixelationIntensity').setValue(value);
-        }
-    });
+    if (path === 'data.pixelationIntensity') {
+        device.scope.resolve('pixelationIntensity').setValue(value);
+    }
+});
 
-    // set initial values
-    data.set('data', {
-        sceneTonemapping: pc.TONEMAP_NEUTRAL,
-        pixelSize: 8,
-        pixelationIntensity: 0.5
-    });
+// set initial values
+data.set('data', {
+    sceneTonemapping: pc.TONEMAP_NEUTRAL,
+    pixelSize: 8,
+    pixelationIntensity: 0.5
 });

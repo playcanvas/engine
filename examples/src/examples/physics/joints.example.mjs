@@ -10,7 +10,7 @@ pc.WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -185,7 +185,14 @@ createJoint('windmill-hinge', new pc.Vec3(-5.5, 4, 0.3), new pc.Vec3(0, -90, 0),
 
 const links = [];
 for (let i = 0; i < 6; i++) {
-    const link = createBox(`link-${i}`, new pc.Vec3(0.18, 0.5, 0.18), new pc.Vec3(-2, 5.25 - i * 0.5, 0), blue, 'dynamic', 2);
+    const link = createBox(
+        `link-${i}`,
+        new pc.Vec3(0.18, 0.5, 0.18),
+        new pc.Vec3(-2, 5.25 - i * 0.5, 0),
+        blue,
+        'dynamic',
+        2
+    );
     links.push(link);
 
     // each ball joint sits at the top of its link with its X axis pointing down the chain and
@@ -264,7 +271,9 @@ anchor.addComponent('joint', {
 
 const towerBoxes = [];
 for (let i = 0; i < 4; i++) {
-    towerBoxes.push(createBox(`tower-${i}`, new pc.Vec3(0.7, 0.7, 0.7), new pc.Vec3(8.5, 0.85 + i * 0.7, 0), green, 'dynamic', 8));
+    towerBoxes.push(
+        createBox(`tower-${i}`, new pc.Vec3(0.7, 0.7, 0.7), new pc.Vec3(8.5, 0.85 + i * 0.7, 0), green, 'dynamic', 8)
+    );
 }
 for (let i = 0; i < 3; i++) {
     const lower = towerBoxes[i];
@@ -287,7 +296,7 @@ for (let i = 0; i < 3; i++) {
 
 // ***********    Click to shoot balls   *******************
 
-app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
+app.mouse.on(pc.EVENT_MOUSEDOWN, event => {
     const ball = new pc.Entity('ball');
     ball.addComponent('render', {
         type: 'sphere',
@@ -314,7 +323,7 @@ app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
 
 // reverse the slider motor at each end of the rail to patrol back and forth
 let patrolTimer = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     patrolTimer += dt;
     if (patrolTimer > 3) {
         patrolTimer = 0;

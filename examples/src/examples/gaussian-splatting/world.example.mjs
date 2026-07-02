@@ -69,11 +69,11 @@ const config = {
 // LOD preset definitions
 /** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
 const LOD_PRESETS = {
-    'desktop': {
+    desktop: {
         range: [0, 2],
         lodBaseDistance: 15
     },
-    'mobile': {
+    mobile: {
         range: [1, 5],
         lodBaseDistance: 15
     }
@@ -92,187 +92,187 @@ const assets = {
     )
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.start();
+app.start();
 
-    // setup skydome
-    app.scene.skyboxMip = 1;
-    app.scene.exposure = 1.5;
+// setup skydome
+app.scene.skyboxMip = 1;
+app.scene.exposure = 1.5;
 
-    // enable rotation-based LOD updates and behind-camera penalty
-    app.scene.gsplat.lodUpdateAngle = 90;
-    app.scene.gsplat.lodBehindPenalty = 2;
-    app.scene.gsplat.radialSorting = true;
-    app.scene.gsplat.minPixelSize = 1;
-    app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
-    app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
+// enable rotation-based LOD updates and behind-camera penalty
+app.scene.gsplat.lodUpdateAngle = 90;
+app.scene.gsplat.lodBehindPenalty = 2;
+app.scene.gsplat.radialSorting = true;
+app.scene.gsplat.minPixelSize = 1;
+app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
+app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-    // set up SH update parameters
-    app.scene.gsplat.colorUpdateAngle = 10;
+// set up SH update parameters
+app.scene.gsplat.colorUpdateAngle = 10;
 
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
-        }
-    });
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
 
-    // initialize UI settings
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('debug', pc.GSPLAT_DEBUG_NONE);
-    data.set('splatBudget', pc.platform.mobile ? 1 : 4);
+// initialize UI settings
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('debug', pc.GSPLAT_DEBUG_NONE);
+data.set('splatBudget', pc.platform.mobile ? 1 : 4);
 
-    data.on('debug:set', () => {
-        app.scene.gsplat.debug = data.get('debug');
-    });
+data.on('debug:set', () => {
+    app.scene.gsplat.debug = data.get('debug');
+});
 
-    const applySplatBudget = () => {
-        const millions = data.get('splatBudget');
-        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
-    };
+const applySplatBudget = () => {
+    const millions = data.get('splatBudget');
+    app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+};
 
-    applySplatBudget();
-    data.on('splatBudget:set', applySplatBudget);
+applySplatBudget();
+data.on('splatBudget:set', applySplatBudget);
 
-    // Auto-select LOD preset based on device
-    const preset = pc.platform.mobile ? 'mobile' : 'desktop';
-    const presetData = LOD_PRESETS[preset];
+// Auto-select LOD preset based on device
+const preset = pc.platform.mobile ? 'mobile' : 'desktop';
+const presetData = LOD_PRESETS[preset];
 
-    // Create skatepark entity
-    const skatepark = new pc.Entity('Skatepark');
-    skatepark.addComponent('gsplat', {
-        asset: assets.skatepark,
-        lodRangeMin: presetData.range[0],
-        lodRangeMax: presetData.range[1]
-    });
-    skatepark.setLocalPosition(0, 0, 0);
-    const [rotX, rotY, rotZ] = /** @type {[number, number, number]} */ (config.eulerAngles);
-    skatepark.setLocalEulerAngles(rotX, rotY, rotZ);
-    skatepark.setLocalScale(1, 1, 1);
-    app.root.addChild(skatepark);
+// Create skatepark entity
+const skatepark = new pc.Entity('Skatepark');
+skatepark.addComponent('gsplat', {
+    asset: assets.skatepark,
+    lodRangeMin: presetData.range[0],
+    lodRangeMax: presetData.range[1]
+});
+skatepark.setLocalPosition(0, 0, 0);
+const [rotX, rotY, rotZ] = /** @type {[number, number, number]} */ (config.eulerAngles);
+skatepark.setLocalEulerAngles(rotX, rotY, rotZ);
+skatepark.setLocalScale(1, 1, 1);
+app.root.addChild(skatepark);
 
-    // Apply LOD distances to skatepark
-    const gs = /** @type {any} */ (skatepark.gsplat);
-    gs.lodBaseDistance = presetData.lodBaseDistance;
-    gs.lodMultiplier = 4;
+// Apply LOD distances to skatepark
+const gs = /** @type {any} */ (skatepark.gsplat);
+gs.lodBaseDistance = presetData.lodBaseDistance;
+gs.lodMultiplier = 4;
 
-    data.set('lodBaseDistance', presetData.lodBaseDistance);
-    data.set('lodMultiplier', 4);
+data.set('lodBaseDistance', presetData.lodBaseDistance);
+data.set('lodMultiplier', 4);
 
-    data.on('lodBaseDistance:set', () => {
-        gs.lodBaseDistance = data.get('lodBaseDistance');
-    });
-    data.on('lodMultiplier:set', () => {
-        gs.lodMultiplier = data.get('lodMultiplier');
-    });
+data.on('lodBaseDistance:set', () => {
+    gs.lodBaseDistance = data.get('lodBaseDistance');
+});
+data.on('lodMultiplier:set', () => {
+    gs.lodMultiplier = data.get('lodMultiplier');
+});
 
-    // World center coordinates
-    const worldCenter = { x: 18, y: -1.3, z: 13.5 };
+// World center coordinates
+const worldCenter = { x: 18, y: -1.3, z: 13.5 };
 
-    // Create biker entity at center, ground level
-    const biker = new pc.Entity('Biker');
-    biker.addComponent('gsplat', {
-        asset: assets.biker
-    });
-    biker.setLocalPosition(worldCenter.x, worldCenter.y, worldCenter.z);
-    biker.setLocalEulerAngles(180, 0, 0);
-    biker.setLocalScale(1, 1, 1);
-    app.root.addChild(biker);
+// Create biker entity at center, ground level
+const biker = new pc.Entity('Biker');
+biker.addComponent('gsplat', {
+    asset: assets.biker
+});
+biker.setLocalPosition(worldCenter.x, worldCenter.y, worldCenter.z);
+biker.setLocalEulerAngles(180, 0, 0);
+biker.setLocalScale(1, 1, 1);
+app.root.addChild(biker);
 
-    // Create first orbiting logo
-    const logo1 = new pc.Entity('Logo1');
-    logo1.addComponent('gsplat', {
-        asset: assets.logo
-    });
-    logo1.setLocalEulerAngles(180, 90, 0);
-    app.root.addChild(logo1);
+// Create first orbiting logo
+const logo1 = new pc.Entity('Logo1');
+logo1.addComponent('gsplat', {
+    asset: assets.logo
+});
+logo1.setLocalEulerAngles(180, 90, 0);
+app.root.addChild(logo1);
 
-    // Create second orbiting logo
-    const logo2 = new pc.Entity('Logo2');
-    logo2.addComponent('gsplat', {
-        asset: assets.logo
-    });
-    logo2.setLocalEulerAngles(180, 90, 0);
-    logo2.setLocalScale(0.5, 0.5, 0.5);
-    app.root.addChild(logo2);
+// Create second orbiting logo
+const logo2 = new pc.Entity('Logo2');
+logo2.addComponent('gsplat', {
+    asset: assets.logo
+});
+logo2.setLocalEulerAngles(180, 90, 0);
+logo2.setLocalScale(0.5, 0.5, 0.5);
+app.root.addChild(logo2);
 
-    // Create camera
-    const camera = new pc.Entity('Camera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        fov: 75,
-        toneMapping: pc.TONEMAP_ACES
-    });
+// Create camera
+const camera = new pc.Entity('Camera');
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    fov: 75,
+    toneMapping: pc.TONEMAP_ACES
+});
 
-    // Set camera position
-    const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
-    const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint);
-    const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
-    camera.setLocalPosition(camX, camY, camZ);
-    app.root.addChild(camera);
+// Set camera position
+const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
+const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint);
+const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
+camera.setLocalPosition(camX, camY, camZ);
+app.root.addChild(camera);
 
-    // Add camera controls
-    camera.addComponent('script');
-    const cc = /** @type {CameraControls} */ ((/** @type {any} */ (camera.script)).create(CameraControls));
-    Object.assign(cc, {
-        sceneSize: 500,
-        moveSpeed: config.moveSpeed,
-        moveFastSpeed: config.moveFastSpeed,
-        enableOrbit: false,
-        enablePan: false,
-        focusPoint: focusPoint
-    });
+// Add camera controls
+camera.addComponent('script');
+const cc = /** @type {CameraControls} */ (/** @type {any} */ (camera.script).create(CameraControls));
+Object.assign(cc, {
+    sceneSize: 500,
+    moveSpeed: config.moveSpeed,
+    moveFastSpeed: config.moveFastSpeed,
+    enableOrbit: false,
+    enablePan: false,
+    focusPoint: focusPoint
+});
 
-    data.set('orbitCamera', false);
-    data.on('orbitCamera:set', () => {
-        const orbit = !!data.get('orbitCamera');
-        cc.enableOrbit = orbit;
-        cc.enablePan = orbit;
-        cc.enableFly = !orbit;
-        if (orbit) {
-            cc.focusPoint = new pc.Vec3(worldCenter.x, worldCenter.y, worldCenter.z);
-        }
-    });
+data.set('orbitCamera', false);
+data.on('orbitCamera:set', () => {
+    const orbit = !!data.get('orbitCamera');
+    cc.enableOrbit = orbit;
+    cc.enablePan = orbit;
+    cc.enableFly = !orbit;
+    if (orbit) {
+        cc.focusPoint = new pc.Vec3(worldCenter.x, worldCenter.y, worldCenter.z);
+    }
+});
 
-    // Orbit parameters
-    const logo1Radius = 3;
-    const logo1Speed = 0.6;
-    const logo2Radius = 5;
-    const logo2Speed = -0.2;
-    const orbitHeight = 3;
+// Orbit parameters
+const logo1Radius = 3;
+const logo1Speed = 0.6;
+const logo2Radius = 5;
+const logo2Speed = -0.2;
+const orbitHeight = 3;
 
-    // Animation update
-    let time = 0;
-    const centerVec = new pc.Vec3(worldCenter.x, worldCenter.y + orbitHeight, worldCenter.z);
-    const rollSpeed1 = 90; // degrees per second
-    const rollSpeed2 = 120; // degrees per second
-    app.on('update', (dt) => {
-        time += dt;
+// Animation update
+let time = 0;
+const centerVec = new pc.Vec3(worldCenter.x, worldCenter.y + orbitHeight, worldCenter.z);
+const rollSpeed1 = 90; // degrees per second
+const rollSpeed2 = 120; // degrees per second
+app.on('update', dt => {
+    time += dt;
 
-        // Orbit logo 1 around world center
-        const angle1 = time * logo1Speed;
-        logo1.setLocalPosition(
-            worldCenter.x + logo1Radius * Math.sin(angle1),
-            worldCenter.y + orbitHeight,
-            worldCenter.z + logo1Radius * Math.cos(angle1)
-        );
-        logo1.lookAt(centerVec);
-        logo1.rotateLocal(0, 0, time * rollSpeed1);
+    // Orbit logo 1 around world center
+    const angle1 = time * logo1Speed;
+    logo1.setLocalPosition(
+        worldCenter.x + logo1Radius * Math.sin(angle1),
+        worldCenter.y + orbitHeight,
+        worldCenter.z + logo1Radius * Math.cos(angle1)
+    );
+    logo1.lookAt(centerVec);
+    logo1.rotateLocal(0, 0, time * rollSpeed1);
 
-        // Orbit logo 2 around world center (opposite direction)
-        const angle2 = time * logo2Speed;
-        logo2.setLocalPosition(
-            worldCenter.x + logo2Radius * Math.sin(angle2),
-            worldCenter.y + orbitHeight,
-            worldCenter.z + logo2Radius * Math.cos(angle2)
-        );
-        logo2.lookAt(centerVec);
-        logo2.rotateLocal(0, 0, time * rollSpeed2);
+    // Orbit logo 2 around world center (opposite direction)
+    const angle2 = time * logo2Speed;
+    logo2.setLocalPosition(
+        worldCenter.x + logo2Radius * Math.sin(angle2),
+        worldCenter.y + orbitHeight,
+        worldCenter.z + logo2Radius * Math.cos(angle2)
+    );
+    logo2.lookAt(centerVec);
+    logo2.rotateLocal(0, 0, time * rollSpeed2);
 
-        // Update HUD stats
-        data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
-    });
+    // Update HUD stats
+    data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
 });

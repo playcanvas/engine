@@ -58,117 +58,118 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.skyboxMip = 2;
-    app.scene.exposure = 2;
-    app.scene.envAtlas = assets.helipad.resource;
+app.start();
 
-    // sphere material
-    const material = new pc.StandardMaterial();
-    material.diffuseMap = assets.color.resource;
-    material.normalMap = assets.normal.resource;
-    material.glossMap = assets.gloss.resource;
-    material.update();
+// setup skydome
+app.scene.skyboxMip = 2;
+app.scene.exposure = 2;
+app.scene.envAtlas = assets.helipad.resource;
 
-    // sphere mesh and entity
-    const entity = new pc.Entity('Sphere');
-    app.root.addChild(entity);
+// sphere material
+const material = new pc.StandardMaterial();
+material.diffuseMap = assets.color.resource;
+material.normalMap = assets.normal.resource;
+material.glossMap = assets.gloss.resource;
+material.update();
 
-    const geom = new pc.SphereGeometry({
-        radius: 1,
-        latitudeBands: 100,
-        longitudeBands: 100
-    });
+// sphere mesh and entity
+const entity = new pc.Entity('Sphere');
+app.root.addChild(entity);
 
-    const mesh = pc.Mesh.fromGeometry(device, geom, {
-        storageVertex: true // allow vertex buffer to be accessible by compute shader
-    });
+const geom = new pc.SphereGeometry({
+    radius: 1,
+    latitudeBands: 100,
+    longitudeBands: 100
+});
 
-    // Add a render component with the mesh
-    entity.addComponent('render', {
-        meshInstances: [new pc.MeshInstance(mesh, material)]
-    });
-    app.root.addChild(entity);
+const mesh = pc.Mesh.fromGeometry(device, geom, {
+    storageVertex: true // allow vertex buffer to be accessible by compute shader
+});
 
-    // Create an orbit camera
-    const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
-    });
-    cameraEntity.translate(0, 0, 5);
+// Add a render component with the mesh
+entity.addComponent('render', {
+    meshInstances: [new pc.MeshInstance(mesh, material)]
+});
+app.root.addChild(entity);
 
-    // add orbit camera script with a mouse and a touch support
-    cameraEntity.addComponent('script');
-    cameraEntity.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: entity
-        }
-    });
-    cameraEntity.script.create('orbitCameraInputMouse');
-    cameraEntity.script.create('orbitCameraInputTouch');
-    app.root.addChild(cameraEntity);
+// Create an orbit camera
+const cameraEntity = new pc.Entity();
+cameraEntity.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5)
+});
+cameraEntity.translate(0, 0, 5);
 
-    // a compute shader that will modify the vertex buffer of the mesh every frame
-    const shader = device.supportsCompute ?
-        new pc.Shader(device, {
-            name: 'ComputeShader',
-            shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-            cshader: computeShaderWgsl,
+// add orbit camera script with a mouse and a touch support
+cameraEntity.addComponent('script');
+cameraEntity.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: entity
+    }
+});
+cameraEntity.script.create('orbitCameraInputMouse');
+cameraEntity.script.create('orbitCameraInputTouch');
+app.root.addChild(cameraEntity);
 
-            // format of a uniform buffer used by the compute shader
-            computeUniformBufferFormats: {
-                ub: new pc.UniformBufferFormat(device, [
-                    new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
-                    new pc.UniformFormat('positionOffset', pc.UNIFORMTYPE_UINT),
-                    new pc.UniformFormat('normalOffset', pc.UNIFORMTYPE_UINT),
-                    new pc.UniformFormat('time', pc.UNIFORMTYPE_FLOAT)
-                ])
-            },
+// a compute shader that will modify the vertex buffer of the mesh every frame
+const shader = device.supportsCompute
+    ? new pc.Shader(device, {
+          name: 'ComputeShader',
+          shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+          cshader: computeShaderWgsl,
 
-            // format of a bind group, providing resources for the compute shader
-            computeBindGroupFormat: new pc.BindGroupFormat(device, [
-                // a uniform buffer we provided format for
-                new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-                // the vertex buffer we want to modify
-                new pc.BindStorageBufferFormat('vb', pc.SHADERSTAGE_COMPUTE)
-            ])
-        }) :
-        null;
+          // format of a uniform buffer used by the compute shader
+          computeUniformBufferFormats: {
+              ub: new pc.UniformBufferFormat(device, [
+                  new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
+                  new pc.UniformFormat('positionOffset', pc.UNIFORMTYPE_UINT),
+                  new pc.UniformFormat('normalOffset', pc.UNIFORMTYPE_UINT),
+                  new pc.UniformFormat('time', pc.UNIFORMTYPE_FLOAT)
+              ])
+          },
 
-    // information about the vertex buffer format - offset of position and normal attributes
-    // Note: data is stored non-interleaved, positions together, normals together, so no need
-    // to worry about stride
-    const format = mesh.vertexBuffer.format;
-    const positionElement = format.elements.find(e => e.name === pc.SEMANTIC_POSITION);
-    const normalElement = format.elements.find(e => e.name === pc.SEMANTIC_NORMAL);
+          // format of a bind group, providing resources for the compute shader
+          computeBindGroupFormat: new pc.BindGroupFormat(device, [
+              // a uniform buffer we provided format for
+              new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
+              // the vertex buffer we want to modify
+              new pc.BindStorageBufferFormat('vb', pc.SHADERSTAGE_COMPUTE)
+          ])
+      })
+    : null;
 
-    // create an instance of the compute shader, and provide it the mesh vertex buffer
-    const compute = new pc.Compute(device, shader, 'ComputeModifyVB');
-    compute.setParameter('vb', mesh.vertexBuffer);
-    compute.setParameter('count', mesh.vertexBuffer.numVertices);
-    compute.setParameter('positionOffset', positionElement?.offset / 4); // number of floats offset
-    compute.setParameter('normalOffset', normalElement?.offset / 4); // number of floats offset
+// information about the vertex buffer format - offset of position and normal attributes
+// Note: data is stored non-interleaved, positions together, normals together, so no need
+// to worry about stride
+const format = mesh.vertexBuffer.format;
+const positionElement = format.elements.find(e => e.name === pc.SEMANTIC_POSITION);
+const normalElement = format.elements.find(e => e.name === pc.SEMANTIC_NORMAL);
 
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
-        if (entity) {
-            // update non-constant parameters each frame
-            compute.setParameter('time', time);
+// create an instance of the compute shader, and provide it the mesh vertex buffer
+const compute = new pc.Compute(device, shader, 'ComputeModifyVB');
+compute.setParameter('vb', mesh.vertexBuffer);
+compute.setParameter('count', mesh.vertexBuffer.numVertices);
+compute.setParameter('positionOffset', positionElement?.offset / 4); // number of floats offset
+compute.setParameter('normalOffset', normalElement?.offset / 4); // number of floats offset
 
-            // set up both dispatches
-            compute.setupDispatch(mesh.vertexBuffer.numVertices);
+let time = 0;
+app.on('update', dt => {
+    time += dt;
+    if (entity) {
+        // update non-constant parameters each frame
+        compute.setParameter('time', time);
 
-            // dispatch the compute shader
-            device.computeDispatch([compute], 'ModifyVBDispatch');
+        // set up both dispatches
+        compute.setupDispatch(mesh.vertexBuffer.numVertices);
 
-            // solid / wireframe
-            entity.render.renderStyle = Math.floor(time * 0.5) % 2 ? pc.RENDERSTYLE_WIREFRAME : pc.RENDERSTYLE_SOLID;
-        }
-    });
+        // dispatch the compute shader
+        device.computeDispatch([compute], 'ModifyVBDispatch');
+
+        // solid / wireframe
+        entity.render.renderStyle = Math.floor(time * 0.5) % 2 ? pc.RENDERSTYLE_WIREFRAME : pc.RENDERSTYLE_SOLID;
+    }
 });

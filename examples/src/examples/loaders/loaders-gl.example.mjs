@@ -11,7 +11,7 @@ import shaderVert from './shader.vert';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const loadES5 = async (url) => {
+const loadES5 = async url => {
     const res = await fetch(url);
     const txt = await res.text();
     const module = {
@@ -117,7 +117,7 @@ app.root.addChild(camera);
 loadModel('./assets/models/park_points.drc');
 // update things each frame
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt;
     // orbit the camera
     if (camera) {

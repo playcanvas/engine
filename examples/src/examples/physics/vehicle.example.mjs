@@ -11,7 +11,7 @@ pc.WasmModule.setConfig('Ammo', {
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -63,157 +63,158 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.skyboxMip = 2;
-    app.scene.exposure = 0.3;
-    app.scene.envAtlas = assets.helipad.resource;
+app.start();
 
-    const lighting = app.scene.lighting;
-    lighting.shadowsEnabled = false;
+// setup skydome
+app.scene.skyboxMip = 2;
+app.scene.exposure = 0.3;
+app.scene.envAtlas = assets.helipad.resource;
 
-    // Create a static ground shape for our car to drive on
-    const ground = new pc.Entity('Ground');
-    ground.addComponent('rigidbody', {
-        type: 'static'
+const lighting = app.scene.lighting;
+lighting.shadowsEnabled = false;
+
+// Create a static ground shape for our car to drive on
+const ground = new pc.Entity('Ground');
+ground.addComponent('rigidbody', {
+    type: 'static'
+});
+ground.addComponent('collision', {
+    type: 'box',
+    halfExtents: new pc.Vec3(50, 0.5, 50)
+});
+ground.setLocalPosition(0, -0.5, 0);
+app.root.addChild(ground);
+
+// Create 4 wheels for our vehicle
+const wheels = [
+    { name: 'Front Left Wheel', pos: new pc.Vec3(0.8, 0.4, 1.2), front: true },
+    { name: 'Front Right Wheel', pos: new pc.Vec3(-0.8, 0.4, 1.2), front: true },
+    { name: 'Back Left Wheel', pos: new pc.Vec3(0.8, 0.4, -1.2), front: false },
+    { name: 'Back Right Wheel', pos: new pc.Vec3(-0.8, 0.4, -1.2), front: false }
+].map(wheelDef => {
+    // Create a wheel
+    const wheel = new pc.Entity(wheelDef.name);
+    wheel.addComponent('script');
+    wheel.script.create('vehicleWheel', {
+        attributes: {
+            debugRender: true,
+            isFront: wheelDef.front
+        }
     });
-    ground.addComponent('collision', {
-        type: 'box',
-        halfExtents: new pc.Vec3(50, 0.5, 50)
-    });
-    ground.setLocalPosition(0, -0.5, 0);
-    app.root.addChild(ground);
+    wheel.setLocalPosition(wheelDef.pos);
+    return wheel;
+});
 
-    // Create 4 wheels for our vehicle
-    const wheels = [
-        { name: 'Front Left Wheel', pos: new pc.Vec3(0.8, 0.4, 1.2), front: true },
-        { name: 'Front Right Wheel', pos: new pc.Vec3(-0.8, 0.4, 1.2), front: true },
-        { name: 'Back Left Wheel', pos: new pc.Vec3(0.8, 0.4, -1.2), front: false },
-        { name: 'Back Right Wheel', pos: new pc.Vec3(-0.8, 0.4, -1.2), front: false }
-    ].map((wheelDef) => {
-        // Create a wheel
-        const wheel = new pc.Entity(wheelDef.name);
-        wheel.addComponent('script');
-        wheel.script.create('vehicleWheel', {
+// Create a physical vehicle
+const vehicle = new pc.Entity('Vehicle');
+vehicle.addComponent('rigidbody', {
+    mass: 800,
+    type: 'dynamic'
+});
+vehicle.addComponent('collision', {
+    type: 'compound'
+});
+vehicle.addComponent('script');
+vehicle.script.create('vehicle', {
+    attributes: {
+        wheels: wheels
+    }
+});
+vehicle.script.create('vehicleControls');
+vehicle.script.create('actionPhysicsReset', {
+    attributes: {
+        event: 'reset'
+    }
+});
+vehicle.setLocalPosition(0, 2, 0);
+
+// Create the car chassis, offset upwards in Y from the compound body
+const chassis = new pc.Entity('Chassis');
+chassis.addComponent('collision', {
+    type: 'box',
+    halfExtents: [0.6, 0.35, 1.65]
+});
+chassis.setLocalPosition(0, 0.65, 0);
+
+// Create the car chassis, offset upwards in Y from the compound body
+const cab = new pc.Entity('Cab');
+cab.addComponent('collision', {
+    type: 'box',
+    halfExtents: [0.5, 0.2, 1]
+});
+cab.setLocalPosition(0, 1.2, -0.25);
+
+// Add the vehicle to the hierarchy
+wheels.forEach(wheel => {
+    vehicle.addChild(wheel);
+});
+vehicle.addChild(chassis);
+vehicle.addChild(cab);
+app.root.addChild(vehicle);
+
+// Build a wall of blocks for the car to smash through
+for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < 5; j++) {
+        const block = new pc.Entity('Block');
+        block.addComponent('rigidbody', {
+            type: 'dynamic'
+        });
+        block.addComponent('collision', {
+            type: 'box'
+        });
+        block.addComponent('script');
+        block.script.create('actionPhysicsReset', {
             attributes: {
-                debugRender: true,
-                isFront: wheelDef.front
+                event: 'reset'
             }
         });
-        wheel.setLocalPosition(wheelDef.pos);
-        return wheel;
-    });
-
-    // Create a physical vehicle
-    const vehicle = new pc.Entity('Vehicle');
-    vehicle.addComponent('rigidbody', {
-        mass: 800,
-        type: 'dynamic'
-    });
-    vehicle.addComponent('collision', {
-        type: 'compound'
-    });
-    vehicle.addComponent('script');
-    vehicle.script.create('vehicle', {
-        attributes: {
-            wheels: wheels
-        }
-    });
-    vehicle.script.create('vehicleControls');
-    vehicle.script.create('actionPhysicsReset', {
-        attributes: {
-            event: 'reset'
-        }
-    });
-    vehicle.setLocalPosition(0, 2, 0);
-
-    // Create the car chassis, offset upwards in Y from the compound body
-    const chassis = new pc.Entity('Chassis');
-    chassis.addComponent('collision', {
-        type: 'box',
-        halfExtents: [0.6, 0.35, 1.65]
-    });
-    chassis.setLocalPosition(0, 0.65, 0);
-
-    // Create the car chassis, offset upwards in Y from the compound body
-    const cab = new pc.Entity('Cab');
-    cab.addComponent('collision', {
-        type: 'box',
-        halfExtents: [0.5, 0.2, 1]
-    });
-    cab.setLocalPosition(0, 1.2, -0.25);
-
-    // Add the vehicle to the hierarchy
-    wheels.forEach((wheel) => {
-        vehicle.addChild(wheel);
-    });
-    vehicle.addChild(chassis);
-    vehicle.addChild(cab);
-    app.root.addChild(vehicle);
-
-    // Build a wall of blocks for the car to smash through
-    for (let i = 0; i < 10; i++) {
-        for (let j = 0; j < 5; j++) {
-            const block = new pc.Entity('Block');
-            block.addComponent('rigidbody', {
-                type: 'dynamic'
-            });
-            block.addComponent('collision', {
-                type: 'box'
-            });
-            block.addComponent('script');
-            block.script.create('actionPhysicsReset', {
-                attributes: {
-                    event: 'reset'
-                }
-            });
-            block.setLocalPosition(i - 4.5, j + 0.5, -10);
-            app.root.addChild(block);
-        }
+        block.setLocalPosition(i - 4.5, j + 0.5, -10);
+        app.root.addChild(block);
     }
+}
 
-    // Create a directional light source
-    const light = new pc.Entity('Directional Light');
-    light.addComponent('light', {
-        type: 'directional',
-        color: new pc.Color(1, 1, 1),
-        castShadows: true,
-        shadowBias: 0.2,
-        shadowDistance: 40,
-        normalOffsetBias: 0.05,
-        shadowResolution: 2048
-    });
-    light.setLocalEulerAngles(45, 30, 0);
-    app.root.addChild(light);
+// Create a directional light source
+const light = new pc.Entity('Directional Light');
+light.addComponent('light', {
+    type: 'directional',
+    color: new pc.Color(1, 1, 1),
+    castShadows: true,
+    shadowBias: 0.2,
+    shadowDistance: 40,
+    normalOffsetBias: 0.05,
+    shadowResolution: 2048
+});
+light.setLocalEulerAngles(45, 30, 0);
+app.root.addChild(light);
 
-    // Create a camera to render the scene
-    const camera = new pc.Entity('Camera');
-    camera.addComponent('camera');
-    camera.addComponent('script');
-    camera.script.create('trackingCamera', {
-        attributes: {
-            target: vehicle
-        }
-    });
-    camera.translate(0, 10, 15);
-    camera.lookAt(0, 0, 0);
-    app.root.addChild(camera);
+// Create a camera to render the scene
+const camera = new pc.Entity('Camera');
+camera.addComponent('camera');
+camera.addComponent('script');
+camera.script.create('trackingCamera', {
+    attributes: {
+        target: vehicle
+    }
+});
+camera.translate(0, 10, 15);
+camera.lookAt(0, 0, 0);
+app.root.addChild(camera);
 
-    // Enable rendering and resetting of all rigid bodies in the scene
-    app.root.addComponent('script');
-    app.root.script.create('renderPhysics', {
-        attributes: {
-            drawShapes: true,
-            opacity: 1
-        }
-    });
+// Enable rendering and resetting of all rigid bodies in the scene
+app.root.addComponent('script');
+app.root.script.create('renderPhysics', {
+    attributes: {
+        drawShapes: true,
+        opacity: 1
+    }
+});
 
-    app.keyboard.on('keydown', (e) => {
-        if (e.key === pc.KEY_R) {
-            app.fire('reset');
-        }
-    });
+app.keyboard.on('keydown', e => {
+    if (e.key === pc.KEY_R) {
+        app.fire('reset');
+    }
 });

@@ -61,40 +61,42 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // get the instance of the bench and set up with render component
-    const entity = assets.bench.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.1, 0.1),
-        farClip: 100,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(-3, 1, 2);
-    camera.lookAt(0, 0.5, 0);
-    app.root.addChild(camera);
+// get the instance of the bench and set up with render component
+const entity = assets.bench.resource.instantiateRenderEntity();
+app.root.addChild(entity);
 
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 1;
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.1, 0.1),
+    farClip: 100,
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.translate(-3, 1, 2);
+camera.lookAt(0, 0.5, 0);
+app.root.addChild(camera);
 
-    // a link element, created in the html part of the examples.
-    const link = document.getElementById('ar-link');
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
 
-    // convert the loaded entity into asdz file
-    const options = {
-        maxTextureSize: 1024
-    };
+// a link element, created in the html part of the examples.
+const link = document.getElementById('ar-link');
 
-    new pc.UsdzExporter()
+// convert the loaded entity into asdz file
+const options = {
+    maxTextureSize: 1024
+};
+
+new pc.UsdzExporter()
     .build(entity, options)
-    .then((arrayBuffer) => {
+    .then(arrayBuffer => {
         const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
         // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
         // the download of the .asdz file triggers its opening in QuickLook AT mode.
@@ -105,15 +107,14 @@ assetListLoader.load(() => {
     })
     .catch(console.error);
 
-    // when clicking on the download UI button, trigger the download
-    data.on('download', () => {
-        link.click();
-    });
+// when clicking on the download UI button, trigger the download
+data.on('download', () => {
+    link.click();
+});
 
-    // spin the meshe
-    app.on('update', (dt) => {
-        if (entity) {
-            entity.rotate(0, -12 * dt, 0);
-        }
-    });
+// spin the meshe
+app.on('update', dt => {
+    if (entity) {
+        entity.rotate(0, -12 * dt, 0);
+    }
 });

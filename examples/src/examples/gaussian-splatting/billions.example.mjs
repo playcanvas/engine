@@ -93,8 +93,8 @@ const config = {
     focusPoint: [12, 3, 0],
     // camera fly speeds — the instanced world is enormous. Normal speed is 10x the lod-streaming
     // example; fast (shift) is 80x.
-    moveSpeed: 4 * 10,          // 40
-    moveFastSpeed: 15 * 20 * 4  // 1200
+    moveSpeed: 4 * 10, // 40
+    moveFastSpeed: 15 * 20 * 4 // 1200
 };
 
 // Instance layout: identical gsplat tiles wrapped into the cylinder. Tiles run along the loop
@@ -134,271 +134,274 @@ const assets = {
     sky: new pc.Asset('sky', 'texture', { url: './assets/hdri/space.webp' }, { mipmaps: false })
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // custom mini stats showing gsplat counts
-    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+app.start();
 
-    // --- infinite skybox backdrop from the equirectangular LDR image ---
-    // The built-in infinite sky samples a cubemap, so the equirect is reprojected once into a
-    // skybox cubemap (the visible backdrop only). We deliberately do NOT build an env-atlas /
-    // prefiltered probes and never set scene.envAtlas, so this contributes zero lighting — it is
-    // purely a background.
-    // Explicit power-of-two face size: the default derives size from source.width / 4, which
-    // asserts for image widths not divisible by 4 (this image is 1774 wide).
-    // Generated up front (one-off GPU work) but NOT assigned to scene.skybox yet — the backdrop is
-    // revealed together with the splats once their first (worst-LOD) frame is ready (see below),
-    // so the sky doesn't pop in before the scene.
-    const skyboxCubemap = pc.EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
-    app.scene.sky.type = pc.SKYTYPE_INFINITE;
+// custom mini stats showing gsplat counts
+const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
-    // Sky rotation (degrees about the vertical axis), exposed in the UI to aim a feature of the
-    // backdrop (e.g. the planet) into view rather than behind the tiles.
-    data.set('skyRotation', 100);
-    const applySkyRotation = () => {
-        app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get('skyRotation'), 0);
-    };
-    applySkyRotation();
-    data.on('skyRotation:set', applySkyRotation);
+// --- infinite skybox backdrop from the equirectangular LDR image ---
+// The built-in infinite sky samples a cubemap, so the equirect is reprojected once into a
+// skybox cubemap (the visible backdrop only). We deliberately do NOT build an env-atlas /
+// prefiltered probes and never set scene.envAtlas, so this contributes zero lighting — it is
+// purely a background.
+// Explicit power-of-two face size: the default derives size from source.width / 4, which
+// asserts for image widths not divisible by 4 (this image is 1774 wide).
+// Generated up front (one-off GPU work) but NOT assigned to scene.skybox yet — the backdrop is
+// revealed together with the splats once their first (worst-LOD) frame is ready (see below),
+// so the sky doesn't pop in before the scene.
+const skyboxCubemap = pc.EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+app.scene.sky.type = pc.SKYTYPE_INFINITE;
 
-    // --- scene-wide gsplat defaults (same values as the lod-streaming example) ---
-    app.scene.gsplat.lodUpdateAngle = 90;
-    app.scene.gsplat.lodBehindPenalty = 3;
-    app.scene.gsplat.radialSorting = true;
-    app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
-    app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
-    app.scene.gsplat.minPixelSize = 2;
-    app.scene.gsplat.alphaClipForward = 1 / 255;
-    app.scene.gsplat.minContribution = 3;
-    app.scene.gsplat.dataFormat = pc.GSPLATDATA_COMPACT;
+// Sky rotation (degrees about the vertical axis), exposed in the UI to aim a feature of the
+// backdrop (e.g. the planet) into view rather than behind the tiles.
+data.set('skyRotation', 100);
+const applySkyRotation = () => {
+    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get('skyRotation'), 0);
+};
+applySkyRotation();
+data.on('skyRotation:set', applySkyRotation);
 
-    // Colorize LODs debug toggle (off by default)
-    data.set('colorizeLods', false);
-    const applyColorizeLods = () => {
-        app.scene.gsplat.debug = data.get('colorizeLods') ? pc.GSPLAT_DEBUG_LOD : pc.GSPLAT_DEBUG_NONE;
-    };
-    applyColorizeLods();
-    data.on('colorizeLods:set', applyColorizeLods);
+// --- scene-wide gsplat defaults (same values as the lod-streaming example) ---
+app.scene.gsplat.lodUpdateAngle = 90;
+app.scene.gsplat.lodBehindPenalty = 3;
+app.scene.gsplat.radialSorting = true;
+app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
+app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
+app.scene.gsplat.minPixelSize = 2;
+app.scene.gsplat.alphaClipForward = 1 / 255;
+app.scene.gsplat.minContribution = 3;
+app.scene.gsplat.dataFormat = pc.GSPLATDATA_COMPACT;
 
-    // Renderer: CPU-sort raster on WebGL, GPU-sort raster on WebGPU
-    app.scene.gsplat.renderer = device.isWebGPU ?
-        pc.GSPLAT_RENDERER_RASTER_GPU_SORT :
-        pc.GSPLAT_RENDERER_RASTER_CPU_SORT;
+// Colorize LODs debug toggle (off by default)
+data.set('colorizeLods', false);
+const applyColorizeLods = () => {
+    app.scene.gsplat.debug = data.get('colorizeLods') ? pc.GSPLAT_DEBUG_LOD : pc.GSPLAT_DEBUG_NONE;
+};
+applyColorizeLods();
+data.on('colorizeLods:set', applyColorizeLods);
 
-    // --- gsplat instances, all sharing the same streamed asset; count is observer-driven ---
-    /** @type {pc.Entity[]} */
-    const instanceEntities = [];
-    /** @type {any[]} */
-    const gsInstances = [];
+// Renderer: CPU-sort raster on WebGL, GPU-sort raster on WebGPU
+app.scene.gsplat.renderer = device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT;
 
-    // Tile spacing derived from the gsplat's local AABB. The 180° X-flip negates Z but the
-    // absolute X/Z extents stay the same, so the local AABB size is enough to spread tiles.
-    const aabb = /** @type {any} */ (assets.scene.resource).aabb;
-    const mn = aabb.getMin();
-    const mx = aabb.getMax();
-    const spacingX = (mx.x - mn.x) * LAYOUT.spacingFactor;
-    const spacingZ = (mx.z - mn.z) * LAYOUT.spacingFactor;
+// --- gsplat instances, all sharing the same streamed asset; count is observer-driven ---
+/** @type {pc.Entity[]} */
+const instanceEntities = [];
+/** @type {any[]} */
+const gsInstances = [];
 
-    const numSplatsPerInstance = /** @type {any} */ (assets.scene.resource).numSplats;
-    const toM = v => `${(v / 1e6).toFixed(1)}M`;
-    const toB = v => `${(v / 1e9).toFixed(1)}B`;
+// Tile spacing derived from the gsplat's local AABB. The 180° X-flip negates Z but the
+// absolute X/Z extents stay the same, so the local AABB size is enough to spread tiles.
+const aabb = /** @type {any} */ (assets.scene.resource).aabb;
+const mn = aabb.getMin();
+const mx = aabb.getMax();
+const spacingX = (mx.x - mn.x) * LAYOUT.spacingFactor;
+const spacingZ = (mx.z - mn.z) * LAYOUT.spacingFactor;
 
-    // --- LOD tuning (temporary): seed defaults and live-apply on change ---
-    data.set('lodBaseDistance', DEFAULT_LOD_BASE_DISTANCE);
-    data.set('lodMultiplier', DEFAULT_LOD_MULTIPLIER);
-    const applyLod = () => {
-        const base = data.get('lodBaseDistance');
-        const mult = data.get('lodMultiplier');
-        for (let i = 0; i < gsInstances.length; i++) {
-            gsInstances[i].lodBaseDistance = base;
-            gsInstances[i].lodMultiplier = mult;
-        }
-    };
-    data.on('lodBaseDistance:set', applyLod);
-    data.on('lodMultiplier:set', applyLod);
+const numSplatsPerInstance = /** @type {any} */ (assets.scene.resource).numSplats;
+const toM = v => `${(v / 1e6).toFixed(1)}M`;
+const toB = v => `${(v / 1e9).toFixed(1)}B`;
 
-    // Each instance's grid slot is a fixed function of its index — independent of the current
-    // instance count — so changing the count never moves (and never re-streams) the tiles we
-    // keep. Tiles are added one full RING at a time: a ring is a complete run along the loop
-    // (one axial column), `ringSize` tiles, laid out centre-out so it grows symmetrically from
-    // the start tile. Only once a ring is full does the next axial column (ring) begin. With the
-    // cylinder calibration a full ring is exactly one 360° loop, so the default fills the first
-    // loop, then the second alongside it.
-    const cols = LAYOUT.maxCols;
-    const ringSize = Math.ceil(MAX_INSTANCES / cols);
-    const refRows = ringSize;
-    const offX = (cols - 1) * 0.5 * spacingX;
+// --- LOD tuning (temporary): seed defaults and live-apply on change ---
+data.set('lodBaseDistance', DEFAULT_LOD_BASE_DISTANCE);
+data.set('lodMultiplier', DEFAULT_LOD_MULTIPLIER);
+const applyLod = () => {
+    const base = data.get('lodBaseDistance');
+    const mult = data.get('lodMultiplier');
+    for (let i = 0; i < gsInstances.length; i++) {
+        gsInstances[i].lodBaseDistance = base;
+        gsInstances[i].lodMultiplier = mult;
+    }
+};
+data.on('lodBaseDistance:set', applyLod);
+data.on('lodMultiplier:set', applyLod);
 
-    // Map a position-within-ring counter (0, 1, 2, …) to a centre-out signed offset: 0, +1, -1, …
-    const rowOffset = r => Math.ceil(r / 2) * ((r % 2 === 1) ? 1 : -1);
+// Each instance's grid slot is a fixed function of its index — independent of the current
+// instance count — so changing the count never moves (and never re-streams) the tiles we
+// keep. Tiles are added one full RING at a time: a ring is a complete run along the loop
+// (one axial column), `ringSize` tiles, laid out centre-out so it grows symmetrically from
+// the start tile. Only once a ring is full does the next axial column (ring) begin. With the
+// cylinder calibration a full ring is exactly one 360° loop, so the default fills the first
+// loop, then the second alongside it.
+const cols = LAYOUT.maxCols;
+const ringSize = Math.ceil(MAX_INSTANCES / cols);
+const refRows = ringSize;
+const offX = (cols - 1) * 0.5 * spacingX;
 
-    // Cylindrical bend along the length (Z): map each tile's centre-out length coordinate onto an
-    // arc so the ground curves up to both sides and each tile tilts to stay tangent to the
-    // surface. The curvature per tile is a fixed (count-independent) function of the bend radius,
-    // so existing tiles stay put as the count changes.
-    // - Cylinder controller on: calibrate the radius so the slider's max instance count wraps a
-    //   full 360° loop (fewer instances → a partial arc you can fly along).
-    // - Off: gentle LAYOUT.bendFraction strip calibrated to the default strip length.
-    let bendRadius;
-    if (USE_CYLINDER_CONTROLLER) {
-        const maxRows = Math.ceil(MAX_INSTANCES / cols);
-        bendRadius = spacingZ * maxRows / (2 * Math.PI);
-    } else {
-        const refLength = (refRows - 1) * spacingZ;
-        const bendArc = LAYOUT.bendFraction * 2 * Math.PI;
-        bendRadius = (bendArc > 0 && refLength > 0) ? refLength / bendArc : 0;
+// Map a position-within-ring counter (0, 1, 2, …) to a centre-out signed offset: 0, +1, -1, …
+const rowOffset = r => Math.ceil(r / 2) * (r % 2 === 1 ? 1 : -1);
+
+// Cylindrical bend along the length (Z): map each tile's centre-out length coordinate onto an
+// arc so the ground curves up to both sides and each tile tilts to stay tangent to the
+// surface. The curvature per tile is a fixed (count-independent) function of the bend radius,
+// so existing tiles stay put as the count changes.
+// - Cylinder controller on: calibrate the radius so the slider's max instance count wraps a
+//   full 360° loop (fewer instances → a partial arc you can fly along).
+// - Off: gentle LAYOUT.bendFraction strip calibrated to the default strip length.
+let bendRadius;
+if (USE_CYLINDER_CONTROLLER) {
+    const maxRows = Math.ceil(MAX_INSTANCES / cols);
+    bendRadius = (spacingZ * maxRows) / (2 * Math.PI);
+} else {
+    const refLength = (refRows - 1) * spacingZ;
+    const bendArc = LAYOUT.bendFraction * 2 * Math.PI;
+    bendRadius = bendArc > 0 && refLength > 0 ? refLength / bendArc : 0;
+}
+
+// Returns the world position and X-axis euler angle (including the 180° capture flip) for a
+// given instance index.
+const layoutForIndex = idx => {
+    const c = Math.floor(idx / ringSize); // ring index = axial column (fill one ring first)
+    const r = idx % ringSize; // position within the ring
+    const x = c * spacingX - offX;
+    const s = rowOffset(r) * spacingZ; // centre-out length coordinate
+    if (bendRadius === 0) {
+        return { pos: [x, 0, s], eulerX: 180 };
+    }
+    const theta = s / bendRadius; // arc angle for this tile
+    const z = bendRadius * Math.sin(theta);
+    const y = bendRadius * (1 - Math.cos(theta)); // ground lifts toward the ends
+    const eulerX = 180 - theta * pc.math.RAD_TO_DEG; // tilt to stay tangent to the surface
+    return { pos: [x, y, z], eulerX };
+};
+
+// Start at the lowest LOD for a fast initial display, then open up to the FULL LOD range
+// (all levels, 0..worst) once the first frame's data is ready. The range is per-component,
+// so it is applied to every tile on creation and whenever it changes.
+const lodLevels = /** @type {any} */ (assets.scene.resource).octree?.lodLevels ?? 1;
+const worstLod = lodLevels - 1;
+const lodRange = { min: worstLod, max: worstLod };
+const applyLodRange = (min, max) => {
+    lodRange.min = min;
+    lodRange.max = max;
+    gsInstances.forEach(gs => {
+        gs.lodRangeMin = min;
+        gs.lodRangeMax = max;
+    });
+};
+
+// Add/remove entities to match the requested count. Newly added tiles are positioned and
+// LOD-configured once, on creation; surplus tiles are destroyed from the end. Tiles that
+// remain are left completely untouched, so the shared streamed resource isn't re-fetched
+// and visible tiles don't reload between slider ticks.
+const rebuildInstances = () => {
+    const N = data.get('instances');
+
+    while (instanceEntities.length < N) {
+        const idx = instanceEntities.length;
+        const entity = new pc.Entity(`${config.name}-${idx}`);
+        entity.addComponent('gsplat', { asset: assets.scene });
+        const { pos, eulerX } = layoutForIndex(idx);
+        entity.setLocalEulerAngles(eulerX, 0, 0);
+        entity.setLocalPosition(pos[0], pos[1], pos[2]);
+        app.root.addChild(entity);
+        instanceEntities.push(entity);
+        const gs = /** @type {any} */ (entity.gsplat);
+        gs.lodBaseDistance = data.get('lodBaseDistance');
+        gs.lodMultiplier = data.get('lodMultiplier');
+        gs.lodRangeMin = lodRange.min;
+        gs.lodRangeMax = lodRange.max;
+        gsInstances.push(gs);
+    }
+    while (instanceEntities.length > N) {
+        instanceEntities.pop().destroy();
+        gsInstances.pop();
     }
 
-    // Returns the world position and X-axis euler angle (including the 180° capture flip) for a
-    // given instance index.
-    const layoutForIndex = (idx) => {
-        const c = Math.floor(idx / ringSize);   // ring index = axial column (fill one ring first)
-        const r = idx % ringSize;               // position within the ring
-        const x = c * spacingX - offX;
-        const s = rowOffset(r) * spacingZ;      // centre-out length coordinate
-        if (bendRadius === 0) {
-            return { pos: [x, 0, s], eulerX: 180 };
-        }
-        const theta = s / bendRadius;           // arc angle for this tile
-        const z = bendRadius * Math.sin(theta);
-        const y = bendRadius * (1 - Math.cos(theta));   // ground lifts toward the ends
-        const eulerX = 180 - theta * pc.math.RAD_TO_DEG; // tilt to stay tangent to the surface
-        return { pos: [x, y, z], eulerX };
-    };
+    data.set('data.stats.splatsTotal', toB(numSplatsPerInstance * N));
+};
 
-    // Start at the lowest LOD for a fast initial display, then open up to the FULL LOD range
-    // (all levels, 0..worst) once the first frame's data is ready. The range is per-component,
-    // so it is applied to every tile on creation and whenever it changes.
-    const lodLevels = /** @type {any} */ (assets.scene.resource).octree?.lodLevels ?? 1;
-    const worstLod = lodLevels - 1;
-    const lodRange = { min: worstLod, max: worstLod };
-    const applyLodRange = (min, max) => {
-        lodRange.min = min;
-        lodRange.max = max;
-        gsInstances.forEach((gs) => {
-            gs.lodRangeMin = min;
-            gs.lodRangeMax = max;
-        });
-    };
+data.set('instances', pc.platform.mobile ? DEFAULT_INSTANCES_MOBILE : DEFAULT_INSTANCES_DESKTOP);
+rebuildInstances();
+data.on('instances:set', rebuildInstances);
 
-    // Add/remove entities to match the requested count. Newly added tiles are positioned and
-    // LOD-configured once, on creation; surplus tiles are destroyed from the end. Tiles that
-    // remain are left completely untouched, so the shared streamed resource isn't re-fetched
-    // and visible tiles don't reload between slider ticks.
-    const rebuildInstances = () => {
-        const N = data.get('instances');
-
-        while (instanceEntities.length < N) {
-            const idx = instanceEntities.length;
-            const entity = new pc.Entity(`${config.name}-${idx}`);
-            entity.addComponent('gsplat', { asset: assets.scene });
-            const { pos, eulerX } = layoutForIndex(idx);
-            entity.setLocalEulerAngles(eulerX, 0, 0);
-            entity.setLocalPosition(pos[0], pos[1], pos[2]);
-            app.root.addChild(entity);
-            instanceEntities.push(entity);
-            const gs = /** @type {any} */ (entity.gsplat);
-            gs.lodBaseDistance = data.get('lodBaseDistance');
-            gs.lodMultiplier = data.get('lodMultiplier');
-            gs.lodRangeMin = lodRange.min;
-            gs.lodRangeMax = lodRange.max;
-            gsInstances.push(gs);
-        }
-        while (instanceEntities.length > N) {
-            instanceEntities.pop().destroy();
-            gsInstances.pop();
-        }
-
-        data.set('data.stats.splatsTotal', toB(numSplatsPerInstance * N));
-    };
-
-    data.set('instances', pc.platform.mobile ? DEFAULT_INSTANCES_MOBILE : DEFAULT_INSTANCES_DESKTOP);
-    rebuildInstances();
-    data.on('instances:set', rebuildInstances);
-
-    const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
-    const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
-        if (ready && loadingCount === 0) {
-            gsplatSystem.off('frame:ready', onFrameReady);
-            applyLodRange(0, worstLod);
-            // reveal the backdrop now, together with the loaded scene (not before it)
-            app.scene.skybox = skyboxCubemap;
-        }
-    };
-    gsplatSystem.on('frame:ready', onFrameReady);
-
-    // --- camera with fly controls (same controls as lod-streaming, much faster move speeds) ---
-    const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
-    const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint);
-
-    // World-space centre of the first tile's content, used to centre the camera horizontally on
-    // that tile. Only X/Z are taken from the tile centre; the camera keeps its configured
-    // (absolute) elevation rather than the tile's mid-height, so it starts above the ground.
-    const tile0Center = instanceEntities[0].getWorldTransform().transformPoint(
-        new pc.Vec3((mn.x + mx.x) * 0.5, (mn.y + mx.y) * 0.5, (mn.z + mx.z) * 0.5),
-        new pc.Vec3()
-    );
-
-    const camera = new pc.Entity('camera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0, 0, 0),
-        fov: 75,
-        toneMapping: pc.TONEMAP_LINEAR,
-        // huge world — extend the far clip so distant instances are not culled
-        farClip: 100000
-    });
-    camera.setLocalPosition(tile0Center.x + camX, camY, tile0Center.z + camZ);
-    app.root.addChild(camera);
-
-    if (USE_CYLINDER_CONTROLLER) {
-        // Custom fly camera operating inside the cylinder; "up" follows the curved surface so the
-        // controls stay consistent all the way around the loop. Starts centred on the first tile
-        // (axial = its X) at the bottom of the loop (angle 0), at the configured eye height.
-        const controller = new CylinderController(app, camera, {
-            radius: bendRadius,
-            axialStart: tile0Center.x,
-            startHeight: camY,
-            moveSpeed: config.moveSpeed,
-            moveFastSpeed: config.moveFastSpeed,
-            // strong movement damping for a smooth, floaty glide (higher = stronger; default 0.99)
-            moveDamping: 0.997
-        });
-        app.on('update', (/** @type {number} */ dt) => controller.update(dt));
-        app.on('destroy', () => controller.destroy());
-    } else {
-        camera.addComponent('script');
-        const cc = /** @type {CameraControls} */ ((/** @type {any} */ (camera.script)).create(CameraControls));
-        Object.assign(cc, {
-            sceneSize: 500,
-            moveSpeed: config.moveSpeed,
-            moveFastSpeed: config.moveFastSpeed,
-            // higher damping (default 0.98) eases the camera into a new speed, so toggling shift
-            // between normal and fast ramps smoothly instead of snapping
-            moveDamping: 0.995,
-            enableOrbit: false,
-            enablePan: false,
-            focusPoint: new pc.Vec3(tile0Center.x + focusX, focusY, tile0Center.z + focusZ)
-        });
+const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
+const onFrameReady = (
+    /** @type {any} */ cam,
+    /** @type {any} */ layer,
+    /** @type {boolean} */ ready,
+    /** @type {number} */ loadingCount
+) => {
+    if (ready && loadingCount === 0) {
+        gsplatSystem.off('frame:ready', onFrameReady);
+        applyLodRange(0, worstLod);
+        // reveal the backdrop now, together with the loaded scene (not before it)
+        app.scene.skybox = skyboxCubemap;
     }
+};
+gsplatSystem.on('frame:ready', onFrameReady);
 
-    // --- Splat budget ---
-    // Hardcoded to 0 (no cap): the LOD ramp on each instance is what gates splat count, the
-    // budget is left disabled. Kept as an observer so the value can still be overridden via
-    // share-URL state if needed.
-    data.set('splatBudget', 0);
-    const applySplatBudget = () => {
-        const millions = data.get('splatBudget');
-        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
-    };
-    applySplatBudget();
-    data.on('splatBudget:set', applySplatBudget);
+// --- camera with fly controls (same controls as lod-streaming, much faster move speeds) ---
+const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
+const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint);
 
-    // --- Stats ---
-    // Total Splats is set inside rebuildInstances (depends on the live instance count). Active
-    // Splats is the per-frame visible count from the renderer.
-    app.on('update', () => {
-        data.set('data.stats.gsplats', toM(app.stats.frame.gsplats));
+// World-space centre of the first tile's content, used to centre the camera horizontally on
+// that tile. Only X/Z are taken from the tile centre; the camera keeps its configured
+// (absolute) elevation rather than the tile's mid-height, so it starts above the ground.
+const tile0Center = instanceEntities[0]
+    .getWorldTransform()
+    .transformPoint(new pc.Vec3((mn.x + mx.x) * 0.5, (mn.y + mx.y) * 0.5, (mn.z + mx.z) * 0.5), new pc.Vec3());
+
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0, 0, 0),
+    fov: 75,
+    toneMapping: pc.TONEMAP_LINEAR,
+    // huge world — extend the far clip so distant instances are not culled
+    farClip: 100000
+});
+camera.setLocalPosition(tile0Center.x + camX, camY, tile0Center.z + camZ);
+app.root.addChild(camera);
+
+if (USE_CYLINDER_CONTROLLER) {
+    // Custom fly camera operating inside the cylinder; "up" follows the curved surface so the
+    // controls stay consistent all the way around the loop. Starts centred on the first tile
+    // (axial = its X) at the bottom of the loop (angle 0), at the configured eye height.
+    const controller = new CylinderController(app, camera, {
+        radius: bendRadius,
+        axialStart: tile0Center.x,
+        startHeight: camY,
+        moveSpeed: config.moveSpeed,
+        moveFastSpeed: config.moveFastSpeed,
+        // strong movement damping for a smooth, floaty glide (higher = stronger; default 0.99)
+        moveDamping: 0.997
     });
+    app.on('update', (/** @type {number} */ dt) => controller.update(dt));
+    app.on('destroy', () => controller.destroy());
+} else {
+    camera.addComponent('script');
+    const cc = /** @type {CameraControls} */ (/** @type {any} */ (camera.script).create(CameraControls));
+    Object.assign(cc, {
+        sceneSize: 500,
+        moveSpeed: config.moveSpeed,
+        moveFastSpeed: config.moveFastSpeed,
+        // higher damping (default 0.98) eases the camera into a new speed, so toggling shift
+        // between normal and fast ramps smoothly instead of snapping
+        moveDamping: 0.995,
+        enableOrbit: false,
+        enablePan: false,
+        focusPoint: new pc.Vec3(tile0Center.x + focusX, focusY, tile0Center.z + focusZ)
+    });
+}
+
+// --- Splat budget ---
+// Hardcoded to 0 (no cap): the LOD ramp on each instance is what gates splat count, the
+// budget is left disabled. Kept as an observer so the value can still be overridden via
+// share-URL state if needed.
+data.set('splatBudget', 0);
+const applySplatBudget = () => {
+    const millions = data.get('splatBudget');
+    app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+};
+applySplatBudget();
+data.on('splatBudget:set', applySplatBudget);
+
+// --- Stats ---
+// Total Splats is set inside rebuildInstances (depends on the live instance count). Active
+// Splats is the per-frame visible count from the renderer.
+app.on('update', () => {
+    data.set('data.stats.gsplats', toM(app.stats.frame.gsplats));
 });

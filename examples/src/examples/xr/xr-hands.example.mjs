@@ -46,10 +46,7 @@ createOptions.componentSystems = [
     pc.CameraComponentSystem,
     pc.LightComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -178,11 +175,11 @@ const vec3A = new pc.Vec3();
 if (app.xr.supported) {
     // XR availability
     document
-    .querySelector('.container > .button[data-xr="immersive-ar"]')
-    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+        .querySelector('.container > .button[data-xr="immersive-ar"]')
+        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
     document
-    .querySelector('.container > .button[data-xr="immersive-vr"]')
-    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+        .querySelector('.container > .button[data-xr="immersive-vr"]')
+        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
 
     // XR availability events
     app.xr.on('available', (type, available) => {
@@ -217,14 +214,14 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', (evt) => {
+    app.keyboard.on('keydown', evt => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
     // when new input source added
-    app.xr.input.on('add', (inputSource) => {
+    app.xr.input.on('add', inputSource => {
         message('Controller Added');
         createController(inputSource);
     });

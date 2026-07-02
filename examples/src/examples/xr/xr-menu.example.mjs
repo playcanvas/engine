@@ -27,7 +27,7 @@ pc.WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -44,7 +44,7 @@ document.head.appendChild(css);
 /**
  * @param {string} msg - The message.
  */
-const message = (msg) => {
+const message = msg => {
     /** @type {HTMLElement | null} */
     const el = document.querySelector('.message');
     if (el) {
@@ -117,7 +117,7 @@ app.on('destroy', () => {
 });
 
 // Load assets
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -244,7 +244,7 @@ app.on('menu:spawnCube', spawnCube);
 app.on('menu:reset', resetScene);
 
 // Keyboard shortcuts
-app.keyboard.on('keydown', (e) => {
+app.keyboard.on('keydown', e => {
     if (e.key === pc.KEY_B) {
         spawnCube();
     } else if (e.key === pc.KEY_R) {
@@ -255,11 +255,11 @@ app.keyboard.on('keydown', (e) => {
 if (app.xr.supported) {
     // XR availability
     document
-    .querySelector('.container > .button[data-xr="immersive-ar"]')
-    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+        .querySelector('.container > .button[data-xr="immersive-ar"]')
+        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
     document
-    .querySelector('.container > .button[data-xr="immersive-vr"]')
-    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+        .querySelector('.container > .button[data-xr="immersive-vr"]')
+        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
 
     // XR availability events
     app.xr.on('available', (type, available) => {
@@ -268,7 +268,7 @@ if (app.xr.supported) {
     });
 
     // Button handler - fires events that XrSession listens to
-    const onXrButtonClick = (e) => {
+    const onXrButtonClick = e => {
         const button = /** @type {HTMLElement} */ (e.currentTarget);
         if (!button.classList.contains('active')) return;
 
@@ -281,7 +281,7 @@ if (app.xr.supported) {
     };
 
     // Button clicks
-    document.querySelectorAll('.container > .button').forEach((button) => {
+    document.querySelectorAll('.container > .button').forEach(button => {
         button.addEventListener('click', onXrButtonClick);
     });
 

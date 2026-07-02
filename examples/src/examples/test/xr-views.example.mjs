@@ -43,11 +43,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -131,101 +127,103 @@ class CompositeArrayPass extends pc.RenderPassShaderQuad {
     }
 }
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.start();
 
-    // Ensure canvas is resized when window changes size
-    const resize = () => app.resizeCanvas();
-    window.addEventListener('resize', resize);
-    app.on('destroy', () => {
-        window.removeEventListener('resize', resize);
-    });
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    // setup skydome
-    app.scene.skyboxMip = 3;
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
 
-    // instantiate the terrain
-    /** @type {pc.Entity} */
-    const terrain = assets.terrain.resource.instantiateRenderEntity();
-    terrain.setLocalScale(30, 30, 30);
-    app.root.addChild(terrain);
+// setup skydome
+app.scene.skyboxMip = 3;
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
 
-    // Create a directional light
-    const dirLight = new pc.Entity('Cascaded Light');
-    dirLight.addComponent('light', {
-        type: 'directional',
-        color: pc.Color.WHITE,
-        shadowBias: 0.3,
-        normalOffsetBias: 0.2,
-        intensity: 1.0,
-        castShadows: false,
-        shadowDistance: 1000
-    });
-    app.root.addChild(dirLight);
-    dirLight.setLocalEulerAngles(75, 120, 20);
+// instantiate the terrain
+/** @type {pc.Entity} */
+const terrain = assets.terrain.resource.instantiateRenderEntity();
+terrain.setLocalScale(30, 30, 30);
+app.root.addChild(terrain);
 
-    // create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.9, 0.9, 0.9),
-        farClip: 1000,
-        toneMapping: pc.TONEMAP_ACES
-    });
+// Create a directional light
+const dirLight = new pc.Entity('Cascaded Light');
+dirLight.addComponent('light', {
+    type: 'directional',
+    color: pc.Color.WHITE,
+    shadowBias: 0.3,
+    normalOffsetBias: 0.2,
+    intensity: 1.0,
+    castShadows: false,
+    shadowDistance: 1000
+});
+app.root.addChild(dirLight);
+dirLight.setLocalEulerAngles(75, 120, 20);
 
-    // and position it in the world
-    camera.setLocalPosition(-500, 160, 300);
+// create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.9, 0.9, 0.9),
+    farClip: 1000,
+    toneMapping: pc.TONEMAP_ACES
+});
 
-    // add orbit camera script with a mouse and a touch support
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: terrain,
-            distanceMax: 600
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
+// and position it in the world
+camera.setLocalPosition(-500, 160, 300);
 
-    // Create mock XR views using a loop. The number of views differs between backends because
-    // each backend uses a different visualisation:
-    // - WebGL: a single canvas-sized backbuffer with 4 sub-rect viewports (2x2 grid).
-    // - WebGPU: a 4-layer array texture, one full-canvas-size view per layer, then composited
-    //   into a 2x2 grid as a separate post-render pass.
-    const numViews = 4;
-    const viewsList = [];
-    for (let i = 0; i < numViews; i++) {
-        viewsList.push(new pc.RenderView());
+// add orbit camera script with a mouse and a touch support
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: terrain,
+        distanceMax: 600
     }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+app.root.addChild(camera);
 
-    // simulate an active XR session by handing the camera the per-view array directly. On a real
-    // headset the XrManager populates xrViews (and the per-eye device projection); here we build
-    // each eye's projection from the camera's settings, captured before the session is activated
-    // (once active, the fov/clip getters report XR-session values instead).
-    const projFov = camera.camera.fov;
-    const projNearClip = camera.camera.nearClip;
-    const projFarClip = camera.camera.farClip;
-    const projHorizontalFov = camera.camera.horizontalFov;
-    camera.camera.camera.xrViews = viewsList;
+// Create mock XR views using a loop. The number of views differs between backends because
+// each backend uses a different visualisation:
+// - WebGL: a single canvas-sized backbuffer with 4 sub-rect viewports (2x2 grid).
+// - WebGPU: a 4-layer array texture, one full-canvas-size view per layer, then composited
+//   into a 2x2 grid as a separate post-render pass.
+const numViews = 4;
+const viewsList = [];
+for (let i = 0; i < numViews; i++) {
+    viewsList.push(new pc.RenderView());
+}
 
-    // ----------------------------------------------------------------------------------------
-    // WebGPU-only setup: drive FramePassMultiView via a fake bridge - we provide the per-view
-    // sub-image entries on the device that the wrapper consumes (mirroring what
-    // WebgpuXrBridge.beginFrame does on a real headset).
-    // ----------------------------------------------------------------------------------------
-    let arrayTex = null;
-    let compositeCamera = null;
-    if (device.isWebGPU) {
+// simulate an active XR session by handing the camera the per-view array directly. On a real
+// headset the XrManager populates xrViews (and the per-eye device projection); here we build
+// each eye's projection from the camera's settings, captured before the session is activated
+// (once active, the fov/clip getters report XR-session values instead).
+const projFov = camera.camera.fov;
+const projNearClip = camera.camera.nearClip;
+const projFarClip = camera.camera.farClip;
+const projHorizontalFov = camera.camera.horizontalFov;
+camera.camera.camera.xrViews = viewsList;
 
-        const createArrayTexture = (w, h) => new pc.Texture(device, {
+// ----------------------------------------------------------------------------------------
+// WebGPU-only setup: drive FramePassMultiView via a fake bridge - we provide the per-view
+// sub-image entries on the device that the wrapper consumes (mirroring what
+// WebgpuXrBridge.beginFrame does on a real headset).
+// ----------------------------------------------------------------------------------------
+let arrayTex = null;
+let compositeCamera = null;
+if (device.isWebGPU) {
+    const createArrayTexture = (w, h) =>
+        new pc.Texture(device, {
             name: 'XrViewsArrayTexture',
             format: device.backBufferFormat,
             arrayLength: numViews,
@@ -238,68 +236,65 @@ assetListLoader.load(() => {
             magFilter: pc.FILTER_LINEAR
         });
 
-        arrayTex = createArrayTexture(Math.max(canvas.width, 1), Math.max(canvas.height, 1));
+    arrayTex = createArrayTexture(Math.max(canvas.width, 1), Math.max(canvas.height, 1));
 
-        // composite camera renders second (higher priority) and only runs the composite pass that
-        // samples the four rendered layers and lays them out as a 2x2 grid on the canvas
-        compositeCamera = new pc.Entity('XrViewsCompositeCamera');
-        compositeCamera.addComponent('camera', {
-            priority: 1,
-            clearColor: new pc.Color(0, 0, 0, 0),
-            clearColorBuffer: false,
-            clearDepthBuffer: false,
-            clearStencilBuffer: false
-        });
-        app.root.addChild(compositeCamera);
+    // composite camera renders second (higher priority) and only runs the composite pass that
+    // samples the four rendered layers and lays them out as a 2x2 grid on the canvas
+    compositeCamera = new pc.Entity('XrViewsCompositeCamera');
+    compositeCamera.addComponent('camera', {
+        priority: 1,
+        clearColor: new pc.Color(0, 0, 0, 0),
+        clearColorBuffer: false,
+        clearDepthBuffer: false,
+        clearStencilBuffer: false
+    });
+    app.root.addChild(compositeCamera);
 
-        const compositePass = new CompositeArrayPass(device, arrayTex, numViews);
-        compositePass.init(null);
-        compositeCamera.camera.framePasses = [compositePass];
-    }
+    const compositePass = new CompositeArrayPass(device, arrayTex, numViews);
+    compositePass.init(null);
+    compositeCamera.camera.framePasses = [compositePass];
+}
 
-    // reused each frame; setView/setViewport copy the data into each view
-    const projMat = new pc.Mat4();
-    const viewInvMat = new pc.Mat4();
+// reused each frame; setView/setViewport copy the data into each view
+const projMat = new pc.Mat4();
+const viewInvMat = new pc.Mat4();
 
-    app.on('update', (/** @type {number} */ dt) => {
+app.on('update', (/** @type {number} */ dt) => {
+    const width = canvas.width;
+    const height = canvas.height;
+    const isWebgpu = device.isWebGPU;
 
-        const width = canvas.width;
-        const height = canvas.height;
-        const isWebgpu = device.isWebGPU;
+    // all views share the projection; the renderer derives the per-view matrices from setView
+    projMat.setPerspective(projFov, width / height, projNearClip, projFarClip, projHorizontalFov);
 
-        // all views share the projection; the renderer derives the per-view matrices from setView
-        projMat.setPerspective(projFov, width / height, projNearClip, projFarClip, projHorizontalFov);
+    // update all views - supply projection, pose and viewport for each
+    viewsList.forEach((view, viewIndex) => {
+        const pos = camera.getPosition();
+        const rot = camera.getRotation();
 
-        // update all views - supply projection, pose and viewport for each
-        viewsList.forEach((view, viewIndex) => {
-            const pos = camera.getPosition();
-            const rot = camera.getRotation();
+        // Rotate each view by 10 degrees * view index around UP axis
+        const angle = 10 * viewIndex;
+        const upRotation = new pc.Quat().setFromAxisAngle(pc.Vec3.UP, angle);
+        const combinedRot = new pc.Quat().mul2(upRotation, rot);
+        viewInvMat.setTRS(pos, combinedRot, pc.Vec3.ONE);
 
-            // Rotate each view by 10 degrees * view index around UP axis
-            const angle = 10 * viewIndex;
-            const upRotation = new pc.Quat().setFromAxisAngle(pc.Vec3.UP, angle);
-            const combinedRot = new pc.Quat().mul2(upRotation, rot);
-            viewInvMat.setTRS(pos, combinedRot, pc.Vec3.ONE);
+        // supply the view's projection and pose; the renderer derives the rest each frame
+        view.setView(projMat.data, viewInvMat.data);
 
-            // supply the view's projection and pose; the renderer derives the rest each frame
-            view.setView(projMat.data, viewInvMat.data);
-
-            if (isWebgpu) {
-                // each view writes into its own array layer at full size; the composite pass
-                // arranges the four layers into a 2x2 grid on the canvas
-                view.setViewport(0, 0, width, height);
-            } else {
-                // WebGL: 4 sub-viewports of a single canvas-sized backbuffer (2x2 grid).
-                // WebGL viewport y=0 is the bottom of the canvas, so views 0,1 go in the top
-                // row (y = height/2) to match the WebGPU composite's top-down layout.
-                view.setViewport(
-                    (viewIndex % 2 === 0) ? 0 : width / 2,
-                    (viewIndex < 2) ? height / 2 : 0,
-                    width / 2,
-                    height / 2
-                );
-            }
-        });
-
+        if (isWebgpu) {
+            // each view writes into its own array layer at full size; the composite pass
+            // arranges the four layers into a 2x2 grid on the canvas
+            view.setViewport(0, 0, width, height);
+        } else {
+            // WebGL: 4 sub-viewports of a single canvas-sized backbuffer (2x2 grid).
+            // WebGL viewport y=0 is the bottom of the canvas, so views 0,1 go in the top
+            // row (y = height/2) to match the WebGPU composite's top-down layout.
+            view.setViewport(
+                viewIndex % 2 === 0 ? 0 : width / 2,
+                viewIndex < 2 ? height / 2 : 0,
+                width / 2,
+                height / 2
+            );
+        }
     });
 });

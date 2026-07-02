@@ -40,10 +40,13 @@ const LUT_CATALOG = LUT_TABLE.map(([key, label]) => ({
     file: key === 'none' ? null : `lut-${key}.png`
 }));
 
-data.set('lutSelectOptions', LUT_CATALOG.map(({ key, label }) => ({
-    v: key,
-    t: label
-})));
+data.set(
+    'lutSelectOptions',
+    LUT_CATALOG.map(({ key, label }) => ({
+        v: key,
+        t: label
+    }))
+);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -62,10 +65,10 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 });
 
 await Promise.all([
-    new Promise((resolve) => {
+    new Promise(resolve => {
         pc.WasmModule.getInstance('Ammo', () => resolve(true));
     }),
-    new Promise((resolve) => {
+    new Promise(resolve => {
         pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
@@ -96,12 +99,7 @@ createOptions.componentSystems = [
     pc.RigidBodyComponentSystem,
     pc.GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.GSplatHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -133,17 +131,20 @@ for (const { key, file } of LUT_CATALOG) {
     if (!file) {
         continue;
     }
-    lutAssets[key] = new pc.Asset(`lut-${key}`, 'texture',
-        { url: `${lutBaseUrl}/${file}` }, lutAssetOptions);
+    lutAssets[key] = new pc.Asset(`lut-${key}`, 'texture', { url: `${lutBaseUrl}/${file}` }, lutAssetOptions);
 }
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
+    splat: new pc.Asset('sunnyvale-splat', 'gsplat', {
+        url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog'
+    }),
+    collision: new pc.Asset('sunnyvale-collision', 'container', {
+        url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb'
+    }),
     ...lutAssets
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -230,7 +231,7 @@ const animatableKeys = LUT_CATALOG.filter(({ file }) => file !== null).map(({ ke
 const HOLD_SECONDS = 1.5;
 const CROSSFADE_SECONDS = 1.5;
 const CYCLE_SECONDS = HOLD_SECONDS + CROSSFADE_SECONDS;
-const randomKey = (excludeKey) => {
+const randomKey = excludeKey => {
     const choices = animatableKeys.filter(k => k !== excludeKey);
     return choices[Math.floor(Math.random() * choices.length)];
 };
@@ -243,7 +244,7 @@ const startLutAnimate = () => {
     data.set('lutIntensity2', 1);
     data.set('lutBlend', 0);
 };
-data.on('lutAnimate:set', (value) => {
+data.on('lutAnimate:set', value => {
     if (value) {
         startLutAnimate();
     }

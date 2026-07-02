@@ -81,7 +81,7 @@ app.on('destroy', () => {
 });
 
 // Helpers to create integer pixel buffers and render targets which we will ping-pong between
-const createPixelColorBuffer = (i) => {
+const createPixelColorBuffer = i => {
     return new pc.Texture(device, {
         name: `PixelBuffer_${i}`,
         width: TEXTURE_WIDTH,
@@ -198,150 +198,151 @@ const resetData = () => {
 resetData();
 data.on('reset', resetData);
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    data.set('options', {
-        brush: 1,
-        brushSize: 8
-    });
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.start();
+data.set('options', {
+    brush: 1,
+    brushSize: 8
+});
 
-    // setup skydome
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 2;
-    app.scene.exposure = 1;
+app.start();
 
-    // Create an Entity with a camera component
-    const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent('camera', {
-        farClip: 500
-    });
+// setup skydome
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 2;
+app.scene.exposure = 1;
 
-    // add camera to the world
-    cameraEntity.setPosition(0, 5, 15);
-    cameraEntity.lookAt(0, 5, 0);
-    app.root.addChild(cameraEntity);
+// Create an Entity with a camera component
+const cameraEntity = new pc.Entity();
+cameraEntity.addComponent('camera', {
+    farClip: 500
+});
 
-    // create a plane called gameScreen to display the sand
-    // simulation visualization texture
-    const gameScreen = new pc.Entity();
-    gameScreen.addComponent('render', {
-        type: 'plane',
-        castShadows: false,
-        receiveShadows: false
-    });
-    gameScreen.setLocalPosition(0, 5, 0);
-    gameScreen.setLocalScale(PLANE_WIDTH, 1, PLANE_HEIGHT);
-    gameScreen.setEulerAngles(90, 0, 0);
+// add camera to the world
+cameraEntity.setPosition(0, 5, 15);
+cameraEntity.lookAt(0, 5, 0);
+app.root.addChild(cameraEntity);
 
-    /** @type {pc.StandardMaterial} */
-    const gameScreenMaterial = gameScreen.render.material;
-    gameScreenMaterial.diffuse = pc.Color.BLACK;
-    gameScreenMaterial.emissiveMap = outputTexture;
-    gameScreenMaterial.emissive = pc.Color.WHITE;
-    gameScreenMaterial.useLighting = false;
-    gameScreenMaterial.update();
-    app.root.addChild(gameScreen);
+// create a plane called gameScreen to display the sand
+// simulation visualization texture
+const gameScreen = new pc.Entity();
+gameScreen.addComponent('render', {
+    type: 'plane',
+    castShadows: false,
+    receiveShadows: false
+});
+gameScreen.setLocalPosition(0, 5, 0);
+gameScreen.setLocalScale(PLANE_WIDTH, 1, PLANE_HEIGHT);
+gameScreen.setEulerAngles(90, 0, 0);
 
-    // Create a matching plane for mouse picking
-    const gamePlane = new pc.Plane(new pc.Vec3(0, 0, 1), 0);
+/** @type {pc.StandardMaterial} */
+const gameScreenMaterial = gameScreen.render.material;
+gameScreenMaterial.diffuse = pc.Color.BLACK;
+gameScreenMaterial.emissiveMap = outputTexture;
+gameScreenMaterial.emissive = pc.Color.WHITE;
+gameScreenMaterial.useLighting = false;
+gameScreenMaterial.update();
+app.root.addChild(gameScreen);
 
-    // Setup mouse controls
-    const mouse = new pc.Mouse(document.body);
-    const keyboard = new pc.Keyboard(document.body);
+// Create a matching plane for mouse picking
+const gamePlane = new pc.Plane(new pc.Vec3(0, 0, 1), 0);
 
-    mouse.disableContextMenu();
+// Setup mouse controls
+const mouse = new pc.Mouse(document.body);
+const keyboard = new pc.Keyboard(document.body);
 
-    // Reset on space bar, select brush on 1-4
-    keyboard.on(
-        'keyup',
-        (event) => {
-            switch (event.key) {
-                case pc.KEY_SPACE:
-                    resetData();
-                    break;
-                case pc.KEY_1:
-                    data.set('options.brush', 1);
-                    break;
-                case pc.KEY_2:
-                    data.set('options.brush', 2);
-                    break;
-                case pc.KEY_3:
-                    data.set('options.brush', 3);
-                    break;
-                case pc.KEY_4:
-                    data.set('options.brush', 4);
-                    break;
-            }
-        },
-        this
-    );
+mouse.disableContextMenu();
 
-    let mouseState = 0;
-    mouse.on('mousedown', (event) => {
-        if (event.button === pc.MOUSEBUTTON_LEFT) {
-            if (keyboard.isPressed(pc.KEY_SHIFT)) {
-                mouseState = 2;
-            } else {
-                mouseState = 1;
-            }
-        } else if (event.button === pc.MOUSEBUTTON_RIGHT) {
+// Reset on space bar, select brush on 1-4
+keyboard.on(
+    'keyup',
+    event => {
+        switch (event.key) {
+            case pc.KEY_SPACE:
+                resetData();
+                break;
+            case pc.KEY_1:
+                data.set('options.brush', 1);
+                break;
+            case pc.KEY_2:
+                data.set('options.brush', 2);
+                break;
+            case pc.KEY_3:
+                data.set('options.brush', 3);
+                break;
+            case pc.KEY_4:
+                data.set('options.brush', 4);
+                break;
+        }
+    },
+    this
+);
+
+let mouseState = 0;
+mouse.on('mousedown', event => {
+    if (event.button === pc.MOUSEBUTTON_LEFT) {
+        if (keyboard.isPressed(pc.KEY_SHIFT)) {
             mouseState = 2;
+        } else {
+            mouseState = 1;
         }
-    });
-    mouse.on('mouseup', () => {
-        mouseState = 0;
-    });
+    } else if (event.button === pc.MOUSEBUTTON_RIGHT) {
+        mouseState = 2;
+    }
+});
+mouse.on('mouseup', () => {
+    mouseState = 0;
+});
 
-    const mouseRay = new pc.Ray();
-    const planePoint = new pc.Vec3();
-    const mousePos = new pc.Vec2();
-    const mouseUniform = new Float32Array(2);
-    mouse.on('mousemove', (event) => {
-        const x = event.x;
-        const y = event.y;
+const mouseRay = new pc.Ray();
+const planePoint = new pc.Vec3();
+const mousePos = new pc.Vec2();
+const mouseUniform = new Float32Array(2);
+mouse.on('mousemove', event => {
+    const x = event.x;
+    const y = event.y;
 
-        mousePos.x = x;
-        mousePos.y = y;
+    mousePos.x = x;
+    mousePos.y = y;
 
-        if (cameraEntity.camera) {
-            cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip, mouseRay.direction);
-            mouseRay.origin.copy(cameraEntity.getPosition());
-            mouseRay.direction.sub(mouseRay.origin).normalize();
-            gamePlane.intersectsRay(mouseRay, planePoint);
-            planePoint.x = PLANE_WIDTH / 2 + planePoint.x;
-            planePoint.y = PLANE_HEIGHT - planePoint.y;
-            mousePos.set(planePoint.x / PLANE_WIDTH, planePoint.y / PLANE_HEIGHT);
-        }
-    });
+    if (cameraEntity.camera) {
+        cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip, mouseRay.direction);
+        mouseRay.origin.copy(cameraEntity.getPosition());
+        mouseRay.direction.sub(mouseRay.origin).normalize();
+        gamePlane.intersectsRay(mouseRay, planePoint);
+        planePoint.x = PLANE_WIDTH / 2 + planePoint.x;
+        planePoint.y = PLANE_HEIGHT - planePoint.y;
+        mousePos.set(planePoint.x / PLANE_WIDTH, planePoint.y / PLANE_HEIGHT);
+    }
+});
 
-    let passNum = 0;
-    app.on('update', (/** @type {number} */) => {
-        mouseUniform[0] = mousePos.x;
-        mouseUniform[1] = mousePos.y;
+let passNum = 0;
+app.on('update', (/** @type {number} */) => {
+    mouseUniform[0] = mousePos.x;
+    mouseUniform[1] = mousePos.y;
 
-        const brushRadius = data.get('options.brushSize') / Math.max(TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        const brush = data.get('options.brush') ?? 1;
+    const brushRadius = data.get('options.brushSize') / Math.max(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    const brush = data.get('options.brush') ?? 1;
 
-        // Run the sand simulation shader
-        for (let i = 0; i < STEPS_PER_FRAME; i++) {
-            device.scope.resolve('sourceTexture').setValue(sourceTexture);
-            device.scope.resolve('mousePosition').setValue(mouseUniform);
-            device.scope.resolve('mouseButton').setValue(mouseState);
-            device.scope.resolve('brush').setValue(brush);
-            device.scope.resolve('brushRadius').setValue(brushRadius);
-            device.scope.resolve('passNum').setValue(passNum);
-            device.scope.resolve('randomVal').setValue(Math.random());
-            pc.drawQuadWithShader(device, sandRenderTarget, sandShader);
-            device.copyRenderTarget(sandRenderTarget, sourceRenderTarget, true, false);
-            passNum = (passNum + 1) % 16;
-        }
-
-        // Render a visual representation of the simulation
-        device.scope.resolve('sourceTexture').setValue(sandRenderTarget.colorBuffer);
+    // Run the sand simulation shader
+    for (let i = 0; i < STEPS_PER_FRAME; i++) {
+        device.scope.resolve('sourceTexture').setValue(sourceTexture);
         device.scope.resolve('mousePosition').setValue(mouseUniform);
+        device.scope.resolve('mouseButton').setValue(mouseState);
+        device.scope.resolve('brush').setValue(brush);
         device.scope.resolve('brushRadius').setValue(brushRadius);
-        pc.drawQuadWithShader(device, outputRenderTarget, outputShader);
-    });
+        device.scope.resolve('passNum').setValue(passNum);
+        device.scope.resolve('randomVal').setValue(Math.random());
+        pc.drawQuadWithShader(device, sandRenderTarget, sandShader);
+        device.copyRenderTarget(sandRenderTarget, sourceRenderTarget, true, false);
+        passNum = (passNum + 1) % 16;
+    }
+
+    // Render a visual representation of the simulation
+    device.scope.resolve('sourceTexture').setValue(sandRenderTarget.colorBuffer);
+    device.scope.resolve('mousePosition').setValue(mouseUniform);
+    device.scope.resolve('brushRadius').setValue(brushRadius);
+    pc.drawQuadWithShader(device, outputRenderTarget, outputShader);
 });

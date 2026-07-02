@@ -68,125 +68,126 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 1;
+app.start();
 
-    // get existing layers
-    const worldLayer = app.scene.layers.getLayerByName('World');
-    const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
-    const uiLayer = app.scene.layers.getLayerByName('UI');
+// setup skydome
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
 
-    // create a layer for object that render into texture, add it right after the world layer
-    const rtLayer = new pc.Layer({ name: 'RTLayer' });
-    app.scene.layers.insert(rtLayer, 1);
+// get existing layers
+const worldLayer = app.scene.layers.getLayerByName('World');
+const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
+const uiLayer = app.scene.layers.getLayerByName('UI');
 
-    /**
-     * Helper function to create a texture to render to.
-     * @param {string} name - The name.
-     * @param {number} width - The width.
-     * @param {number} height - The height.
-     * @returns {pc.Texture} The returned texture.
-     */
-    const createTexture = (name, width, height) => {
-        return new pc.Texture(app.graphicsDevice, {
-            name: name,
-            width: width,
-            height: height,
-            format: pc.PIXELFORMAT_RGBA8,
-            mipmaps: true,
-            minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
-            magFilter: pc.FILTER_LINEAR,
-            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE
-        });
-    };
+// create a layer for object that render into texture, add it right after the world layer
+const rtLayer = new pc.Layer({ name: 'RTLayer' });
+app.scene.layers.insert(rtLayer, 1);
 
-    // create textures and render target for rendering into, including depth buffer
-    const texture0 = createTexture('RT-texture-0', 512, 512);
-    const texture1 = createTexture('RT-texture-1', 512, 512);
-    const texture2 = createTexture('RT-texture-2', 512, 512);
-
-    // render to multiple targets if supported
-    const colorBuffers = [texture0, texture1, texture2];
-    const renderTarget = new pc.RenderTarget({
-        name: 'MRT',
-        colorBuffers: colorBuffers,
-        depth: true,
-        flipY: !app.graphicsDevice.isWebGPU,
-        samples: 2
+/**
+ * Helper function to create a texture to render to.
+ * @param {string} name - The name.
+ * @param {number} width - The width.
+ * @param {number} height - The height.
+ * @returns {pc.Texture} The returned texture.
+ */
+const createTexture = (name, width, height) => {
+    return new pc.Texture(app.graphicsDevice, {
+        name: name,
+        width: width,
+        height: height,
+        format: pc.PIXELFORMAT_RGBA8,
+        mipmaps: true,
+        minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
+        magFilter: pc.FILTER_LINEAR,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE
     });
+};
 
-    // Create texture camera, which renders entities in RTLayer into the texture
-    const textureCamera = new pc.Entity('TextureCamera');
-    textureCamera.addComponent('camera', {
-        layers: [rtLayer.id],
-        farClip: 500,
-        toneMapping: pc.TONEMAP_ACES,
+// create textures and render target for rendering into, including depth buffer
+const texture0 = createTexture('RT-texture-0', 512, 512);
+const texture1 = createTexture('RT-texture-1', 512, 512);
+const texture2 = createTexture('RT-texture-2', 512, 512);
 
-        // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
-        // to make it rendered first each frame
-        priority: -1,
+// render to multiple targets if supported
+const colorBuffers = [texture0, texture1, texture2];
+const renderTarget = new pc.RenderTarget({
+    name: 'MRT',
+    colorBuffers: colorBuffers,
+    depth: true,
+    flipY: !app.graphicsDevice.isWebGPU,
+    samples: 2
+});
 
-        // this camera renders into texture target
-        renderTarget: renderTarget
-    });
-    app.root.addChild(textureCamera);
+// Create texture camera, which renders entities in RTLayer into the texture
+const textureCamera = new pc.Entity('TextureCamera');
+textureCamera.addComponent('camera', {
+    layers: [rtLayer.id],
+    farClip: 500,
+    toneMapping: pc.TONEMAP_ACES,
 
-    // set the shader pass to use MRT output
-    textureCamera.camera.setShaderPass('MyMRT');
+    // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
+    // to make it rendered first each frame
+    priority: -1,
 
-    // get the instance of the chess board. Render it into RTLayer only.
-    const boardEntity = assets.board.resource.instantiateRenderEntity({
-        layers: [rtLayer.id]
-    });
-    app.root.addChild(boardEntity);
+    // this camera renders into texture target
+    renderTarget: renderTarget
+});
+app.root.addChild(textureCamera);
 
-    // override output shader chunk for the material of the chess board, to inject our custom shader
-    // chunk which outputs to multiple render targets during our custom shader pass
-    /** @type {Array<pc.RenderComponent>} */
-    const renders = boardEntity.findComponents('render');
-    renders.forEach((render) => {
-        const meshInstances = render.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const material = meshInstances[i].material;
-            material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('outputPS', outputGlslFrag);
-            material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('outputPS', outputWgslFrag);
-            material.shaderChunksVersion = '2.8';
-        }
-    });
+// set the shader pass to use MRT output
+textureCamera.camera.setShaderPass('MyMRT');
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        layers: [worldLayer.id, skyboxLayer.id, uiLayer.id]
-    });
-    app.root.addChild(camera);
+// get the instance of the chess board. Render it into RTLayer only.
+const boardEntity = assets.board.resource.instantiateRenderEntity({
+    layers: [rtLayer.id]
+});
+app.root.addChild(boardEntity);
 
-    // update things every frame
-    let angle = 1;
-    app.on('update', (/** @type {number} */ dt) => {
-        angle += dt;
+// override output shader chunk for the material of the chess board, to inject our custom shader
+// chunk which outputs to multiple render targets during our custom shader pass
+/** @type {Array<pc.RenderComponent>} */
+const renders = boardEntity.findComponents('render');
+renders.forEach(render => {
+    const meshInstances = render.meshInstances;
+    for (let i = 0; i < meshInstances.length; i++) {
+        const material = meshInstances[i].material;
+        material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('outputPS', outputGlslFrag);
+        material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('outputPS', outputWgslFrag);
+        material.shaderChunksVersion = '2.8';
+    }
+});
 
-        // orbit the camera around
-        textureCamera.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));
-        textureCamera.lookAt(pc.Vec3.ZERO);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    layers: [worldLayer.id, skyboxLayer.id, uiLayer.id]
+});
+app.root.addChild(camera);
 
-        const gd = app.graphicsDevice;
-        const ratio = gd.width / gd.height;
+// update things every frame
+let angle = 1;
+app.on('update', (/** @type {number} */ dt) => {
+    angle += dt;
 
-        // debug draw the texture on the screen in the world layer of the main camera
-        // @ts-ignore engine-tsd
-        app.drawTexture(0, 0.4, 1, ratio, texture0, null, worldLayer);
+    // orbit the camera around
+    textureCamera.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));
+    textureCamera.lookAt(pc.Vec3.ZERO);
 
-        // @ts-ignore engine-tsd
-        app.drawTexture(-0.5, -0.5, 0.9, 0.9 * ratio, texture1, null, worldLayer);
+    const gd = app.graphicsDevice;
+    const ratio = gd.width / gd.height;
 
-        // @ts-ignore engine-tsd
-        app.drawTexture(0.5, -0.5, 0.9, 0.9 * ratio, texture2, null, worldLayer);
-    });
+    // debug draw the texture on the screen in the world layer of the main camera
+    // @ts-ignore engine-tsd
+    app.drawTexture(0, 0.4, 1, ratio, texture0, null, worldLayer);
+
+    // @ts-ignore engine-tsd
+    app.drawTexture(-0.5, -0.5, 0.9, 0.9 * ratio, texture1, null, worldLayer);
+
+    // @ts-ignore engine-tsd
+    app.drawTexture(0.5, -0.5, 0.9, 0.9 * ratio, texture2, null, worldLayer);
 });

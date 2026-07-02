@@ -60,15 +60,18 @@ data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
 // Grid bounds for position denormalization
 const gridSize = 10;
-const posScale = (gridSize / 2) * 0.5;  // positions range from -posScale to +posScale
+const posScale = (gridSize / 2) * 0.5; // positions range from -posScale to +posScale
 
 // Create custom format with single RGBA8 texture (RGB=normalized position, A=brightness)
 // and custom uTint/uTint2 uniforms for per-instance color gradient
-const format = new pc.GSplatFormat(device, [
-    // this line gives us 'loadData' function in the shader, returning vec4
-    { name: 'data', format: pc.PIXELFORMAT_RGBA8 }
-], {
-    readGLSL: `
+const format = new pc.GSplatFormat(
+    device,
+    [
+        // this line gives us 'loadData' function in the shader, returning vec4
+        { name: 'data', format: pc.PIXELFORMAT_RGBA8 }
+    ],
+    {
+        readGLSL: `
         uniform vec3 uTint;
         uniform vec3 uTint2;
 
@@ -86,7 +89,7 @@ const format = new pc.GSplatFormat(device, [
         vec3 getScale() { return vec3(0.15); }
         vec4 getRotation() { return vec4(0.0, 0.0, 0.0, 1.0); }
     `,
-    readWGSL: `
+        readWGSL: `
         uniform uTint: vec3f;
         uniform uTint2: vec3f;
 
@@ -104,7 +107,8 @@ const format = new pc.GSplatFormat(device, [
         fn getScale() -> vec3f { return vec3f(0.15); }
         fn getRotation() -> vec4f { return vec4f(0.0, 0.0, 0.0, 1.0); }
     `
-});
+    }
+);
 
 // Create container with max capacity
 const maxSplats = gridSize ** 3;
@@ -134,9 +138,9 @@ for (let x = 0; x < gridSize; x++) {
             const dy = ny - 0.5;
             const dz = nz - 0.5;
             const distFromCenter = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            const maxDist = Math.sqrt(0.75);  // max distance in normalized cube
-            const radial = 1.0 - (distFromCenter / maxDist) * 0.7;  // 0.3 to 1.0
-            const diagonal = (nx + ny + nz) / 3.0;  // 0 to 1 corner-to-corner
+            const maxDist = Math.sqrt(0.75); // max distance in normalized cube
+            const radial = 1.0 - (distFromCenter / maxDist) * 0.7; // 0.3 to 1.0
+            const diagonal = (nx + ny + nz) / 3.0; // 0 to 1 corner-to-corner
             const brightness = radial * 0.7 + diagonal * 0.3;
 
             // Data: RGB = normalized position (0-255), A = brightness (0-255)
@@ -172,14 +176,38 @@ const spacing = boundingSphereRadius * 2 + 1;
 
 // Two vibrant contrasting tint colors per instance: [color A, color B]
 const tintPairs = [
-    [[1.0, 0.0, 0.2], [0.0, 1.0, 1.0]],  // hot pink ↔ cyan
-    [[1.0, 1.0, 0.0], [1.0, 0.0, 1.0]],  // yellow ↔ magenta
-    [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]],  // green ↔ red
-    [[1.0, 0.5, 0.0], [0.0, 0.5, 1.0]],  // orange ↔ electric blue
-    [[0.0, 0.0, 1.0], [1.0, 1.0, 0.0]],  // blue ↔ yellow
-    [[1.0, 0.0, 0.5], [0.5, 1.0, 0.0]],  // magenta ↔ lime
-    [[0.0, 1.0, 0.5], [1.0, 0.0, 1.0]],  // spring green ↔ purple
-    [[1.0, 0.3, 0.0], [0.0, 1.0, 1.0]]   // bright orange ↔ aqua
+    [
+        [1.0, 0.0, 0.2],
+        [0.0, 1.0, 1.0]
+    ], // hot pink ↔ cyan
+    [
+        [1.0, 1.0, 0.0],
+        [1.0, 0.0, 1.0]
+    ], // yellow ↔ magenta
+    [
+        [0.0, 1.0, 0.0],
+        [1.0, 0.0, 0.0]
+    ], // green ↔ red
+    [
+        [1.0, 0.5, 0.0],
+        [0.0, 0.5, 1.0]
+    ], // orange ↔ electric blue
+    [
+        [0.0, 0.0, 1.0],
+        [1.0, 1.0, 0.0]
+    ], // blue ↔ yellow
+    [
+        [1.0, 0.0, 0.5],
+        [0.5, 1.0, 0.0]
+    ], // magenta ↔ lime
+    [
+        [0.0, 1.0, 0.5],
+        [1.0, 0.0, 1.0]
+    ], // spring green ↔ purple
+    [
+        [1.0, 0.3, 0.0],
+        [0.0, 1.0, 1.0]
+    ] // bright orange ↔ aqua
 ];
 
 /** @type {pc.Entity[]} */
@@ -192,11 +220,7 @@ for (let gx = 0; gx < 2; gx++) {
             child.addComponent('gsplat', {
                 resource: container
             });
-            child.setLocalPosition(
-                (gx - 0.5) * spacing,
-                (gy - 0.5) * spacing,
-                (gz - 0.5) * spacing
-            );
+            child.setLocalPosition((gx - 0.5) * spacing, (gy - 0.5) * spacing, (gz - 0.5) * spacing);
 
             // Set per-instance tint gradient (center and edge colors)
             const [centerTint, edgeTint] = tintPairs[tintIndex++];
@@ -220,7 +244,7 @@ app.root.addChild(camera);
 
 // Animate tints and rotate
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt;
 
     // Rotate parent
@@ -234,13 +258,13 @@ app.on('update', (dt) => {
 
     // Animate tint colors - hue rotation for vivid saturated colors
     children.forEach((child, i) => {
-        const phase = i * 0.8;  // different phase per instance
-        const speed = 0.17;    // animation speed (slowed 3x)
+        const phase = i * 0.8; // different phase per instance
+        const speed = 0.17; // animation speed (slowed 3x)
 
         // Helper: convert hue (0-1) to RGB with full saturation
-        const hueToRgb = (h) => {
-            h = ((h % 1) + 1) % 1;  // normalize to 0-1
-            const x = 1 - Math.abs((h * 6) % 2 - 1);
+        const hueToRgb = h => {
+            h = ((h % 1) + 1) % 1; // normalize to 0-1
+            const x = 1 - Math.abs(((h * 6) % 2) - 1);
             if (h < 1 / 6) return [1, x, 0];
             if (h < 2 / 6) return [x, 1, 0];
             if (h < 3 / 6) return [0, 1, x];
@@ -252,7 +276,7 @@ app.on('update', (dt) => {
         // Primary and secondary tints: split-complementary (~90° apart)
         // Far enough for contrast, close enough to not cancel to grey
         const hue1 = time * speed + phase;
-        const hue2 = hue1 + 0.25;  // ~90° offset
+        const hue2 = hue1 + 0.25; // ~90° offset
 
         child.gsplat?.setParameter('uTint', hueToRgb(hue1));
         child.gsplat?.setParameter('uTint2', hueToRgb(hue2));

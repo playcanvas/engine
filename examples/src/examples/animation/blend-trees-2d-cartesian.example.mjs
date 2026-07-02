@@ -42,12 +42,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.AnimComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.AnimClipHandler,
-    pc.AnimStateGraphHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.AnimClipHandler, pc.AnimStateGraphHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -63,143 +58,144 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    // setup skydome
-    app.scene.exposure = 2;
-    app.scene.skyboxMip = 2;
-    app.scene.envAtlas = assets.helipad.resource;
-
-    // Create an Entity with a camera component
-    const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1)
-    });
-    cameraEntity.translate(0, 0.75, 3);
-    app.root.addChild(cameraEntity);
-
-    // Create an entity with a light component
-    const lightEntity = new pc.Entity();
-    lightEntity.addComponent('light', {
-        castShadows: true,
-        intensity: 1.5,
-        normalOffsetBias: 0.02,
-        shadowType: pc.SHADOW_PCF5_32F,
-        shadowDistance: 6,
-        shadowResolution: 2048,
-        shadowBias: 0.02
-    });
-    app.root.addChild(lightEntity);
-    lightEntity.setLocalEulerAngles(45, 30, 0);
-
-    // create an entity from the loaded model using the render component
-    const modelEntity = assets.model.resource.instantiateRenderEntity({
-        castShadows: true
-    });
-    modelEntity.name = 'model';
-
-    // add an anim component to the entity
-    modelEntity.addComponent('anim', {
-        activate: true
-    });
-
-    // create an anim state graph
-    const animStateGraphData = {
-        layers: [
-            {
-                name: 'base',
-                states: [
-                    {
-                        name: 'START'
-                    },
-                    {
-                        name: 'Emote',
-                        speed: 1.0,
-                        loop: true,
-                        blendTree: {
-                            type: pc.ANIM_BLEND_2D_CARTESIAN,
-                            parameters: ['posX', 'posY'],
-                            children: [
-                                {
-                                    name: 'Idle',
-                                    point: [-0.5, 0.5]
-                                },
-                                {
-                                    name: 'Eager',
-                                    point: [0.5, 0.5]
-                                },
-                                {
-                                    name: 'Walk',
-                                    point: [0.5, -0.5]
-                                },
-                                {
-                                    name: 'Dance',
-                                    point: [-0.5, -0.5]
-                                }
-                            ]
-                        }
-                    }
-                ],
-                transitions: [
-                    {
-                        from: 'START',
-                        to: 'Emote'
-                    }
-                ]
-            }
-        ],
-        parameters: {
-            posX: {
-                name: 'posX',
-                type: 'FLOAT',
-                value: -0.5
-            },
-            posY: {
-                name: 'posY',
-                type: 'FLOAT',
-                value: 0.5
-            }
-        }
-    };
-
-    // load the state graph into the anim component
-    modelEntity.anim.loadStateGraph(animStateGraphData);
-
-    // load the state graph asset resource into the anim component
-    const characterStateLayer = modelEntity.anim.baseLayer;
-    characterStateLayer.assignAnimation('Emote.Idle', assets.idleAnim.resource.animations[0].resource);
-    characterStateLayer.assignAnimation('Emote.Eager', assets.eagerAnim.resource.animations[0].resource);
-    characterStateLayer.assignAnimation('Emote.Dance', assets.danceAnim.resource.animations[0].resource);
-    characterStateLayer.assignAnimation('Emote.Walk', assets.walkAnim.resource.animations[0].resource);
-
-    // Initialize observer data
-    data.set('data', {
-        pos: { x: -0.5, y: 0.5 },
-        animPoints: []
-    });
-
-    // Helper to update animation points for visualization
-    const updateAnimPoints = () => {
-        const points = characterStateLayer._controller._states.Emote.animations.map((/** @type {any} */ animNode) => ({
-            x: animNode.point?.x ?? 0,
-            y: animNode.point?.y ?? 0,
-            weight: animNode.weight ?? 0
-        }));
-        data.set('data.animPoints', points);
-    };
-
-    // Set initial animation points
-    updateAnimPoints();
-
-    // Listen for position changes from controls
-    data.on('data.pos:set', (value) => {
-        modelEntity.anim.setFloat('posX', value.x);
-        modelEntity.anim.setFloat('posY', value.y);
-        // Update animation points when position changes (weights recalculate)
-        updateAnimPoints();
-    });
-
-    app.root.addChild(modelEntity);
-
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+// setup skydome
+app.scene.exposure = 2;
+app.scene.skyboxMip = 2;
+app.scene.envAtlas = assets.helipad.resource;
+
+// Create an Entity with a camera component
+const cameraEntity = new pc.Entity();
+cameraEntity.addComponent('camera', {
+    clearColor: new pc.Color(0.1, 0.1, 0.1)
+});
+cameraEntity.translate(0, 0.75, 3);
+app.root.addChild(cameraEntity);
+
+// Create an entity with a light component
+const lightEntity = new pc.Entity();
+lightEntity.addComponent('light', {
+    castShadows: true,
+    intensity: 1.5,
+    normalOffsetBias: 0.02,
+    shadowType: pc.SHADOW_PCF5_32F,
+    shadowDistance: 6,
+    shadowResolution: 2048,
+    shadowBias: 0.02
+});
+app.root.addChild(lightEntity);
+lightEntity.setLocalEulerAngles(45, 30, 0);
+
+// create an entity from the loaded model using the render component
+const modelEntity = assets.model.resource.instantiateRenderEntity({
+    castShadows: true
+});
+modelEntity.name = 'model';
+
+// add an anim component to the entity
+modelEntity.addComponent('anim', {
+    activate: true
+});
+
+// create an anim state graph
+const animStateGraphData = {
+    layers: [
+        {
+            name: 'base',
+            states: [
+                {
+                    name: 'START'
+                },
+                {
+                    name: 'Emote',
+                    speed: 1.0,
+                    loop: true,
+                    blendTree: {
+                        type: pc.ANIM_BLEND_2D_CARTESIAN,
+                        parameters: ['posX', 'posY'],
+                        children: [
+                            {
+                                name: 'Idle',
+                                point: [-0.5, 0.5]
+                            },
+                            {
+                                name: 'Eager',
+                                point: [0.5, 0.5]
+                            },
+                            {
+                                name: 'Walk',
+                                point: [0.5, -0.5]
+                            },
+                            {
+                                name: 'Dance',
+                                point: [-0.5, -0.5]
+                            }
+                        ]
+                    }
+                }
+            ],
+            transitions: [
+                {
+                    from: 'START',
+                    to: 'Emote'
+                }
+            ]
+        }
+    ],
+    parameters: {
+        posX: {
+            name: 'posX',
+            type: 'FLOAT',
+            value: -0.5
+        },
+        posY: {
+            name: 'posY',
+            type: 'FLOAT',
+            value: 0.5
+        }
+    }
+};
+
+// load the state graph into the anim component
+modelEntity.anim.loadStateGraph(animStateGraphData);
+
+// load the state graph asset resource into the anim component
+const characterStateLayer = modelEntity.anim.baseLayer;
+characterStateLayer.assignAnimation('Emote.Idle', assets.idleAnim.resource.animations[0].resource);
+characterStateLayer.assignAnimation('Emote.Eager', assets.eagerAnim.resource.animations[0].resource);
+characterStateLayer.assignAnimation('Emote.Dance', assets.danceAnim.resource.animations[0].resource);
+characterStateLayer.assignAnimation('Emote.Walk', assets.walkAnim.resource.animations[0].resource);
+
+// Initialize observer data
+data.set('data', {
+    pos: { x: -0.5, y: 0.5 },
+    animPoints: []
+});
+
+// Helper to update animation points for visualization
+const updateAnimPoints = () => {
+    const points = characterStateLayer._controller._states.Emote.animations.map((/** @type {any} */ animNode) => ({
+        x: animNode.point?.x ?? 0,
+        y: animNode.point?.y ?? 0,
+        weight: animNode.weight ?? 0
+    }));
+    data.set('data.animPoints', points);
+};
+
+// Set initial animation points
+updateAnimPoints();
+
+// Listen for position changes from controls
+data.on('data.pos:set', value => {
+    modelEntity.anim.setFloat('posX', value.x);
+    modelEntity.anim.setFloat('posY', value.y);
+    // Update animation points when position changes (weights recalculate)
+    updateAnimPoints();
+});
+
+app.root.addChild(modelEntity);
+
+app.start();
