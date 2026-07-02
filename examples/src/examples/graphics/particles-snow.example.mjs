@@ -40,18 +40,18 @@ await new Promise((resolve) => {
 
 app.start();
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0, 0, 0)
@@ -71,7 +71,7 @@ cameraEntity.script.create('orbitCamera', {
 cameraEntity.script.create('orbitCameraInputMouse');
 cameraEntity.script.create('orbitCameraInputTouch');
 
-// create a directional light
+// Create a directional light
 const lightDirEntity = new pc.Entity();
 lightDirEntity.addComponent('light', {
     type: 'directional',
@@ -80,7 +80,7 @@ lightDirEntity.addComponent('light', {
 });
 lightDirEntity.setLocalEulerAngles(45, 0, 0);
 
-// add entities into the scene hierarchy
+// Add Entities into the scene hierarchy
 app.root.addChild(cameraEntity);
 app.root.addChild(lightDirEntity);
 
@@ -103,7 +103,7 @@ const rotCurve2 = new pc.Curve([0, -100]);
 // scale is constant at 0.1
 const scaleCurve = new pc.Curve([0, 0.2]);
 
-// create entity for particle system
+// Create entity for particle system
 const entity = new pc.Entity();
 app.root.addChild(entity);
 entity.setLocalPosition(0, 5, 0);
@@ -124,7 +124,7 @@ entity.addComponent('particlesystem', {
     depthSoftening: 0.08
 });
 
-// create an entity for the ground
+// Create an Entity for the ground
 const ground = new pc.Entity();
 ground.addComponent('render', {
     type: 'cylinder'

@@ -42,7 +42,7 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -50,7 +50,7 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0.75, 0.75, 0.75)
@@ -58,7 +58,7 @@ cameraEntity.addComponent('camera', {
 cameraEntity.rotateLocal(0, 0, 0);
 cameraEntity.translateLocal(0, 0, 20);
 
-// create a directional light
+// Create a directional light
 const lightDirEntity = new pc.Entity();
 lightDirEntity.addComponent('light', {
     type: 'directional',
@@ -67,37 +67,37 @@ lightDirEntity.addComponent('light', {
 });
 lightDirEntity.setLocalEulerAngles(45, 0, 0);
 
-// create a screen to display the particle texture
+// Create a screen to display the particle texture
 const screenEntity = new pc.Entity();
 screenEntity.addComponent('screen', { resolution: new pc.Vec2(640, 480), screenSpace: true });
 screenEntity.screen.scaleMode = 'blend';
 screenEntity.screen.referenceResolution = new pc.Vec2(1280, 720);
 
-// create a panel to display the full particle texture
+// Create a panel to display the full particle texture
 const panel = new pc.Entity();
 screenEntity.addChild(panel);
 
-// add entities into the scene hierarchy
+// Add Entities into the scene hierarchy
 app.root.addChild(cameraEntity);
 app.root.addChild(lightDirEntity);
 app.root.addChild(screenEntity);
 
-// create entity for first particle system
+// Create entity for first particle system
 const particleEntity1 = new pc.Entity();
 app.root.addChild(particleEntity1);
 particleEntity1.setLocalPosition(-3, 3, 0);
 
-// create entity for second particle system
+// Create entity for second particle system
 const particleEntity2 = new pc.Entity();
 app.root.addChild(particleEntity2);
 particleEntity2.setLocalPosition(3, 3, 0);
 
-// create entity for third particle system
+// Create entity for third particle system
 const particleEntity3 = new pc.Entity();
 app.root.addChild(particleEntity3);
 particleEntity3.setLocalPosition(-3, -3, 0);
 
-// create entity for fourth particle system
+// Create entity for fourth particle system
 const particleEntity4 = new pc.Entity();
 app.root.addChild(particleEntity4);
 particleEntity4.setLocalPosition(3, -3, 0);

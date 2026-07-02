@@ -1,8 +1,8 @@
 // @config
 // @flag HIDDEN
 
-// temporary repro: taa + transparent clear — rt alpha should stay 0 in empty regions when correct.
-// dev sidebar: test / taa-alpha
+// Temporary repro: TAA + transparent clear — RT alpha should stay 0 in empty regions when correct.
+// Dev sidebar: test / taa-alpha
 
 import * as pc from 'playcanvas';
 
@@ -89,8 +89,8 @@ function createViewMaterial(defineName) {
             vertex_position: pc.SEMANTIC_POSITION
         }
     };
-    // match app.drawtexture fallback: fullscreen quads use negative y scale, so back-face culling
-    // would discard the whole quad (default material.cull is cullface_back).
+    // Match app.drawTexture fallback: fullscreen quads use negative Y scale, so back-face culling
+    // would discard the whole quad (default Material.cull is CULLFACE_BACK).
     mat.cull = pc.CULLFACE_NONE;
     mat.depthTest = false;
     mat.depthWrite = false;
@@ -203,7 +203,7 @@ light.addComponent('light', {
     shadowResolution: 2048,
     shadowBias: 0.2,
     normalOffsetBias: 0.05,
-    // default light.layers is [world] only; geometry lives on rtlayer, so it would stay black.
+    // Default light.layers is [World] only; geometry lives on rtLayer, so it would stay black.
     layers: [rtLayer.id]
 });
 app.root.addChild(light);
@@ -238,7 +238,7 @@ sceneCamera.addComponent('camera', {
     nearClip: 0.5,
     priority: -1,
     renderTarget: sceneRt,
-    // fully transparent clear — green is visible only where alpha is preserved
+    // Fully transparent clear — green is visible only where alpha is preserved
     clearColor: new pc.Color(0, 1, 0, 0)
 });
 app.root.addChild(sceneCamera);
@@ -266,7 +266,7 @@ cameraFrame.taa.jitter = 1;
 const applySettings = () => {
     cameraFrame.taa.enabled = data.get('data.taa.enabled');
     cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
-    // sharpen when taa is on (same idea as graphics/taa.example.mjs); cameraframe stays active when taa is off.
+    // Sharpen when TAA is on (same idea as graphics/taa.example.mjs); CameraFrame stays active when TAA is off.
     cameraFrame.rendering.sharpness = data.get('data.taa.enabled') ? 1 : 0;
     cameraFrame.update();
 };
@@ -312,7 +312,7 @@ const syncSceneRt = () => {
     if (width < 2 || devHeight < 2) {
         return;
     }
-    // drawtexture sizes are in projected units where 2 spans the viewport. the top composite
+    // drawTexture sizes are in projected units where 2 spans the viewport. The top composite
     // quad uses width=1 and height=width/height, which maps to roughly (width/2)×(width/2)
     // pixels — ~1:1 texels vs on-screen preview instead of full-buffer supersampling.
     const panelPx = Math.max(2, Math.floor(width * 0.5));
@@ -331,7 +331,7 @@ app.on('update', () => {
     const gd = app.graphicsDevice;
     const ratio = gd.width / gd.height;
 
-    // bottom panels first (opaque), then top: straight-alpha blended over gray (like a transparent canvas).
+    // Bottom panels first (opaque), then top: straight-alpha blended over gray (like a transparent canvas).
     // @ts-ignore engine-tsd
     app.drawTexture(-0.5, -0.5, 0.9, 0.9 * ratio, null, matRgb, worldLayer);
 

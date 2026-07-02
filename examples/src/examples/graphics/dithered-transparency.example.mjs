@@ -33,7 +33,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable anti-aliasing as taa is used to smooth edges
+    // disable anti-aliasing as TAA is used to smooth edges
     antialias: false
 };
 
@@ -60,11 +60,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler, pc.Contai
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -141,14 +141,14 @@ const spawnTable = (position) => {
     return materials;
 };
 
-// left — bc demo: alphadither stays untouched (implicit) so opacity drives both blend
+// LEFT — BC demo: alphaDither stays untouched (implicit) so opacity drives both blend
 // strength and dither density, exactly like the legacy engine
 const leftMaterials = spawnTable(new pc.Vec3(-7, 0, 0));
 
-// right — new feature: alphadither set explicitly from the slider, decoupled from opacity
+// RIGHT — new feature: alphaDither set explicitly from the slider, decoupled from opacity
 const rightMaterials = spawnTable(new pc.Vec3(7, 0, 0));
 
-// create an entity with a directional light, casting soft vsm shadow
+// Create an Entity with a directional light, casting soft VSM shadow
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -164,7 +164,7 @@ light.addComponent('light', {
 light.setLocalEulerAngles(75, 120, 20);
 app.root.addChild(light);
 
-// create the camera
+// Create the camera
 const cameraEntity = new pc.Entity('Camera');
 cameraEntity.addComponent('camera', {
     fov: 70
@@ -185,7 +185,7 @@ cameraEntity.script.create('orbitCamera', {
 cameraEntity.script.create('orbitCameraInputMouse');
 cameraEntity.script.create('orbitCameraInputTouch');
 
-// ------ custom render passes set up ------
+// ------ Custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
@@ -201,12 +201,12 @@ const applySettings = () => {
 
 // ------
 
-// alphadither is routed to the right table only — leaving the left's _alphadither at its
-// null default, so its dither uses the legacy fallback to opacity. everything else is applied
-// to both tables so the only difference between them is alphadither's null vs explicit state.
+// alphaDither is routed to the right table only — leaving the left's _alphaDither at its
+// null default, so its dither uses the legacy fallback to opacity. Everything else is applied
+// to both tables so the only difference between them is alphaDither's null vs explicit state.
 const rightOnly = new Set(['alphaDither']);
 
-// handle ui changes
+// handle UI changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     const propertyName = path.split('.')[1];
     const targets = rightOnly.has(propertyName) ? rightMaterials : [...leftMaterials, ...rightMaterials];
@@ -219,9 +219,9 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     applySettings();
 });
 
-// initial values — alphadither starts at 0.5 to match opacity, so on load the right table's
-// dither matches the left's (both look identical). drag opacity and only the left's dither
-// density follows; drag alpha dither and only the right's does.
+// initial values — alphaDither starts at 0.5 to match opacity, so on load the right table's
+// dither matches the left's (both look identical). Drag Opacity and only the left's dither
+// density follows; drag Alpha Dither and only the right's does.
 data.set('data', {
     taa: false,
     opacity: 0.5,

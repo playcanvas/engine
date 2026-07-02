@@ -34,11 +34,11 @@ createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.Contai
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -67,8 +67,8 @@ const uiLayer = app.scene.layers.getLayerByName('UI');
 const excludedLayer = new pc.Layer({ name: 'Excluded' });
 app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
-// create an envatlas texture, which will hold a prefiltered lighting generated from the cubemap.
-// this represents a reflection prefiltered for different levels of roughness
+// create an envAtlas texture, which will hold a prefiltered lighting generated from the cubemap.
+// This represents a reflection prefiltered for different levels of roughness
 const envAtlas = new pc.Texture(app.graphicsDevice, {
     width: 512,
     height: 512,
@@ -93,7 +93,7 @@ roomMaterial.reflectivity = 0.3;
 roomMaterial.envAtlas = envAtlas; // use reflection from env atlas
 roomMaterial.metalness = 0.5;
 
-// the material uses box projected cubemap for reflections. set its bounding box the the size of the room
+// the material uses box projected cubemap for reflections. Set its bounding box the the size of the room
 // so that the reflections line up
 roomMaterial.cubeMapProjection = pc.CUBEPROJ_BOX;
 roomMaterial.cubeMapProjectionBox = new pc.BoundingBox(new pc.Vec3(0, 200, 0), new pc.Vec3(400, 200, 400));
@@ -134,7 +134,7 @@ const videoTexture = new pc.Texture(app.graphicsDevice, {
     addressV: pc.ADDRESS_CLAMP_TO_EDGE
 });
 
-// create a html element with the video
+// create a HTML element with the video
 /** @type {HTMLVideoElement} */
 const video = document.createElement('video');
 video.id = 'vid';
@@ -153,12 +153,12 @@ video.addEventListener('canplaythrough', () => {
     videoTexture.setSource(video);
 });
 
-// listen for the 'loadedmetadata' event to resize the texture appropriately
+// Listen for the 'loadedmetadata' event to resize the texture appropriately
 video.addEventListener('loadedmetadata', () => {
     videoTexture.resize(video.videoWidth, video.videoHeight);
 });
 
-// materials used on the tv screen to display the video texture
+// materials used on the TV screen to display the video texture
 const screenMaterial = new pc.StandardMaterial();
 screenMaterial.useLighting = false;
 screenMaterial.emissiveMap = videoTexture;
@@ -234,7 +234,7 @@ lightOmni.addComponent('light', {
     range: 1000
 });
 
-// add a white sphere to light so that we can see where it is. this sphere is excluded from the reflections.
+// add a white sphere to light so that we can see where it is. This sphere is excluded from the reflections.
 lightOmni.addComponent('render', {
     type: 'sphere',
     layers: [excludedLayer.id],
@@ -245,7 +245,7 @@ lightOmni.addComponent('render', {
 lightOmni.setLocalScale(20, 20, 20);
 app.root.addChild(lightOmni);
 
-// create an entity with a camera component
+// create an Entity with a camera component
 const camera = new pc.Entity('MainCamera');
 camera.addComponent('camera', {
     fov: 100,
@@ -267,7 +267,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// create a probe object with cubemaprenderer script which takes care of rendering dynamic cubemap
+// create a probe object with cubemapRenderer script which takes care of rendering dynamic cubemap
 const probe = new pc.Entity('probeCamera');
 probe.addComponent('script');
 
@@ -279,7 +279,7 @@ probe.addComponent('camera', {
     // priority - render before world camera
     priority: -1,
 
-    // only render meshes on the worldlayer (and not excluded layer)
+    // only render meshes on the worldLayer (and not excluded layer)
     layers: [worldLayer.id],
 
     // disable as this is not a camera that renders cube map but only a container for properties for cube map rendering
@@ -289,9 +289,9 @@ probe.addComponent('camera', {
     farClip: 500
 });
 
-// add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly usable
-// as a lighting source for envatlas generation
-// position it in the center of the room.
+// Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly usable
+// as a lighting source for envAtlas generation
+// Position it in the center of the room.
 probe.script.create('cubemapRenderer', {
     attributes: {
         resolution: 128,
@@ -302,23 +302,23 @@ probe.script.create('cubemapRenderer', {
 probe.setPosition(0, 200, 0);
 app.root.addChild(probe);
 
-// handle oncubemappostrender event fired by the cubemaprenderer when all faces of the cubemap are done rendering
+// handle onCubemapPostRender event fired by the cubemapRenderer when all faces of the cubemap are done rendering
 probe.on('onCubemapPostRender', () => {
-    // prefilter just rendered cubemap into envatlas, so that it can be used for reflection during the rest of the frame
+    // prefilter just rendered cubemap into envAtlas, so that it can be used for reflection during the rest of the frame
     // @ts-ignore
     pc.EnvLighting.generateAtlas(probe.script.cubemapRenderer.cubeMap, {
         target: envAtlas
     });
 });
 
-// set an update function on the app's update event
+// Set an update function on the app's update event
 let time = 0;
 let updateProbeCount = 1;
 let updateVideo = true;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt * 0.3;
 
-    // update the video data to the texture every other frame
+    // Update the video data to the texture every other frame
     if (updateVideo && videoTexture) {
         videoTexture.upload();
     }

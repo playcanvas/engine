@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -62,7 +62,7 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(1, 0, 0)
@@ -72,7 +72,7 @@ camera.rotateLocal(-30, 0, 0);
 camera.translateLocal(0, 0, 5);
 app.root.addChild(camera);
 
-// create an entity for the ground
+// Create an Entity for the ground
 const material = new pc.StandardMaterial();
 material.diffuse = pc.Color.GRAY;
 material.update();
@@ -86,7 +86,7 @@ ground.setLocalScale(50, 1, 50);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// create an entity with a light component
+// Create an entity with a light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -103,7 +103,7 @@ app.root.addChild(light);
 
 app.start();
 
-// create walking dude
+// Create walking dude
 const entity = new pc.Entity();
 
 // add sound component

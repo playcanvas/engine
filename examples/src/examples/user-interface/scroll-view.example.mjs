@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -54,7 +54,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create a camera
+// Create a camera
 const camera = new pc.Entity();
 app.root.addChild(camera);
 
@@ -62,7 +62,7 @@ camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 
-// create a 2d screen
+// Create a 2D screen
 const screen = new pc.Entity();
 app.root.addChild(screen);
 
@@ -89,14 +89,14 @@ function createScrollbar(horizontal) {
     };
     if (horizontal) {
         // @ts-ignore engine-tsd
-        handleOptions.anchor = new pc.Vec4(0, 0, 0, 1); // split in y
+        handleOptions.anchor = new pc.Vec4(0, 0, 0, 1); // Split in Y
         // @ts-ignore engine-tsd
-        handleOptions.pivot = new pc.Vec2(0, 0); // bottom left
+        handleOptions.pivot = new pc.Vec2(0, 0); // Bottom left
     } else {
         // @ts-ignore engine-tsd
-        handleOptions.anchor = new pc.Vec4(0, 1, 1, 1); // split in x
+        handleOptions.anchor = new pc.Vec4(0, 1, 1, 1); // Split in X
         // @ts-ignore engine-tsd
-        handleOptions.pivot = new pc.Vec2(1, 1); // top right
+        handleOptions.pivot = new pc.Vec2(1, 1); // Top right
     }
     handle.addComponent('element', handleOptions);
     handle.addComponent('button', {
@@ -151,7 +151,7 @@ function createScrollbar(horizontal) {
     return scrollbar;
 }
 
-// create some text content
+// Create some text content
 const text = new pc.Entity('Text');
 text.addComponent('element', {
     alignment: new pc.Vec2(0, 0),
@@ -172,7 +172,7 @@ text.addComponent('element', {
     wrapLines: true
 });
 
-// group to hold the content inside the scroll view's viewport
+// Group to hold the content inside the scroll view's viewport
 const content = new pc.Entity('Content');
 content.addChild(text);
 
@@ -185,7 +185,7 @@ content.addComponent('element', {
     width: 600
 });
 
-// scroll view viewport
+// Scroll view viewport
 const viewport = new pc.Entity('Viewport');
 viewport.addChild(content);
 
@@ -204,13 +204,13 @@ viewport.addComponent('element', {
 const horizontalScrollbar = createScrollbar(true);
 const verticalScrollbar = createScrollbar(false);
 
-// create a scroll view
+// Create a scroll view
 const scrollview = new pc.Entity('ScrollView');
 scrollview.addChild(viewport);
 scrollview.addChild(horizontalScrollbar);
 scrollview.addChild(verticalScrollbar);
 
-// you must add the scrollview entity to the hierarchy before adding the scrollview component
+// You must add the scrollview entity to the hierarchy BEFORE adding the scrollview component
 screen.addChild(scrollview);
 
 scrollview.addComponent('element', {

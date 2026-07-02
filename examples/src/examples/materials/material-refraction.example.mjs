@@ -35,11 +35,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -54,20 +54,20 @@ app.start();
 
 app.scene.envAtlas = assets.helipad.resource;
 
-// depth layer is where the framebuffer is copied to a texture to be used in the following layers.
-// move the depth layer to take place after world and skydome layers, to capture both of them.
+// Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+// Move the depth layer to take place after World and Skydome layers, to capture both of them.
 const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
 app.scene.layers.remove(depthLayer);
 app.scene.layers.insertOpaque(depthLayer, 2);
 
-// create an entity with a camera component
+// Create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
 });
 app.root.addChild(camera);
 
-// create an entity with a directional light component
+// Create an entity with a directional light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -144,7 +144,7 @@ for (let i = 0; i < count; i++) {
     createObject(Math.cos(angle) * 2.5, -0.3, Math.sin(angle) * 2.5, objMaterial, 0.2);
 }
 
-// initial values for the ui
+// initial values for the UI
 data.set('data', {
     dynamic: false
 });

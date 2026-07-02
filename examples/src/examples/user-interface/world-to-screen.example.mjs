@@ -36,11 +36,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -53,7 +53,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
@@ -62,7 +62,7 @@ camera.rotateLocal(-30, 0, 0);
 camera.translateLocal(0, 0, 7);
 app.root.addChild(camera);
 
-// create an entity for the ground
+// Create an Entity for the ground
 const material = new pc.StandardMaterial();
 material.diffuse = pc.Color.WHITE;
 material.diffuseMap = assets.checkboard.resource;
@@ -78,7 +78,7 @@ ground.setLocalScale(50, 1, 50);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// create an entity with a light component
+// Create an entity with a light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -93,7 +93,7 @@ light.addComponent('light', {
 light.setLocalEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
-// create a 2d screen
+// Create a 2D screen
 const screen = new pc.Entity();
 screen.setLocalScale(0.01, 0.01, 0.01);
 screen.addComponent('screen', {
@@ -125,7 +125,7 @@ function worldToScreenSpace(worldPosition, camera, screen) {
     // invert the y position
     screenPos.y = screen.resolution.y - screenPos.y;
 
-    // put that into a vec3
+    // put that into a Vec3
     return new pc.Vec3(screenPos.x / scale, screenPos.y / scale, screenPos.z / scale);
 }
 
@@ -136,7 +136,7 @@ function worldToScreenSpace(worldPosition, camera, screen) {
  * @param {number} radius - The radius.
  */
 function createPlayer(id, startingAngle, speed, radius) {
-    // create a capsule entity to represent a player in the 3d world
+    // Create a capsule entity to represent a player in the 3d world
     const entity = new pc.Entity();
     entity.setLocalScale(new pc.Vec3(0.5, 0.5, 0.5));
     entity.addComponent('render', {
@@ -161,7 +161,7 @@ function createPlayer(id, startingAngle, speed, radius) {
         entity.setLocalEulerAngles(0, angle + 90, 0);
     });
 
-    // create a text element that will hover the player's head
+    // Create a text element that will hover the player's head
     const playerInfo = new pc.Entity();
     playerInfo.addComponent('element', {
         pivot: new pc.Vec2(0.5, 0),
@@ -218,10 +218,10 @@ function createPlayer(id, startingAngle, speed, radius) {
             // if world position is in front of the camera, show it
             playerInfo.enabled = true;
 
-            // set the ui position
+            // set the UI position
             playerInfo.setLocalPosition(screenPosition);
         } else {
-            // if world position is actually *behind* the camera, hide the ui
+            // if world position is actually *behind* the camera, hide the UI
             playerInfo.enabled = false;
         }
     });

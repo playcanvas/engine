@@ -47,11 +47,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -90,13 +90,13 @@ const mesh = pc.Mesh.fromGeometry(device, geom, {
     storageVertex: true // allow vertex buffer to be accessible by compute shader
 });
 
-// add a render component with the mesh
+// Add a render component with the mesh
 entity.addComponent('render', {
     meshInstances: [new pc.MeshInstance(mesh, material)]
 });
 app.root.addChild(entity);
 
-// create an orbit camera
+// Create an orbit camera
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
@@ -143,7 +143,7 @@ const shader = device.supportsCompute
     : null;
 
 // information about the vertex buffer format - offset of position and normal attributes
-// note: data is stored non-interleaved, positions together, normals together, so no need
+// Note: data is stored non-interleaved, positions together, normals together, so no need
 // to worry about stride
 const format = mesh.vertexBuffer.format;
 const positionElement = format.elements.find((e) => e.name === pc.SEMANTIC_POSITION);

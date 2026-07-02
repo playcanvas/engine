@@ -36,11 +36,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -94,7 +94,7 @@ const ORBIT_DISTANCE = 4;
 const ORBIT_INITIAL_YAW = 32;
 const ORBIT_INITIAL_PITCH = -10;
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -139,7 +139,7 @@ ground.setLocalPosition(0, -0.45, 0);
 app.root.addChild(ground);
 
 // shadow casting directional light
-// note: it does not affect gsplat, as lighting is not supported there currently
+// Note: it does not affect gsplat, as lighting is not supported there currently
 const directionalLight = new pc.Entity();
 directionalLight.addComponent('light', {
     type: 'directional',

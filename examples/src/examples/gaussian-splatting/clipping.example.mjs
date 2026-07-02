@@ -51,18 +51,18 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// auto resolution: treat dpr >= 2 as high-dpi (drops to half)
+// auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
     device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
 };
 applyResolution();
 
-// ensure dpr and canvas are updated when window changes size
+// Ensure DPR and canvas are updated when window changes size
 const resize = () => {
     applyResolution();
     app.resizeCanvas();
@@ -73,7 +73,7 @@ app.on('destroy', () => {
 });
 
 // configuration for grid instances
-const GRID_SIZE = 5; // n x n grid
+const GRID_SIZE = 5; // N x N grid
 const GRID_SPACING = 2; // spacing between instances in world units
 
 const assets = {
@@ -97,8 +97,8 @@ app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxMip = 3;
 app.scene.exposure = 1.5;
 
-// add a custom varying stream: written once per splat by the vertex stage customization
-// using setclipstate(value), and read per fragment using getclipstate()
+// Add a custom varying stream: written once per splat by the vertex stage customization
+// using setClipState(value), and read per fragment using getClipState()
 app.scene.gsplat.varyings.add([{ name: 'clipState', type: pc.TYPE_UINT32, components: 1 }]);
 
 // apply the clipping customization to the scene-wide gsplat material
@@ -119,16 +119,16 @@ data.on('renderer:set', () => {
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('animate', true);
 
-// enable rotation-based lod updates and behind-camera penalty
+// enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 4;
 
-// allow rendering with lower lod quality when optimal is not yet loaded
+// allow rendering with lower LOD quality when optimal is not yet loaded
 app.scene.gsplat.lodUnderfillLimit = 10;
 
 data.set('splatBudget', pc.platform.mobile ? 1 : 3);
 
-// create grid of instances centered around origin on xz plane
+// create grid of instances centered around origin on XZ plane
 const half = (GRID_SIZE - 1) * 0.5;
 for (let z = 0; z < GRID_SIZE; z++) {
     for (let x = 0; x < GRID_SIZE; x++) {
@@ -154,7 +154,7 @@ const applySplatBudget = () => {
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
-// create a camera with fly controls
+// Create a camera with fly controls
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),

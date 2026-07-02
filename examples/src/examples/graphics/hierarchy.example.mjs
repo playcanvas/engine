@@ -20,11 +20,11 @@ createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSy
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -106,7 +106,7 @@ const spacing = 7;
 createChildren(root, gridSize, scale, scaleDelta, spacing, levels);
 console.log(`number of created entities: ${entities.length}`);
 
-// create main camera
+// Create main camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
@@ -115,7 +115,7 @@ camera.setLocalPosition(90 * Math.sin(0), 40, 90 * Math.cos(0));
 camera.lookAt(new pc.Vec3(0, 5, 0));
 app.root.addChild(camera);
 
-// create an entity with a omni light component
+// Create an Entity with a omni light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',

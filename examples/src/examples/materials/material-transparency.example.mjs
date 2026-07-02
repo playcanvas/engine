@@ -15,7 +15,7 @@ const gfxOptions = {
     // disable anti-aliasing to make dithering more pronounced
     antialias: false,
 
-    // use srgb for display format (only supported on webgpu, fallbacks to ldr on webgl2)
+    // use sRGB for display format (only supported on WebGPU, fallbacks to LDR on WebGL2)
     displayFormat: pc.DISPLAYFORMAT_LDR_SRGB
 };
 
@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -55,7 +55,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create an entity with a camera component
+// Create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: pc.Color.BLACK,
@@ -92,7 +92,7 @@ const createSphere = (x, z) => {
     }
 
     // we want the spheres to seem to fade out in a linear fashion, so we need to convert
-    // the perceived opacity value from srgb to linear space
+    // the perceived opacity value from sRGB to linear space
     const perceivedOpacity = (z + 1) / NUM_SPHERES_Z;
     const linearOpacity = Math.pow(perceivedOpacity, 2.2);
     material.opacity = linearOpacity;
@@ -115,7 +115,7 @@ const createSphere = (x, z) => {
  * @param {number} y - The y coordinate.
  */
 const createText = (fontAsset, message, x, y) => {
-    // create a text element-based entity
+    // Create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],

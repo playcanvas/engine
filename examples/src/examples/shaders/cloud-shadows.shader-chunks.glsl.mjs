@@ -10,7 +10,7 @@ export const litUserDeclarationPS = /* glsl */ `
     uniform float cloudShadowIntensity;
 `;
 
-// override endps to apply cloud shadow after combinecolor but before emission/fog/tonemap/gamma
+// Override endPS to apply cloud shadow after combineColor but before emission/fog/tonemap/gamma
 export const endPS = /* glsl */ `
     gl_FragColor.rgb = combineColor(litArgs_albedo, litArgs_sheen_specularity, litArgs_clearcoat_specularity);
 

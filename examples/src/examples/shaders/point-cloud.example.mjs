@@ -34,33 +34,33 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
 });
 camera.translate(0, 7, 24);
 
-// add entity into scene hierarchy
+// Add entity into scene hierarchy
 app.root.addChild(camera);
 app.start();
 
-// create a new entity
+// Create a new Entity
 const entity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
-// create a new material with a custom shader
+// Create a new material with a custom shader
 const material = new pc.ShaderMaterial({
     uniqueName: 'MyShader',
     vertexGLSL: shaderVert,
@@ -76,7 +76,7 @@ const renderComponents = entity.findComponents('render');
 
 // for all render components
 renderComponents.forEach((/** @type {pc.RenderComponent} */ render) => {
-    // for all meshes in the render component, assign new material
+    // For all meshes in the render component, assign new material
     render.meshInstances.forEach((meshInstance) => {
         meshInstance.material = material;
     });
@@ -87,10 +87,10 @@ renderComponents.forEach((/** @type {pc.RenderComponent} */ render) => {
 
 let currentTime = 0;
 app.on('update', (dt) => {
-    // update the time and pass it to shader
+    // Update the time and pass it to shader
     currentTime += dt;
     material.setParameter('uTime', currentTime);
 
-    // rotate the model
+    // Rotate the model
     entity.rotate(0, 15 * dt, 0);
 });

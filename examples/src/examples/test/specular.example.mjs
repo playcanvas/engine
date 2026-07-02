@@ -69,7 +69,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// ibl is required to see the dielectric f0 changes that the extension controls
+// IBL is required to see the dielectric F0 changes that the extension controls
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.exposure = 10;
 

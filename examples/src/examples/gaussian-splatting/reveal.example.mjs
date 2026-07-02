@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -61,7 +61,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// array of available effects (extensible for future effects)
+// Array of available effects (extensible for future effects)
 const effects = ['radial', 'rain', 'grid'];
 
 data.on('renderer:set', () => {
@@ -72,11 +72,11 @@ data.on('renderer:set', () => {
     }
 });
 
-// default to radial effect
+// Default to radial effect
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('effect', 'radial');
 
-// create hotel gsplat
+// Create hotel gsplat
 const hotel = new pc.Entity('hotel');
 hotel.addComponent('gsplat', {
     asset: assets.hotel
@@ -84,10 +84,10 @@ hotel.addComponent('gsplat', {
 hotel.setLocalEulerAngles(180, 0, 0);
 app.root.addChild(hotel);
 
-// add script component to the hotel entity
+// Add script component to the hotel entity
 hotel.addComponent('script');
 
-// helper function to create radial script with configured attributes
+// Helper function to create radial script with configured attributes
 const createRadialScript = () => {
     const script = hotel.script?.create(GsplatRevealRadial);
     if (script) {
@@ -95,15 +95,15 @@ const createRadialScript = () => {
         script.speed = 5;
         script.acceleration = 0;
         script.delay = 3;
-        script.dotTint.set(0, 1, 1); // cyan
-        script.waveTint.set(1, 0.5, 0); // orange
+        script.dotTint.set(0, 1, 1); // Cyan
+        script.waveTint.set(1, 0.5, 0); // Orange
         script.oscillationIntensity = 0.2;
         script.endRadius = 25;
     }
     return script;
 };
 
-// helper function to create rain script with configured attributes
+// Helper function to create rain script with configured attributes
 const createRainScript = () => {
     const script = hotel.script?.create(GsplatRevealRain);
     if (script) {
@@ -114,16 +114,16 @@ const createRainScript = () => {
         script.flightTime = 2;
         script.rainSize = 0.015;
         script.rotation = 0.9; // 90% of full circle rotation during fall
-        script.fallTint.set(0, 1, 1); // cyan tint during fall
+        script.fallTint.set(0, 1, 1); // Cyan tint during fall
         script.fallTintIntensity = 0.2;
-        script.hitTint.set(2, 0, 0); // bright red flash on landing
+        script.hitTint.set(2, 0, 0); // Bright red flash on landing
         script.hitDuration = 0.5;
         script.endRadius = 25;
     }
     return script;
 };
 
-// helper function to create grid eruption script with configured attributes
+// Helper function to create grid eruption script with configured attributes
 const createGridScript = () => {
     const script = hotel.script?.create(GsplatRevealGridEruption);
     if (script) {
@@ -133,9 +133,9 @@ const createGridScript = () => {
         script.delay = 0.2;
         script.duration = 1.0;
         script.dotSize = 0.01;
-        script.moveTint.set(1, 0, 1); // magenta during movement
+        script.moveTint.set(1, 0, 1); // Magenta during movement
         script.moveTintIntensity = 0.2; // 20% blend with original color
-        script.landTint.set(2, 2, 0); // yellow flash on landing
+        script.landTint.set(2, 2, 0); // Yellow flash on landing
         script.landDuration = 0.6;
         script.endRadius = 25;
     }
@@ -147,12 +147,12 @@ const createGridScript = () => {
  * @param {string} effectName - Name of the effect to create
  */
 const createEffect = (effectName) => {
-    // destroy any existing reveal scripts
+    // Destroy any existing reveal scripts
     hotel.script?.destroy(GsplatRevealRadial.scriptName);
     hotel.script?.destroy(GsplatRevealRain.scriptName);
     hotel.script?.destroy(GsplatRevealGridEruption.scriptName);
 
-    // create the selected effect (fresh instance, starts from beginning)
+    // Create the selected effect (fresh instance, starts from beginning)
     if (effectName === 'radial') {
         createRadialScript();
     } else if (effectName === 'rain') {
@@ -162,22 +162,22 @@ const createEffect = (effectName) => {
     }
 };
 
-// create only the radial script initially
+// Create only the radial script initially
 createEffect('radial');
 
-// switch between effects when dropdown changes
+// Switch between effects when dropdown changes
 data.on('effect:set', () => {
     const effect = data.get('effect');
     createEffect(effect);
 });
 
-// restart button - recreate current effect from beginning
+// Restart button - recreate current effect from beginning
 data.on('restart', () => {
     const currentEffect = data.get('effect');
     createEffect(currentEffect);
 });
 
-// prev button - cycle to previous effect in the list
+// Prev button - cycle to previous effect in the list
 data.on('prev', () => {
     const currentEffect = data.get('effect');
     const currentIndex = effects.indexOf(currentEffect);
@@ -186,7 +186,7 @@ data.on('prev', () => {
     data.set('effect', prevEffect);
 });
 
-// next button - cycle to next effect in the list
+// Next button - cycle to next effect in the list
 data.on('next', () => {
     const currentEffect = data.get('effect');
     const currentIndex = effects.indexOf(currentEffect);
@@ -195,7 +195,7 @@ data.on('next', () => {
     data.set('effect', nextEffect);
 });
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: pc.Color.BLACK,
@@ -218,19 +218,19 @@ camera.script?.create('orbitCameraInputMouse');
 camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// auto-rotate camera when idle
+// Auto-rotate camera when idle
 let autoRotateEnabled = true;
 let lastInteractionTime = 0;
 const autoRotateDelay = 2; // seconds of inactivity before auto-rotate resumes
 const autoRotateSpeed = 10; // degrees per second
 
-// detect user interaction (click/touch only, not mouse movement)
+// Detect user interaction (click/touch only, not mouse movement)
 const onUserInteraction = () => {
     autoRotateEnabled = false;
     lastInteractionTime = Date.now();
 };
 
-// listen for click and touch events only
+// Listen for click and touch events only
 if (app.mouse) {
     app.mouse.on('mousedown', onUserInteraction);
     app.mouse.on('mousewheel', onUserInteraction);
@@ -239,14 +239,14 @@ if (app.touch) {
     app.touch.on('touchstart', onUserInteraction);
 }
 
-// auto-rotate update
+// Auto-rotate update
 app.on('update', (dt) => {
-    // re-enable auto-rotate after delay
+    // Re-enable auto-rotate after delay
     if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
         autoRotateEnabled = true;
     }
 
-    // apply auto-rotation
+    // Apply auto-rotation
     if (autoRotateEnabled) {
         const orbitCamera = camera.script?.get('orbitCamera');
         if (orbitCamera) {

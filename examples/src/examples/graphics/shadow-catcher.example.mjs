@@ -23,7 +23,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable hdr rendering if supported
+    // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
@@ -46,11 +46,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -63,8 +63,8 @@ await new Promise((resolve) => {
 
 app.start();
 
-// depth layer is where prepass finishes rendering. move the depth layer to take place after
-// world and skydome layers, to capture both of them in depth buffer, to be used by depth of field
+// Depth layer is where prepass finishes rendering. Move the depth layer to take place after
+// World and Skydome layers, to capture both of them in depth buffer, to be used by Depth of Field
 const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
 app.scene.layers.remove(depthLayer);
 app.scene.layers.insertOpaque(depthLayer, 2);
@@ -76,13 +76,13 @@ const statueEntity = assets.statue.resource.instantiateRenderEntity({
 statueEntity.rotate(0, 140, 0);
 app.root.addChild(statueEntity);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     farClip: 500,
     fov: 60,
 
-    // if the device renders in hdr mode, disable tone mapping to output hdr values without any processing
+    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
     toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
     gammaCorrection: pc.GAMMA_SRGB
 });
@@ -120,7 +120,7 @@ const applyHdri = (source) => {
     app.scene.envAtlas = envAtlas;
 };
 
-// when device is lost, we need to regenerate the skybox textures from hdri
+// when device is lost, we need to regenerate the skybox textures from HDRI
 device.on('devicerestored', () => {
     applyHdri(assets.hdri_street.resource);
 });
@@ -132,7 +132,7 @@ app.scene.sky.node.setLocalScale(new pc.Vec3(200, 200, 200));
 app.scene.sky.node.setLocalPosition(pc.Vec3.ZERO);
 app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
 
-// enable depth writing for the sky, for dof to work on it
+// enable depth writing for the sky, for DOF to work on it
 app.scene.sky.depthWrite = true;
 
 // create two directional lights which cast shadows
@@ -169,7 +169,7 @@ light2.addComponent('light', {
 light2.setLocalEulerAngles(45, -30, 0);
 app.root.addChild(light2);
 
-// create an entity with a shadow catcher script, and create a shadow catcher geometry plane
+// Create an entity with a shadow catcher script, and create a shadow catcher geometry plane
 // with a specified scale
 const shadowCatcher = new pc.Entity('ShadowCatcher');
 shadowCatcher.addComponent('script').create(ShadowCatcher, {
@@ -178,7 +178,7 @@ shadowCatcher.addComponent('script').create(ShadowCatcher, {
     }
 });
 
-// offset it slightly above the ground (skydome) - this is needed when dof is enabled and the skydome
+// offset it slightly above the ground (skydome) - this is needed when DOF is enabled and the skydome
 // writes depth to the depth buffer, to avoid depth conflicts with the shadow catcher plane
 shadowCatcher.setLocalPosition(0, 0.01, 0);
 
@@ -192,7 +192,7 @@ data.set('data', {
     dof: true
 });
 
-// set up cameraframe rendering, to give us access to depth of field
+// set up CameraFrame rendering, to give us access to Depth of Field
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
 cameraFrame.dof.enabled = true;
@@ -206,10 +206,10 @@ cameraFrame.dof.highQuality = true;
 cameraFrame.update();
 
 app.on('update', (dt) => {
-    // toggle dof
+    // toggle DOF
     cameraFrame.dof.enabled = data.get('data.dof');
 
-    // dof distance - distance between the camera and the entity
+    // DOF distance - distance between the camera and the entity
     const distance = cameraEntity.position.distance(statueEntity.position);
     cameraFrame.dof.focusDistance = distance;
     cameraFrame.update();

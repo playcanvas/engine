@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -61,7 +61,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create hotel gsplat
+// Create hotel gsplat
 const hotel = new pc.Entity('hotel');
 hotel.addComponent('gsplat', {
     asset: assets.hotel
@@ -69,7 +69,7 @@ hotel.addComponent('gsplat', {
 hotel.setLocalEulerAngles(180, 0, 0);
 app.root.addChild(hotel);
 
-// create camera with orbit controls
+// Create camera with orbit controls
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: pc.Color.BLACK,
@@ -100,25 +100,25 @@ data.on('renderer:set', () => {
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('exaggeratedStereo', false);
 
-// interpupillary distance (~63mm), half for each eye offset from center
+// Interpupillary distance (~63mm), half for each eye offset from center
 const halfIPD = 0.032;
 
-// set up two renderviews for stereo rendering (left eye, right eye)
+// Set up two RenderViews for stereo rendering (left eye, right eye)
 const viewsList = [new pc.RenderView(), new pc.RenderView()];
 
 const cameraComponent = camera.camera;
 
-// simulate an active xr session by handing the camera the per-view array directly. on a real
-// headset the xrmanager populates xrviews (and the per-eye device projection); here we build
+// simulate an active XR session by handing the camera the per-view array directly. On a real
+// headset the XrManager populates xrViews (and the per-eye device projection); here we build
 // each eye's projection from the camera's settings, captured before the session is activated
-// (once active, the fov/clip getters report xr-session values instead).
+// (once active, the fov/clip getters report XR-session values instead).
 const projFov = cameraComponent.fov;
 const projNearClip = cameraComponent.nearClip;
 const projFarClip = cameraComponent.farClip;
 const projHorizontalFov = cameraComponent.horizontalFov;
 cameraComponent.camera.xrViews = viewsList;
 
-// reused each frame; setview/setviewport copy the data into each view
+// reused each frame; setView/setViewport copy the data into each view
 const projMat = new pc.Mat4();
 const viewInvMat = new pc.Mat4();
 
@@ -126,7 +126,7 @@ app.on('update', (/** @type {number} */ _dt) => {
     const width = canvas.width;
     const height = canvas.height;
 
-    // both eyes share the projection; the renderer derives the per-view matrices from setview
+    // both eyes share the projection; the renderer derives the per-view matrices from setView
     projMat.setPerspective(projFov, width / height, projNearClip, projFarClip, projHorizontalFov);
 
     viewsList.forEach((view, viewIndex) => {
@@ -143,7 +143,7 @@ app.on('update', (/** @type {number} */ _dt) => {
         const focusPoint = hotel.getPosition();
         viewInvMat.setLookAt(eyePos, focusPoint, pc.Vec3.UP);
 
-        // supply the eye's projection and pose; the view matrix is derived from viewinvmat
+        // supply the eye's projection and pose; the view matrix is derived from viewInvMat
         view.setView(projMat.data, viewInvMat.data);
 
         // side-by-side viewports: left eye on left half, right eye on right half

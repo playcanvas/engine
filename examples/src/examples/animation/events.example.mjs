@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Ani
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -60,14 +60,14 @@ app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxIntensity = 0.4; // make it darker
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
 });
 cameraEntity.translate(0, 1, 0);
 
-// ------ custom render passes set up ------
+// ------ Custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
@@ -145,7 +145,7 @@ app.on('update', (/** @type {number} */ dt) => {
 
 const walkTrack = assets.walkAnim.resource.animations[0].resource;
 
-// add two anim events to the walk animation, one for each foot step. these events should occur just as each foot touches the ground
+// Add two anim events to the walk animation, one for each foot step. These events should occur just as each foot touches the ground
 walkTrack.events = new pc.AnimEvents([
     {
         time: walkTrack.duration * 0.1,

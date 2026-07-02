@@ -40,11 +40,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -57,14 +57,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create a camera
+// Create a camera
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.12)
 });
 app.root.addChild(camera);
 
-// create a 2d screen
+// Create a 2D screen
 const screen = new pc.Entity('Screen');
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -96,9 +96,9 @@ const createLabel = (text, x, y, fontSize) => {
     screen.addChild(label);
 };
 
-// --- panel a: rectangular mask (top) -------------------------------------
-// the mask is a plain image element (no texture), so its rectangle defines
-// the masked region. a row of square tiles (matching the square source
+// --- Panel A: rectangular mask (top) -------------------------------------
+// The mask is a plain image element (no texture), so its rectangle defines
+// the masked region. A row of square tiles (matching the square source
 // texture, so it renders undistorted) scrolls horizontally behind it on a
 // treadmill, and is continuously clipped at the left and right edges of the
 // rectangle.
@@ -117,7 +117,7 @@ rectMask.addComponent('element', {
 rectMask.setLocalPosition(0, 155, 0);
 screen.addChild(rectMask);
 
-// square tiles the height of the mask, enough of them to cover the masked
+// Square tiles the height of the mask, enough of them to cover the masked
 // width with room to wrap around seamlessly as they scroll.
 const tileSize = rectHeight;
 const tileCount = 5;
@@ -139,10 +139,10 @@ for (let i = 0; i < tileCount; i++) {
 
 createLabel('Rectangular mask', 0, 25, 26);
 
-// --- panel b: alpha-shaped mask (bottom) ---------------------------------
-// the mask uses the heart texture. as the mask material runs an alpha test,
+// --- Panel B: alpha-shaped mask (bottom) ---------------------------------
+// The mask uses the heart texture. As the mask material runs an alpha test,
 // the visible region follows the heart's opaque pixels rather than a
-// rectangle. the content drifts behind it, and the heart itself "beats" by
+// rectangle. The content drifts behind it, and the heart itself "beats" by
 // animating the mask element's size.
 const heartSize = 230;
 
@@ -159,7 +159,7 @@ heartMask.addComponent('element', {
 heartMask.setLocalPosition(0, -150, 0);
 screen.addChild(heartMask);
 
-// content is larger than the heart so it always covers it as it drifts.
+// Content is larger than the heart so it always covers it as it drifts.
 const heartContent = new pc.Entity('HeartContent');
 heartContent.addComponent('element', {
     type: pc.ELEMENTTYPE_IMAGE,
@@ -173,7 +173,7 @@ heartMask.addChild(heartContent);
 
 createLabel('Heart alpha mask', 0, -295, 26);
 
-// animate the content. time only advances while animation is enabled, so
+// Animate the content. Time only advances while animation is enabled, so
 // toggling it off freezes the scene in place.
 let time = 0;
 app.on('update', (dt) => {
@@ -181,7 +181,7 @@ app.on('update', (dt) => {
         time += dt;
     }
 
-    // panel a: scroll the row of square tiles on a treadmill. each tile is
+    // Panel A: scroll the row of square tiles on a treadmill. Each tile is
     // wrapped around a belt as wide as all tiles combined, so the strip
     // scrolls continuously and is clipped at the rectangle edges.
     const scrollX = (time * 100) % tileTotal;
@@ -192,14 +192,14 @@ app.on('update', (dt) => {
         rectContent[i].setLocalPosition(x, 0, 0);
     }
 
-    // panel b: drift the content and pulse the heart-shaped mask.
+    // Panel B: drift the content and pulse the heart-shaped mask.
     heartContent.setLocalPosition(40 * Math.sin(time * 0.7), 35 * Math.sin(time * 1.1), 0);
     const beat = heartSize + 20 * Math.sin(time * 2.5);
     heartMask.element.width = beat;
     heartMask.element.height = beat;
 });
 
-// toggle masking on both elements. with masking off the content renders
+// Toggle masking on both elements. With masking off the content renders
 // unclipped, which shows what the mask is actually hiding.
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.mask') {

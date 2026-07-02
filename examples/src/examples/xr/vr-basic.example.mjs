@@ -51,7 +51,7 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -82,7 +82,7 @@ app.scene.exposure = 0.5;
 const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
 app.root.addChild(galleryEntity);
 
-// initial camera (desktop / before xr): offset to the side and higher than default eye height.
+// Initial camera (desktop / before XR): offset to the side and higher than default eye height.
 const camX = 1.35;
 const camY = 2.45;
 const camZ = 3.0;

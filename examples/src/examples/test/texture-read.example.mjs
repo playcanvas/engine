@@ -20,7 +20,7 @@ const gfxOptions = {
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// create device info overlay (top center)
+// Create device info overlay (top center)
 const deviceInfo = document.createElement('div');
 deviceInfo.style.cssText = `
     position: absolute;
@@ -38,7 +38,7 @@ deviceInfo.style.cssText = `
 deviceInfo.textContent = `Device: ${device.deviceType.toUpperCase()}`;
 document.body.appendChild(deviceInfo);
 
-// create result overlay (center)
+// Create result overlay (center)
 const resultOverlay = document.createElement('div');
 resultOverlay.style.cssText = `
     position: absolute;
@@ -55,7 +55,7 @@ resultOverlay.style.cssText = `
 `;
 document.body.appendChild(resultOverlay);
 
-// create details overlay (below result)
+// Create details overlay (below result)
 const detailsOverlay = document.createElement('div');
 detailsOverlay.style.cssText = `
     position: absolute;
@@ -74,14 +74,14 @@ detailsOverlay.style.cssText = `
 `;
 document.body.appendChild(detailsOverlay);
 
-// test texture size
+// Test texture size
 const TEX_WIDTH = 4;
 const TEX_HEIGHT = 4;
 
-// define formats to test (normalized 8-bit formats only)
-// note: integer formats (r8i, r8u, rg8i, rg8u) are excluded due to webgl readpixels limitations
-// note: rg8s is excluded because it's not renderable in webgpu (rg8snorm doesn't support renderattachment)
-// note: rgb8 is excluded because webgpu doesn't support it (maps to rgba8unorm internally)
+// Define formats to test (normalized 8-bit formats only)
+// Note: Integer formats (R8I, R8U, RG8I, RG8U) are excluded due to WebGL readPixels limitations
+// Note: RG8S is excluded because it's not renderable in WebGPU (RG8Snorm doesn't support RenderAttachment)
+// Note: RGB8 is excluded because WebGPU doesn't support it (maps to rgba8unorm internally)
 const formatsToTest = [
     { format: pc.PIXELFORMAT_R8, name: 'R8', channels: 1, arrayType: Uint8Array },
     { format: pc.PIXELFORMAT_RG8, name: 'RG8', channels: 2, arrayType: Uint8Array },
@@ -101,7 +101,7 @@ function generateTestData(width, height, channels, ArrayType) {
     const size = width * height * channels;
     const data = new ArrayType(size);
 
-    // fill with recognizable pattern (0-255 range)
+    // Fill with recognizable pattern (0-255 range)
     for (let i = 0; i < size; i++) {
         data[i] = (i * 17 + 31) % 256;
     }
@@ -143,7 +143,7 @@ async function testFormat(formatInfo) {
     console.log(`Testing format: ${name}`);
 
     try {
-        // create texture
+        // Create texture
         const texture = new pc.Texture(device, {
             name: `Test_${name}`,
             width: TEX_WIDTH,
@@ -156,21 +156,21 @@ async function testFormat(formatInfo) {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        // generate test data
+        // Generate test data
         const expectedData = generateTestData(TEX_WIDTH, TEX_HEIGHT, channels, arrayType);
         const dataLength = TEX_WIDTH * TEX_HEIGHT * channels;
 
-        // lock, write data, unlock (which uploads)
+        // Lock, write data, unlock (which uploads)
         const lockedData = texture.lock();
         for (let i = 0; i < dataLength; i++) {
             lockedData[i] = expectedData[i];
         }
         texture.unlock();
 
-        // read back from gpu
+        // Read back from GPU
         const readData = await texture.read(0, 0, TEX_WIDTH, TEX_HEIGHT, { immediate: true });
 
-        // verify returned buffer length matches expected
+        // Verify returned buffer length matches expected
         if (readData.length !== dataLength) {
             const error = `Buffer length mismatch: expected ${dataLength}, got ${readData.length}`;
             console.error(`  ✗ ${name}: FAILED - ${error}`);
@@ -178,10 +178,10 @@ async function testFormat(formatInfo) {
             return { name, passed: false, error };
         }
 
-        // compare
+        // Compare
         const result = compareArrays(expectedData, readData, dataLength);
 
-        // cleanup
+        // Cleanup
         texture.destroy();
 
         if (result.match) {
@@ -206,7 +206,7 @@ async function runTests() {
     console.log(`Running texture.read() tests on ${device.deviceType.toUpperCase()}`);
     console.log('='.repeat(60));
 
-    // run tests sequentially to avoid resource conflicts
+    // Run tests sequentially to avoid resource conflicts
     /** @type {{name: string, passed: boolean, error?: string}[]} */
     const results = await formatsToTest.reduce(
         async (accPromise, formatInfo) => {
@@ -218,7 +218,7 @@ async function runTests() {
         Promise.resolve(/** @type {{name: string, passed: boolean, error?: string}[]} */ ([]))
     );
 
-    // summary
+    // Summary
     console.log('='.repeat(60));
     const passed = results.filter((r) => r.passed);
     const failed = results.filter((r) => !r.passed);
@@ -245,7 +245,7 @@ async function runTests() {
     console.log('='.repeat(60));
 }
 
-// create minimal app for the example framework
+// Create minimal app for the example framework
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 
@@ -262,5 +262,5 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// run tests after a short delay to ensure everything is initialized
+// Run tests after a short delay to ensure everything is initialized
 setTimeout(runTests, 100);

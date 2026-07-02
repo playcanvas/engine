@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -56,14 +56,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create a camera
+// Create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// create a 2d screen
+// Create a 2D screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -73,7 +73,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// create a new material with the new shader and additive alpha blending
+// Create a new material with the new shader and additive alpha blending
 const material = new pc.ShaderMaterial({
     uniqueName: 'myUIShader',
     vertexGLSL: shaderGlslVert,
@@ -90,7 +90,7 @@ material.depthWrite = true;
 material.setParameter('uDiffuseMap', assets.playcanvas.resource);
 material.update();
 
-// create the ui image element with the custom material
+// Create the UI image element with the custom material
 const entity = new pc.Entity();
 entity.addComponent('element', {
     pivot: new pc.Vec2(0.5, 0.5),

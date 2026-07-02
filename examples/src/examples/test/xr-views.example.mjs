@@ -48,9 +48,9 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// composite pass that samples a 4-layer texture array and writes the layers into a 2x2 grid on
-// the canvas backbuffer. used by the webgpu branch to visualise the per-eye renders produced by
-// framepassmultiview.
+// Composite pass that samples a 4-layer texture array and writes the layers into a 2x2 grid on
+// the canvas backbuffer. Used by the WebGPU branch to visualise the per-eye renders produced by
+// FramePassMultiView.
 class CompositeArrayPass extends pc.RenderPassShaderQuad {
     constructor(graphicsDevice, sourceTexture, numViews) {
         super(graphicsDevice);
@@ -81,10 +81,10 @@ class CompositeArrayPass extends pc.RenderPassShaderQuad {
         });
     }
 
-    // called once per frame during frame graph construction, after framestart() but before any
-    // gpu commands are recorded. this is the safe point to resize the array texture: the previous
-    // frame's gpu commands have already been submitted and deferred-destroys flushed, so
-    // destroying the old gpu texture here won't conflict with any pending submit.
+    // Called once per frame during frame graph construction, after frameStart() but before any
+    // GPU commands are recorded. This is the safe point to resize the array texture: the previous
+    // frame's GPU commands have already been submitted and deferred-destroys flushed, so
+    // destroying the old GPU texture here won't conflict with any pending submit.
     frameUpdate() {
         super.frameUpdate();
 
@@ -97,8 +97,8 @@ class CompositeArrayPass extends pc.RenderPassShaderQuad {
             tex.resize(width, height);
         }
 
-        // re-populate device.xrsubimages with the current (possibly new) gpu texture reference.
-        // this must happen after resize() so the gpu texture handle is up-to-date.
+        // re-populate device.xrSubImages with the current (possibly new) GPU texture reference.
+        // this must happen after resize() so the GPU texture handle is up-to-date.
         const gpuTexture = tex.impl?.gpuTexture;
         if (gpuTexture) {
             const viewFormat = gpuTexture.format;
@@ -133,11 +133,11 @@ await new Promise((resolve) => {
 
 app.start();
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -155,7 +155,7 @@ const terrain = assets.terrain.resource.instantiateRenderEntity();
 terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
-// create a directional light
+// Create a directional light
 const dirLight = new pc.Entity('Cascaded Light');
 dirLight.addComponent('light', {
     type: 'directional',
@@ -169,7 +169,7 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(75, 120, 20);
 
-// create an entity with a camera component
+// create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.9, 0.9, 0.9),
@@ -193,10 +193,10 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// create mock xr views using a loop. the number of views differs between backends because
+// Create mock XR views using a loop. The number of views differs between backends because
 // each backend uses a different visualisation:
-// - webgl: a single canvas-sized backbuffer with 4 sub-rect viewports (2x2 grid).
-// - webgpu: a 4-layer array texture, one full-canvas-size view per layer, then composited
+// - WebGL: a single canvas-sized backbuffer with 4 sub-rect viewports (2x2 grid).
+// - WebGPU: a 4-layer array texture, one full-canvas-size view per layer, then composited
 //   into a 2x2 grid as a separate post-render pass.
 const numViews = 4;
 const viewsList = [];
@@ -204,10 +204,10 @@ for (let i = 0; i < numViews; i++) {
     viewsList.push(new pc.RenderView());
 }
 
-// simulate an active xr session by handing the camera the per-view array directly. on a real
-// headset the xrmanager populates xrviews (and the per-eye device projection); here we build
+// simulate an active XR session by handing the camera the per-view array directly. On a real
+// headset the XrManager populates xrViews (and the per-eye device projection); here we build
 // each eye's projection from the camera's settings, captured before the session is activated
-// (once active, the fov/clip getters report xr-session values instead).
+// (once active, the fov/clip getters report XR-session values instead).
 const projFov = camera.camera.fov;
 const projNearClip = camera.camera.nearClip;
 const projFarClip = camera.camera.farClip;
@@ -215,9 +215,9 @@ const projHorizontalFov = camera.camera.horizontalFov;
 camera.camera.camera.xrViews = viewsList;
 
 // ----------------------------------------------------------------------------------------
-// webgpu-only setup: drive framepassmultiview via a fake bridge - we provide the per-view
+// WebGPU-only setup: drive FramePassMultiView via a fake bridge - we provide the per-view
 // sub-image entries on the device that the wrapper consumes (mirroring what
-// webgpuxrbridge.beginframe does on a real headset).
+// WebgpuXrBridge.beginFrame does on a real headset).
 // ----------------------------------------------------------------------------------------
 let arrayTex = null;
 let compositeCamera = null;
@@ -255,7 +255,7 @@ if (device.isWebGPU) {
     compositeCamera.camera.framePasses = [compositePass];
 }
 
-// reused each frame; setview/setviewport copy the data into each view
+// reused each frame; setView/setViewport copy the data into each view
 const projMat = new pc.Mat4();
 const viewInvMat = new pc.Mat4();
 
@@ -264,7 +264,7 @@ app.on('update', (/** @type {number} */ _dt) => {
     const height = canvas.height;
     const isWebgpu = device.isWebGPU;
 
-    // all views share the projection; the renderer derives the per-view matrices from setview
+    // all views share the projection; the renderer derives the per-view matrices from setView
     projMat.setPerspective(projFov, width / height, projNearClip, projFarClip, projHorizontalFov);
 
     // update all views - supply projection, pose and viewport for each
@@ -272,7 +272,7 @@ app.on('update', (/** @type {number} */ _dt) => {
         const pos = camera.getPosition();
         const rot = camera.getRotation();
 
-        // rotate each view by 10 degrees * view index around up axis
+        // Rotate each view by 10 degrees * view index around UP axis
         const angle = 10 * viewIndex;
         const upRotation = new pc.Quat().setFromAxisAngle(pc.Vec3.UP, angle);
         const combinedRot = new pc.Quat().mul2(upRotation, rot);
@@ -286,9 +286,9 @@ app.on('update', (/** @type {number} */ _dt) => {
             // arranges the four layers into a 2x2 grid on the canvas
             view.setViewport(0, 0, width, height);
         } else {
-            // webgl: 4 sub-viewports of a single canvas-sized backbuffer (2x2 grid).
-            // webgl viewport y=0 is the bottom of the canvas, so views 0,1 go in the top
-            // row (y = height/2) to match the webgpu composite's top-down layout.
+            // WebGL: 4 sub-viewports of a single canvas-sized backbuffer (2x2 grid).
+            // WebGL viewport y=0 is the bottom of the canvas, so views 0,1 go in the top
+            // row (y = height/2) to match the WebGPU composite's top-down layout.
             view.setViewport(
                 viewIndex % 2 === 0 ? 0 : width / 2,
                 viewIndex < 2 ? height / 2 : 0,

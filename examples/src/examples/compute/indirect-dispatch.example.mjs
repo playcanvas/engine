@@ -52,24 +52,24 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// create a layer for the render target
+// Create a layer for the render target
 const rtLayer = new pc.Layer({ name: 'RTLayer' });
 app.scene.layers.push(rtLayer);
 
-// get skybox layer for the rt camera
+// Get skybox layer for the RT camera
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 
 const TILE_SIZE = 32;
 
-// camera parameters
+// Camera parameters
 const CAMERA_NEAR = 0.1;
 const CAMERA_FAR = 500;
 
-// buffers and state
+// Buffers and state
 let renderTarget = null;
 let depthTexture = null;
 let edgeTileListBuffer = null;
@@ -86,19 +86,19 @@ let rtHeight = 0;
 let numTilesX = 0;
 let numTilesY = 0;
 
-// reference to the rt camera (set during asset load)
+// Reference to the RT camera (set during asset load)
 let rtCamera = null;
 
-// create resources for the given dimensions
+// Create resources for the given dimensions
 const createResources = () => {
-    // use half height for each texture (top = original, bottom = processed)
+    // Use half height for each texture (top = original, bottom = processed)
     rtWidth = device.width;
     rtHeight = Math.floor(device.height / 2);
     numTilesX = Math.ceil(rtWidth / TILE_SIZE);
     numTilesY = Math.ceil(rtHeight / TILE_SIZE);
     const numTiles = numTilesX * numTilesY;
 
-    // destroy old resources
+    // Destroy old resources
     renderTarget?.colorBuffer?.destroy();
     depthTexture?.destroy();
     renderTarget?.destroy();
@@ -109,7 +109,7 @@ const createResources = () => {
     completionCounterBuffer?.destroy();
     outputTexture?.destroy();
 
-    // create render target texture (source for compute)
+    // Create render target texture (source for compute)
     const colorBuffer = new pc.Texture(device, {
         name: 'RT-ColorBuffer',
         width: rtWidth,
@@ -122,7 +122,7 @@ const createResources = () => {
         addressV: pc.ADDRESS_CLAMP_TO_EDGE
     });
 
-    // create explicit depth texture for compute shader access
+    // Create explicit depth texture for compute shader access
     depthTexture = new pc.Texture(device, {
         name: 'RT-DepthBuffer',
         width: rtWidth,
@@ -142,7 +142,7 @@ const createResources = () => {
         samples: 1
     });
 
-    // create output storage texture (write-only destination for compute)
+    // Create output storage texture (write-only destination for compute)
     outputTexture = new pc.Texture(device, {
         name: 'OutputTexture',
         width: rtWidth,
@@ -156,22 +156,22 @@ const createResources = () => {
         storage: true
     });
 
-    // create tile list buffers (stores indices of tiles)
+    // Create tile list buffers (stores indices of tiles)
     edgeTileListBuffer = new pc.StorageBuffer(device, numTiles * 4);
     smoothTileListBuffer = new pc.StorageBuffer(device, numTiles * 4);
 
-    // create counter buffers (atomic counters, cleared each frame)
+    // Create counter buffers (atomic counters, cleared each frame)
     edgeTileCounterBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_DST);
     smoothTileCounterBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_DST);
     completionCounterBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_DST);
 
-    // update camera's render target
+    // Update camera's render target
     if (rtCamera) {
         rtCamera.camera.renderTarget = renderTarget;
     }
 };
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => {
     app.resizeCanvas();
     if (device.supportsCompute) {
@@ -187,20 +187,20 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// setup skydome from hdr texture
+// Setup skydome from HDR texture
 const hdriSource = assets.hdri.resource;
 
-// convert to high resolution cubemap for the skybox
+// Convert to high resolution cubemap for the skybox
 const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriSource);
 app.scene.skybox = skybox;
 
-// generate env-atlas texture for the lighting
+// Generate env-atlas texture for the lighting
 const lighting = pc.EnvLighting.generateLightingSource(hdriSource);
 const envAtlas = pc.EnvLighting.generateAtlas(lighting);
 lighting.destroy();
 app.scene.envAtlas = envAtlas;
 
-// configure projected skydome
+// Configure projected skydome
 app.scene.sky.type = pc.SKYTYPE_DOME;
 app.scene.sky.node.setLocalScale(new pc.Vec3(200, 200, 200));
 app.scene.sky.node.setLocalPosition(new pc.Vec3(0, 0, 0));
@@ -208,18 +208,18 @@ app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 0, 0);
 app.scene.exposure = 0.7;
 
-// add an instance of the statue
+// Add an instance of the statue
 const statueEntity = assets.statue.resource.instantiateRenderEntity({
     layers: [rtLayer.id]
 });
 app.root.addChild(statueEntity);
 
-// initialize resources
+// Initialize resources
 if (device.supportsCompute) {
     createResources();
 }
 
-// create camera that renders to the render target
+// Create camera that renders to the render target
 rtCamera = new pc.Entity('rtCamera');
 rtCamera.addComponent('camera', {
     nearClip: CAMERA_NEAR,
@@ -231,7 +231,7 @@ rtCamera.addComponent('camera', {
     renderTarget: renderTarget
 });
 
-// add orbit camera script
+// Add orbit camera script
 rtCamera.addComponent('script');
 rtCamera.script.create('orbitCamera', {
     attributes: {
@@ -248,7 +248,7 @@ rtCamera.setLocalPosition(-4, 5, 22);
 rtCamera.lookAt(0, 0, 1);
 app.root.addChild(rtCamera);
 
-// create main camera (for final view - only immediate layer for drawtexture)
+// Create main camera (for final view - only immediate layer for drawTexture)
 const immediateLayer = app.scene.layers.getLayerByName('Immediate');
 const mainCamera = new pc.Entity('mainCamera');
 mainCamera.addComponent('camera', {
@@ -259,10 +259,10 @@ mainCamera.setPosition(0, 0, 0);
 app.root.addChild(mainCamera);
 
 if (device.supportsCompute) {
-    // shader defines - tile_size is used in both shaders
+    // Shader defines - TILE_SIZE is used in both shaders
     const shaderDefines = new Map([['{TILE_SIZE}', `${TILE_SIZE}`]]);
 
-    // create scan shader (analyzes depth discontinuities and populates edge/smooth tile lists)
+    // Create scan shader (analyzes depth discontinuities and populates edge/smooth tile lists)
     const scanShader = new pc.Shader(device, {
         name: 'ScanShader',
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
@@ -276,7 +276,7 @@ if (device.supportsCompute) {
                 new pc.UniformFormat('cameraFar', pc.UNIFORMTYPE_FLOAT),
                 new pc.UniformFormat('numTilesX', pc.UNIFORMTYPE_UINT),
                 new pc.UniformFormat('numTilesY', pc.UNIFORMTYPE_UINT),
-                // slot indices into the indirect dispatch buffer where scan shader writes dispatch args
+                // Slot indices into the indirect dispatch buffer where scan shader writes dispatch args
                 new pc.UniformFormat('edgeIndirectSlot', pc.UNIFORMTYPE_UINT),
                 new pc.UniformFormat('smoothIndirectSlot', pc.UNIFORMTYPE_UINT)
             ])
@@ -291,19 +291,19 @@ if (device.supportsCompute) {
                 pc.SAMPLETYPE_DEPTH,
                 false
             ), // depth texture, no sampler
-            // tile lists populated by scan shader, consumed by effect shaders
+            // Tile lists populated by scan shader, consumed by effect shaders
             new pc.BindStorageBufferFormat('edgeTileList', pc.SHADERSTAGE_COMPUTE),
             new pc.BindStorageBufferFormat('smoothTileList', pc.SHADERSTAGE_COMPUTE),
-            // atomic counters for tile classification
+            // Atomic counters for tile classification
             new pc.BindStorageBufferFormat('edgeTileCounter', pc.SHADERSTAGE_COMPUTE),
             new pc.BindStorageBufferFormat('smoothTileCounter', pc.SHADERSTAGE_COMPUTE),
             new pc.BindStorageBufferFormat('completionCounter', pc.SHADERSTAGE_COMPUTE),
-            // indirect dispatch buffer - scan shader writes dispatch args here
+            // Indirect dispatch buffer - scan shader writes dispatch args here
             new pc.BindStorageBufferFormat('indirectDispatchBuffer', pc.SHADERSTAGE_COMPUTE)
         ])
     });
 
-    // create effect shader (reads from input, writes to output with tint)
+    // Create effect shader (reads from input, writes to output with tint)
     const effectShader = new pc.Shader(device, {
         name: 'EffectShader',
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
@@ -327,40 +327,40 @@ if (device.supportsCompute) {
                 pc.TEXTUREDIMENSION_2D,
                 pc.SAMPLETYPE_FLOAT,
                 false
-            ), // no sampler, using textureload
+            ), // no sampler, using textureLoad
             new pc.BindStorageTextureFormat('outputTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
         ])
     });
 
-    // create compute instances
+    // Create compute instances
     scanCompute = new pc.Compute(device, scanShader, 'ScanCompute');
     effectComputeEdge = new pc.Compute(device, effectShader, 'EffectComputeEdge');
     effectComputeSmooth = new pc.Compute(device, effectShader, 'EffectComputeSmooth');
 
-    // set initial data values
+    // Set initial data values
     data.set('data', {
         threshold: 15 // threshold is in world units - depth range within tile that triggers edge detection
     });
 
-    // update loop
+    // Update loop
     app.on('update', (/** @type {number} */ _dt) => {
         if (!device.supportsCompute || !scanCompute || !effectComputeEdge || !effectComputeSmooth) {
             return;
         }
 
-        // get threshold from ui
+        // Get threshold from UI
         const threshold = data.get('data.threshold') ?? 0.02;
 
-        // clear all counter buffers each frame
+        // Clear all counter buffers each frame
         edgeTileCounterBuffer.clear();
         smoothTileCounterBuffer.clear();
         completionCounterBuffer.clear();
 
-        // allocate two slots in the indirect dispatch buffer for this frame
+        // Allocate two slots in the indirect dispatch buffer for this frame
         const edgeIndirectSlot = device.getIndirectDispatchSlot();
         const smoothIndirectSlot = device.getIndirectDispatchSlot();
 
-        // --- pass 1: scan tiles and classify by depth discontinuity ---
+        // --- Pass 1: Scan tiles and classify by depth discontinuity ---
         scanCompute.setParameter('threshold', threshold);
         scanCompute.setParameter('cameraNear', CAMERA_NEAR);
         scanCompute.setParameter('cameraFar', CAMERA_FAR);
@@ -379,7 +379,7 @@ if (device.supportsCompute) {
         scanCompute.setupDispatch(numTilesX, numTilesY, 1);
         device.computeDispatch([scanCompute], 'ScanDispatch');
 
-        // --- pass 2: apply red tint to edge tiles (indirect dispatch) ---
+        // --- Pass 2: Apply red tint to edge tiles (indirect dispatch) ---
         effectComputeEdge.setParameter('numTilesX', numTilesX);
         effectComputeEdge.setParameter('numTilesY', numTilesY);
         effectComputeEdge.setParameter('tintColor', [1.0, 0.3, 0.3]);
@@ -390,7 +390,7 @@ if (device.supportsCompute) {
         effectComputeEdge.setupIndirectDispatch(edgeIndirectSlot);
         device.computeDispatch([effectComputeEdge], 'EffectEdgeDispatch');
 
-        // --- pass 3: apply blue tint to smooth tiles (indirect dispatch) ---
+        // --- Pass 3: Apply blue tint to smooth tiles (indirect dispatch) ---
         effectComputeSmooth.setParameter('numTilesX', numTilesX);
         effectComputeSmooth.setParameter('numTilesY', numTilesY);
         effectComputeSmooth.setParameter('tintColor', [0.3, 0.3, 1.0]);
@@ -401,13 +401,13 @@ if (device.supportsCompute) {
         effectComputeSmooth.setupIndirectDispatch(smoothIndirectSlot);
         device.computeDispatch([effectComputeSmooth], 'EffectSmoothDispatch');
 
-        // display textures with a small gap between them
+        // Display textures with a small gap between them
         const gap = 0.02;
 
-        // top half: original rt texture
+        // Top half: original RT texture
         app.drawTexture(0, 0.5 - gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, renderTarget.colorBuffer);
 
-        // bottom half: compute-processed texture (red edge tiles, blue smooth tiles)
+        // Bottom half: compute-processed texture (red edge tiles, blue smooth tiles)
         app.drawTexture(0, -0.5 + gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, outputTexture);
     });
 }

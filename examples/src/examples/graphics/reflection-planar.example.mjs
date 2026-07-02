@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler, pc.Contai
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -107,9 +107,9 @@ const uiLayer = app.scene.layers.getLayerByName('UI');
 const excludedLayer = new pc.Layer({ name: 'Excluded' });
 app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
-// create the shader from the vertex and fragment shaders
+// Create the shader from the vertex and fragment shaders
 // reflective ground
-// this is in the excluded layer so it does not render into reflection texture
+// This is in the excluded layer so it does not render into reflection texture
 const groundMaterial = new pc.ShaderMaterial({
     uniqueName: 'MyShader',
     vertexGLSL: shaderGlslVert,
@@ -146,7 +146,7 @@ for (let i = 0; i < 6; i++) {
     entities.push(createPrimitive(shapeName, pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), color, [worldLayer.id]));
 }
 
-// create main camera, which renders entities in world, excluded and skybox layers
+// Create main camera, which renders entities in world, excluded and skybox layers
 const camera = new pc.Entity('MainCamera');
 camera.addComponent('camera', {
     fov: 60,
@@ -164,7 +164,7 @@ reflectionCamera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
 });
 
-// add planarrenderer script which renders the reflection texture
+// add planarRenderer script which renders the reflection texture
 reflectionCamera.addComponent('script');
 reflectionCamera.script.create('planarRenderer', {
     attributes: {
@@ -195,7 +195,7 @@ app.on('update', (dt) => {
     camera.setLocalPosition(30 * Math.cos(time * 0.2), 10, 30 * Math.sin(time * 0.2));
     camera.lookAt(pc.Vec3.ZERO);
 
-    // animate fov
+    // animate FOV
     camera.camera.fov = 60 + 20 * Math.sin(time * 0.5);
 
     // trigger reflection camera update (must be called after all parameters of the main camera are updated)

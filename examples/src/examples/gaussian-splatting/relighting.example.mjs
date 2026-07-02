@@ -34,7 +34,7 @@ const paramOrientation = hashParams.get('orientation');
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the mesh glb we load is draco compressed
+// Set up and load draco module, as the mesh glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -72,15 +72,15 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// high res toggle (false by default): when false, use half native dpr; when true, use min(dpr, 2)
+// High Res toggle (false by default): when false, use half native DPR; when true, use min(DPR, 2)
 data.set('highRes', !!data.get('highRes'));
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
-    // auto: treat dpr >= 2 as high-dpi (drops to half); high res forces native capped at 2
+    // auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
     device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
 };
 applyResolution();
@@ -90,14 +90,14 @@ const applyAndResize = () => {
 };
 data.on('highRes:set', applyAndResize);
 
-// ensure dpr and canvas are updated when window changes size
+// Ensure DPR and canvas are updated when window changes size
 window.addEventListener('resize', applyAndResize);
 app.on('destroy', () => {
     window.removeEventListener('resize', applyAndResize);
 });
 
-// roman-parish configuration
-// original dataset: https://www.youtube.com/watch?v=3rty_clk13k
+// Roman-Parish configuration
+// original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
 const config = {
     name: 'Roman-Parish',
     url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json',
@@ -112,7 +112,7 @@ const config = {
     focusPoint: [12, 3, 0]
 };
 
-// hdri environment presets (poly haven, infinite projection)
+// HDRI environment presets (Poly Haven, infinite projection)
 /** @type {Record<string, string | null>} */
 const ENV_PRESETS = {
     none: null,
@@ -126,7 +126,7 @@ const ENV_PRESETS = {
     night: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_night_puresky_2k.hdr'
 };
 
-// lod preset definitions
+// LOD preset definitions
 /** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
 const LOD_PRESETS = {
     'desktop-max': {
@@ -175,7 +175,7 @@ app.start();
 
 const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
-// enable rotation-based lod updates and behind-camera penalty
+// enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.radialSorting = true;
@@ -212,7 +212,7 @@ data.on('compact:set', () => {
 
 const MAX_PERSPECTIVE_FOV = 140;
 
-// initialize ui settings (must be after observer registration)
+// initialize UI settings (must be after observer registration)
 const initialSettings = {
     fisheye: 0,
     cameraFov: 75,
@@ -250,7 +250,7 @@ Object.entries(initialSettings).forEach(([key, value]) => data.set(key, value));
 
 const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 
-// create a camera with fly controls
+// Create a camera with fly controls
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(1, 1, 1),
@@ -276,8 +276,8 @@ Object.assign(cc, {
     focusPoint: focusPoint
 });
 
-// relighting renderer: renders the relighting layer (proxy mesh) from a camera matching the
-// main camera into an rgba16f texture - lit mesh color in rgb, mesh coverage mask in a
+// Relighting renderer: renders the relighting layer (proxy mesh) from a camera matching the
+// main camera into an RGBA16F texture - lit mesh color in RGB, mesh coverage mask in A
 const relighting = /** @type {GsplatRelighting} */ (
     /** @type {any} */ (camera.script).create(GsplatRelighting, {
         properties: {
@@ -300,7 +300,7 @@ data.on('brightness:set', () => {
     relighting.brightness = data.get('brightness');
 });
 
-// directional light with pcss soft shadows, lighting the proxy mesh on the relighting layer
+// Directional light with PCSS soft shadows, lighting the proxy mesh on the relighting layer
 const light = new pc.Entity('light');
 light.addComponent('light', {
     type: 'directional',
@@ -361,7 +361,7 @@ data.on('shadows:set', () => {
     light.light.castShadows = !!data.get('shadows');
 });
 
-// omni lights with translate gizmos, used to interactively tune light placements - their
+// Omni lights with translate gizmos, used to interactively tune light placements - their
 // settings are logged to the console once a second
 const OMNI_LIGHTS = [
     { position: [12.02, 4.45, 9.04], radius: 12.9, intensity: 3.67, color: [1.0, 1.0, 1.0] },
@@ -376,7 +376,7 @@ const omniLights = [];
 /** @type {pc.TranslateGizmo[]} */
 const omniGizmos = [];
 
-// color / radius edits apply to all lights until one is moved using its gizmo - from then on
+// Color / radius edits apply to all lights until one is moved using its gizmo - from then on
 // they apply only to the light last grabbed (-1 means all)
 let selectedOmni = -1;
 
@@ -414,7 +414,7 @@ OMNI_LIGHTS.forEach((def, index) => {
             if (meshInstance) {
                 cc.enabled = false;
 
-                // select this light for color / radius edits and sync the ui to its values
+                // select this light for color / radius edits and sync the UI to its values
                 selectedOmni = index;
                 const lightComponent = /** @type {pc.LightComponent} */ (entity.light);
                 data.set('omniColor', [lightComponent.color.r, lightComponent.color.g, lightComponent.color.b]);
@@ -434,7 +434,7 @@ OMNI_LIGHTS.forEach((def, index) => {
     omniGizmos.push(gizmo);
 });
 
-// ui intensity is a multiplier on the per-light intensities; when zero, the lights are
+// UI intensity is a multiplier on the per-light intensities; when zero, the lights are
 // disabled and their gizmos hidden
 const applyOmniIntensity = () => {
     const multiplier = data.get('omniIntensity');
@@ -486,7 +486,7 @@ data.on('omniShadows:set', () => {
     });
 });
 
-// rotation of the image based lighting around the y axis
+// Rotation of the image based lighting around the Y axis
 const envRotationQuat = new pc.Quat();
 const applyEnvRotation = () => {
     app.scene.skyboxRotation = envRotationQuat.setFromEulerAngles(0, data.get('envRotation'), 0);
@@ -494,19 +494,19 @@ const applyEnvRotation = () => {
 applyEnvRotation();
 data.on('envRotation:set', applyEnvRotation);
 
-// intensity of the image based lighting. the same value is used as the background multiplier
+// Intensity of the image based lighting. The same value is used as the background multiplier
 // of the relighting effect, so the splat based sky follows the environment exposure.
 data.on('skyExposure:set', () => {
     app.scene.skyboxIntensity = data.get('skyExposure');
     relighting.background = data.get('skyExposure');
 });
 
-// image based lighting for the proxy mesh. this needs to be the scene environment (not a
-// per-material env atlas), as skyboxintensity and skyboxrotation only apply to materials
+// Image based lighting for the proxy mesh. This needs to be the scene environment (not a
+// per-material env atlas), as skyboxIntensity and skyboxRotation only apply to materials
 // using the scene environment.
 app.scene.envAtlas = assets.envatlas.resource;
 
-// instantiate the draco compressed proxy mesh matching the splat scene. it renders only to
+// Instantiate the draco compressed proxy mesh matching the splat scene. It renders only to
 // the relighting layer, with a lit gray material configured to write a coverage mask to alpha.
 const meshEntity = assets.mesh.resource.instantiateRenderEntity();
 const meshMaterial = new pc.StandardMaterial();
@@ -526,7 +526,7 @@ meshParent.addChild(meshEntity);
 meshParent.setLocalEulerAngles(data.get('orientation'), 0, 0);
 app.root.addChild(meshParent);
 
-// cameraframe for hdr linear rendering (created lazily on first enable)
+// CameraFrame for HDR linear rendering (created lazily on first enable)
 /** @type {pc.CameraFrame|null} */
 let cameraFrame = null;
 
@@ -584,7 +584,7 @@ data.on('fogDensity:set', () => {
     }
 });
 
-// hdri environment loading
+// HDRI environment loading
 /** @type {Map<string, { skybox: pc.Texture, envAtlas: pc.Texture }>} */
 const hdriCache = new Map();
 
@@ -634,7 +634,7 @@ applyEnvironment(data.get('environment')).catch((err) => {
     console.warn('Environment load failed:', err);
 });
 
-// gsplat loading state
+// Gsplat loading state
 /** @type {pc.Entity|null} */
 let gsplatEntity = null;
 /** @type {any} */
@@ -700,7 +700,7 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
     gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
     gsplatGs.lodMultiplier = presetData.lodMultiplier;
 
-    // start with lowest lod for fast initial display, then stream up
+    // Start with lowest LOD for fast initial display, then stream up
     const lodLevels = gsplatGs.resource?.octree?.lodLevels;
     if (lodLevels) {
         const worstLod = lodLevels - 1;
@@ -722,8 +722,8 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
     gsplatSystem.on('frame:ready', onFrameReady);
 };
 
-// initial load — use the observer's current url, which is paramurl from the
-// hash query if set, or the share-url state value applied during app.start().
+// Initial load — use the observer's current url, which is paramUrl from the
+// hash query if set, or the share-URL state value applied during app.start().
 await loadGsplat(data.get('url') || null);
 
 data.on('lodPreset:set', applyPreset);

@@ -21,7 +21,7 @@ import uiHtml from './ui.html';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// load ammo.js physics engine
+// Load Ammo.js physics engine
 pc.WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
@@ -31,7 +31,7 @@ await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
-// create ui
+// create UI
 // html
 const div = document.createElement('div');
 div.innerHTML = uiHtml;
@@ -52,7 +52,7 @@ const message = (msg) => {
     }
 };
 
-// assets
+// Assets
 const assets = {
     buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: './assets/textures/blue-button.png' }),
     click: new pc.Asset('click', 'audio', { url: './assets/sounds/click.mp3' }),
@@ -67,7 +67,7 @@ const assets = {
     gallery: new pc.Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' })
 };
 
-// create graphics device
+// Create graphics device
 const gfxOptions = {
     deviceTypes: [deviceType],
     alpha: true
@@ -76,7 +76,7 @@ const gfxOptions = {
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// appbase with minimal component systems for ui, scripts, audio, and physics
+// AppBase with minimal component systems for UI, scripts, audio, and physics
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(canvas);
@@ -107,7 +107,7 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -116,18 +116,18 @@ app.on('destroy', () => {
     css.remove();
 });
 
-// load assets
+// Load assets
 await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-// skybox
+// Skybox
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxMip = 0;
 
-// create camera parent for locomotion (xrsession attaches to this)
+// create camera parent for locomotion (XrSession attaches to this)
 const cameraParent = new pc.Entity('CameraParent');
 app.root.addChild(cameraParent);
 
@@ -146,7 +146,7 @@ cameraEntity.script.create(CameraControls, {
 });
 cameraParent.addChild(cameraEntity);
 
-// add xrsession script to camera parent - handles xr lifecycle
+// Add XrSession script to camera parent - handles XR lifecycle
 cameraParent.addComponent('script');
 cameraParent.script.create(XrSession, {
     properties: {
@@ -156,10 +156,10 @@ cameraParent.script.create(XrSession, {
     }
 });
 
-// add xrcontrollers script - handles skinned hand/controller models
+// Add XrControllers script - handles skinned hand/controller models
 cameraParent.script.create(XrControllers);
 
-// add xrnavigation script - handles teleportation and smooth locomotion
+// Add XrNavigation script - handles teleportation and smooth locomotion
 cameraParent.script.create(XrNavigation);
 
 // add directional light
@@ -174,7 +174,7 @@ light.addComponent('light', {
 light.setEulerAngles(45, 135, 0);
 app.root.addChild(light);
 
-// add vr gallery environment with physics
+// Add VR gallery environment with physics
 const galleryEntity = /** @type {pc.ContainerResource} */ (assets.gallery.resource).instantiateRenderEntity();
 galleryEntity.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
     const entity = render.entity;
@@ -189,7 +189,7 @@ galleryEntity.findComponents('render').forEach((/** @type {pc.RenderComponent} *
 });
 app.root.addChild(galleryEntity);
 
-// array to track spawned objects for reset
+// Array to track spawned objects for reset
 /** @type {pc.Entity[]} */
 const spawnedObjects = [];
 
@@ -222,7 +222,7 @@ const resetScene = () => {
     spawnedObjects.length = 0;
 };
 
-// xr menu script entity
+// XR Menu Script Entity
 const menuEntity = new pc.Entity('XrMenu');
 menuEntity.addComponent('script');
 menuEntity.script.create(XrMenu, {
@@ -239,11 +239,11 @@ menuEntity.script.create(XrMenu, {
 });
 app.root.addChild(menuEntity);
 
-// handle menu events
+// Handle menu events
 app.on('menu:spawnCube', spawnCube);
 app.on('menu:reset', resetScene);
 
-// keyboard shortcuts
+// Keyboard shortcuts
 app.keyboard.on('keydown', (e) => {
     if (e.key === pc.KEY_B) {
         spawnCube();
@@ -253,7 +253,7 @@ app.keyboard.on('keydown', (e) => {
 });
 
 if (app.xr.supported) {
-    // xr availability
+    // XR availability
     document
         .querySelector('.container > .button[data-xr="immersive-ar"]')
         ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
@@ -261,13 +261,13 @@ if (app.xr.supported) {
         .querySelector('.container > .button[data-xr="immersive-vr"]')
         ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
 
-    // xr availability events
+    // XR availability events
     app.xr.on('available', (type, available) => {
         const element = document.querySelector(`.container > .button[data-xr="${type}"]`);
         element?.classList.toggle('active', available);
     });
 
-    // button handler - fires events that xrsession listens to
+    // Button handler - fires events that XrSession listens to
     const onXrButtonClick = (e) => {
         const button = /** @type {HTMLElement} */ (e.currentTarget);
         if (!button.classList.contains('active')) return;
@@ -280,7 +280,7 @@ if (app.xr.supported) {
         }
     };
 
-    // button clicks
+    // Button clicks
     document.querySelectorAll('.container > .button').forEach((button) => {
         button.addEventListener('click', onXrButtonClick);
     });

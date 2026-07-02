@@ -45,11 +45,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -62,19 +62,19 @@ await new Promise((resolve) => {
 
 app.start();
 
-// set skybox
+// Set skybox
 app.scene.skyboxMip = 1;
 app.scene.skyboxIntensity = 1.4;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create directional light
+// Create directional light
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional'
 });
 light.setLocalEulerAngles(45, 0, 45);
 
-// construct material
+// Construct material
 const material = new pc.StandardMaterial();
 material.useMetalness = true;
 material.gloss = 0.8;
@@ -87,7 +87,7 @@ material.normalMapTiling.set(7, 7);
 material.glossMapTiling.set(7, 7);
 material.update();
 
-// create a torus shape
+// Create a torus shape
 const torus = pc.Mesh.fromGeometry(
     app.graphicsDevice,
     new pc.TorusGeometry({
@@ -105,26 +105,26 @@ shape.addComponent('render', {
 shape.setPosition(0, 0, 0);
 shape.setLocalScale(2, 2, 2);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),
     toneMapping: pc.TONEMAP_ACES
 });
 
-// adjust the camera position
+// Adjust the camera position
 camera.translate(0, 0, 4);
 
-// add the new entities to the hierarchy
+// Add the new Entities to the hierarchy
 app.root.addChild(light);
 app.root.addChild(shape);
 app.root.addChild(camera);
 
-// set an update function on the app's update event
+// Set an update function on the app's update event
 let angle = 0;
 app.on('update', (dt) => {
     angle = (angle + dt * 10) % 360;
 
-    // rotate the boxes
+    // Rotate the boxes
     shape.setEulerAngles(angle, angle * 2, angle * 4);
 });

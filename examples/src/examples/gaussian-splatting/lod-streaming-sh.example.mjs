@@ -43,14 +43,14 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is updated when window changes size
+// Ensure canvas is updated when window changes size
 const onResize = () => {
     app.resizeCanvas();
-    // with on-demand rendering (autorender is set to false once the reveal completes), a resize is
+    // With on-demand rendering (autoRender is set to false once the reveal completes), a resize is
     // a viewport change the app makes itself — it does not raise 'frame:request' — so request a
     // render to draw the scene at the new canvas size.
     app.renderNextFrame = true;
@@ -60,7 +60,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', onResize);
 });
 
-// skatepark configuration
+// Skatepark configuration
 const config = {
     name: 'Skatepark',
     url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json',
@@ -75,7 +75,7 @@ const config = {
     focusPoint: [0, 0.6, 0]
 };
 
-// lod preset definitions with customizable distances
+// LOD preset definitions with customizable distances
 /** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
 const LOD_PRESETS = {
     'desktop-max': {
@@ -117,14 +117,14 @@ app.start();
 app.scene.skyboxMip = 1;
 app.scene.exposure = 1.5;
 
-// enable rotation-based lod updates and behind-camera penalty
+// enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 2;
 app.scene.gsplat.radialSorting = true;
 app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
 app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-// set up sh update parameters
+// set up SH update parameters
 app.scene.gsplat.colorUpdateAngle = 10;
 
 data.on('renderer:set', () => {
@@ -135,7 +135,7 @@ data.on('renderer:set', () => {
     }
 });
 
-// initialize ui settings
+// initialize UI settings
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('debug', pc.GSPLAT_DEBUG_NONE);
 data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
@@ -186,7 +186,7 @@ const applySplatBudget = () => {
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
-// create a camera with fly controls
+// Create a camera with fly controls
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -194,7 +194,7 @@ camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
 });
 
-// set camera position
+// Set camera position
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
 const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
@@ -203,7 +203,7 @@ camera.setLocalPosition(camX, camY, camZ);
 
 app.root.addChild(camera);
 
-// add the gsplatrevealgrideruption script to the gsplat entity
+// Add the GsplatRevealGridEruption script to the gsplat entity
 entity.addComponent('script');
 const revealScript = entity.script?.create(GsplatRevealGridEruption);
 if (revealScript) {
@@ -227,14 +227,14 @@ Object.assign(cc, {
     focusPoint: focusPoint
 });
 
-// --- on-demand rendering demo -----------------------------------------------------------
-// gaussian-splat streaming (lod evaluation + file loading) runs every frame regardless of
-// rendering. we render continuously while the reveal animation plays, then switch to rendering
+// --- On-demand rendering demo -----------------------------------------------------------
+// Gaussian-splat streaming (LOD evaluation + file loading) runs every frame regardless of
+// rendering. We render continuously while the reveal animation plays, then switch to rendering
 // only on demand: when streaming has new data to show (the 'frame:request' event) or when the
-// camera moves. this lets an otherwise-idle app keep loading splats in the background while
-// staying gpu-idle until there's something new to draw.
+// camera moves. This lets an otherwise-idle app keep loading splats in the background while
+// staying GPU-idle until there's something new to draw.
 
-// render whenever streaming produced new data (or a cpu sort result became ready to apply)
+// render whenever streaming produced new data (or a CPU sort result became ready to apply)
 app.systems.gsplat.on('frame:request', () => {
     app.renderNextFrame = true;
 });
@@ -244,7 +244,7 @@ const lastCamPos = new pc.Vec3();
 const lastCamRot = new pc.Quat();
 
 app.on('update', () => {
-    // update hud stats
+    // update HUD stats
     data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
 
     if (revealPlaying) {
@@ -254,8 +254,8 @@ app.on('update', () => {
             revealPlaying = false;
             app.autoRender = false;
 
-            // the reveal finishing is a draw-state change (it ends the per-frame splat masking),
-            // not a streaming change, so it does not raise 'frame:request'. render one final
+            // The reveal finishing is a draw-state change (it ends the per-frame splat masking),
+            // not a streaming change, so it does not raise 'frame:request'. Render one final
             // frame so the fully-revealed scene — including the far environment/sky splats, which
             // the eruption reveals last — is shown before we go idle.
             app.renderNextFrame = true;

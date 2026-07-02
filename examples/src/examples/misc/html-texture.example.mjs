@@ -6,12 +6,12 @@
 // circle — all driven by standard CSS.
 
 //
-// this example demonstrates the html-in-canvas api: a styled html element with
-// css animations is appended to a canvas marked with the "layoutsubtree"
-// attribute, then captured into a gpu texture (texelementimage2d on webgl,
-// copyelementimagetotexture on webgpu).
+// This example demonstrates the HTML-in-Canvas API: a styled HTML element with
+// CSS animations is appended to a canvas marked with the "layoutsubtree"
+// attribute, then captured into a GPU texture (texElementImage2D on WebGL,
+// copyElementImageToTexture on WebGPU).
 //
-// fallback: when device.supportshtmltextures is false, a static 2d canvas with
+// Fallback: when device.supportsHtmlTextures is false, a static 2D canvas with
 // hand-drawn placeholder graphics is used as the texture source instead.
 //
 import * as pc from 'playcanvas';
@@ -20,7 +20,7 @@ import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 
-// enable layoutsubtree for html-in-canvas support
+// Enable layoutsubtree for HTML-in-Canvas support
 canvas.setAttribute('layoutsubtree', 'true');
 
 window.focus();
@@ -56,9 +56,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 
-// create an html element to use as texture source.
-// per the html-in-canvas proposal, the element must be a direct child of the canvas.
-// the 'inert' attribute prevents hit testing on the element.
+// Create an HTML element to use as texture source.
+// Per the HTML-in-Canvas proposal, the element must be a direct child of the canvas.
+// The 'inert' attribute prevents hit testing on the element.
 const htmlElement = document.createElement('div');
 htmlElement.setAttribute('inert', '');
 htmlElement.style.width = '512px';
@@ -106,7 +106,7 @@ document.head.appendChild(style);
 
 canvas.appendChild(htmlElement);
 
-// create texture
+// Create texture
 const htmlTexture = new pc.Texture(device, {
     width: 512,
     height: 512,
@@ -114,7 +114,7 @@ const htmlTexture = new pc.Texture(device, {
     name: 'htmlTexture'
 });
 
-// fallback canvas texture for browsers without texelementimage2d support
+// Fallback canvas texture for browsers without texElementImage2D support
 const createFallbackTexture = () => {
     const fallbackCanvas = document.createElement('canvas');
     fallbackCanvas.width = 512;
@@ -151,7 +151,7 @@ const createFallbackTexture = () => {
     return fallbackCanvas;
 };
 
-// start with fallback texture, then switch to html source once the paint record is ready
+// Start with fallback texture, then switch to HTML source once the paint record is ready
 const fallbackCanvas = createFallbackTexture();
 if (fallbackCanvas) {
     htmlTexture.setSource(fallbackCanvas);
@@ -170,8 +170,8 @@ app.on('destroy', () => {
 });
 
 if (device.supportsHtmlTextures) {
-    // the browser must paint the html element before texelementimage2d can use it.
-    // wait for the 'paint' event, then set the html element as the texture source.
+    // The browser must paint the HTML element before texElementImage2D can use it.
+    // Wait for the 'paint' event, then set the HTML element as the texture source.
     canvas.addEventListener(
         'paint',
         () => {
@@ -181,7 +181,7 @@ if (device.supportsHtmlTextures) {
     );
     canvas.requestPaint();
 
-    // re-upload the texture whenever the browser repaints the html children
+    // Re-upload the texture whenever the browser repaints the HTML children
     canvas.addEventListener('paint', onPaintUpload);
 } else {
     console.warn('HTML textures are not supported - using canvas fallback');
@@ -199,7 +199,7 @@ app.scene.skyboxMip = 0;
 app.scene.skyboxIntensity = 2;
 app.scene.exposure = 1.5;
 
-// create metallic material with the html texture for mirror-like reflections
+// Create metallic material with the HTML texture for mirror-like reflections
 const material = new pc.StandardMaterial();
 material.diffuseMap = htmlTexture;
 material.useMetalness = true;

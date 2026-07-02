@@ -36,11 +36,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -53,14 +53,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create a camera
+// Create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// create a 2d screen
+// Create a 2D screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -70,10 +70,10 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// create layout group entity
+// Create Layout Group Entity
 const group = new pc.Entity();
 group.addComponent('element', {
-    // a layout group needs a 'group' element component
+    // a Layout Group needs a 'group' element component
     type: pc.ELEMENTTYPE_GROUP,
     anchor: [0.5, 0.5, 0.5, 0.5],
     pivot: [0.5, 0.5],

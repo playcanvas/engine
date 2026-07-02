@@ -33,11 +33,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -52,14 +52,14 @@ app.start();
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
 });
 camera.translate(0, 7, 25);
 
-// create an entity with a omni light component and a sphere model component.
+// Create an Entity with a omni light component and a sphere model component.
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -68,11 +68,11 @@ light.addComponent('light', {
 });
 light.translate(0, 1, 0);
 
-// add entities into scene hierarchy
+// Add entities into scene hierarchy
 app.root.addChild(camera);
 app.root.addChild(light);
 
-// create a new material with a custom shader
+// Create a new material with a custom shader
 const material = new pc.ShaderMaterial({
     uniqueName: 'wobble',
     vertexGLSL: shaderGlslVert,

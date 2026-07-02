@@ -35,11 +35,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -55,7 +55,7 @@ app.start();
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// create an entity with a camera component
+// Create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
@@ -63,7 +63,7 @@ camera.addComponent('camera', {
 camera.translate(0, 0, 3);
 app.root.addChild(camera);
 
-// create an entity with a directional light component
+// Create an entity with a directional light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',

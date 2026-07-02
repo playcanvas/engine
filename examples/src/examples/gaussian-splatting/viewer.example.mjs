@@ -14,13 +14,13 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up the ZSTD decompression module, used by the spz parser
+// Set up the ZSTD decompression module, used by the spz parser
 pc.WasmModule.setConfig('ZstdDecoderModule', {
     glueUrl: './assets/wasm/zstd/zstd.wasm.js',
     wasmUrl: './assets/wasm/zstd/zstd.wasm.wasm'
 });
 
-// create html overlay for drop instructions
+// Create HTML overlay for drop instructions
 const dropOverlay = document.createElement('div');
 dropOverlay.id = 'drop-overlay';
 dropOverlay.style.cssText = `
@@ -54,7 +54,7 @@ document.body.appendChild(dropOverlay);
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    // disable antialiasing as cameraframe handles it
+    // Disable antialiasing as CameraFrame handles it
     antialias: false
 };
 
@@ -78,22 +78,22 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// register the spz parser with the gsplat resource handler
+// Register the spz parser with the gsplat resource handler
 const gsplatHandler = /** @type {pc.GSplatHandler} */ (app.loader.getHandler('gsplat'));
 gsplatHandler.addParser(new SpzParser(app));
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// load orbit camera script and hdri
+// Load orbit camera script and HDRI
 const assets = {
     orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     hdri: new pc.Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false })
@@ -129,7 +129,7 @@ const calcEntityAABB = (bbox, entity) => {
     return bbox;
 };
 
-// create camera at startup so skydome is visible before dropping files
+// Create camera at startup so skydome is visible before dropping files
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0, 0, 0),
@@ -139,7 +139,7 @@ camera.addComponent('camera', {
 camera.setLocalPosition(0, 2, 5);
 app.root.addChild(camera);
 
-// create directional light for glb model illumination
+// Create directional light for GLB model illumination
 const light = new pc.Entity('light');
 light.addComponent('light', {
     type: 'directional',
@@ -153,7 +153,7 @@ light.addComponent('light', {
 light.setLocalEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
-// setup cameraframe
+// Setup CameraFrame
 const cameraFrame = new pc.CameraFrame(app, camera.camera);
 cameraFrame.rendering.renderFormats = [
     pc.PIXELFORMAT_RGBA16F,
@@ -163,17 +163,17 @@ cameraFrame.rendering.renderFormats = [
 cameraFrame.rendering.samples = 1;
 cameraFrame.grading.enabled = true;
 
-// setup skydome toggle function
+// Setup skydome toggle function
 const applySkydome = () => {
     const enabled = data.get('data.skydome');
     if (enabled) {
         const hdriTexture = assets.hdri.resource;
 
-        // generate high resolution cubemap for skybox
+        // Generate high resolution cubemap for skybox
         const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriTexture);
         app.scene.skybox = skybox;
 
-        // generate env-atlas for lighting
+        // Generate env-atlas for lighting
         const lighting = pc.EnvLighting.generateLightingSource(hdriTexture);
         const envAtlas = pc.EnvLighting.generateAtlas(lighting);
         lighting.destroy();
@@ -184,7 +184,7 @@ const applySkydome = () => {
     }
 };
 
-// initialize data values
+// Initialize data values
 data.set('data', {
     skydome: false,
     compact: false,
@@ -192,7 +192,7 @@ data.set('data', {
     orientation: 180,
     tonemapping: pc.TONEMAP_LINEAR,
     grading: {
-        exposure: 0, // 0 ev = no change
+        exposure: 0, // 0 EV = no change
         contrast: 1
     },
     bloom: {
@@ -209,21 +209,21 @@ data.set('data', {
     }
 });
 
-// apply initial skydome setting
+// Apply initial skydome setting
 applySkydome();
 
-// apply settings function
+// Apply settings function
 const applySettings = () => {
     cameraFrame.rendering.toneMapping = data.get('data.tonemapping');
 
-    // convert exposure ev (f-stops) to brightness multiplier
-    // each stop doubles or halves brightness: multiplier = 2^(ev)
+    // Convert exposure EV (F-stops) to brightness multiplier
+    // Each stop doubles or halves brightness: multiplier = 2^(EV)
     const exposureEV = data.get('data.grading.exposure');
     cameraFrame.grading.brightness = Math.pow(2, exposureEV);
 
     cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
-    // bloom - only enabled if toggle is on
+    // Bloom - only enabled if toggle is on
     const bloomEnabled = data.get('data.bloom.enabled');
     const bloomIntensity = data.get('data.bloom.intensity');
     cameraFrame.bloom.intensity = bloomEnabled ? bloomIntensity : 0;
@@ -231,7 +231,7 @@ const applySettings = () => {
         cameraFrame.bloom.blurLevel = 7;
     }
 
-    // color enhance
+    // Color Enhance
     cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
     cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
     cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
@@ -242,7 +242,7 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// apply initial settings
+// Apply initial settings
 applySettings();
 
 data.on('renderer:set', () => {
@@ -254,7 +254,7 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
-// listen for changes
+// Listen for changes
 data.on('*:set', (/** @type {string} */ path) => {
     if (path === 'data.skydome') {
         applySkydome();
@@ -263,7 +263,7 @@ data.on('*:set', (/** @type {string} */ path) => {
     } else if (path === 'data.antialias') {
         app.scene.gsplat.antiAlias = data.get('data.antialias');
     } else if (path === 'data.orientation') {
-        // apply orientation to splat entity
+        // Apply orientation to splat entity
         if (splatEntity) {
             const orientation = data.get('data.orientation');
             splatEntity.setLocalEulerAngles(orientation, 0, 0);
@@ -273,7 +273,7 @@ data.on('*:set', (/** @type {string} */ path) => {
     }
 });
 
-// setup drag and drop handlers
+// Setup drag and drop handlers
 canvas.addEventListener('dragover', (e) => {
     e.preventDefault();
 });
@@ -284,11 +284,11 @@ canvas.addEventListener('drop', async (e) => {
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
 
-    // detect unpacked sog: a meta.json file was dropped (with any number of sibling webp files).
+    // Detect unpacked SOG: a meta.json file was dropped (with any number of sibling webp files).
     const metaFile = files.find((f) => f.name.toLowerCase() === 'meta.json');
     const isUnpackedSog = !!metaFile;
 
-    // otherwise expect a single gsplat/glb file
+    // Otherwise expect a single gsplat/glb file
     const file = files[0];
     const fileName = file.name.toLowerCase();
     const isSpz = !isUnpackedSog && fileName.endsWith('.spz');
@@ -300,15 +300,15 @@ canvas.addEventListener('drop', async (e) => {
         return;
     }
 
-    // hide instructions overlay
+    // Hide instructions overlay
     dropOverlay.style.display = 'none';
 
     let entity;
     let aabb;
 
     if (isUnpackedSog) {
-        // build a filename -> blob url map for all sibling files (webp textures).
-        // the sogparser will use options.mapurl to resolve filenames referenced in meta.json.
+        // Build a filename -> blob URL map for all sibling files (webp textures).
+        // The SogParser will use options.mapUrl to resolve filenames referenced in meta.json.
         const blobMap = new Map();
         for (const f of files) {
             if (f !== metaFile) {
@@ -318,7 +318,7 @@ canvas.addEventListener('drop', async (e) => {
 
         const metaBlobUrl = URL.createObjectURL(metaFile);
 
-        // create gsplat asset manually so we can pass the mapurl option
+        // Create gsplat asset manually so we can pass the mapUrl option
         const asset = new pc.Asset(metaFile.name, 'gsplat', {
             url: metaBlobUrl,
             filename: metaFile.name
@@ -334,7 +334,7 @@ canvas.addEventListener('drop', async (e) => {
             app.assets.load(asset);
         });
 
-        // create gsplat entity
+        // Create gsplat entity
         entity = new pc.Entity(metaFile.name);
         entity.addComponent('gsplat', {
             asset: asset
@@ -354,11 +354,11 @@ canvas.addEventListener('drop', async (e) => {
             return;
         }
     } else if (isGsplat) {
-        // create blob url and load asset using loadfromurlandfilename
-        // this method is specifically for blob assets where the url doesn't identify the format
+        // Create blob URL and load asset using loadFromUrlAndFilename
+        // This method is specifically for blob assets where the URL doesn't identify the format
         const blobUrl = URL.createObjectURL(file);
 
-        // load gaussian splat asset
+        // Load gaussian splat asset
         const asset = await new Promise((resolve, reject) => {
             app.assets.loadFromUrlAndFilename(blobUrl, file.name, 'gsplat', (err, loadedAsset) => {
                 if (err) {
@@ -369,7 +369,7 @@ canvas.addEventListener('drop', async (e) => {
             });
         });
 
-        // create gsplat entity
+        // Create gsplat entity
         entity = new pc.Entity(file.name);
         entity.addComponent('gsplat', {
             asset: asset
@@ -380,23 +380,23 @@ canvas.addEventListener('drop', async (e) => {
         entity.setLocalEulerAngles(orientation, 0, 0);
         app.root.addChild(entity);
 
-        // store reference for orientation updates and sync the orientation control
+        // Store reference for orientation updates and sync the orientation control
         splatEntity = entity;
         data.set('data.orientation', orientation);
 
-        // wait a frame for customaabb to be available
+        // Wait a frame for customAabb to be available
         await new Promise((resolve) => {
             requestAnimationFrame(resolve);
         });
 
-        // get bounds for framing
+        // Get bounds for framing
         aabb = entity.gsplat.customAabb;
         if (!aabb) {
             console.warn('customAabb not available');
             return;
         }
     } else {
-        // load glb container asset
+        // Load GLB container asset
         const blobUrl = URL.createObjectURL(file);
         let asset;
         try {
@@ -411,18 +411,18 @@ canvas.addEventListener('drop', async (e) => {
             });
         } catch (err) {
             console.error('Failed to load GLB:', err);
-            // show error in overlay (draco/basis compressed files are not supported)
+            // Show error in overlay (Draco/Basis compressed files are not supported)
             dropBox.textContent = 'Failed to load GLB (compressed formats not supported)';
             dropBox.style.background = 'rgba(180, 50, 50, 0.7)';
             dropOverlay.style.display = 'flex';
             return;
         }
 
-        // instantiate glb entity
+        // Instantiate GLB entity
         entity = asset.resource.instantiateRenderEntity();
         app.root.addChild(entity);
 
-        // calculate bounds from mesh instances
+        // Calculate bounds from mesh instances
         aabb = calcEntityAABB(new pc.BoundingBox(), entity);
     }
 
@@ -430,7 +430,7 @@ canvas.addEventListener('drop', async (e) => {
     const size = aabb.halfExtents.length() * 2;
     const cameraDistance = size * 2.5;
 
-    // update camera for the loaded asset
+    // Update camera for the loaded asset
     camera.camera.farClip = size * 10;
     camera.setLocalPosition(
         center.x,
@@ -438,7 +438,7 @@ canvas.addEventListener('drop', async (e) => {
         center.z + cameraDistance
     );
 
-    // add orbit camera script
+    // Add orbit camera script
     camera.addComponent('script');
     camera.script.create('orbitCamera', {
         attributes: {

@@ -46,11 +46,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -69,7 +69,7 @@ app.scene.skyboxMip = 1;
 app.scene.skyboxIntensity = 0.4;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create a directional light
+// Create a directional light
 const light = new pc.Entity();
 light.addComponent('light');
 light.setLocalEulerAngles(45, 30, 0);
@@ -177,11 +177,11 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
     document.body.append(base, stick);
 };
 
-// create joystick ui
+// Create joystick UI
 createJoystickUI('left');
 createJoystickUI('right');
 
-// bind controls to camera attributes
+// Bind controls to camera attributes
 data.set(
     'attr',
     [

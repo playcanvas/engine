@@ -31,11 +31,11 @@ await new Promise((resolve) => {
 
 app.start();
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -44,14 +44,14 @@ app.on('destroy', () => {
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
 });
 camera.translate(0, 0, 15);
 
-// create an entity with a omni light
+// Create an Entity with a omni light
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -63,7 +63,7 @@ light.translate(5, 5, 10);
 app.root.addChild(camera);
 app.root.addChild(light);
 
-// create a texture to hold the video frame data
+// Create a texture to hold the video frame data
 const videoTexture = new pc.Texture(app.graphicsDevice, {
     format: pc.PIXELFORMAT_RGBA8,
     mipmaps: false,
@@ -73,22 +73,22 @@ const videoTexture = new pc.Texture(app.graphicsDevice, {
     addressV: pc.ADDRESS_CLAMP_TO_EDGE
 });
 
-// create our html element with the video
+// Create our HTML element with the video
 /** @type {HTMLVideoElement} */
 const video = document.createElement('video');
 video.id = 'vid';
 video.loop = true;
 
-// muted so that we can autoplay
+// Muted so that we can autoplay
 video.muted = true;
 video.autoplay = true;
 
-// inline needed for ios otherwise it plays at fullscreen
+// Inline needed for iOS otherwise it plays at fullscreen
 video.playsInline = true;
 
 video.crossOrigin = 'anonymous';
 
-// make sure that the video is in view on the page otherwise it doesn't
+// Make sure that the video is in view on the page otherwise it doesn't
 // load on some browsers, especially mobile
 video.setAttribute(
     'style',
@@ -102,7 +102,7 @@ video.addEventListener('canplaythrough', () => {
     videoTexture.setSource(video);
 });
 
-// listen for the 'loadedmetadata' event to resize the texture appropriately
+// Listen for the 'loadedmetadata' event to resize the texture appropriately
 video.addEventListener('loadedmetadata', () => {
     videoTexture.resize(video.videoWidth, video.videoHeight);
 });
@@ -111,7 +111,7 @@ video.addEventListener('loadedmetadata', () => {
 const entity = assets.tv.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
-// create a material that will use our video texture
+// Create a material that will use our video texture
 const material = new pc.StandardMaterial();
 material.useLighting = false;
 material.emissiveMap = videoTexture;
@@ -138,7 +138,7 @@ app.on('update', (dt) => {
     // rotate the tv object
     entity.setLocalEulerAngles(100 + Math.sin(time) * 50, 0, -90);
 
-    // upload the video data to the texture every other frame
+    // Upload the video data to the texture every other frame
     upload = !upload;
     if (upload) {
         videoTexture.upload();

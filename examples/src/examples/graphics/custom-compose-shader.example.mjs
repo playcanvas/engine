@@ -38,9 +38,9 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // the scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
-    // to avoid the additional cost. this is only used for the ui which renders on top of the
-    // post-processed scene, and we're typically happy with some aliasing on the ui.
+    // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
+    // to avoid the additional cost. This is only used for the UI which renders on top of the
+    // post-processed scene, and we're typically happy with some aliasing on the UI.
     antialias: false
 };
 
@@ -64,11 +64,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -110,7 +110,7 @@ loveEntity.findComponents('render').forEach((render) => {
     });
 });
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     farClip: 1500,
@@ -137,16 +137,16 @@ cameraEntity.setLocalPosition(-50, 100, 220);
 cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
-// ------ custom shader chunks for the camera frame ------
+// ------ Custom shader chunks for the camera frame ------
 
-// note: override these empty chunks with your own custom code. available chunk names:
-// - composedeclarationsps: declarations for your custom code
-// - composemainstartps: code to run at the start of the compose code
-// - composemainendps: code to run at the end of the compose code
+// Note: Override these empty chunks with your own custom code. Available chunk names:
+// - composeDeclarationsPS: declarations for your custom code
+// - composeMainStartPS: code to run at the start of the compose code
+// - composeMainEndPS: code to run at the end of the compose code
 
-// pixelation shader is based on this shadertoy shader: https://www.shadertoy.com/view/4dsxws
+// Pixelation shader is based on this shadertoy shader: https://www.shadertoy.com/view/4dsXWs
 
-// define the pixelation helper in declarations so it's available in main
+// Define the pixelation helper in declarations so it's available in main
 pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).set(
     'composeDeclarationsPS',
     `
@@ -167,7 +167,7 @@ pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).set(
     `
 );
 
-// wgsl equivalent declarations
+// WGSL equivalent declarations
 pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL).set(
     'composeDeclarationsPS',
     `
@@ -187,7 +187,7 @@ pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL).set(
     `
 );
 
-// call the helper at the end of compose to apply on top of previous effects
+// Call the helper at the end of compose to apply on top of previous effects
 pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).set(
     'composeMainEndPS',
     `
@@ -195,7 +195,7 @@ pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_GLSL).set(
     `
 );
 
-// wgsl equivalent call
+// WGSL equivalent call
 pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL).set(
     'composeMainEndPS',
     `
@@ -203,7 +203,7 @@ pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL).set(
     `
 );
 
-// ------ custom render passes set up ------
+// ------ Custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.samples = 4;
@@ -216,7 +216,7 @@ cameraFrame.vignette.intensity = 0.8;
 
 cameraFrame.update();
 
-// apply ui changes (tone mapping only)
+// apply UI changes (tone mapping only)
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.sceneTonemapping') {
         // postprocessing tone mapping

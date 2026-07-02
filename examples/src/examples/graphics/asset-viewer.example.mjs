@@ -78,11 +78,11 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -95,8 +95,8 @@ await new Promise((resolve) => {
 
 app.start();
 
-// depth layer is where the framebuffer is copied to a texture to be used in the following layers.
-// move the depth layer to take place after world and skydome layers, to capture both of them.
+// Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+// Move the depth layer to take place after World and Skydome layers, to capture both of them.
 const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
 app.scene.layers.remove(depthLayer);
 app.scene.layers.insertOpaque(depthLayer, 2);
@@ -107,7 +107,7 @@ app.scene.layers.insertOpaque(depthLayer, 2);
  * @param {number} z - The z coordinate.
  */
 const createText = (fontAsset, message, x, z) => {
-    // create a text element-based entity
+    // Create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
@@ -189,7 +189,7 @@ plane.setLocalScale(new pc.Vec3(25, 0, 10));
 plane.setLocalPosition(0, -1.0, 0);
 app.root.addChild(plane);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_NEUTRAL

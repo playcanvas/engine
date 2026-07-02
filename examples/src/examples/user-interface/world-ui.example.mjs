@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler, pc.ScriptHa
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -55,7 +55,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// create an entity with a camera component and simple orbiter script
+// Create an Entity with a camera component and simple orbiter script
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
@@ -65,14 +65,14 @@ camera.translateLocal(0, 0, 7);
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
-        inertiaFactor: 0.2 // override default of 0 (no inertia)
+        inertiaFactor: 0.2 // Override default of 0 (no inertia)
     }
 });
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// create an entity for the ground
+// Create an Entity for the ground
 const material = new pc.StandardMaterial();
 material.diffuse = pc.Color.WHITE;
 material.diffuseMap = assets.checkboard.resource;
@@ -88,7 +88,7 @@ ground.setLocalScale(50, 1, 50);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// create an entity with a light component
+// Create an entity with a light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -103,10 +103,10 @@ light.addComponent('light', {
 light.setLocalEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
-// create a 3d world screen, which is basically a `screen` with `screenspace` set to false
+// Create a 3D world screen, which is basically a `screen` with `screenSpace` set to false
 const screen = new pc.Entity();
 screen.setLocalScale(0.01, 0.01, 0.01);
-screen.setPosition(0, 0.01, 0); // place ui slightly above the ground
+screen.setPosition(0, 0.01, 0); // place UI slightly above the ground
 screen.setLocalRotation(new pc.Quat().setFromEulerAngles(-90, 0, 0));
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -114,7 +114,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// text
+// Text
 const text = new pc.Entity();
 text.setLocalPosition(0, 25, 0);
 text.addComponent('element', {
@@ -133,7 +133,7 @@ text.addComponent('element', {
 });
 screen.addChild(text);
 
-// button
+// Button
 const button = new pc.Entity();
 button.setLocalPosition(0, -25, 0);
 button.addComponent('button');
@@ -147,7 +147,7 @@ button.addComponent('element', {
 });
 screen.addChild(button);
 
-// create a label for the button
+// Create a label for the button
 const buttonText = new pc.Entity();
 buttonText.addComponent('element', {
     pivot: new pc.Vec2(0.5, 0.5),
@@ -162,7 +162,7 @@ buttonText.addComponent('element', {
 });
 button.addChild(buttonText);
 
-// change the background color every time the button is clicked
+// Change the background color every time the button is clicked
 button.button.on('click', () => {
     camera.camera.clearColor = new pc.Color(Math.random(), Math.random(), Math.random());
 });

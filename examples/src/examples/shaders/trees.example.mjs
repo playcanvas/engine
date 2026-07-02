@@ -29,7 +29,7 @@ const gfxOptions = {
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// determine shader language and import the appropriate shader chunks
+// Determine shader language and import the appropriate shader chunks
 const shaderLanguage = device.isWebGPU ? pc.SHADERLANGUAGE_WGSL : pc.SHADERLANGUAGE_GLSL;
 const shaderChunks = device.isWebGPU ? shaderChunksWgsl : shaderChunksGlsl;
 
@@ -42,11 +42,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -61,7 +61,7 @@ app.start();
 
 app.scene.ambientLight = new pc.Color(0.4, 0.2, 0.0);
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES,
@@ -129,7 +129,7 @@ meshInstance.material.shaderChunksVersion = '2.8';
 // create a ground material - all chunks apart from swaying in the wind, so fog and color blending
 const groundMaterial = new pc.StandardMaterial();
 const groundChunks = groundMaterial.getShaderChunks(shaderLanguage);
-// only add the chunks we need (excluding transformcorevs which is for tree swaying)
+// only add the chunks we need (excluding transformCoreVS which is for tree swaying)
 groundChunks.add({
     diffusePS: shaderChunks.diffusePS,
     litUserMainEndPS: shaderChunks.litUserMainEndPS,
@@ -151,8 +151,8 @@ let time = 0;
 app.on('update', (dt) => {
     time += dt;
 
-    // update uniforms once per frame. note that this needs to use unique uniform names, to make sure
-    // nothing overrides those. alternatively, you could 'setparameter' on the materials.
+    // update uniforms once per frame. Note that this needs to use unique uniform names, to make sure
+    // nothing overrides those. Alternatively, you could 'setParameter' on the materials.
     app.graphicsDevice.scope.resolve('myTime').setValue(time);
     app.graphicsDevice.scope.resolve('myFogParams').setValue([-2, 2]);
 

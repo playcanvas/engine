@@ -1,6 +1,6 @@
 import { math, Vec3, Quat, Mat4, KeyboardMouseSource, DualGestureSource } from 'playcanvas';
 
-// frame-rate independent damping: fraction of the remaining distance to cover this frame.
+// Frame-rate independent damping: fraction of the remaining distance to cover this frame.
 const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 // scratch
@@ -65,13 +65,13 @@ class CylinderController {
 
         const startHeight = options.startHeight ?? 2;
 
-        // target position (input integrates into this) and smoothed current position. the camera
-        // starts at the bottom of the loop (z = 0), `startheight` above the ground.
+        // Target position (input integrates into this) and smoothed current position. The camera
+        // starts at the bottom of the loop (z = 0), `startHeight` above the ground.
         this._posT = new Vec3(options.axialStart ?? 0, startHeight, 0);
         this._pos = this._posT.clone();
 
-        // orientation as a free quaternion (target + smoothed current). start level, looking
-        // along +z (down the tube) — at the bottom, up is +y and the loop tangent is +z.
+        // Orientation as a free quaternion (target + smoothed current). Start level, looking
+        // along +Z (down the tube) — at the bottom, up is +Y and the loop tangent is +Z.
         mat.setLookAt(new Vec3(0, 0, 0), new Vec3(0, 0, 1), new Vec3(0, 1, 0));
         this._rotT = new Quat().setFromMat4(mat);
         this._rot = this._rotT.clone();
@@ -80,7 +80,7 @@ class CylinderController {
         this._axis = new Vec3();
         this._shift = 0;
 
-        // cross-platform input sources (same primitives as firstpersoncontroller)
+        // cross-platform input sources (same primitives as FirstPersonController)
         this._desktopInput = new KeyboardMouseSource({ pointerLock: true });
         this._mobileInput = new DualGestureSource();
         this._desktopInput.attach(app.graphicsDevice.canvas);
@@ -109,7 +109,7 @@ class CylinderController {
         const moveY = math.clamp(this._axis.y, -1, 1); // up (camera up)
         const moveZ = math.clamp(this._axis.z - leftInput[1], -1, 1); // forward
 
-        // --- look: apply yaw about the camera's up and pitch about its right (free 6-dof) ---
+        // --- look: apply yaw about the camera's up and pitch about its right (free 6-DOF) ---
         const yawIn = mouse[0] * this.lookSpeed + rightInput[0] * this.touchLookSpeed * dt;
         const pitchIn = mouse[1] * this.lookSpeed + rightInput[1] * this.touchLookSpeed * dt;
         if (yawIn || pitchIn) {
@@ -142,8 +142,8 @@ class CylinderController {
             this._posT.z = radial.z * k;
         }
 
-        // --- auto-level: ease roll only so the horizon stays flat relative to the curved floor;
-        // pitch/yaw stay free. faded by distance from the axis so the open interior is free-fly. ---
+        // --- auto-level: ease ROLL only so the horizon stays flat relative to the curved floor;
+        // pitch/yaw stay free. Faded by distance from the axis so the open interior is free-fly. ---
         radial.set(0, this._posT.y - R, this._posT.z);
         rlen = radial.length();
         if (rlen > R * 1e-3) {
@@ -161,8 +161,8 @@ class CylinderController {
                 const closeness = math.clamp(rlen / R, 0, 1); // 1 at surface, 0 at axis
                 const frac = math.clamp(this.levelSpeed * dt, 0, 1) * closeness;
                 if (frac > 0 && Math.abs(rollDeg) > 1e-3) {
-                    // apply the level correction to both the target and the smoothed current
-                    // orientation. because it's the same rigid rotation, it preserves the look
+                    // Apply the level correction to BOTH the target and the smoothed current
+                    // orientation. Because it's the same rigid rotation, it preserves the look
                     // offset the slerp below is smoothing — so auto-level doesn't fight the look
                     // damping (which otherwise shows up as a wobble), it just rigidly eases roll.
                     qLevel.setFromAxisAngle(fwd, rollDeg * frac);

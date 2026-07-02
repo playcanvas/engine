@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -61,7 +61,7 @@ app.scene.skyboxMip = 2;
 app.scene.exposure = 0.7;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
@@ -77,7 +77,7 @@ material.metalness = 1;
 material.useMetalness = true;
 material.update();
 
-// create a entity with a sphere render component and the material
+// Create a Entity with a sphere render component and the material
 const sphere = new pc.Entity('InstancingEntity');
 sphere.addComponent('render', {
     material: material,
@@ -119,7 +119,7 @@ const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceC
     data: matrices
 });
 
-// initialize instancing using the vertex buffer on meshinstance of the created sphere
+// initialize instancing using the vertex buffer on meshInstance of the created sphere
 const sphereMeshInst = sphere.render.meshInstances[0];
 sphereMeshInst.setInstancing(vertexBuffer);
 
@@ -130,7 +130,7 @@ const shader = device.supportsCompute
           shaderLanguage: pc.SHADERLANGUAGE_WGSL,
           cshader: computeShaderWgsl,
 
-          // include all wgsl chunks to be available for including in the compute shader
+          // include all WGSL chunks to be available for including in the compute shader
           cincludes: pc.ShaderChunks.get(device, pc.SHADERLANGUAGE_WGSL),
 
           // format of a uniform buffer used by the compute shader
@@ -161,12 +161,12 @@ const shader = device.supportsCompute
       })
     : null;
 
-// create an instance of the compute shader, and provide it with uniform values that do not change each frame
+// Create an instance of the compute shader, and provide it with uniform values that do not change each frame
 const compute = new pc.Compute(device, shader, 'ComputeModifyVB');
 compute.setParameter('maxInstanceCount', instanceCount);
 compute.setParameter('indirectMetaData', sphereMeshInst.getIndirectMetaData());
 
-// set an update function on the app's update event
+// Set an update function on the app's update event
 let angle = 0;
 let time = 0;
 app.on('update', (dt) => {

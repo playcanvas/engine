@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
+// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -67,18 +67,18 @@ data.on('renderer:set', () => {
     }
 });
 
-// default precise mode to true, paused to false, edge scale to 0.5
+// Default precise mode to true, paused to false, edge scale to 0.5
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('precise', true);
 data.set('edgeScale', 0.5);
 let paused = false;
 
-// handle pause/play toggle
+// Handle pause/play toggle
 data.on('togglePause', () => {
     paused = !paused;
 });
 
-// create hotel gsplat
+// Create hotel gsplat
 const hotel = new pc.Entity('hotel');
 hotel.addComponent('gsplat', {
     asset: assets.hotel
@@ -86,28 +86,28 @@ hotel.addComponent('gsplat', {
 hotel.setLocalEulerAngles(180, 0, 0);
 app.root.addChild(hotel);
 
-// add script component to the hotel entity
+// Add script component to the hotel entity
 hotel.addComponent('script');
 
-// create the crop effect script
+// Create the crop effect script
 const cropScript = hotel.script?.create(GsplatCropShaderEffect);
 
-// set initial edge scale factor
+// Set initial edge scale factor
 if (cropScript) {
     cropScript.edgeScaleFactor = data.get('edgeScale');
 }
 
-// handle edge scale changes
+// Handle edge scale changes
 data.on('edgeScale:set', () => {
     if (cropScript) {
         cropScript.edgeScaleFactor = data.get('edgeScale');
     }
 });
 
-// get the gsplat material
+// Get the gsplat material
 const getMaterial = () => app.scene.gsplat?.material;
 
-// set initial define state
+// Set initial define state
 /**
  * @param {boolean} precise - Whether to enable precise cropping
  */
@@ -123,7 +123,7 @@ const updatePreciseDefine = (precise) => {
     }
 };
 
-// wait for material to be available, then set initial state
+// Wait for material to be available, then set initial state
 const checkMaterial = () => {
     const material = getMaterial();
     if (material) {
@@ -134,12 +134,12 @@ const checkMaterial = () => {
 };
 checkMaterial();
 
-// handle precise toggle changes
+// Handle precise toggle changes
 data.on('precise:set', () => {
     updatePreciseDefine(data.get('precise'));
 });
 
-// create an entity with a camera component
+// Create an Entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: pc.Color.BLACK,
@@ -161,7 +161,7 @@ camera.script?.create('orbitCameraInputMouse');
 camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// setup bloom post-processing
+// Setup bloom post-processing
 if (camera.camera) {
     const cameraFrame = new pc.CameraFrame(app, camera.camera);
     cameraFrame.rendering.samples = 4;
@@ -171,19 +171,19 @@ if (camera.camera) {
     cameraFrame.update();
 }
 
-// auto-rotate camera when idle
+// Auto-rotate camera when idle
 let autoRotateEnabled = true;
 let lastInteractionTime = 0;
 const autoRotateDelay = 2; // seconds of inactivity before auto-rotate resumes
 const autoRotateSpeed = 10; // degrees per second
 
-// detect user interaction (click/touch only, not mouse movement)
+// Detect user interaction (click/touch only, not mouse movement)
 const onUserInteraction = () => {
     autoRotateEnabled = false;
     lastInteractionTime = Date.now();
 };
 
-// listen for click and touch events only
+// Listen for click and touch events only
 if (app.mouse) {
     app.mouse.on('mousedown', onUserInteraction);
     app.mouse.on('mousewheel', onUserInteraction);
@@ -192,7 +192,7 @@ if (app.touch) {
     app.touch.on('touchstart', onUserInteraction);
 }
 
-// clean up event listeners on destroy
+// Clean up event listeners on destroy
 app.on('destroy', () => {
     if (app.mouse) {
         app.mouse.off('mousedown', onUserInteraction);
@@ -203,19 +203,19 @@ app.on('destroy', () => {
     }
 });
 
-// animate aabb size with soft bounce
+// Animate AABB size with soft bounce
 const period = 9.0; // seconds for one cycle
 const minSize = 0.4;
 const maxSize = 1.75;
 let elapsedTime = 0;
 
 app.on('update', (dt) => {
-    // re-enable auto-rotate after delay
+    // Re-enable auto-rotate after delay
     if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
         autoRotateEnabled = true;
     }
 
-    // apply auto-rotation
+    // Apply auto-rotation
     if (autoRotateEnabled) {
         const orbitCamera = camera.script?.get('orbitCamera');
         if (orbitCamera) {
@@ -223,12 +223,12 @@ app.on('update', (dt) => {
         }
     }
 
-    // animate aabb with soft bounce (sin-based easing)
+    // Animate AABB with soft bounce (sin-based easing)
     if (cropScript && !paused) {
         elapsedTime += dt;
         const t = (Math.sin((elapsedTime * Math.PI * 2) / period) + 1) / 2; // 0 to 1, soft bounce
         const size = minSize + t * (maxSize - minSize);
-        const sizeXZ = size * 1.5; // 50% wider in x and z directions
+        const sizeXZ = size * 1.5; // 50% wider in X and Z directions
         cropScript.aabbMin.set(-sizeXZ, -size, -sizeXZ);
         cropScript.aabbMax.set(sizeXZ, size, sizeXZ);
     }
