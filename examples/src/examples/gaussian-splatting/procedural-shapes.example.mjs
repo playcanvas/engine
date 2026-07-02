@@ -43,18 +43,18 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.GSplatHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     fov: 30,
@@ -62,7 +62,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(-3, 1.5, -3);
 
-// Add camera controls
+// add camera controls
 camera.addComponent('script');
 camera.script.create(CameraControls, {
     properties: {
@@ -86,7 +86,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create the bicycle gsplat
+// create the bicycle gsplat
 const bicycle = new pc.Entity('Bicycle');
 bicycle.addComponent('gsplat', {
     asset: assets.bicycle
@@ -94,7 +94,7 @@ bicycle.addComponent('gsplat', {
 bicycle.setLocalEulerAngles(0, 0, 180);
 app.root.addChild(bicycle);
 
-// Add a reveal effect to the scene using box shader effect
+// add a reveal effect to the scene using box shader effect
 bicycle.addComponent('script');
 const revealScript = bicycle.script.create(GsplatBoxShaderEffect);
 revealScript.aabbMin.set(-2, -0.5, -2);
@@ -108,7 +108,7 @@ revealScript.baseTint.set(1, 1, 1);
 revealScript.edgeTint.set(5, 2, 0); // orange/gold edge
 revealScript.tint.set(1, 1, 1);
 
-// Create ground entity with GsplatImage script
+// create ground entity with gsplatimage script
 const ground = new pc.Entity('Ground');
 ground.addComponent('script');
 const groundImage = ground.script.create(GsplatImage);
@@ -117,7 +117,7 @@ ground.setLocalPosition(0, -0.05, 0);
 ground.setLocalScale(3, 3, 3);
 app.root.addChild(ground);
 
-// Create gear wall entity with GsplatImage script (behind the bike)
+// create gear wall entity with gsplatimage script (behind the bike)
 const gearWall = new pc.Entity('GearWall');
 gearWall.addComponent('script');
 const gearImage = gearWall.script.create(GsplatImage);
@@ -127,23 +127,23 @@ gearWall.setLocalEulerAngles(-90, -90, 0);
 gearWall.setLocalScale(1, 1, 1);
 app.root.addChild(gearWall);
 
-// CAD-style drawing parameters
+// cad-style drawing parameters
 const thickness = 0.001;
 
-// Wheel parameters
+// wheel parameters
 const wheelRadius = 0.35,
     wheelWidth = 0.06;
 const frontWheelZ = 0.58,
     rearWheelZ = -0.58,
     wheelY = 0.33;
 
-// Derived wheel box corners
+// derived wheel box corners
 const wheelBottomY = wheelY - wheelRadius;
 const wheelTopY = wheelY + wheelRadius;
 const frontBoxZ = frontWheelZ + wheelRadius;
 const rearBoxZ = rearWheelZ - wheelRadius;
 
-// Bicycle dimensions (using wheel box edges for length)
+// bicycle dimensions (using wheel box edges for length)
 const bikeMinX = -0.35,
     bikeMaxX = 0.35;
 const bikeMinY = wheelBottomY,
@@ -152,11 +152,11 @@ const bikeMinZ = rearBoxZ,
     bikeMaxZ = frontBoxZ;
 const dimOffset = 0.15;
 const lengthY = wheelTopY + dimOffset; // above the wheel boxes
-const heightZ = bikeMinZ - dimOffset; // at front wheel (negative Z is front with handlebars)
+const heightZ = bikeMinZ - dimOffset; // at front wheel (negative z is front with handlebars)
 const widthY = bikeMaxY + dimOffset;
-const handlebarZ = -0.3; // Z position near handlebars (negative Z is front)
+const handlebarZ = -0.3; // z position near handlebars (negative z is front)
 
-// AABBs: [minX, minY, minZ, maxX, maxY, maxZ]
+// aabbs: [minx, miny, minz, maxx, maxy, maxz]
 const yellow = new pc.Color(1, 0.9, 0.2, 1);
 const aabbs = [
     [
@@ -177,51 +177,51 @@ const aabbs = [
     ]
 ];
 
-// Arrows: [startX, startY, startZ, endX, endY, endZ]
+// arrows: [startx, starty, startz, endx, endy, endz]
 const cyan = new pc.Color(0.2, 0.9, 1, 1);
 const arrows = [
-    // Length (Z axis) - bidirectional
+    // length (z axis) - bidirectional
     [0, lengthY, bikeMinZ, 0, lengthY, bikeMaxZ],
     [0, lengthY, bikeMaxZ, 0, lengthY, bikeMinZ],
-    // Height (Y axis) - bidirectional
+    // height (y axis) - bidirectional
     [0, bikeMinY, heightZ, 0, bikeMaxY, heightZ],
     [0, bikeMaxY, heightZ, 0, bikeMinY, heightZ],
-    // Width (X axis) - bidirectional (at handlebar position)
+    // width (x axis) - bidirectional (at handlebar position)
     [bikeMinX, widthY, handlebarZ, bikeMaxX, widthY, handlebarZ],
     [bikeMaxX, widthY, handlebarZ, bikeMinX, widthY, handlebarZ]
 ];
 
-// Extension lines: [startX, startY, startZ, endX, endY, endZ]
+// extension lines: [startx, starty, startz, endx, endy, endz]
 const gray = new pc.Color(0.5, 0.5, 0.5, 0.8);
 const extLines = [
-    // Length extension lines (from wheel box top corners, going up)
+    // length extension lines (from wheel box top corners, going up)
     [0, wheelTopY, rearBoxZ, 0, lengthY + 0.05, rearBoxZ],
     [0, wheelTopY, frontBoxZ, 0, lengthY + 0.05, frontBoxZ],
-    // Height extension lines (at front wheel - negative Z side)
+    // height extension lines (at front wheel - negative z side)
     [0, wheelBottomY, rearBoxZ, 0, wheelBottomY, heightZ - 0.05],
     [0, bikeMaxY, handlebarZ, 0, bikeMaxY, heightZ - 0.05], // top line extends from handlebars
-    // Width extension lines (at handlebar Z position)
+    // width extension lines (at handlebar z position)
     [bikeMinX, bikeMaxY, handlebarZ, bikeMinX, widthY + 0.05, handlebarZ],
     [bikeMaxX, bikeMaxY, handlebarZ, bikeMaxX, widthY + 0.05, handlebarZ]
 ];
 
-// Calculate dimension values
+// calculate dimension values
 const lengthValue = (bikeMaxZ - bikeMinZ).toFixed(2);
 const heightValue = (bikeMaxY - bikeMinY).toFixed(2);
 const widthValue = (bikeMaxX - bikeMinX).toFixed(2);
 
-// Track current lines entity and text entities
+// track current lines entity and text entities
 let linesEntity = null;
 const textEntities = [];
 
-// Helper to create a text label
+// helper to create a text label
 const createTextLabel = (text, x, y, z, rotX, rotY, rotZ) => {
     const textEntity = new pc.Entity(`Text-${text}`);
     textEntity.addComponent('script');
     const textScript = textEntity.script.create(GsplatText);
     textScript.text = text;
     textScript.fontSize = 48;
-    textScript.fillStyle = '#00e5ff'; // Cyan to match arrows
+    textScript.fillStyle = '#00e5ff'; // cyan to match arrows
     textScript.strokeStyle = 'rgba(0,0,0,0.9)';
     textScript.strokeWidth = 3;
     textScript.padding = 8;
@@ -233,14 +233,14 @@ const createTextLabel = (text, x, y, z, rotX, rotY, rotZ) => {
     return textEntity;
 };
 
-// Function to create the lines entity with all primitives
+// function to create the lines entity with all primitives
 const createLinesEntity = () => {
     linesEntity = new pc.Entity('Lines');
     linesEntity.addComponent('script');
     const lines = linesEntity.script.create(GsplatLines);
     app.root.addChild(linesEntity);
 
-    // Add all primitives
+    // add all primitives
     const arrowHeadSize = thickness * 27; // 3x default size
     for (const a of aabbs) {
         lines.addAABB(new pc.Vec3(a[0], a[1], a[2]), new pc.Vec3(a[3], a[4], a[5]), yellow, thickness * 0.5);
@@ -258,26 +258,26 @@ const createLinesEntity = () => {
         lines.addLineSimple(new pc.Vec3(l[0], l[1], l[2]), new pc.Vec3(l[3], l[4], l[5]), gray, thickness * 0.5);
     }
 
-    // Add text labels for each dimension
-    // Length label
+    // add text labels for each dimension
+    // length label
     const lengthMidZ = (bikeMinZ + bikeMaxZ) / 2;
     createTextLabel(lengthValue, 0.0, lengthY + 0.02, lengthMidZ, -90, -90, 0);
 
-    // Height label
+    // height label
     const heightMidY = (bikeMinY + bikeMaxY) / 2;
     createTextLabel(heightValue, 0, heightMidY, heightZ - 0.02, 0, -180, -90);
 
-    // Width label
+    // width label
     createTextLabel(widthValue, 0, widthY + 0.02, handlebarZ, -90, 180, 0);
 };
 
-// Function to destroy the lines entity and text labels
+// function to destroy the lines entity and text labels
 const destroyLinesEntity = () => {
     if (linesEntity) {
         linesEntity.destroy();
         linesEntity = null;
     }
-    // Destroy all text entities
+    // destroy all text entities
     for (const textEntity of textEntities) {
         textEntity.destroy();
     }
@@ -292,12 +292,12 @@ data.on('renderer:set', () => {
     }
 });
 
-// Set default value and create initial lines
+// set default value and create initial lines
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('showLines', true);
 createLinesEntity();
 
-// Handle toggle changes
+// handle toggle changes
 data.on('showLines:set', (value) => {
     if (value) {
         createLinesEntity();

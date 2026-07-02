@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.CubemapHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -66,7 +66,7 @@ app.scene.skyboxMip = 2;
  * @returns {pc.Entity} The returned entity.
  */
 const createHighQualitySphere = (material, layer) => {
-    // Create Entity and add it to the scene
+    // create entity and add it to the scene
     const entity = new pc.Entity('HighResSphere');
     app.root.addChild(entity);
 
@@ -76,7 +76,7 @@ const createHighQualitySphere = (material, layer) => {
         new pc.SphereGeometry({ latitudeBands: 200, longitudeBands: 200 })
     );
 
-    // Add a render component with the mesh
+    // add a render component with the mesh
     entity.addComponent('render', {
         type: 'asset',
         layers: layer,
@@ -86,7 +86,7 @@ const createHighQualitySphere = (material, layer) => {
     return entity;
 };
 
-// We render decals to a texture, so create a render target for it. Note that the texture needs
+// we render decals to a texture, so create a render target for it. note that the texture needs
 // to be of renderable format here, and so it cannot be compressed.
 const texture = assets.color.resource;
 const renderTarget = new pc.RenderTarget({
@@ -98,8 +98,8 @@ const renderTarget = new pc.RenderTarget({
 const decalLayer = new pc.Layer({ name: 'decalLayer' });
 app.scene.layers.insert(decalLayer, 0);
 
-// Create a camera, which renders decals using a decalLayer, and renders before the main camera
-// Note that this camera does not need its position set, as it's only used to trigger
+// create a camera, which renders decals using a decallayer, and renders before the main camera
+// note that this camera does not need its position set, as it's only used to trigger
 // the rendering, but the camera matrix is not used for the rendering (our custom shader
 // does not need it).
 const decalCamera = new pc.Entity('DecalCamera');
@@ -112,7 +112,7 @@ decalCamera.addComponent('camera', {
 });
 app.root.addChild(decalCamera);
 
-// Create main camera, which renders entities in world layer - this is where we show mesh with decals
+// create main camera, which renders entities in world layer - this is where we show mesh with decals
 const camera = new pc.Entity('MainCamera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1, 1),
@@ -135,7 +135,7 @@ const worldLayer = app.scene.layers.getLayerByName('World');
 const meshEntity = createHighQualitySphere(material, [worldLayer.id]);
 meshEntity.setLocalScale(15, 15, 15);
 
-// Create a decal material with a custom shader
+// create a decal material with a custom shader
 const decalMaterial = new pc.ShaderMaterial({
     uniqueName: 'DecalShader',
     vertexGLSL: shaderGlslVert,
@@ -151,9 +151,9 @@ decalMaterial.cull = pc.CULLFACE_NONE;
 decalMaterial.blendType = pc.BLEND_NORMAL;
 decalMaterial.setParameter('uDecalMap', assets.decal.resource);
 
-// To render into uv space of the mesh, we need to render the mesh using our custom shader into
-// the texture. In order to do this, we creates a new entity, containing the same mesh instances,
-// but using our custom shader. We make it a child of the original entity, to use its transform.
+// to render into uv space of the mesh, we need to render the mesh using our custom shader into
+// the texture. in order to do this, we creates a new entity, containing the same mesh instances,
+// but using our custom shader. we make it a child of the original entity, to use its transform.
 const meshInstances = meshEntity.render.meshInstances.map((srcMeshInstance) => {
     return new pc.MeshInstance(srcMeshInstance.mesh, decalMaterial);
 });
@@ -166,7 +166,7 @@ cloneEntity.addComponent('render', {
 });
 meshEntity.addChild(cloneEntity);
 
-// Create an entity with a directional light component
+// create an entity with a directional light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -182,8 +182,8 @@ const decalFrequency = 0.5;
 app.on('update', (dt) => {
     time += dt * 0.7;
 
-    // a decal projection box is an orthographic projection from some position. We calculate position
-    // here to be in an orbit around the sphere. Draw a line showing the projection point and direction.
+    // a decal projection box is an orthographic projection from some position. we calculate position
+    // here to be in an orbit around the sphere. draw a line showing the projection point and direction.
     const decalProjectionPos = new pc.Vec3(8 * Math.cos(time), 8 * Math.cos(time * 0.3), 8 * Math.sin(time));
     app.drawLine(decalProjectionPos, pc.Vec3.ZERO, pc.Color.WHITE);
 
@@ -202,7 +202,7 @@ app.on('update', (dt) => {
         // ortographics projection matrix - this defines the size of the decal, but also its depth range (0..5)
         const projMatrix = new pc.Mat4().setOrtho(-1, 1, -1, 1, 0, 5);
 
-        // final matrix is a combination of view and projection matrix. Make it available to the shader.
+        // final matrix is a combination of view and projection matrix. make it available to the shader.
         const viewProj = new pc.Mat4();
         viewProj.mul2(projMatrix, viewMatrix);
         decalMaterial.setParameter('matrix_decal_viewProj', viewProj.data);

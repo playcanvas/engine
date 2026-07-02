@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -98,7 +98,7 @@ logoEntity2.setLocalEulerAngles(-90, -90, 0);
 logoEntity2.setLocalScale(2, 2, 2);
 app.root.addChild(logoEntity2);
 
-// Create left camera
+// create left camera
 const cameraLeft = new pc.Entity('LeftCamera');
 cameraLeft.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -109,7 +109,7 @@ cameraLeft.addComponent('camera', {
 cameraLeft.setLocalPosition(-0.8, 2, 3);
 app.root.addChild(cameraLeft);
 
-// Create right orthographic camera
+// create right orthographic camera
 const cameraRight = new pc.Entity('RightCamera');
 cameraRight.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -123,7 +123,7 @@ cameraRight.translate(0, 8, 0);
 cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
 app.root.addChild(cameraRight);
 
-// Create top camera
+// create top camera
 const cameraTop = new pc.Entity('TopCamera');
 cameraTop.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),

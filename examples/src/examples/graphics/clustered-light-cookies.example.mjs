@@ -56,11 +56,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -74,7 +74,7 @@ await new Promise((resolve) => {
 app.start();
 
 // enable clustered lighting - this is what routes the cookie textures through the shared cookie
-// atlas (and the code path that this example exercises). It's a temporary API and will change.
+// atlas (and the code path that this example exercises). it's a temporary api and will change.
 app.scene.clusteredLightingEnabled = true;
 
 // cookies are disabled by default for clustered lighting, enable them
@@ -109,7 +109,7 @@ const proceduralCookie = new pc.Texture(app.graphicsDevice, {
 });
 
 // fill the procedural cookie with an animated radial pattern - 'phase' shifts each regeneration
-// so the content varies but stays recognizable. unlock() uploads it, bumping its uploadVersion.
+// so the content varies but stays recognizable. unlock() uploads it, bumping its uploadversion.
 const updateProceduralCookie = (phase) => {
     const pixels = proceduralCookie.lock();
     const half = cookieSize * 0.5;
@@ -173,7 +173,7 @@ video.addEventListener('canplaythrough', onCanPlay);
 video.load();
 
 // clean up the video when the app is destroyed, so a late 'canplaythrough' does not call
-// setSource on an already torn-down graphics device
+// setsource on an already torn-down graphics device
 app.on('destroy', () => {
     video.removeEventListener('canplaythrough', onCanPlay);
     video.pause();
@@ -182,7 +182,7 @@ app.on('destroy', () => {
 
 // ----- four spot lights, one per quadrant of the board -----
 // each light sits just above its quadrant and points straight down, so the four cookies project
-// onto different areas of the board. Two use the procedural cookie, two use the video cookie.
+// onto different areas of the board. two use the procedural cookie, two use the video cookie.
 const quadrantOffset = 11;
 const lightHeight = 20;
 const quadrants = [
@@ -206,8 +206,8 @@ quadrants.forEach((q, i) => {
         cookieIntensity: 1
     });
 
-    // position above the quadrant center and aim straight down (RIGHT as up to avoid a
-    // degenerate look-at), then rotate so the spot cone points along -Y
+    // position above the quadrant center and aim straight down (right as up to avoid a
+    // degenerate look-at), then rotate so the spot cone points along -y
     const x = q.x * quadrantOffset;
     const z = q.z * quadrantOffset;
     spot.setLocalPosition(x, lightHeight, z);
@@ -216,7 +216,7 @@ quadrants.forEach((q, i) => {
     app.root.addChild(spot);
 });
 
-// Create an entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.05, 0.05, 0.05),

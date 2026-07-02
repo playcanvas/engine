@@ -45,11 +45,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler, pc.ScriptHa
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -62,7 +62,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create an entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1, 1)
@@ -145,7 +145,7 @@ for (let i = 0; i < NUM_BOXES; i++) {
  * @param {number} rot - The z coordinate rotation (euler angles).
  */
 const createText = (fontAsset, message, x, y, z, rot) => {
-    // Create a text element-based entity
+    // create a text element-based entity
     const text = new pc.Entity();
     text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
@@ -195,7 +195,7 @@ directionalLight.addComponent('light', {
 directionalLight.setEulerAngles(45, 180, 0);
 app.root.addChild(directionalLight);
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 let time = 0;
 const rot = new pc.Quat();
 app.on('update', (/** @type {number} */ dt) => {

@@ -41,11 +41,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -58,14 +58,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create a camera
+// create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// Create a 2D screen
+// create a 2d screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -75,7 +75,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// Create a simple panel
+// create a simple panel
 const panel = new pc.Entity();
 panel.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
@@ -87,7 +87,7 @@ panel.addComponent('element', {
 });
 screen.addChild(panel);
 
-// Prepare the atlas with a single frame
+// prepare the atlas with a single frame
 const texture = assets.grey_button.resource;
 texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
 texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
@@ -100,10 +100,10 @@ atlas.frames = {
         // x, y, width, height properties of the frame in pixels
         rect: new pc.Vec4(0, 0, 240, 135),
 
-        // The pivot of the frame - values are between 0-1
+        // the pivot of the frame - values are between 0-1
         pivot: new pc.Vec2(0.5, 0.5),
 
-        // Nine-slice border: left, bottom, right, top border in pixels
+        // nine-slice border: left, bottom, right, top border in pixels
         border: new pc.Vec4(21, 28, 21, 33)
     }
 };
@@ -130,7 +130,7 @@ const createSpriteAsset = (frame) => {
 
 panel.element.spriteAsset = createSpriteAsset('0').id;
 
-// Animation variables
+// animation variables
 let scaleXDirection = 1;
 let scaleYDirection = 1;
 const scaleXSpeed = 3;
@@ -143,7 +143,7 @@ app.on('update', (dt) => {
     let targetWidth = currentWidth + scaleXDirection * scaleXSpeed;
     let targetHeight = currentHeight + scaleYDirection * scaleYSpeed;
 
-    // Bounce logic for width
+    // bounce logic for width
     if (targetWidth > 800) {
         targetWidth = 800;
         scaleXDirection = -1;
@@ -152,7 +152,7 @@ app.on('update', (dt) => {
         scaleXDirection = 1;
     }
 
-    // Bounce logic for height
+    // bounce logic for height
     if (targetHeight > 676) {
         targetHeight = 676;
         scaleYDirection = -1;
@@ -165,7 +165,7 @@ app.on('update', (dt) => {
     panel.element.height = targetHeight;
 });
 
-// apply UI changes
+// apply ui changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.sliced') {
         panel.element.sprite.renderMode = value ? pc.SPRITE_RENDERMODE_SLICED : pc.SPRITE_RENDERMODE_SIMPLE;

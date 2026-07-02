@@ -22,11 +22,11 @@ createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSy
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -50,7 +50,7 @@ material2.metalness = 0.5;
 material2.useMetalness = true;
 material2.update();
 
-// create a single BatchGroup. Make it dynamic to allow batched meshes to be freely moved every frame.
+// create a single batchgroup. make it dynamic to allow batched meshes to be freely moved every frame.
 const batchGroup = app.batcher.addGroup('Meshes', true, 100);
 
 // create various primitive instances using one of the two materials
@@ -70,7 +70,7 @@ for (let i = 0; i < numInstances; i++) {
         material: Math.random() < 0.5 ? material1 : material2,
         castShadows: true,
 
-        // add it to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls.
+        // add it to the batchgroup - this instructs engine to try and render these meshes in a small number of draw calls.
         // there will be at least 2 draw calls, one for each material
         batchGroupId: batchGroup.id
     });
@@ -82,7 +82,7 @@ for (let i = 0; i < numInstances; i++) {
     entities.push(entity);
 }
 
-// Create an Entity for the ground
+// create an entity for the ground
 const ground = new pc.Entity();
 ground.addComponent('render', {
     type: 'box',
@@ -92,15 +92,15 @@ ground.setLocalScale(150, 1, 150);
 ground.setLocalPosition(0, -26, 0);
 app.root.addChild(ground);
 
-// Create an entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2)
 });
 app.root.addChild(camera);
 
-// Create an entity with a directional light component
-// Add it as a child of a camera to rotate with the camera
+// create an entity with a directional light component
+// add it as a child of a camera to rotate with the camera
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -112,7 +112,7 @@ light.addComponent('light', {
 camera.addChild(light);
 light.setLocalEulerAngles(15, 30, 0);
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;

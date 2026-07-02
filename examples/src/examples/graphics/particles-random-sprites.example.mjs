@@ -53,11 +53,11 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -68,7 +68,7 @@ await new Promise((resolve) => {
     new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     clearColor: new pc.Color(0.23, 0.5, 0.75)
@@ -76,7 +76,7 @@ cameraEntity.addComponent('camera', {
 cameraEntity.rotateLocal(0, 0, 0);
 cameraEntity.translateLocal(0, 0, 20);
 
-// Create a directional light
+// create a directional light
 const lightDirEntity = new pc.Entity();
 lightDirEntity.addComponent('light', {
     type: 'directional',
@@ -85,29 +85,29 @@ lightDirEntity.addComponent('light', {
 });
 lightDirEntity.setLocalEulerAngles(45, 0, 0);
 
-// Create a screen to display the particle systems textures
+// create a screen to display the particle systems textures
 const screenEntity = new pc.Entity();
 screenEntity.addComponent('screen', { resolution: new pc.Vec2(640, 480), screenSpace: true });
 screenEntity.screen.scaleMode = 'blend';
 screenEntity.screen.referenceResolution = new pc.Vec2(1280, 720);
 
-// Create a panel to display the full particle textures
+// create a panel to display the full particle textures
 const panel = new pc.Entity();
 screenEntity.addChild(panel);
 const panel2 = new pc.Entity();
 screenEntity.addChild(panel2);
 
-// Add Entities into the scene hierarchy
+// add entities into the scene hierarchy
 app.root.addChild(cameraEntity);
 app.root.addChild(lightDirEntity);
 app.root.addChild(screenEntity);
 
-// Create entity for first particle system
+// create entity for first particle system
 const particleEntity1 = new pc.Entity();
 app.root.addChild(particleEntity1);
 particleEntity1.setLocalPosition(-3, 3, 0);
 
-// Create entity for second particle system
+// create entity for second particle system
 const particleEntity2 = new pc.Entity();
 app.root.addChild(particleEntity2);
 particleEntity2.setLocalPosition(3, 3, 0);

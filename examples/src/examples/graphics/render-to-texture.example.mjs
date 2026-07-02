@@ -5,14 +5,14 @@ import { deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// Overview:
-// There are 3 layers used:
-// - worldLayer - it contains objects that render into main camera and also into texture
-// - excludedLayer - it contains objects that are excluded from rendering into texture and so render only into main camera
-// - skyboxLayer - it contains skybox and renders into both main and texture camera
-// There are two cameras:
-// - textureCamera - this camera renders into texture, objects from World and also Skybox layers
-// - camera - this camera renders into main framebuffer, objects from World, Excluded and also Skybox layers
+// overview:
+// there are 3 layers used:
+// - worldlayer - it contains objects that render into main camera and also into texture
+// - excludedlayer - it contains objects that are excluded from rendering into texture and so render only into main camera
+// - skyboxlayer - it contains skybox and renders into both main and texture camera
+// there are two cameras:
+// - texturecamera - this camera renders into texture, objects from world and also skybox layers
+// - camera - this camera renders into main framebuffer, objects from world, excluded and also skybox layers
 
 const assets = {
     helipad: new pc.Asset(
@@ -28,12 +28,12 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // Request the main back-buffer's MSAA color and depth attachments to be allocated as transient
-    // ("memoryless") attachments. On tile-based GPUs (mobile / Apple Silicon) this lets the driver
-    // keep their contents in fast on-chip memory and skip VRAM allocation entirely. This is valid
+    // request the main back-buffer's msaa color and depth attachments to be allocated as transient
+    // ("memoryless") attachments. on tile-based gpus (mobile / apple silicon) this lets the driver
+    // keep their contents in fast on-chip memory and skip vram allocation entirely. this is valid
     // here because the back-buffer is cleared each frame and never read back: there is no scene
-    // color grab (sceneColorMap) and no scene depth grab (sceneDepthMap) / depth prepass. These are
-    // WebGPU-only hints and are silently ignored on WebGL2 or where the feature is unsupported.
+    // color grab (scenecolormap) and no scene depth grab (scenedepthmap) / depth prepass. these are
+    // webgpu-only hints and are silently ignored on webgl2 or where the feature is unsupported.
     transientColor: true,
     transientDepth: true
 };
@@ -59,11 +59,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -131,7 +131,7 @@ function createParticleSystem(position) {
         [0, 0]
     ]);
 
-    // Create entity for particle system
+    // create entity for particle system
     const entity = new pc.Entity();
     app.root.addChild(entity);
     entity.setLocalPosition(position);
@@ -164,13 +164,13 @@ const renderTarget = new pc.RenderTarget({
     flipY: !app.graphicsDevice.isWebGPU,
     samples: 2,
 
-    // Allocate this render target's MSAA color and depth attachments as transient
-    // ("memoryless") attachments (WebGPU only; ignored elsewhere). The multi-sampled color
-    // buffer is only ever resolved into the single-sampled `texture` we sample below - the MSAA
+    // allocate this render target's msaa color and depth attachments as transient
+    // ("memoryless") attachments (webgpu only; ignored elsewhere). the multi-sampled color
+    // buffer is only ever resolved into the single-sampled `texture` we sample below - the msaa
     // buffer itself is never sampled, stored or reloaded - and the depth buffer is used only for
-    // in-pass depth testing and is never grabbed or resolved. Both therefore only need their
-    // contents within the render pass, so tile-based GPUs can keep them on-chip. Note that
-    // transientColor requires MSAA (samples > 1); it is a no-op for single-sampled color.
+    // in-pass depth testing and is never grabbed or resolved. both therefore only need their
+    // contents within the render pass, so tile-based gpus can keep them on-chip. note that
+    // transientcolor requires msaa (samples > 1); it is a no-op for single-sampled color.
     transientColor: true,
     transientDepth: true
 });
@@ -202,7 +202,7 @@ createPrimitive('box', new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.YELL
 // particle system
 createParticleSystem(new pc.Vec3(2, 3, 0));
 
-// Create main camera, which renders entities in world, excluded and skybox layers
+// create main camera, which renders entities in world, excluded and skybox layers
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     fov: 100,
@@ -226,13 +226,13 @@ camera.script.create('orbitCamera', {
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-// Create texture camera, which renders entities in world and skybox layers into the texture
+// create texture camera, which renders entities in world and skybox layers into the texture
 const textureCamera = new pc.Entity('TextureCamera');
 textureCamera.addComponent('camera', {
     layers: [worldLayer.id, skyboxLayer.id],
     toneMapping: pc.TONEMAP_ACES,
 
-    // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
+    // set the priority of texturecamera to lower number than the priority of the main camera (which is at default 0)
     // to make it rendered first each frame
     priority: -1,
 
@@ -246,7 +246,7 @@ textureCamera.addComponent('render', {
 });
 app.root.addChild(textureCamera);
 
-// Create an Entity with a omni light component and add it to world layer (and so used by both cameras)
+// create an entity with a omni light component and add it to world layer (and so used by both cameras)
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -259,7 +259,7 @@ light.translate(0, 2, 5);
 app.root.addChild(light);
 
 // create a plane called tv which we use to display rendered texture
-// this is only added to excluded Layer, so it does not render into texture
+// this is only added to excluded layer, so it does not render into texture
 const tv = createPrimitive('plane', new pc.Vec3(6, 8, -5), new pc.Vec3(20, 10, 10), pc.Color.BLACK, [excludedLayer.id]);
 tv.setLocalEulerAngles(90, 0, 0);
 tv.render.castShadows = false;
@@ -296,7 +296,7 @@ app.on('update', (dt) => {
         }
     }
 
-    // debug draw the texture on the screen in the excludedLayer layer of the main camera
+    // debug draw the texture on the screen in the excludedlayer layer of the main camera
     // @ts-ignore engine-tsd
     app.drawTexture(0.7, -0.7, 0.5, 0.5, texture, null, excludedLayer);
 });

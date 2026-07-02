@@ -52,11 +52,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -77,7 +77,7 @@ app.scene.envAtlas = assets.helipad.resource;
 const lighting = app.scene.lighting;
 lighting.shadowsEnabled = false;
 
-// Create a static ground shape for our car to drive on
+// create a static ground shape for our car to drive on
 const ground = new pc.Entity('Ground');
 ground.addComponent('rigidbody', {
     type: 'static'
@@ -89,14 +89,14 @@ ground.addComponent('collision', {
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// Create 4 wheels for our vehicle
+// create 4 wheels for our vehicle
 const wheels = [
     { name: 'Front Left Wheel', pos: new pc.Vec3(0.8, 0.4, 1.2), front: true },
     { name: 'Front Right Wheel', pos: new pc.Vec3(-0.8, 0.4, 1.2), front: true },
     { name: 'Back Left Wheel', pos: new pc.Vec3(0.8, 0.4, -1.2), front: false },
     { name: 'Back Right Wheel', pos: new pc.Vec3(-0.8, 0.4, -1.2), front: false }
 ].map((wheelDef) => {
-    // Create a wheel
+    // create a wheel
     const wheel = new pc.Entity(wheelDef.name);
     wheel.addComponent('script');
     wheel.script.create('vehicleWheel', {
@@ -109,7 +109,7 @@ const wheels = [
     return wheel;
 });
 
-// Create a physical vehicle
+// create a physical vehicle
 const vehicle = new pc.Entity('Vehicle');
 vehicle.addComponent('rigidbody', {
     mass: 800,
@@ -132,7 +132,7 @@ vehicle.script.create('actionPhysicsReset', {
 });
 vehicle.setLocalPosition(0, 2, 0);
 
-// Create the car chassis, offset upwards in Y from the compound body
+// create the car chassis, offset upwards in y from the compound body
 const chassis = new pc.Entity('Chassis');
 chassis.addComponent('collision', {
     type: 'box',
@@ -140,7 +140,7 @@ chassis.addComponent('collision', {
 });
 chassis.setLocalPosition(0, 0.65, 0);
 
-// Create the car chassis, offset upwards in Y from the compound body
+// create the car chassis, offset upwards in y from the compound body
 const cab = new pc.Entity('Cab');
 cab.addComponent('collision', {
     type: 'box',
@@ -148,7 +148,7 @@ cab.addComponent('collision', {
 });
 cab.setLocalPosition(0, 1.2, -0.25);
 
-// Add the vehicle to the hierarchy
+// add the vehicle to the hierarchy
 wheels.forEach((wheel) => {
     vehicle.addChild(wheel);
 });
@@ -156,7 +156,7 @@ vehicle.addChild(chassis);
 vehicle.addChild(cab);
 app.root.addChild(vehicle);
 
-// Build a wall of blocks for the car to smash through
+// build a wall of blocks for the car to smash through
 for (let i = 0; i < 10; i++) {
     for (let j = 0; j < 5; j++) {
         const block = new pc.Entity('Block');
@@ -177,7 +177,7 @@ for (let i = 0; i < 10; i++) {
     }
 }
 
-// Create a directional light source
+// create a directional light source
 const light = new pc.Entity('Directional Light');
 light.addComponent('light', {
     type: 'directional',
@@ -191,7 +191,7 @@ light.addComponent('light', {
 light.setLocalEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
-// Create a camera to render the scene
+// create a camera to render the scene
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera');
 camera.addComponent('script');
@@ -204,7 +204,7 @@ camera.translate(0, 10, 15);
 camera.lookAt(0, 0, 0);
 app.root.addChild(camera);
 
-// Enable rendering and resetting of all rigid bodies in the scene
+// enable rendering and resetting of all rigid bodies in the scene
 app.root.addComponent('script');
 app.root.script.create('renderPhysics', {
     attributes: {

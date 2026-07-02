@@ -21,7 +21,7 @@ const gfxOptions = {
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// Status overlay
+// status overlay
 const statusOverlay = document.createElement('div');
 statusOverlay.style.cssText = `
     position: absolute;
@@ -60,13 +60,13 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Camera (required for app to render)
+// camera (required for app to render)
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', { clearColor: new pc.Color(0.1, 0.1, 0.15) });
 camera.setPosition(0, 0, 1);
 app.root.addChild(camera);
 
-// ==================== STATE ====================
+// ==================== state ====================
 
 /** @type {number} */
 let currentMaxElements = 0;
@@ -104,20 +104,20 @@ function logError(msg) {
     statusOverlay.textContent = logLines.join('\n');
 }
 
-// Create radix sort instance in indirect mode — sortIndirect requires this.
+// create radix sort instance in indirect mode — sortindirect requires this.
 radixSort = new pc.ComputeRadixSort(device, { indirect: true });
 
-// Create sortElementCount buffer (single u32, GPU-readable storage buffer)
+// create sortelementcount buffer (single u32, gpu-readable storage buffer)
 sortElementCountBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
 
-// ==================== PREPARE-INDIRECT COMPUTE SHADER ====================
-// Simulates the GSplat pipeline's prepareIndirect: a compute shader writes
-// sortElementCount and indirect dispatch args within the command buffer
-// (instead of queue.writeBuffer which executes before the command buffer).
+// ==================== prepare-indirect compute shader ====================
+// simulates the gsplat pipeline's prepareindirect: a compute shader writes
+// sortelementcount and indirect dispatch args within the command buffer
+// (instead of queue.writebuffer which executes before the command buffer).
 //
-// The shader mirrors the sortIndirectArgsCS WGSL chunk: it uses the slot
-// count and per-slot granularities from ComputeRadixSort#prepareIndirect()
-// to support any backend (Multipass = 1 slot, OneSweep = 2 slots).
+// the shader mirrors the sortindirectargscs wgsl chunk: it uses the slot
+// count and per-slot granularities from computeradixsort#prepareindirect()
+// to support any backend (multipass = 1 slot, onesweep = 2 slots).
 
 const prepareSource = /* wgsl */ `
     @group(0) @binding(0) var<storage, read_write> sortElementCountBuf: array<u32>;
@@ -194,7 +194,7 @@ const prepareShader = new pc.Shader(device, {
 
 const prepareCompute = new pc.Compute(device, prepareShader, 'PrepareIndirectTest');
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== helper functions ====================
 
 /**
  * Regenerates random key data.
@@ -235,11 +235,11 @@ function regenerateData() {
 async function doVerification(sortedIndices, capturedValues, maxElements, visibleCount, numBits) {
     totalTests++;
 
-    // Read back sorted indices (only visibleCount entries matter)
+    // read back sorted indices (only visiblecount entries matter)
     const indicesData = new Uint32Array(visibleCount);
     await sortedIndices.read(0, visibleCount * 4, indicesData, true);
 
-    // Check 1: All indices in range [0, visibleCount)
+    // check 1: all indices in range [0, visiblecount)
     let outOfRangeCount = 0;
     for (let i = 0; i < visibleCount; i++) {
         if (indicesData[i] >= visibleCount) {
@@ -250,7 +250,7 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
         }
     }
 
-    // Check 2: No duplicate indices (valid permutation)
+    // check 2: no duplicate indices (valid permutation)
     const seen = new Uint8Array(visibleCount);
     let duplicateCount = 0;
     let missingCount = 0;
@@ -275,7 +275,7 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
         }
     }
 
-    // Check 3: Values are in sorted order
+    // check 3: values are in sorted order
     let orderErrors = 0;
     const sortedValues = [];
     for (let i = 0; i < visibleCount; i++) {
@@ -291,7 +291,7 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
         }
     }
 
-    // CPU reference sort for value comparison
+    // cpu reference sort for value comparison
     const cpuSorted = capturedValues.slice(0, visibleCount).sort((a, b) => a - b);
     let valueMismatches = 0;
     for (let i = 0; i < visibleCount; i++) {
@@ -324,7 +324,7 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
     }
 }
 
-// ==================== CONTROLS ====================
+// ==================== controls ====================
 
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     if (path === 'options.elementsK') {
@@ -334,9 +334,9 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             needsRegen = true;
         }
     } else if (path === 'options.bits') {
-        // Only accept multiples of the active backend's radix width
-        // (4 for Multipass, 8 for OneSweep). Snapping to an invalid
-        // multiple would trigger the sortIndirect assert every frame.
+        // only accept multiples of the active backend's radix width
+        // (4 for multipass, 8 for onesweep). snapping to an invalid
+        // multiple would trigger the sortindirect assert every frame.
         const rb = radixSort ? radixSort.radixBits : 4;
         const validBits = [4, 8, 12, 16, 20, 24, 28, 32].filter((b) => b % rb === 0);
         const nearest = validBits.reduce((prev, curr) =>
@@ -349,15 +349,15 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     }
 });
 
-// Initialize with defaults
+// initialize with defaults
 data.set('options', {
     elementsK: 1000,
     bits: 16
 });
 
-// ==================== UPDATE LOOP ====================
-// Simulate the GSplat pipeline: same keys buffer, but visibleCount changes every frame
-// (like camera rotation changing the culled set). This tests whether sortIndirect's
+// ==================== update loop ====================
+// simulate the gsplat pipeline: same keys buffer, but visiblecount changes every frame
+// (like camera rotation changing the culled set). this tests whether sortindirect's
 // internal state (ping-pong buffers, block sums) handles varying counts correctly.
 
 let frameCount = 0;
@@ -366,13 +366,13 @@ let varyingVisibleCount = 0;
 app.on('update', () => {
     if (currentMaxElements === 0 || currentNumBits === 0) return;
 
-    // Regenerate data only when parameters change
+    // regenerate data only when parameters change
     if (needsRegen) {
         regenerateData();
     }
 
-    // Vary visible count every frame using a sine wave (simulates camera rotation)
-    // Oscillates between 10% and 90% of maxElements
+    // vary visible count every frame using a sine wave (simulates camera rotation)
+    // oscillates between 10% and 90% of maxelements
     frameCount++;
     const t = frameCount * 0.05; // ~3 second full cycle at 60fps
     const minPercent = 10;
@@ -380,23 +380,23 @@ app.on('update', () => {
     const percent = minPercent + (maxPercent - minPercent) * (0.5 + 0.5 * Math.sin(t));
     varyingVisibleCount = Math.max(1, Math.floor((currentMaxElements * percent) / 100));
 
-    // Override the visible count for this frame (don't use currentVisiblePercent)
+    // override the visible count for this frame (don't use currentvisiblepercent)
     const maxElements = currentMaxElements;
     const visibleCount = varyingVisibleCount;
     const numBits = currentNumBits;
 
     if (!keysBuffer || !radixSort || !sortElementCountBuffer) return;
 
-    // Query backend slot requirements — varies by backend:
-    //   Multipass: [1, 2048, 0, 0]   (1 slot; see ELEMENTS_PER_WORKGROUP)
-    //   OneSweep:  [2, 3840, 32768, 0]  (2 slots: binning + globalHist)
+    // query backend slot requirements — varies by backend:
+    //   multipass: [1, 2048, 0, 0]   (1 slot; see elements_per_workgroup)
+    //   onesweep:  [2, 3840, 32768, 0]  (2 slots: binning + globalhist)
     const sortInfo = radixSort.prepareIndirect();
     const slotCount = sortInfo[0];
 
-    // Allocate the required number of consecutive per-frame dispatch slots.
+    // allocate the required number of consecutive per-frame dispatch slots.
     const dispatchSlot = device.getIndirectDispatchSlot(slotCount);
 
-    // Write sortElementCount and all dispatch slot args via compute shader.
+    // write sortelementcount and all dispatch slot args via compute shader.
     prepareCompute.setParameter('sortElementCountBuf', sortElementCountBuffer);
     prepareCompute.setParameter('indirectDispatchArgs', device.indirectDispatchBuffer);
     prepareCompute.setParameter('visibleCount', visibleCount);
@@ -410,7 +410,7 @@ app.on('update', () => {
     prepareCompute.setupDispatch(1, 1, 1);
     device.computeDispatch([prepareCompute], 'PrepareIndirectTest');
 
-    // Run indirect sort with varying visible count
+    // run indirect sort with varying visible count
     const sortedIndicesBuffer = radixSort.sortIndirect(
         keysBuffer,
         maxElements,
@@ -419,7 +419,7 @@ app.on('update', () => {
         sortElementCountBuffer
     );
 
-    // Verify every 10 frames to catch intermittent failures without overwhelming readbacks
+    // verify every 10 frames to catch intermittent failures without overwhelming readbacks
     if (frameCount % 10 === 0 && !verificationPending) {
         verificationPending = true;
         doVerification(sortedIndicesBuffer, originalValues.slice(), maxElements, visibleCount, numBits).then(() => {

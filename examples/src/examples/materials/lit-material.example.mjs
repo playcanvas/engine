@@ -53,11 +53,11 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -72,7 +72,7 @@ app.start();
 
 app.scene.envAtlas = assets.helipad.resource;
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
@@ -91,7 +91,7 @@ camera.translate(0, 1, 4);
 camera.lookAt(0, 0, 0);
 app.root.addChild(camera);
 
-// Create an Entity with a omni light component and a sphere model component.
+// create an entity with a omni light component and a sphere model component.
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -115,7 +115,7 @@ material.hasSpecular = true;
 
 material.hasSpecularityFactor = true;
 material.hasNormals = true;
-//    material.hasMetalness = true;
+//    material.hasmetalness = true;
 material.hasMetalness = false;
 material.occludeSpecular = pc.SPECOCC_AO;
 

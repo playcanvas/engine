@@ -21,19 +21,19 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// Set the canvas to fill the window and automatically
+// set the canvas to fill the window and automatically
 // change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Create an entity with a directional light component
+// create an entity with a directional light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional'
@@ -41,7 +41,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
-// Create an entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
@@ -151,7 +151,7 @@ const createMorphInstance = (x, y, z) => {
     // create a morph using these 3 targets
     mesh.morph = new pc.Morph(targets, app.graphicsDevice);
 
-    // Create the mesh instance
+    // create the mesh instance
     const material = new pc.StandardMaterial();
     const meshInstance = new pc.MeshInstance(mesh, material);
 
@@ -159,12 +159,12 @@ const createMorphInstance = (x, y, z) => {
     const morphInstance = new pc.MorphInstance(mesh.morph);
     meshInstance.morphInstance = morphInstance;
 
-    // Create Entity and add it to the scene
+    // create entity and add it to the scene
     const entity = new pc.Entity();
     entity.setLocalPosition(x, y, z);
     app.root.addChild(entity);
 
-    // Add a render component with meshInstance
+    // add a render component with meshinstance
     entity.addComponent('render', {
         material: material,
         meshInstances: [meshInstance]

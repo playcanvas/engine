@@ -15,8 +15,8 @@ import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-contr
 
 import { data, deviceType } from 'examples/context';
 
-// Color LUTs in examples/assets/cube-luts/ (256×16 Unreal-style horizontal strip).
-// Rows: [key, label]. Textures are lut-{key}.png except key 'none'.
+// color luts in examples/assets/cube-luts/ (256×16 unreal-style horizontal strip).
+// rows: [key, label]. textures are lut-{key}.png except key 'none'.
 /** @type {[string, string][]} */
 const LUT_TABLE = [
     ['none', 'None'],
@@ -57,7 +57,7 @@ pc.WasmModule.setConfig('Ammo', {
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
-// the collision GLB uses Draco-compressed meshes, so the Draco decoder is required
+// the collision glb uses draco-compressed meshes, so the draco decoder is required
 pc.WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -107,16 +107,16 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// 3D LUTs are 2D "horizontal strip" textures in Unreal-format (an unwrapped 3D LUT).
-// They must be loaded with srgb:true (they are sRGB-encoded), mipmaps:false (sampled at
-// LOD 0 only) and linear filtering (avoids banding between LUT entries).
+// 3d luts are 2d "horizontal strip" textures in unreal-format (an unwrapped 3d lut).
+// they must be loaded with srgb:true (they are srgb-encoded), mipmaps:false (sampled at
+// lod 0 only) and linear filtering (avoids banding between lut entries).
 const lutAssetOptions = {
     srgb: true,
     mipmaps: false,
@@ -150,8 +150,8 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Renderer selection. Register before setting the initial value, so the initial
-// AUTO selection is resolved to the concrete renderer and shown in the dropdown.
+// renderer selection. register before setting the initial value, so the initial
+// auto selection is resolved to the concrete renderer and shown in the dropdown.
 data.on('renderer:set', () => {
     app.scene.gsplat.renderer = data.get('renderer');
     const current = app.scene.gsplat.currentRenderer;
@@ -160,7 +160,7 @@ data.on('renderer:set', () => {
     }
 });
 
-// Initial control values
+// initial control values
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('splatBudget', 4);
 data.set('lut', 'bw');
@@ -172,7 +172,7 @@ data.set('lutAnimate', true);
 data.set('data.stats.gsplats', '—');
 data.set('data.stats.resolution', '—');
 
-// Splat budget (in millions)
+// splat budget (in millions)
 const applySplatBudget = () => {
     const millions = data.get('splatBudget');
     app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
@@ -180,10 +180,10 @@ const applySplatBudget = () => {
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
-// Gravity
+// gravity
 app.systems.rigidbody?.gravity.set(0, -10, 0);
 
-// Camera (attached to the character controller below)
+// camera (attached to the character controller below)
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
@@ -193,9 +193,9 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(0, 0.9, 0);
 
-// CameraFrame post-processing pipeline. Linear tonemap is the identity on values in [0,1]
+// cameraframe post-processing pipeline. linear tonemap is the identity on values in [0,1]
 // which lets gaussian splat colors (already display-ready) pass through unchanged so the
-// LUT is the only thing modifying the final look.
+// lut is the only thing modifying the final look.
 const cameraFrame = new pc.CameraFrame(app, camera.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_LINEAR;
 cameraFrame.update();
@@ -224,9 +224,9 @@ data.on('lutIntensity:set', applyLut);
 data.on('lutIntensity2:set', applyLut);
 data.on('lutBlend:set', applyLut);
 
-// Animate mode cycles between random LUTs in slot 2 every 3 s
-// (1.5 s hold on the current look, 1.5 s crossfade to the next). When a crossfade
-// completes, slot 2 becomes the new slot 1 and a fresh random LUT is picked for slot 2.
+// animate mode cycles between random luts in slot 2 every 3 s
+// (1.5 s hold on the current look, 1.5 s crossfade to the next). when a crossfade
+// completes, slot 2 becomes the new slot 1 and a fresh random lut is picked for slot 2.
 const animatableKeys = LUT_CATALOG.filter(({ file }) => file !== null).map(({ key }) => key);
 const HOLD_SECONDS = 1.5;
 const CROSSFADE_SECONDS = 1.5;
@@ -251,22 +251,22 @@ data.on('lutAnimate:set', (value) => {
 });
 startLutAnimate();
 
-// Parent that holds both the splat and the collision mesh, keeping them aligned.
-// The splat data is authored upside-down relative to PlayCanvas's Y-up convention,
-// so a 180° rotation around Z flips both the visual and the collision together.
+// parent that holds both the splat and the collision mesh, keeping them aligned.
+// the splat data is authored upside-down relative to playcanvas's y-up convention,
+// so a 180° rotation around z flips both the visual and the collision together.
 const sceneRoot = new pc.Entity('sunnyvale');
 sceneRoot.setLocalEulerAngles(0, 0, 180);
 app.root.addChild(sceneRoot);
 
-// Gaussian splat (visual)
+// gaussian splat (visual)
 const splat = new pc.Entity('sunnyvale-gsplat');
 splat.addComponent('gsplat', {
     asset: assets.splat
 });
 sceneRoot.addChild(splat);
 
-// Collision mesh instantiated from the GLB; attached to each render component as
-// a static rigidbody using the actual triangle mesh. The mesh itself is hidden -
+// collision mesh instantiated from the glb; attached to each render component as
+// a static rigidbody using the actual triangle mesh. the mesh itself is hidden -
 // it is only used for collision.
 const collisionRoot = assets.collision.resource.instantiateRenderEntity();
 collisionRoot.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
@@ -284,7 +284,7 @@ collisionRoot.findComponents('render').forEach((/** @type {pc.RenderComponent} *
 });
 sceneRoot.addChild(collisionRoot);
 
-// First-person character controller
+// first-person character controller
 const characterController = new pc.Entity('character-controller');
 characterController.setPosition(0, 2, 0);
 characterController.addChild(camera);
@@ -314,7 +314,7 @@ characterController.script.create(FirstPersonController, {
 });
 app.root.addChild(characterController);
 
-// Stats
+// stats
 app.on('update', (/** @type {number} */ dt) => {
     if (data.get('lutAnimate')) {
         animClock += dt;

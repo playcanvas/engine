@@ -52,15 +52,15 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// High Res toggle (false by default): when false, use half native DPR; when true, use min(DPR, 2)
+// high res toggle (false by default): when false, use half native dpr; when true, use min(dpr, 2)
 data.set('highRes', !!data.get('highRes'));
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
-    // auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
+    // auto: treat dpr >= 2 as high-dpi (drops to half); high res forces native capped at 2
     device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
 };
 applyResolution();
@@ -70,14 +70,14 @@ const applyAndResize = () => {
 };
 data.on('highRes:set', applyAndResize);
 
-// Ensure DPR and canvas are updated when window changes size
+// ensure dpr and canvas are updated when window changes size
 window.addEventListener('resize', applyAndResize);
 app.on('destroy', () => {
     window.removeEventListener('resize', applyAndResize);
 });
 
-// Roman-Parish configuration
-// original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
+// roman-parish configuration
+// original dataset: https://www.youtube.com/watch?v=3rty_clk13k
 const config = {
     name: 'Roman-Parish',
     url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json',
@@ -92,7 +92,7 @@ const config = {
     focusPoint: [12, 3, 0]
 };
 
-// HDRI environment presets (Poly Haven, infinite projection)
+// hdri environment presets (poly haven, infinite projection)
 /** @type {Record<string, { url: string, exposure: number } | null>} */
 const ENV_PRESETS = {
     none: null,
@@ -130,7 +130,7 @@ const ENV_PRESETS = {
     }
 };
 
-// LOD preset definitions
+// lod preset definitions
 /** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
 const LOD_PRESETS = {
     'desktop-max': {
@@ -174,7 +174,7 @@ app.start();
 
 const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
-// enable rotation-based LOD updates and behind-camera penalty
+// enable rotation-based lod updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.radialSorting = true;
@@ -211,7 +211,7 @@ data.on('compact:set', () => {
 
 const MAX_PERSPECTIVE_FOV = 140;
 
-// initialize UI settings (must be after observer registration)
+// initialize ui settings (must be after observer registration)
 data.set('fisheye', 0);
 data.set('cameraFov', 75);
 data.set('toneMapping', pc.TONEMAP_LINEAR);
@@ -233,7 +233,7 @@ data.set('orientation', paramOrientation ? parseFloat(paramOrientation) : 270);
 
 const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 
-// Create a camera with fly controls
+// create a camera with fly controls
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(1, 1, 1),
@@ -259,7 +259,7 @@ Object.assign(cc, {
     focusPoint: focusPoint
 });
 
-// CameraFrame for HDR linear rendering (created lazily on first enable)
+// cameraframe for hdr linear rendering (created lazily on first enable)
 /** @type {pc.CameraFrame|null} */
 let cameraFrame = null;
 
@@ -316,7 +316,7 @@ data.on('fogDensity:set', () => {
     }
 });
 
-// Poly Haven credit overlay (shown when an HDRI is active)
+// poly haven credit overlay (shown when an hdri is active)
 const phCredit = document.createElement('a');
 phCredit.href = 'https://polyhaven.com';
 phCredit.target = '_blank';
@@ -342,7 +342,7 @@ phCredit.onmouseleave = () => {
 document.body.appendChild(phCredit);
 app.on('destroy', () => phCredit.remove());
 
-// HDRI environment loading
+// hdri environment loading
 /** @type {Map<string, { skybox: pc.Texture, envAtlas: pc.Texture }>} */
 const hdriCache = new Map();
 
@@ -390,7 +390,7 @@ data.on('environment:set', () => {
     });
 });
 
-// Gsplat loading state
+// gsplat loading state
 /** @type {pc.Entity|null} */
 let gsplatEntity = null;
 /** @type {any} */
@@ -456,7 +456,7 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
     gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
     gsplatGs.lodMultiplier = presetData.lodMultiplier;
 
-    // Start with lowest LOD for fast initial display, then stream up
+    // start with lowest lod for fast initial display, then stream up
     const lodLevels = gsplatGs.resource?.octree?.lodLevels;
     if (lodLevels) {
         const worstLod = lodLevels - 1;
@@ -477,7 +477,7 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
     };
     gsplatSystem.on('frame:ready', onFrameReady);
 
-    // Radial reveal effect
+    // radial reveal effect
     gsplatEntity.addComponent('script');
     const revealScript = gsplatEntity.script?.create(GsplatRevealRadial);
     if (revealScript) {
@@ -490,8 +490,8 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
     }
 };
 
-// Initial load — use the observer's current url, which is paramUrl from the
-// hash query if set, or the share-URL state value applied during app.start().
+// initial load — use the observer's current url, which is paramurl from the
+// hash query if set, or the share-url state value applied during app.start().
 await loadGsplat(data.get('url') || null);
 
 data.on('lodPreset:set', applyPreset);

@@ -35,11 +35,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -59,14 +59,14 @@ app.scene.envAtlas = assets.helipad.resource;
 
 app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
 });
 app.root.addChild(camera);
 
-// Move the camera back to see the cubes
+// move the camera back to see the cubes
 camera.translate(0, 0, 10);
 
 // create standard material and enable instancing on it
@@ -76,7 +76,7 @@ material.metalness = 0.7;
 material.useMetalness = true;
 material.update();
 
-// Create a Entity with a cylinder render component and the instancing material
+// create a entity with a cylinder render component and the instancing material
 const cylinder = new pc.Entity('InstancingEntity');
 cylinder.addComponent('render', {
     material: material,
@@ -120,11 +120,11 @@ const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceC
     data: matrices
 });
 
-// initialize instancing using the vertex buffer on meshInstance of the created box
+// initialize instancing using the vertex buffer on meshinstance of the created box
 const cylinderMeshInst = cylinder.render.meshInstances[0];
 cylinderMeshInst.setInstancing(vertexBuffer);
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 let angle = 0;
 app.on('update', (dt) => {
     // orbit camera around

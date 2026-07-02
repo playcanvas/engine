@@ -34,11 +34,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -51,14 +51,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create a camera
+// create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// Create a 2D screen
+// create a 2d screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -68,7 +68,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// Create a text element that wraps text over several lines
+// create a text element that wraps text over several lines
 const loremIpsum =
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
 const text = new pc.Entity();
@@ -85,11 +85,11 @@ text.addComponent('element', {
 });
 screen.addChild(text);
 
-// Start with no text printed
+// start with no text printed
 text.element.rangeStart = 0;
 text.element.rangeEnd = 0;
 
-// Render a new character every 75ms
+// render a new character every 75ms
 const id = setInterval(() => {
     text.element.rangeEnd += 1;
     if (text.element.rangeEnd >= loremIpsum.length) {

@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -62,7 +62,7 @@ app.scene.envAtlas = assets.helipad.resource;
 // set up some general scene rendering properties
 app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_ACES
@@ -110,7 +110,7 @@ material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('transformInstancingVS', tr
 
 material.update();
 
-// Create an Entity with a sphere and the instancing material
+// create an entity with a sphere and the instancing material
 const instancingEntity = new pc.Entity('InstancingEntity');
 instancingEntity.addComponent('render', {
     material: material,
@@ -118,11 +118,11 @@ instancingEntity.addComponent('render', {
 });
 app.root.addChild(instancingEntity);
 
-// initialize instancing using the vertex buffer on meshInstance of the created mesh instance
+// initialize instancing using the vertex buffer on meshinstance of the created mesh instance
 const meshInst = instancingEntity.render.meshInstances[0];
 meshInst.setInstancing(vertexBuffer);
 
-// add a non-instanced sphere, using the same material. A non-instanced version of the shader
+// add a non-instanced sphere, using the same material. a non-instanced version of the shader
 // is automatically created by the engine
 const sphere = new pc.Entity('sphere');
 sphere.addComponent('render', {
@@ -132,7 +132,7 @@ sphere.addComponent('render', {
 sphere.setLocalScale(2, 2, 2);
 app.root.addChild(sphere);
 
-// An update function executes once per frame
+// an update function executes once per frame
 let time = 0;
 const spherePos = new pc.Vec3();
 app.on('update', (dt) => {

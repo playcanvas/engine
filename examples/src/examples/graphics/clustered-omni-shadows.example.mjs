@@ -51,11 +51,11 @@ createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.Cubema
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -75,7 +75,7 @@ data.set('settings', {
     cookiesEnabled: true
 });
 
-// enabled clustered lighting. This is a temporary API and will change in the future
+// enabled clustered lighting. this is a temporary api and will change in the future
 app.scene.clusteredLightingEnabled = true;
 
 // adjust default clustered lighting parameters to handle many lights
@@ -163,7 +163,7 @@ for (let i = 0; i < numTowers; i++) {
 }
 
 // construct the cubemap asset for the omni light cookie texture
-// Note: the textures array could contain 6 texture asset names to load instead as well
+// note: the textures array could contain 6 texture asset names to load instead as well
 const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
     textures: [
         assets.xmas_posx.id,
@@ -217,7 +217,7 @@ for (let i = 0; i < numLights; i++) {
     omniLights.push(lightOmni);
 }
 
-// create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     fov: 80,
@@ -243,14 +243,14 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// handle HUD changes - update properties on the scene
+// handle hud changes - update properties on the scene
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     // @ts-ignore
     lighting[pathArray[1]] = value;
 });
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt * 0.3;

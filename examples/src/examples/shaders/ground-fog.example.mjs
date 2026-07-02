@@ -53,11 +53,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -91,7 +91,7 @@ app.root.addChild(terrain);
 // find a tree in the middle to use as a focus point
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
-// create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(150 / 255, 213 / 255, 63 / 255),
@@ -118,7 +118,7 @@ app.root.addChild(camera);
 // enable the camera to render the scene's depth map.
 camera.camera.requestSceneDepthMap(true);
 
-// Create a directional light casting cascaded shadows
+// create a directional light casting cascaded shadows
 const dirLight = new pc.Entity();
 dirLight.addComponent('light', {
     type: 'directional',
@@ -136,7 +136,7 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(45, 350, 20);
 
-// Create a new material with a fog shader
+// create a new material with a fog shader
 const material = new pc.ShaderMaterial({
     uniqueName: 'GroundFogShader',
     vertexGLSL: shaderGlslVert,
@@ -177,7 +177,7 @@ app.on('update', (dt) => {
         camera.script.orbitCamera.distance = 320;
     }
 
-    // Update the time and pass it to shader
+    // update the time and pass it to shader
     currentTime += dt;
     material.setParameter('uTime', currentTime);
 

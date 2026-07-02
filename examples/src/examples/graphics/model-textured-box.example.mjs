@@ -25,11 +25,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -49,14 +49,14 @@ const material = new pc.StandardMaterial();
 material.diffuseMap = assets.clouds.resource;
 material.update();
 
-// Create a Entity with a Box model component
+// create a entity with a box model component
 const box = new pc.Entity();
 box.addComponent('render', {
     type: 'box',
     material: material
 });
 
-// Create an Entity with a omni light component and a sphere model component.
+// create an entity with a omni light component and a sphere model component.
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -66,24 +66,24 @@ light.addComponent('light', {
 light.addComponent('render', {
     type: 'sphere'
 });
-// Scale the sphere down to 0.1m
+// scale the sphere down to 0.1m
 light.setLocalScale(0.1, 0.1, 0.1);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
 });
 
-// Add the new Entities to the hierarchy
+// add the new entities to the hierarchy
 app.root.addChild(box);
 app.root.addChild(light);
 app.root.addChild(camera);
 
-// Move the camera 10m along the z-axis
+// move the camera 10m along the z-axis
 camera.translate(0, 0, 10);
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 let angle = 0;
 app.on('update', (dt) => {
     angle += dt;
@@ -91,9 +91,9 @@ app.on('update', (dt) => {
         angle = 0;
     }
 
-    // Move the light in a circle
+    // move the light in a circle
     light.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));
 
-    // Rotate the box
+    // rotate the box
     box.setEulerAngles(angle * 2, angle * 4, angle * 8);
 });

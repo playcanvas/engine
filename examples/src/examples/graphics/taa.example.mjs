@@ -28,7 +28,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable anti-aliasing as TAA is used to smooth edges
+    // disable anti-aliasing as taa is used to smooth edges
     antialias: false
 };
 
@@ -51,11 +51,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -78,7 +78,7 @@ const houseEntity = assets.house.resource.instantiateRenderEntity();
 houseEntity.setLocalScale(100, 100, 100);
 app.root.addChild(houseEntity);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     nearClip: 10,
@@ -123,7 +123,7 @@ const cubeEntity = assets.cube.resource.instantiateRenderEntity();
 cubeEntity.setLocalScale(30, 30, 30);
 app.root.addChild(cubeEntity);
 
-// ------ Custom render passes set up ------
+// ------ custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
@@ -141,11 +141,11 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// apply UI changes
+// apply ui changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     applySettings();
 
-    // TAA has been flipped, setup sharpening appropriately
+    // taa has been flipped, setup sharpening appropriately
     const pathArray = path.split('.');
     if (pathArray[2] === 'enabled') {
         data.set('data.scene.sharpness', value ? 1 : 0);

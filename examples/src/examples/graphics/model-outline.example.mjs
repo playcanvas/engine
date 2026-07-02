@@ -33,7 +33,7 @@ createOptions.resourceHandlers = [pc.ScriptHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -113,7 +113,7 @@ createPrimitive('box', new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(
 ]);
 createPrimitive('cone', new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), new pc.Color(0, 1, 1), [worldLayer.id]);
 
-// Create main camera, which renders entities in world layer
+// create main camera, which renders entities in world layer
 const camera = new pc.Entity('MainCamera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.4),
@@ -122,14 +122,14 @@ camera.addComponent('camera', {
 camera.translate(0, 20, 25);
 camera.lookAt(pc.Vec3.ZERO);
 
-// Create outline camera, which renders entities in outline layer into the render target
+// create outline camera, which renders entities in outline layer into the render target
 const outlineCamera = new pc.Entity('Outline Camera');
 outlineCamera.addComponent('camera', {
     clearColor: new pc.Color(0.0, 0.0, 0.0, 0.0),
     layers: [outlineLayer.id],
     renderTarget: renderTarget,
 
-    // set the priority of outlineCamera to lower number than the priority of the main camera (which is at default 0)
+    // set the priority of outlinecamera to lower number than the priority of the main camera (which is at default 0)
     // to make it rendered first each frame
     priority: -1
 });
@@ -143,7 +143,7 @@ camera.camera.postEffects.addEffect(outline);
 
 app.root.addChild(camera);
 
-// Create an Entity with a omni light component and add it to both layers
+// create an entity with a omni light component and add it to both layers
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -157,7 +157,7 @@ light.addComponent('light', {
 light.translate(0, 2, 5);
 app.root.addChild(light);
 
-// Ensure canvas is resized when window changes size + render target handling
+// ensure canvas is resized when window changes size + render target handling
 const resize = () => {
     app.resizeCanvas();
 

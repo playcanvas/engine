@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -55,14 +55,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create a camera
+// create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// Create a 2D screen
+// create a 2d screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -77,7 +77,7 @@ const firstLineText = 'PlayCanvas supports Emojis via CanvasFont!';
 const flagsText = 'Flags: 🇺🇸🇩🇪🇮🇪🇮🇹🏴‍☠️🇨🇦';
 const complexText = 'Complex emoji: 👨🏿3️⃣👁️‍🗨️';
 
-// Create a canvas font asset
+// create a canvas font asset
 const size = 64;
 const elSize = 32;
 
@@ -89,7 +89,7 @@ const canvasFont = new pc.CanvasFont(app, {
     height: 256
 });
 
-// The first texture update needs to be `createTextures()`. Follow-up calls need to be `updateTextures()`.
+// the first texture update needs to be `createtextures()`. follow-up calls need to be `updatetextures()`.
 canvasFont.createTextures(firstLineText);
 canvasFont.updateTextures(flagsText);
 canvasFont.updateTextures(complexText);
@@ -116,7 +116,7 @@ createText(225, firstLineText);
 createText(150, flagsText);
 createText(100, complexText);
 
-// Canvas Fonts Debug - you shouldn't do this in your actual project
+// canvas fonts debug - you shouldn't do this in your actual project
 const debugText = new pc.Entity();
 debugText.setLocalPosition(0, -50, 0);
 debugText.addComponent('element', {
@@ -129,11 +129,11 @@ debugText.addComponent('element', {
 });
 screen.addChild(debugText);
 
-// Create Layout Group Entity
+// create layout group entity
 const group = new pc.Entity();
 group.setLocalPosition(0, -150, 0);
 group.addComponent('element', {
-    // a Layout Group needs a 'group' element component
+    // a layout group needs a 'group' element component
     type: pc.ELEMENTTYPE_GROUP,
     anchor: [0.5, 0.5, 0.5, 0.5],
     pivot: [0.5, 0.5],

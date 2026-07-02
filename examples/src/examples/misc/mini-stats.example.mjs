@@ -31,11 +31,11 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -56,7 +56,7 @@ options.sizes = [
 options.startSizeIndex = 2;
 
 // display additional counters
-// Note: for most of these to report values, either debug or profiling engine build needs to be used.
+// note: for most of these to report values, either debug or profiling engine build needs to be used.
 options.stats = [
     // frame update time in ms
     {
@@ -100,7 +100,7 @@ options.stats = [
         unitsName: 'ms'
     },
 
-    // used VRAM in MB
+    // used vram in mb
     {
         name: 'VRAM',
         stats: ['vram.totalUsed'],
@@ -138,7 +138,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
-// Create an entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
@@ -229,7 +229,7 @@ app.on('update', () => {
             });
             textures.push(texture);
 
-            // ensure texture is uploaded (actual VRAM is allocated)
+            // ensure texture is uploaded (actual vram is allocated)
             texture.lock();
             texture.unlock();
 

@@ -67,7 +67,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', onResize);
 });
 
-// Outside scene (Roman Parish) and inside-portal scene (Skatepark) configuration
+// outside scene (roman parish) and inside-portal scene (skatepark) configuration
 const OUTSIDE_URL = 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json';
 const INSIDE_URL = 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json';
 
@@ -89,7 +89,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Use the environment atlas for image-based lighting only - this gives the
+// use the environment atlas for image-based lighting only - this gives the
 // portal arch a soft ambient tint so it isn't pure black, while the actual
 // sky geometry stays hidden (the camera's clear color remains the visible
 // background, which keeps the focus on the splat scenes).
@@ -105,21 +105,21 @@ app.scene.gsplat.lodUpdateDistance = 0.5;
 app.scene.gsplat.lodUnderfillLimit = 5;
 app.scene.gsplat.splatBudget = pc.platform.mobile ? 500000 : 1500000;
 
-// ---------- Layer setup ----------
-// Each splat scene has its own dedicated layer (outsideLayer for Parish,
-// insideLayer for Skatepark). The data on each layer never changes - we
+// ---------- layer setup ----------
+// each splat scene has its own dedicated layer (outsidelayer for parish,
+// insidelayer for skatepark). the data on each layer never changes - we
 // never reassign gsplat entities to a different layer, so the gsplat manager
 // for each layer keeps its splat data preloaded and there's no reconciliation
 // cost on portal crossings.
 //
-// What changes on a crossing is:
+// what changes on a crossing is:
 //   1) the order of the two splat transparent sub-layers, so the
-//      "through-scene" renders BEFORE the glass overlay and the
-//      "from-scene" renders AFTER it (see comment below).
-//   2) the stencil + depthFunc settings on each layer's gsplat material, so
+//      "through-scene" renders before the glass overlay and the
+//      "from-scene" renders after it (see comment below).
+//   2) the stencil + depthfunc settings on each layer's gsplat material, so
 //      whichever scene is currently being viewed through the portal gets
-//      stencil-masked + FUNC_GREATER, and the other gets no stencil +
-//      FUNC_LESSEQUAL.
+//      stencil-masked + func_greater, and the other gets no stencil +
+//      func_lessequal.
 const worldLayer = app.scene.layers.getLayerByName('World');
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
@@ -128,34 +128,34 @@ const portalMaskLayer = new pc.Layer({ name: 'PortalMask' });
 const portalArchLayer = new pc.Layer({ name: 'PortalArch' });
 const outsideLayer = new pc.Layer({ name: 'PortalOutside' });
 const insideLayer = new pc.Layer({ name: 'PortalInside' });
-// portalGlassLayer renders a translucent specular "glass" pane inside the
-// portal opening. It must render BETWEEN the through-scene and the
-// from-scene so the glass blends OVER the through-scene's splats, but
+// portalglasslayer renders a translucent specular "glass" pane inside the
+// portal opening. it must render between the through-scene and the
+// from-scene so the glass blends over the through-scene's splats, but
 // any from-scene splats that sit between the camera and the portal still
 // render on top of the glass.
 const portalGlassLayer = new pc.Layer({ name: 'PortalGlass' });
 
-// ---- Layer ordering with explicit opaque/transparent control ----
-// pc.LayerComposition.insert() inserts BOTH the opaque and transparent
+// ---- layer ordering with explicit opaque/transparent control ----
+// pc.layercomposition.insert() inserts both the opaque and transparent
 // sub-layers of a layer in a single call, which makes precise transparent
 // ordering awkward (transparent entries end up in reverse insertion order).
 //
-// We avoid that here by using the sub-layer API directly: each layer is
+// we avoid that here by using the sub-layer api directly: each layer is
 // only ever a pure-opaque or pure-transparent renderer, so we just place
 // the relevant sub-layer where we want it in the composition.
 //
-//   - maskLayer / archLayer:        only opaque   (mask plane + arch geom)
-//   - insideLayer / outsideLayer:   only transparent (gsplats)
-//   - portalGlassLayer:             only transparent (glass overlay)
+//   - masklayer / archlayer:        only opaque   (mask plane + arch geom)
+//   - insidelayer / outsidelayer:   only transparent (gsplats)
+//   - portalglasslayer:             only transparent (glass overlay)
 //
-// Initial sub-layer order (swapped=false: Parish=from, Skatepark=through):
-//   [0] maskLayer opaque        - stencil + depth at portal plane
-//   [1] archLayer opaque        - arch geom, clears stencil on arch silhouette
-//   [2] insideLayer transparent - through-scene splats (FUNC_GREATER)
-//   [3] portalGlassLayer transp - glass overlay, blends over through-scene
-//   [4] outsideLayer transparent- from-scene splats (FUNC_LESSEQUAL); any
+// initial sub-layer order (swapped=false: parish=from, skatepark=through):
+//   [0] masklayer opaque        - stencil + depth at portal plane
+//   [1] archlayer opaque        - arch geom, clears stencil on arch silhouette
+//   [2] insidelayer transparent - through-scene splats (func_greater)
+//   [3] portalglasslayer transp - glass overlay, blends over through-scene
+//   [4] outsidelayer transparent- from-scene splats (func_lessequal); any
 //                                 from-scene splat closer than the portal
-//                                 renders OVER the glass, like glass behind
+//                                 renders over the glass, like glass behind
 //                                 leaves.
 app.scene.layers.insertOpaque(portalMaskLayer, 0);
 app.scene.layers.insertOpaque(portalArchLayer, 1);
@@ -181,7 +181,7 @@ const reorderLayersForSwap = (nowSwapped) => {
     app.scene.layers.insertTransparent(newFromLayer, 4);
 };
 
-// ---------- Camera with fly controls ----------
+// ---------- camera with fly controls ----------
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.05, 0.05, 0.07),
@@ -199,7 +199,7 @@ camera.addComponent('camera', {
     toneMapping: pc.TONEMAP_LINEAR
 });
 camera.setLocalPosition(10.3, 2, -10);
-// Push the near clip way in. The portal mask plane is a flat quad that needs
+// push the near clip way in. the portal mask plane is a flat quad that needs
 // to be fully visible (no near-plane clipping) right up to the moment the
 // camera crosses it - otherwise the plane is partially clipped on the
 // crossing frame, the stencil isn't written in part of the portal area,
@@ -219,13 +219,13 @@ Object.assign(cc, {
     focusPoint: focusPoint
 });
 
-// ---------- Portal mesh + stencil mask plane ----------
-// The portal group holds both the visible decorative arch (rendered to the world
+// ---------- portal mesh + stencil mask plane ----------
+// the portal group holds both the visible decorative arch (rendered to the world
 // layer) and an invisible plane (rendered to the portal mask layer) that writes 1
 // into the stencil buffer over the portal opening.
 //
-// PORTAL_WORLD_POS / PORTAL_WORLD_YAW is the single source of truth for where the
-// portal sits in the app world. Both splat scenes are then positioned so that
+// portal_world_pos / portal_world_yaw is the single source of truth for where the
+// portal sits in the app world. both splat scenes are then positioned so that
 // their declared local portal anchors line up with this transform - meaning the
 // camera can walk continuously between worlds, no teleport required.
 const PORTAL_WORLD_POS = new pc.Vec3(12, 1.5, 0);
@@ -236,38 +236,38 @@ portalGroup.setLocalPosition(PORTAL_WORLD_POS);
 portalGroup.setLocalEulerAngles(0, PORTAL_WORLD_YAW, 0);
 app.root.addChild(portalGroup);
 
-// ---------- Splat scenes ----------
-// Each scene declares where the portal sits inside its own upright space:
-//  - intrinsicEuler: rotation required to bring the raw splat data upright
-//  - portalLocalPos / portalLocalYaw: portal anchor expressed in that upright space
+// ---------- splat scenes ----------
+// each scene declares where the portal sits inside its own upright space:
+//  - intrinsiceuler: rotation required to bring the raw splat data upright
+//  - portallocalpos / portallocalyaw: portal anchor expressed in that upright space
 //
-// The scene's entity transform is then derived as:
-//     entity.transform = Tworld * Tlocal^(-1) * Tintrinsic
+// the scene's entity transform is then derived as:
+//     entity.transform = tworld * tlocal^(-1) * tintrinsic
 // which guarantees that the scene's declared portal point coincides exactly with
-// the world portal. Tune these per-scene values to choose where each world's
+// the world portal. tune these per-scene values to choose where each world's
 // "doorway" lives.
-// Each scene also declares a "viewThroughOffset" - a world-space translation
+// each scene also declares a "viewthroughoffset" - a world-space translation
 // applied to the scene's entity only while it's being viewed *through* the portal
 // (i.e. it's not the world the camera currently lives in).
 //
-// PARALLAX TRADE-OFF (tune via the "Parish Through Z" slider):
-//   offset.z =  0  →  Parish content sits at the same depth as the portal.
-//                     It "stays in the portal frame" as you move - matches the
-//                     gentle parallax you get on the Parish side looking at the
-//                     Skatepark. Cost: your camera is inside the Parish data, so
-//                     the visible part of the Parish is whatever is right around
-//                     the portal in 3D space.
-//   offset.z << 0  →  Parish content gets pushed far behind the portal.
-//                     Visually distant, but it shifts in the SAME direction as
+// parallax trade-off (tune via the "parish through z" slider):
+//   offset.z =  0  →  parish content sits at the same depth as the portal.
+//                     it "stays in the portal frame" as you move - matches the
+//                     gentle parallax you get on the parish side looking at the
+//                     skatepark. cost: your camera is inside the parish data, so
+//                     the visible part of the parish is whatever is right around
+//                     the portal in 3d space.
+//   offset.z << 0  →  parish content gets pushed far behind the portal.
+//                     visually distant, but it shifts in the same direction as
 //                     your strafe (depth-ambiguity parallax, like a far landscape
 //                     seen through a window).
-//   offset.z >  0  →  Parish content sits between you and the portal (visible
-//                     only inside the portal frame). Parallaxes in the OPPOSITE
+//   offset.z >  0  →  parish content sits between you and the portal (visible
+//                     only inside the portal frame). parallaxes in the opposite
 //                     direction to your motion, like a close object.
-// The Skatepark already sits at the portal so its through-portal view doesn't
+// the skatepark already sits at the portal so its through-portal view doesn't
 // need an offset.
-// Each scene is permanently bound to its own layer (Parish -> outsideLayer,
-// Skatepark -> insideLayer). The reorder + material-flip logic in the swap
+// each scene is permanently bound to its own layer (parish -> outsidelayer,
+// skatepark -> insidelayer). the reorder + material-flip logic in the swap
 // handler is what makes a layer act as "from" or "through" at any time.
 const sceneConfigs = [
     {
@@ -294,7 +294,7 @@ const sceneConfigs = [
     }
 ];
 
-// Helper: build a TRS Mat4 from position + Y-only yaw (degrees).
+// helper: build a trs mat4 from position + y-only yaw (degrees).
 const trsYaw = (/** @type {pc.Vec3} */ pos, /** @type {number} */ yaw) => {
     return new pc.Mat4().setTRS(pos, new pc.Quat().setFromEulerAngles(0, yaw, 0), pc.Vec3.ONE);
 };
@@ -303,7 +303,7 @@ const portalWorldMat = trsYaw(PORTAL_WORLD_POS, PORTAL_WORLD_YAW);
 const tmpPos = new pc.Vec3();
 const tmpEuler = new pc.Vec3();
 
-// Helper: apply a Mat4 to an entity by extracting position + euler.
+// helper: apply a mat4 to an entity by extracting position + euler.
 const applyMatToEntity = (/** @type {pc.Entity} */ entity, /** @type {pc.Mat4} */ mat) => {
     mat.getTranslation(tmpPos);
     mat.getEulerAngles(tmpEuler);
@@ -311,7 +311,7 @@ const applyMatToEntity = (/** @type {pc.Entity} */ entity, /** @type {pc.Mat4} *
     entity.setLocalEulerAngles(tmpEuler);
 };
 
-// Build the natural ("portal-aligned") world transform for a scene.
+// build the natural ("portal-aligned") world transform for a scene.
 const buildOriginalTransform = (/** @type {typeof sceneConfigs[number]} */ config) => {
     const portalLocalMat = trsYaw(config.portalLocalPos, config.portalLocalYaw);
     const intrinsicMat = new pc.Mat4().setTRS(
@@ -319,7 +319,7 @@ const buildOriginalTransform = (/** @type {typeof sceneConfigs[number]} */ confi
         new pc.Quat().setFromEulerAngles(config.intrinsicEuler.x, config.intrinsicEuler.y, config.intrinsicEuler.z),
         pc.Vec3.ONE
     );
-    // entity = Tworld * Tlocal^(-1) * Tintrinsic
+    // entity = tworld * tlocal^(-1) * tintrinsic
     return new pc.Mat4().mul2(portalWorldMat, portalLocalMat.invert()).mul(intrinsicMat);
 };
 
@@ -339,7 +339,7 @@ sceneConfigs.forEach((config) => {
         layers: [config.layer.id],
         lodBaseDistance: config.lodBaseDistance,
         lodMultiplier: config.lodMultiplier,
-        // start with the lowest LOD until the first frame settles, then unlock the full range
+        // start with the lowest lod until the first frame settles, then unlock the full range
         lodRangeMin: 4,
         lodRangeMax: 5
     });
@@ -347,11 +347,11 @@ sceneConfigs.forEach((config) => {
     // "from" pose - the portal-aligned natural transform (used while you live in this scene)
     const fromTransform = buildOriginalTransform(config);
 
-    // "through" pose - same as the from pose, but translated by viewThroughOffset.
+    // "through" pose - same as the from pose, but translated by viewthroughoffset.
     const throughOffsetMat = new pc.Mat4().setTRS(config.viewThroughOffset, new pc.Quat(), pc.Vec3.ONE);
     const throughTransform = new pc.Mat4().mul2(throughOffsetMat, fromTransform);
 
-    // Start each scene at whichever pose matches the initial swap state
+    // start each scene at whichever pose matches the initial swap state
     // (initially swapped=false: parish=from, skatepark=through).
     const startMat = config.layer === insideLayer ? throughTransform : fromTransform;
     applyMatToEntity(entity, startMat);
@@ -360,19 +360,19 @@ sceneConfigs.forEach((config) => {
     sceneStates.set(config.layer, { entity, fromTransform, throughTransform });
 });
 
-// ---------- Snow particles bound to the Skatepark layer ----------
-// Procedural Gaussian-splat snow that follows the camera. It's rendered on
-// insideLayer (the Skatepark layer), so it inherits whatever stencil/depth
+// ---------- snow particles bound to the skatepark layer ----------
+// procedural gaussian-splat snow that follows the camera. it's rendered on
+// insidelayer (the skatepark layer), so it inherits whatever stencil/depth
 // rules are active for that layer:
-//  - While the user is in the Skatepark (insideLayer = from-scene): snow
-//    renders normally everywhere around the camera (LESSEQUAL, no stencil).
-//  - While the user is in the Parish, looking through the portal at the
-//    Skatepark (insideLayer = through-scene): snow is stencil-masked and
+//  - while the user is in the skatepark (insidelayer = from-scene): snow
+//    renders normally everywhere around the camera (lessequal, no stencil).
+//  - while the user is in the parish, looking through the portal at the
+//    skatepark (insidelayer = through-scene): snow is stencil-masked and
 //    depth-clipped to the far side of the portal plane, so the camera-
-//    relative snow volume isn't visible from outside the Skatepark world.
-// No enable/disable logic needed - the per-layer material state flip in
-// applyMaterialStateForLayer is reused for the snow.
-// Half-extent (world units) of the camera-relative particle volume. The
+//    relative snow volume isn't visible from outside the skatepark world.
+// no enable/disable logic needed - the per-layer material state flip in
+// applymaterialstateforlayer is reused for the snow.
+// half-extent (world units) of the camera-relative particle volume. the
 // grid is square in all three axes, so this single value controls the
 // overall size of the snow volume.
 const SNOW_EXTENT = 20;
@@ -394,15 +394,15 @@ const weather = /** @type {GsplatWeather} */ (
 );
 weather.extents.set(SNOW_EXTENT, SNOW_EXTENT, SNOW_EXTENT);
 app.root.addChild(weatherEntity);
-// The script creates the gsplat component during initialize() (fired when
-// the entity is attached to the hierarchy). Now retarget it to the
-// Skatepark layer so the snow shares its rendering state.
+// the script creates the gsplat component during initialize() (fired when
+// the entity is attached to the hierarchy). now retarget it to the
+// skatepark layer so the snow shares its rendering state.
 weatherEntity.gsplat.layers = [insideLayer.id];
 
-// Stencil parameters used by the portal pieces (defined together for clarity).
-//  - maskStencil:        always increments stencil (used by the invisible mask plane).
-//  - archStencil:        always clears stencil to 0 (used by the visible arch frame).
-//  - portalOnlyStencil:  passes when stencil != 0 (used by the through-scene and
+// stencil parameters used by the portal pieces (defined together for clarity).
+//  - maskstencil:        always increments stencil (used by the invisible mask plane).
+//  - archstencil:        always clears stencil to 0 (used by the visible arch frame).
+//  - portalonlystencil:  passes when stencil != 0 (used by the through-scene and
 //                        the visible glass overlay, so they only render inside
 //                        the portal opening - not where the arch cleared it).
 const maskStencil = new pc.StencilParameters({
@@ -418,14 +418,14 @@ const portalOnlyStencil = new pc.StencilParameters({
     ref: 0
 });
 
-// ---------- Invisible stencil mask plane ----------
-// Increments stencil from 0 to 1 inside the portal opening, AND writes depth
-// at the portal plane's depth. The depth write is what gives us an "oblique
-// near clip plane at the portal": the through-scene splats use depthFunc =
-// FUNC_GREATER, so they only render where their depth is *past* the mask
-// plane's depth. That means parish content sitting between the camera and the
+// ---------- invisible stencil mask plane ----------
+// increments stencil from 0 to 1 inside the portal opening, and writes depth
+// at the portal plane's depth. the depth write is what gives us an "oblique
+// near clip plane at the portal": the through-scene splats use depthfunc =
+// func_greater, so they only render where their depth is *past* the mask
+// plane's depth. that means parish content sitting between the camera and the
 // portal (or anywhere else not on the far side) gets discarded - you only see
-// what's beyond the portal, exactly like a real window. No color is written
+// what's beyond the portal, exactly like a real window. no color is written
 // so the plane stays invisible; culling is off so the mask still works from
 // both sides of the portal.
 const maskMaterial = new pc.StandardMaterial();
@@ -450,17 +450,17 @@ maskPlane.setLocalEulerAngles(90, 0, 0);
 maskPlane.setLocalScale(3.5, 1, 6.7);
 portalGroup.addChild(maskPlane);
 
-// Decorative portal arch - rendered to portalArchLayer, which sits BEFORE the
-// splat layers in the layer composition. The arch's opaque materials write to
+// decorative portal arch - rendered to portalarchlayer, which sits before the
+// splat layers in the layer composition. the arch's opaque materials write to
 // the depth buffer, so any splats further from the camera than the arch are
 // depth-tested out and properly occluded by it.
 //
-// Additionally, the arch's materials are configured to *clear* the stencil
-// (archStencil, defined above) wherever the arch geometry is drawn. The mask
+// additionally, the arch's materials are configured to *clear* the stencil
+// (archstencil, defined above) wherever the arch geometry is drawn. the mask
 // plane wrote stencil = 1 across a rectangular region matching the doorway;
 // without this clear, the through-scene splats would spill into the
 // rectangular area outside the arch's actual silhouette and the rectangle
-// would look "visible". Clearing the stencil at the arch geometry confines
+// would look "visible". clearing the stencil at the arch geometry confines
 // the through-scene render (and the glass overlay) to the arch's true opening.
 const portalEntity = assets.portal.resource.instantiateRenderEntity();
 portalEntity.setLocalPosition(0, -3, 0);
@@ -479,27 +479,27 @@ archMaterials.forEach((/** @type {pc.Material} */ mat) => {
     mat.update();
 });
 
-// ---------- Visible glass overlay plane ----------
-// A second plane, geometrically identical to the invisible mask plane, but
-// rendered on portalGlassLayer (the LAST custom layer). It uses a translucent
+// ---------- visible glass overlay plane ----------
+// a second plane, geometrically identical to the invisible mask plane, but
+// rendered on portalglasslayer (the last custom layer). it uses a translucent
 // specular material that picks up specular highlights from the env atlas,
 // giving the portal opening a real glassy quality.
 //
-// Render-order argument: it sits after the through-scene, so the glass color
-// and specular blend OVER the through-scene splats. It sits before the
-// default "World" layer and renders only inside the portal opening (stencil =
-// portalOnlyStencil), so it doesn't paint over the from-scene or the arch.
+// render-order argument: it sits after the through-scene, so the glass color
+// and specular blend over the through-scene splats. it sits before the
+// default "world" layer and renders only inside the portal opening (stencil =
+// portalonlystencil), so it doesn't paint over the from-scene or the arch.
 //
-// Following the "Spec Fade Off" sphere recipe from
+// following the "spec fade off" sphere recipe from
 // material-translucent-specular.example.mjs:
-//  - BLEND_NORMAL alpha blending
-//  - opacityFadesSpecular = false so the specular stays bright at low opacity
+//  - blend_normal alpha blending
+//  - opacityfadesspecular = false so the specular stays bright at low opacity
 //  - low diffuse opacity, white specular, high gloss
-//  - depthWrite = false (the mask plane already wrote depth at this position)
-//  - alphaWrite = false (matches the example; avoids alpha-only writes mucking
+//  - depthwrite = false (the mask plane already wrote depth at this position)
+//  - alphawrite = false (matches the example; avoids alpha-only writes mucking
 //    up later passes)
 const glassMaterial = new pc.StandardMaterial();
-// Temporary red tint + higher opacity so the glass plane is obviously visible
+// temporary red tint + higher opacity so the glass plane is obviously visible
 // for debugging - dial these back once you can see it.
 glassMaterial.diffuse = new pc.Color(0, 1, 1);
 glassMaterial.specular = new pc.Color(0.4, 0.4, 0.4);
@@ -527,34 +527,34 @@ glassPlane.setLocalEulerAngles(maskPlane.getLocalEulerAngles());
 glassPlane.setLocalScale(maskPlane.getLocalScale());
 portalGroup.addChild(glassPlane);
 
-// ---------- Stencil + depth setup for the two splat scenes ----------
-// The gsplat material is created lazily per (camera, layer) pair.
-// The from-scene (the world the camera is in) gets:
+// ---------- stencil + depth setup for the two splat scenes ----------
+// the gsplat material is created lazily per (camera, layer) pair.
+// the from-scene (the world the camera is in) gets:
 //  - no stencil restriction
-//  - depthFunc = LESSEQUAL
+//  - depthfunc = lessequal
 // so its splats render everywhere and naturally occlude the portal area when
 // there are from-scene splats between the camera and the portal plane.
 //
-// The through-scene (the world visible through the portal) gets:
-//  - portalOnlyStencil (FUNC_NOTEQUAL ref=0) - renders only inside the portal opening
-//  - depthFunc = FUNC_GREATER                 - renders only past the portal plane
+// the through-scene (the world visible through the portal) gets:
+//  - portalonlystencil (func_notequal ref=0) - renders only inside the portal opening
+//  - depthfunc = func_greater                 - renders only past the portal plane
 // giving us an oblique near-clip anchored at the portal.
 //
-// On every portal crossing both materials are reconfigured to swap their
-// from/through roles. The splat data on each layer stays put (no reload),
+// on every portal crossing both materials are reconfigured to swap their
+// from/through roles. the splat data on each layer stays put (no reload),
 // so the swap is just a state flip - much cheaper than moving placements
 // between layers.
 
 /** @type {pc.GSplatComponentSystem} */
 const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 
-// GSplatComponentSystem.getMaterial is keyed by the low-level Camera instance,
-// NOT by the entity or the CameraComponent. Unwrap: entity → CameraComponent → Camera.
+// gsplatcomponentsystem.getmaterial is keyed by the low-level camera instance,
+// not by the entity or the cameracomponent. unwrap: entity → cameracomponent → camera.
 const cameraInstance = /** @type {any} */ (camera.camera).camera;
 
-// Tracks which world the user is currently *in*.
-// false = Parish is from-scene (around user) and Skatepark is through-scene.
-// true  = swapped: Skatepark is from-scene and Parish is through-scene.
+// tracks which world the user is currently *in*.
+// false = parish is from-scene (around user) and skatepark is through-scene.
+// true  = swapped: skatepark is from-scene and parish is through-scene.
 let swapped = false;
 
 const isLayerThrough = (/** @type {pc.Layer} */ layer) => {
@@ -568,9 +568,9 @@ const applyMaterialStateForLayer = (/** @type {pc.ShaderMaterial} */ material, /
     material.update();
 };
 
-// Called when the swap state changes. We look up each layer's existing
+// called when the swap state changes. we look up each layer's existing
 // gsplat material via the system and reconfigure it in place.
-// (Note: getMaterial returns null *during* the material:created event because
+// (note: getmaterial returns null *during* the material:created event because
 // the director only stores the manager after the event fires - so on the
 // initial setup we use the material argument passed to the event handler
 // below instead.)
@@ -587,15 +587,15 @@ gsplatSystem.on('material:created', (material, cam, layer) => {
     }
 });
 
-// ---------- Walk-through detection ----------
-// We swap worlds ONLY when the camera's movement from the previous frame to
+// ---------- walk-through detection ----------
+// we swap worlds only when the camera's movement from the previous frame to
 // the current one passes through the rectangular mask plane (not just crosses
-// its infinite extension). The check works in the mask plane's mesh-local
-// space: the plane primitive lives in the XZ plane (Y=0) with corners at
+// its infinite extension). the check works in the mask plane's mesh-local
+// space: the plane primitive lives in the xz plane (y=0) with corners at
 // (±0.5, 0, ±0.5), so we transform the previous and current camera positions
-// into that space, look for a Y sign change (= plane crossing), then verify
-// the intersection point lies within X,Z ∈ [-0.5, 0.5] (= passes through the
-// quad). Walking *around* the plane gives a Y sign change but with the
+// into that space, look for a y sign change (= plane crossing), then verify
+// the intersection point lies within x,z ∈ [-0.5, 0.5] (= passes through the
+// quad). walking *around* the plane gives a y sign change but with the
 // intersection outside the quad bounds, so the swap is suppressed.
 const prevCamWorldPos = new pc.Vec3().copy(camera.getPosition());
 const localPrev = new pc.Vec3();
@@ -604,18 +604,18 @@ const planeWorldInv = new pc.Mat4();
 const updatePortalSide = () => {
     const currCamWorldPos = camera.getPosition();
 
-    // Convert prev and current camera positions to mask plane local space.
+    // convert prev and current camera positions to mask plane local space.
     planeWorldInv.copy(maskPlane.getWorldTransform()).invert();
     planeWorldInv.transformPoint(prevCamWorldPos, localPrev);
     planeWorldInv.transformPoint(currCamWorldPos, localCurr);
 
-    // expose current world to the Stats panel
+    // expose current world to the stats panel
     data.set('data.stats.world', swapped ? 'Skatepark' : 'Parish');
 
-    // Did the camera cross the plane between frames?
+    // did the camera cross the plane between frames?
     const crossed = localPrev.y > 0 !== localCurr.y > 0;
     if (crossed) {
-        // Solve for the parameter t along the segment where it hits Y=0.
+        // solve for the parameter t along the segment where it hits y=0.
         const t = localPrev.y / (localPrev.y - localCurr.y);
         const ix = localPrev.x + t * (localCurr.x - localPrev.x);
         const iz = localPrev.z + t * (localCurr.z - localPrev.z);
@@ -624,13 +624,13 @@ const updatePortalSide = () => {
         if (insideQuad) {
             swapped = !swapped;
 
-            // Reorder layers so the new from-scene renders first (no portal
+            // reorder layers so the new from-scene renders first (no portal
             // depth clipping) and the new through-scene renders last (with
-            // stencil + GREATER depth). Material state flips to match.
+            // stencil + greater depth). material state flips to match.
             reorderLayersForSwap(swapped);
             applyMaterialStateToBothLayers();
 
-            // Snap each scene to whichever pose matches the new swap state.
+            // snap each scene to whichever pose matches the new swap state.
             const fromLayer = swapped ? insideLayer : outsideLayer;
             const throughLayer = swapped ? outsideLayer : insideLayer;
             const fromState = sceneStates.get(fromLayer);
@@ -643,7 +643,7 @@ const updatePortalSide = () => {
     prevCamWorldPos.copy(currCamWorldPos);
 };
 
-// unlock the full LOD range once the first frame is ready
+// unlock the full lod range once the first frame is ready
 const onFrameReady = (
     /** @type {any} */ cam,
     /** @type {any} */ layer,

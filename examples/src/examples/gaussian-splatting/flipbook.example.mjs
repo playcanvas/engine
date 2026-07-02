@@ -53,18 +53,18 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Create assets for scripts and skydome
+// create assets for scripts and skydome
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
@@ -95,7 +95,7 @@ app.root.addChild(roomEntity);
 
 const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -123,7 +123,7 @@ camera.setLocalPosition(-50, 100, 220);
 camera.lookAt(0, 0, 100);
 app.root.addChild(camera);
 
-// Create player flipbook
+// create player flipbook
 const player = new pc.Entity('Player');
 player.addComponent('gsplat', {
     castShadows: true
@@ -155,7 +155,7 @@ data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
 app.scene.gsplat.alphaClip = 0.1;
 
-// Create shadow catcher
+// create shadow catcher
 const shadowCatcher = new pc.Entity('ShadowCatcher');
 shadowCatcher.addComponent('render', {
     type: 'plane',
@@ -173,7 +173,7 @@ shadowCatcher.script?.create(ShadowCatcher, {
 shadowCatcher.setLocalPosition(0, 1, -180);
 app.root.addChild(shadowCatcher);
 
-// Shadow casting directional light
+// shadow casting directional light
 const directionalLight = new pc.Entity('light');
 directionalLight.addComponent('light', {
     type: 'directional',

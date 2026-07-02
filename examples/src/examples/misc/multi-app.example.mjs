@@ -8,7 +8,7 @@ import * as pc from 'playcanvas';
 
 import { data } from 'examples/context';
 
-// Use custom createGraphicsDevice function to not automatically include fall backs
+// use custom creategraphicsdevice function to not automatically include fall backs
 /**
  * @param {HTMLCanvasElement} canvas - The canvas element.
  * @param {string} deviceType - The device type.
@@ -59,7 +59,7 @@ async function createApp(deviceType) {
     app.setCanvasFillMode(pc.FILLMODE_NONE);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    // Ensure canvas is resized when window changes size
+    // ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
     window.addEventListener('resize', resize);
     app.on('destroy', () => {
@@ -92,7 +92,7 @@ async function createApp(deviceType) {
     app.root.addChild(light);
     light.setEulerAngles(45, 0, 0);
 
-    // Create a 2D screen
+    // create a 2d screen
     const screen = new pc.Entity('screen', app);
     screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
@@ -102,7 +102,7 @@ async function createApp(deviceType) {
     });
     app.root.addChild(screen);
 
-    // Text with outline to identify the platform
+    // text with outline to identify the platform
     const text = new pc.Entity('text', app);
     text.setLocalPosition(0, -100, 0);
     text.addComponent('element', {
@@ -135,7 +135,7 @@ const apps = {
     null: []
 };
 
-// Remove existing canvas
+// remove existing canvas
 const existingCanvas = document.getElementById('application-canvas');
 if (existingCanvas) {
     existingCanvas.remove();
@@ -154,7 +154,7 @@ async function addApp(deviceType) {
     }
 }
 
-// Add event listers for adding and removing apps
+// add event listers for adding and removing apps
 for (const deviceType in apps) {
     data.set(deviceType, 0);
 
@@ -167,7 +167,7 @@ for (const deviceType in apps) {
             try {
                 app.destroy();
             } catch (e) {
-                // FIX: Throws error when hot reloading
+                // fix: throws error when hot reloading
                 console.error(e);
             }
             canvas.remove();
@@ -176,6 +176,6 @@ for (const deviceType in apps) {
     });
 }
 
-// Start with a webgl2 and webgpu app
+// start with a webgl2 and webgpu app
 await addApp('webgl2');
 await addApp('webgpu');

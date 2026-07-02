@@ -13,9 +13,9 @@ import { deviceType } from 'examples/context';
 
 import computeShaderWgsl from './compute-shader.wgsl';
 
-// Note: the example is based on this article:
+// note: the example is based on this article:
 // https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html
-// A simpler but less performant version of the compute shader is used for simplicity.
+// a simpler but less performant version of the compute shader is used for simplicity.
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -52,11 +52,11 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -80,8 +80,8 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 camera.setPosition(0, 0, 5);
 
-// Enable the camera to render the scene's color map, available as uSceneColorMap in the shaders.
-// This allows us to use the rendered scene as an input for the histogram compute shader.
+// enable the camera to render the scene's color map, available as uscenecolormap in the shaders.
+// this allows us to use the rendered scene as an input for the histogram compute shader.
 camera.camera.requestSceneColorMap(true);
 
 // create directional light entity
@@ -117,17 +117,17 @@ const shader = device.supportsCompute
       })
     : null;
 
-// Create a storage buffer to which the compute shader will write the histogram values.
+// create a storage buffer to which the compute shader will write the histogram values.
 const numBins = 256;
 const histogramStorageBuffer = new pc.StorageBuffer(
     device,
     numBins * 4, // 4 bytes per value, storing unsigned int
-    pc.BUFFERUSAGE_COPY_SRC | // needed for reading back the data to CPU
+    pc.BUFFERUSAGE_COPY_SRC | // needed for reading back the data to cpu
         pc.BUFFERUSAGE_COPY_DST // needed for clearing the buffer
 );
 
-// Create an instance of the compute shader, and set the input and output data. Note that we do
-// not provide a value for `uSceneColorMap` as this is done by the engine internally.
+// create an instance of the compute shader, and set the input and output data. note that we do
+// not provide a value for `uscenecolormap` as this is done by the engine internally.
 const compute = new pc.Compute(device, shader, 'ComputeHistogram');
 compute.setParameter('outBuffer', histogramStorageBuffer);
 
@@ -141,7 +141,7 @@ app.root.addChild(solid);
 
 let firstFrame = true;
 app.on('update', (/** @type {number} */ dt) => {
-    // The update function runs every frame before the frame gets rendered. On the first time it
+    // the update function runs every frame before the frame gets rendered. on the first time it
     // runs, the scene color map has not been rendered yet, so we skip the first frame.
     if (firstFrame) {
         firstFrame = false;
@@ -156,8 +156,8 @@ app.on('update', (/** @type {number} */ dt) => {
         compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
         device.computeDispatch([compute], 'HistogramDispatch');
 
-        // Read back the histogram data from the storage buffer. None that the returned promise
-        // will be resolved later, when the GPU is done running it, and so the histogram on the
+        // read back the histogram data from the storage buffer. none that the returned promise
+        // will be resolved later, when the gpu is done running it, and so the histogram on the
         // screen will be up to few frames behind.
         const histogramData = new Uint32Array(numBins);
         histogramStorageBuffer.read(0, undefined, histogramData).then((data) => {

@@ -42,11 +42,11 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -82,13 +82,13 @@ cameraEntity.script.create('orbitCamera', {
 cameraEntity.script.create('orbitCameraInputMouse');
 cameraEntity.script.create('orbitCameraInputTouch');
 
-// ------- Particle simulation -------
+// ------- particle simulation -------
 
 const numParticles = 1024 * 1024;
 
-// a compute shader that will simulate the particles stored in a storage buffer. No bind group
-// or uniform buffer formats are provided - the loose uniforms (count, dt, sphereCount) and the
-// storage buffers (particles, spheres) use the simplified WGSL syntax and are reflected
+// a compute shader that will simulate the particles stored in a storage buffer. no bind group
+// or uniform buffer formats are provided - the loose uniforms (count, dt, spherecount) and the
+// storage buffers (particles, spheres) use the simplified wgsl syntax and are reflected
 // automatically by the engine from the shader source.
 const shader = device.supportsCompute
     ? new pc.Shader(device, {
@@ -98,7 +98,7 @@ const shader = device.supportsCompute
       })
     : null;
 
-// Create a storage buffer to store particles
+// create a storage buffer to store particles
 // see the particle size / alignment / padding here: https://tinyurl.com/particle-structure
 const particleFloatSize = 12;
 const particleStructSize = particleFloatSize * 4; // 4 bytes per float
@@ -106,7 +106,7 @@ const particleStorageBuffer = new pc.StorageBuffer(
     device,
     numParticles * particleStructSize,
     pc.BUFFERUSAGE_VERTEX | // vertex buffer reads it
-        pc.BUFFERUSAGE_COPY_DST // CPU copies initial data to it
+        pc.BUFFERUSAGE_COPY_DST // cpu copies initial data to it
 );
 
 // generate initial particle data
@@ -187,7 +187,7 @@ cameraEntity.script.orbitCamera.focusEntity = s1;
 const sphereStorageBuffer = new pc.StorageBuffer(device, numSpheres * 16, pc.BUFFERUSAGE_COPY_DST);
 sphereStorageBuffer.write(0, sphereData);
 
-// Create an instance of the compute shader and assign buffers to it
+// create an instance of the compute shader and assign buffers to it
 const compute = new pc.Compute(device, shader, 'ComputeParticles');
 compute.setParameter('particles', particleStorageBuffer);
 compute.setParameter('spheres', sphereStorageBuffer);
@@ -196,9 +196,9 @@ compute.setParameter('spheres', sphereStorageBuffer);
 compute.setParameter('count', numParticles);
 compute.setParameter('sphereCount', numSpheres);
 
-// ------- Particle rendering -------
+// ------- particle rendering -------
 
-// material to render the particles using WGSL shader as GLSL does not have access to storage buffers
+// material to render the particles using wgsl shader as glsl does not have access to storage buffers
 const material = new pc.ShaderMaterial({
     uniqueName: 'ParticleRenderShader',
     vertexWGSL: shaderSharedWgsl + shaderRenderingVertexWgsl,

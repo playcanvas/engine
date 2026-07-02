@@ -56,7 +56,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Initialize control data
+// initialize control data
 data.set('boxSize', 0.67);
 
 const assets = {
@@ -80,22 +80,22 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
-// Store all editable gsplat entities
+// store all editable gsplat entities
 const editables = [];
 let cloneCounter = 0;
 let activeGizmoEntity = null;
 
-// Gizmo will be created after camera
+// gizmo will be created after camera
 let gizmoLayer = null;
 let gizmo = null;
 
-// Selection box state
+// selection box state
 let selectionBox = null;
 let selectionBoxVisible = false;
 const selectionBoxEntity = new pc.Entity('SelectionBox');
 app.root.addChild(selectionBoxEntity);
 
-// Inject CSS styles for UI
+// inject css styles for ui
 const style = document.createElement('style');
 style.textContent = `
         .gsplat-panel {
@@ -119,7 +119,7 @@ style.textContent = `
     `;
 document.head.appendChild(style);
 
-// HTML UI for entity list
+// html ui for entity list
 const uiPanel = document.createElement('div');
 uiPanel.className = 'gsplat-panel';
 
@@ -134,7 +134,7 @@ uiPanel.appendChild(listContainer);
 
 document.body.appendChild(uiPanel);
 
-// Show/hide gizmo for an entity
+// show/hide gizmo for an entity
 const showGizmoFor = (entity) => {
     if (activeGizmoEntity) {
         gizmo.detach();
@@ -146,21 +146,21 @@ const showGizmoFor = (entity) => {
     updateEntityList();
 };
 
-// Remove entity from scene
+// remove entity from scene
 const removeEntity = (editable) => {
     showGizmoFor(null);
 
-    // Cleanup processors
+    // cleanup processors
     editable.selectionProcessor?.destroy();
     editable.deleteProcessor?.destroy();
 
-    // Remove from editables
+    // remove from editables
     const idx = editables.indexOf(editable);
     if (idx !== -1) {
         editables.splice(idx, 1);
     }
 
-    // Destroy entity
+    // destroy entity
     editable.entity.destroy();
 
     updateEntityList();
@@ -191,25 +191,25 @@ function updateEntityList() {
     }
 }
 
-// Sets up textures, creates processors, and sets work buffer modifier
-// Assumes extra streams already exist on the format
-// Returns { selectionProcessor, deleteProcessor }
+// sets up textures, creates processors, and sets work buffer modifier
+// assumes extra streams already exist on the format
+// returns { selectionprocessor, deleteprocessor }
 const setupEditableProcessors = (gsplatComponent) => {
-    // Initialize splatVisible: all visible (255)
+    // initialize splatvisible: all visible (255)
     const visibleTexture = gsplatComponent.getInstanceTexture('splatVisible');
     const visibleData = new Uint8Array(visibleTexture.width * visibleTexture.height);
     visibleData.fill(255);
     visibleTexture.lock().set(visibleData);
     visibleTexture.unlock();
 
-    // Initialize splatSelection: none selected (0)
+    // initialize splatselection: none selected (0)
     const selectionTexture = gsplatComponent.getInstanceTexture('splatSelection');
     const selectionData = new Uint8Array(selectionTexture.width * selectionTexture.height);
     selectionData.fill(0);
     selectionTexture.lock().set(selectionData);
     selectionTexture.unlock();
 
-    // Create processors
+    // create processors
     const selectionProc = new pc.GSplatProcessor(
         device,
         { component: gsplatComponent },
@@ -224,13 +224,13 @@ const setupEditableProcessors = (gsplatComponent) => {
         deleteProcessor
     );
 
-    // Set work buffer modifier
+    // set work buffer modifier
     gsplatComponent.setWorkBufferModifier(workBufferModifier);
 
     return { selectionProcessor: selectionProc, deleteProcessor: deleteProc };
 };
 
-// Creates an editable gsplat entity with splatVisible and splatSelection streams
+// creates an editable gsplat entity with splatvisible and splatselection streams
 const createEditableSplat = (name, asset, position, rotation, scale) => {
     const entity = new pc.Entity(name);
     const gsplatComponent = entity.addComponent('gsplat', { asset });
@@ -241,7 +241,7 @@ const createEditableSplat = (name, asset, position, rotation, scale) => {
 
     const resource = /** @type {pc.GSplatResource} */ (asset.resource);
 
-    // Add splatVisible and splatSelection streams if not present
+    // add splatvisible and splatselection streams if not present
     if (!resource.format.getStream('splatVisible')) {
         resource.format.addExtraStreams([
             { name: 'splatVisible', format: pc.PIXELFORMAT_R8, storage: pc.GSPLAT_STREAM_INSTANCE },
@@ -249,7 +249,7 @@ const createEditableSplat = (name, asset, position, rotation, scale) => {
         ]);
     }
 
-    // Setup textures and processors
+    // setup textures and processors
     const { selectionProcessor, deleteProcessor } = setupEditableProcessors(gsplatComponent);
 
     const editable = {
@@ -265,17 +265,17 @@ const createEditableSplat = (name, asset, position, rotation, scale) => {
     return editable;
 };
 
-// Creates a cloned gsplat from selected splats using GPU-based data copy
-// aabbCenter is used to make splat positions local (relative to aabbCenter)
+// creates a cloned gsplat from selected splats using gpu-based data copy
+// aabbcenter is used to make splat positions local (relative to aabbcenter)
 const createClonedSplat = (selectedData, aabbCenter) => {
     const { totalCount, centers, aabb, mappings } = selectedData;
 
     if (totalCount === 0) return null;
 
-    // Use built-in default format for full visual preservation
+    // use built-in default format for full visual preservation
     const format = pc.GSplatFormat.createDefaultFormat(device);
 
-    // Add visibility and selection streams (with instance storage)
+    // add visibility and selection streams (with instance storage)
     format.addExtraStreams([
         { name: 'splatVisible', format: pc.PIXELFORMAT_R8, storage: pc.GSPLAT_STREAM_INSTANCE },
         { name: 'splatSelection', format: pc.PIXELFORMAT_R8, storage: pc.GSPLAT_STREAM_INSTANCE }
@@ -284,9 +284,9 @@ const createClonedSplat = (selectedData, aabbCenter) => {
     const container = new pc.GSplatContainer(device, totalCount, format);
     const dstTextureSize = container.textureDimensions.x;
 
-    // Run GSplatProcessor per source editable to copy data
+    // run gsplatprocessor per source editable to copy data
     for (const mapping of mappings) {
-        // Extract source entity's transform
+        // extract source entity's transform
         const worldTransform = mapping.editable.entity.getWorldTransform();
         const modelScale = new pc.Vec3();
         const modelRotation = new pc.Quat();
@@ -296,7 +296,7 @@ const createClonedSplat = (selectedData, aabbCenter) => {
             modelRotation.mulScalar(-1);
         }
 
-        // Create remapping texture for this source
+        // create remapping texture for this source
         const remapTexture = new pc.Texture(device, {
             name: 'RemapTexture',
             width: dstTextureSize,
@@ -309,7 +309,7 @@ const createClonedSplat = (selectedData, aabbCenter) => {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        // Fill remapping texture on CPU
+        // fill remapping texture on cpu
         const remapData = remapTexture.lock();
         remapData.fill(0xffffffff); // mark all as "skip"
         for (let i = 0; i < mapping.srcIndices.length; i++) {
@@ -317,7 +317,7 @@ const createClonedSplat = (selectedData, aabbCenter) => {
         }
         remapTexture.unlock();
 
-        // Create processor to copy data from source to destination
+        // create processor to copy data from source to destination
         const copyProc = new pc.GSplatProcessor(
             device,
             { component: mapping.editable.component }, // source
@@ -332,12 +332,12 @@ const createClonedSplat = (selectedData, aabbCenter) => {
         copyProc.setParameter('aabb_center', [aabbCenter.x, aabbCenter.y, aabbCenter.z]);
         copyProc.process();
 
-        // Cleanup
+        // cleanup
         copyProc.destroy();
         remapTexture.destroy();
     }
 
-    // Set centers and aabb (make local by subtracting aabbCenter)
+    // set centers and aabb (make local by subtracting aabbcenter)
     const localCenters = new Float32Array(totalCount * 3);
     for (let i = 0; i < totalCount; i++) {
         localCenters[i * 3 + 0] = centers[i * 3 + 0] - aabbCenter.x;
@@ -346,13 +346,13 @@ const createClonedSplat = (selectedData, aabbCenter) => {
     }
     container.centers.set(localCenters);
 
-    // Make aabb local too
+    // make aabb local too
     const localAabb = new pc.BoundingBox();
     localAabb.center.sub2(aabb.center, aabbCenter);
     localAabb.halfExtents.copy(aabb.halfExtents);
     container.aabb.copy(localAabb);
 
-    // Create entity at aabbCenter position (with small offset to make clone visible)
+    // create entity at aabbcenter position (with small offset to make clone visible)
     cloneCounter++;
     const name = `clone${cloneCounter}`;
     const entity = new pc.Entity(name);
@@ -362,7 +362,7 @@ const createClonedSplat = (selectedData, aabbCenter) => {
     entity.setLocalPosition(aabbCenter.x + 0.1, aabbCenter.y, aabbCenter.z + 0.1);
     app.root.addChild(entity);
 
-    // Setup textures and processors
+    // setup textures and processors
     const { selectionProcessor, deleteProcessor } = setupEditableProcessors(gsplatComponent);
 
     const editable = {
@@ -379,13 +379,13 @@ const createClonedSplat = (selectedData, aabbCenter) => {
     return editable;
 };
 
-// Collect selected splat data from all editables (using GPU-computed selection)
+// collect selected splat data from all editables (using gpu-computed selection)
 const collectSelectedData = async () => {
     if (!selectionBox || !selectionBoxVisible) {
         return { totalCount: 0, centers: null, aabb: null, mappings: [] };
     }
 
-    // Run selection processor on all editables to ensure splatSelection textures are up to date
+    // run selection processor on all editables to ensure splatselection textures are up to date
     const boxMin = selectionBox.getMin();
     const boxMax = selectionBox.getMax();
     for (const editable of editables) {
@@ -399,7 +399,7 @@ const collectSelectedData = async () => {
     let totalCount = 0;
     const mappings = [];
 
-    // Read all visibility and selection textures in parallel
+    // read all visibility and selection textures in parallel
     const textureDataArray = await Promise.all(
         editables.map(async (editable) => {
             const visibleTexture = editable.component.getInstanceTexture('splatVisible');
@@ -412,14 +412,14 @@ const collectSelectedData = async () => {
         })
     );
 
-    // Process each editable using GPU-computed selection data
+    // process each editable using gpu-computed selection data
     for (let e = 0; e < editables.length; e++) {
         const editable = editables[e];
         const { visibleData, selectionData } = textureDataArray[e];
 
         const srcIndices = [];
         for (let i = 0; i < editable.resource.numSplats; i++) {
-            // Include splats that are both visible and selected (by GPU)
+            // include splats that are both visible and selected (by gpu)
             if (visibleData[i] > 127 && selectionData[i] > 127) {
                 srcIndices.push(i);
             }
@@ -435,7 +435,7 @@ const collectSelectedData = async () => {
         return { totalCount: 0, centers: null, aabb: null, mappings: [] };
     }
 
-    // Collect centers (still needed for aabb/sorting)
+    // collect centers (still needed for aabb/sorting)
     const centers = new Float32Array(totalCount * 3);
     const aabb = new pc.BoundingBox();
     const tempBox = new pc.BoundingBox();
@@ -447,7 +447,7 @@ const collectSelectedData = async () => {
         const transform = mapping.editable.entity.getWorldTransform();
 
         for (const idx of mapping.srcIndices) {
-            // Get center and transform to world space
+            // get center and transform to world space
             point.set(srcCenters[idx * 3], srcCenters[idx * 3 + 1], srcCenters[idx * 3 + 2]);
             transform.transformPoint(point, point);
 
@@ -459,7 +459,7 @@ const collectSelectedData = async () => {
                 aabb.center.copy(point);
                 aabb.halfExtents.set(0.01, 0.01, 0.01);
             } else {
-                // BoundingBox.add expects a BoundingBox, not a Vec3
+                // boundingbox.add expects a boundingbox, not a vec3
                 tempBox.center.copy(point);
                 tempBox.halfExtents.set(0.01, 0.01, 0.01);
                 aabb.add(tempBox);
@@ -471,12 +471,12 @@ const collectSelectedData = async () => {
     return { totalCount, centers, aabb, mappings };
 };
 
-// Create initial splats
+// create initial splats
 createEditableSplat('biker1', assets.biker, [-1.9, -0.55, 0.6], [180, -90, 0], [0.3, 0.3, 0.3]);
 createEditableSplat('biker2', assets.biker, [-3, -0.5, -0.5], [180, 180, 0], [0.3, 0.3, 0.3]);
 createEditableSplat('apartment', assets.apartment, [0, -0.5, -3], [180, 0, 0], [0.5, 0.5, 0.5]);
 
-// Camera setup
+// camera setup
 const cameraPos = new pc.Vec3(-0.98, 0.28, -2.31);
 const focusPos = new pc.Vec3(-1.1, 0.13, -1.56);
 
@@ -490,7 +490,7 @@ camera.setLocalPosition(cameraPos);
 camera.lookAt(focusPos);
 app.root.addChild(camera);
 
-// Create gizmo now that camera exists
+// create gizmo now that camera exists
 gizmoLayer = pc.Gizmo.createLayer(app);
 gizmo = new pc.TranslateGizmo(camera.camera, gizmoLayer);
 
@@ -504,7 +504,7 @@ const orbitCamera = camera.script.create('orbitCamera', {
 const orbitInput = camera.script.create('orbitCameraInputMouse');
 orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
 
-// Gizmo interaction - disable camera when using gizmo
+// gizmo interaction - disable camera when using gizmo
 gizmo.on('pointer:down', (_x, _y, meshInstance) => {
     if (meshInstance) {
         orbitInput.enabled = false;
@@ -516,14 +516,14 @@ gizmo.on('pointer:up', () => {
 
 app.mouse.disableContextMenu();
 
-// Update loop - draw selection box, sync position, and update selection highlights
+// update loop - draw selection box, sync position, and update selection highlights
 app.on('update', () => {
-    // Sync selection box center with entity position (gizmo moves the entity)
+    // sync selection box center with entity position (gizmo moves the entity)
     if (selectionBox && selectionBoxVisible) {
         selectionBox.center.copy(selectionBoxEntity.getPosition());
         app.drawWireAlignedBox(selectionBox.getMin(), selectionBox.getMax(), pc.Color.YELLOW);
 
-        // Update selection highlighting for all editables
+        // update selection highlighting for all editables
         const boxMin = selectionBox.getMin();
         const boxMax = selectionBox.getMax();
 
@@ -538,7 +538,7 @@ app.on('update', () => {
     }
 });
 
-// Select button handler - show/create selection box
+// select button handler - show/create selection box
 const defaultBoxCenter = new pc.Vec3(-1.695, -0.302, -0.721);
 data.on('select', () => {
     const boxSize = data.get('boxSize');
@@ -555,7 +555,7 @@ data.on('select', () => {
     showGizmoFor(selectionBoxEntity);
 });
 
-// Box size change handler
+// box size change handler
 data.on('boxSize:set', (value) => {
     if (selectionBox) {
         const halfSize = value / 2;
@@ -563,13 +563,13 @@ data.on('boxSize:set', (value) => {
     }
 });
 
-// Clear selection - hide box and remove yellow highlighting
+// clear selection - hide box and remove yellow highlighting
 const clearSelection = () => {
     selectionBoxVisible = false;
     if (activeGizmoEntity === selectionBoxEntity) {
         showGizmoFor(null);
     }
-    // Clear selection highlighting on all editables
+    // clear selection highlighting on all editables
     for (const editable of editables) {
         const selectionTexture = editable.component.getInstanceTexture('splatSelection');
         if (selectionTexture) {
@@ -582,7 +582,7 @@ const clearSelection = () => {
     }
 };
 
-// Delete selected button handler
+// delete selected button handler
 data.on('deleteSelected', () => {
     if (!selectionBox || !selectionBoxVisible) return;
 
@@ -601,11 +601,11 @@ data.on('deleteSelected', () => {
     clearSelection();
 });
 
-// Clone selected button handler
+// clone selected button handler
 data.on('cloneSelected', async () => {
     const selectedData = await collectSelectedData();
     if (selectedData.totalCount > 0) {
-        // Use selection box center as the clone's pivot point
+        // use selection box center as the clone's pivot point
         const aabbCenter = selectionBox.center.clone();
         const cloned = createClonedSplat(selectedData, aabbCenter);
         clearSelection();
@@ -615,7 +615,7 @@ data.on('cloneSelected', async () => {
     }
 });
 
-// Cleanup on destroy
+// cleanup on destroy
 app.on('destroy', () => {
     for (const editable of editables) {
         editable.selectionProcessor?.destroy();

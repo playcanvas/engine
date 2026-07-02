@@ -33,11 +33,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -50,7 +50,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Set up environment atlas for lighting
+// set up environment atlas for lighting
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxIntensity = 2;
 
@@ -60,12 +60,12 @@ const uiLayer = app.scene.layers.getLayerByName('UI');
 const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
 
 // create a layer for the reflection plane (excluded from reflection rendering)
-// Layer order needed: World(opaque) -> Excluded(opaque) -> Depth -> World(transp) -> Excluded(transp)
+// layer order needed: world(opaque) -> excluded(opaque) -> depth -> world(transp) -> excluded(transp)
 const excludedLayer = new pc.Layer({ name: 'Excluded' });
 app.scene.layers.insertOpaque(excludedLayer, app.scene.layers.getOpaqueIndex(worldLayer) + 1);
 app.scene.layers.insertTransparent(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
-// Create main camera - include depth layer for scene color map to work
+// create main camera - include depth layer for scene color map to work
 const camera = new pc.Entity('MainCamera');
 camera.addComponent('camera', {
     fov: 60,
@@ -78,22 +78,22 @@ camera.addComponent('script');
 camera.setLocalPosition(-0.2, 0.1, 0.2);
 app.root.addChild(camera);
 
-// Enable scene color map for materials with refraction/transmission (sunglasses model uses this feature)
+// enable scene color map for materials with refraction/transmission (sunglasses model uses this feature)
 camera.camera.requestSceneColorMap(true);
 
-// Add camera controls for orbit interaction
+// add camera controls for orbit interaction
 /** @type {CameraControls} */
 const cameraControls = camera.script.create(CameraControls);
 cameraControls.focusPoint = new pc.Vec3(0, 0.02, 0);
-cameraControls.enableFly = false; // Only orbit mode
-cameraControls.pitchRange = new pc.Vec2(-85, -4); // Limit pitch to keep camera above ground
-cameraControls.zoomRange = new pc.Vec2(0.1, 1.0); // Limit zoom distance
+cameraControls.enableFly = false; // only orbit mode
+cameraControls.pitchRange = new pc.Vec2(-85, -4); // limit pitch to keep camera above ground
+cameraControls.zoomRange = new pc.Vec2(0.1, 1.0); // limit zoom distance
 
 // get the instance of the sunglasses model
 const sunglassesEntity = assets.sunglasses.resource.instantiateRenderEntity();
 app.root.addChild(sunglassesEntity);
 
-// Create the reflective ground plane with the BlurredPlanarReflection script
+// create the reflective ground plane with the blurredplanarreflection script
 const groundReflector = new pc.Entity('GroundReflector');
 groundReflector.addComponent('render', {
     type: 'plane',
@@ -102,12 +102,12 @@ groundReflector.addComponent('render', {
 });
 groundReflector.setLocalScale(4, 1, 4);
 
-// Add the blurred planar reflection script
+// add the blurred planar reflection script
 groundReflector.addComponent('script');
 /** @type {BlurredPlanarReflection} */
 const reflectionScript = groundReflector.script.create(BlurredPlanarReflection);
 
-// Set properties directly
+// set properties directly
 reflectionScript.mainCamera = camera;
 reflectionScript.resolution = 1.0;
 reflectionScript.blurAmount = 0.5;
@@ -119,7 +119,7 @@ reflectionScript.fadeColor = new pc.Color(1, 1, 1, 1);
 
 app.root.addChild(groundReflector);
 
-// Apply settings from observer data
+// apply settings from observer data
 const applySettings = () => {
     reflectionScript.resolution = data.get('data.resolution');
     reflectionScript.blurAmount = data.get('data.blurAmount');
@@ -129,12 +129,12 @@ const applySettings = () => {
     reflectionScript.heightRange = data.get('data.heightRange');
 };
 
-// Listen for UI changes
+// listen for ui changes
 data.on('*:set', () => {
     applySettings();
 });
 
-// Set initial data values
+// set initial data values
 data.set('data', {
     resolution: 1.0,
     blurAmount: 0.5,

@@ -14,20 +14,20 @@ window.focus();
 
 function generateMipmaps(width, height) {
     const colors = [
-        [0, 128, 0], // Green
-        [255, 255, 0], // Yellow
-        [255, 165, 0], // Orange
-        [255, 0, 0], // Red
-        [0, 0, 255], // Blue
-        [75, 0, 130], // Indigo
-        [238, 130, 238], // Violet
-        [255, 192, 203], // Pink
-        [165, 42, 42], // Brown
-        [128, 128, 128], // Gray
-        [128, 0, 128], // Purple
-        [0, 128, 128], // Teal
-        [0, 0, 0], // Black
-        [255, 255, 255] // White
+        [0, 128, 0], // green
+        [255, 255, 0], // yellow
+        [255, 165, 0], // orange
+        [255, 0, 0], // red
+        [0, 0, 255], // blue
+        [75, 0, 130], // indigo
+        [238, 130, 238], // violet
+        [255, 192, 203], // pink
+        [165, 42, 42], // brown
+        [128, 128, 128], // gray
+        [128, 0, 128], // purple
+        [0, 128, 128], // teal
+        [0, 0, 0], // black
+        [255, 255, 255] // white
     ];
 
     const mipmapLevels = Math.log2(Math.max(width, height)) + 1;
@@ -103,11 +103,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -121,7 +121,7 @@ await new Promise((resolve) => {
 app.start();
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-// Create directional light
+// create directional light
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional'
@@ -164,7 +164,7 @@ textureArrayOptions.levels = levels;
 textureArrayOptions.name = 'textureArrayData';
 const mipmapTextureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
 
-// Create a new material with the new shader
+// create a new material with the new shader
 const material = new pc.ShaderMaterial({
     uniqueName: 'MyShader',
     vertexGLSL: shaderGlslVert,
@@ -180,7 +180,7 @@ const material = new pc.ShaderMaterial({
 material.setParameter('uDiffuseMap', textureArray);
 material.update();
 
-// Create a another material with the new shader
+// create a another material with the new shader
 const groundMaterial = new pc.ShaderMaterial({
     uniqueName: 'MyShaderGround',
     vertexGLSL: shaderGlslVert,
@@ -197,7 +197,7 @@ groundMaterial.cull = pc.CULLFACE_NONE;
 groundMaterial.setParameter('uDiffuseMap', textureArray);
 groundMaterial.update();
 
-// Create an Entity for the ground
+// create an entity for the ground
 const ground = new pc.Entity();
 ground.addComponent('render', {
     type: 'box',
@@ -224,39 +224,39 @@ shape.addComponent('render', {
 shape.setPosition(0, -2, 0);
 shape.setLocalScale(4, 4, 4);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2)
 });
 
-// Adjust the camera position
+// adjust the camera position
 camera.translate(3, -2, 4);
 camera.lookAt(0, 0, 0);
 
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
-        inertiaFactor: 0.2, // Override default of 0 (no inertia),
+        inertiaFactor: 0.2, // override default of 0 (no inertia),
         distanceMax: 10.0
     }
 });
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-// Add the new Entities to the hierarchy
+// add the new entities to the hierarchy
 app.root.addChild(light);
 app.root.addChild(shape);
 app.root.addChild(camera);
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 let angle = 0;
 let time = 0;
 app.on('update', (dt) => {
     time += dt;
     angle = (angle + dt * 10) % 360;
 
-    // Rotate the boxes
+    // rotate the boxes
     shape.setEulerAngles(angle, angle * 2, angle * 4);
     shape.render.meshInstances[0].setParameter('uTime', time);
 });

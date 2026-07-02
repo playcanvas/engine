@@ -64,11 +64,11 @@ data.set('settings', {
     }
 });
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -131,7 +131,7 @@ app.root.addChild(pillar);
 // find a tree in the middle to use as a focus point
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
-// create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.9, 0.9, 0.9),
@@ -155,7 +155,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// Create a directional light casting soft shadows
+// create a directional light casting soft shadows
 const dirLight = new pc.Entity('MainLight');
 dirLight.addComponent('light', {
     ...{
@@ -175,7 +175,7 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(75, 120, 20);
 
-// handle HUD changes - update properties on the light
+// handle hud changes - update properties on the light
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     if (pathArray[2] === 'soft') {

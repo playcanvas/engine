@@ -8,7 +8,7 @@ import uiHtml from './ui.html';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// create UI
+// create ui
 // html
 const div = document.createElement('div');
 div.innerHTML = uiHtml;
@@ -54,7 +54,7 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -173,7 +173,7 @@ for (let x = 0; x <= SIZE; x++) {
 const vec3A = new pc.Vec3();
 
 if (app.xr.supported) {
-    // XR availability
+    // xr availability
     document
         .querySelector('.container > .button[data-xr="immersive-ar"]')
         ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
@@ -181,13 +181,13 @@ if (app.xr.supported) {
         .querySelector('.container > .button[data-xr="immersive-vr"]')
         ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
 
-    // XR availability events
+    // xr availability events
     app.xr.on('available', (type, available) => {
         const element = document.querySelector(`.container > .button[data-xr="${type}"]`);
         element?.classList.toggle('active', available);
     });
 
-    // reset camera color on XR end
+    // reset camera color on xr end
     app.xr.on('end', () => {
         cameraEntity.camera.clearColor = colorCamera;
     });
@@ -214,7 +214,7 @@ if (app.xr.supported) {
         buttons[i].addEventListener('click', onXrButtonClick);
     }
 
-    // end session by keyboard ESC
+    // end session by keyboard esc
     app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
