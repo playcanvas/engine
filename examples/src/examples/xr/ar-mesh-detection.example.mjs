@@ -61,7 +61,7 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -110,7 +110,7 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // if not in vr, activate
                 activate();
             } else {
                 // otherwise reset camera
@@ -122,7 +122,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // end session by keyboard esc
     app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -132,8 +132,8 @@ if (app.xr.supported) {
     app.xr.on('start', () => {
         message('Immersive AR session has started');
 
-        // Trigger manual room capture
-        // With a delay due to some issues on Quest 3 triggering immediately
+        // trigger manual room capture
+        // with a delay due to some issues on quest 3 triggering immediately
         setTimeout(() => {
             app.xr.initiateRoomCapture((err) => {
                 if (err) console.log(err);
@@ -167,7 +167,7 @@ if (app.xr.supported) {
     const materialWireframe = new pc.StandardMaterial();
     materialWireframe.emissive = new pc.Color(1, 1, 1);
 
-    // create entities for each XrMesh as they are added
+    // create entities for each xrmesh as they are added
     app.xr.meshDetection.on('add', (xrMesh) => {
         // solid mesh
         const mesh = new pc.Mesh(app.graphicsDevice);
@@ -226,7 +226,7 @@ if (app.xr.supported) {
         entity.setRotation(xrMesh.getRotation());
     });
 
-    // when XrMesh is removed, destroy related entity
+    // when xrmesh is removed, destroy related entity
     app.xr.meshDetection.on('remove', (xrMesh) => {
         const entity = entities.get(xrMesh);
         if (entity) {
@@ -242,13 +242,13 @@ if (app.xr.supported) {
 
     app.on('update', () => {
         if (app.xr.active && app.xr.meshDetection.supported) {
-            // iterate through each XrMesh
+            // iterate through each xrmesh
             for (let i = 0; i < app.xr.meshDetection.meshes.length; i++) {
                 const mesh = app.xr.meshDetection.meshes[i];
 
                 const entity = entities.get(mesh);
                 if (entity) {
-                    // update entity transforms based on XrMesh
+                    // update entity transforms based on xrmesh
                     entity.setPosition(mesh.getPosition());
                     entity.setRotation(mesh.getRotation());
 
@@ -257,7 +257,7 @@ if (app.xr.supported) {
                     entity.label.rotateLocal(0, 180, 0);
                 }
 
-                // render XrMesh gizmo axes
+                // render xrmesh gizmo axes
                 transform.setTRS(mesh.getPosition(), mesh.getRotation(), pc.Vec3.ONE);
                 vec3A.set(0.2, 0, 0);
                 vec3B.set(0, 0.2, 0);

@@ -56,11 +56,11 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -78,7 +78,7 @@ app.scene.exposure = 2;
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// Create an entity with a light component
+// create an entity with a light component
 const lightEntity = new pc.Entity();
 lightEntity.addComponent('light', {
     castShadows: true,
@@ -92,7 +92,7 @@ lightEntity.addComponent('light', {
 app.root.addChild(lightEntity);
 lightEntity.setLocalEulerAngles(45, 30, 0);
 
-// Set the gravity for our rigid bodies
+// set the gravity for our rigid bodies
 app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
 /**
@@ -117,31 +117,31 @@ floor.addComponent('render', {
     material: gray
 });
 
-// Scale it and move it so that the top is at 0 on the y axis
+// scale it and move it so that the top is at 0 on the y axis
 floor.setLocalScale(10, 1, 10);
 floor.translateLocal(0, -0.5, 0);
 
-// Add a rigidbody component so that other objects collide with it
+// add a rigidbody component so that other objects collide with it
 floor.addComponent('rigidbody', {
     type: 'static',
     restitution: 0.5
 });
 
-// Add a collision component
+// add a collision component
 floor.addComponent('collision', {
     type: 'box',
     halfExtents: new pc.Vec3(5, 0.5, 5)
 });
 
-// Add the floor to the hierarchy
+// add the floor to the hierarchy
 app.root.addChild(floor);
 
-// Create an entity from the loaded model using the render component
+// create an entity from the loaded model using the render component
 const modelEntity = assets.model.resource.instantiateRenderEntity({
     castShadows: true
 });
 
-// Add an anim component to the entity
+// add an anim component to the entity
 modelEntity.addComponent('anim', {
     activate: true
 });
@@ -175,7 +175,7 @@ const animStateGraphData = {
 // load the state graph into the anim component
 modelEntity.anim.loadStateGraph(animStateGraphData);
 
-// Add a rigid body and collision for the head with offset as the model's origin is
+// add a rigid body and collision for the head with offset as the model's origin is
 // at the feet on the floor
 modelEntity.addComponent('rigidbody', {
     type: 'static',
@@ -194,7 +194,7 @@ characterStateLayer.assignAnimation('Idle', assets.idleAnim.resource.animations[
 
 app.root.addChild(modelEntity);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera');
 cameraEntity.translate(0, 2, 5);
@@ -229,7 +229,7 @@ ball.enabled = false;
 let timer = 0;
 let count = 40;
 
-// Set an update function on the application's update event
+// set an update function on the application's update event
 app.on('update', (dt) => {
     // create a falling box every 0.2 seconds
     if (count > 0) {
@@ -238,7 +238,7 @@ app.on('update', (dt) => {
             count--;
             timer = 0.5;
 
-            // Create a new ball to drop
+            // create a new ball to drop
             const clone = ball.clone();
             clone.rigidbody.teleport(pc.math.random(-0.25, 0.25), 5, pc.math.random(-0.25, 0.25));
 
@@ -247,12 +247,12 @@ app.on('update', (dt) => {
         }
     }
 
-    // Show active bodies in red and frozen bodies in gray
+    // show active bodies in red and frozen bodies in gray
     app.root.findByTag('shape').forEach((/** @type {pc.Entity} */ entity) => {
         entity.render.meshInstances[0].material = entity.rigidbody.isActive() ? red : gray;
     });
 
-    // Render the offset collision
+    // render the offset collision
     app.scene.immediate.drawWireSphere(
         modelEntity.collision.getShapePosition(),
         0.3,

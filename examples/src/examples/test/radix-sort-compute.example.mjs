@@ -24,7 +24,7 @@ const gfxOptions = {
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// Create device info overlay (top center)
+// create device info overlay (top center)
 const deviceInfo = document.createElement('div');
 deviceInfo.style.cssText = `
     position: absolute;
@@ -41,7 +41,7 @@ deviceInfo.style.cssText = `
 `;
 document.body.appendChild(deviceInfo);
 
-// Create error overlay (initially hidden)
+// create error overlay (initially hidden)
 const errorOverlay = document.createElement('div');
 errorOverlay.style.cssText = `
     position: absolute;
@@ -60,8 +60,8 @@ errorOverlay.style.cssText = `
 `;
 document.body.appendChild(errorOverlay);
 
-// Create benchmark status overlay (shown while running) and a results
-// container (shown after completion). Both are full-screen-ish panels on top
+// create benchmark status overlay (shown while running) and a results
+// container (shown after completion). both are full-screen-ish panels on top
 // of the canvas so the user doesn't need to look at devtools.
 const benchStatus = document.createElement('div');
 benchStatus.style.cssText = `
@@ -102,7 +102,7 @@ benchResults.style.cssText = `
 `;
 document.body.appendChild(benchResults);
 
-// Track sort failure count and verification state
+// track sort failure count and verification state
 let sortFailureCount = 0;
 let verificationPending = false;
 /** @type {{sortedIndices: pc.StorageBuffer, originalValues: number[], numElements: number}|null} */
@@ -127,7 +127,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// State - initialized from observer via data.set() below
+// state - initialized from observer via data.set() below
 /** @type {number} */
 let currentNumElements = 0;
 /** @type {number} */
@@ -141,25 +141,25 @@ let originalValues = [];
 /** @type {boolean} */
 let needsRegen = true;
 
-// Valid radix modes. After benchmarking across NVIDIA / Apple / Mali / IMG
+// valid radix modes. after benchmarking across nvidia / apple / mali / img
 // the surviving variants are:
 //   - '4-shared-mem': the universal portable fallback
-//     (ComputeRadixSort with kind=RADIX_SORT_PORTABLE), subgroup-free,
-//     shipped as the production default on every non-NVIDIA device.
+//     (computeradixsort with kind=radix_sort_portable), subgroup-free,
+//     shipped as the production default on every non-nvidia device.
 //   - 'onesweep': the fused single-sweep implementation
-//     (ComputeRadixSort with kind=RADIX_SORT_ONESWEEP). Fastest on NVIDIA;
-//     unstable on Mali (validates incorrectly) and Apple (GPU hangs under
+//     (computeradixsort with kind=radix_sort_onesweep). fastest on nvidia;
+//     unstable on mali (validates incorrectly) and apple (gpu hangs under
 //     heavy validation load), so it is selectable manually but restricted
-//     to NVIDIA in the benchmark / validation sweeps.
+//     to nvidia in the benchmark / validation sweeps.
 const RADIX_MODES = {
     '4-shared-mem': { kind: pc.RADIX_SORT_PORTABLE },
     onesweep: { kind: pc.RADIX_SORT_ONESWEEP }
 };
 const DEFAULT_MODE = '4-shared-mem';
 
-// Lazy cache of ComputeRadixSort instances, keyed by the mode dropdown.
-// Instances are created on first use and retained, so subsequent toggles
-// between configurations are free (no shader rebuild). Each instance grows
+// lazy cache of computeradixsort instances, keyed by the mode dropdown.
+// instances are created on first use and retained, so subsequent toggles
+// between configurations are free (no shader rebuild). each instance grows
 // its internal buffers on demand.
 /** @type {Map<string, pc.ComputeRadixSort>} */
 const radixSortCache = new Map();
@@ -204,9 +204,9 @@ function buildGpuLine(sep) {
         line += `  ${sep}  ${info.vendor || '?'} / ${info.architecture || info.device || '?'}`;
     }
     if (device.isWebGPU) {
-        // Read from device fields captured at init (adapter.limits for
-        // subgroup entries can be cleared after requestDevice on some
-        // browsers, so a live re-read is unreliable - e.g. on M4 Chrome).
+        // read from device fields captured at init (adapter.limits for
+        // subgroup entries can be cleared after requestdevice on some
+        // browsers, so a live re-read is unreliable - e.g. on m4 chrome).
         const maxSg = device.maxSubgroupSize;
         const minSg = device.minSubgroupSize;
         if (device.supportsSubgroups && maxSg) {
@@ -232,9 +232,9 @@ function updateDeviceInfo() {
 
 updateDeviceInfo();
 
-// ==================== MATERIALS ====================
+// ==================== materials ====================
 
-// Create unsorted visualization material (WGSL only for WebGPU)
+// create unsorted visualization material (wgsl only for webgpu)
 const unsortedMaterial = new pc.ShaderMaterial({
     uniqueName: 'UnsortedVizMaterialCompute',
     vertexWGSL: vertWgsl,
@@ -245,8 +245,8 @@ const unsortedMaterial = new pc.ShaderMaterial({
     }
 });
 
-// Create sorted visualization material (WGSL only for WebGPU)
-// Uses same shader as unsorted but with SORTED define
+// create sorted visualization material (wgsl only for webgpu)
+// uses same shader as unsorted but with sorted define
 const sortedMaterial = new pc.ShaderMaterial({
     uniqueName: 'SortedVizMaterialCompute',
     vertexWGSL: vertWgsl,
@@ -258,9 +258,9 @@ const sortedMaterial = new pc.ShaderMaterial({
 });
 sortedMaterial.setDefine('SORTED', true);
 
-// ==================== SCENE SETUP ====================
+// ==================== scene setup ====================
 
-// Create camera entity
+// create camera entity
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.15),
@@ -270,7 +270,7 @@ camera.addComponent('camera', {
 camera.setPosition(0, 0, 1);
 app.root.addChild(camera);
 
-// Create unsorted visualization plane (top half)
+// create unsorted visualization plane (top half)
 const unsortedPlane = new pc.Entity('unsortedPlane');
 unsortedPlane.addComponent('render', {
     type: 'plane',
@@ -284,7 +284,7 @@ unsortedPlane.setEulerAngles(90, 0, 0);
 unsortedPlane.enabled = false;
 app.root.addChild(unsortedPlane);
 
-// Create sorted visualization plane (bottom half)
+// create sorted visualization plane (bottom half)
 const sortedPlane = new pc.Entity('sortedPlane');
 sortedPlane.addComponent('render', {
     type: 'plane',
@@ -298,7 +298,7 @@ sortedPlane.setEulerAngles(90, 0, 0);
 sortedPlane.enabled = false;
 app.root.addChild(sortedPlane);
 
-// Create spinning cube for visual frame rate indicator
+// create spinning cube for visual frame rate indicator
 const cube = new pc.Entity('cube');
 cube.addComponent('render', {
     type: 'box'
@@ -307,13 +307,13 @@ cube.setLocalPosition(0, 0, 0.3);
 cube.setLocalScale(0.15, 0.15, 0.15);
 app.root.addChild(cube);
 
-// Create directional light for the cube
+// create directional light for the cube
 const light = new pc.Entity('light');
 light.addComponent('light');
 light.setEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== helper functions ====================
 
 /**
  * Calculates the optimal texture size for storing N elements.
@@ -335,15 +335,15 @@ function regenerateData() {
     const numBits = currentNumBits;
     const maxValue = numBits >= 32 ? 0xffffffff : (1 << numBits) - 1;
 
-    // Destroy old buffer
+    // destroy old buffer
     if (keysBuffer) {
         keysBuffer.destroy();
     }
 
-    // Create storage buffer for keys
+    // create storage buffer for keys
     keysBuffer = new pc.StorageBuffer(device, numElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
 
-    // Generate random test data
+    // generate random test data
     const keysData = new Uint32Array(numElements);
     originalValues = [];
 
@@ -353,7 +353,7 @@ function regenerateData() {
         originalValues.push(value);
     }
 
-    // Upload to GPU
+    // upload to gpu
     keysBuffer.write(0, keysData);
 
     needsRegen = false;
@@ -368,17 +368,17 @@ function runSort(verify = false) {
     if (!keysBuffer) return;
 
     const sort = getActiveRadixSort();
-    // Round up numBits to a multiple of the active radix width so the sort
+    // round up numbits to a multiple of the active radix width so the sort
     // asserts don't fire when the user picks e.g. 12 bits while in 8-bit mode.
-    // Keys never exceed (1 << currentNumBits) - 1 (see regenerateData), so
+    // keys never exceed (1 << currentnumbits) - 1 (see regeneratedata), so
     // sorting with extra high bits is still correct.
     const alignedBits = Math.ceil(currentNumBits / sort.radixBits) * sort.radixBits;
     sortedIndicesBuffer = sort.sort(keysBuffer, currentNumElements, alignedBits);
 
-    // Update visualization materials
+    // update visualization materials
     updateMaterialParameters();
 
-    // Verify results if requested
+    // verify results if requested
     if (verify) {
         verifyResults(sortedIndicesBuffer);
     }
@@ -395,14 +395,14 @@ function updateMaterialParameters() {
     const maxValue = currentNumBits >= 32 ? 0xffffffff : (1 << currentNumBits) - 1;
     const { width, height } = calcTextureSize(currentNumElements);
 
-    // Update unsorted material
+    // update unsorted material
     unsortedMaterial.setParameter('keysBuffer', keysBuffer);
     unsortedMaterial.setParameter('maxValue', maxValue);
     unsortedMaterial.setParameter('elementCount', currentNumElements);
     unsortedMaterial.setParameter('textureSize', [width, height]);
     unsortedMaterial.update();
 
-    // Update sorted material
+    // update sorted material
     sortedMaterial.setParameter('keysBuffer', keysBuffer);
     sortedMaterial.setParameter('sortedIndices', sortedIndicesBuffer);
     sortedMaterial.setParameter('maxValue', maxValue);
@@ -417,7 +417,7 @@ function updateMaterialParameters() {
  * @param {pc.StorageBuffer} sortedIndices - The sorted indices buffer to verify.
  */
 function verifyResults(sortedIndices) {
-    // If verification already in progress, queue this one (replacing any previously queued)
+    // if verification already in progress, queue this one (replacing any previously queued)
     if (verificationPending) {
         pendingVerification = {
             sortedIndices: sortedIndices,
@@ -429,7 +429,7 @@ function verifyResults(sortedIndices) {
 
     verificationPending = true;
 
-    // Capture state at time of call
+    // capture state at time of call
     const capturedOriginalValues = originalValues.slice();
     const capturedNumElements = currentNumElements;
 
@@ -466,20 +466,20 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
         return;
     }
 
-    // Read the sorted indices buffer
+    // read the sorted indices buffer
     const indicesData = new Uint32Array(capturedNumElements);
     await sortedIndices.read(0, capturedNumElements * 4, indicesData, true);
 
-    // Get sorted values by looking up original values
+    // get sorted values by looking up original values
     const sortedValues = [];
     for (let i = 0; i < capturedNumElements; i++) {
         sortedValues.push(capturedOriginalValues[indicesData[i]]);
     }
 
-    // CPU sort a copy of original values for reference
+    // cpu sort a copy of original values for reference
     const cpuSorted = capturedOriginalValues.slice().sort((a, b) => a - b);
 
-    // Compare GPU result against CPU reference. Keep the first and last 5
+    // compare gpu result against cpu reference. keep the first and last 5
     // mismatches so we can see both where corruption starts and whether the
     // tail of the array is also off (e.g. a shift-by-one cascade drops the
     // last element and duplicates an earlier one).
@@ -509,13 +509,13 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
         for (const e of firstErrors) {
             console.error(`  First mismatch at index ${e.i}: GPU=${e.gpu}, expected=${e.expected}`);
         }
-        // Avoid double-logging when the total error count fits in the first window.
+        // avoid double-logging when the total error count fits in the first window.
         if (errorCount > firstErrors.length) {
             for (const e of lastErrors) {
                 console.error(`  Last  mismatch at index ${e.i}: GPU=${e.gpu}, expected=${e.expected}`);
             }
         }
-        // Dump the final few GPU/expected pairs unconditionally so we can
+        // dump the final few gpu/expected pairs unconditionally so we can
         // confirm whether the very end of the array is shifted (a stable
         // shift-by-one drops the last original element) or intact.
         const tailStart = Math.max(0, capturedNumElements - TAIL_SIZE);
@@ -531,7 +531,7 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
     }
 }
 
-// Handle control changes from data binding
+// handle control changes from data binding
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     if (path === 'options.elementsK') {
         const newElements = value * 1000;
@@ -540,7 +540,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             needsRegen = true;
         }
     } else if (path === 'options.bits') {
-        // Snap to a multiple of 8 so the bit count is compatible with both
+        // snap to a multiple of 8 so the bit count is compatible with both
         // 4-bit and 8-bit radix modes without realignment at sort time.
         const validBits = [8, 16, 24, 32];
         const nearest = validBits.reduce((prev, curr) =>
@@ -551,19 +551,19 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             needsRegen = true;
         }
     } else if (path === 'options.mode') {
-        // Switching radix mode changes the active shader set; force a
+        // switching radix mode changes the active shader set; force a
         // re-sort on next frame and refresh the overlay.
         needsRegen = true;
         updateDeviceInfo();
     } else if (path === 'options.validation' && !value) {
-        // Clear any stale error overlay when validation is turned off -
+        // clear any stale error overlay when validation is turned off -
         // a previous failure is no longer being re-checked each frame.
         errorOverlay.style.display = 'none';
     }
 });
 
-// Initialize observer with default values (single source of truth for defaults)
-// Must be after data.on() so the handler receives the initial values.
+// initialize observer with default values (single source of truth for defaults)
+// must be after data.on() so the handler receives the initial values.
 data.set('options', {
     elementsK: 1000,
     bits: 16,
@@ -573,23 +573,23 @@ data.set('options', {
     benchMaxElements: 10_000_000
 });
 
-// ==================== BENCHMARK ====================
+// ==================== benchmark ====================
 
-// Benchmark covers the full dynamic range we care about for gsplat sorts.
-// 100K and 500K expose per-dispatch fixed-cost floors; 30M+ probes DRAM
+// benchmark covers the full dynamic range we care about for gsplat sorts.
+// 100k and 500k expose per-dispatch fixed-cost floors; 30m+ probes dram
 // bandwidth ceilings. 24-bit keys is the gsplat-representative bit width.
 const BENCH_SIZES = [
     100_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000, 8_000_000, 10_000_000,
     15_000_000, 20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
 ];
-// The benchmark and validation matrix mirrors the production decision:
-//   - 4-bit is the universal portable fallback (every non-NVIDIA device:
-//     Apple, Mali, etc.). Chosen over 6-bit because 6-bit regresses badly
-//     on Apple M1/M2 in the 4-8M target range, which is the range we
-//     actually care about on those GPUs.
-//   - OneSweep is the production fastpath on NVIDIA; it's unstable on Mali
-//     (validates incorrectly) and Apple (GPU hangs under heavy validation
-//     load on M1), so it's restricted to NVIDIA here.
+// the benchmark and validation matrix mirrors the production decision:
+//   - 4-bit is the universal portable fallback (every non-nvidia device:
+//     apple, mali, etc.). chosen over 6-bit because 6-bit regresses badly
+//     on apple m1/m2 in the 4-8m target range, which is the range we
+//     actually care about on those gpus.
+//   - onesweep is the production fastpath on nvidia; it's unstable on mali
+//     (validates incorrectly) and apple (gpu hangs under heavy validation
+//     load on m1), so it's restricted to nvidia here.
 const _nvidia = (device.gpuAdapter?.info?.vendor || '').toLowerCase().includes('nvidia');
 const BENCH_CONFIGS = [
     { label: '4-bit', modeKey: '4-shared-mem' },
@@ -599,8 +599,8 @@ const BENCH_WARMUP = 20;
 const BENCH_MEASURE = 50;
 const BENCH_BITS = 24;
 
-// Passes that are not part of the sort itself - excluded from per-cell
-// totals and per-pass breakdowns. `Forward` is the main PlayCanvas forward
+// passes that are not part of the sort itself - excluded from per-cell
+// totals and per-pass breakdowns. `forward` is the main playcanvas forward
 // render pass; its cost (and serialization-behind-compute timing artefacts)
 // would pollute the sort-only comparison.
 const BENCH_EXCLUDED_PASSES = new Set(['Forward']);
@@ -683,8 +683,8 @@ function showBenchStatus(text) {
 function startBenchmark() {
     if (benchState) return;
 
-    // Filter the benchmark size sweep to respect the user-selected upper
-    // bound from the Benchmark panel.
+    // filter the benchmark size sweep to respect the user-selected upper
+    // bound from the benchmark panel.
     const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
     const sizes = BENCH_SIZES.filter((n) => n <= maxN);
     if (sizes.length === 0) {
@@ -695,7 +695,7 @@ function startBenchmark() {
         return;
     }
 
-    // Snapshot interactive state - restored on completion.
+    // snapshot interactive state - restored on completion.
     const saved = {
         elementsK: data.get('options.elementsK'),
         bits: data.get('options.bits'),
@@ -705,7 +705,7 @@ function startBenchmark() {
         profilerEnabled: !!(device.gpuProfiler && device.gpuProfiler.enabled)
     };
 
-    // Force off visualization (saves fragment shader cost during timing) and
+    // force off visualization (saves fragment shader cost during timing) and
     // hide any stale error overlay from a prior interactive session.
     unsortedPlane.enabled = false;
     sortedPlane.enabled = false;
@@ -743,12 +743,12 @@ function stepBenchmark() {
     const size = s.sizes[s.sizeIdx];
 
     if (s.phase === 'setup') {
-        // First frame for this (size, config). Allocate a fresh sort
+        // first frame for this (size, config). allocate a fresh sort
         // instance and fresh keys (identical across configs for the same
-        // size by virtue of the RNG seeding, but since we're measuring
+        // size by virtue of the rng seeding, but since we're measuring
         // per-config-and-size there's no need to share).
         //
-        // We recreate the sort instance for each (config, size) so that
+        // we recreate the sort instance for each (config, size) so that
         // capacity growth from earlier smaller sizes doesn't leak into
         // timings (the current allocation scheme only grows).
         if (s.sortInst) {
@@ -762,11 +762,11 @@ function stepBenchmark() {
         s.sortInst = createBenchSort(cfg.modeKey);
         s.keysBuf = createBenchKeys(size);
 
-        // Round up to the sort's radix width (same alignment rule the
+        // round up to the sort's radix width (same alignment rule the
         // interactive path uses).
         const alignedBits = Math.ceil(BENCH_BITS / s.sortInst.radixBits) * s.sortInst.radixBits;
 
-        // Prime: one throwaway sort so shader compilation, pipeline
+        // prime: one throwaway sort so shader compilation, pipeline
         // creation and buffer allocations land outside the warmup window.
         s.sortInst.sort(s.keysBuf, size, alignedBits);
 
@@ -777,7 +777,7 @@ function stepBenchmark() {
         return;
     }
 
-    // Active phases (warmup / measure): run one sort per frame.
+    // active phases (warmup / measure): run one sort per frame.
     const sort = /** @type {NonNullable<typeof s.sortInst>} */ (s.sortInst);
     const keys = /** @type {NonNullable<typeof s.keysBuf>} */ (s.keysBuf);
     const alignedBits = Math.ceil(BENCH_BITS / sort.radixBits) * sort.radixBits;
@@ -795,12 +795,12 @@ function stepBenchmark() {
     }
 
     // phase === 'measure': collect timings from the previous frame's work.
-    // Timestamp queries resolve async so the values we read now correspond
-    // to the sort dispatched ~1 frame ago; over MEASURE frames this is
-    // amortized away. We deliberately exclude the `Forward` (scene render)
-    // pass - it's not part of the sort, and Metal/WebGPU timing of compute
+    // timestamp queries resolve async so the values we read now correspond
+    // to the sort dispatched ~1 frame ago; over measure frames this is
+    // amortized away. we deliberately exclude the `forward` (scene render)
+    // pass - it's not part of the sort, and metal/webgpu timing of compute
     // followed by graphics serializes in a way that inflates its reported
-    // time in proportion to the preceding compute workload. The total we
+    // time in proportion to the preceding compute workload. the total we
     // record is therefore the sum of sort-related passes only.
     const gp = device.gpuProfiler;
     if (gp && gp.passTimings.size > 0) {
@@ -821,7 +821,7 @@ function stepBenchmark() {
 
     if (s.frame < BENCH_MEASURE) return;
 
-    // Aggregate this (size, config) into a result row.
+    // aggregate this (size, config) into a result row.
     const mean = (/** @type {number[]} */ arr) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0);
     /** @type {Map<string, number>} */
     const passMs = new Map();
@@ -835,9 +835,9 @@ function stepBenchmark() {
         passMs: passMs
     });
 
-    // Order: inner loop is config (so both configs at the same size are
-    // measured back-to-back, equalizing GPU boost-clock / thermal state
-    // across configs at that size). Outer loop is size.
+    // order: inner loop is config (so both configs at the same size are
+    // measured back-to-back, equalizing gpu boost-clock / thermal state
+    // across configs at that size). outer loop is size.
     s.configIdx++;
     if (s.configIdx >= BENCH_CONFIGS.length) {
         s.configIdx = 0;
@@ -867,17 +867,17 @@ function finishBenchmark() {
     benchState = null;
     benchStatus.style.display = 'none';
 
-    // Restore GPU profiler to whatever the user had (usually off).
+    // restore gpu profiler to whatever the user had (usually off).
     if (device.gpuProfiler) {
         device.gpuProfiler.enabled = saved.profilerEnabled;
     }
 
-    // Hide the device info HUD so it doesn't overlap the results title, and
+    // hide the device info hud so it doesn't overlap the results title, and
     // keep the visualization planes disabled while the overlay is shown -
-    // restoring both only when the user clicks Close. We don't restore the
-    // render / elementsK / bits / mode observer values here for the same
+    // restoring both only when the user clicks close. we don't restore the
+    // render / elementsk / bits / mode observer values here for the same
     // reason: doing so would trigger regen and a visible cube / planes
-    // flicker behind the results. Close defers that until it's actually
+    // flicker behind the results. close defers that until it's actually
     // needed.
     deviceInfo.style.display = 'none';
     unsortedPlane.enabled = false;
@@ -901,9 +901,9 @@ function finishBenchmark() {
  * @param {() => void} onClose - Called when the user clicks Close.
  */
 function renderBenchResults(results, onClose) {
-    // Group results by size - columns are configs. `sizes` preserves the
-    // actual measured sizes (may be a subset of BENCH_SIZES when the user
-    // capped the sweep via the Benchmark panel), sorted ascending.
+    // group results by size - columns are configs. `sizes` preserves the
+    // actual measured sizes (may be a subset of bench_sizes when the user
+    // capped the sweep via the benchmark panel), sorted ascending.
     /** @type {Map<number, Map<string, {frameMs: number, passMs: Map<string, number>}>>} */
     const bySize = new Map();
     for (const r of results) {
@@ -920,15 +920,15 @@ function renderBenchResults(results, onClose) {
 
     const baseline = BENCH_CONFIGS[0].label;
 
-    // Explicit palette - PCUI's default styles inherit into the overlay and
+    // explicit palette - pcui's default styles inherit into the overlay and
     // drag text toward panel-background grey, so we pin every cell to a
     // high-contrast foreground.
     const TXT = '#e6e6e6';
     const MUTED = '#aaa';
     const HDR_BG = '#1e1e24';
 
-    // Column count for the details-row colspan: Size + 1 per baseline +
-    // 2 per non-baseline (time + speedup) + Details.
+    // column count for the details-row colspan: size + 1 per baseline +
+    // 2 per non-baseline (time + speedup) + details.
     const totalCols = 2 + (BENCH_CONFIGS.length - 1) * 2 + 1;
 
     let html = '';
@@ -937,8 +937,8 @@ function renderBenchResults(results, onClose) {
     html += `<div style="color:${MUTED};margin-bottom:4px;">${gpuLine}</div>`;
     html += `<div style="color:${MUTED};margin-bottom:12px;">${BENCH_BITS}-bit keys  ·  ${BENCH_WARMUP} warmup + ${BENCH_MEASURE} measured frames per cell  ·  sort-only GPU time in ms (Forward pass excluded)</div>`;
 
-    // Line chart placeholder; filled in by drawBenchChart() after the
-    // overlay HTML is committed to the DOM.
+    // line chart placeholder; filled in by drawbenchchart() after the
+    // overlay html is committed to the dom.
     html +=
         '<canvas id="bench-chart" width="700" height="320" style="display:block;background:#1a1a2e;border-radius:4px;width:100%;max-width:700px;margin-bottom:14px;"></canvas>';
 
@@ -949,7 +949,7 @@ function renderBenchResults(results, onClose) {
     for (let c = 0; c < BENCH_CONFIGS.length; c++) {
         const cfg = BENCH_CONFIGS[c];
         html += `<th ${th}>${cfg.label} (ms)</th>`;
-        // Non-baseline configs get an adjacent speedup-vs-baseline column.
+        // non-baseline configs get an adjacent speedup-vs-baseline column.
         if (c > 0) html += `<th ${th}>vs ${baseline}</th>`;
     }
     html += `<th style="text-align:center;padding:5px 10px;border-bottom:1px solid #444;color:${TXT};">Details</th>`;
@@ -962,7 +962,7 @@ function renderBenchResults(results, onClose) {
         const row = bySize.get(size);
         if (!row) continue;
 
-        // Zebra striping for readability at a glance.
+        // zebra striping for readability at a glance.
         const rowBg = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)';
         const b = row.get(baseline)?.frameMs ?? 0;
 
@@ -981,7 +981,7 @@ function renderBenchResults(results, onClose) {
         html += `<td style="text-align:center;padding:3px 10px;color:${TXT};"><button data-toggle="${i}" style="background:transparent;color:${TXT};border:1px solid #555;border-radius:3px;padding:1px 8px;cursor:pointer;font-family:monospace;font-size:11px;">▸</button></td>`;
         html += '</tr>';
 
-        // Hidden detail row below, one per size. Shows per-pass breakdown
+        // hidden detail row below, one per size. shows per-pass breakdown
         // for all configs side by side; revealed by the toggle button.
         html += `<tr data-detail-content="${i}" style="display:none;background:${rowBg};">`;
         html += `<td colspan="${totalCols}" style="padding:6px 24px 10px 24px;color:${TXT};">`;
@@ -1016,13 +1016,13 @@ function renderBenchResults(results, onClose) {
     benchResults.innerHTML = html;
     benchResults.style.display = 'block';
 
-    // Render the line chart into the <canvas> now that it's in the DOM.
+    // render the line chart into the <canvas> now that it's in the dom.
     const chartCanvas = /** @type {HTMLCanvasElement | null} */ (document.getElementById('bench-chart'));
     if (chartCanvas) {
         drawBenchChart(chartCanvas, bySize, sizes);
     }
 
-    // Wire up per-row toggles. Each button flips the matching detail row
+    // wire up per-row toggles. each button flips the matching detail row
     // and swaps its caret glyph.
     const toggles = benchResults.querySelectorAll('button[data-toggle]');
     toggles.forEach((btn) => {
@@ -1076,9 +1076,9 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
     const plotH = H - PAD.top - PAD.bottom;
     const COLORS = ['#ff6b6b', '#2ecc71', '#a06bff', '#f7dc6f', '#4dabff', '#ff9f43', '#ec87c0', '#48c9b0'];
 
-    // Log-Y. Sort timings routinely span 2-3 decades across the sweep
-    // (e.g. 0.1 ms at 100K vs 70 ms at 50M), so linear-Y squashes the
-    // small-N region into invisibility. On log-Y a fixed speedup ratio
+    // log-y. sort timings routinely span 2-3 decades across the sweep
+    // (e.g. 0.1 ms at 100k vs 70 ms at 50m), so linear-y squashes the
+    // small-n region into invisibility. on log-y a fixed speedup ratio
     // always takes the same vertical space regardless of absolute ms.
     let minVal = Infinity;
     let maxVal = 0;
@@ -1095,8 +1095,8 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
         maxVal = 1;
     }
 
-    // Snap to decades so gridlines land on clean values (0.1, 1, 10, ...).
-    // Always widen by at least one decade so tiny ranges still draw nicely.
+    // snap to decades so gridlines land on clean values (0.1, 1, 10, ...).
+    // always widen by at least one decade so tiny ranges still draw nicely.
     const logMin = Math.floor(Math.log10(minVal));
     let logMax = Math.ceil(Math.log10(maxVal));
     if (logMax <= logMin) logMax = logMin + 1;
@@ -1121,7 +1121,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
     ctx.lineTo(W - PAD.right, H - PAD.bottom);
     ctx.stroke();
 
-    // Decade gridlines + labels, plus unlabelled minor lines at 2x/5x
+    // decade gridlines + labels, plus unlabelled minor lines at 2x/5x
     // within each decade so the eye can still read sub-decade spacing.
     ctx.font = '11px monospace';
     ctx.textAlign = 'right';
@@ -1149,7 +1149,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
         }
     }
 
-    // X ticks: label every size if there's room, otherwise stride so labels
+    // x ticks: label every size if there's room, otherwise stride so labels
     // don't overlap.
     const stride = sizes.length > 10 ? Math.ceil(sizes.length / 10) : 1;
     const denom = Math.max(1, sizes.length - 1);
@@ -1166,7 +1166,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
     ctx.textAlign = 'center';
     ctx.fillText('Sort Time (ms, log scale) vs Element Count', W / 2, 18);
 
-    // One polyline per config in BENCH_CONFIGS order, so colors line up with
+    // one polyline per config in bench_configs order, so colors line up with
     // the summary table's column order.
     for (let c = 0; c < BENCH_CONFIGS.length; c++) {
         const label = BENCH_CONFIGS[c].label;
@@ -1244,7 +1244,7 @@ function benchResultsPlaintext(results, includeDetails = false) {
     text += 'Sort-only GPU time in ms (Forward pass excluded)\n';
     text += `Captured: ${new Date().toISOString()}\n\n`;
 
-    // Header row: Size + for each config: its label + (if non-baseline) a
+    // header row: size + for each config: its label + (if non-baseline) a
     // "vs baseline" column.
     text += 'Size'.padStart(8);
     for (let c = 0; c < BENCH_CONFIGS.length; c++) {
@@ -1314,7 +1314,7 @@ function downloadText(filename, content) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    // Defer revoke so the download has a chance to start in all browsers.
+    // defer revoke so the download has a chance to start in all browsers.
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
@@ -1340,15 +1340,15 @@ function benchFilename() {
     return `radix-bench-${tag}-${stamp}.txt`;
 }
 
-// ==================== VALIDATION ====================
+// ==================== validation ====================
 
-// Validation exercises every mode listed in BENCH_CONFIGS against a CPU
-// reference sort. Unlike the benchmark it ignores timing entirely and only
-// reports pass/fail. The size sweep and mode list are shared with the
-// benchmark so selecting a `Run up to` value applies to both buttons.
+// validation exercises every mode listed in bench_configs against a cpu
+// reference sort. unlike the benchmark it ignores timing entirely and only
+// reports pass/fail. the size sweep and mode list are shared with the
+// benchmark so selecting a `run up to` value applies to both buttons.
 const VALIDATE_RUNS = 10;
 
-// True while an async validation pass is in flight. Gates the normal
+// true while an async validation pass is in flight. gates the normal
 // per-frame sort to prevent the interactive path from clobbering the
 // validate driver's sort instances and readbacks.
 let validateRunning = false;
@@ -1414,9 +1414,9 @@ async function runValidation() {
         return;
     }
 
-    // Snapshot the same interactive state the benchmark does so we can
-    // leave the UI untouched after completion. Validation doesn't need the
-    // GPU profiler, but we still disable visualization and the error
+    // snapshot the same interactive state the benchmark does so we can
+    // leave the ui untouched after completion. validation doesn't need the
+    // gpu profiler, but we still disable visualization and the error
     // overlay to keep the screen clean.
     const saved = {
         elementsK: data.get('options.elementsK'),
@@ -1442,7 +1442,7 @@ async function runValidation() {
 
     try {
         for (const size of sizes) {
-            // Pre-mark any already-failed mode as skipped for this size so
+            // pre-mark any already-failed mode as skipped for this size so
             // it appears in the output grid even though we don't run it.
             for (const cfg of BENCH_CONFIGS) {
                 if (skipLabels.has(cfg.label)) {
@@ -1456,7 +1456,7 @@ async function runValidation() {
             }
 
             for (let run = 0; run < VALIDATE_RUNS; run++) {
-                // Fresh random input per run; shared across all configs at
+                // fresh random input per run; shared across all configs at
                 // this (size, run) so mismatches can be directly compared.
                 const keysCpu = generateValidateKeys(size);
                 const cpuSorted = keysCpu.slice().sort();
@@ -1493,9 +1493,9 @@ async function runValidation() {
                         if (!entry.firstFailure) {
                             entry.firstFailure = { run: run, ...mismatch };
                         }
-                        // Fail-fast per mode: the next size will almost
+                        // fail-fast per mode: the next size will almost
                         // certainly fail too, and each failure eats a long
-                        // readback. Skip this mode at all larger sizes.
+                        // readback. skip this mode at all larger sizes.
                         skipLabels.add(cfg.label);
                     } else {
                         entry.passed++;
@@ -1503,7 +1503,7 @@ async function runValidation() {
 
                     sort.destroy();
 
-                    // Yield a frame so the engine can flush the GPU queue
+                    // yield a frame so the engine can flush the gpu queue
                     // between sorts and the status overlay updates live.
                     // eslint-disable-next-line no-await-in-loop
                     await new Promise((resolve) => {
@@ -1593,10 +1593,10 @@ function renderValidateResults(results, sizes, onClose) {
         }
         html += '</tr>';
 
-        // Insert hidden detail row immediately under each failing size.
-        // The hidden row's id must match the toggle button's
-        // `data-toggle` set earlier (which captured `detailRows.length`
-        // BEFORE pushing this size's failures, i.e. the start index).
+        // insert hidden detail row immediately under each failing size.
+        // the hidden row's id must match the toggle button's
+        // `data-toggle` set earlier (which captured `detailrows.length`
+        // before pushing this size's failures, i.e. the start index).
         if (rowHasDetails) {
             const startIdx = detailRows.findIndex((r) => r.size === size);
             const lastIdx = detailRows.length - 1;
@@ -1624,7 +1624,7 @@ function renderValidateResults(results, sizes, onClose) {
     benchResults.innerHTML = html;
     benchResults.style.display = 'block';
 
-    // Wire toggle buttons.
+    // wire toggle buttons.
     const toggles = benchResults.querySelectorAll('button[data-toggle]');
     toggles.forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -1699,7 +1699,7 @@ function validateResultsPlaintext(results, sizes) {
         text += '\n';
     }
 
-    // Failure detail section: one block per (size, mode) with at least one failure.
+    // failure detail section: one block per (size, mode) with at least one failure.
     let hasFailures = false;
     for (const [, entry] of results) {
         if (entry.failed > 0) {
@@ -1749,7 +1749,7 @@ function validateFilename() {
     return `radix-validate-${tag}-${stamp}.txt`;
 }
 
-// Hook the button-emitted event from the controls panel.
+// hook the button-emitted event from the controls panel.
 data.on('benchmark', () => {
     startBenchmark();
 });
@@ -1758,12 +1758,12 @@ data.on('validate', () => {
     runValidation();
 });
 
-// Update loop - continuously sorts every frame
+// update loop - continuously sorts every frame
 app.on('update', (/** @type {number} */ dt) => {
-    // Rotate the cube for visual frame rate indication
+    // rotate the cube for visual frame rate indication
     cube.rotate(10 * dt, 20 * dt, 30 * dt);
 
-    // Benchmark mode takes over the frame: it owns its own sort instances
+    // benchmark mode takes over the frame: it owns its own sort instances
     // and keys buffer, and intentionally bypasses the interactive material
     // updates so fragment-shader work doesn't contaminate timings.
     if (benchState) {
@@ -1771,32 +1771,32 @@ app.on('update', (/** @type {number} */ dt) => {
         return;
     }
 
-    // Validation drives its own sort dispatches from an async driver and
+    // validation drives its own sort dispatches from an async driver and
     // must not be clobbered by the interactive per-frame sort.
     if (validateRunning) {
         return;
     }
 
-    // Wait for observer to initialize values from controls
+    // wait for observer to initialize values from controls
     if (currentNumElements === 0 || currentNumBits === 0) {
         return;
     }
 
-    // Regenerate data when parameters change. Validation is a one-shot
-    // GPU→CPU readback + CPU reference sort, which is O(N log N) on the
-    // main thread and blocks for seconds at large N. Gate it behind the
-    // Validation toggle so perf testing with frequent slider tweaks stays
+    // regenerate data when parameters change. validation is a one-shot
+    // gpu→cpu readback + cpu reference sort, which is o(n log n) on the
+    // main thread and blocks for seconds at large n. gate it behind the
+    // validation toggle so perf testing with frequent slider tweaks stays
     // responsive.
     const verify = needsRegen && (data.get('options.validation') ?? true);
     if (needsRegen) {
         regenerateData();
     }
 
-    // Sort every frame, verify only after regeneration (and only when the
-    // Validation toggle is on).
+    // sort every frame, verify only after regeneration (and only when the
+    // validation toggle is on).
     runSort(verify);
 
-    // Toggle visualization planes based on the Render checkbox. Disabling
+    // toggle visualization planes based on the render checkbox. disabling
     // rendering isolates pure sort cost (no quad draws, no texture sampling
     // of the keys/indices buffers).
     const renderEnabled = data.get('options.render') ?? true;

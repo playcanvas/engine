@@ -42,11 +42,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -71,7 +71,7 @@ app.root.addChild(morphEntity);
 // get the morph instance, which we apply the weights to
 const morphInstance = morphEntity.render.meshInstances[1].morphInstance;
 
-// Create an entity with a directional light component
+// create an entity with a directional light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -83,7 +83,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 45, 0);
 
-// Create an entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera');
 app.root.addChild(camera);

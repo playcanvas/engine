@@ -36,11 +36,11 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -78,8 +78,8 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 camera.setPosition(0, 0, 3);
 
-// Rotate the box according to the delta time since the last frame.
-// Update the material's 'amount' parameter to animate the color.
+// rotate the box according to the delta time since the last frame.
+// update the material's 'amount' parameter to animate the color.
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     box.rotate(10 * dt, 20 * dt, 30 * dt);

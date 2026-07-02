@@ -61,7 +61,7 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -111,7 +111,7 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // if not in vr, activate
                 activate();
             } else {
                 // otherwise reset camera
@@ -123,7 +123,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // end session by keyboard esc
     app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -134,7 +134,7 @@ if (app.xr.supported) {
         message('Immersive AR session has started');
 
         // trigger manual scanning on session start
-        // app.xr.initiateRoomCapture((err) => { });
+        // app.xr.initiateroomcapture((err) => { });
     });
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
@@ -255,7 +255,7 @@ if (app.xr.supported) {
         });
     });
 
-    // when XrPlane is removed, destroy related entity
+    // when xrplane is removed, destroy related entity
     app.xr.planeDetection.on('remove', (xrPlane) => {
         const entity = entities.get(xrPlane);
         if (entity) {
@@ -271,13 +271,13 @@ if (app.xr.supported) {
 
     app.on('update', () => {
         if (app.xr.active && app.xr.planeDetection.supported) {
-            // iterate through each XrMesh
+            // iterate through each xrmesh
             for (let i = 0; i < app.xr.planeDetection.planes.length; i++) {
                 const plane = app.xr.planeDetection.planes[i];
 
                 const entity = entities.get(plane);
                 if (entity) {
-                    // update entity transforms based on XrPlane
+                    // update entity transforms based on xrplane
                     entity.setPosition(plane.getPosition());
                     entity.setRotation(plane.getRotation());
 
@@ -288,7 +288,7 @@ if (app.xr.supported) {
                     entity.label.translateLocal(0, 0, 0.05);
                 }
 
-                // render XrPlane gizmo axes
+                // render xrplane gizmo axes
                 transform.setTRS(plane.getPosition(), plane.getRotation(), pc.Vec3.ONE);
                 vec3A.set(0.2, 0, 0);
                 vec3B.set(0, 0.2, 0);

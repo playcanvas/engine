@@ -130,7 +130,7 @@ function fillQuadrants(texture, size, colors) {
     texture.unlock();
 }
 
-// create a 2D screen for displaying the textures
+// create a 2d screen for displaying the textures
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(960, 720),
@@ -230,7 +230,7 @@ const GREEN = [40, 200, 40, 255];
 const BLUE = [40, 80, 230, 255];
 const YELLOW = [230, 220, 40, 255];
 
-// Row 1: loaded texture, full copy of mip 0
+// row 1: loaded texture, full copy of mip 0
 {
     const src = assets.playcanvas.resource;
     const w = src.width;
@@ -250,7 +250,7 @@ const YELLOW = [230, 220, 40, 255];
     await runRow('loaded texture, full copy', src, dst, {}, expected, w, h);
 }
 
-// Row 2: procedural quadrants, full copy of mip 0
+// row 2: procedural quadrants, full copy of mip 0
 {
     const size = 64;
     const src = createTexture('quads-src', size, false);
@@ -261,7 +261,7 @@ const YELLOW = [230, 220, 40, 255];
     await runRow('procedural, full copy', src, dst, {}, expected, size, size);
 }
 
-// Row 3: copy source mip 1 into a destination's mip 0. The source is a mipmapped quadrant
+// row 3: copy source mip 1 into a destination's mip 0. the source is a mipmapped quadrant
 // texture; the expected result is a direct read of the source's mip 1, so this verifies that
 // the copy correctly selects the requested source mip level (independent of how mips are made).
 {
@@ -275,7 +275,7 @@ const YELLOW = [230, 220, 40, 255];
     await runRow('source mip 1 -> dest mip 0', src, dst, { sourceMipLevel: 1 }, expected, mip1Size, mip1Size);
 }
 
-// Row 4: sub-rect - copy the top-left 32x32 quadrant of the source into dest at offset (32, 32)
+// row 4: sub-rect - copy the top-left 32x32 quadrant of the source into dest at offset (32, 32)
 {
     const size = 64;
     const src = createTexture('subrect-src', size, false);
@@ -286,7 +286,7 @@ const YELLOW = [230, 220, 40, 255];
     fillLevel(dst, 0, [60, 60, 60, 255]);
     dst.upload();
     const half = size / 2;
-    // build expected: grey background with the source's top-left (RED) quadrant placed at (32,32)
+    // build expected: grey background with the source's top-left (red) quadrant placed at (32,32)
     const expected = new Uint8Array(size * size * 4);
     for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {

@@ -54,11 +54,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// auto resolution: treat DPR >= 2 as high-DPI (drops to half)
+// auto resolution: treat dpr >= 2 as high-dpi (drops to half)
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
     device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
@@ -68,7 +68,7 @@ applyResolution();
 const resize = () => {
     applyResolution();
     app.resizeCanvas();
-    // With on-demand rendering (autoRender is set to false once the reveal completes), a resize is
+    // with on-demand rendering (autorender is set to false once the reveal completes), a resize is
     // a viewport change the app makes itself — it does not raise 'frame:request' — so request a
     // render to draw the scene at the new canvas size.
     app.renderNextFrame = true;
@@ -80,20 +80,20 @@ app.on('destroy', () => {
 
 const config = {
     name: 'Lublin-downtown',
-    // The capture was split into 4 balanced pieces, each built as a multi-LOD streamed SOG bundle.
-    // All pieces share the original world coordinates, so they load at the origin and reassemble.
+    // the capture was split into 4 balanced pieces, each built as a multi-lod streamed sog bundle.
+    // all pieces share the original world coordinates, so they load at the origin and reassemble.
     urls: [
         'https://code.playcanvas.com/examples_data/downtown_01/ssog0/lod-meta.json',
         'https://code.playcanvas.com/examples_data/downtown_01/ssog1/lod-meta.json',
         'https://code.playcanvas.com/examples_data/downtown_01/ssog2/lod-meta.json',
         'https://code.playcanvas.com/examples_data/downtown_01/ssog3/lod-meta.json'
     ],
-    // Whole-scene orientation (euler degrees). The capture stores height on Z; this rotates it to
-    // be Y-up for the fly camera. VERIFY/ADJUST once the real data is loaded.
+    // whole-scene orientation (euler degrees). the capture stores height on z; this rotates it to
+    // be y-up for the fly camera. verify/adjust once the real data is loaded.
     sceneRotation: [-90, 0, 0],
     lodUpdateDistance: 4,
     lodUnderfillLimit: 5,
-    // distance-based LOD ramp base distance (LOD = 1 + log(d / base) / log(mult)); the multiplier
+    // distance-based lod ramp base distance (lod = 1 + log(d / base) / log(mult)); the multiplier
     // is derived from the splat budget — see the budget section below
     lodBaseDistance: 20,
     // fly speeds
@@ -102,7 +102,7 @@ const config = {
     // default start view
     cameraPosition: [-87.42, -14.23, 179.97],
     cameraRotation: [-14.85, -64.12, 0],
-    // partly-cloudy HDRI backdrop, downloaded at runtime from Poly Haven (CC0)
+    // partly-cloudy hdri backdrop, downloaded at runtime from poly haven (cc0)
     skyUrl: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr'
 };
 
@@ -136,7 +136,7 @@ app.scene.gsplat.alphaClipForward = 1 / 255;
 app.scene.gsplat.minContribution = 3;
 app.scene.gsplat.dataFormat = pc.GSPLATDATA_COMPACT;
 
-// Colorize LODs debug toggle (off by default)
+// colorize lods debug toggle (off by default)
 data.set('colorizeLods', false);
 const applyColorizeLods = () => {
     app.scene.gsplat.debug = data.get('colorizeLods') ? pc.GSPLAT_DEBUG_LOD : pc.GSPLAT_DEBUG_NONE;
@@ -144,7 +144,7 @@ const applyColorizeLods = () => {
 applyColorizeLods();
 data.on('colorizeLods:set', applyColorizeLods);
 
-// Renderer: CPU-sort raster on WebGL, GPU-sort raster on WebGPU
+// renderer: cpu-sort raster on webgl, gpu-sort raster on webgpu
 app.scene.gsplat.renderer = device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT;
 
 // --- create the 4 streamed pieces under a single root (shared coordinate frame) ---
@@ -182,8 +182,8 @@ const center = worldAabb.center.clone();
 const radius = worldAabb.halfExtents.length();
 
 // --- circular reveal: keep all splats hidden until the first frame is ready, then sweep them
-// in from the INITIAL CAMERA POSITION. Runs on the shared (unified) gsplat material, so one
-// instance drives all four pieces. While loading, the effect time is pinned negative
+// in from the initial camera position. runs on the shared (unified) gsplat material, so one
+// instance drives all four pieces. while loading, the effect time is pinned negative
 // (everything hidden, see the update loop); it is released on frame:ready below. ---
 const camStart = new pc.Vec3(config.cameraPosition[0], config.cameraPosition[1], config.cameraPosition[2]);
 const revealReach = camStart.distance(center) + radius; // furthest splat from the camera start
@@ -201,15 +201,15 @@ reveal.dotTint.set(0, 0, 0); // no leading dot tint
 reveal.waveTint.set(5, 0, 0); // red highlight edge
 let revealStarted = false;
 
-// --- infinite HDRI backdrop (partly-cloudy sky), backdrop only ---
-// Reproject the equirect HDRI into a skybox cubemap. We do NOT build an env-atlas / set
-// scene.envAtlas — the splats are pre-lit, so the sky contributes no lighting, just a backdrop.
-// Generated up front but revealed together with the scene (on frame:ready), so it doesn't pop
+// --- infinite hdri backdrop (partly-cloudy sky), backdrop only ---
+// reproject the equirect hdri into a skybox cubemap. we do not build an env-atlas / set
+// scene.envatlas — the splats are pre-lit, so the sky contributes no lighting, just a backdrop.
+// generated up front but revealed together with the scene (on frame:ready), so it doesn't pop
 // in before the splats.
 const skyboxCubemap = pc.EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
 app.scene.sky.type = pc.SKYTYPE_INFINITE;
 
-// Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some
+// start with the 4 lowest (coarsest) lods for a fast initial display that still gets some
 // nearby detail, then open up to the full range once the first frame's data is ready.
 const worstLod = lodLevels - 1;
 gsInstances.forEach((gs) => {
@@ -249,7 +249,7 @@ camera.setLocalPosition(config.cameraPosition[0], config.cameraPosition[1], conf
 camera.setLocalEulerAngles(config.cameraRotation[0], config.cameraRotation[1], config.cameraRotation[2]);
 app.root.addChild(camera);
 
-// focus point straight ahead of the camera's initial orientation — CameraControls derives the
+// focus point straight ahead of the camera's initial orientation — cameracontrols derives the
 // starting yaw/pitch from (position -> focus), reproducing the configured rotation.
 const focusPoint = camera.forward
     .clone()
@@ -270,10 +270,10 @@ Object.assign(cc, {
     focusPoint: focusPoint
 });
 
-// --- Splat budget (millions; 0 = no cap), driving both the cap and the LOD multiplier.
-// Base distance is fixed (config.lodBaseDistance); the multiplier interpolates 1.5 (at 2M) to
-// 2.5 (at the Extreme budget), clamped — coarser falloff as the budget grows. Default to the
-// Medium quality preset (desktop 8M / mobile 2M), so a quality button is lit at launch. ---
+// --- splat budget (millions; 0 = no cap), driving both the cap and the lod multiplier.
+// base distance is fixed (config.lodbasedistance); the multiplier interpolates 1.5 (at 2m) to
+// 2.5 (at the extreme budget), clamped — coarser falloff as the budget grows. default to the
+// medium quality preset (desktop 8m / mobile 2m), so a quality button is lit at launch. ---
 const extremeBudget = pc.platform.mobile ? 8 : 25;
 data.set('splatBudget', pc.platform.mobile ? 4 : 8);
 const applySplatBudget = () => {
@@ -289,7 +289,7 @@ const applySplatBudget = () => {
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
-// --- on-screen quality buttons: each sets the splat budget. The Splat Budget slider in the
+// --- on-screen quality buttons: each sets the splat budget. the splat budget slider in the
 // controls stays two-way bound to the same value, so it tracks the buttons and can still be
 // dragged; clicking a button just resets the value. ---
 const QUALITY = pc.platform.mobile
@@ -344,14 +344,14 @@ const updateQualityButtons = () => {
 updateQualityButtons();
 data.on('splatBudget:set', updateQualityButtons);
 
-// --- On-demand rendering ----------------------------------------------------------------
-// Gaussian-splat streaming (LOD evaluation + file loading) runs every frame regardless of
-// rendering. We render continuously while the scene loads and the reveal animation plays, then
+// --- on-demand rendering ----------------------------------------------------------------
+// gaussian-splat streaming (lod evaluation + file loading) runs every frame regardless of
+// rendering. we render continuously while the scene loads and the reveal animation plays, then
 // switch to rendering only on demand: when streaming has new data to show (the 'frame:request'
-// event), when the camera moves, or on a resize / UI change (handled where those occur). This
-// keeps the GPU idle while the huge city sits still, yet still streams in the background.
+// event), when the camera moves, or on a resize / ui change (handled where those occur). this
+// keeps the gpu idle while the huge city sits still, yet still streams in the background.
 
-// render whenever streaming produced new data (or a CPU sort result became ready to apply)
+// render whenever streaming produced new data (or a cpu sort result became ready to apply)
 app.systems.gsplat.on('frame:request', () => {
     app.renderNextFrame = true;
 });
@@ -360,26 +360,26 @@ let onDemand = false;
 const lastCamPos = new pc.Vec3();
 const lastCamRot = new pc.Quat();
 
-// --- Stats + on-demand driver ---
+// --- stats + on-demand driver ---
 app.on('update', () => {
     // keep the reveal frozen (all splats hidden) until it is released on frame:ready
     if (!revealStarted) reveal.effectTime = -1e6;
 
-    // update HUD stats
+    // update hud stats
     data.set('data.stats.gsplats', toM(app.stats.frame.gsplats));
     const bb = app.graphicsDevice.backBufferSize;
     data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 
     if (!onDemand) {
-        // The reveal starts once the first frame is ready and disables itself when its animation
-        // completes. Until then autoRender stays true so the scene streams in and the reveal
+        // the reveal starts once the first frame is ready and disables itself when its animation
+        // completes. until then autorender stays true so the scene streams in and the reveal
         // animates every frame; once it finishes, switch to on-demand rendering.
         if (revealStarted && reveal && !reveal.enabled) {
             onDemand = true;
             app.autoRender = false;
 
-            // The reveal finishing is a draw-state change (it stops masking the splats), not a
-            // streaming change, so it does not raise 'frame:request'. Render one final frame so
+            // the reveal finishing is a draw-state change (it stops masking the splats), not a
+            // streaming change, so it does not raise 'frame:request'. render one final frame so
             // the fully-revealed scene is shown before we go idle.
             app.renderNextFrame = true;
 

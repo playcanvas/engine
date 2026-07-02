@@ -66,7 +66,7 @@ export function Controls({ observer }) {
             ctx.stroke();
         };
 
-        // Initial draw
+        // initial draw
         drawPosition();
 
         observer.on('*:set', drawPosition);

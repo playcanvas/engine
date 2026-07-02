@@ -46,11 +46,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -63,29 +63,29 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Setup skydome - the environment is important for seeing transmission effects
+// setup skydome - the environment is important for seeing transmission effects
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
 app.scene.skyboxIntensity = 1.5;
 
-// Instantiate the transmission roughness test model
-// This model shows a grid of transmissive tiles with:
-// - Increasing roughness along the horizontal axis
-// - Increasing IOR along the vertical axis
+// instantiate the transmission roughness test model
+// this model shows a grid of transmissive tiles with:
+// - increasing roughness along the horizontal axis
+// - increasing ior along the vertical axis
 const modelEntity = assets.model.resource.instantiateRenderEntity();
 modelEntity.setLocalEulerAngles(0, 90, 0);
 modelEntity.setPosition(0, 0, 0);
 modelEntity.setLocalScale(1, 1, 1);
 app.root.addChild(modelEntity);
 
-// Create a camera with an orbit camera script
+// create a camera with an orbit camera script
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
     toneMapping: pc.TONEMAP_ACES
 });
 
-// The color grab pass is needed for transmission effects
+// the color grab pass is needed for transmission effects
 camera.camera.requestSceneColorMap(true);
 
 camera.addComponent('script');
@@ -100,7 +100,7 @@ app.root.addChild(camera);
 camera.script.orbitCamera.yaw = 90;
 camera.script.orbitCamera.distance = 2;
 
-// Add a directional light
+// add a directional light
 const directionalLight = new pc.Entity();
 directionalLight.addComponent('light', {
     type: 'directional',

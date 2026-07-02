@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -54,14 +54,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create a camera
+// create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// Create a 2D screen
+// create a 2d screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -71,7 +71,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// Basic Text
+// basic text
 const textBasic = new pc.Entity();
 textBasic.setLocalPosition(0, 200, 0);
 textBasic.addComponent('element', {
@@ -84,7 +84,7 @@ textBasic.addComponent('element', {
 });
 screen.addChild(textBasic);
 
-// Markup Text with wrap
+// markup text with wrap
 const textMarkup = new pc.Entity();
 textMarkup.setLocalPosition(0, 50, 0);
 textMarkup.addComponent('element', {
@@ -103,7 +103,7 @@ textMarkup.addComponent('element', {
 });
 screen.addChild(textMarkup);
 
-// Text with outline
+// text with outline
 const textOutline = new pc.Entity();
 textOutline.setLocalPosition(0, -100, 0);
 textOutline.addComponent('element', {
@@ -119,7 +119,7 @@ textOutline.addComponent('element', {
 });
 screen.addChild(textOutline);
 
-// Text with drop shadow
+// text with drop shadow
 const textDropShadow = new pc.Entity();
 textDropShadow.setLocalPosition(0, -200, 0);
 textDropShadow.addComponent('element', {

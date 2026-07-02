@@ -24,8 +24,8 @@ const loadES5 = async (url) => {
 const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
 const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
 
-// This example uses draco point cloud loader library from https://loaders.gl/
-// Note that many additional formats are supported by the library and can be used.
+// this example uses draco point cloud loader library from https://loaders.gl/
+// note that many additional formats are supported by the library and can be used.
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: './assets/wasm/glslang/glslang.js',
@@ -45,11 +45,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -61,10 +61,10 @@ app.on('destroy', () => {
  */
 async function loadModel(url) {
     // load the url using the draco format loader
-    // @ts-ignore: cannot find CORE and DRACO
+    // @ts-ignore: cannot find core and draco
     const modelData = await CORE.load(url, DRACO.DracoLoader);
 
-    // loaded colors only contain RGB, convert it to an array of RGBA with alpha of 255
+    // loaded colors only contain rgb, convert it to an array of rgba with alpha of 255
     const srcColors = modelData.attributes.COLOR_0.value;
     const numVertices = srcColors.length / modelData.attributes.COLOR_0.size;
     const colors32 = new Uint8Array(numVertices * 4);
@@ -95,7 +95,7 @@ async function loadModel(url) {
     material.blendType = pc.BLENDMODE_ONE_MINUS_DST_ALPHA;
     material.cull = pc.CULLFACE_NONE;
 
-    // Add an entity with a render component to render the mesh
+    // add an entity with a render component to render the mesh
     const entity = new pc.Entity();
     entity.addComponent('render', {
         material: material,
@@ -104,7 +104,7 @@ async function loadModel(url) {
 
     app.root.addChild(entity);
 }
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
@@ -113,7 +113,7 @@ camera.addComponent('camera', {
 camera.translate(-20, 15, 20);
 camera.lookAt(0, 7, 0);
 app.root.addChild(camera);
-// Load the draco model, don't wait for it.
+// load the draco model, don't wait for it.
 loadModel('./assets/models/park_points.drc');
 // update things each frame
 let time = 0;

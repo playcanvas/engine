@@ -39,11 +39,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.AnimClipHandler, pc.Anim
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -62,7 +62,7 @@ const animClipStaticLightData = {
     inputs: [[0.0]],
     // curve keyframe outputs
     outputs: [
-        // a single RGBA color keyframe value of a green light
+        // a single rgba color keyframe value of a green light
         {
             components: 4,
             data: [0.0, 1.0, 0.0, 1.0]
@@ -114,7 +114,7 @@ const animClipFlashingLightData = {
     ],
     // curve keyframe outputs
     outputs: [
-        //  keyframe outputs for a flashing red RGBA color
+        //  keyframe outputs for a flashing red rgba color
         {
             components: 4,
             data: [1.0, 0.0, 0.0, 1.0, 0.4, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.4, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]
@@ -164,7 +164,7 @@ const animClipHandler = new pc.AnimClipHandler(app);
 const animClipStaticLight = animClipHandler.open(undefined, animClipStaticLightData);
 const animClipFlashingLight = animClipHandler.open(undefined, animClipFlashingLightData);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.name = 'camera';
 cameraEntity.addComponent('camera', {
@@ -193,7 +193,7 @@ planeEntity.addComponent('render', {
 planeEntity.setLocalScale(15, 1, 15);
 planeEntity.setPosition(0, 0, 0);
 
-// Create the animatible lights
+// create the animatible lights
 const lightsEntity = new pc.Entity();
 lightsEntity.name = 'lights';
 
@@ -221,7 +221,7 @@ light2.addComponent('light', {
 });
 light2.setPosition(0, 10, 0);
 
-// Add Entities into the scene hierarchy
+// add entities into the scene hierarchy
 app.root.addChild(cameraEntity);
 lightsEntity.addChild(light1);
 lightsEntity.addChild(light2);

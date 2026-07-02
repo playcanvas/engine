@@ -25,11 +25,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -57,7 +57,7 @@ clone.setLocalScale(0.2, 0.2, 0.2);
 clone.setLocalPosition(-4, 12, 0);
 app.root.addChild(clone);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
@@ -65,7 +65,7 @@ camera.addComponent('camera', {
 camera.translate(0, 7, 24);
 app.root.addChild(camera);
 
-// Create an Entity with a omni light component
+// create an entity with a omni light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',

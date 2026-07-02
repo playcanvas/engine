@@ -23,7 +23,7 @@ pc.WasmModule.setConfig('Ammo', {
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
-// the collision GLB uses Draco-compressed meshes, so the Draco decoder is required
+// the collision glb uses draco-compressed meshes, so the draco decoder is required
 pc.WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -114,16 +114,16 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Use the env atlas for image-based lighting only (the character will be lit
-// by it as a soft ambient). Disable the visible Skybox layer so the actual
+// use the env atlas for image-based lighting only (the character will be lit
+// by it as a soft ambient). disable the visible skybox layer so the actual
 // skydome geometry is never drawn - the camera's clear color remains the
 // visible background.
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxIntensity = 0.5;
 app.scene.layers.getLayerById(pc.LAYERID_SKYBOX).enabled = false;
 
-// Register the renderer handler before setting the initial value, so the initial
-// AUTO selection is resolved to the concrete renderer and shown in the dropdown.
+// register the renderer handler before setting the initial value, so the initial
+// auto selection is resolved to the concrete renderer and shown in the dropdown.
 data.on('renderer:set', () => {
     app.scene.gsplat.renderer = data.get('renderer');
     const current = app.scene.gsplat.currentRenderer;
@@ -132,7 +132,7 @@ data.on('renderer:set', () => {
     }
 });
 
-// Initial control values
+// initial control values
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('splatBudget', 4);
 data.set('cameraDistance', 5);
@@ -149,10 +149,10 @@ const applySplatBudget = () => {
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
 
-// Gravity
+// gravity
 app.systems.rigidbody?.gravity.set(0, -10, 0);
 
-// Directional light - both lights the character and feeds the shadow catcher
+// directional light - both lights the character and feeds the shadow catcher
 const light = new pc.Entity('light');
 light.addComponent('light', {
     type: 'directional',
@@ -168,21 +168,21 @@ light.addComponent('light', {
 light.setLocalEulerAngles(60, -20, 0);
 app.root.addChild(light);
 
-// Shadow catcher: a transparent plane that receives the character's shadow
+// shadow catcher: a transparent plane that receives the character's shadow
 // from the directional light, multiplied onto the gsplat ground behind it.
-// It lives at the world root and is repositioned each frame to follow the
-// character on the ground (raycast down to find ground Y).
+// it lives at the world root and is repositioned each frame to follow the
+// character on the ground (raycast down to find ground y).
 const shadowCatcher = new pc.Entity('shadow-catcher');
 shadowCatcher.addComponent('script').create(ShadowCatcher, {
     properties: {
         scale: new pc.Vec3(12, 12, 12),
-        // drawBucket 0 makes the catcher render AFTER the gsplat ground so
+        // drawbucket 0 makes the catcher render after the gsplat ground so
         // its shadow can darken the gsplat
         drawBucket: 0
     }
 });
 
-// Camera (standalone - not parented to the character; positioned by the controller)
+// camera (standalone - not parented to the character; positioned by the controller)
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
@@ -192,9 +192,9 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// Parent that holds both the splat and the collision mesh, keeping them aligned.
-// The splat data is authored upside-down relative to PlayCanvas's Y-up convention,
-// so a 180° rotation around Z flips both the visual and the collision together.
+// parent that holds both the splat and the collision mesh, keeping them aligned.
+// the splat data is authored upside-down relative to playcanvas's y-up convention,
+// so a 180° rotation around z flips both the visual and the collision together.
 const sceneRoot = new pc.Entity('sunnyvale');
 sceneRoot.setLocalEulerAngles(0, 0, 180);
 app.root.addChild(sceneRoot);
@@ -221,9 +221,9 @@ collisionRoot.findComponents('render').forEach((/** @type {pc.RenderComponent} *
 });
 sceneRoot.addChild(collisionRoot);
 
-// ---- Character ----
-// The third-person controller acts on `characterController` (capsule + dynamic
-// rigidbody). The visible bitmoji mesh is a child entity (`characterModel`) so
+// ---- character ----
+// the third-person controller acts on `charactercontroller` (capsule + dynamic
+// rigidbody). the visible bitmoji mesh is a child entity (`charactermodel`) so
 // the controller can rotate it independently from the capsule.
 const characterController = new pc.Entity('character-controller');
 characterController.setPosition(0, 1.2, 0);
@@ -244,9 +244,9 @@ characterController.addComponent('rigidbody', {
 });
 app.root.addChild(characterController);
 
-// Shadow catcher lives at the world root and is repositioned each frame to
+// shadow catcher lives at the world root and is repositioned each frame to
 // follow the character horizontally while staying glued to the ground (raycast
-// down from above the character to find ground Y). This keeps the shadow on
+// down from above the character to find ground y). this keeps the shadow on
 // the ground when the character jumps rather than rising with them.
 app.root.addChild(shadowCatcher);
 
@@ -254,16 +254,16 @@ const _scRayStart = new pc.Vec3();
 const _scRayEnd = new pc.Vec3();
 const _scPos = new pc.Vec3();
 let _scLastY = 0;
-// Exclude the character's own collision so the raycast always hits actual
+// exclude the character's own collision so the raycast always hits actual
 // ground geometry, never the character's capsule.
 const _scRayOpts = {
     filterCallback: (/** @type {pc.Entity} */ entity) => entity !== characterController
 };
 const updateShadowCatcher = () => {
     const cp = characterController.getPosition();
-    // Start the ray AT the character (not above) so we never hit roofs,
+    // start the ray at the character (not above) so we never hit roofs,
     // overhangs or any geometry that lives between the character and the sky.
-    // The filterCallback below skips the character's own capsule, so starting
+    // the filtercallback below skips the character's own capsule, so starting
     // inside it is safe and always finds the ground below.
     _scRayStart.set(cp.x, cp.y, cp.z);
     _scRayEnd.set(cp.x, cp.y - 100, cp.z);
@@ -274,7 +274,7 @@ const updateShadowCatcher = () => {
     shadowCatcher.setPosition(_scPos);
 };
 
-// Visible character (rotated by the controller). The bitmoji model's pivot is
+// visible character (rotated by the controller). the bitmoji model's pivot is
 // at the feet, so offset down by half capsule height (1.0) to align feet with
 // the bottom of the capsule.
 const characterModel = new pc.Entity('character-model');
@@ -287,7 +287,7 @@ const characterRender = assets.character.resource.instantiateRenderEntity({
 });
 characterModel.addChild(characterRender);
 
-// Anim state graph (same shape as the locomotion example: idle/walk/jog/jump
+// anim state graph (same shape as the locomotion example: idle/walk/jog/jump
 // driven by an integer `speed` parameter and a `jump` trigger).
 characterModel.addComponent('anim', { activate: true });
 characterModel.anim.loadStateGraph({
@@ -374,7 +374,7 @@ layer.assignAnimation('Jog', assets.jogAnim.resource.animations[0].resource);
 layer.assignAnimation('Jump', assets.jumpAnim.resource.animations[0].resource);
 layer.assignAnimation('Dance', assets.danceAnim.resource.animations[0].resource);
 
-// Wire the third-person controller
+// wire the third-person controller
 characterController.addComponent('script');
 const tpc = /** @type {ThirdPersonController} */ (
     characterController.script.create(ThirdPersonController, {
@@ -396,7 +396,7 @@ const tpc = /** @type {ThirdPersonController} */ (
     })
 );
 
-// Drive animation parameters from controller events
+// drive animation parameters from controller events
 tpc.on('speed', (/** @type {number} */ bucket) => {
     characterModel.anim.setInteger('speed', bucket);
 });
@@ -406,7 +406,7 @@ tpc.on('jump', () => {
     }
 });
 
-// Q triggers the dance animation. It exits as soon as the player moves again
+// q triggers the dance animation. it exits as soon as the player moves again
 // (via the `speed > 0` transition in the state graph).
 app.keyboard.on(pc.EVENT_KEYDOWN, (/** @type {pc.KeyboardEvent} */ evt) => {
     if (evt.key === pc.KEY_Q) {
@@ -414,7 +414,7 @@ app.keyboard.on(pc.EVENT_KEYDOWN, (/** @type {pc.KeyboardEvent} */ evt) => {
     }
 });
 
-// Hook controls
+// hook controls
 data.on('cameraDistance:set', () => {
     tpc.cameraDistance = data.get('cameraDistance');
 });
@@ -428,7 +428,7 @@ data.on('lookSens:set', () => {
     tpc.lookSens = data.get('lookSens');
 });
 
-// Stats + shadow catcher follow
+// stats + shadow catcher follow
 app.on('update', () => {
     updateShadowCatcher();
 

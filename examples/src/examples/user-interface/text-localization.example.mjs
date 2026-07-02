@@ -34,11 +34,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -91,14 +91,14 @@ app.i18n.addData({
     ]
 });
 
-// Create a camera
+// create a camera
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
 });
 app.root.addChild(camera);
 
-// Create a 2D screen
+// create a 2d screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -108,7 +108,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// Create a basic text element
+// create a basic text element
 const text = new pc.Entity();
 text.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
@@ -129,7 +129,7 @@ screen.addChild(text);
  * @returns {pc.Entity} The returned entity.
  */
 function createButton(labelText, x, y) {
-    // Create a simple button
+    // create a simple button
     const button = new pc.Entity();
     button.addComponent('button');
     button.addComponent('element', {
@@ -141,7 +141,7 @@ function createButton(labelText, x, y) {
         useInput: true
     });
 
-    // Create a label for the button
+    // create a label for the button
     const label = new pc.Entity();
     label.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
@@ -157,7 +157,7 @@ function createButton(labelText, x, y) {
     });
     button.addChild(label);
 
-    // Change the locale to the button text
+    // change the locale to the button text
     button.button.on('click', () => {
         app.i18n.locale = labelText;
     });

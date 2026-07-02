@@ -58,11 +58,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -96,7 +96,7 @@ const boardEntity = assets.board.resource.instantiateRenderEntity({
 });
 app.root.addChild(boardEntity);
 
-// Create left camera, using default layers (including the World)
+// create left camera, using default layers (including the world)
 const cameraLeft = new pc.Entity('LeftCamera');
 cameraLeft.addComponent('camera', {
     farClip: 500,
@@ -105,7 +105,7 @@ cameraLeft.addComponent('camera', {
 });
 app.root.addChild(cameraLeft);
 
-// Create right orthographic camera, using spot light layer and skybox layer,
+// create right orthographic camera, using spot light layer and skybox layer,
 // so that it receives the light from the spot light but not from the directional light
 const cameraRight = new pc.Entity('RightCamera');
 cameraRight.addComponent('camera', {
@@ -120,7 +120,7 @@ cameraRight.translate(0, 150, 0);
 cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
 app.root.addChild(cameraRight);
 
-// Create top camera, using default layers (including the World)
+// create top camera, using default layers (including the world)
 const cameraTop = new pc.Entity('TopCamera');
 cameraTop.addComponent('camera', {
     farClip: 500,
@@ -144,7 +144,7 @@ cameraTop.script.create('orbitCamera', {
 cameraTop.script.create('orbitCameraInputMouse');
 cameraTop.script.create('orbitCameraInputTouch');
 
-// Create a directional light which casts shadows
+// create a directional light which casts shadows
 const dirLight = new pc.Entity();
 dirLight.addComponent('light', {
     type: 'directional',
@@ -160,7 +160,7 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(45, 0, 30);
 
-// Create a single directional light which casts shadows
+// create a single directional light which casts shadows
 const spotLight = new pc.Entity();
 spotLight.addComponent('light', {
     type: 'spot',
@@ -177,11 +177,11 @@ spotLight.addComponent('light', {
 });
 app.root.addChild(spotLight);
 
-// set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+// set skybox - this dds file was 'prefiltered' in the playcanvas editor and then downloaded.
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// handle HUD changes - update the debug mode for the top and right cameras
+// handle hud changes - update the debug mode for the top and right cameras
 data.on('*:set', (/** @type {string} */ path, value) => {
     cameraTop.camera.setShaderPass(value);
     cameraRight.camera.setShaderPass(value);

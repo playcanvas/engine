@@ -45,9 +45,9 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
-    // to avoid the additional cost. This is only used for the UI which renders on top of the
-    // post-processed scene, and we're typically happy with some aliasing on the UI.
+    // the scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
+    // to avoid the additional cost. this is only used for the ui which renders on top of the
+    // post-processed scene, and we're typically happy with some aliasing on the ui.
     antialias: false
 };
 
@@ -74,11 +74,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -119,7 +119,7 @@ loveEntity.findComponents('render').forEach((render) => {
     });
 });
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
     farClip: 1500,
@@ -146,7 +146,7 @@ cameraEntity.setLocalPosition(-50, 100, 220);
 cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
-// Create a 2D screen
+// create a 2d screen
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -156,10 +156,10 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// Create a new entity for the UI element
+// create a new entity for the ui element
 const uiElement = new pc.Entity();
 
-// Add a UI component with an image type
+// add a ui component with an image type
 const texture = assets.colors.resource;
 uiElement.addComponent('element', {
     type: 'image',
@@ -172,7 +172,7 @@ uiElement.addComponent('element', {
 uiElement.setLocalPosition(-0.1 * texture.width, 0.1 * texture.height, 0);
 screen.addChild(uiElement);
 
-// ------ Custom render passes set up ------
+// ------ custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.samples = 4;
@@ -183,13 +183,13 @@ cameraFrame.vignette.outer = 1;
 cameraFrame.vignette.curvature = 0.5;
 cameraFrame.vignette.intensity = 0.5;
 
-// Apply Color LUT
+// apply color lut
 cameraFrame.colorLUT.texture = assets.colorLut.resource;
 cameraFrame.colorLUT.intensity = 1.0;
 
 cameraFrame.update();
 
-// apply UI changes
+// apply ui changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.hdr') {
         cameraFrame.enabled = value;

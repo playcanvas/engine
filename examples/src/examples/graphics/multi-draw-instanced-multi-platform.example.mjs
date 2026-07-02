@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
@@ -97,7 +97,7 @@ combine.normals = [];
 combine.uvs = [];
 combine.indices = [];
 
-// vertex offsets and firstIndex tracking (in indices)
+// vertex offsets and firstindex tracking (in indices)
 const vtxCounts = [sphereGeom.positions.length / 3, boxGeom.positions.length / 3, cylGeom.positions.length / 3];
 const idxCounts = [sphereGeom.indices.length, boxGeom.indices.length, cylGeom.indices.length];
 const firstIndex = [0, idxCounts[0], idxCounts[0] + idxCounts[1]];
@@ -110,10 +110,10 @@ pushGeom(cylGeom, vtxCounts[0] + vtxCounts[1]);
 // create mesh
 const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, combine);
 
-// MeshInstance
+// meshinstance
 const meshInst = new pc.MeshInstance(mesh, material);
 
-// entity to render our MeshInstance
+// entity to render our meshinstance
 const entity = new pc.Entity('MultiDrawEntity');
 entity.addComponent('render', { meshInstances: [meshInst] });
 app.root.addChild(entity);
@@ -198,7 +198,7 @@ const vb = new pc.VertexBuffer(app.graphicsDevice, vbFormat, totalInstances, { d
 meshInst.setInstancing(vb);
 
 // multi-draw: 3 draws (sphere, box, cylinder) with different instance counts
-// provide firstInstance (instances are packed sequentially per ring) - this is WebGPU only
+// provide firstinstance (instances are packed sequentially per ring) - this is webgpu only
 const firstInstance = [0, ringCounts[0], ringCounts[0] + ringCounts[1]];
 const cmd = meshInst.setMultiDraw(null, 3);
 cmd.add(0, idxCounts[0], ringCounts[0], firstIndex[0], 0, firstInstance[0]);

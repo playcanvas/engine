@@ -14,9 +14,9 @@ import * as pc from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
-// Shader options for GSplatProcessor - paints splats inside brush sphere
+// shader options for gsplatprocessor - paints splats inside brush sphere
 const shaderOptions = {
-    // GLSL process code - provides process() function with declarations
+    // glsl process code - provides process() function with declarations
     processGLSL: `
         uniform vec4 uPaintSphere;
         uniform vec4 uPaintColor;
@@ -33,7 +33,7 @@ const shaderOptions = {
             }
         }
     `,
-    // WGSL process code
+    // wgsl process code
     processWGSL: `
         uniform uPaintSphere: vec4f;
         uniform uPaintColor: vec4f;
@@ -50,7 +50,7 @@ const shaderOptions = {
     `
 };
 
-// Work buffer modifier - blends customColor paint texture with original splat color
+// work buffer modifier - blends customcolor paint texture with original splat color
 const workBufferModifier = {
     glsl: `
         // Modify splat center position (no change)
@@ -123,19 +123,19 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Initialize control data with defaults
-data.set('paintColor', [1.0, 0.0, 0.0]); // Red
+// initialize control data with defaults
+data.set('paintColor', [1.0, 0.0, 0.0]); // red
 data.set('paintIntensity', 0.5);
 data.set('brushSize', 0.15);
 
@@ -160,10 +160,10 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
-// Store all paintable entities
+// store all paintable entities
 const paintables = [];
 
-// Creates a paintable gsplat entity with position, rotation, scale, and sets up processing
+// creates a paintable gsplat entity with position, rotation, scale, and sets up processing
 const createPaintableSplat = (name, asset, position, rotation, scale) => {
     const entity = new pc.Entity(name);
     const gsplatComponent = entity.addComponent('gsplat', { asset });
@@ -172,7 +172,7 @@ const createPaintableSplat = (name, asset, position, rotation, scale) => {
     entity.setLocalScale(...scale);
     app.root.addChild(entity);
 
-    // Add customColor stream if not already present on the resource
+    // add customcolor stream if not already present on the resource
     const resource = /** @type {pc.GSplatResource} */ (asset.resource);
     if (resource.format.extraStreams.length === 0) {
         resource.format.addExtraStreams([
@@ -180,8 +180,8 @@ const createPaintableSplat = (name, asset, position, rotation, scale) => {
         ]);
     }
 
-    // Create processor for this entity's instance texture
-    // This processor will read from the default stream and write to the customColor stream. It will
+    // create processor for this entity's instance texture
+    // this processor will read from the default stream and write to the customcolor stream. it will
     // use brush sphere to determine which splats to colorize.
     const processor = new pc.GSplatProcessor(
         device,
@@ -190,35 +190,35 @@ const createPaintableSplat = (name, asset, position, rotation, scale) => {
         shaderOptions
     );
 
-    // Zero-initialize the customColor texture (alpha=0 means not modified)
+    // zero-initialize the customcolor texture (alpha=0 means not modified)
     const customColorTexture = gsplatComponent.getInstanceTexture('customColor');
     const texData = customColorTexture.lock();
     texData.fill(0);
     customColorTexture.unlock();
 
-    // Use alpha blending: new color replaces old based on intensity (alpha)
+    // use alpha blending: new color replaces old based on intensity (alpha)
 
     processor.blendState = pc.BlendState.ALPHABLEND;
 
-    // Set up workBufferModifier to read customColor and blend with original
-    // This modification is used when the gsplat data are written to the global workbuffer, and
-    // we want to blend the customColor with the original color.
+    // set up workbuffermodifier to read customcolor and blend with original
+    // this modification is used when the gsplat data are written to the global workbuffer, and
+    // we want to blend the customcolor with the original color.
     gsplatComponent.setWorkBufferModifier(workBufferModifier);
 
     paintables.push({ entity, processor });
     return entity;
 };
 
-// Create paintable splats
+// create paintable splats
 createPaintableSplat('biker1', assets.biker, [-1.9, -0.55, 0.6], [180, -90, 0], [0.3, 0.3, 0.3]);
 createPaintableSplat('biker2', assets.biker, [-3, -0.5, -0.5], [180, 180, 0], [0.3, 0.3, 0.3]);
 createPaintableSplat('apartment', assets.apartment, [0, -0.5, -3], [180, 0, 0], [0.5, 0.5, 0.5]);
 
-// Camera positions
+// camera positions
 const cameraPos = new pc.Vec3(-0.98, 0.28, -2.31);
 const focusPos = new pc.Vec3(-1.1, 0.13, -1.56);
 
-// Create camera with orbit camera script
+// create camera with orbit camera script
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     fov: 90,
@@ -229,7 +229,7 @@ camera.setLocalPosition(cameraPos);
 camera.lookAt(focusPos);
 app.root.addChild(camera);
 
-// Add orbit camera script with native mouse input (LMB orbit, MMB pan, wheel zoom)
+// add orbit camera script with native mouse input (lmb orbit, mmb pan, wheel zoom)
 camera.addComponent('script');
 const orbitCamera = camera.script.create('orbitCamera', {
     attributes: {
@@ -239,40 +239,40 @@ const orbitCamera = camera.script.create('orbitCamera', {
 });
 const orbitInput = camera.script.create('orbitCameraInputMouse');
 
-// Initialize orbit camera to match current camera position and focus
+// initialize orbit camera to match current camera position and focus
 orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
 
-// Paint state
+// paint state
 let isPainting = false;
 
-// Track if picker needs re-preparation (after camera moves)
+// track if picker needs re-preparation (after camera moves)
 let pickerDirty = true;
 
-// Disable context menu for RMB
+// disable context menu for rmb
 app.mouse.disableContextMenu();
 
-// Helper to update paint color on all processors
+// helper to update paint color on all processors
 const updatePaintColor = () => {
     const color = data.get('paintColor');
     const intensity = data.get('paintIntensity');
-    // RGB from color picker, alpha is the intensity
+    // rgb from color picker, alpha is the intensity
     for (const paintable of paintables) {
         paintable.processor.setParameter('uPaintColor', [color[0], color[1], color[2], intensity]);
     }
 };
 
-// Set initial paint color
+// set initial paint color
 updatePaintColor();
 
-// Listen for color/intensity changes
+// listen for color/intensity changes
 data.on('paintColor:set', updatePaintColor);
 data.on('paintIntensity:set', updatePaintColor);
 
-// Create picker for world position (with depth enabled)
+// create picker for world position (with depth enabled)
 const picker = new pc.Picker(app, 1, 1, true);
 const worldLayer = app.scene.layers.getLayerByName('World');
 
-// Prepare picker (re-prepare when camera moves)
+// prepare picker (re-prepare when camera moves)
 const preparePicker = () => {
     if (pickerDirty) {
         picker.resize(canvas.clientWidth, canvas.clientHeight);
@@ -281,58 +281,58 @@ const preparePicker = () => {
     }
 };
 
-// Pending paint requests - processed in update loop for consistent frame timing
+// pending paint requests - processed in update loop for consistent frame timing
 const pendingPaints = [];
 
-// Temp vectors for coordinate transformation
+// temp vectors for coordinate transformation
 const invMat = new pc.Mat4();
 const modelPoint = new pc.Vec3();
 
-// Process pending paint requests in update loop
+// process pending paint requests in update loop
 app.on('update', () => {
-    // Process all pending paint requests
+    // process all pending paint requests
     while (pendingPaints.length > 0) {
         const { worldPoint, brushRadius } = pendingPaints.shift();
 
-        // Run all processors - each transforms to its own model space
+        // run all processors - each transforms to its own model space
         for (const paintable of paintables) {
-            // Transform world position to this entity's model space
+            // transform world position to this entity's model space
             invMat.copy(paintable.entity.getWorldTransform()).invert();
             invMat.transformPoint(worldPoint, modelPoint);
 
-            // Set paint sphere uniform and run processor
+            // set paint sphere uniform and run processor
             paintable.processor.setParameter('uPaintSphere', [modelPoint.x, modelPoint.y, modelPoint.z, brushRadius]);
             paintable.processor.process();
 
-            // Trigger work buffer update for next frame to reflect the paint changes
+            // trigger work buffer update for next frame to reflect the paint changes
             paintable.entity.gsplat.workBufferUpdate = pc.WORKBUFFER_UPDATE_ONCE;
         }
     }
 });
 
-// Request paint at a specific screen position - queues for processing in update loop
+// request paint at a specific screen position - queues for processing in update loop
 const paintAt = (x, y) => {
-    // Prepare picker if needed (after camera moved)
+    // prepare picker if needed (after camera moved)
     preparePicker();
 
-    // Get world position for the paint brush
+    // get world position for the paint brush
     picker.getWorldPointAsync(x, y).then((worldPoint) => {
         if (worldPoint) {
             const brushRadius = data.get('brushSize');
 
-            // Queue paint request for processing in update loop
+            // queue paint request for processing in update loop
             pendingPaints.push({ worldPoint: worldPoint.clone(), brushRadius });
         }
     });
 };
 
-// RMB paint - disable orbit input while painting (orbit-camera handles LMB/MMB/wheel natively)
+// rmb paint - disable orbit input while painting (orbit-camera handles lmb/mmb/wheel natively)
 app.mouse.on(pc.EVENT_MOUSEDOWN, (e) => {
     if (e.button === pc.MOUSEBUTTON_RIGHT) {
         isPainting = true;
         pickerDirty = true;
         orbitInput.enabled = false;
-        orbitInput.panButtonDown = false; // Cancel pan that orbit-camera started
+        orbitInput.panButtonDown = false; // cancel pan that orbit-camera started
         paintAt(e.x, e.y);
     }
 });
@@ -353,7 +353,7 @@ window.addEventListener('mouseup', () => {
     orbitInput.enabled = true;
 });
 
-// Cleanup on destroy
+// cleanup on destroy
 app.on('destroy', () => {
     for (const paintable of paintables) {
         paintable.processor?.destroy();

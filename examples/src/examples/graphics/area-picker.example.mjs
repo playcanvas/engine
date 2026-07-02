@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -90,8 +90,8 @@ new pc.Mouse(document.body).on(
     this
 );
 
-// Create an instance of the picker class
-// Lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
+// create an instance of the picker class
+// lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
 const picker = new pc.Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale, true);
 
 /**
@@ -125,9 +125,9 @@ function createPrimitive(primitiveType, position, scale) {
     return primitive;
 }
 
-// Create main camera. It auto-orbits the scene until the first right-click, after which
+// create main camera. it auto-orbits the scene until the first right-click, after which
 // interactive orbit controls (drag to orbit, scroll to zoom) take over - letting the view be
-// moved around to visually confirm culling. Left-click picks without stopping the orbit.
+// moved around to visually confirm culling. left-click picks without stopping the orbit.
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
@@ -135,7 +135,7 @@ camera.addComponent('camera', {
 camera.addComponent('script');
 app.root.addChild(camera);
 
-// auto-rotation is active until the first right-click; at that point we create CameraControls
+// auto-rotation is active until the first right-click; at that point we create cameracontrols
 // (which attaches at the camera's current pose, so there's no jump) and hand control to the
 // user, never auto-rotating again
 let autoRotate = true;
@@ -151,7 +151,7 @@ data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
     camera.camera.orthoHeight = 15;
 });
 
-// ------ Custom render passes with bloom ------
+// ------ custom render passes with bloom ------
 const cameraFrame = new pc.CameraFrame(app, camera.camera);
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.bloom.blurLevel = 4;
@@ -168,7 +168,7 @@ cameraFrame.update();
 function drawRectangle(x, y, w, h) {
     const pink = new pc.Color(1, 0.02, 0.58);
 
-    // transform 4 2D screen points into world space
+    // transform 4 2d screen points into world space
     const pt0 = camera.camera.screenToWorld(x, y, 1);
     const pt1 = camera.camera.screenToWorld(x + w, y, 1);
     const pt2 = camera.camera.screenToWorld(x + w, y + h, 1);
@@ -216,7 +216,7 @@ let pendingPickRequest = null;
 
 // handle mouse buttons: left button picks a world point (auto-rotation continues, so the picked
 // marker can be seen from a moving viewpoint), right button hands control to the user and stops
-// the auto-rotation. The context menu is disabled so the right button is usable.
+// the auto-rotation. the context menu is disabled so the right button is usable.
 const mouse = new pc.Mouse(document.body);
 mouse.disableContextMenu();
 mouse.on('mousedown', (event) => {
@@ -242,7 +242,7 @@ app.on('update', (/** @type {number} */ dt) => {
         camera.lookAt(pc.Vec3.ZERO);
     }
 
-    // Make sure the picker is the right size, and prepare it, which renders meshes into its render target
+    // make sure the picker is the right size, and prepare it, which renders meshes into its render target
     if (picker) {
         picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
         picker.prepare(camera.camera, app.scene, pickerLayers);
@@ -280,12 +280,12 @@ app.on('update', (/** @type {number} */ dt) => {
         const areaPos = areas[a].pos;
         const areaSize = areas[a].size;
 
-        // display 2D rectangle around it
+        // display 2d rectangle around it
         drawRectangle(areaPos.x, areaPos.y, areaSize.x, areaSize.y);
 
-        // get list of meshInstances inside the area from the picker
-        // this scans the pixels inside the render target and maps the id value stored there into meshInstances
-        // Note that this is an async function returning a promise. Store it in the promises array.
+        // get list of meshinstances inside the area from the picker
+        // this scans the pixels inside the render target and maps the id value stored there into meshinstances
+        // note that this is an async function returning a promise. store it in the promises array.
         const promise = picker.getSelectionAsync(
             areaPos.x * pickerScale,
             areaPos.y * pickerScale,
@@ -301,7 +301,7 @@ app.on('update', (/** @type {number} */ dt) => {
         // turn off previously highlighted meshes
         for (let h = 0; h < highlights.length; h++) {
             highlightMaterial(highlights[h], pc.Color.BLACK);
-            // Reset emissive intensity when turning off
+            // reset emissive intensity when turning off
             highlights[h].emissiveIntensity = 0;
         }
         highlights.length = 0;

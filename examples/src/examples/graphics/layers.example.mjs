@@ -20,11 +20,11 @@ createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSy
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -35,7 +35,7 @@ app.start();
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-// Create a new layer to put in front of everything
+// create a new layer to put in front of everything
 const layer = new pc.Layer({
     name: 'Front Layer'
 });
@@ -47,8 +47,8 @@ const idx = app.scene.layers.getTransparentIndex(worldLayer);
 // insert the new layer after the world layer
 app.scene.layers.insert(layer, idx + 1);
 
-// Create an Entity with a camera component
-// Make sure it renders both World and Front Layer
+// create an entity with a camera component
+// make sure it renders both world and front layer
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),
@@ -57,8 +57,8 @@ camera.addComponent('camera', {
 camera.translate(0, 0, 24);
 app.root.addChild(camera);
 
-// Create an Entity with a omni light component
-// Make sure it lights both World and Front Layer
+// create an entity with a omni light component
+// make sure it lights both world and front layer
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -82,7 +82,7 @@ blue.diffuse.set(0, 0, 1);
 blue.depthTest = false;
 blue.update();
 
-// red box is rendered first in World layer
+// red box is rendered first in world layer
 const redBox = new pc.Entity();
 redBox.addComponent('render', {
     type: 'box',
@@ -91,7 +91,7 @@ redBox.addComponent('render', {
 redBox.setLocalScale(5, 5, 5);
 app.root.addChild(redBox);
 
-// blue box is rendered in the Front Layer which is after World
+// blue box is rendered in the front layer which is after world
 // because it does not test for depth
 // and is in a later layer
 // it is visible even though it should be inside the red box

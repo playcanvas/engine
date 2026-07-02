@@ -38,11 +38,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -90,7 +90,7 @@ for (let i = 0; i < 7; i++) {
     });
 }
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
@@ -111,10 +111,10 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// Set camera position looking at origin
+// set camera position looking at origin
 camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(10, 4, 10), pc.Vec3.ZERO);
 
-// Custom render passes set up with bloom
+// custom render passes set up with bloom
 const cameraFrame = new pc.CameraFrame(app, camera.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
 cameraFrame.rendering.samples = 1;
@@ -122,7 +122,7 @@ cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.update();
 
-// Create an instance of the picker class with depth enabled
+// create an instance of the picker class with depth enabled
 const picker = new pc.Picker(app, 1, 1, true);
 
 // update things each frame
@@ -165,18 +165,18 @@ app.on('update', (dt) => {
 
 // function handling mouse click / touch
 const handlePointer = (x, y) => {
-    // Lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
+    // lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
     const pickerScale = 0.25;
     picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
 
-    // render the ID texture
+    // render the id texture
     const worldLayer = app.scene.layers.getLayerByName('World');
     picker.prepare(camera.camera, app.scene, [worldLayer]);
 
     // get the world position at the clicked point
     picker.getWorldPointAsync(x * pickerScale, y * pickerScale).then((worldPoint) => {
         if (worldPoint) {
-            // get the meshInstance of the picked object
+            // get the meshinstance of the picked object
             picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
                 if (meshInstances.length > 0) {
                     const meshInstance = meshInstances[0];

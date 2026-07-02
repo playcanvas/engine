@@ -129,7 +129,7 @@ cavemanAtlas.texture = cavemanTexture;
 cavemanAtlas.frames = {};
 for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-        // TextureAtlas rects use a bottom-left origin, so flip the row
+        // textureatlas rects use a bottom-left origin, so flip the row
         const x = c * cellW;
         const y = (ROWS - 1 - r) * cellH;
         const index = r * COLS + c;

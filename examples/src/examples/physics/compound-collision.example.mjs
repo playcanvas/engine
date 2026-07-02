@@ -46,11 +46,11 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -69,18 +69,18 @@ function createMaterial(color) {
     return material;
 }
 
-// Create a couple of materials for our objects
+// create a couple of materials for our objects
 const red = createMaterial(new pc.Color(0.7, 0.3, 0.3));
 const gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
 
-// Define a scene hierarchy in JSON format. This is loaded/parsed in
-// the parseScene function below
+// define a scene hierarchy in json format. this is loaded/parsed in
+// the parsescene function below
 const scene = [
     {
-        // The Chair entity has a collision component of type 'compound' and a
-        // rigidbody component. This means that any descendent entity with a
+        // the chair entity has a collision component of type 'compound' and a
+        // rigidbody component. this means that any descendent entity with a
         // collision component is added to a compound collision shape on the
-        // Chair entity. You can use compound collision shapes to define
+        // chair entity. you can use compound collision shapes to define
         // complex, rigid shapes.
         name: 'Chair',
         pos: [0, 1, 0],
@@ -376,7 +376,7 @@ function parseEntity(e) {
     return entity;
 }
 
-// Parse the scene data above into entities and add them to the scene's root entity
+// parse the scene data above into entities and add them to the scene's root entity
 function parseScene(s) {
     s.forEach((e) => {
         app.root.addChild(parseEntity(e));
@@ -387,7 +387,7 @@ parseScene(scene);
 
 let numChairs = 0;
 
-// Clone the chair entity hierarchy and add it to the scene root
+// clone the chair entity hierarchy and add it to the scene root
 function spawnChair() {
     /** @type {pc.Entity} */
     const chair = app.root.findByName('Chair');
@@ -397,17 +397,17 @@ function spawnChair() {
     numChairs++;
 }
 
-// Set an update function on the application's update event
+// set an update function on the application's update event
 let time = 0;
 app.on('update', (dt) => {
-    // Add a new chair every 250 ms
+    // add a new chair every 250 ms
     time += dt;
     if (time > 0.25 && numChairs < 20) {
         spawnChair();
         time = 0;
     }
 
-    // Show active bodies in red and frozen bodies in gray
+    // show active bodies in red and frozen bodies in gray
     app.root.findComponents('rigidbody').forEach((/** @type {pc.RigidBodyComponent} */ body) => {
         body.entity.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
             render.material = body.isActive() ? red : gray;

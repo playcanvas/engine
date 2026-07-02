@@ -44,8 +44,8 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
-// Enable GPU timing (timestamp queries) so the HUD can show total GPU time per frame
-// (sum of all compute + render passes), same source MiniStats uses.
+// enable gpu timing (timestamp queries) so the hud can show total gpu time per frame
+// (sum of all compute + render passes), same source ministats uses.
 device.gpuProfiler.enabled = true;
 
 const createOptions = new pc.AppOptions();
@@ -60,7 +60,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem,
     pc.GSplatComponentSystem,
-    // UI systems required by the in-XR HUD (XrMenu builds screen/element/button components).
+    // ui systems required by the in-xr hud (xrmenu builds screen/element/button components).
     pc.ScreenComponentSystem,
     pc.ElementComponentSystem,
     pc.ButtonComponentSystem
@@ -70,11 +70,11 @@ createOptions.resourceHandlers = [
     pc.ContainerHandler,
     pc.ScriptHandler,
     pc.GSplatHandler,
-    // Required to load the HUD font asset.
+    // required to load the hud font asset.
     pc.FontHandler
 ];
 createOptions.xr = pc.XrManager;
-// Enables element click events (desktop fallback); XR ray/finger picking is handled inside XrMenu.
+// enables element click events (desktop fallback); xr ray/finger picking is handled inside xrmenu.
 createOptions.elementInput = new pc.ElementInput(canvas);
 
 const app = new pc.AppBase(canvas);
@@ -133,7 +133,7 @@ const lodPresetKey = pc.platform.mobile ? 'mobile' : 'desktop';
 
 const assets = {
     church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
-    // Monospace font for the in-XR debug HUD (XrMenu) text rendering.
+    // monospace font for the in-xr debug hud (xrmenu) text rendering.
     font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
@@ -215,12 +215,12 @@ data.on('renderer:set', () => {
     }
 });
 
-// Pick the renderer per backend: GPU-sort (compute) on WebGPU, CPU-sort raster on WebGL.
+// pick the renderer per backend: gpu-sort (compute) on webgpu, cpu-sort raster on webgl.
 data.set('renderer', device.isWebGPU ? pc.GSPLAT_RENDERER_RASTER_GPU_SORT : pc.GSPLAT_RENDERER_RASTER_CPU_SORT);
 data.set('splatBudget', 2);
-// XR framebuffer scale factor (applied only when starting an XR session; does not affect 2D).
+// xr framebuffer scale factor (applied only when starting an xr session; does not affect 2d).
 data.set('framebufferScaleFactor', 1);
-// Foveated contribution culling strength (GPU-sort renderer only; 0 = off).
+// foveated contribution culling strength (gpu-sort renderer only; 0 = off).
 data.set('foveationStrength', 0);
 data.set('data.stats.gsplats', '—');
 data.set('data.stats.resolution', '—');
@@ -275,9 +275,9 @@ const xrNavigation = /** @type {any} */ (
     })
 );
 
-// In-XR debug HUD: an always-visible, camera-following menu. Label-only rows (no eventName)
-// act as live readouts updated each frame via setItemLabel. Starting with FPS.
-// Base scale at full framebuffer resolution; scaled up at lower resolutions for readability.
+// in-xr debug hud: an always-visible, camera-following menu. label-only rows (no eventname)
+// act as live readouts updated each frame via setitemlabel. starting with fps.
+// base scale at full framebuffer resolution; scaled up at lower resolutions for readability.
 const HUD_BASE_SCALE = 1.2;
 const menuEntity = new pc.Entity('XrHud');
 menuEntity.addComponent('script');
@@ -285,14 +285,14 @@ menuEntity.script.create(XrMenu, {
     properties: {
         menuItems: [
             { label: 'FPS: --' }, // [0] label-only readout (updated each frame)
-            { label: 'GPU: --' }, // [1] total GPU time per frame (updated each frame)
+            { label: 'GPU: --' }, // [1] total gpu time per frame (updated each frame)
             { label: 'RES: --' }, // [2] label-only readout (updated each frame)
             { label: 'FOVEATION: OFF', eventName: 'xrhud:foveation' }, // [3] toggle (off by default)
-            // [4] number row: splat budget, +/- 0.5M (0.5..4M)
+            // [4] number row: splat budget, +/- 0.5m (0.5..4m)
             { type: 'number', label: 'BUDGET', value: '2.0M', decEvent: 'budget:dec', incEvent: 'budget:inc' },
             // [5] number row: scene index (0 = cave, 1 = original, 2 = skatepark)
             { type: 'number', label: 'SCENE', value: '0', decEvent: 'scene:dec', incEvent: 'scene:inc' },
-            // [6] number row: minContribution, +/- 2 (1..20)
+            // [6] number row: mincontribution, +/- 2 (1..20)
             {
                 type: 'number',
                 label: 'Contribution',
@@ -300,11 +300,11 @@ menuEntity.script.create(XrMenu, {
                 decEvent: 'contribution:dec',
                 incEvent: 'contribution:inc'
             },
-            // [7] number row: alphaClipForward, stepped 1/255 .. 1/2
+            // [7] number row: alphaclipforward, stepped 1/255 .. 1/2
             { type: 'number', label: 'AlphaClip', value: '1/16', decEvent: 'alphaclip:dec', incEvent: 'alphaclip:inc' },
-            // [8] number row: foveated contribution culling strength (GPU-sort renderer only)
+            // [8] number row: foveated contribution culling strength (gpu-sort renderer only)
             { type: 'number', label: 'FovCull', value: '0.0', decEvent: 'fovcull:dec', incEvent: 'fovcull:inc' },
-            { label: 'EXIT XR', eventName: 'xr:end' } // [9] interactive: ends the XR session
+            { label: 'EXIT XR', eventName: 'xr:end' } // [9] interactive: ends the xr session
         ],
         fontAsset: assets.font,
         alwaysVisible: true,
@@ -317,11 +317,11 @@ menuEntity.script.create(XrMenu, {
 app.root.addChild(menuEntity);
 const xrHud = /** @type {any} */ (menuEntity.script).xrMenu;
 
-// Replace the engine's ray-to-ground teleport with a fixed-step "dash" in the direction the user
-// is looking. The ray-to-ground jump behaves badly near floor level (a near-horizontal ray hits
-// the ground far away, throwing you outside the scene), and AVP has no thumbstick for smooth
-// locomotion. A pinch moves a fixed distance along the head's horizontal forward, keeping the
-// current elevation (XZ only). The menu veto is preserved so pinches on the HUD just click.
+// replace the engine's ray-to-ground teleport with a fixed-step "dash" in the direction the user
+// is looking. the ray-to-ground jump behaves badly near floor level (a near-horizontal ray hits
+// the ground far away, throwing you outside the scene), and avp has no thumbstick for smooth
+// locomotion. a pinch moves a fixed distance along the head's horizontal forward, keeping the
+// current elevation (xz only). the menu veto is preserved so pinches on the hud just click.
 const MOVE_STEP = 1.5; // metres per pinch
 const moveDir = new pc.Vec3();
 xrNavigation.tryTeleport = () => {
@@ -335,7 +335,7 @@ xrNavigation.tryTeleport = () => {
     cameraRig.translate(moveDir.x, 0, moveDir.z);
 };
 
-// Fixed foveation toggle, driven from the in-XR HUD. Off by default. fixedFoveation can only be
+// fixed foveation toggle, driven from the in-xr hud. off by default. fixedfoveation can only be
 // set during an active session and is ignored unless anti-aliasing is off (it is here).
 let foveationEnabled = false;
 const FOVEATION_LEVEL = 1; // highest foveation when enabled
@@ -348,8 +348,8 @@ app.on('xrhud:foveation', () => {
     applyFoveation();
 });
 
-// In-XR splat budget control (number row [4]). +/- 0.5M, clamped to 0.5..4M. Writes the same
-// 'splatBudget' observer the 2D slider uses, so both stay in sync.
+// in-xr splat budget control (number row [4]). +/- 0.5m, clamped to 0.5..4m. writes the same
+// 'splatbudget' observer the 2d slider uses, so both stay in sync.
 const BUDGET_ROW = 4;
 let budgetM = data.get('splatBudget') ?? 2;
 const applyBudget = () => {
@@ -366,7 +366,7 @@ app.on('budget:inc', () => {
 });
 applyBudget(); // seed the readout
 
-// In-XR minContribution control (number row [6]). +/- 2, clamped to 1..20 (default 5).
+// in-xr mincontribution control (number row [6]). +/- 2, clamped to 1..20 (default 5).
 const CONTRIB_ROW = 6;
 let contribution = 5;
 const applyContribution = () => {
@@ -383,8 +383,8 @@ app.on('contribution:inc', () => {
 });
 applyContribution(); // seed the readout
 
-// In-XR alphaClipForward control (number row [7]). Stepped through nice reciprocals from the
-// current default 1/255 up to 1/2 (10 steps); displayed as "1/N". '+' raises the alpha floor.
+// in-xr alphaclipforward control (number row [7]). stepped through nice reciprocals from the
+// current default 1/255 up to 1/2 (10 steps); displayed as "1/n". '+' raises the alpha floor.
 const ALPHACLIP_ROW = 7;
 const ALPHACLIP_DENOMS = [255, 128, 64, 48, 32, 24, 16, 8, 4, 2];
 let alphaClipIndex = 6; // 1/16
@@ -403,8 +403,8 @@ app.on('alphaclip:inc', () => {
 });
 applyAlphaClip(); // seed the readout
 
-// Foveated contribution culling strength (number row [8]). +/- 5, clamped to 0..50
-// (default 0 = off). Only affects the GPU-sort (hybrid) renderer.
+// foveated contribution culling strength (number row [8]). +/- 5, clamped to 0..50
+// (default 0 = off). only affects the gpu-sort (hybrid) renderer.
 const FOVCULL_ROW = 8;
 const applyFovCull = () => {
     const v = data.get('foveationStrength') ?? 0;
@@ -491,8 +491,8 @@ const loadGsplat = (scene) => {
     }
 };
 
-// Selectable scenes via the in-XR SCENE number row: 0 = the cave from the
-// gaussian-splatting/depth-of-field example, 1 = original. The cave splat is unrotated (its proxy
+// selectable scenes via the in-xr scene number row: 0 = the cave from the
+// gaussian-splatting/depth-of-field example, 1 = original. the cave splat is unrotated (its proxy
 // is what's flipped in that example), whereas the original needs a 180° flip.
 const caveAsset = new pc.Asset('gsplat-cave', 'gsplat', {
     url: 'https://code.playcanvas.com/examples_data/example_cave_01/lod-meta.json'
@@ -512,7 +512,7 @@ app.assets.add(apartmentAsset);
 const SCENES = [
     // 0: cave — small interior; viewpoint roughly matches the depth-of-field example
     { asset: caveAsset, euler: [0, 0, 0], pos: [0.01, -0.09, -0.26], focus: [-0.22, -0.05, -1.24] },
-    // 1: original Roman Parish church — rig at the configured start, looking at the focus point
+    // 1: original roman parish church — rig at the configured start, looking at the focus point
     { asset: assets.church, euler: [270, 0, 0], pos: config.cameraPosition, focus: config.focusPoint || [0, 0.6, 0] },
     // 2: apartment (.sog) — start at the editor/paint "biker1" spot, transformed into this
     // scene's frame (apartment at origin, euler 180, scale 1), looking toward the interior
@@ -523,15 +523,15 @@ const SCENES = [
 const SCENE_ROW = 5;
 let sceneIndex = 0;
 
-// Place the XR rig for a scene: stand on the scene ground (y = 0, mirroring what XrSession does
-// at session start) and face the focus horizontally. In XR the headset supplies eye height and
+// place the xr rig for a scene: stand on the scene ground (y = 0, mirroring what xrsession does
+// at session start) and face the focus horizontally. in xr the headset supplies eye height and
 // pitch, so we keep yaw only — using the full desktop pos.y here would lift the viewer metres off
 // the ground (the "giant" effect), and keeping the previous yaw would leave you facing the wrong
 // way after a scene switch.
 const placeForSceneXr = (scene) => {
     const p = scene.pos;
     const f = scene.focus;
-    // Stand on the ground (y = 0) by default; per-scene `xrY` lifts the spawn for scenes whose
+    // stand on the ground (y = 0) by default; per-scene `xry` lifts the spawn for scenes whose
     // floor sits below the origin.
     cameraRig.setLocalPosition(p[0], scene.xrY ?? 0, p[2]);
     cameraRig.lookAt(f[0], f[1], f[2]);
@@ -544,8 +544,8 @@ const setScene = (index) => {
     xrHud?.setItemValue(SCENE_ROW, `${sceneIndex}`);
     const scene = SCENES[sceneIndex];
 
-    // Position the viewpoint for this scene. On desktop the fly camera (cc) owns the pose; in
-    // XR the rig is the floor-level navigation root and the headset supplies height/pitch.
+    // position the viewpoint for this scene. on desktop the fly camera (cc) owns the pose; in
+    // xr the rig is the floor-level navigation root and the headset supplies height/pitch.
     if (app.xr.active) {
         placeForSceneXr(scene);
     } else {
@@ -587,12 +587,12 @@ const tryStartVr = () => {
         return;
     }
     if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-        // local-floor: WebXR puts the local-space origin at the floor below the viewer at
-        // session start, so the camera (child of the rig) ends up at rig + ~1.6 m on Y.
+        // local-floor: webxr puts the local-space origin at the floor below the viewer at
+        // session start, so the camera (child of the rig) ends up at rig + ~1.6 m on y.
         // `local` would put the head at rig.y, sinking the viewpoint into the scene floor.
         //
-        // Start XR directly (rather than firing 'vr:start') so we can pass framebufferScaleFactor
-        // from the controls — it is read-only once a session is running. XrSession still performs
+        // start xr directly (rather than firing 'vr:start') so we can pass framebufferscalefactor
+        // from the controls — it is read-only once a session is running. xrsession still performs
         // its rig setup, as that is bound to the xr 'start' event, not the start call.
         camera.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
             framebufferScaleFactor: data.get('framebufferScaleFactor'),
@@ -605,8 +605,8 @@ const tryStartVr = () => {
     }
 };
 
-// DOM button in the iframe document so the click carries transient activation into the
-// WebXR requestSession call. Hidden while VR is active.
+// dom button in the iframe document so the click carries transient activation into the
+// webxr requestsession call. hidden while vr is active.
 const enterVrButton = createEnterVrButton(tryStartVr);
 
 const updateEnterVrButton = () => {
@@ -628,23 +628,23 @@ if (app.xr.supported) {
     app.xr.on('start', () => {
         setCameraControlsForXr();
         updateEnterVrButton();
-        // Fixed foveation is per-session (new layer each session); start disabled and sync the HUD.
+        // fixed foveation is per-session (new layer each session); start disabled and sync the hud.
         foveationEnabled = false;
         applyFoveation();
-        // Scale the HUD up inversely with the framebuffer scale so text stays readable at lower
-        // resolutions (e.g. 0.5x scale -> 2x larger menu). Full resolution keeps the base size.
+        // scale the hud up inversely with the framebuffer scale so text stays readable at lower
+        // resolutions (e.g. 0.5x scale -> 2x larger menu). full resolution keeps the base size.
         const scaleFactor = data.get('framebufferScaleFactor') || 1;
         xrHud?.setMenuScale(HUD_BASE_SCALE / scaleFactor);
-        // Stand on the ground facing the focus for the current scene. XrSession's own 'start'
+        // stand on the ground facing the focus for the current scene. xrsession's own 'start'
         // handler runs first (registered earlier) and derives the rig from the desktop camera —
-        // re-place here so the XR viewpoint is ground-level and correctly oriented.
+        // re-place here so the xr viewpoint is ground-level and correctly oriented.
         placeForSceneXr(SCENES[sceneIndex]);
         setMessage('VR active — left thumbstick: move, right: turn; tap to exit');
     });
     app.xr.on('end', () => {
         setMessage('VR ended — click Enter VR to re-enter');
-        // XrManager fires 'end' *before* clearing its internal session reference, so
-        // `app.xr.active` still reads true at this point. Defer state-dependent updates to
+        // xrmanager fires 'end' *before* clearing its internal session reference, so
+        // `app.xr.active` still reads true at this point. defer state-dependent updates to
         // the next microtask so they observe the cleared session.
         Promise.resolve().then(() => {
             setCameraControlsForXr();
@@ -666,7 +666,7 @@ if (app.xr.supported) {
     setMessage('WebXR is not supported');
 }
 
-// Refresh the readouts at ~2 Hz so the numbers are readable rather than flickering every frame.
+// refresh the readouts at ~2 hz so the numbers are readable rather than flickering every frame.
 let hudTimer = 0;
 app.on('update', (dt) => {
     hudTimer += dt;
@@ -677,7 +677,7 @@ app.on('update', (dt) => {
     data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
     data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 
-    // GPU time is the sum of all compute + render pass timings (device.gpuProfiler).
+    // gpu time is the sum of all compute + render pass timings (device.gpuprofiler).
     xrHud?.setItemLabel(0, `FPS: ${app.stats.frame.fps}`);
     xrHud?.setItemLabel(1, `GPU: ${(device.gpuProfiler?._frameTime ?? 0).toFixed(1)}ms`);
     xrHud?.setItemLabel(2, `RES: ${bb.x} x ${bb.y}`);

@@ -27,11 +27,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -45,9 +45,9 @@ const scripturl = './scripts/parsers/obj-model.js';
 /** @type {pc.Entity} */
 let entity;
 app.assets.loadFromUrl(scripturl, 'script', () => {
-    // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
+    // obj parser is not enabled by default in engine. add the parser to the model resource handler
     // set up obj parser
-    // @ts-ignore globally loaded ObjModelParser
+    // @ts-ignore globally loaded objmodelparser
     app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
 
     app.assets.loadFromUrl(objurl, 'model', (err, asset) => {
@@ -69,7 +69,7 @@ app.assets.loadFromUrl(scripturl, 'script', () => {
     });
 });
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
@@ -77,7 +77,7 @@ camera.addComponent('camera', {
 camera.translate(0, 0, 5);
 app.root.addChild(camera);
 
-// Create an Entity with a omni light component
+// create an entity with a omni light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',

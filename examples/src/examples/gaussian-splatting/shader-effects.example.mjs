@@ -37,11 +37,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -59,7 +59,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Effect configurations
+// effect configurations
 const effectConfigs = {
     reveal: {
         aabbMin: new pc.Vec3(-1, -1.6, -1),
@@ -169,12 +169,12 @@ data.on('renderer:set', () => {
     }
 });
 
-// Default to enabled
+// default to enabled
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 data.set('enabled', true);
 data.set('effect', 'hide');
 
-// Create hotel gsplat
+// create hotel gsplat
 const hotel = new pc.Entity('hotel');
 hotel.addComponent('gsplat', {
     asset: assets.hotel
@@ -182,16 +182,16 @@ hotel.addComponent('gsplat', {
 hotel.setLocalEulerAngles(180, 0, 0);
 app.root.addChild(hotel);
 
-// Add script component to the hotel entity
+// add script component to the hotel entity
 hotel.addComponent('script');
 
-// Helper function to create box script with configured attributes
+// helper function to create box script with configured attributes
 const createBoxScript = () => {
     const script = hotel.script?.create(GsplatBoxShaderEffect);
     return script;
 };
 
-// Helper function to apply effect configuration to script
+// helper function to apply effect configuration to script
 /**
  * @param {any} script - The box effect script instance
  * @param {any} config - The effect configuration object
@@ -212,29 +212,29 @@ const applyEffectConfig = (script, config) => {
     script.tint.copy(config.tint);
 };
 
-// Create the box effect script
+// create the box effect script
 const boxScript = createBoxScript();
 
-// Apply initial configuration
+// apply initial configuration
 const initialEffect = data.get('effect');
 applyEffectConfig(boxScript, effectConfigs[/** @type {keyof typeof effectConfigs} */ (initialEffect)]);
 
-// Handle effect changes
+// handle effect changes
 data.on('effect:set', () => {
     const effect = data.get('effect');
     const config = effectConfigs[/** @type {keyof typeof effectConfigs} */ (effect)];
 
     if (boxScript && config) {
-        // Apply new configuration
+        // apply new configuration
         applyEffectConfig(boxScript, config);
 
-        // Reset effectTime by disabling and re-enabling
+        // reset effecttime by disabling and re-enabling
         boxScript.enabled = false;
         boxScript.enabled = true;
     }
 });
 
-// Restart button - reset current effect
+// restart button - reset current effect
 data.on('restart', () => {
     if (boxScript) {
         boxScript.enabled = false;
@@ -242,7 +242,7 @@ data.on('restart', () => {
     }
 });
 
-// Prev button - cycle to previous effect
+// prev button - cycle to previous effect
 data.on('prev', () => {
     const effects = ['hide', 'reveal', 'tint', 'untint', 'roomHide', 'roomReveal', 'roomTint', 'roomUntint'];
     const currentEffect = data.get('effect');
@@ -251,7 +251,7 @@ data.on('prev', () => {
     data.set('effect', effects[prevIndex]);
 });
 
-// Next button - cycle to next effect
+// next button - cycle to next effect
 data.on('next', () => {
     const effects = ['hide', 'reveal', 'tint', 'untint', 'roomHide', 'roomReveal', 'roomTint', 'roomUntint'];
     const currentEffect = data.get('effect');
@@ -260,7 +260,7 @@ data.on('next', () => {
     data.set('effect', effects[nextIndex]);
 });
 
-// Handle enable/disable toggle
+// handle enable/disable toggle
 data.on('enabled:set', () => {
     const enabled = data.get('enabled');
     if (boxScript) {
@@ -268,7 +268,7 @@ data.on('enabled:set', () => {
     }
 });
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: pc.Color.BLACK,
@@ -290,19 +290,19 @@ camera.script?.create('orbitCameraInputMouse');
 camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// Auto-rotate camera when idle
+// auto-rotate camera when idle
 let autoRotateEnabled = true;
 let lastInteractionTime = 0;
 const autoRotateDelay = 2; // seconds of inactivity before auto-rotate resumes
 const autoRotateSpeed = 10; // degrees per second
 
-// Detect user interaction (click/touch only, not mouse movement)
+// detect user interaction (click/touch only, not mouse movement)
 const onUserInteraction = () => {
     autoRotateEnabled = false;
     lastInteractionTime = Date.now();
 };
 
-// Listen for click and touch events only
+// listen for click and touch events only
 if (app.mouse) {
     app.mouse.on('mousedown', onUserInteraction);
     app.mouse.on('mousewheel', onUserInteraction);
@@ -311,14 +311,14 @@ if (app.touch) {
     app.touch.on('touchstart', onUserInteraction);
 }
 
-// Auto-rotate update
+// auto-rotate update
 app.on('update', (dt) => {
-    // Re-enable auto-rotate after delay
+    // re-enable auto-rotate after delay
     if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
         autoRotateEnabled = true;
     }
 
-    // Apply auto-rotation
+    // apply auto-rotation
     if (autoRotateEnabled) {
         const orbitCamera = camera.script?.get('orbitCamera');
         if (orbitCamera) {

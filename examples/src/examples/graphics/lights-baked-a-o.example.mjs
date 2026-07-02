@@ -49,11 +49,11 @@ createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.Contai
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -71,10 +71,10 @@ app.scene.skyboxMip = 3;
 app.scene.skyboxIntensity = 0.6;
 app.scene.envAtlas = assets.helipad.resource;
 
-// if skydome cubemap is disabled using HUD, a constant ambient color is used instead
+// if skydome cubemap is disabled using hud, a constant ambient color is used instead
 app.scene.ambientLight = new pc.Color(0.1, 0.3, 0.4);
 
-// instantiate the house model, which has unwrapped texture coordinates for lightmap in UV1
+// instantiate the house model, which has unwrapped texture coordinates for lightmap in uv1
 const house = assets.house.resource.instantiateRenderEntity();
 house.setLocalScale(100, 100, 100);
 app.root.addChild(house);
@@ -110,7 +110,7 @@ lightDirectional.addComponent('light', {
 app.root.addChild(lightDirectional);
 lightDirectional.setLocalEulerAngles(-55, 0, -30);
 
-// Create an entity with a omni light component that is configured as a baked light
+// create an entity with a omni light component that is configured as a baked light
 const lightOmni = new pc.Entity('Omni');
 lightOmni.addComponent('light', {
     type: 'omni',
@@ -130,7 +130,7 @@ lightOmni.addComponent('light', {
 lightOmni.setLocalPosition(-4, 10, 5);
 app.root.addChild(lightOmni);
 
-// Create an entity with a spot light component that is configured as a baked light
+// create an entity with a spot light component that is configured as a baked light
 const lightSpot = new pc.Entity('Spot');
 lightSpot.addComponent('light', {
     type: 'spot',
@@ -150,7 +150,7 @@ lightSpot.addComponent('light', {
 lightSpot.setLocalPosition(-5, 10, -7.5);
 app.root.addChild(lightSpot);
 
-// Create an entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),
@@ -183,7 +183,7 @@ app.scene.lightmapSizeMultiplier = 512;
 // bake when settings are changed only
 let needBake = false;
 
-// handle data changes from HUD to modify baking properties
+// handle data changes from hud to modify baking properties
 data.on('*:set', (/** @type {string} */ path, value) => {
     let bakeSettingChanged = true;
     const pathArray = path.split('.');
@@ -221,7 +221,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     needBake ||= bakeSettingChanged;
 });
 
-// bake properties connected to the HUD
+// bake properties connected to the hud
 data.set('data', {
     settings: {
         lightmapFilterEnabled: true,
@@ -250,9 +250,9 @@ data.set('data', {
     }
 });
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 app.on('update', (dt) => {
-    // bake lightmaps when HUD properties change
+    // bake lightmaps when hud properties change
     if (needBake) {
         needBake = false;
         app.lightmapper.bake(null, bakeType);

@@ -56,11 +56,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -81,7 +81,7 @@ const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
 laboratoryEntity.setLocalScale(100, 100, 100);
 app.root.addChild(laboratoryEntity);
 
-// set up materials to use SSAO only (disable baked AO map)
+// set up materials to use ssao only (disable baked ao map)
 laboratoryEntity.findComponents('render').forEach((render) => {
     render.meshInstances.forEach((meshInstance) => {
         meshInstance.material.depthState = pc.DepthState.DEFAULT;
@@ -91,8 +91,8 @@ laboratoryEntity.findComponents('render').forEach((render) => {
     });
 });
 
-// detect the torches in the model (all named 'Fackel*') and add a warm omni light at each.
-// Their intensity is driven by the day/night cycle so they only glow between sunset and sunrise.
+// detect the torches in the model (all named 'fackel*') and add a warm omni light at each.
+// their intensity is driven by the day/night cycle so they only glow between sunset and sunrise.
 const torchIntensity = 60;
 const torchLights = [];
 laboratoryEntity
@@ -116,7 +116,7 @@ laboratoryEntity
         torchLights.push(light);
     });
 
-// use the dry-sand terrain as the ground. Instantiate it, measure its native bounds, scale it
+// use the dry-sand terrain as the ground. instantiate it, measure its native bounds, scale it
 // up to cover the scene out to the horizon, and drop it so its surface sits where the lab rests.
 const terrain = assets.terrain.resource.instantiateRenderEntity({
     castShadows: true,
@@ -141,7 +141,7 @@ const terrainTop = (tc.y + terrainAabb.halfExtents.y) * terrainScale;
 terrain.setLocalPosition(-tc.x * terrainScale - 71.6, groundLevel - terrainTop + 267.1, -tc.z * terrainScale + 395.8);
 
 // dim the terrain albedo (diffuse) by 0.5 to balance the bright sand against the darker building.
-// Scaling diffuse multiplies the albedo texture, darkening the surface in direct and ambient light.
+// scaling diffuse multiplies the albedo texture, darkening the surface in direct and ambient light.
 const dimmedTerrainMaterials = new Set();
 terrain.findComponents('render').forEach((render) => {
     render.meshInstances.forEach((mi) => {
@@ -153,8 +153,8 @@ terrain.findComponents('render').forEach((render) => {
     });
 });
 
-// a single directional light, kept in sync with the sun by the procedural sky script. It uses
-// PCSS soft shadows so the shadow penumbra reacts to the (moving) sun.
+// a single directional light, kept in sync with the sun by the procedural sky script. it uses
+// pcss soft shadows so the shadow penumbra reacts to the (moving) sun.
 const sunLight = new pc.Entity('Sun');
 sunLight.addComponent('light', {
     type: 'directional',
@@ -175,7 +175,7 @@ sunLight.addComponent('light', {
     normalOffsetBias: 0.82,
     shadowDistance: 2400,
     // the sun moves every frame, so the shadow map must be re-rendered in realtime
-    // (SHADOWUPDATE_THISFRAME would render it once and then stop)
+    // (shadowupdate_thisframe would render it once and then stop)
     shadowUpdateMode: pc.SHADOWUPDATE_REALTIME
 });
 app.root.addChild(sunLight);
@@ -188,7 +188,7 @@ const skyScript = sky.script.create(ProceduralSky);
 skyScript.sunLight = sunLight;
 app.root.addChild(sky);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const cameraEntity = new pc.Entity('Camera');
 cameraEntity.addComponent('camera', {
     farClip: 3000,
@@ -205,15 +205,15 @@ cc.focusPoint = new pc.Vec3(0, 25, 0);
 // limit how far the camera can orbit out, keeping it in the sharp near-cascade zone (x = min, y = max)
 cc.zoomRange = new pc.Vec2(1, 500);
 
-// ------ Custom render passes set up ------
+// ------ custom render passes set up ------
 
 const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
 
-// 16bit render target for HDR, so the bright sun blooms and SSAO has better precision
+// 16bit render target for hdr, so the bright sun blooms and ssao has better precision
 cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
 
-// SSAO, applied to the ambient lighting (not as a post-process), toggled from the UI
+// ssao, applied to the ambient lighting (not as a post-process), toggled from the ui
 cameraFrame.ssao.type = pc.SSAOTYPE_LIGHTING;
 cameraFrame.ssao.blurEnabled = true;
 cameraFrame.ssao.intensity = 0.4;
@@ -222,13 +222,13 @@ cameraFrame.ssao.radius = 30;
 cameraFrame.ssao.samples = 12;
 cameraFrame.ssao.minAngle = 10;
 
-// HDR bloom, off by default (blurLevel left at its default of 16)
+// hdr bloom, off by default (blurlevel left at its default of 16)
 cameraFrame.bloom.intensity = 0;
 cameraFrame.bloom.blurLevel = 16;
 
 cameraFrame.update();
 
-// SSAO toggles the CameraFrame SSAO type, which needs an explicit update()
+// ssao toggles the cameraframe ssao type, which needs an explicit update()
 data.on('data.effects.ssao:set', (/** @type {boolean} */ value) => {
     cameraFrame.ssao.type = value ? pc.SSAOTYPE_LIGHTING : pc.SSAOTYPE_NONE;
     cameraFrame.update();
@@ -267,7 +267,7 @@ data.set('data', {
         moonGlow: 3
     },
     // editable keyframe curves - each entry is an [x, y] pair, smoothstepped between keys.
-    // These are exposed in the inspector as arrays of vec2 and rebuilt on the fly.
+    // these are exposed in the inspector as arrays of vec2 and rebuilt on the fly.
     curves: {
         elevation: [
             [0, -60],
@@ -290,7 +290,7 @@ data.set('data', {
     }
 });
 
-// build a pc.Curve from an array of [x, y] keyframe pairs (as edited in the inspector)
+// build a pc.curve from an array of [x, y] keyframe pairs (as edited in the inspector)
 const buildCurve = (pairs) => {
     const curve = new pc.Curve(pairs.flat());
     curve.type = pc.CURVE_SMOOTHSTEP;
@@ -342,7 +342,7 @@ app.on('update', (dt) => {
     skyScript.moonSize = data.get('data.night.moonSize');
     skyScript.moonGlow = data.get('data.night.moonGlow');
 
-    // bloom is a toggle whose intensity is driven by elevation - CameraFrame needs update() on change
+    // bloom is a toggle whose intensity is driven by elevation - cameraframe needs update() on change
     const bloom = data.get('data.effects.bloom') ? bloomCurve.value(elevation) : 0;
     if (bloom !== lastBloom) {
         cameraFrame.bloom.intensity = bloom;

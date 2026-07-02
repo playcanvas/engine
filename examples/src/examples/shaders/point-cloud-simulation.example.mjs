@@ -17,8 +17,8 @@ const gfxOptions = {
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// render to low resolution to make particles more visible on WebGPU, as it doesn't support point
-// size and those are very small otherwise. This is not a proper solution, and only a temporary
+// render to low resolution to make particles more visible on webgpu, as it doesn't support point
+// size and those are very small otherwise. this is not a proper solution, and only a temporary
 // workaround specifically for this example use case.
 if (device.isWebGPU) {
     device.maxPixelRatio = 0.2;
@@ -33,24 +33,24 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0, 0, 0)
 });
 
-// Add entity into scene hierarchy
+// add entity into scene hierarchy
 app.root.addChild(camera);
 
 // allocate two buffers to store positions of particles
@@ -70,14 +70,14 @@ for (let i = 0; i < 3 * maxNumPoints; i++) {
  * @param {pc.Mesh} mesh - The mesh.
  */
 function updateMesh(mesh) {
-    // Set current positions on mesh - this reallocates vertex buffer if more space is needed to test it.
-    // For best performance, we could preallocate enough space using mesh.Clear.
-    // Also turn off bounding box generation, as we set up large box manually
+    // set current positions on mesh - this reallocates vertex buffer if more space is needed to test it.
+    // for best performance, we could preallocate enough space using mesh.clear.
+    // also turn off bounding box generation, as we set up large box manually
     mesh.setPositions(positions, 3, visiblePoints);
     mesh.update(pc.PRIMITIVE_POINTS, false);
 }
 
-// Create a mesh with dynamic vertex buffer (index buffer is not needed)
+// create a mesh with dynamic vertex buffer (index buffer is not needed)
 const mesh = new pc.Mesh(app.graphicsDevice);
 mesh.clear(true);
 updateMesh(mesh);
@@ -85,7 +85,7 @@ updateMesh(mesh);
 // set large bounding box so we don't need to update it each frame
 mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15));
 
-// Create a new material with a custom shader
+// create a new material with a custom shader
 const material = new pc.ShaderMaterial({
     uniqueName: 'MyShader',
     vertexGLSL: shaderVert,
@@ -99,10 +99,10 @@ const material = new pc.ShaderMaterial({
 material.blendType = pc.BLEND_ADDITIVEALPHA;
 material.depthWrite = false;
 
-// Create the mesh instance
+// create the mesh instance
 const meshInstance = new pc.MeshInstance(mesh, material);
 
-// Create Entity to render the mesh instances using a render component
+// create entity to render the mesh instances using a render component
 const entity = new pc.Entity();
 entity.addComponent('render', {
     type: 'asset',
@@ -112,14 +112,14 @@ entity.addComponent('render', {
 });
 app.root.addChild(entity);
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 let time = 0,
     previousTime;
 app.on('update', (dt) => {
     previousTime = time;
     time += dt;
 
-    // update particle positions using simple Verlet integration, and keep them inside a sphere boundary
+    // update particle positions using simple verlet integration, and keep them inside a sphere boundary
     let dist;
     const pos = new pc.Vec3();
     const old = new pc.Vec3();
@@ -134,7 +134,7 @@ app.on('update', (dt) => {
         delta.sub2(pos, old);
         next.add2(pos, delta);
 
-        // boundary collision to keep them inside a sphere. If outside, simply move them in opposite direction
+        // boundary collision to keep them inside a sphere. if outside, simply move them in opposite direction
         dist = next.length();
         if (dist > 15) next.copy(old);
 
@@ -156,7 +156,7 @@ app.on('update', (dt) => {
     // update mesh vertices
     updateMesh(mesh);
 
-    // Rotate the camera around
+    // rotate the camera around
     const cameraTime = time * 0.2;
     const cameraPos = new pc.Vec3(20 * Math.sin(cameraTime), 10, 20 * Math.cos(cameraTime));
     camera.setLocalPosition(cameraPos);

@@ -49,11 +49,11 @@ createOptions.resourceHandlers = [
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -68,7 +68,7 @@ app.start();
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-// Set the gravity for our rigid bodies
+// set the gravity for our rigid bodies
 app.systems.rigidbody.gravity.set(0, -9.81, 0);
 /**
  * @param {pc.Color} color - The color of the material.
@@ -86,7 +86,7 @@ function createMaterial(color) {
 const red = createMaterial(new pc.Color(1, 0.3, 0.3));
 const gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
 
-// ***********    Create our floor   *******************
+// ***********    create our floor   *******************
 
 const floor = new pc.Entity();
 floor.addComponent('render', {
@@ -112,7 +112,7 @@ floor.addComponent('collision', {
 // add the floor to the hierarchy
 app.root.addChild(floor);
 
-// ***********    Create lights   *******************
+// ***********    create lights   *******************
 
 // make our scene prettier by adding a directional light
 const light = new pc.Entity();
@@ -129,12 +129,12 @@ light.addComponent('light', {
 // set the direction for our light
 light.setLocalEulerAngles(45, 30, 0);
 
-// Add the light to the hierarchy
+// add the light to the hierarchy
 app.root.addChild(light);
 
-// ***********    Create camera    *******************
+// ***********    create camera    *******************
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.5, 0.5, 0.8),
@@ -144,7 +144,7 @@ camera.addComponent('camera', {
 // add the camera to the hierarchy
 app.root.addChild(camera);
 
-// Move the camera a little further away
+// move the camera a little further away
 camera.translate(0, 10, 15);
 camera.lookAt(0, 2, 0);
 
@@ -178,35 +178,35 @@ const createTemplate = (type, collisionOptions, template) => {
     return template;
 };
 
-// ***********    Create templates    *******************
+// ***********    create templates    *******************
 
-// Create a template for a falling box
+// create a template for a falling box
 const boxTemplate = createTemplate('box', {
     type: 'box',
     halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
 });
 
-// A sphere...
+// a sphere...
 const sphereTemplate = createTemplate('sphere', {
     type: 'sphere',
     radius: 0.5
 });
 
-// A capsule...
+// a capsule...
 const capsuleTemplate = createTemplate('capsule', {
     type: 'capsule',
     radius: 0.5,
     height: 2
 });
 
-// A cylinder...
+// a cylinder...
 const cylinderTemplate = createTemplate('cylinder', {
     type: 'cylinder',
     radius: 0.5,
     height: 1
 });
 
-// A torus mesh...
+// a torus mesh...
 const container = assets.torus.resource;
 const meshTemplate = container.instantiateRenderEntity();
 
@@ -224,18 +224,18 @@ createTemplate(
 const templates = [boxTemplate, sphereTemplate, capsuleTemplate, cylinderTemplate, meshTemplate];
 
 // disable the templates because we don't want them to be visible
-// we'll just use them to clone other Entities
+// we'll just use them to clone other entities
 templates.forEach((template) => {
     template.enabled = false;
 });
 
-// ***********    Update Function   *******************
+// ***********    update function   *******************
 
 // initialize variables for our update function
 let timer = 0;
 let count = 40;
 
-// Set an update function on the application's update event
+// set an update function on the application's update event
 app.on('update', (dt) => {
     // create a falling box every 0.2 seconds
     if (count > 0) {
@@ -244,7 +244,7 @@ app.on('update', (dt) => {
             count--;
             timer = 0.2;
 
-            // Clone a random template and position it above the floor
+            // clone a random template and position it above the floor
             const template = templates[Math.floor(Math.random() * templates.length)];
             const clone = template.clone();
             // enable the clone because the template is disabled
@@ -261,7 +261,7 @@ app.on('update', (dt) => {
         }
     }
 
-    // Show active bodies in red and frozen bodies in gray
+    // show active bodies in red and frozen bodies in gray
     app.root.findComponents('rigidbody').forEach((/** @type {pc.RigidBodyComponent} */ body) => {
         body.entity.render.meshInstances[0].material = body.isActive() ? red : gray;
     });

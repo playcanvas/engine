@@ -12,7 +12,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable HDR rendering if supported
+    // enable hdr rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
@@ -28,11 +28,11 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -66,7 +66,7 @@ primitive.addComponent('render', {
 primitive.setLocalScale(new pc.Vec3(20, 20, 20));
 app.root.addChild(primitive);
 
-// Create an Entity with a omni light component
+// create an entity with a omni light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -80,42 +80,42 @@ light.addComponent('light', {
 light.translate(0, 8, 0);
 app.root.addChild(light);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2),
 
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    // if the device renders in hdr mode, disable tone mapping to output hdr values without any processing
     toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
     gammaCorrection: pc.GAMMA_SRGB
 });
 
-// Add the camera to the hierarchy
+// add the camera to the hierarchy
 app.root.addChild(camera);
 
-// Create bouncing ball model and add it to hierarchy
+// create bouncing ball model and add it to hierarchy
 const ball = new pc.Entity();
 ball.addComponent('render', {
     type: 'sphere'
 });
 app.root.addChild(ball);
 
-// Allocate space for decals. Each decal is a quad with 4 vertices
+// allocate space for decals. each decal is a quad with 4 vertices
 const numDecals = 500;
 const numDecalVertices = 4 * numDecals;
 
-// Allocate storage for vertex positions, vertex stores x, y and z
+// allocate storage for vertex positions, vertex stores x, y and z
 const positions = new Float32Array(3 * numDecalVertices);
 
-// Allocate storage for colors, each vertex stores r, g, b and a
+// allocate storage for colors, each vertex stores r, g, b and a
 const colors = new Uint8ClampedArray(4 * numDecalVertices);
 
-// Allocate storage for uvs, each vertex stores u and v. And fill them up to display whole texture
+// allocate storage for uvs, each vertex stores u and v. and fill them up to display whole texture
 /** @type {number[]} */
 const uvs = [];
 for (let i = 0; i < numDecals; i++) uvs.push(0, 0, 0, 1, 1, 1, 1, 0);
 
-// Allocate and generate indices. Each quad is representing using 2 triangles, and uses 4 vertices
+// allocate and generate indices. each quad is representing using 2 triangles, and uses 4 vertices
 const quadTriangles = [0, 1, 2, 2, 3, 0];
 const indices = new Uint16Array(6 * numDecals);
 for (let i = 0; i < numDecals; i++) {
@@ -195,30 +195,30 @@ function updateMesh(mesh, updatePositions, updateColors, initAll) {
     mesh.update(pc.PRIMITIVE_TRIANGLES);
 }
 
-// Create a mesh with dynamic vertex buffer and static index buffer
+// create a mesh with dynamic vertex buffer and static index buffer
 const mesh = new pc.Mesh(app.graphicsDevice);
 mesh.clear(true, false);
 updateMesh(mesh, true, true, true);
 
 // create material
 const material = new pc.StandardMaterial();
-material.useLighting = false; // turn off lighting - we use emissive texture only. Also, lighting needs normal maps which we don't generate
+material.useLighting = false; // turn off lighting - we use emissive texture only. also, lighting needs normal maps which we don't generate
 material.diffuse = new pc.Color(0, 0, 0);
 material.emissiveVertexColor = true;
 material.blendType = pc.BLEND_ADDITIVEALPHA; // additive alpha blend
 material.depthWrite = false; // optimization - no need to write to depth buffer, as decals are part of the ground plane
 material.emissiveMap = assets.heart.resource;
 material.emissive = pc.Color.WHITE;
-material.emissiveIntensity = 10; // bright emissive to make it really bright on HDR displays
+material.emissiveIntensity = 10; // bright emissive to make it really bright on hdr displays
 material.opacityMap = assets.heart.resource;
 material.depthBias = -0.1; // depth biases to avoid z-fighting with ground plane
 material.slopeDepthBias = -0.1;
 material.update();
 
-// Create the mesh instance
+// create the mesh instance
 const meshInstance = new pc.MeshInstance(mesh, material);
 
-// Create Entity with a render component to render the mesh instance
+// create entity with a render component to render the mesh instance
 const entity = new pc.Entity();
 entity.addComponent('render', {
     type: 'asset',
@@ -227,20 +227,20 @@ entity.addComponent('render', {
 });
 app.root.addChild(entity);
 
-// Set an update function on the app's update event
+// set an update function on the app's update event
 let time = 0;
 let decalIndex = 0;
 app.on('update', (/** @type {number} */ dt) => {
     const previousTime = time;
     time += dt;
 
-    // Bounce the ball around in a circle with changing radius
+    // bounce the ball around in a circle with changing radius
     const radius = Math.abs(Math.sin(time * 0.55) * 9);
     const previousElevation = 2 * Math.cos(previousTime * 7);
     const elevation = 2 * Math.cos(time * 7);
     ball.setLocalPosition(new pc.Vec3(radius * Math.sin(time), 0.5 + Math.abs(elevation), radius * Math.cos(time)));
 
-    // When ball crossed the ground plane
+    // when ball crossed the ground plane
     let positionsUpdated = false;
     let colorsUpdated = false;
     if ((previousElevation < 0 && elevation >= 0) || (elevation < 0 && previousElevation >= 0)) {

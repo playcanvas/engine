@@ -64,11 +64,11 @@ createOptions.resourceHandlers = [pc.ScriptHandler, pc.TextureHandler, pc.Contai
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -142,7 +142,7 @@ light.addComponent('light', {
 });
 focusPrimitive.addChild(light);
 
-// Create an Entity with a camera component, and attach postprocessing effects scripts on it
+// create an entity with a camera component, and attach postprocessing effects scripts on it
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),
@@ -190,7 +190,7 @@ camera.setLocalPosition(0, 30, -60);
 camera.lookAt(0, 0, 100);
 app.root.addChild(camera);
 
-// Allow user to toggle individual post effects
+// allow user to toggle individual post effects
 app.keyboard.on(
     'keydown',
     (e) => {
@@ -220,7 +220,7 @@ app.keyboard.on(
     this
 );
 
-// Create a 2D screen to place UI on
+// create a 2d screen to place ui on
 const screen = new pc.Entity();
 screen.addComponent('screen', {
     referenceResolution: new pc.Vec2(1280, 720),
@@ -242,7 +242,7 @@ text.addComponent('element', {
 });
 screen.addChild(text);
 
-// Display some UI text which the post processing can be tested against
+// display some ui text which the post processing can be tested against
 text.element.text = 'Test UI Text';
 
 // update things every frame

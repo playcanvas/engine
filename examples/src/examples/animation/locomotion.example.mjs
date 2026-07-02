@@ -66,11 +66,11 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -86,7 +86,7 @@ app.scene.skyboxMip = 2;
 app.scene.skyboxIntensity = 0.7;
 app.scene.envAtlas = assets.helipad.resource;
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const cameraEntity = new pc.Entity();
 cameraEntity.name = 'Camera';
 cameraEntity.addComponent('camera', {
@@ -98,7 +98,7 @@ cameraEntity.translateLocal(0.5, 3, 8);
 cameraEntity.rotateLocal(-30, 0, 0);
 app.root.addChild(cameraEntity);
 
-// Create an entity with a light component
+// create an entity with a light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -120,9 +120,9 @@ const renderEntity = assets.model.resource.instantiateRenderEntity({
     castShadows: true
 });
 
-// assign the renderEntity as the child of character entity. All transforms of the
-// renderEntity and its children are driven by the anim component.
-// The characterEntity transform will be controlled by the Locomotion script.
+// assign the renderentity as the child of character entity. all transforms of the
+// renderentity and its children are driven by the anim component.
+// the characterentity transform will be controlled by the locomotion script.
 characterEntity.addChild(renderEntity);
 
 // add an anim component to the entity
@@ -301,7 +301,7 @@ data.on('jump', () => {
     }
 });
 
-// create a Locomotion script and initialize some variables
+// create a locomotion script and initialize some variables
 const Locomotion = pc.createScript('Locomotion');
 
 let characterDirection;
@@ -319,7 +319,7 @@ Locomotion.prototype.initialize = function () {
 // @ts-ignore engine-tsd
 Locomotion.prototype.onMouseDown = function (event) {
     if (event.button !== 0) return;
-    // Set the character target position to a position on the plane that the user has clicked
+    // set the character target position to a position on the plane that the user has clicked
     /** @type {pc.Entity} */
     const cameraEntity = app.root.findByName('Camera');
     const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
@@ -359,8 +359,8 @@ const currentPosition = new pc.Vec3(0, 0, 0);
 // update code called every frame
 Locomotion.prototype.update = function (/** @type {number} */ dt) {
     if (characterEntity.anim.getInteger('speed')) {
-        // Update position if target position is not the same as entity position. Base the movement speed on the current state
-        // Move the character along X & Z axis based on click target position & make character face click direction
+        // update position if target position is not the same as entity position. base the movement speed on the current state
+        // move the character along x & z axis based on click target position & make character face click direction
         let moveSpeed = speedForState(characterEntity.anim.baseLayer.activeState);
         if (characterEntity.anim.baseLayer.transitioning) {
             const prevMoveSpeed = speedForState(characterEntity.anim.baseLayer.previousState);

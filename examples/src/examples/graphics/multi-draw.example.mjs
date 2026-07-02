@@ -43,11 +43,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
@@ -73,7 +73,7 @@ camera.translate(0, 150, 80);
 camera.lookAt(pc.Vec3.ZERO);
 const cc = /** @type { any } */ (camera.script.create(CameraControls));
 Object.assign(cc, {
-    // focusPoint: pc.Vec3.ZERO,
+    // focuspoint: pc.vec3.zero,
     enableFly: false
 });
 
@@ -120,7 +120,7 @@ const indices = [];
 const firstIndexPerPatch = [];
 const indexCountPerPatch = [];
 
-// helper to sample height from global (x,z) in world units, stored in R channel of heightmap
+// helper to sample height from global (x,z) in world units, stored in r channel of heightmap
 const sampleHeight = (x, z) => {
     const u = (x + terrainWidth * 0.5) / terrainWidth;
     const v = 1 - (z + terrainDepth * 0.5) / terrainDepth;
@@ -175,10 +175,10 @@ mesh.setUvs(0, uvs);
 mesh.setIndices(indices);
 mesh.update();
 
-// MeshInstance
+// meshinstance
 const meshInst = new pc.MeshInstance(mesh, material);
 
-// entity to render our MeshInstance
+// entity to render our meshinstance
 const entity = new pc.Entity('TerrainEntity');
 entity.addComponent('render', { meshInstances: [meshInst] });
 app.root.addChild(entity);
@@ -193,7 +193,7 @@ let time = 0;
 
 app.on('update', (dt) => {
     time += dt;
-    // spinning band: infinite line through grid center with angle theta; hide patches within distance <= bandRadius
+    // spinning band: infinite line through grid center with angle theta; hide patches within distance <= bandradius
     const cx = (patchesX - 1) * 0.5;
     const cz = (patchesZ - 1) * 0.5;
     const theta = time * rotRps * Math.PI * 2;

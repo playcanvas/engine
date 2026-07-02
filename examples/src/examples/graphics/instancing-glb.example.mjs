@@ -44,11 +44,11 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
@@ -67,7 +67,7 @@ const entity = assets.glb.resource.instantiateRenderEntity({
 });
 app.root.addChild(entity);
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity();
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.1, 0.1),
@@ -95,7 +95,7 @@ app.root.addChild(camera);
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// Create an entity with a light component
+// create an entity with a light component
 const light = new pc.Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -110,7 +110,7 @@ light.addComponent('light', {
 light.setLocalEulerAngles(60, 30, 0);
 app.root.addChild(light);
 
-// Create an Entity for the ground
+// create an entity for the ground
 const material = new pc.StandardMaterial();
 material.diffuse = pc.Color.GRAY;
 material.update();

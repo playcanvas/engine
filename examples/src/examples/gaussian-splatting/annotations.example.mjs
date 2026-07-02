@@ -42,25 +42,25 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.GSplatHandler];
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// Ensure canvas is resized when window changes size
+// ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Create an Entity with a camera component
+// create an entity with a camera component
 const camera = new pc.Entity('Camera');
 camera.addComponent('camera', {
     fov: 30
 });
 camera.setLocalPosition(-2, 1.2, -2.5);
 
-// Add camera controls and post-processing
+// add camera controls and post-processing
 camera.addComponent('script');
 camera.script.create(CameraControls, {
     properties: {
@@ -103,7 +103,7 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
-// Create the bicycle gsplat
+// create the bicycle gsplat
 const bicycle = new pc.Entity('Bicycle');
 bicycle.addComponent('gsplat', {
     asset: assets.bicycle
@@ -111,11 +111,11 @@ bicycle.addComponent('gsplat', {
 bicycle.setLocalEulerAngles(0, 0, 180);
 app.root.addChild(bicycle);
 
-// Add annotation manager to the bicycle entity
+// add annotation manager to the bicycle entity
 bicycle.addComponent('script');
 const manager = bicycle.script.create(AnnotationManager);
 
-// Set default values for controls
+// set default values for controls
 data.set('data', {
     hotspotSize: 25,
     hotspotColor: [0.8, 0.8, 0.8],
@@ -124,7 +124,7 @@ data.set('data', {
     behindOpacity: 0.25
 });
 
-// Handle control changes - update the manager directly
+// handle control changes - update the manager directly
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const prop = path.split('.')[1];
     if (prop === 'hotspotSize') {
@@ -138,7 +138,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     }
 });
 
-// Create annotations at specific locations (positions are local to the bicycle entity)
+// create annotations at specific locations (positions are local to the bicycle entity)
 const annotations = [
     {
         pos: [0, -0.6, -0.86],
