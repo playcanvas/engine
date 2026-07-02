@@ -10,10 +10,44 @@
 // source: https://superspl.at/scene/d5d397aa
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    CollisionComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    GamePads,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent, Texture } from 'playcanvas'
+ */
 
 // Color LUTs in examples/assets/cube-luts/ (256×16 Unreal-style horizontal strip).
 // Rows: [key, label]. Textures are lut-{key}.png except key 'none'.
@@ -40,22 +74,25 @@ const LUT_CATALOG = LUT_TABLE.map(([key, label]) => ({
     file: key === 'none' ? null : `lut-${key}.png`
 }));
 
-data.set('lutSelectOptions', LUT_CATALOG.map(({ key, label }) => ({
-    v: key,
-    t: label
-})));
+data.set(
+    'lutSelectOptions',
+    LUT_CATALOG.map(({ key, label }) => ({
+        v: key,
+        t: label
+    }))
+);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 // the collision GLB uses Draco-compressed meshes, so the Draco decoder is required
-pc.WasmModule.setConfig('DracoDecoderModule', {
+WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
@@ -63,10 +100,10 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 
 await Promise.all([
     new Promise((resolve) => {
-        pc.WasmModule.getInstance('Ammo', () => resolve(true));
+        WasmModule.getInstance('Ammo', () => resolve(true));
     }),
     new Promise((resolve) => {
-        pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
+        WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
 
@@ -77,37 +114,32 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.gamepads = new pc.GamePads();
-createOptions.keyboard = new pc.Keyboard(window);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.gamepads = new GamePads();
+createOptions.keyboard = new Keyboard(window);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.GSplatHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -127,24 +159,27 @@ const lutAssetOptions = {
 
 const lutBaseUrl = './assets/cube-luts';
 
-/** @type {Record<string, pc.Asset>} */
+/** @type {Record<string, Asset>} */
 const lutAssets = {};
 for (const { key, file } of LUT_CATALOG) {
     if (!file) {
         continue;
     }
-    lutAssets[key] = new pc.Asset(`lut-${key}`, 'texture',
-        { url: `${lutBaseUrl}/${file}` }, lutAssetOptions);
+    lutAssets[key] = new Asset(`lut-${key}`, 'texture', { url: `${lutBaseUrl}/${file}` }, lutAssetOptions);
 }
 
 const assets = {
-    splat: new pc.Asset('sunnyvale-splat', 'gsplat', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog' }),
-    collision: new pc.Asset('sunnyvale-collision', 'container', { url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb' }),
+    splat: new Asset('sunnyvale-splat', 'gsplat', {
+        url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.sog'
+    }),
+    collision: new Asset('sunnyvale-collision', 'container', {
+        url: 'https://code.playcanvas.com/examples_data/example_sunnyvale/sunnyvale.glb'
+    }),
     ...lutAssets
 };
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -160,7 +195,7 @@ data.on('renderer:set', () => {
 });
 
 // Initial control values
-data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('splatBudget', 4);
 data.set('lut', 'bw');
 data.set('lut2', 'blue');
@@ -183,23 +218,23 @@ data.on('splatBudget:set', applySplatBudget);
 app.systems.rigidbody?.gravity.set(0, -10, 0);
 
 // Camera (attached to the character controller below)
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    clearColor: new Color(0.1, 0.1, 0.1),
     farClip: 1000,
     fov: 75,
-    toneMapping: pc.TONEMAP_LINEAR
+    toneMapping: TONEMAP_LINEAR
 });
 camera.setLocalPosition(0, 0.9, 0);
 
 // CameraFrame post-processing pipeline. Linear tonemap is the identity on values in [0,1]
 // which lets gaussian splat colors (already display-ready) pass through unchanged so the
 // LUT is the only thing modifying the final look.
-const cameraFrame = new pc.CameraFrame(app, camera.camera);
-cameraFrame.rendering.toneMapping = pc.TONEMAP_LINEAR;
+const cameraFrame = new CameraFrame(app, camera.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_LINEAR;
 cameraFrame.update();
 
-/** @type {Record<string, pc.Texture | null>} */
+/** @type {Record<string, Texture | null>} */
 const lutTextures = { none: null };
 for (const { key, file } of LUT_CATALOG) {
     if (file) {
@@ -231,7 +266,7 @@ const HOLD_SECONDS = 1.5;
 const CROSSFADE_SECONDS = 1.5;
 const CYCLE_SECONDS = HOLD_SECONDS + CROSSFADE_SECONDS;
 const randomKey = (excludeKey) => {
-    const choices = animatableKeys.filter(k => k !== excludeKey);
+    const choices = animatableKeys.filter((k) => k !== excludeKey);
     return choices[Math.floor(Math.random() * choices.length)];
 };
 let animClock = 0;
@@ -253,12 +288,12 @@ startLutAnimate();
 // Parent that holds both the splat and the collision mesh, keeping them aligned.
 // The splat data is authored upside-down relative to PlayCanvas's Y-up convention,
 // so a 180° rotation around Z flips both the visual and the collision together.
-const sceneRoot = new pc.Entity('sunnyvale');
+const sceneRoot = new Entity('sunnyvale');
 sceneRoot.setLocalEulerAngles(0, 0, 180);
 app.root.addChild(sceneRoot);
 
 // Gaussian splat (visual)
-const splat = new pc.Entity('sunnyvale-gsplat');
+const splat = new Entity('sunnyvale-gsplat');
 splat.addComponent('gsplat', {
     asset: assets.splat
 });
@@ -268,7 +303,7 @@ sceneRoot.addChild(splat);
 // a static rigidbody using the actual triangle mesh. The mesh itself is hidden -
 // it is only used for collision.
 const collisionRoot = assets.collision.resource.instantiateRenderEntity();
-collisionRoot.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+collisionRoot.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     const entity = render.entity;
     entity.addComponent('rigidbody', {
         type: 'static',
@@ -284,7 +319,7 @@ collisionRoot.findComponents('render').forEach((/** @type {pc.RenderComponent} *
 sceneRoot.addChild(collisionRoot);
 
 // First-person character controller
-const characterController = new pc.Entity('character-controller');
+const characterController = new Entity('character-controller');
 characterController.setPosition(0, 2, 0);
 characterController.addChild(camera);
 characterController.addComponent('collision', {
@@ -297,8 +332,8 @@ characterController.addComponent('rigidbody', {
     mass: 100,
     linearDamping: 0,
     angularDamping: 0,
-    linearFactor: pc.Vec3.ONE,
-    angularFactor: pc.Vec3.ZERO,
+    linearFactor: Vec3.ONE,
+    angularFactor: Vec3.ZERO,
     friction: 0.5,
     restitution: 0
 });

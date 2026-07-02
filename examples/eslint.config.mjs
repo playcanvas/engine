@@ -1,4 +1,5 @@
 import playcanvasConfig from '@playcanvas/eslint-config';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 
 import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from './utils/inline-markdown.mjs';
@@ -285,6 +286,176 @@ const configBlockShape = {
     }
 };
 
+const assetLoaderTopLevelAwait = {
+    meta: {
+        type: 'suggestion',
+        fixable: 'code',
+        docs: {
+            description: 'prefer top-level await for example asset loading'
+        },
+        messages: {
+            topLevelAwait: 'Use top-level await instead of wrapping example setup in an asset loader callback.'
+        }
+    },
+
+    create(context) {
+        const sourceCode = context.sourceCode;
+
+        const isAssetLoader = (node) => {
+            return (node?.type === 'NewExpression' &&
+                node.callee.type === 'Identifier' &&
+                node.callee.name === 'AssetListLoader') ||
+                (node?.type === 'NewExpression' &&
+                node.callee.type === 'MemberExpression' &&
+                node.callee.object.name === 'pc' &&
+                node.callee.property.name === 'AssetListLoader');
+        };
+
+        const hasReturn = (node) => {
+            if (!node || typeof node !== 'object') {
+                return false;
+            }
+            if (node.type === 'ReturnStatement') {
+                return true;
+            }
+            if (node.type === 'FunctionDeclaration' ||
+                node.type === 'FunctionExpression' ||
+                node.type === 'ArrowFunctionExpression') {
+                return false;
+            }
+            return Object.entries(node).some(([key, value]) => {
+                if (key === 'parent' || key === 'loc' || key === 'range') {
+                    return false;
+                }
+                if (Array.isArray(value)) {
+                    return value.some(child => child?.type && hasReturn(child));
+                }
+                return value?.type && hasReturn(value);
+            });
+        };
+
+        return {
+            Program(node) {
+                const body = node.body;
+
+                for (let i = 1; i < body.length; i++) {
+                    const prev = body[i - 1];
+                    const stmt = body[i];
+                    const decl = prev.type === 'VariableDeclaration' && prev.declarations.length === 1 ?
+                        prev.declarations[0] :
+                        null;
+                    const call = stmt.type === 'ExpressionStatement' ? stmt.expression : null;
+                    const callback = call?.type === 'CallExpression' ? call.arguments[0] : null;
+
+                    if (decl?.id.type !== 'Identifier' ||
+                        !isAssetLoader(decl.init) ||
+                        call?.type !== 'CallExpression' ||
+                        call.callee.type !== 'MemberExpression' ||
+                        call.callee.object.name !== decl.id.name ||
+                        call.callee.property.name !== 'load' ||
+                        callback?.type !== 'ArrowFunctionExpression' ||
+                        callback.params.length ||
+                        callback.body.type !== 'BlockStatement') {
+                        continue;
+                    }
+
+                    const canFix = !hasReturn(callback.body) &&
+                        body.slice(i + 1).every(node => node.type.startsWith('Export'));
+
+                    context.report({
+                        node: stmt,
+                        messageId: 'topLevelAwait',
+                        fix: canFix ? (fixer) => {
+                            const gap = sourceCode.text.slice(prev.range[1], stmt.range[0]);
+                            if (gap.trim()) {
+                                return null;
+                            }
+
+                            const loader = sourceCode.getText(decl.init);
+                            const block = sourceCode.text
+                            .slice(callback.body.range[0] + 1, callback.body.range[1] - 1)
+                            .trim();
+
+                            return fixer.replaceTextRange(
+                                [prev.range[0], stmt.range[1]],
+                                `await new Promise((resolve) => {\n    ${loader}.load(resolve);\n});\n\n${block}`
+                            );
+                        } : null
+                    });
+                }
+            }
+        };
+    }
+};
+
+const noPlaycanvasNamespace = {
+    meta: {
+        type: 'problem',
+        docs: {
+            description: 'require direct PlayCanvas imports in examples'
+        },
+        messages: {
+            namespaceImport: 'Import PlayCanvas exports directly instead of using the pc namespace.',
+            namespaceReference: 'Use the direct PlayCanvas import instead of pc.{{name}}.'
+        }
+    },
+
+    create(context) {
+        const sourceCode = context.sourceCode;
+
+        return {
+            ImportDeclaration(node) {
+                if (node.source.value !== 'playcanvas') {
+                    return;
+                }
+
+                for (const specifier of node.specifiers) {
+                    if (specifier.type === 'ImportNamespaceSpecifier') {
+                        context.report({
+                            node: specifier,
+                            messageId: 'namespaceImport'
+                        });
+                    }
+                }
+            },
+
+            MemberExpression(node) {
+                if (node.computed ||
+                    node.object.type !== 'Identifier' ||
+                    node.object.name !== 'pc' ||
+                    node.property.type !== 'Identifier') {
+                    return;
+                }
+
+                context.report({
+                    node,
+                    messageId: 'namespaceReference',
+                    data: { name: node.property.name }
+                });
+            },
+
+            Program(node) {
+                for (const comment of sourceCode.getAllComments()) {
+                    const match = /\bpc\.([A-Za-z_$][\w$]*)/.exec(comment.value);
+                    if (!match) {
+                        continue;
+                    }
+
+                    context.report({
+                        node,
+                        loc: {
+                            line: comment.loc.start.line,
+                            column: comment.loc.start.column + match.index
+                        },
+                        messageId: 'namespaceReference',
+                        data: { name: match[1] }
+                    });
+                }
+            }
+        };
+    }
+};
+
 const importOrder = ['error', {
     groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'unknown'],
     pathGroups: [
@@ -332,6 +503,15 @@ const jsxUsesVars = {
     }
 };
 
+const examplesPlugin = {
+    rules: {
+        'config-block-at-top': configBlockAtTop,
+        'config-block-shape': configBlockShape,
+        'asset-loader-top-level-await': assetLoaderTopLevelAwait,
+        'no-playcanvas-namespace': noPlaycanvasNamespace
+    }
+};
+
 export default [
     ...playcanvasConfig,
     {
@@ -350,6 +530,32 @@ export default [
         rules: {
             'import/order': importOrder,
             'import/no-unresolved': 'off'
+        }
+    },
+    {
+        ...eslintConfigPrettier,
+        files: ['src/examples/**/*.{mjs,jsx}']
+    },
+    {
+        files: ['src/examples/**/*.{mjs,jsx}'],
+        plugins: {
+            examples: examplesPlugin
+        },
+        rules: {
+            'arrow-parens': 'off',
+            curly: 'error',
+            'examples/no-playcanvas-namespace': 'error',
+            'implicit-arrow-linebreak': 'off',
+            'indent': 'off',
+            'no-confusing-arrow': 'off',
+            'no-unused-vars': ['error', {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_'
+            }],
+            'object-curly-spacing': ['error', 'always'],
+            'operator-linebreak': 'off',
+            'quotes': 'off'
         }
     },
     {
@@ -374,15 +580,8 @@ export default [
     },
     {
         files: ['src/examples/**/*.example.mjs'],
-        plugins: {
-            examples: {
-                rules: {
-                    'config-block-at-top': configBlockAtTop,
-                    'config-block-shape': configBlockShape
-                }
-            }
-        },
         rules: {
+            'examples/asset-loader-top-level-await': 'error',
             'examples/config-block-at-top': 'error',
             'examples/config-block-shape': 'error'
         }

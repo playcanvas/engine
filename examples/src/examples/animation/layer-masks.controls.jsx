@@ -7,7 +7,7 @@ import {
     SliderInput
 } from '@playcanvas/pcui/react';
 
-import * as pc from 'playcanvas';
+import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -24,7 +24,7 @@ export function Controls({ observer }) {
             <Panel headerText='Full Body Layer'>
                 <LabelGroup text='active state'>
                     <SelectInput
-                        options={['Idle', 'Walk'].map(_ => ({ v: _, t: _ }))}
+                        options={['Idle', 'Walk'].map((_) => ({ v: _, t: _ }))}
                         binding={new BindingTwoWay()}
                         link={{
                             observer,
@@ -36,7 +36,7 @@ export function Controls({ observer }) {
             <Panel headerText='Upper Body Layer'>
                 <LabelGroup text='active state'>
                     <SelectInput
-                        options={['Eager', 'Idle', 'Dance'].map(_ => ({ v: _, t: _ }))}
+                        options={['Eager', 'Idle', 'Dance'].map((_) => ({ v: _, t: _ }))}
                         binding={new BindingTwoWay()}
                         link={{
                             observer,
@@ -47,10 +47,10 @@ export function Controls({ observer }) {
                 <LabelGroup text='blend type'>
                     <SelectInput
                         options={[
-                            { v: pc.ANIM_LAYER_OVERWRITE, t: 'Overwrite' },
-                            { v: pc.ANIM_LAYER_ADDITIVE, t: 'Additive' }
+                            { v: ANIM_LAYER_OVERWRITE, t: 'Overwrite' },
+                            { v: ANIM_LAYER_ADDITIVE, t: 'Additive' }
                         ]}
-                        value={pc.ANIM_LAYER_ADDITIVE}
+                        value={ANIM_LAYER_ADDITIVE}
                         binding={new BindingTwoWay()}
                         link={{
                             observer,

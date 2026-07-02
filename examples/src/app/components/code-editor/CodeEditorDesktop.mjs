@@ -64,9 +64,15 @@ const FILE_TYPE_LANGUAGES = {
 const EXAMPLE_MODEL_DIR = 'inmemory://example/';
 const ASSET_MODEL_DIR = 'inmemory://asset/';
 const SCRIPT_EXTENSIONS = new Set(['mjs', 'js', 'jsx', 'tsx']);
+const MONACO_STACK = '/modules/monaco-editor/';
 
 const isScript = (/** @type {string} */ name) => SCRIPT_EXTENSIONS.has(name.split('.').pop() ?? '');
 const modelPath = (/** @type {string} */ name) => `${isScript(name) ? EXAMPLE_MODEL_DIR : ASSET_MODEL_DIR}${name}`;
+const isMonacoCanceled = (/** @type {any} */ reason) => {
+    return reason?.name === 'Canceled' &&
+        reason?.message === 'Canceled' &&
+        `${reason?.stack ?? ''}`.includes(MONACO_STACK);
+};
 
 // `import ... from 'playcanvas/scripts/esm/foo.mjs'` and a script's own relative `./bar.mjs` deps
 const SCRIPT_IMPORT = /from\s+['"](playcanvas\/scripts\/[^'"]+)['"]/g;
@@ -111,6 +117,7 @@ class CodeEditorDesktop extends CodeEditorBase {
         this._handleExampleHotReload = this._handleExampleHotReload.bind(this);
         this._handleExampleError = this._handleExampleError.bind(this);
         this._handleRequestedFiles = this._handleRequestedFiles.bind(this);
+        this._handleUnhandledRejection = this._handleUnhandledRejection.bind(this);
         this._onDownload = this._onDownload.bind(this);
     }
 
@@ -201,6 +208,15 @@ class CodeEditorDesktop extends CodeEditorBase {
     }
 
     /**
+     * @param {PromiseRejectionEvent} event - The event.
+     */
+    _handleUnhandledRejection(event) {
+        if (isMonacoCanceled(event.reason)) {
+            event.preventDefault();
+        }
+    }
+
+    /**
      * @param {Partial<State>} state - New partial state.
      */
     mergeState(state) {
@@ -214,6 +230,7 @@ class CodeEditorDesktop extends CodeEditorBase {
         window.addEventListener('exampleHotReload', this._handleExampleHotReload);
         window.addEventListener('exampleError', this._handleExampleError);
         window.addEventListener('requestedFiles', this._handleRequestedFiles);
+        window.addEventListener('unhandledrejection', this._handleUnhandledRejection);
         iframe.fire('requestFiles');
     }
 
@@ -222,6 +239,7 @@ class CodeEditorDesktop extends CodeEditorBase {
         window.removeEventListener('exampleHotReload', this._handleExampleHotReload);
         window.removeEventListener('exampleError', this._handleExampleError);
         window.removeEventListener('requestedFiles', this._handleRequestedFiles);
+        window.removeEventListener('unhandledrejection', this._handleUnhandledRejection);
         this._navDisposables.forEach(d => d.dispose());
         this._navDisposables = [];
         this._disposeModels();
@@ -501,6 +519,7 @@ class CodeEditorDesktop extends CodeEditorBase {
             language,
             path: modelPath(selectedFile),
             keepCurrentModel: true,
+            saveViewState: false,
             theme: 'playcanvas',
             loading: null,
             beforeMount: this.beforeMount.bind(this),

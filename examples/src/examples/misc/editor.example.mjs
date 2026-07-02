@@ -2,7 +2,33 @@
 //
 // `1` Translate · `2` Rotate · `3` Scale · `X` Toggle world/local · `P` Perspective · `O` Orthographic · Hold `Shift` Snap · Hold `Ctrl` Non-uniform scale
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    Layer,
+    LightComponentSystem,
+    OutlineRenderer,
+    PROJECTION_ORTHOGRAPHIC,
+    PROJECTION_PERSPECTIVE,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TextureHandler,
+    Vec3,
+    Vec4,
+    ViewCube,
+    createGraphicsDevice
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
 
@@ -11,6 +37,10 @@ import { data, deviceType } from 'examples/context';
 import { GizmoHandler } from './gizmo-handler.mjs';
 import { Selector } from './selector.mjs';
 
+/**
+ * @import { AssetRegistry, Material } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -18,39 +48,39 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 /**
- * @param {pc.Asset[] | number[]} assetList - The asset list.
- * @param {pc.AssetRegistry} assetRegistry - The asset registry.
+ * @param {Asset[] | number[]} assetList - The asset list.
+ * @param {AssetRegistry} assetRegistry - The asset registry.
  * @returns {Promise<void>} The promise.
  */
 const loadAssets = (assetList, assetRegistry) => {
     return new Promise((resolve) => {
-        const assetListLoader = new pc.AssetListLoader(assetList, assetRegistry);
+        const assetListLoader = new AssetListLoader(assetList, assetRegistry);
         assetListLoader.load(resolve);
     });
 };
@@ -59,64 +89,64 @@ await loadAssets(Object.values(assets), app.assets);
 app.start();
 
 /**
- * @param {pc.Color} color - The color.
- * @returns {pc.Material} - The standard material.
+ * @param {Color} color - The color.
+ * @returns {Material} - The standard material.
  */
 const createColorMaterial = (color) => {
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     material.update();
     return material;
 };
 
 // scene settings
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 // create entities
-const box = new pc.Entity('box');
+const box = new Entity('box');
 box.addComponent('render', {
     type: 'box',
-    material: createColorMaterial(new pc.Color(0.8, 1, 1))
+    material: createColorMaterial(new Color(0.8, 1, 1))
 });
 box.setPosition(1, 0, 1);
 app.root.addChild(box);
 
-const sphere = new pc.Entity('sphere');
+const sphere = new Entity('sphere');
 sphere.addComponent('render', {
     type: 'sphere',
-    material: createColorMaterial(new pc.Color(1, 0.8, 1))
+    material: createColorMaterial(new Color(1, 0.8, 1))
 });
 sphere.setPosition(-1, 0, 1);
 app.root.addChild(sphere);
 
-const cone = new pc.Entity('cone');
+const cone = new Entity('cone');
 cone.addComponent('render', {
     type: 'cone',
-    material: createColorMaterial(new pc.Color(1, 1, 0.8))
+    material: createColorMaterial(new Color(1, 1, 0.8))
 });
 cone.setPosition(-1, 0, -1);
 cone.setLocalScale(1.5, 2.25, 1.5);
 app.root.addChild(cone);
 
-const capsule = new pc.Entity('capsule');
+const capsule = new Entity('capsule');
 capsule.addComponent('render', {
     type: 'capsule',
-    material: createColorMaterial(new pc.Color(0.8, 0.8, 1))
+    material: createColorMaterial(new Color(0.8, 0.8, 1))
 });
 capsule.setPosition(1, 0, -1);
 app.root.addChild(capsule);
 
 // camera
 data.set('camera', {
-    proj: pc.PROJECTION_PERSPECTIVE + 1,
+    proj: PROJECTION_PERSPECTIVE + 1,
     dist: 1,
     fov: 45,
     orthoHeight: 10
 });
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('script');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    clearColor: new Color(0.1, 0.1, 0.1),
     farClip: 1000
 });
 const cameraOffset = 4 * camera.camera.aspectRatio;
@@ -126,7 +156,7 @@ app.root.addChild(camera);
 // camera controls
 const cc = /** @type {CameraControls} */ (camera.script.create(CameraControls));
 Object.assign(cc, {
-    focusPoint: pc.Vec3.ZERO,
+    focusPoint: Vec3.ZERO,
     sceneSize: 5,
     rotateDamping: 0,
     moveDamping: 0
@@ -136,16 +166,16 @@ app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
 });
 
 // outline renderer
-const outlineLayer = new pc.Layer({ name: 'OutlineLayer' });
+const outlineLayer = new Layer({ name: 'OutlineLayer' });
 app.scene.layers.push(outlineLayer);
-const immediateLayer = /** @type {pc.Layer} */ (app.scene.layers.getLayerByName('Immediate'));
-const outlineRenderer = new pc.OutlineRenderer(app, outlineLayer);
+const immediateLayer = /** @type {Layer} */ (app.scene.layers.getLayerByName('Immediate'));
+const outlineRenderer = new OutlineRenderer(app, outlineLayer);
 app.on('update', () => {
     outlineRenderer.frameUpdate(camera, immediateLayer, false);
 });
 
 // grid
-const gridEntity = new pc.Entity('grid');
+const gridEntity = new Entity('grid');
 gridEntity.setLocalScale(8, 1, 8);
 app.root.addChild(gridEntity);
 gridEntity.addComponent('script');
@@ -157,7 +187,7 @@ data.set('grid', {
 });
 
 // create light entity
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light', {
     intensity: 1
 });
@@ -182,7 +212,7 @@ gizmoHandler.switch('translate');
 setGizmoControls();
 
 // view cube
-const viewCube = new pc.ViewCube(new pc.Vec4(0, 1, 1, 0));
+const viewCube = new ViewCube(new Vec4(0, 1, 1, 0));
 viewCube.dom.style.margin = '20px';
 data.set('viewCube', {
     colorX: Object.values(viewCube.colorX),
@@ -193,9 +223,9 @@ data.set('viewCube', {
     lineThickness: viewCube.lineThickness,
     lineLength: viewCube.lineLength
 });
-const tmpV1 = new pc.Vec3();
+const tmpV1 = new Vec3();
 let aligned = false;
-viewCube.on(pc.ViewCube.EVENT_CAMERAALIGN, (/** @type {pc.Vec3} */ dir) => {
+viewCube.on(ViewCube.EVENT_CAMERAALIGN, (/** @type {Vec3} */ dir) => {
     const cameraPos = camera.getPosition();
     const focusPoint = cc.focusPoint;
     const cameraDist = focusPoint.distance(cameraPos);
@@ -210,12 +240,12 @@ app.on('prerender', () => {
 // selector
 const layers = app.scene.layers;
 const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
-selector.on('select', (/** @type {pc.Entity} */ node, /** @type {boolean} */ clear) => {
+selector.on('select', (/** @type {Entity} */ node, /** @type {boolean} */ clear) => {
     gizmoHandler.add(node, clear);
     if (clear) {
         outlineRenderer.removeAllEntities();
     }
-    outlineRenderer.addEntity(node, pc.Color.WHITE);
+    outlineRenderer.addEntity(node, Color.WHITE);
 });
 selector.on('deselect', () => {
     // do not deselect when view cube has just aligned the camera
@@ -251,7 +281,7 @@ const keydown = (/** @type {KeyboardEvent} */ e) => {
             break;
         }
         case 'r': {
-            cc.focus(pc.Vec3.ZERO, true);
+            cc.focus(Vec3.ZERO, true);
             break;
         }
     }
@@ -275,10 +305,10 @@ const keypress = (/** @type {KeyboardEvent} */ e) => {
             data.set('gizmo.type', 'scale');
             break;
         case 'p':
-            data.set('camera.proj', pc.PROJECTION_PERSPECTIVE + 1);
+            data.set('camera.proj', PROJECTION_PERSPECTIVE + 1);
             break;
         case 'o':
-            data.set('camera.proj', pc.PROJECTION_ORTHOGRAPHIC + 1);
+            data.set('camera.proj', PROJECTION_ORTHOGRAPHIC + 1);
             break;
     }
 };
@@ -287,7 +317,7 @@ window.addEventListener('keyup', keyup);
 window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
-const tmpC1 = new pc.Color();
+const tmpC1 = new Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
     switch (category) {
@@ -354,7 +384,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             }
             break;
         }
-
     }
 });
 

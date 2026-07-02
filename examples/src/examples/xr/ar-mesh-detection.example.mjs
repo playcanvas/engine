@@ -1,4 +1,42 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_ADDITIVEALPHA,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    Mat4,
+    Mesh,
+    MeshInstance,
+    Mouse,
+    PRIMITIVE_LINES,
+    PRIMITIVE_TRIANGLES,
+    RENDERSTYLE_WIREFRAME,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScreenComponentSystem,
+    StandardMaterial,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    XRSPACE_LOCALFLOOR,
+    XRTYPE_AR,
+    XrManager,
+    calculateNormals,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -8,7 +46,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -27,7 +65,7 @@ const message = function (msg) {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
@@ -35,35 +73,31 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScreenComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.FontHandler,
-    pc.ContainerHandler
-];
+createOptions.resourceHandlers = [TextureHandler, FontHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -73,20 +107,20 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // create camera
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0, 0, 0, 0),
+    clearColor: new Color(0, 0, 0, 0),
     farClip: 10000
 });
 app.root.addChild(camera);
 
-const l = new pc.Entity();
+const l = new Entity();
 l.addComponent('light', {
     type: 'omni',
     range: 20
@@ -94,11 +128,11 @@ l.addComponent('light', {
 camera.addChild(l);
 
 if (app.xr.supported) {
-    const activate = function () {
-        if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-            camera.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+    const activate = () => {
+        if (app.xr.isAvailable(XRTYPE_AR)) {
+            camera.camera.startXr(XRTYPE_AR, XRSPACE_LOCALFLOOR, {
                 meshDetection: true,
-                callback: function (err) {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -128,7 +162,7 @@ if (app.xr.supported) {
 
     // end session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
@@ -147,7 +181,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_AR}`, (available) => {
         if (available) {
             if (app.xr.meshDetection.supported) {
                 message('Touch screen to start AR session and look at the floor or walls');
@@ -162,29 +196,29 @@ if (app.xr.supported) {
     const entities = new Map();
 
     // materials
-    const materialDefault = new pc.StandardMaterial();
+    const materialDefault = new StandardMaterial();
 
-    const materialGlobalMesh = new pc.StandardMaterial();
-    materialGlobalMesh.blendType = pc.BLEND_ADDITIVEALPHA;
+    const materialGlobalMesh = new StandardMaterial();
+    materialGlobalMesh.blendType = BLEND_ADDITIVEALPHA;
     materialGlobalMesh.opacity = 0.2;
 
-    const materialWireframe = new pc.StandardMaterial();
-    materialWireframe.emissive = new pc.Color(1, 1, 1);
+    const materialWireframe = new StandardMaterial();
+    materialWireframe.emissive = new Color(1, 1, 1);
 
     // create entities for each XrMesh as they are added
     app.xr.meshDetection.on('add', (xrMesh) => {
         // solid mesh
-        const mesh = new pc.Mesh(app.graphicsDevice);
+        const mesh = new Mesh(app.graphicsDevice);
         mesh.clear(true, false);
         mesh.setPositions(xrMesh.vertices);
-        mesh.setNormals(pc.calculateNormals(xrMesh.vertices, xrMesh.indices));
+        mesh.setNormals(calculateNormals(xrMesh.vertices, xrMesh.indices));
         mesh.setIndices(xrMesh.indices);
-        mesh.update(pc.PRIMITIVE_TRIANGLES);
+        mesh.update(PRIMITIVE_TRIANGLES);
         const material = xrMesh.label === 'global mesh' ? materialGlobalMesh : materialDefault;
-        const meshInstance = new pc.MeshInstance(mesh, material);
+        const meshInstance = new MeshInstance(mesh, material);
 
         // wireframe mesh
-        const meshWireframe = new pc.Mesh(app.graphicsDevice);
+        const meshWireframe = new Mesh(app.graphicsDevice);
         meshWireframe.clear(true, false);
         meshWireframe.setPositions(xrMesh.vertices);
         const indices = new Uint16Array((xrMesh.indices.length / 3) * 4);
@@ -196,12 +230,12 @@ if (app.xr.supported) {
             indices[ind + 3] = xrMesh.indices[i + 2];
         }
         meshWireframe.setIndices(indices);
-        meshWireframe.update(pc.PRIMITIVE_LINES);
-        const meshInstanceWireframe = new pc.MeshInstance(meshWireframe, materialWireframe);
-        meshInstanceWireframe.renderStyle = pc.RENDERSTYLE_WIREFRAME;
+        meshWireframe.update(PRIMITIVE_LINES);
+        const meshInstanceWireframe = new MeshInstance(meshWireframe, materialWireframe);
+        meshInstanceWireframe.renderStyle = RENDERSTYLE_WIREFRAME;
 
         // entity
-        const entity = new pc.Entity();
+        const entity = new Entity();
         entity.addComponent('render', {
             meshInstances: [meshInstance, meshInstanceWireframe]
         });
@@ -209,17 +243,17 @@ if (app.xr.supported) {
         entities.set(xrMesh, entity);
 
         // label
-        const label = new pc.Entity();
+        const label = new Entity();
         label.setLocalPosition(0, 0, 0);
         label.addComponent('element', {
-            pivot: new pc.Vec2(0.5, 0.5),
+            pivot: new Vec2(0.5, 0.5),
             fontAsset: assets.font.id,
             fontSize: 0.05,
             text: xrMesh.label,
             width: 1,
             height: 0.1,
-            color: new pc.Color(1, 0, 0),
-            type: pc.ELEMENTTYPE_TEXT
+            color: new Color(1, 0, 0),
+            type: ELEMENTTYPE_TEXT
         });
         entity.addChild(label);
         label.setLocalPosition(0, 0, 0.05);
@@ -239,10 +273,10 @@ if (app.xr.supported) {
         }
     });
 
-    const vec3A = new pc.Vec3();
-    const vec3B = new pc.Vec3();
-    const vec3C = new pc.Vec3();
-    const transform = new pc.Mat4();
+    const vec3A = new Vec3();
+    const vec3B = new Vec3();
+    const vec3C = new Vec3();
+    const transform = new Mat4();
 
     app.on('update', () => {
         if (app.xr.active && app.xr.meshDetection.supported) {
@@ -262,21 +296,21 @@ if (app.xr.supported) {
                 }
 
                 // render XrMesh gizmo axes
-                transform.setTRS(mesh.getPosition(), mesh.getRotation(), pc.Vec3.ONE);
+                transform.setTRS(mesh.getPosition(), mesh.getRotation(), Vec3.ONE);
                 vec3A.set(0.2, 0, 0);
                 vec3B.set(0, 0.2, 0);
                 vec3C.set(0, 0, 0.2);
                 transform.transformPoint(vec3A, vec3A);
                 transform.transformPoint(vec3B, vec3B);
                 transform.transformPoint(vec3C, vec3C);
-                app.drawLine(mesh.getPosition(), vec3A, pc.Color.RED, false);
-                app.drawLine(mesh.getPosition(), vec3B, pc.Color.GREEN, false);
-                app.drawLine(mesh.getPosition(), vec3C, pc.Color.BLUE, false);
+                app.drawLine(mesh.getPosition(), vec3A, Color.RED, false);
+                app.drawLine(mesh.getPosition(), vec3B, Color.GREEN, false);
+                app.drawLine(mesh.getPosition(), vec3C, Color.BLUE, false);
             }
         }
     });
 
-    if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
+    if (!app.xr.isAvailable(XRTYPE_AR)) {
         message('Immersive AR is not available');
     } else if (!app.xr.meshDetection.supported) {
         message('AR Mesh Detection is not available');

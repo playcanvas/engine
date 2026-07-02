@@ -5,7 +5,28 @@
 // @flag WEBGL_DISABLED
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    BUFFERUSAGE_COPY_DST,
+    BUFFERUSAGE_COPY_SRC,
+    CameraComponentSystem,
+    Color,
+    ComputeRadixSort,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    PROJECTION_ORTHOGRAPHIC,
+    RADIX_SORT_ONESWEEP,
+    RADIX_SORT_PORTABLE,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial,
+    StorageBuffer,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -21,7 +42,7 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // Create device info overlay (top center)
@@ -105,21 +126,21 @@ document.body.appendChild(benchResults);
 // Track sort failure count and verification state
 let sortFailureCount = 0;
 let verificationPending = false;
-/** @type {{sortedIndices: pc.StorageBuffer, originalValues: number[], numElements: number}|null} */
+/** @type {{sortedIndices: StorageBuffer, originalValues: number[], numElements: number}|null} */
 let pendingVerification = null;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
 createOptions.resourceHandlers = [];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -132,9 +153,9 @@ app.on('destroy', () => {
 let currentNumElements = 0;
 /** @type {number} */
 let currentNumBits = 0;
-/** @type {pc.StorageBuffer|null} */
+/** @type {StorageBuffer|null} */
 let keysBuffer = null;
-/** @type {pc.StorageBuffer|null} */
+/** @type {StorageBuffer|null} */
 let sortedIndicesBuffer = null;
 /** @type {number[]} */
 let originalValues = [];
@@ -152,8 +173,8 @@ let needsRegen = true;
 //     heavy validation load), so it is selectable manually but restricted
 //     to NVIDIA in the benchmark / validation sweeps.
 const RADIX_MODES = {
-    '4-shared-mem': { kind: pc.RADIX_SORT_PORTABLE },
-    'onesweep': { kind: pc.RADIX_SORT_ONESWEEP }
+    '4-shared-mem': { kind: RADIX_SORT_PORTABLE },
+    onesweep: { kind: RADIX_SORT_ONESWEEP }
 };
 const DEFAULT_MODE = '4-shared-mem';
 
@@ -161,7 +182,7 @@ const DEFAULT_MODE = '4-shared-mem';
 // Instances are created on first use and retained, so subsequent toggles
 // between configurations are free (no shader rebuild). Each instance grows
 // its internal buffers on demand.
-/** @type {Map<string, pc.ComputeRadixSort>} */
+/** @type {Map<string, ComputeRadixSort>} */
 const radixSortCache = new Map();
 
 /**
@@ -169,14 +190,14 @@ const radixSortCache = new Map();
  * selection. Falls back to safe defaults if the observer value is not yet
  * populated.
  *
- * @returns {pc.ComputeRadixSort} The active radix sort instance.
+ * @returns {ComputeRadixSort} The active radix sort instance.
  */
 function getActiveRadixSort() {
     const mode = data.get('options.mode') ?? DEFAULT_MODE;
     const modeCfg = RADIX_MODES[mode] ?? RADIX_MODES[DEFAULT_MODE];
     let inst = radixSortCache.get(mode);
     if (!inst) {
-        inst = new pc.ComputeRadixSort(device, { kind: modeCfg.kind });
+        inst = new ComputeRadixSort(device, { kind: modeCfg.kind });
         radixSortCache.set(mode, inst);
     }
     return inst;
@@ -210,7 +231,7 @@ function buildGpuLine(sep) {
         const maxSg = device.maxSubgroupSize;
         const minSg = device.minSubgroupSize;
         if (device.supportsSubgroups && maxSg) {
-            const range = (minSg && minSg !== maxSg) ? `${minSg}-${maxSg}` : `${maxSg}`;
+            const range = minSg && minSg !== maxSg ? `${minSg}-${maxSg}` : `${maxSg}`;
             line += `  ${sep}  subgroup: ${range}`;
         } else if (device.supportsSubgroups) {
             line += `  ${sep}  subgroup: yes`;
@@ -235,25 +256,25 @@ updateDeviceInfo();
 // ==================== MATERIALS ====================
 
 // Create unsorted visualization material (WGSL only for WebGPU)
-const unsortedMaterial = new pc.ShaderMaterial({
+const unsortedMaterial = new ShaderMaterial({
     uniqueName: 'UnsortedVizMaterialCompute',
     vertexWGSL: vertWgsl,
     fragmentWGSL: wgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
     }
 });
 
 // Create sorted visualization material (WGSL only for WebGPU)
 // Uses same shader as unsorted but with SORTED define
-const sortedMaterial = new pc.ShaderMaterial({
+const sortedMaterial = new ShaderMaterial({
     uniqueName: 'SortedVizMaterialCompute',
     vertexWGSL: vertWgsl,
     fragmentWGSL: wgslFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
     }
 });
 sortedMaterial.setDefine('SORTED', true);
@@ -261,17 +282,17 @@ sortedMaterial.setDefine('SORTED', true);
 // ==================== SCENE SETUP ====================
 
 // Create camera entity
-const camera = new pc.Entity('camera');
+const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.15),
-    projection: pc.PROJECTION_ORTHOGRAPHIC,
+    clearColor: new Color(0.1, 0.1, 0.15),
+    projection: PROJECTION_ORTHOGRAPHIC,
     orthoHeight: 1
 });
 camera.setPosition(0, 0, 1);
 app.root.addChild(camera);
 
 // Create unsorted visualization plane (top half)
-const unsortedPlane = new pc.Entity('unsortedPlane');
+const unsortedPlane = new Entity('unsortedPlane');
 unsortedPlane.addComponent('render', {
     type: 'plane',
     material: unsortedMaterial,
@@ -285,7 +306,7 @@ unsortedPlane.enabled = false;
 app.root.addChild(unsortedPlane);
 
 // Create sorted visualization plane (bottom half)
-const sortedPlane = new pc.Entity('sortedPlane');
+const sortedPlane = new Entity('sortedPlane');
 sortedPlane.addComponent('render', {
     type: 'plane',
     material: sortedMaterial,
@@ -299,7 +320,7 @@ sortedPlane.enabled = false;
 app.root.addChild(sortedPlane);
 
 // Create spinning cube for visual frame rate indicator
-const cube = new pc.Entity('cube');
+const cube = new Entity('cube');
 cube.addComponent('render', {
     type: 'box'
 });
@@ -308,7 +329,7 @@ cube.setLocalScale(0.15, 0.15, 0.15);
 app.root.addChild(cube);
 
 // Create directional light for the cube
-const light = new pc.Entity('light');
+const light = new Entity('light');
 light.addComponent('light');
 light.setEulerAngles(45, 30, 0);
 app.root.addChild(light);
@@ -333,7 +354,7 @@ function calcTextureSize(numElements) {
 function regenerateData() {
     const numElements = currentNumElements;
     const numBits = currentNumBits;
-    const maxValue = numBits >= 32 ? 0xFFFFFFFF : (1 << numBits) - 1;
+    const maxValue = numBits >= 32 ? 0xffffffff : (1 << numBits) - 1;
 
     // Destroy old buffer
     if (keysBuffer) {
@@ -341,7 +362,7 @@ function regenerateData() {
     }
 
     // Create storage buffer for keys
-    keysBuffer = new pc.StorageBuffer(device, numElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+    keysBuffer = new StorageBuffer(device, numElements * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
     // Generate random test data
     const keysData = new Uint32Array(numElements);
@@ -392,7 +413,7 @@ function updateMaterialParameters() {
         return;
     }
 
-    const maxValue = currentNumBits >= 32 ? 0xFFFFFFFF : (1 << currentNumBits) - 1;
+    const maxValue = currentNumBits >= 32 ? 0xffffffff : (1 << currentNumBits) - 1;
     const { width, height } = calcTextureSize(currentNumElements);
 
     // Update unsorted material
@@ -414,7 +435,7 @@ function updateMaterialParameters() {
 /**
  * Downloads and verifies the sorted results against CPU-sorted reference.
  *
- * @param {pc.StorageBuffer} sortedIndices - The sorted indices buffer to verify.
+ * @param {StorageBuffer} sortedIndices - The sorted indices buffer to verify.
  */
 function verifyResults(sortedIndices) {
     // If verification already in progress, queue this one (replacing any previously queued)
@@ -446,14 +467,16 @@ function processNextVerification() {
         const pending = pendingVerification;
         pendingVerification = null;
         verificationPending = true;
-        doVerification(pending.sortedIndices, pending.originalValues, pending.numElements).then(processNextVerification);
+        doVerification(pending.sortedIndices, pending.originalValues, pending.numElements).then(
+            processNextVerification
+        );
     }
 }
 
 /**
  * Performs the actual verification with pre-captured data.
  *
- * @param {pc.StorageBuffer} sortedIndices - The sorted indices buffer.
+ * @param {StorageBuffer} sortedIndices - The sorted indices buffer.
  * @param {number[]} capturedOriginalValues - Copy of original values at sort time.
  * @param {number} capturedNumElements - Number of elements at sort time.
  */
@@ -501,7 +524,9 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
 
     if (errorCount > 0) {
         sortFailureCount++;
-        console.error(`✗ [${device.deviceType}] Array is NOT correctly sorted (${errorCount} errors, ${(errorCount / capturedNumElements * 100).toFixed(2)}%)`);
+        console.error(
+            `✗ [${device.deviceType}] Array is NOT correctly sorted (${errorCount} errors, ${((errorCount / capturedNumElements) * 100).toFixed(2)}%)`
+        );
         for (const e of firstErrors) {
             console.error(`  First mismatch at index ${e.i}: GPU=${e.gpu}, expected=${e.expected}`);
         }
@@ -539,7 +564,8 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         // Snap to a multiple of 8 so the bit count is compatible with both
         // 4-bit and 8-bit radix modes without realignment at sort time.
         const validBits = [8, 16, 24, 32];
-        const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev)
+        const nearest = validBits.reduce((prev, curr) =>
+            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
         );
         if (nearest !== currentNumBits) {
             currentNumBits = nearest;
@@ -574,9 +600,8 @@ data.set('options', {
 // 100K and 500K expose per-dispatch fixed-cost floors; 30M+ probes DRAM
 // bandwidth ceilings. 24-bit keys is the gsplat-representative bit width.
 const BENCH_SIZES = [
-    100_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 4_000_000,
-    5_000_000, 6_000_000, 8_000_000, 10_000_000, 15_000_000,
-    20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
+    100_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000, 8_000_000, 10_000_000,
+    15_000_000, 20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
 ];
 // The benchmark and validation matrix mirrors the production decision:
 //   - 4-bit is the universal portable fallback (every non-NVIDIA device:
@@ -610,8 +635,8 @@ const BENCH_EXCLUDED_PASSES = new Set(['Forward']);
  *     frame: number,
  *     frameTimes: number[],
  *     passAccum: Map<string, number[]>,
- *     sortInst: pc.ComputeRadixSort | null,
- *     keysBuf: pc.StorageBuffer | null,
+ *     sortInst: ComputeRadixSort | null,
+ *     keysBuf: StorageBuffer | null,
  *     results: {size: number, configLabel: string, frameMs: number, passMs: Map<string, number>}[],
  *     saved: {elementsK: any, bits: any, mode: any, render: any, validation: any, profilerEnabled: boolean}
  * }}
@@ -636,11 +661,11 @@ function fmtN(n) {
  * interactive UI state.
  *
  * @param {string} modeKey - Entry key into RADIX_MODES.
- * @returns {pc.ComputeRadixSort} Sort instance.
+ * @returns {ComputeRadixSort} Sort instance.
  */
 function createBenchSort(modeKey) {
     const modeCfg = RADIX_MODES[modeKey];
-    return new pc.ComputeRadixSort(device, { kind: modeCfg.kind });
+    return new ComputeRadixSort(device, { kind: modeCfg.kind });
 }
 
 /**
@@ -648,11 +673,11 @@ function createBenchSort(modeKey) {
  * sized to numElements and uploads it.
  *
  * @param {number} numElements - Number of elements.
- * @returns {pc.StorageBuffer} Uploaded keys buffer.
+ * @returns {StorageBuffer} Uploaded keys buffer.
  */
 function createBenchKeys(numElements) {
     const maxValue = (1 << BENCH_BITS) - 1;
-    const buf = new pc.StorageBuffer(device, numElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+    const buf = new StorageBuffer(device, numElements * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
     const keysData = new Uint32Array(numElements);
     for (let i = 0; i < numElements; i++) {
         keysData[i] = Math.floor(Math.random() * maxValue);
@@ -682,7 +707,7 @@ function startBenchmark() {
     // Filter the benchmark size sweep to respect the user-selected upper
     // bound from the Benchmark panel.
     const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
-    const sizes = BENCH_SIZES.filter(n => n <= maxN);
+    const sizes = BENCH_SIZES.filter((n) => n <= maxN);
     if (sizes.length === 0) {
         showBenchStatus('No benchmark sizes selected.');
         setTimeout(() => {
@@ -935,7 +960,8 @@ function renderBenchResults(results, onClose) {
 
     // Line chart placeholder; filled in by drawBenchChart() after the
     // overlay HTML is committed to the DOM.
-    html += '<canvas id="bench-chart" width="700" height="320" style="display:block;background:#1a1a2e;border-radius:4px;width:100%;max-width:700px;margin-bottom:14px;"></canvas>';
+    html +=
+        '<canvas id="bench-chart" width="700" height="320" style="display:block;background:#1a1a2e;border-radius:4px;width:100%;max-width:700px;margin-bottom:14px;"></canvas>';
 
     html += `<table style="border-collapse:collapse;margin-bottom:14px;width:100%;color:${TXT};">`;
     html += `<thead><tr style="background:${HDR_BG};">`;
@@ -968,7 +994,7 @@ function renderBenchResults(results, onClose) {
             const v = row.get(cfg.label)?.frameMs ?? 0;
             html += `<td ${td}>${v ? v.toFixed(2) : '—'}</td>`;
             if (c > 0) {
-                const speedup = (b > 0 && v > 0) ? (b / v) : 0;
+                const speedup = b > 0 && v > 0 ? b / v : 0;
                 const spColor = speedup >= 1 ? '#78e37a' : '#e87878';
                 html += `<td style="text-align:right;padding:3px 10px;color:${spColor};">${speedup ? `${speedup.toFixed(2)}×` : '—'}</td>`;
             }
@@ -1001,8 +1027,10 @@ function renderBenchResults(results, onClose) {
     html += '</tbody></table>';
 
     html += '<div style="margin-top:14px;display:flex;gap:8px;">';
-    html += '<button id="bench-save-btn" style="background:#3a8a3a;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Save to file</button>';
-    html += '<button id="bench-close-btn" style="background:#4a9eff;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Close</button>';
+    html +=
+        '<button id="bench-save-btn" style="background:#3a8a3a;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Save to file</button>';
+    html +=
+        '<button id="bench-close-btn" style="background:#4a9eff;color:#fff;border:none;border-radius:3px;padding:6px 14px;cursor:pointer;font-family:monospace;font-size:13px;">Close</button>';
     html += '</div>';
     html += '</div>';
 
@@ -1321,9 +1349,12 @@ function benchFilename() {
     let tag = device.deviceType || 'gpu';
     if (device.isWebGPU && dev.gpuAdapter?.info) {
         const info = dev.gpuAdapter.info;
-        tag = (info.architecture || info.device || info.vendor || 'gpu');
+        tag = info.architecture || info.device || info.vendor || 'gpu';
     }
-    tag = String(tag).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    tag = String(tag)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
     const d = new Date();
     const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
     const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
@@ -1395,7 +1426,7 @@ async function runValidation() {
     if (validateRunning || benchState) return;
 
     const maxN = /** @type {number} */ (data.get('options.benchMaxElements') ?? 10_000_000);
-    const sizes = BENCH_SIZES.filter(n => n <= maxN);
+    const sizes = BENCH_SIZES.filter((n) => n <= maxN);
     if (sizes.length === 0) {
         showBenchStatus('No validation sizes selected.');
         setTimeout(() => {
@@ -1437,7 +1468,10 @@ async function runValidation() {
             for (const cfg of BENCH_CONFIGS) {
                 if (skipLabels.has(cfg.label)) {
                     results.set(key(size, cfg.label), {
-                        passed: 0, failed: 0, skipped: true, firstFailure: null
+                        passed: 0,
+                        failed: 0,
+                        skipped: true,
+                        firstFailure: null
                     });
                 }
             }
@@ -1447,19 +1481,13 @@ async function runValidation() {
                 // this (size, run) so mismatches can be directly compared.
                 const keysCpu = generateValidateKeys(size);
                 const cpuSorted = keysCpu.slice().sort();
-                const keysBuf = new pc.StorageBuffer(
-                    device,
-                    size * 4,
-                    pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST
-                );
+                const keysBuf = new StorageBuffer(device, size * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
                 keysBuf.write(0, keysCpu);
 
                 for (const cfg of BENCH_CONFIGS) {
                     if (skipLabels.has(cfg.label)) continue;
 
-                    showBenchStatus(
-                        `Validating [${cfg.label}]  ${fmtN(size)}  run ${run + 1}/${VALIDATE_RUNS}`
-                    );
+                    showBenchStatus(`Validating [${cfg.label}]  ${fmtN(size)}  run ${run + 1}/${VALIDATE_RUNS}`);
 
                     const sort = createBenchSort(cfg.modeKey);
                     const alignedBits = Math.ceil(BENCH_BITS / sort.radixBits) * sort.radixBits;
@@ -1587,7 +1615,7 @@ function renderValidateResults(results, sizes, onClose) {
         // `data-toggle` set earlier (which captured `detailRows.length`
         // BEFORE pushing this size's failures, i.e. the start index).
         if (rowHasDetails) {
-            const startIdx = detailRows.findIndex(r => r.size === size);
+            const startIdx = detailRows.findIndex((r) => r.size === size);
             const lastIdx = detailRows.length - 1;
             let detailHtml = '';
             for (let d = startIdx; d <= lastIdx; d++) {
@@ -1604,8 +1632,10 @@ function renderValidateResults(results, sizes, onClose) {
     html += '</tbody></table>';
 
     html += '<div style="margin-top:14px;display:flex;gap:8px;">';
-    html += '<button id="validate-save" style="background:#2a6;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Save to file</button>';
-    html += '<button id="validate-close" style="background:#48a;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Close</button>';
+    html +=
+        '<button id="validate-save" style="background:#2a6;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Save to file</button>';
+    html +=
+        '<button id="validate-close" style="background:#48a;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;">Close</button>';
     html += '</div>';
 
     benchResults.innerHTML = html;
@@ -1724,9 +1754,12 @@ function validateFilename() {
     let tag = device.deviceType || 'gpu';
     if (device.isWebGPU && dev.gpuAdapter?.info) {
         const info = dev.gpuAdapter.info;
-        tag = (info.architecture || info.device || info.vendor || 'gpu');
+        tag = info.architecture || info.device || info.vendor || 'gpu';
     }
-    tag = String(tag).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    tag = String(tag)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
     const d = new Date();
     const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
     const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;

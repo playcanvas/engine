@@ -9,11 +9,54 @@
 // author: Andrii Shramko
 // source: https://www.linkedin.com/in/andrii-shramko/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    FOG_EXP,
+    FOG_NONE,
+    GSPLATDATA_COMPACT,
+    GSPLATDATA_LARGE,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    LightComponentSystem,
+    MiniStats,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SKYTYPE_INFINITE,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_LINEAR,
+    TRACEID_BUFFERS,
+    TRACEID_TEXTURES,
+    TextureHandler,
+    TouchDevice,
+    Tracing,
+    Vec3,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
 import { data, deviceType, win } from 'examples/context';
+
+/**
+ * @import { Texture } from 'playcanvas'
+ */
 
 // allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
@@ -32,40 +75,41 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // High Res toggle (false by default): when false, use half native DPR; when true, use min(DPR, 2)
 data.set('highRes', !!data.get('highRes'));
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
     // auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
-    device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
+    device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
 };
 applyResolution();
 const applyAndResize = () => {
-    applyResolution(); app.resizeCanvas();
+    applyResolution();
+    app.resizeCanvas();
 };
 data.on('highRes:set', applyAndResize);
 
@@ -94,8 +138,8 @@ const config = {
 // HDRI environment presets (Poly Haven, infinite projection)
 /** @type {Record<string, { url: string, exposure: number } | null>} */
 const ENV_PRESETS = {
-    'none': null,
-    'rosendal': {
+    none: null,
+    rosendal: {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/rosendal_park_sunset_puresky_2k.hdr',
         exposure: 0.06
     },
@@ -107,11 +151,11 @@ const ENV_PRESETS = {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr',
         exposure: 0.9
     },
-    'moonlit': {
+    moonlit: {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_moon_noon_puresky_2k.hdr',
         exposure: 0.4
     },
-    'sunflowers': {
+    sunflowers: {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/sunflowers_puresky_2k.hdr',
         exposure: 0.8
     },
@@ -123,7 +167,7 @@ const ENV_PRESETS = {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/cloud_layers_2k.hdr',
         exposure: 1
     },
-    'night': {
+    night: {
         url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_night_puresky_2k.hdr',
         exposure: 0.2
     }
@@ -137,7 +181,7 @@ const LOD_PRESETS = {
         lodBaseDistance: 7,
         lodMultiplier: 3
     },
-    'desktop': {
+    desktop: {
         range: [1, 5],
         lodBaseDistance: 5,
         lodMultiplier: 4
@@ -147,7 +191,7 @@ const LOD_PRESETS = {
         lodBaseDistance: 5,
         lodMultiplier: 2
     },
-    'mobile': {
+    mobile: {
         range: [3, 5],
         lodBaseDistance: 2,
         lodMultiplier: 2
@@ -155,389 +199,394 @@ const LOD_PRESETS = {
 };
 
 const assets = {
-    church: new pc.Asset('gsplat', 'gsplat', { url: config.url }),
+    church: new Asset('gsplat', 'gsplat', { url: config.url }),
 
-    envatlas: new pc.Asset(
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(async () => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+app.start();
 
-    // enable rotation-based LOD updates and behind-camera penalty
-    app.scene.gsplat.lodUpdateAngle = 90;
-    app.scene.gsplat.lodBehindPenalty = 3;
-    app.scene.gsplat.radialSorting = true;
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
-    data.on('radialSorting:set', () => {
-        app.scene.gsplat.radialSorting = !!data.get('radialSorting');
-    });
+// enable rotation-based LOD updates and behind-camera penalty
+app.scene.gsplat.lodUpdateAngle = 90;
+app.scene.gsplat.lodBehindPenalty = 3;
+app.scene.gsplat.radialSorting = true;
 
-    app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
-    app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
+data.on('radialSorting:set', () => {
+    app.scene.gsplat.radialSorting = !!data.get('radialSorting');
+});
 
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
+app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
+app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.on('minPixelSize:set', () => {
+    app.scene.gsplat.minPixelSize = data.get('minPixelSize');
+});
+data.on('alphaClipForward:set', () => {
+    app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
+});
+data.on('minContribution:set', () => {
+    app.scene.gsplat.minContribution = data.get('minContribution');
+});
+data.on('debug:set', () => {
+    app.scene.gsplat.debug = data.get('debug');
+});
+data.on('compact:set', () => {
+    app.scene.gsplat.dataFormat = data.get('compact') ? GSPLATDATA_COMPACT : GSPLATDATA_LARGE;
+});
+
+const MAX_PERSPECTIVE_FOV = 140;
+
+// initialize UI settings (must be after observer registration)
+data.set('fisheye', 0);
+data.set('cameraFov', 75);
+data.set('toneMapping', TONEMAP_LINEAR);
+data.set('exposure', 1);
+data.set('minPixelSize', 2);
+data.set('alphaClipForward', 1 / 255);
+data.set('minContribution', 3);
+data.set('radialSorting', true);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
+data.set('culling', device.isWebGPU);
+data.set('compact', true);
+data.set('debug', GSPLAT_DEBUG_NONE);
+data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
+data.set('splatBudget', platform.mobile ? 1 : 4);
+data.set('environment', 'none');
+data.set('fogDensity', 0);
+data.set('url', paramUrl || '');
+data.set('orientation', paramOrientation ? parseFloat(paramOrientation) : 270);
+
+const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
+
+// Create a camera with fly controls
+const camera = new Entity('camera');
+camera.addComponent('camera', {
+    clearColor: new Color(1, 1, 1),
+    fov: 75,
+    toneMapping: TONEMAP_LINEAR
+});
+
+const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
+const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
+const focusPoint = new Vec3(focusX, focusY, focusZ);
+
+camera.setLocalPosition(camX, camY, camZ);
+app.root.addChild(camera);
+
+camera.addComponent('script');
+const cc = /** @type { CameraControls} */ (/** @type {any} */ (camera.script).create(CameraControls));
+Object.assign(cc, {
+    sceneSize: 500,
+    moveSpeed: /** @type {number} */ (config.moveSpeed),
+    moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
+    enableOrbit: false,
+    enablePan: false,
+    focusPoint: focusPoint
+});
+
+// CameraFrame for HDR linear rendering (created lazily on first enable)
+/** @type {CameraFrame|null} */
+let cameraFrame = null;
+
+const applyToneMapping = () => {
+    const tm = data.get('toneMapping');
+    if (cameraFrame?.enabled) {
+        cameraFrame.rendering.toneMapping = tm;
+        cameraFrame.update();
+    } else {
+        camera.camera.toneMapping = tm;
+    }
+};
+
+data.set('cameraFrame', false);
+data.on('cameraFrame:set', () => {
+    if (data.get('cameraFrame')) {
+        if (!cameraFrame) {
+            cameraFrame = new CameraFrame(app, camera.camera);
+            cameraFrame.rendering.toneMapping = data.get('toneMapping');
         }
-    });
-    data.on('minPixelSize:set', () => {
-        app.scene.gsplat.minPixelSize = data.get('minPixelSize');
-    });
-    data.on('alphaClipForward:set', () => {
-        app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
-    });
-    data.on('minContribution:set', () => {
-        app.scene.gsplat.minContribution = data.get('minContribution');
-    });
-    data.on('debug:set', () => {
-        app.scene.gsplat.debug = data.get('debug');
-    });
-    data.on('compact:set', () => {
-        app.scene.gsplat.dataFormat = data.get('compact') ? pc.GSPLATDATA_COMPACT : pc.GSPLATDATA_LARGE;
-    });
+        cameraFrame.enabled = true;
+        cameraFrame.update();
+    } else if (cameraFrame) {
+        cameraFrame.destroy();
+        cameraFrame = null;
+    }
+    applyToneMapping();
+});
 
-    const MAX_PERSPECTIVE_FOV = 140;
+const applyFov = () => {
+    const fov = data.get('cameraFov');
+    camera.camera.fov = data.get('fisheye') === 0 ? Math.min(fov, MAX_PERSPECTIVE_FOV) : fov;
+};
+data.on('cameraFov:set', applyFov);
+data.on('fisheye:set', () => {
+    const fisheye = data.get('fisheye');
+    app.scene.gsplat.fisheye = fisheye;
+    app.scene.sky.fisheye = fisheye;
+    applyFov();
+});
+data.on('toneMapping:set', applyToneMapping);
+data.on('exposure:set', () => {
+    app.scene.exposure = data.get('exposure');
+});
 
-    // initialize UI settings (must be after observer registration)
-    data.set('fisheye', 0);
-    data.set('cameraFov', 75);
-    data.set('toneMapping', pc.TONEMAP_LINEAR);
-    data.set('exposure', 1);
-    data.set('minPixelSize', 2);
-    data.set('alphaClipForward', 1 / 255);
-    data.set('minContribution', 3);
-    data.set('radialSorting', true);
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('culling', device.isWebGPU);
-    data.set('compact', true);
-    data.set('debug', pc.GSPLAT_DEBUG_NONE);
-    data.set('lodPreset', pc.platform.mobile ? 'mobile' : 'desktop');
-    data.set('splatBudget', pc.platform.mobile ? 1 : 4);
-    data.set('environment', 'none');
-    data.set('fogDensity', 0);
-    data.set('url', paramUrl || '');
-    data.set('orientation', paramOrientation ? parseFloat(paramOrientation) : 270);
+data.on('fogDensity:set', () => {
+    const density = data.get('fogDensity');
+    if (density > 0) {
+        app.scene.fog.type = FOG_EXP;
+        app.scene.fog.density = density;
+        app.scene.fog.color.copy(camera.camera.clearColor);
+    } else {
+        app.scene.fog.type = FOG_NONE;
+    }
+});
 
-    const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
+// Poly Haven credit overlay (shown when an HDRI is active)
+const phCredit = document.createElement('a');
+phCredit.href = 'https://polyhaven.com';
+phCredit.target = '_blank';
+phCredit.rel = 'noopener';
+phCredit.textContent = 'HDRI by Poly Haven';
+Object.assign(phCredit.style, {
+    position: 'fixed',
+    bottom: '6px',
+    right: '10px',
+    zIndex: '11',
+    font: '400 16px/1 sans-serif',
+    color: 'rgba(255,255,255,0.25)',
+    textDecoration: 'none',
+    pointerEvents: 'auto',
+    display: 'none'
+});
+phCredit.onmouseenter = () => {
+    phCredit.style.color = 'rgba(255,255,255,0.5)';
+};
+phCredit.onmouseleave = () => {
+    phCredit.style.color = 'rgba(255,255,255,0.25)';
+};
+document.body.appendChild(phCredit);
+app.on('destroy', () => phCredit.remove());
 
-    // Create a camera with fly controls
-    const camera = new pc.Entity('camera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(1, 1, 1),
-        fov: 75,
-        toneMapping: pc.TONEMAP_LINEAR
-    });
+// HDRI environment loading
+/** @type {Map<string, { skybox: Texture, envAtlas: Texture }>} */
+const hdriCache = new Map();
 
-    const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
-    const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint || [0, 0.6, 0]);
-    const focusPoint = new pc.Vec3(focusX, focusY, focusZ);
+const applyEnvironment = async (/** @type {string} */ name) => {
+    const preset = ENV_PRESETS[name];
+    if (!preset) {
+        app.scene.skybox = null;
+        app.scene.envAtlas = null;
+        phCredit.style.display = 'none';
+        data.set('exposure', 1);
+        return;
+    }
 
-    camera.setLocalPosition(camX, camY, camZ);
-    app.root.addChild(camera);
-
-    camera.addComponent('script');
-    const cc = /** @type { CameraControls} */ ((/** @type {any} */ (camera.script)).create(CameraControls));
-    Object.assign(cc, {
-        sceneSize: 500,
-        moveSpeed: /** @type {number} */ (config.moveSpeed),
-        moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
-        enableOrbit: false,
-        enablePan: false,
-        focusPoint: focusPoint
-    });
-
-    // CameraFrame for HDR linear rendering (created lazily on first enable)
-    /** @type {pc.CameraFrame|null} */
-    let cameraFrame = null;
-
-    const applyToneMapping = () => {
-        const tm = data.get('toneMapping');
-        if (cameraFrame?.enabled) {
-            cameraFrame.rendering.toneMapping = tm;
-            cameraFrame.update();
-        } else {
-            camera.camera.toneMapping = tm;
-        }
-    };
-
-    data.set('cameraFrame', false);
-    data.on('cameraFrame:set', () => {
-        if (data.get('cameraFrame')) {
-            if (!cameraFrame) {
-                cameraFrame = new pc.CameraFrame(app, camera.camera);
-                cameraFrame.rendering.toneMapping = data.get('toneMapping');
-            }
-            cameraFrame.enabled = true;
-            cameraFrame.update();
-        } else if (cameraFrame) {
-            cameraFrame.destroy();
-            cameraFrame = null;
-        }
-        applyToneMapping();
-    });
-
-    const applyFov = () => {
-        const fov = data.get('cameraFov');
-        camera.camera.fov = (data.get('fisheye') === 0) ? Math.min(fov, MAX_PERSPECTIVE_FOV) : fov;
-    };
-    data.on('cameraFov:set', applyFov);
-    data.on('fisheye:set', () => {
-        const fisheye = data.get('fisheye');
-        app.scene.gsplat.fisheye = fisheye;
-        app.scene.sky.fisheye = fisheye;
-        applyFov();
-    });
-    data.on('toneMapping:set', applyToneMapping);
-    data.on('exposure:set', () => {
-        app.scene.exposure = data.get('exposure');
-    });
-
-    data.on('fogDensity:set', () => {
-        const density = data.get('fogDensity');
-        if (density > 0) {
-            app.scene.fog.type = pc.FOG_EXP;
-            app.scene.fog.density = density;
-            app.scene.fog.color.copy(camera.camera.clearColor);
-        } else {
-            app.scene.fog.type = pc.FOG_NONE;
-        }
-    });
-
-    // Poly Haven credit overlay (shown when an HDRI is active)
-    const phCredit = document.createElement('a');
-    phCredit.href = 'https://polyhaven.com';
-    phCredit.target = '_blank';
-    phCredit.rel = 'noopener';
-    phCredit.textContent = 'HDRI by Poly Haven';
-    Object.assign(phCredit.style, {
-        position: 'fixed',
-        bottom: '6px',
-        right: '10px',
-        zIndex: '11',
-        font: '400 16px/1 sans-serif',
-        color: 'rgba(255,255,255,0.25)',
-        textDecoration: 'none',
-        pointerEvents: 'auto',
-        display: 'none'
-    });
-    phCredit.onmouseenter = () => {
-        phCredit.style.color = 'rgba(255,255,255,0.5)';
-    };
-    phCredit.onmouseleave = () => {
-        phCredit.style.color = 'rgba(255,255,255,0.25)';
-    };
-    document.body.appendChild(phCredit);
-    app.on('destroy', () => phCredit.remove());
-
-    // HDRI environment loading
-    /** @type {Map<string, { skybox: pc.Texture, envAtlas: pc.Texture }>} */
-    const hdriCache = new Map();
-
-    const applyEnvironment = async (/** @type {string} */ name) => {
-        const preset = ENV_PRESETS[name];
-        if (!preset) {
-            app.scene.skybox = null;
-            app.scene.envAtlas = null;
-            phCredit.style.display = 'none';
-            data.set('exposure', 1);
-            return;
-        }
-
-        if (!hdriCache.has(preset.url)) {
-            const asset = new pc.Asset('hdri', 'texture', { url: preset.url }, { mipmaps: false });
-            await new Promise((resolve, reject) => {
-                asset.on('load', resolve);
-                asset.on('error', (/** @type {string} */ err) => {
-                    console.error('Failed to load HDRI:', err);
-                    reject(err);
-                });
-                app.assets.add(asset);
-                app.assets.load(asset);
+    if (!hdriCache.has(preset.url)) {
+        const asset = new Asset('hdri', 'texture', { url: preset.url }, { mipmaps: false });
+        await new Promise((resolve, reject) => {
+            asset.on('load', resolve);
+            asset.on('error', (/** @type {string} */ err) => {
+                console.error('Failed to load HDRI:', err);
+                reject(err);
             });
-
-            const source = asset.resource;
-            const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
-            const lighting = pc.EnvLighting.generateLightingSource(source);
-            const envAtlas = pc.EnvLighting.generateAtlas(lighting);
-            lighting.destroy();
-            hdriCache.set(preset.url, { skybox, envAtlas });
-        }
-
-        const cached = /** @type {{ skybox: pc.Texture, envAtlas: pc.Texture }} */ (hdriCache.get(preset.url));
-        app.scene.skybox = cached.skybox;
-        app.scene.envAtlas = cached.envAtlas;
-        app.scene.sky.type = pc.SKYTYPE_INFINITE;
-        data.set('exposure', preset.exposure ?? 1);
-        phCredit.style.display = 'block';
-    };
-
-    data.on('environment:set', () => {
-        applyEnvironment(data.get('environment')).catch((err) => {
-            console.warn('Environment load failed:', err);
-        });
-    });
-
-    // Gsplat loading state
-    /** @type {pc.Entity|null} */
-    let gsplatEntity = null;
-    /** @type {any} */
-    let gsplatGs = null;
-    /** @type {pc.Asset|null} */
-    let customAsset = null;
-
-    const applyPreset = () => {
-        const preset = data.get('lodPreset');
-        const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
-        if (gsplatGs) {
-            gsplatGs.lodRangeMin = presetData.range[0];
-            gsplatGs.lodRangeMax = presetData.range[1];
-            gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
-            gsplatGs.lodMultiplier = presetData.lodMultiplier;
-        }
-        data.set('lodBaseDistance', presetData.lodBaseDistance);
-        data.set('lodMultiplier', presetData.lodMultiplier);
-    };
-
-    const loadGsplat = async (/** @type {string|null} */ url) => {
-        if (gsplatEntity) {
-            gsplatEntity.destroy();
-            gsplatEntity = null;
-            gsplatGs = null;
-        }
-
-        if (customAsset) {
-            app.assets.remove(customAsset);
-            customAsset.unload();
-            customAsset = null;
-        }
-
-        /** @type {pc.Asset} */
-        let asset;
-        if (url) {
-            asset = new pc.Asset('gsplat', 'gsplat', { url: url });
             app.assets.add(asset);
-            await new Promise((resolve, reject) => {
-                asset.on('load', resolve);
-                asset.on('error', (/** @type {string} */ err) => {
-                    console.error('Failed to load gsplat:', err);
-                    reject(err);
-                });
-                app.assets.load(asset);
-            });
-            customAsset = asset; // eslint-disable-line require-atomic-updates
-        } else {
-            asset = assets.church;
-        }
-
-        gsplatEntity = new pc.Entity(config.name || 'gsplat'); // eslint-disable-line require-atomic-updates
-        gsplatEntity.addComponent('gsplat', {
-            asset: asset
+            app.assets.load(asset);
         });
-        gsplatEntity.setLocalPosition(0, 0, 0);
-        gsplatEntity.setLocalEulerAngles(data.get('orientation'), 0, 0);
-        gsplatEntity.setLocalScale(1, 1, 1);
-        app.root.addChild(gsplatEntity);
-        gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
 
-        const presetData = LOD_PRESETS[data.get('lodPreset')] || LOD_PRESETS.desktop;
+        const source = asset.resource;
+        const skybox = EnvLighting.generateSkyboxCubemap(source);
+        const lighting = EnvLighting.generateLightingSource(source);
+        const envAtlas = EnvLighting.generateAtlas(lighting);
+        lighting.destroy();
+        hdriCache.set(preset.url, { skybox, envAtlas });
+    }
+
+    const cached = /** @type {{ skybox: Texture, envAtlas: Texture }} */ (hdriCache.get(preset.url));
+    app.scene.skybox = cached.skybox;
+    app.scene.envAtlas = cached.envAtlas;
+    app.scene.sky.type = SKYTYPE_INFINITE;
+    data.set('exposure', preset.exposure ?? 1);
+    phCredit.style.display = 'block';
+};
+
+data.on('environment:set', () => {
+    applyEnvironment(data.get('environment')).catch((err) => {
+        console.warn('Environment load failed:', err);
+    });
+});
+
+// Gsplat loading state
+/** @type {Entity|null} */
+let gsplatEntity = null;
+/** @type {any} */
+let gsplatGs = null;
+/** @type {Asset|null} */
+let customAsset = null;
+
+const applyPreset = () => {
+    const preset = data.get('lodPreset');
+    const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
+    if (gsplatGs) {
+        gsplatGs.lodRangeMin = presetData.range[0];
+        gsplatGs.lodRangeMax = presetData.range[1];
         gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
         gsplatGs.lodMultiplier = presetData.lodMultiplier;
+    }
+    data.set('lodBaseDistance', presetData.lodBaseDistance);
+    data.set('lodMultiplier', presetData.lodMultiplier);
+};
 
-        // Start with lowest LOD for fast initial display, then stream up
-        const lodLevels = gsplatGs.resource?.octree?.lodLevels;
-        if (lodLevels) {
-            const worstLod = lodLevels - 1;
-            gsplatGs.lodRangeMin = worstLod;
-            gsplatGs.lodRangeMax = worstLod;
-        }
+const loadGsplat = async (/** @type {string|null} */ url) => {
+    if (gsplatEntity) {
+        gsplatEntity.destroy();
+        gsplatEntity = null;
+        gsplatGs = null;
+    }
 
-        const onFrameReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
-            if (ready && loadingCount === 0) {
-                gsplatSystem.off('frame:ready', onFrameReady);
-                applyPreset();
-            }
-        };
-        gsplatSystem.on('frame:ready', onFrameReady);
+    if (customAsset) {
+        app.assets.remove(customAsset);
+        customAsset.unload();
+        customAsset = null;
+    }
 
-        // Radial reveal effect
-        gsplatEntity.addComponent('script');
-        const revealScript = gsplatEntity.script?.create(GsplatRevealRadial);
-        if (revealScript) {
-            revealScript.center.set(focusX, focusY, focusZ);
-            revealScript.speed = 5;
-            revealScript.acceleration = 0;
-            revealScript.delay = 3;
-            revealScript.oscillationIntensity = 0.2;
-            revealScript.endRadius = 25;
-        }
-    };
-
-    // Initial load — use the observer's current url, which is paramUrl from the
-    // hash query if set, or the share-URL state value applied during app.start().
-    await loadGsplat(data.get('url') || null);
-
-    data.on('lodPreset:set', applyPreset);
-
-    data.on('lodBaseDistance:set', () => {
-        if (gsplatGs) gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
-    });
-    data.on('lodMultiplier:set', () => {
-        if (gsplatGs) gsplatGs.lodMultiplier = data.get('lodMultiplier');
-    });
-
-    const applySplatBudget = () => {
-        const millions = data.get('splatBudget');
-        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
-    };
-
-    applySplatBudget();
-    data.on('splatBudget:set', applySplatBudget);
-
-    data.on('orientation:set', () => {
-        if (gsplatEntity) {
-            gsplatEntity.setLocalEulerAngles(data.get('orientation'), 0, 0);
-        }
-    });
-
-    data.on('url:set', () => {
-        const url = data.get('url');
-        loadGsplat(url || null).catch((err) => {
-            console.warn('Loading failed, reverting to default:', err);
-            loadGsplat(null);
+    /** @type {Asset} */
+    let asset;
+    if (url) {
+        asset = new Asset('gsplat', 'gsplat', { url: url });
+        app.assets.add(asset);
+        await new Promise((resolve, reject) => {
+            asset.on('load', resolve);
+            asset.on('error', (/** @type {string} */ err) => {
+                console.error('Failed to load gsplat:', err);
+                reject(err);
+            });
+            app.assets.load(asset);
         });
+        customAsset = asset; // eslint-disable-line require-atomic-updates
+    } else {
+        asset = assets.church;
+    }
+
+    gsplatEntity = new Entity(config.name || 'gsplat'); // eslint-disable-line require-atomic-updates
+    gsplatEntity.addComponent('gsplat', {
+        asset: asset
     });
+    gsplatEntity.setLocalPosition(0, 0, 0);
+    gsplatEntity.setLocalEulerAngles(data.get('orientation'), 0, 0);
+    gsplatEntity.setLocalScale(1, 1, 1);
+    app.root.addChild(gsplatEntity);
+    gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
 
-    let logTexturesRequested = false;
-    data.on('logTextures', () => {
-        logTexturesRequested = true;
+    const presetData = LOD_PRESETS[data.get('lodPreset')] || LOD_PRESETS.desktop;
+    gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
+    gsplatGs.lodMultiplier = presetData.lodMultiplier;
+
+    // Start with lowest LOD for fast initial display, then stream up
+    const lodLevels = gsplatGs.resource?.octree?.lodLevels;
+    if (lodLevels) {
+        const worstLod = lodLevels - 1;
+        gsplatGs.lodRangeMin = worstLod;
+        gsplatGs.lodRangeMax = worstLod;
+    }
+
+    const onFrameReady = (
+        /** @type {any} */ cam,
+        /** @type {any} */ layer,
+        /** @type {boolean} */ ready,
+        /** @type {number} */ loadingCount
+    ) => {
+        if (ready && loadingCount === 0) {
+            gsplatSystem.off('frame:ready', onFrameReady);
+            applyPreset();
+        }
+    };
+    gsplatSystem.on('frame:ready', onFrameReady);
+
+    // Radial reveal effect
+    gsplatEntity.addComponent('script');
+    const revealScript = gsplatEntity.script?.create(GsplatRevealRadial);
+    if (revealScript) {
+        revealScript.center.set(focusX, focusY, focusZ);
+        revealScript.speed = 5;
+        revealScript.acceleration = 0;
+        revealScript.delay = 3;
+        revealScript.oscillationIntensity = 0.2;
+        revealScript.endRadius = 25;
+    }
+};
+
+// Initial load — use the observer's current url, which is paramUrl from the
+// hash query if set, or the share-URL state value applied during app.start().
+await loadGsplat(data.get('url') || null);
+
+data.on('lodPreset:set', applyPreset);
+
+data.on('lodBaseDistance:set', () => {
+    if (gsplatGs) gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
+});
+data.on('lodMultiplier:set', () => {
+    if (gsplatGs) gsplatGs.lodMultiplier = data.get('lodMultiplier');
+});
+
+const applySplatBudget = () => {
+    const millions = data.get('splatBudget');
+    app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+};
+
+applySplatBudget();
+data.on('splatBudget:set', applySplatBudget);
+
+data.on('orientation:set', () => {
+    if (gsplatEntity) {
+        gsplatEntity.setLocalEulerAngles(data.get('orientation'), 0, 0);
+    }
+});
+
+data.on('url:set', () => {
+    const url = data.get('url');
+    loadGsplat(url || null).catch((err) => {
+        console.warn('Loading failed, reverting to default:', err);
+        loadGsplat(null);
     });
+});
 
-    let logBuffersRequested = false;
-    data.on('logBuffers', () => {
-        logBuffersRequested = true;
-    });
+let logTexturesRequested = false;
+data.on('logTextures', () => {
+    logTexturesRequested = true;
+});
 
-    app.on('update', () => {
+let logBuffersRequested = false;
+data.on('logBuffers', () => {
+    logBuffersRequested = true;
+});
 
-        // log textures for one frame if requested
-        pc.Tracing.set(pc.TRACEID_TEXTURES, logTexturesRequested);
-        logTexturesRequested = false;
+app.on('update', () => {
+    // log textures for one frame if requested
+    Tracing.set(TRACEID_TEXTURES, logTexturesRequested);
+    logTexturesRequested = false;
 
-        pc.Tracing.set(pc.TRACEID_BUFFERS, logBuffersRequested);
-        logBuffersRequested = false;
+    Tracing.set(TRACEID_BUFFERS, logBuffersRequested);
+    logBuffersRequested = false;
 
-        data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
-        const bb = app.graphicsDevice.backBufferSize;
-        data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
-    });
+    data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
+    const bb = app.graphicsDevice.backBufferSize;
+    data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 });

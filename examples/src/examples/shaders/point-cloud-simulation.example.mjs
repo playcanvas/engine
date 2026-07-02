@@ -1,4 +1,23 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    BLEND_ADDITIVEALPHA,
+    BoundingBox,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Mesh,
+    MeshInstance,
+    PRIMITIVE_POINTS,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -14,7 +33,7 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // render to low resolution to make particles more visible on WebGPU, as it doesn't support point
@@ -24,18 +43,18 @@ if (device.isWebGPU) {
     device.maxPixelRatio = 0.2;
 }
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -45,9 +64,9 @@ app.on('destroy', () => {
 });
 
 // Create an Entity with a camera component
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0, 0, 0)
+    clearColor: new Color(0, 0, 0)
 });
 
 // Add entity into scene hierarchy
@@ -67,43 +86,43 @@ for (let i = 0; i < 3 * maxNumPoints; i++) {
 
 /**
  * helper function to update vertex of the mesh
- * @param {pc.Mesh} mesh - The mesh.
+ * @param {Mesh} mesh - The mesh.
  */
 function updateMesh(mesh) {
     // Set current positions on mesh - this reallocates vertex buffer if more space is needed to test it.
     // For best performance, we could preallocate enough space using mesh.Clear.
     // Also turn off bounding box generation, as we set up large box manually
     mesh.setPositions(positions, 3, visiblePoints);
-    mesh.update(pc.PRIMITIVE_POINTS, false);
+    mesh.update(PRIMITIVE_POINTS, false);
 }
 
 // Create a mesh with dynamic vertex buffer (index buffer is not needed)
-const mesh = new pc.Mesh(app.graphicsDevice);
+const mesh = new Mesh(app.graphicsDevice);
 mesh.clear(true);
 updateMesh(mesh);
 
 // set large bounding box so we don't need to update it each frame
-mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15));
+mesh.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(15, 15, 15));
 
 // Create a new material with a custom shader
-const material = new pc.ShaderMaterial({
+const material = new ShaderMaterial({
     uniqueName: 'MyShader',
     vertexGLSL: shaderVert,
     fragmentGLSL: shaderFrag,
     attributes: {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
     }
 });
 
-material.blendType = pc.BLEND_ADDITIVEALPHA;
+material.blendType = BLEND_ADDITIVEALPHA;
 material.depthWrite = false;
 
 // Create the mesh instance
-const meshInstance = new pc.MeshInstance(mesh, material);
+const meshInstance = new MeshInstance(mesh, material);
 
 // Create Entity to render the mesh instances using a render component
-const entity = new pc.Entity();
+const entity = new Entity();
 entity.addComponent('render', {
     type: 'asset',
     meshInstances: [meshInstance],
@@ -121,10 +140,10 @@ app.on('update', (dt) => {
 
     // update particle positions using simple Verlet integration, and keep them inside a sphere boundary
     let dist;
-    const pos = new pc.Vec3();
-    const old = new pc.Vec3();
-    const delta = new pc.Vec3();
-    const next = new pc.Vec3();
+    const pos = new Vec3();
+    const old = new Vec3();
+    const delta = new Vec3();
+    const next = new Vec3();
     for (let i = 0; i < maxNumPoints; i++) {
         // read positions from buffers
         old.set(oldPositions[i * 3], oldPositions[i * 3 + 1], oldPositions[i * 3 + 2]);
@@ -158,7 +177,7 @@ app.on('update', (dt) => {
 
     // Rotate the camera around
     const cameraTime = time * 0.2;
-    const cameraPos = new pc.Vec3(20 * Math.sin(cameraTime), 10, 20 * Math.cos(cameraTime));
+    const cameraPos = new Vec3(20 * Math.sin(cameraTime), 10, 20 * Math.cos(cameraTime));
     camera.setLocalPosition(cameraPos);
-    camera.lookAt(pc.Vec3.ZERO);
+    camera.lookAt(Vec3.ZERO);
 });

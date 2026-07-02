@@ -1,4 +1,29 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    XRHAND_LEFT,
+    XRHAND_RIGHT,
+    XRSPACE_LOCAL,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -8,7 +33,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -24,31 +49,24 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -60,18 +78,18 @@ app.on('destroy', () => {
 app.start();
 
 // create camera parent
-const cameraParent = new pc.Entity();
+const cameraParent = new Entity();
 app.root.addChild(cameraParent);
 
 // create camera
-const c = new pc.Entity();
+const c = new Entity();
 c.addComponent('camera', {
-    clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
+    clearColor: new Color(44 / 255, 62 / 255, 80 / 255),
     farClip: 10000
 });
 cameraParent.addChild(c);
 
-const l = new pc.Entity();
+const l = new Entity();
 l.addComponent('light', {
     type: 'spot',
     range: 30
@@ -84,11 +102,11 @@ app.root.addChild(l);
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
  */
-const createCube = function (x, y, z) {
-    const cube = new pc.Entity();
+const createCube = (x, y, z) => {
+    const cube = new Entity();
     cube.addComponent('render', {
         type: 'box',
-        material: new pc.StandardMaterial()
+        material: new StandardMaterial()
     });
     cube.setLocalScale(1, 1, 1);
     cube.translate(x, y, z);
@@ -97,8 +115,8 @@ const createCube = function (x, y, z) {
 
 const controllers = [];
 // create controller box
-const createController = function (inputSource) {
-    const entity = new pc.Entity();
+const createController = (inputSource) => {
+    const entity = new Entity();
     entity.addComponent('render', {
         type: 'box'
     });
@@ -125,10 +143,10 @@ for (let x = 0; x <= SIZE; x++) {
 }
 
 if (app.xr.supported) {
-    const activate = function () {
-        if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-                callback: function (err) {
+    const activate = () => {
+        if (app.xr.isAvailable(XRTYPE_VR)) {
+            c.camera.startXr(XRTYPE_VR, XRSPACE_LOCAL, {
+                callback: (err) => {
                     if (err) message(`Immersive VR failed to start: ${err.message}`);
                 }
             });
@@ -158,7 +176,7 @@ if (app.xr.supported) {
 
     // end session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
@@ -176,11 +194,11 @@ if (app.xr.supported) {
     const rotateResetThreshold = 0.25;
     let lastRotateValue = 0;
 
-    const tmpVec2A = new pc.Vec2();
-    const tmpVec2B = new pc.Vec2();
-    const tmpVec3A = new pc.Vec3();
-    const tmpVec3B = new pc.Vec3();
-    const lineColor = new pc.Color(1, 1, 1);
+    const tmpVec2A = new Vec2();
+    const tmpVec2B = new Vec2();
+    const tmpVec3A = new Vec3();
+    const tmpVec3B = new Vec3();
+    const lineColor = new Color(1, 1, 1);
 
     // update position and rotation for each controller
     app.on('update', (dt) => {
@@ -194,7 +212,7 @@ if (app.xr.supported) {
             if (!inputSource.gamepad) continue;
 
             // left controller - for movement
-            if (inputSource.handedness === pc.XRHAND_LEFT) {
+            if (inputSource.handedness === XRHAND_LEFT) {
                 // set vector based on gamepad thumbstick axes values
                 tmpVec2A.set(inputSource.gamepad.axes[2], inputSource.gamepad.axes[3]);
 
@@ -221,7 +239,7 @@ if (app.xr.supported) {
                 }
 
                 // right controller - for rotation
-            } else if (inputSource.handedness === pc.XRHAND_RIGHT) {
+            } else if (inputSource.handedness === XRHAND_RIGHT) {
                 // get rotation from thumbsitck
                 const rotate = -inputSource.gamepad.axes[2];
 

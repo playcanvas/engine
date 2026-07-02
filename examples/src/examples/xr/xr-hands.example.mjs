@@ -1,4 +1,29 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    ModelComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    XRSPACE_LOCALFLOOR,
+    XRTARGETRAY_POINTER,
+    XRTYPE_AR,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -21,7 +46,7 @@ document.head.appendChild(css);
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     document.querySelector('.message').textContent = msg;
 };
 
@@ -30,32 +55,29 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.ModelComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
+    RenderComponentSystem,
+    ModelComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -64,21 +86,21 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
+app.scene.ambientLight = new Color(0.1, 0.1, 0.1);
 
 app.start();
 
-const colorCamera = new pc.Color(44 / 255, 62 / 255, 80 / 255);
-const colorTransparent = new pc.Color(0, 0, 0, 0);
+const colorCamera = new Color(44 / 255, 62 / 255, 80 / 255);
+const colorTransparent = new Color(0, 0, 0, 0);
 
 // create camera
-const cameraEntity = new pc.Entity();
+const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
     clearColor: colorCamera
 });
 app.root.addChild(cameraEntity);
 
-const l = new pc.Entity();
+const l = new Entity();
 l.addComponent('light', {
     type: 'directional'
 });
@@ -90,11 +112,11 @@ app.root.addChild(l);
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
  */
-const createCube = function (x, y, z) {
-    const cube = new pc.Entity();
+const createCube = (x, y, z) => {
+    const cube = new Entity();
     cube.addComponent('render', {
         type: 'box',
-        material: new pc.StandardMaterial()
+        material: new StandardMaterial()
     });
     cube.setLocalPosition(x, y, z);
     cube.setLocalScale(0.5, 0.5, 0.5);
@@ -104,20 +126,20 @@ const createCube = function (x, y, z) {
 const controllers = [];
 
 // create controller model
-const createController = function (inputSource) {
-    const entity = new pc.Entity();
+const createController = (inputSource) => {
+    const entity = new Entity();
 
     if (inputSource.hand) {
         // hand input
         // @ts-ignore engine-tsd
         entity.joints = [];
 
-        const material = new pc.StandardMaterial();
+        const material = new StandardMaterial();
 
         // create box for each hand joint
         for (let i = 0; i < inputSource.hand.joints.length; i++) {
             const joint = inputSource.hand.joints[i];
-            const jointEntity = new pc.Entity();
+            const jointEntity = new Entity();
             jointEntity.addComponent('model', {
                 type: 'box',
                 material: material
@@ -173,16 +195,16 @@ for (let x = 0; x <= SIZE; x++) {
 }
 
 // reusable vector
-const vec3A = new pc.Vec3();
+const vec3A = new Vec3();
 
 if (app.xr.supported) {
     // XR availability
     document
-    .querySelector('.container > .button[data-xr="immersive-ar"]')
-    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+        .querySelector('.container > .button[data-xr="immersive-ar"]')
+        ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_AR));
     document
-    .querySelector('.container > .button[data-xr="immersive-vr"]')
-    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+        .querySelector('.container > .button[data-xr="immersive-vr"]')
+        ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_VR));
 
     // XR availability events
     app.xr.on('available', (type, available) => {
@@ -196,15 +218,16 @@ if (app.xr.supported) {
     });
 
     // button handler
-    const onXrButtonClick = function () {
-        if (!this.classList.contains('active')) return;
+    const onXrButtonClick = (event) => {
+        const button = /** @type {HTMLElement} */ (event.currentTarget);
+        if (!button.classList.contains('active')) return;
 
-        const type = this.getAttribute('data-xr');
+        const type = button.getAttribute('data-xr');
 
-        cameraEntity.camera.clearColor = type === pc.XRTYPE_AR ? colorTransparent : colorCamera;
+        cameraEntity.camera.clearColor = type === XRTYPE_AR ? colorTransparent : colorCamera;
 
-        app.xr.start(cameraEntity.camera, type, pc.XRSPACE_LOCALFLOOR, {
-            callback: function (err) {
+        app.xr.start(cameraEntity.camera, type, XRSPACE_LOCALFLOOR, {
+            callback: (err) => {
                 if (err) message(`XR ${type} failed to start: ${err.message}`);
             }
         });
@@ -218,7 +241,7 @@ if (app.xr.supported) {
 
     // end session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
@@ -262,9 +285,9 @@ if (app.xr.supported) {
             }
 
             // draw ray
-            if (inputSource.targetRayMode === pc.XRTARGETRAY_POINTER) {
+            if (inputSource.targetRayMode === XRTARGETRAY_POINTER) {
                 vec3A.copy(inputSource.getDirection()).add(inputSource.getOrigin());
-                const color = inputSource.selecting ? pc.Color.GREEN : pc.Color.WHITE;
+                const color = inputSource.selecting ? Color.GREEN : Color.WHITE;
                 app.drawLine(inputSource.getOrigin(), vec3A, color);
             }
         }

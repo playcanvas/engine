@@ -17,10 +17,44 @@
 // as a fixed DOM overlay on top of the canvas instead of a 3D textured plane.
 // Click handling works identically in both modes via standard DOM events.
 //
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BLEND_PREMULTIPLIED,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    LAYERID_DEPTH,
+    Layer,
+    LightComponentSystem,
+    Mat4,
+    Mouse,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_LINEAR,
+    Texture,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 import { BlurredPlanarReflection } from 'playcanvas/scripts/esm/blurred-planar-reflection.mjs';
 
 import { deviceType } from 'examples/context';
+
+/**
+ * @import { CameraComponent } from 'playcanvas'
+ */
 
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.
@@ -37,7 +71,7 @@ class HtmlSync {
     /**
      * @param {HTMLCanvasElement} canvas - The canvas with layoutsubtree="true".
      * @param {HTMLElement} element - The HTML element appended to the canvas.
-     * @param {pc.Entity} planeEntity - The plane entity displaying the texture.
+     * @param {Entity} planeEntity - The plane entity displaying the texture.
      * @param {number} width - HTML element width in CSS pixels.
      * @param {number} height - HTML element height in CSS pixels.
      */
@@ -50,24 +84,19 @@ class HtmlSync {
         // PlayCanvas plane's local space (-0.5..0.5). Column 2 provides a
         // non-zero Z axis (the plane's normal) so the matrix stays
         // non-singular — the browser needs to invert it for hit testing.
-        this._pixelToLocal = new pc.Mat4();
-        this._pixelToLocal.data.set([
-            1 / width, 0, 0, 0,
-            0, 0, 1 / height, 0,
-            0, 1, 0, 0,
-            -0.5, 0, -0.5, 1
-        ]);
+        this._pixelToLocal = new Mat4();
+        this._pixelToLocal.data.set([1 / width, 0, 0, 0, 0, 0, 1 / height, 0, 0, 1, 0, 0, -0.5, 0, -0.5, 1]);
 
-        this._t1 = new pc.Mat4();
-        this._t2 = new pc.Mat4();
-        this._drawTransform = new pc.Mat4();
+        this._t1 = new Mat4();
+        this._t2 = new Mat4();
+        this._drawTransform = new Mat4();
     }
 
     /**
      * Recompute the draw_transform and sync the element's CSS transform so the
      * browser can hit-test it at the correct screen position.
      *
-     * @param {pc.CameraComponent} cameraComponent - The active camera component.
+     * @param {CameraComponent} cameraComponent - The active camera component.
      */
     update(cameraComponent) {
         const canvas = this.canvas;
@@ -82,21 +111,28 @@ class HtmlSync {
         this._drawTransform.mul2(this._t2, this._t1);
 
         // viewport: clip-space → device pixels (Y flipped)
-        this._t1.data.set([
-            w / 2, 0, 0, 0,
-            0, -h / 2, 0, 0,
-            0, 0, 1, 0,
-            w / 2, h / 2, 0, 1
-        ]);
+        this._t1.data.set([w / 2, 0, 0, 0, 0, -h / 2, 0, 0, 0, 0, 1, 0, w / 2, h / 2, 0, 1]);
         // viewport · viewProj · world · pixelToLocal  (_t2 receives the result)
         this._t2.mul2(this._t1, this._drawTransform);
 
         const d = this._t2.data;
         const domDrawTransform = new DOMMatrix([
-            d[0], d[1], d[2], d[3],
-            d[4], d[5], d[6], d[7],
-            d[8], d[9], d[10], d[11],
-            d[12], d[13], d[14], d[15]
+            d[0],
+            d[1],
+            d[2],
+            d[3],
+            d[4],
+            d[5],
+            d[6],
+            d[7],
+            d[8],
+            d[9],
+            d[10],
+            d[11],
+            d[12],
+            d[13],
+            d[14],
+            d[15]
         ]);
 
         // Register the element for hit testing via the browser API.
@@ -108,10 +144,22 @@ class HtmlSync {
         // points. The fix: scale only the output x,y rows by 1/DPR.
         const dpr = w / canvas.clientWidth;
         this.element.style.transform = new DOMMatrix([
-            d[0] / dpr, d[1] / dpr, d[2], d[3],
-            d[4] / dpr, d[5] / dpr, d[6], d[7],
-            d[8] / dpr, d[9] / dpr, d[10], d[11],
-            d[12] / dpr, d[13] / dpr, d[14], d[15]
+            d[0] / dpr,
+            d[1] / dpr,
+            d[2],
+            d[3],
+            d[4] / dpr,
+            d[5] / dpr,
+            d[6],
+            d[7],
+            d[8] / dpr,
+            d[9] / dpr,
+            d[10],
+            d[11],
+            d[12] / dpr,
+            d[13] / dpr,
+            d[14],
+            d[15]
         ]).toString();
     }
 }
@@ -124,36 +172,41 @@ canvas.setAttribute('layoutsubtree', 'true');
 window.focus();
 
 const assets = {
-    envatlas: new pc.Asset(
+    envatlas: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    shoe: new pc.Asset('shoe', 'container', { url: './assets/models/MaterialsVariantsShoe.glb' }),
-    background: new pc.Asset('background', 'texture', { url: './assets/textures/background_shoes.png' }, { srgb: true })
+    shoe: new Asset('shoe', 'container', { url: './assets/models/MaterialsVariantsShoe.glb' }),
+    background: new Asset('background', 'texture', { url: './assets/textures/background_shoes.png' }, { srgb: true })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem, pc.ScriptComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler, pc.ContainerHandler];
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -187,7 +240,7 @@ htmlPanel.style.background = 'rgba(15, 15, 25, 0.375)';
 htmlPanel.style.backdropFilter = 'blur(12px)';
 htmlPanel.style.webkitBackdropFilter = 'blur(12px)';
 htmlPanel.style.borderRadius = '20px';
-htmlPanel.style.fontFamily = '\'Segoe UI\', Arial, sans-serif';
+htmlPanel.style.fontFamily = "'Segoe UI', Arial, sans-serif";
 htmlPanel.style.color = 'white';
 htmlPanel.style.display = 'flex';
 htmlPanel.style.flexDirection = 'column';
@@ -229,7 +282,9 @@ const updatePanel = () => {
         <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: rgba(255,255,255,0.5); margin-bottom: 2px;">Product Configurator</div>
         <div style="font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Shoe Style</div>
         <div style="font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 8px;">Click to change variant</div>
-        ${variants.map(v => `
+        ${variants
+            .map(
+                (v) => `
             <div data-variant="${v}" class="variant-btn${v === activeVariant ? ' active' : ''}" style="
                 padding: 14px 16px;
                 border-radius: 12px;
@@ -254,7 +309,9 @@ const updatePanel = () => {
                 "></div>
                 ${v.charAt(0).toUpperCase() + v.slice(1)}
             </div>
-        `).join('')}
+        `
+            )
+            .join('')}
         <div style="margin-top: auto; font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; letter-spacing: 1px;">
             Powered by HTML-in-Canvas
         </div>
@@ -269,7 +326,7 @@ updatePanel();
 // browser fires a "paint" event whenever the panel's visual content changes;
 // we respond by re-uploading the texture. The first paint uses setSource() to
 // bind the element, subsequent paints just call upload().
-/** @type {pc.Texture|null} */
+/** @type {Texture|null} */
 let panelTexture = null;
 
 const onPaintUpload = () => {
@@ -286,18 +343,22 @@ app.on('destroy', () => {
 if (supportsHtmlInCanvas) {
     canvas.appendChild(htmlPanel);
 
-    panelTexture = new pc.Texture(device, {
+    panelTexture = new Texture(device, {
         width: PANEL_WIDTH,
         height: PANEL_HEIGHT,
-        format: pc.PIXELFORMAT_RGBA8,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
+        format: PIXELFORMAT_RGBA8,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
         name: 'panelTexture'
     });
 
-    canvas.addEventListener('paint', () => {
-        panelTexture.setSource(/** @type {any} */ (htmlPanel));
-    }, { once: true });
+    canvas.addEventListener(
+        'paint',
+        () => {
+            panelTexture.setSource(/** @type {any} */ (htmlPanel));
+        },
+        { once: true }
+    );
     canvas.requestPaint();
     canvas.addEventListener('paint', onPaintUpload);
 } else {
@@ -305,196 +366,197 @@ if (supportsHtmlInCanvas) {
 }
 
 // --- Load assets and build scene ---
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Environment lighting (skybox excluded from camera so background stays white)
-    app.scene.envAtlas = assets.envatlas.resource;
-    app.scene.skyboxIntensity = 2;
+app.start();
 
-    // Layers setup for reflective ground
-    const worldLayer = app.scene.layers.getLayerByName('World');
-    const uiLayer = app.scene.layers.getLayerByName('UI');
-    const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+// Environment lighting (skybox excluded from camera so background stays white)
+app.scene.envAtlas = assets.envatlas.resource;
+app.scene.skyboxIntensity = 2;
 
-    const excludedLayer = new pc.Layer({ name: 'Excluded' });
-    app.scene.layers.insertOpaque(excludedLayer, app.scene.layers.getOpaqueIndex(worldLayer) + 1);
-    app.scene.layers.insertTransparent(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
+// Layers setup for reflective ground
+const worldLayer = app.scene.layers.getLayerByName('World');
+const uiLayer = app.scene.layers.getLayerByName('UI');
+const depthLayer = app.scene.layers.getLayerById(LAYERID_DEPTH);
 
-    // Background plane behind the scene
-    const bgMaterial = new pc.StandardMaterial();
-    bgMaterial.diffuse = new pc.Color(0, 0, 0);
-    bgMaterial.emissiveMap = assets.background.resource;
-    bgMaterial.emissive = pc.Color.WHITE;
-    bgMaterial.useLighting = false;
-    bgMaterial.update();
+const excludedLayer = new Layer({ name: 'Excluded' });
+app.scene.layers.insertOpaque(excludedLayer, app.scene.layers.getOpaqueIndex(worldLayer) + 1);
+app.scene.layers.insertTransparent(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
-    const bgPlane = new pc.Entity('background');
-    bgPlane.addComponent('render', {
+// Background plane behind the scene
+const bgMaterial = new StandardMaterial();
+bgMaterial.diffuse = new Color(0, 0, 0);
+bgMaterial.emissiveMap = assets.background.resource;
+bgMaterial.emissive = Color.WHITE;
+bgMaterial.useLighting = false;
+bgMaterial.update();
+
+const bgPlane = new Entity('background');
+bgPlane.addComponent('render', {
+    type: 'plane',
+    material: bgMaterial
+});
+bgPlane.setLocalPosition(2.2, 2.5, -8);
+bgPlane.setLocalEulerAngles(90, 0, 0);
+bgPlane.setLocalScale(30, 1, 30);
+app.root.addChild(bgPlane);
+
+// Shoe model
+const shoeEntity = assets.shoe.resource.instantiateRenderEntity();
+shoeEntity.setLocalScale(3, 3, 3);
+shoeEntity.setLocalEulerAngles(0, 0, -20);
+shoeEntity.setLocalPosition(0, 1.7, 0);
+app.root.addChild(shoeEntity);
+
+// Read variant names from the model
+const modelVariants = assets.shoe.resource.getMaterialVariants();
+if (modelVariants.length > 0) {
+    variants = modelVariants;
+}
+activeVariant = variants[0];
+updatePanel();
+
+// 3D panel entity — a plane textured with the live HTML panel texture.
+// It uses emissive rendering (unlit) with premultiplied alpha blending so
+// the glassmorphism transparency from CSS is preserved in 3D.
+let panel = null;
+if (panelTexture) {
+    const panelMaterial = new StandardMaterial();
+    panelMaterial.diffuse = new Color(0, 0, 0);
+    panelMaterial.emissiveMap = panelTexture;
+    panelMaterial.emissive = Color.WHITE;
+    panelMaterial.useLighting = false;
+    panelMaterial.blendType = BLEND_PREMULTIPLIED;
+    panelMaterial.opacityMap = panelTexture;
+    panelMaterial.opacityMapChannel = 'a';
+    panelMaterial.alphaTest = 0.1;
+    panelMaterial.depthWrite = true;
+    panelMaterial.update();
+
+    panel = new Entity('ui-panel');
+    panel.addComponent('render', {
         type: 'plane',
-        material: bgMaterial
+        material: panelMaterial
     });
-    bgPlane.setLocalPosition(2.2, 2.5, -8);
-    bgPlane.setLocalEulerAngles(90, 0, 0);
-    bgPlane.setLocalScale(30, 1, 30);
-    app.root.addChild(bgPlane);
+    panel.setLocalPosition(4.5, 2.5, 0);
+    panel.setLocalEulerAngles(90, 0, 0);
+    panel.setLocalScale(2.8, 1, 3.8);
+    app.root.addChild(panel);
+}
 
-    // Shoe model
-    const shoeEntity = assets.shoe.resource.instantiateRenderEntity();
-    shoeEntity.setLocalScale(3, 3, 3);
-    shoeEntity.setLocalEulerAngles(0, 0, -20);
-    shoeEntity.setLocalPosition(0, 1.7, 0);
-    app.root.addChild(shoeEntity);
+// Reflective ground plane (in excluded layer so it doesn't render into its own reflection)
+const groundReflector = new Entity('ground');
+groundReflector.addComponent('render', {
+    type: 'plane',
+    layers: [excludedLayer.id],
+    castShadows: false
+});
+groundReflector.setLocalPosition(0, -0.5, 0);
+groundReflector.setLocalScale(20, 1, 20);
 
-    // Read variant names from the model
-    const modelVariants = assets.shoe.resource.getMaterialVariants();
-    if (modelVariants.length > 0) {
-        variants = modelVariants;
-    }
-    activeVariant = variants[0];
-    updatePanel();
+groundReflector.addComponent('script');
+/** @type {BlurredPlanarReflection} */
+const reflectionScript = groundReflector.script.create(BlurredPlanarReflection);
+reflectionScript.resolution = 1.0;
+reflectionScript.blurAmount = 0.3;
+reflectionScript.intensity = 1.5;
+reflectionScript.fadeStrength = 0.4;
+reflectionScript.angleFade = 0.3;
+reflectionScript.heightRange = 0.15;
+reflectionScript.fadeColor = new Color(1, 1, 1, 1);
 
-    // 3D panel entity — a plane textured with the live HTML panel texture.
-    // It uses emissive rendering (unlit) with premultiplied alpha blending so
-    // the glassmorphism transparency from CSS is preserved in 3D.
-    let panel = null;
-    if (panelTexture) {
-        const panelMaterial = new pc.StandardMaterial();
-        panelMaterial.diffuse = new pc.Color(0, 0, 0);
-        panelMaterial.emissiveMap = panelTexture;
-        panelMaterial.emissive = pc.Color.WHITE;
-        panelMaterial.useLighting = false;
-        panelMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-        panelMaterial.opacityMap = panelTexture;
-        panelMaterial.opacityMapChannel = 'a';
-        panelMaterial.alphaTest = 0.1;
-        panelMaterial.depthWrite = true;
-        panelMaterial.update();
+app.root.addChild(groundReflector);
 
-        panel = new pc.Entity('ui-panel');
-        panel.addComponent('render', {
-            type: 'plane',
-            material: panelMaterial
-        });
-        panel.setLocalPosition(4.5, 2.5, 0);
-        panel.setLocalEulerAngles(90, 0, 0);
-        panel.setLocalScale(2.8, 1, 3.8);
-        app.root.addChild(panel);
-    }
+// Camera - exclude skybox layer, include depth layer for reflection
+const camera = new Entity('camera');
+camera.addComponent('camera', {
+    clearColor: new Color(1, 1, 1, 1),
+    fov: 45,
+    nearClip: 0.01,
+    layers: [worldLayer.id, excludedLayer.id, depthLayer.id, uiLayer.id],
+    toneMapping: TONEMAP_LINEAR
+});
+camera.setPosition(2.5, 3.0, 14);
+camera.lookAt(2.2, 1.5, 0);
 
-    // Reflective ground plane (in excluded layer so it doesn't render into its own reflection)
-    const groundReflector = new pc.Entity('ground');
-    groundReflector.addComponent('render', {
-        type: 'plane',
-        layers: [excludedLayer.id],
-        castShadows: false
-    });
-    groundReflector.setLocalPosition(0, -0.5, 0);
-    groundReflector.setLocalScale(20, 1, 20);
+app.root.addChild(camera);
 
-    groundReflector.addComponent('script');
-    /** @type {BlurredPlanarReflection} */
-    const reflectionScript = groundReflector.script.create(BlurredPlanarReflection);
-    reflectionScript.resolution = 1.0;
-    reflectionScript.blurAmount = 0.3;
-    reflectionScript.intensity = 1.5;
-    reflectionScript.fadeStrength = 0.4;
-    reflectionScript.angleFade = 0.3;
-    reflectionScript.heightRange = 0.15;
-    reflectionScript.fadeColor = new pc.Color(1, 1, 1, 1);
+// Subtle camera sway — orbit around the look target at constant distance
+const lookTarget = new Vec3(2.2, 1.5, 0);
+const baseDir = camera.getPosition().clone().sub(lookTarget);
+const baseDist = baseDir.length();
+const baseYaw = Math.atan2(baseDir.x, baseDir.z);
+const basePitch = Math.asin(baseDir.y / baseDist);
+let targetYaw = 0;
+let targetPitch = 0;
+let currentYaw = 0;
+let currentPitch = 0;
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    targetYaw = -nx * 0.45;
+    targetPitch = ny * 0.15;
+});
 
-    app.root.addChild(groundReflector);
+// Set the main camera for the reflection script
+reflectionScript.mainCamera = camera;
 
-    // Camera - exclude skybox layer, include depth layer for reflection
-    const camera = new pc.Entity('camera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(1, 1, 1, 1),
-        fov: 45,
-        nearClip: 0.01,
-        layers: [worldLayer.id, excludedLayer.id, depthLayer.id, uiLayer.id],
-        toneMapping: pc.TONEMAP_LINEAR
-    });
-    camera.setPosition(2.5, 3.0, 14);
-    camera.lookAt(2.2, 1.5, 0);
+// Light
+const light = new Entity('light');
+light.addComponent('light', {
+    type: 'directional',
+    color: new Color(1, 1, 1),
+    intensity: 3,
+    castShadows: true,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05,
+    shadowResolution: 2048
+});
+light.setEulerAngles(45, 30, 0);
+app.root.addChild(light);
 
-    app.root.addChild(camera);
-
-    // Subtle camera sway — orbit around the look target at constant distance
-    const lookTarget = new pc.Vec3(2.2, 1.5, 0);
-    const baseDir = camera.getPosition().clone().sub(lookTarget);
-    const baseDist = baseDir.length();
-    const baseYaw = Math.atan2(baseDir.x, baseDir.z);
-    const basePitch = Math.asin(baseDir.y / baseDist);
-    let targetYaw = 0;
-    let targetPitch = 0;
-    let currentYaw = 0;
-    let currentPitch = 0;
-    canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-        const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-        targetYaw = -nx * 0.45;
-        targetPitch = ny * 0.15;
-    });
-
-    // Set the main camera for the reflection script
-    reflectionScript.mainCamera = camera;
-
-    // Light
-    const light = new pc.Entity('light');
-    light.addComponent('light', {
-        type: 'directional',
-        color: new pc.Color(1, 1, 1),
-        intensity: 3,
-        castShadows: true,
-        shadowBias: 0.2,
-        normalOffsetBias: 0.05,
-        shadowResolution: 2048
-    });
-    light.setEulerAngles(45, 30, 0);
-    app.root.addChild(light);
-
-    // Click handling — the HTML panel receives real DOM click events in both
-    // modes: via getElementTransform hit testing (HTML-in-Canvas) or via
-    // standard DOM events (overlay fallback). When a variant button is clicked
-    // we apply the glTF KHR_materials_variants extension and repaint.
-    htmlPanel.addEventListener('click', (e) => {
-        const btn = /** @type {HTMLElement} */ (e.target).closest('[data-variant]');
-        if (!btn) return;
-        const variant = btn.getAttribute('data-variant');
-        if (variant && variant !== activeVariant) {
-            activeVariant = variant;
-            assets.shoe.resource.applyMaterialVariant(shoeEntity, activeVariant);
-            updatePanel();
-            if (supportsHtmlInCanvas) {
-                canvas.requestPaint();
-            }
+// Click handling — the HTML panel receives real DOM click events in both
+// modes: via getElementTransform hit testing (HTML-in-Canvas) or via
+// standard DOM events (overlay fallback). When a variant button is clicked
+// we apply the glTF KHR_materials_variants extension and repaint.
+htmlPanel.addEventListener('click', (e) => {
+    const btn = /** @type {HTMLElement} */ (e.target).closest('[data-variant]');
+    if (!btn) return;
+    const variant = btn.getAttribute('data-variant');
+    if (variant && variant !== activeVariant) {
+        activeVariant = variant;
+        assets.shoe.resource.applyMaterialVariant(shoeEntity, activeVariant);
+        updatePanel();
+        if (supportsHtmlInCanvas) {
+            canvas.requestPaint();
         }
-    });
+    }
+});
 
-    // Per-frame sync: HtmlSync projects the 3D panel position into screen
-    // space and sets the HTML element's CSS transform so the browser's hit
-    // testing aligns with where the panel appears in the 3D scene.
-    const supportsGetElementTransform = typeof canvas.getElementTransform === 'function';
-    const htmlSync = (panel && supportsGetElementTransform) ?
-        new HtmlSync(canvas, htmlPanel, panel, PANEL_WIDTH, PANEL_HEIGHT) : null;
+// Per-frame sync: HtmlSync projects the 3D panel position into screen
+// space and sets the HTML element's CSS transform so the browser's hit
+// testing aligns with where the panel appears in the 3D scene.
+const supportsGetElementTransform = typeof canvas.getElementTransform === 'function';
+const htmlSync =
+    panel && supportsGetElementTransform ? new HtmlSync(canvas, htmlPanel, panel, PANEL_WIDTH, PANEL_HEIGHT) : null;
 
-    app.on('update', (/** @type {number} */ dt) => {
-        // Smooth camera sway — orbit at constant radius
-        currentYaw += (targetYaw - currentYaw) * 2 * dt;
-        currentPitch += (targetPitch - currentPitch) * 2 * dt;
+app.on('update', (/** @type {number} */ dt) => {
+    // Smooth camera sway — orbit at constant radius
+    currentYaw += (targetYaw - currentYaw) * 2 * dt;
+    currentPitch += (targetPitch - currentPitch) * 2 * dt;
 
-        const yaw = baseYaw + currentYaw;
-        const pitch = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, basePitch + currentPitch));
+    const yaw = baseYaw + currentYaw;
+    const pitch = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, basePitch + currentPitch));
 
-        camera.setPosition(
-            lookTarget.x + Math.sin(yaw) * Math.cos(pitch) * baseDist,
-            lookTarget.y + Math.sin(pitch) * baseDist,
-            lookTarget.z + Math.cos(yaw) * Math.cos(pitch) * baseDist
-        );
-        camera.lookAt(lookTarget);
+    camera.setPosition(
+        lookTarget.x + Math.sin(yaw) * Math.cos(pitch) * baseDist,
+        lookTarget.y + Math.sin(pitch) * baseDist,
+        lookTarget.z + Math.cos(yaw) * Math.cos(pitch) * baseDist
+    );
+    camera.lookAt(lookTarget);
 
-        htmlSync?.update(camera.camera);
-    });
+    htmlSync?.update(camera.camera);
 });

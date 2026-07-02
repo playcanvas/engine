@@ -1,4 +1,21 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,35 +23,35 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    cube: new pc.Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    cube: new Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -43,56 +60,57 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    /** @type {pc.Entity[]} */
-    const cubeEntities = [];
+app.start();
 
-    // get the instance of the cube it set up with render component and add it to scene
-    cubeEntities[0] = assets.cube.resource.instantiateRenderEntity();
-    cubeEntities[0].setLocalPosition(7, 12, 0);
-    cubeEntities[0].setLocalScale(3, 3, 3);
-    app.root.addChild(cubeEntities[0]);
+/** @type {Entity[]} */
+const cubeEntities = [];
 
-    // clone another copy of it and add it to scene
-    cubeEntities[1] = cubeEntities[0].clone();
-    cubeEntities[1].setLocalPosition(-7, 12, 0);
-    cubeEntities[1].setLocalScale(3, 3, 3);
-    app.root.addChild(cubeEntities[1]);
+// get the instance of the cube it set up with render component and add it to scene
+cubeEntities[0] = assets.cube.resource.instantiateRenderEntity();
+cubeEntities[0].setLocalPosition(7, 12, 0);
+cubeEntities[0].setLocalScale(3, 3, 3);
+app.root.addChild(cubeEntities[0]);
 
-    // get the instance of the statue and set up with render component
-    const statueEntity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(statueEntity);
+// clone another copy of it and add it to scene
+cubeEntities[1] = cubeEntities[0].clone();
+cubeEntities[1].setLocalPosition(-7, 12, 0);
+cubeEntities[1].setLocalScale(3, 3, 3);
+app.root.addChild(cubeEntities[1]);
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.1, 0.1),
-        farClip: 100,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(-20, 15, 20);
-    camera.lookAt(0, 7, 0);
-    app.root.addChild(camera);
+// get the instance of the statue and set up with render component
+const statueEntity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(statueEntity);
 
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 1;
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: new Color(0.2, 0.1, 0.1),
+    farClip: 100,
+    toneMapping: TONEMAP_ACES
+});
+camera.translate(-20, 15, 20);
+camera.lookAt(0, 7, 0);
+app.root.addChild(camera);
 
-    // spin the meshes
-    app.on('update', (dt) => {
-        if (cubeEntities[0]) {
-            cubeEntities[0].rotate(3 * dt, 10 * dt, 6 * dt);
-        }
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
 
-        if (cubeEntities[1]) {
-            cubeEntities[1].rotate(-7 * dt, 5 * dt, -2 * dt);
-        }
+// spin the meshes
+app.on('update', (dt) => {
+    if (cubeEntities[0]) {
+        cubeEntities[0].rotate(3 * dt, 10 * dt, 6 * dt);
+    }
 
-        if (statueEntity) {
-            statueEntity.rotate(0, -12 * dt, 0);
-        }
-    });
+    if (cubeEntities[1]) {
+        cubeEntities[1].rotate(-7 * dt, 5 * dt, -2 * dt);
+    }
+
+    if (statueEntity) {
+        statueEntity.rotate(0, -12 * dt, 0);
+    }
 });

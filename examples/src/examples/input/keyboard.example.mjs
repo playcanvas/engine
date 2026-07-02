@@ -1,4 +1,23 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    KEY_LEFT,
+    KEY_RIGHT,
+    Keyboard,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,34 +25,34 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -42,34 +61,35 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.exposure = 1.6;
-    app.scene.skyboxMip = 1;
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(0, 7, 25);
-    app.root.addChild(camera);
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.exposure = 1.6;
+app.scene.skyboxMip = 1;
 
-    const entity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: new Color(0.4, 0.45, 0.5),
+    toneMapping: TONEMAP_ACES
+});
+camera.translate(0, 7, 25);
+app.root.addChild(camera);
 
-    const keyboard = new pc.Keyboard(document.body);
-    app.on('update', () => {
-        if (keyboard.isPressed(pc.KEY_LEFT)) {
-            entity.rotate(0, -1, 0);
-        }
-        if (keyboard.isPressed(pc.KEY_RIGHT)) {
-            entity.rotate(0, 1, 0);
-        }
-    });
+const entity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(entity);
+
+const keyboard = new Keyboard(document.body);
+app.on('update', () => {
+    if (keyboard.isPressed(KEY_LEFT)) {
+        entity.rotate(0, -1, 0);
+    }
+    if (keyboard.isPressed(KEY_RIGHT)) {
+        entity.rotate(0, 1, 0);
+    }
 });

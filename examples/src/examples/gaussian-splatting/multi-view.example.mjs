@@ -3,7 +3,34 @@
 // Renders Gaussian Splats from multiple camera viewports simultaneously with different projection
 // types.
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    PROJECTION_ORTHOGRAPHIC,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    Vec4,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -17,29 +44,29 @@ const gfxOptions = {
     antialias: false
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.GSplatComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -49,115 +76,116 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    logo: new pc.Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
-    orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    helipad: new pc.Asset(
+    logo: new Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
+    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
+app.start();
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.set('renderer', GSPLAT_RENDERER_AUTO);
+
+// setup skydome
+app.scene.skyboxMip = 2;
+app.scene.envAtlas = assets.helipad.resource;
+
+// create a splat entity and place it in the world
+const logoEntity1 = new Entity();
+logoEntity1.addComponent('gsplat', {
+    asset: assets.logo
+});
+logoEntity1.setLocalPosition(0, 0.05, 0);
+logoEntity1.setLocalEulerAngles(180, 90, 0);
+logoEntity1.setLocalScale(0.7, 0.7, 0.7);
+app.root.addChild(logoEntity1);
+
+// create another splat entity and place it in the world
+const logoEntity2 = new Entity();
+logoEntity2.addComponent('gsplat', {
+    asset: assets.logo
+});
+logoEntity2.setLocalPosition(0, -0.5, 0);
+logoEntity2.setLocalEulerAngles(-90, -90, 0);
+logoEntity2.setLocalScale(2, 2, 2);
+app.root.addChild(logoEntity2);
+
+// Create left camera
+const cameraLeft = new Entity('LeftCamera');
+cameraLeft.addComponent('camera', {
+    clearColor: new Color(0.2, 0.2, 0.2),
+    farClip: 500,
+    rect: new Vec4(0, 0, 0.5, 0.5),
+    toneMapping: TONEMAP_ACES
+});
+cameraLeft.setLocalPosition(-0.8, 2, 3);
+app.root.addChild(cameraLeft);
+
+// Create right orthographic camera
+const cameraRight = new Entity('RightCamera');
+cameraRight.addComponent('camera', {
+    clearColor: new Color(0.2, 0.2, 0.2),
+    farClip: 500,
+    rect: new Vec4(0.5, 0, 0.5, 0.5),
+    projection: PROJECTION_ORTHOGRAPHIC,
+    orthoHeight: 4,
+    toneMapping: TONEMAP_ACES
+});
+cameraRight.translate(0, 8, 0);
+cameraRight.lookAt(Vec3.ZERO, Vec3.RIGHT);
+app.root.addChild(cameraRight);
+
+// Create top camera
+const cameraTop = new Entity('TopCamera');
+cameraTop.addComponent('camera', {
+    clearColor: new Color(0.2, 0.2, 0.2),
+    farClip: 500,
+    rect: new Vec4(0, 0.5, 1, 0.5),
+    toneMapping: TONEMAP_ACES
+});
+cameraTop.translate(-2, 6, 9);
+app.root.addChild(cameraTop);
+
+// add orbit camera script with a mouse and a touch support to top camera
+cameraTop.addComponent('script');
+if (cameraTop.script) {
+    cameraTop.script.create('orbitCamera', {
+        attributes: {
+            inertiaFactor: 0.2,
+            focusEntity: logoEntity2,
+            distanceMax: 60,
+            frameOnStart: false
         }
     });
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+    cameraTop.script.create('orbitCameraInputMouse');
+    cameraTop.script.create('orbitCameraInputTouch');
+}
 
-    // setup skydome
-    app.scene.skyboxMip = 2;
-    app.scene.envAtlas = assets.helipad.resource;
+// update function called once per frame
+let time = 0;
+app.on('update', (dt) => {
+    time += dt;
 
-    // create a splat entity and place it in the world
-    const logoEntity1 = new pc.Entity();
-    logoEntity1.addComponent('gsplat', {
-        asset: assets.logo
-    });
-    logoEntity1.setLocalPosition(0, 0.05, 0);
-    logoEntity1.setLocalEulerAngles(180, 90, 0);
-    logoEntity1.setLocalScale(0.7, 0.7, 0.7);
-    app.root.addChild(logoEntity1);
+    // orbit left camera around the splat
+    cameraLeft.setLocalPosition(6 * Math.sin(time * 0.2), 2, 6 * Math.cos(time * 0.2));
+    cameraLeft.lookAt(logoEntity2.getPosition());
 
-    // create another splat entity and place it in the world
-    const logoEntity2 = new pc.Entity();
-    logoEntity2.addComponent('gsplat', {
-        asset: assets.logo
-    });
-    logoEntity2.setLocalPosition(0, -0.5, 0);
-    logoEntity2.setLocalEulerAngles(-90, -90, 0);
-    logoEntity2.setLocalScale(2, 2, 2);
-    app.root.addChild(logoEntity2);
-
-    // Create left camera
-    const cameraLeft = new pc.Entity('LeftCamera');
-    cameraLeft.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        farClip: 500,
-        rect: new pc.Vec4(0, 0, 0.5, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    cameraLeft.setLocalPosition(-0.8, 2, 3);
-    app.root.addChild(cameraLeft);
-
-    // Create right orthographic camera
-    const cameraRight = new pc.Entity('RightCamera');
-    cameraRight.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        farClip: 500,
-        rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
-        projection: pc.PROJECTION_ORTHOGRAPHIC,
-        orthoHeight: 4,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    cameraRight.translate(0, 8, 0);
-    cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
-    app.root.addChild(cameraRight);
-
-    // Create top camera
-    const cameraTop = new pc.Entity('TopCamera');
-    cameraTop.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        farClip: 500,
-        rect: new pc.Vec4(0, 0.5, 1, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    cameraTop.translate(-2, 6, 9);
-    app.root.addChild(cameraTop);
-
-    // add orbit camera script with a mouse and a touch support to top camera
-    cameraTop.addComponent('script');
-    if (cameraTop.script) {
-        cameraTop.script.create('orbitCamera', {
-            attributes: {
-                inertiaFactor: 0.2,
-                focusEntity: logoEntity2,
-                distanceMax: 60,
-                frameOnStart: false
-            }
-        });
-        cameraTop.script.create('orbitCameraInputMouse');
-        cameraTop.script.create('orbitCameraInputTouch');
-    }
-
-    // update function called once per frame
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
-
-        // orbit left camera around the splat
-        cameraLeft.setLocalPosition(6 * Math.sin(time * 0.2), 2, 6 * Math.cos(time * 0.2));
-        cameraLeft.lookAt(logoEntity2.getPosition());
-
-        // rotate camera right around splat differently
-        cameraRight.setLocalPosition(6 * Math.sin(-time * 0.4), 2, 6 * Math.cos(-time * 0.4));
-        cameraRight.lookAt(logoEntity2.getPosition());
-    });
+    // rotate camera right around splat differently
+    cameraRight.setLocalPosition(6 * Math.sin(-time * 0.4), 2, 6 * Math.cos(-time * 0.4));
+    cameraRight.lookAt(logoEntity2.getPosition());
 });

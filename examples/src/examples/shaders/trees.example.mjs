@@ -8,7 +8,31 @@
 // source: https://sketchfab.com/3d-models/low-poly-tree-with-twisting-branches-4e2589134f2442bcbdab51c1f306cd58
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mat4,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL,
+    StandardMaterial,
+    TONEMAP_ACES,
+    TextureHandler,
+    Vec3,
+    VertexBuffer,
+    VertexFormat,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -19,32 +43,32 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    tree: new pc.Asset('cube', 'container', { url: './assets/models/low-poly-tree.glb' })
+    tree: new Asset('cube', 'container', { url: './assets/models/low-poly-tree.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // Determine shader language and import the appropriate shader chunks
-const shaderLanguage = device.isWebGPU ? pc.SHADERLANGUAGE_WGSL : pc.SHADERLANGUAGE_GLSL;
+const shaderLanguage = device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
 const shaderChunks = device.isWebGPU ? shaderChunksWgsl : shaderChunksGlsl;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -53,110 +77,110 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.scene.ambientLight = new pc.Color(0.4, 0.2, 0.0);
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        toneMapping: pc.TONEMAP_ACES,
-        clearColor: new pc.Color(0.95, 0.95, 0.95)
-    });
-    app.root.addChild(camera);
+app.scene.ambientLight = new Color(0.4, 0.2, 0.0);
 
-    // add a shadow casting directional light
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'directional',
-        castShadows: true,
-        shadowBias: 0.2,
-        normalOffsetBias: 0.06,
-        shadowDistance: 35
-    });
-    app.root.addChild(light);
-    light.setLocalEulerAngles(45, 30, 0);
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    toneMapping: TONEMAP_ACES,
+    clearColor: new Color(0.95, 0.95, 0.95)
+});
+app.root.addChild(camera);
 
-    // number of tree instances to render
-    const instanceCount = 1000;
+// add a shadow casting directional light
+const light = new Entity();
+light.addComponent('light', {
+    type: 'directional',
+    castShadows: true,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.06,
+    shadowDistance: 35
+});
+app.root.addChild(light);
+light.setLocalEulerAngles(45, 30, 0);
 
-    // store matrices for individual instances into array
-    const matrices = new Float32Array(instanceCount * 16);
-    let matrixIndex = 0;
+// number of tree instances to render
+const instanceCount = 1000;
 
-    const pos = new pc.Vec3();
-    const rot = new pc.Quat();
-    const scl = new pc.Vec3();
-    const matrix = new pc.Mat4();
+// store matrices for individual instances into array
+const matrices = new Float32Array(instanceCount * 16);
+let matrixIndex = 0;
 
-    for (let i = 0; i < instanceCount; i++) {
+const pos = new Vec3();
+const rot = new Quat();
+const scl = new Vec3();
+const matrix = new Mat4();
 
-        // random points in the circle
-        const maxRadius = 20;
-        const angle = Math.random() * 2 * Math.PI;
-        const radius = Math.sqrt(Math.random() * (maxRadius ** 2));
+for (let i = 0; i < instanceCount; i++) {
+    // random points in the circle
+    const maxRadius = 20;
+    const angle = Math.random() * 2 * Math.PI;
+    const radius = Math.sqrt(Math.random() * maxRadius ** 2);
 
-        // generate random positions / scales and rotations
-        pos.set(radius * Math.cos(angle), 0, radius * Math.sin(angle));
-        scl.set(0.1 + Math.random() * 0.2, 0.1 + Math.random() * 0.3, 0.1 + Math.random() * 0.2);
-        pos.y = -1.5 + scl.y * 4.5;
-        matrix.setTRS(pos, rot, scl);
+    // generate random positions / scales and rotations
+    pos.set(radius * Math.cos(angle), 0, radius * Math.sin(angle));
+    scl.set(0.1 + Math.random() * 0.2, 0.1 + Math.random() * 0.3, 0.1 + Math.random() * 0.2);
+    pos.y = -1.5 + scl.y * 4.5;
+    matrix.setTRS(pos, rot, scl);
 
-        // copy matrix elements into array of floats
-        for (let m = 0; m < 16; m++) matrices[matrixIndex++] = matrix.data[m];
-    }
+    // copy matrix elements into array of floats
+    for (let m = 0; m < 16; m++) matrices[matrixIndex++] = matrix.data[m];
+}
 
-    // create static vertex buffer containing the matrices
-    const vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
-    const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
-        data: matrices
-    });
+// create static vertex buffer containing the matrices
+const vbFormat = VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+const vertexBuffer = new VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
+    data: matrices
+});
 
-    // create a forest by setting up the tree model for instancing
-    const forest = assets.tree.resource.instantiateRenderEntity();
-    app.root.addChild(forest);
-    const meshInstance = forest.findComponent('render').meshInstances[0];
-    meshInstance.setInstancing(vertexBuffer);
+// create a forest by setting up the tree model for instancing
+const forest = assets.tree.resource.instantiateRenderEntity();
+app.root.addChild(forest);
+const meshInstance = forest.findComponent('render').meshInstances[0];
+meshInstance.setInstancing(vertexBuffer);
 
-    // apply shader chunks to the tree material
-    const treeChunks = meshInstance.material.getShaderChunks(shaderLanguage);
-    treeChunks.add(shaderChunks);
-    meshInstance.material.shaderChunksVersion = '2.8';
+// apply shader chunks to the tree material
+const treeChunks = meshInstance.material.getShaderChunks(shaderLanguage);
+treeChunks.add(shaderChunks);
+meshInstance.material.shaderChunksVersion = '2.8';
 
-    // create a ground material - all chunks apart from swaying in the wind, so fog and color blending
-    const groundMaterial = new pc.StandardMaterial();
-    const groundChunks = groundMaterial.getShaderChunks(shaderLanguage);
-    // only add the chunks we need (excluding transformCoreVS which is for tree swaying)
-    groundChunks.add({
-        diffusePS: shaderChunks.diffusePS,
-        litUserMainEndPS: shaderChunks.litUserMainEndPS,
-        litUserDeclarationPS: shaderChunks.litUserDeclarationPS
-    });
-    groundMaterial.shaderChunksVersion = '2.8';
+// create a ground material - all chunks apart from swaying in the wind, so fog and color blending
+const groundMaterial = new StandardMaterial();
+const groundChunks = groundMaterial.getShaderChunks(shaderLanguage);
+// only add the chunks we need (excluding transformCoreVS which is for tree swaying)
+groundChunks.add({
+    diffusePS: shaderChunks.diffusePS,
+    litUserMainEndPS: shaderChunks.litUserMainEndPS,
+    litUserDeclarationPS: shaderChunks.litUserDeclarationPS
+});
+groundMaterial.shaderChunksVersion = '2.8';
 
-    const ground = new pc.Entity('Ground');
-    ground.addComponent('render', {
-        type: 'cylinder',
-        material: groundMaterial
-    });
-    ground.setLocalScale(50, 1, 50);
-    ground.setLocalPosition(0, -2, 0);
-    app.root.addChild(ground);
+const ground = new Entity('Ground');
+ground.addComponent('render', {
+    type: 'cylinder',
+    material: groundMaterial
+});
+ground.setLocalScale(50, 1, 50);
+ground.setLocalPosition(0, -2, 0);
+app.root.addChild(ground);
 
-    // update things every frame
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
+// update things every frame
+let time = 0;
+app.on('update', (dt) => {
+    time += dt;
 
-        // update uniforms once per frame. Note that this needs to use unique uniform names, to make sure
-        // nothing overrides those. Alternatively, you could 'setParameter' on the materials.
-        app.graphicsDevice.scope.resolve('myTime').setValue(time);
-        app.graphicsDevice.scope.resolve('myFogParams').setValue([-2, 2]);
+    // update uniforms once per frame. Note that this needs to use unique uniform names, to make sure
+    // nothing overrides those. Alternatively, you could 'setParameter' on the materials.
+    app.graphicsDevice.scope.resolve('myTime').setValue(time);
+    app.graphicsDevice.scope.resolve('myFogParams').setValue([-2, 2]);
 
-        // orbit camera around
-        camera.setLocalPosition(18 * Math.sin(time * 0.05), 10, 18 * Math.cos(time * 0.05));
-        camera.lookAt(pc.Vec3.ZERO);
-    });
+    // orbit camera around
+    camera.setLocalPosition(18 * Math.sin(time * 0.05), 10, 18 * Math.cos(time * 0.05));
+    camera.lookAt(Vec3.ZERO);
 });

@@ -8,7 +8,7 @@ import {
     SelectInput
 } from '@playcanvas/pcui/react';
 
-import * as pc from 'playcanvas';
+import { SKYTYPE_BOX, SKYTYPE_DOME, SKYTYPE_INFINITE } from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -41,9 +41,9 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.skybox.type' }}
                         type='string'
                         options={[
-                            { v: pc.SKYTYPE_INFINITE, t: 'Infinite' },
-                            { v: pc.SKYTYPE_BOX, t: 'Box' },
-                            { v: pc.SKYTYPE_DOME, t: 'Dome' }
+                            { v: SKYTYPE_INFINITE, t: 'Infinite' },
+                            { v: SKYTYPE_BOX, t: 'Box' },
+                            { v: SKYTYPE_DOME, t: 'Dome' }
                         ]}
                     />
                 </LabelGroup>

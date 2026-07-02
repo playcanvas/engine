@@ -6,7 +6,25 @@
 // source: https://sketchfab.com/3d-models/bench-wooden-01-1400c9340d5049589deb43601462ac55
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    UsdzExporter,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -25,34 +43,34 @@ div.innerHTML = `<div style="text-align: center;">
 appInner.appendChild(div);
 
 const assets = {
-    helipad: new pc.Asset(
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset('bench', 'container', { url: './assets/models/bench_wooden_01.glb' })
+    bench: new Asset('bench', 'container', { url: './assets/models/bench_wooden_01.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -61,38 +79,40 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // get the instance of the bench and set up with render component
-    const entity = assets.bench.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.1, 0.1),
-        farClip: 100,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(-3, 1, 2);
-    camera.lookAt(0, 0.5, 0);
-    app.root.addChild(camera);
+// get the instance of the bench and set up with render component
+const entity = assets.bench.resource.instantiateRenderEntity();
+app.root.addChild(entity);
 
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 1;
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: new Color(0.2, 0.1, 0.1),
+    farClip: 100,
+    toneMapping: TONEMAP_ACES
+});
+camera.translate(-3, 1, 2);
+camera.lookAt(0, 0.5, 0);
+app.root.addChild(camera);
 
-    // a link element, created in the html part of the examples.
-    const link = document.getElementById('ar-link');
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
 
-    // convert the loaded entity into asdz file
-    const options = {
-        maxTextureSize: 1024
-    };
+// a link element, created in the html part of the examples.
+const link = document.getElementById('ar-link');
 
-    new pc.UsdzExporter()
+// convert the loaded entity into asdz file
+const options = {
+    maxTextureSize: 1024
+};
+
+new UsdzExporter()
     .build(entity, options)
     .then((arrayBuffer) => {
         const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
@@ -105,15 +125,14 @@ assetListLoader.load(() => {
     })
     .catch(console.error);
 
-    // when clicking on the download UI button, trigger the download
-    data.on('download', () => {
-        link.click();
-    });
+// when clicking on the download UI button, trigger the download
+data.on('download', () => {
+    link.click();
+});
 
-    // spin the meshe
-    app.on('update', (dt) => {
-        if (entity) {
-            entity.rotate(0, -12 * dt, 0);
-        }
-    });
+// spin the meshe
+app.on('update', (dt) => {
+    if (entity) {
+        entity.rotate(0, -12 * dt, 0);
+    }
 });
