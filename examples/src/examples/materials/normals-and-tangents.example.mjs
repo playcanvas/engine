@@ -60,49 +60,50 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    // Setup skydome
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
-    app.scene.skyboxIntensity = 1.5;
-
-    const leftEntity = assets.model.resource.instantiateRenderEntity();
-    leftEntity.setLocalEulerAngles(0, 90, 0);
-    leftEntity.setPosition(0, 0, 1);
-    leftEntity.setLocalScale(0.8, 0.8, 0.8);
-    app.root.addChild(leftEntity);
-
-    // Create a camera with an orbit camera script
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
-    camera.script.orbitCamera.pitch = 0;
-    camera.script.orbitCamera.yaw = 90;
-    camera.script.orbitCamera.distance = 3;
-
-    const directionalLight = new pc.Entity();
-    directionalLight.addComponent('light', {
-        type: 'directional',
-        color: pc.Color.WHITE,
-        castShadows: true,
-        intensity: 1,
-        shadowBias: 0.2,
-        normalOffsetBias: 0.05,
-        shadowResolution: 2048
-    });
-    directionalLight.setEulerAngles(45, 180, 0);
-    app.root.addChild(directionalLight);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+// Setup skydome
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
+app.scene.skyboxIntensity = 1.5;
+
+const leftEntity = assets.model.resource.instantiateRenderEntity();
+leftEntity.setLocalEulerAngles(0, 90, 0);
+leftEntity.setPosition(0, 0, 1);
+leftEntity.setLocalScale(0.8, 0.8, 0.8);
+app.root.addChild(leftEntity);
+
+// Create a camera with an orbit camera script
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+app.root.addChild(camera);
+camera.script.orbitCamera.pitch = 0;
+camera.script.orbitCamera.yaw = 90;
+camera.script.orbitCamera.distance = 3;
+
+const directionalLight = new pc.Entity();
+directionalLight.addComponent('light', {
+    type: 'directional',
+    color: pc.Color.WHITE,
+    castShadows: true,
+    intensity: 1,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05,
+    shadowResolution: 2048
+});
+directionalLight.setEulerAngles(45, 180, 0);
+app.root.addChild(directionalLight);

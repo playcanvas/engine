@@ -44,41 +44,42 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.exposure = 1.6;
-    app.scene.skyboxMip = 1;
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(0, 7, 25);
-    app.root.addChild(camera);
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.exposure = 1.6;
+app.scene.skyboxMip = 1;
 
-    const entity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.translate(0, 7, 25);
+app.root.addChild(camera);
 
-    const gamepads = new pc.GamePads();
-    app.on('update', () => {
-        gamepads.update();
-        if (gamepads.isPressed(pc.PAD_1, pc.PAD_LEFT)) {
-            entity.rotate(0, -1, 0);
-        }
-        if (gamepads.isPressed(pc.PAD_1, pc.PAD_RIGHT)) {
-            entity.rotate(0, 1, 0);
-        }
-        if (gamepads.wasPressed(pc.PAD_1, pc.PAD_UP)) {
-            entity.rotate(-1, 0, 0);
-        }
-        if (gamepads.wasPressed(pc.PAD_1, pc.PAD_DOWN)) {
-            entity.rotate(1, 0, 0);
-        }
-    });
+const entity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(entity);
+
+const gamepads = new pc.GamePads();
+app.on('update', () => {
+    gamepads.update();
+    if (gamepads.isPressed(pc.PAD_1, pc.PAD_LEFT)) {
+        entity.rotate(0, -1, 0);
+    }
+    if (gamepads.isPressed(pc.PAD_1, pc.PAD_RIGHT)) {
+        entity.rotate(0, 1, 0);
+    }
+    if (gamepads.wasPressed(pc.PAD_1, pc.PAD_UP)) {
+        entity.rotate(-1, 0, 0);
+    }
+    if (gamepads.wasPressed(pc.PAD_1, pc.PAD_DOWN)) {
+        entity.rotate(1, 0, 0);
+    }
 });

@@ -20,7 +20,7 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
@@ -69,135 +69,136 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    data.set('settings', {
-        shaderPassName: pc.SHADERPASS_FORWARD
-    });
+app.start();
 
-    // get few existing layers and create a new layer for the spot light
-    const worldLayer = app.scene.layers.getLayerByName('World');
-    const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
-    const spotLightLayer = new pc.Layer({ name: 'SpotLightLayer' });
-    app.scene.layers.insert(spotLightLayer, 0);
+data.set('settings', {
+    shaderPassName: pc.SHADERPASS_FORWARD
+});
 
-    // get the instance of the chess board and set up with render component
-    const boardEntity = assets.board.resource.instantiateRenderEntity({
-        castShadows: true,
-        receiveShadows: true,
+// get few existing layers and create a new layer for the spot light
+const worldLayer = app.scene.layers.getLayerByName('World');
+const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
+const spotLightLayer = new pc.Layer({ name: 'SpotLightLayer' });
+app.scene.layers.insert(spotLightLayer, 0);
 
-        // add it to both layers with lights, as we want it to lit by directional light and spot light,
-        // depending on the camera
-        layers: [worldLayer.id, spotLightLayer.id]
-    });
-    app.root.addChild(boardEntity);
+// get the instance of the chess board and set up with render component
+const boardEntity = assets.board.resource.instantiateRenderEntity({
+    castShadows: true,
+    receiveShadows: true,
 
-    // Create left camera, using default layers (including the World)
-    const cameraLeft = new pc.Entity('LeftCamera');
-    cameraLeft.addComponent('camera', {
-        farClip: 500,
-        rect: new pc.Vec4(0, 0, 0.5, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    app.root.addChild(cameraLeft);
+    // add it to both layers with lights, as we want it to lit by directional light and spot light,
+    // depending on the camera
+    layers: [worldLayer.id, spotLightLayer.id]
+});
+app.root.addChild(boardEntity);
 
-    // Create right orthographic camera, using spot light layer and skybox layer,
-    // so that it receives the light from the spot light but not from the directional light
-    const cameraRight = new pc.Entity('RightCamera');
-    cameraRight.addComponent('camera', {
-        layers: [spotLightLayer.id, skyboxLayer.id],
-        farClip: 500,
-        rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
-        projection: pc.PROJECTION_ORTHOGRAPHIC,
-        orthoHeight: 150,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    cameraRight.translate(0, 150, 0);
-    cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
-    app.root.addChild(cameraRight);
+// Create left camera, using default layers (including the World)
+const cameraLeft = new pc.Entity('LeftCamera');
+cameraLeft.addComponent('camera', {
+    farClip: 500,
+    rect: new pc.Vec4(0, 0, 0.5, 0.5),
+    toneMapping: pc.TONEMAP_ACES
+});
+app.root.addChild(cameraLeft);
 
-    // Create top camera, using default layers (including the World)
-    const cameraTop = new pc.Entity('TopCamera');
-    cameraTop.addComponent('camera', {
-        farClip: 500,
-        rect: new pc.Vec4(0, 0.5, 1, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    cameraTop.translate(-100, 75, 100);
-    cameraTop.lookAt(0, 7, 0);
-    app.root.addChild(cameraTop);
+// Create right orthographic camera, using spot light layer and skybox layer,
+// so that it receives the light from the spot light but not from the directional light
+const cameraRight = new pc.Entity('RightCamera');
+cameraRight.addComponent('camera', {
+    layers: [spotLightLayer.id, skyboxLayer.id],
+    farClip: 500,
+    rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
+    projection: pc.PROJECTION_ORTHOGRAPHIC,
+    orthoHeight: 150,
+    toneMapping: pc.TONEMAP_ACES
+});
+cameraRight.translate(0, 150, 0);
+cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
+app.root.addChild(cameraRight);
 
-    // add orbit camera script with a mouse and a touch support
-    cameraTop.addComponent('script');
-    cameraTop.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: app.root,
-            distanceMax: 300,
-            frameOnStart: false
-        }
-    });
-    cameraTop.script.create('orbitCameraInputMouse');
-    cameraTop.script.create('orbitCameraInputTouch');
+// Create top camera, using default layers (including the World)
+const cameraTop = new pc.Entity('TopCamera');
+cameraTop.addComponent('camera', {
+    farClip: 500,
+    rect: new pc.Vec4(0, 0.5, 1, 0.5),
+    toneMapping: pc.TONEMAP_ACES
+});
+cameraTop.translate(-100, 75, 100);
+cameraTop.lookAt(0, 7, 0);
+app.root.addChild(cameraTop);
 
-    // Create a directional light which casts shadows
-    const dirLight = new pc.Entity();
-    dirLight.addComponent('light', {
-        type: 'directional',
-        layers: [worldLayer.id],
-        color: pc.Color.WHITE,
-        intensity: 5,
-        range: 500,
-        shadowDistance: 500,
-        castShadows: true,
-        shadowBias: 0.2,
-        normalOffsetBias: 0.05
-    });
-    app.root.addChild(dirLight);
-    dirLight.setLocalEulerAngles(45, 0, 30);
+// add orbit camera script with a mouse and a touch support
+cameraTop.addComponent('script');
+cameraTop.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: app.root,
+        distanceMax: 300,
+        frameOnStart: false
+    }
+});
+cameraTop.script.create('orbitCameraInputMouse');
+cameraTop.script.create('orbitCameraInputTouch');
 
-    // Create a single directional light which casts shadows
-    const spotLight = new pc.Entity();
-    spotLight.addComponent('light', {
-        type: 'spot',
-        layers: [spotLightLayer.id],
-        color: pc.Color.YELLOW,
-        intensity: 7,
-        innerConeAngle: 20,
-        outerConeAngle: 80,
-        range: 200,
-        shadowDistance: 200,
-        castShadows: true,
-        shadowBias: 0.2,
-        normalOffsetBias: 0.05
-    });
-    app.root.addChild(spotLight);
+// Create a directional light which casts shadows
+const dirLight = new pc.Entity();
+dirLight.addComponent('light', {
+    type: 'directional',
+    layers: [worldLayer.id],
+    color: pc.Color.WHITE,
+    intensity: 5,
+    range: 500,
+    shadowDistance: 500,
+    castShadows: true,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05
+});
+app.root.addChild(dirLight);
+dirLight.setLocalEulerAngles(45, 0, 30);
 
-    // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 1;
+// Create a single directional light which casts shadows
+const spotLight = new pc.Entity();
+spotLight.addComponent('light', {
+    type: 'spot',
+    layers: [spotLightLayer.id],
+    color: pc.Color.YELLOW,
+    intensity: 7,
+    innerConeAngle: 20,
+    outerConeAngle: 80,
+    range: 200,
+    shadowDistance: 200,
+    castShadows: true,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05
+});
+app.root.addChild(spotLight);
 
-    // handle HUD changes - update the debug mode for the top and right cameras
-    data.on('*:set', (/** @type {string} */ path, value) => {
-        cameraTop.camera.setShaderPass(value);
-        cameraRight.camera.setShaderPass(value);
-    });
+// set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
 
-    // update function called once per frame
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
+// handle HUD changes - update the debug mode for the top and right cameras
+data.on('*:set', (/** @type {string} */ path, value) => {
+    cameraTop.camera.setShaderPass(value);
+    cameraRight.camera.setShaderPass(value);
+});
 
-        // orbit camera left around
-        cameraLeft.setLocalPosition(100 * Math.sin(time * 0.2), 35, 100 * Math.cos(time * 0.2));
-        cameraLeft.lookAt(pc.Vec3.ZERO);
+// update function called once per frame
+let time = 0;
+app.on('update', dt => {
+    time += dt;
 
-        // move the spot light around
-        spotLight.setLocalPosition(40 * Math.sin(time * 0.5), 60, 40 * Math.cos(time * 0.5));
+    // orbit camera left around
+    cameraLeft.setLocalPosition(100 * Math.sin(time * 0.2), 35, 100 * Math.cos(time * 0.2));
+    cameraLeft.lookAt(pc.Vec3.ZERO);
 
-        // zoom in and out the orthographic camera
-        cameraRight.camera.orthoHeight = 90 + Math.sin(time * 0.3) * 60;
-    });
+    // move the spot light around
+    spotLight.setLocalPosition(40 * Math.sin(time * 0.5), 60, 40 * Math.cos(time * 0.5));
+
+    // zoom in and out the orthographic camera
+    cameraRight.camera.orthoHeight = 90 + Math.sin(time * 0.3) * 60;
 });

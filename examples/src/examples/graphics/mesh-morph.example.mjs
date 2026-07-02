@@ -182,7 +182,7 @@ for (let k = 0; k < 3; k++) {
 
 // update function called once per frame
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt;
 
     for (let m = 0; m < morphInstances.length; m++) {

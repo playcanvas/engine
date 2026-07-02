@@ -34,15 +34,8 @@ createOptions.touch = new pc.TouchDevice(canvas);
 createOptions.keyboard = new pc.Keyboard(window);
 createOptions.xr = pc.XrManager;
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -142,7 +135,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', (evt) => {
+        app.touch.on('touchend', evt => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -157,14 +150,14 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', (evt) => {
+    app.keyboard.on('keydown', evt => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
     // when new input source added
-    app.xr.input.on('add', (inputSource) => {
+    app.xr.input.on('add', inputSource => {
         createController(inputSource);
     });
 
@@ -183,7 +176,7 @@ if (app.xr.supported) {
     const lineColor = new pc.Color(1, 1, 1);
 
     // update position and rotation for each controller
-    app.on('update', (dt) => {
+    app.on('update', dt => {
         let i, inputSource;
 
         // first we update movement

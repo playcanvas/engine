@@ -37,7 +37,7 @@ export function Controls({ observer }) {
             ctx.fillRect(0, halfHeight, width, 1);
             ctx.fillStyle = '#232e30';
 
-            animPoints.forEach((animNode) => {
+            animPoints.forEach(animNode => {
                 const pointX = (animNode.x + 1) * halfWidth;
                 const pointY = (animNode.y * -1 + 1) * halfHeight;
                 const dotWidth = 8;
@@ -71,7 +71,7 @@ export function Controls({ observer }) {
 
         observer.on('*:set', drawPosition);
 
-        const mouseEvent = (e) => {
+        const mouseEvent = e => {
             if (e.buttons) {
                 const rect = canvas.getBoundingClientRect();
                 const x = (e.clientX - rect.left) / (width / 2) - 1;

@@ -42,34 +42,35 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.exposure = 1.6;
-    app.scene.skyboxMip = 1;
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(0, 7, 25);
-    app.root.addChild(camera);
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.exposure = 1.6;
+app.scene.skyboxMip = 1;
 
-    const entity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.translate(0, 7, 25);
+app.root.addChild(camera);
 
-    const keyboard = new pc.Keyboard(document.body);
-    app.on('update', () => {
-        if (keyboard.isPressed(pc.KEY_LEFT)) {
-            entity.rotate(0, -1, 0);
-        }
-        if (keyboard.isPressed(pc.KEY_RIGHT)) {
-            entity.rotate(0, 1, 0);
-        }
-    });
+const entity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(entity);
+
+const keyboard = new pc.Keyboard(document.body);
+app.on('update', () => {
+    if (keyboard.isPressed(pc.KEY_LEFT)) {
+        entity.rotate(0, -1, 0);
+    }
+    if (keyboard.isPressed(pc.KEY_RIGHT)) {
+        entity.rotate(0, 1, 0);
+    }
 });

@@ -49,30 +49,31 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // a camera is required to render the immediate-mode textures
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1)
-    });
-    app.root.addChild(camera);
+app.start();
 
-    // grid layout (screen-space NDC, -1..1), one tile per format
-    const grid = [
-        { asset: assets.png, x: -0.5, y: 0.42 },
-        { asset: assets.dds, x: 0.0, y: 0.42 },
-        { asset: assets.ktx2, x: 0.5, y: 0.42 },
-        { asset: assets.basis, x: -0.25, y: -0.42 },
-        { asset: assets.hdr, x: 0.25, y: -0.42 }
-    ];
+// a camera is required to render the immediate-mode textures
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.1, 0.1, 0.1)
+});
+app.root.addChild(camera);
 
-    // immediate-mode texture draws must be re-issued every frame
-    app.on('update', () => {
-        grid.forEach(({ asset, x, y }) => {
-            app.drawTexture(x, y, 0.4, 0.6, asset.resource);
-        });
+// grid layout (screen-space NDC, -1..1), one tile per format
+const grid = [
+    { asset: assets.png, x: -0.5, y: 0.42 },
+    { asset: assets.dds, x: 0.0, y: 0.42 },
+    { asset: assets.ktx2, x: 0.5, y: 0.42 },
+    { asset: assets.basis, x: -0.25, y: -0.42 },
+    { asset: assets.hdr, x: 0.25, y: -0.42 }
+];
+
+// immediate-mode texture draws must be re-issued every frame
+app.on('update', () => {
+    grid.forEach(({ asset, x, y }) => {
+        app.drawTexture(x, y, 0.4, 0.6, asset.resource);
     });
 });

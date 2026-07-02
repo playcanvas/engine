@@ -83,7 +83,7 @@ light.addComponent('light', {
 light.translate(5, 0, 15);
 app.root.addChild(light);
 
-app.on('update', (dt) => {
+app.on('update', dt => {
     if (entity) {
         entity.rotate(0, 100 * dt, 0);
     }

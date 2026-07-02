@@ -30,7 +30,7 @@ export function Controls({ observer }) {
             return panel?.offsetWidth ?? canvas.parentElement?.offsetWidth ?? 0;
         };
 
-        const mouseEvent = (e) => {
+        const mouseEvent = e => {
             const w = width();
             if (!w) {
                 return;
@@ -38,17 +38,17 @@ export function Controls({ observer }) {
             if (e.targetTouches) {
                 const offset = canvas.getBoundingClientRect();
                 position
-                .set(
-                    e.targetTouches[0].clientX - offset.x,
-                    e.targetTouches[0].clientY - offset.y
-                )
-                .mulScalar(1 / (w / 2))
-                .sub(pc.Vec2.ONE);
+                    .set(
+                        e.targetTouches[0].clientX - offset.x,
+                        e.targetTouches[0].clientY - offset.y
+                    )
+                    .mulScalar(1 / (w / 2))
+                    .sub(pc.Vec2.ONE);
             } else if (e.buttons) {
                 position
-                .set(e.offsetX, e.offsetY)
-                .mulScalar(1 / (w / 2))
-                .sub(pc.Vec2.ONE);
+                    .set(e.offsetX, e.offsetY)
+                    .mulScalar(1 / (w / 2))
+                    .sub(pc.Vec2.ONE);
             } else {
                 return;
             }
@@ -79,7 +79,7 @@ export function Controls({ observer }) {
             ctx.fillRect(0, halfHeight, w, 1);
             ctx.fillStyle = '#232e30';
 
-            animPoints.forEach((animNode) => {
+            animPoints.forEach(animNode => {
                 const posX = (animNode.x + 1) * halfWidth;
                 const posY = (animNode.y * -1 + 1) * halfHeight;
                 const size = 8;

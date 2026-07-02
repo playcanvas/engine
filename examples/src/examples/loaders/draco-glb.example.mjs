@@ -10,7 +10,7 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
@@ -45,39 +45,40 @@ const assets = {
     heart: new pc.Asset('heart', 'container', { url: './assets/models/heart_draco.glb' })
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.start();
 
-    // create an instance using render component
-    const entity = assets.heart.resource.instantiateRenderEntity({
-        receiveShadows: false
-    });
-    app.root.addChild(entity);
-    entity.setLocalScale(20, 20, 20);
+app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
-    });
-    camera.translate(0, 0.5, 4);
-    app.root.addChild(camera);
+// create an instance using render component
+const entity = assets.heart.resource.instantiateRenderEntity({
+    receiveShadows: false
+});
+app.root.addChild(entity);
+entity.setLocalScale(20, 20, 20);
 
-    // Create an entity with a omni light component
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'omni',
-        intensity: 3
-    });
-    light.setLocalPosition(1, 1, 5);
-    app.root.addChild(light);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2)
+});
+camera.translate(0, 0.5, 4);
+app.root.addChild(camera);
 
-    app.on('update', (dt) => {
-        if (entity) {
-            entity.rotate(4 * dt, -20 * dt, 0);
-        }
-    });
+// Create an entity with a omni light component
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'omni',
+    intensity: 3
+});
+light.setLocalPosition(1, 1, 5);
+app.root.addChild(light);
+
+app.on('update', dt => {
+    if (entity) {
+        entity.rotate(4 * dt, -20 * dt, 0);
+    }
 });

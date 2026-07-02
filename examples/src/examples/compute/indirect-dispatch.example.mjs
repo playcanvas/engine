@@ -24,12 +24,7 @@ window.focus();
 
 const assets = {
     statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    hdri: new pc.Asset(
-        'hdri',
-        'texture',
-        { url: './assets/hdri/wide-street.hdr' },
-        { mipmaps: false }
-    ),
+    hdri: new pc.Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false }),
     orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
@@ -188,84 +183,82 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Setup skydome from HDR texture
-    const hdriSource = assets.hdri.resource;
+// Setup skydome from HDR texture
+const hdriSource = assets.hdri.resource;
 
-    // Convert to high resolution cubemap for the skybox
-    const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriSource);
-    app.scene.skybox = skybox;
+// Convert to high resolution cubemap for the skybox
+const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriSource);
+app.scene.skybox = skybox;
 
-    // Generate env-atlas texture for the lighting
-    const lighting = pc.EnvLighting.generateLightingSource(hdriSource);
-    const envAtlas = pc.EnvLighting.generateAtlas(lighting);
-    lighting.destroy();
-    app.scene.envAtlas = envAtlas;
+// Generate env-atlas texture for the lighting
+const lighting = pc.EnvLighting.generateLightingSource(hdriSource);
+const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+lighting.destroy();
+app.scene.envAtlas = envAtlas;
 
-    // Configure projected skydome
-    app.scene.sky.type = pc.SKYTYPE_DOME;
-    app.scene.sky.node.setLocalScale(new pc.Vec3(200, 200, 200));
-    app.scene.sky.node.setLocalPosition(new pc.Vec3(0, 0, 0));
-    app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
-    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 0, 0);
-    app.scene.exposure = 0.7;
+// Configure projected skydome
+app.scene.sky.type = pc.SKYTYPE_DOME;
+app.scene.sky.node.setLocalScale(new pc.Vec3(200, 200, 200));
+app.scene.sky.node.setLocalPosition(new pc.Vec3(0, 0, 0));
+app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
+app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 0, 0);
+app.scene.exposure = 0.7;
 
-    // Add an instance of the statue
-    const statueEntity = assets.statue.resource.instantiateRenderEntity({
-        layers: [rtLayer.id]
-    });
-    app.root.addChild(statueEntity);
+// Add an instance of the statue
+const statueEntity = assets.statue.resource.instantiateRenderEntity({
+    layers: [rtLayer.id]
+});
+app.root.addChild(statueEntity);
 
-    // Initialize resources
-    if (device.supportsCompute) {
-        createResources();
+// Initialize resources
+if (device.supportsCompute) {
+    createResources();
+}
+
+// Create camera that renders to the render target
+rtCamera = new pc.Entity('rtCamera');
+rtCamera.addComponent('camera', {
+    nearClip: CAMERA_NEAR,
+    farClip: CAMERA_FAR,
+    fov: 70,
+    toneMapping: pc.TONEMAP_ACES,
+    gammaCorrection: pc.GAMMA_SRGB,
+    layers: [rtLayer.id, skyboxLayer.id],
+    renderTarget: renderTarget
+});
+
+// Add orbit camera script
+rtCamera.addComponent('script');
+rtCamera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: statueEntity,
+        distanceMax: 500,
+        frameOnStart: false
     }
+});
+rtCamera.script.create('orbitCameraInputMouse');
+rtCamera.script.create('orbitCameraInputTouch');
 
-    // Create camera that renders to the render target
-    rtCamera = new pc.Entity('rtCamera');
-    rtCamera.addComponent('camera', {
-        nearClip: CAMERA_NEAR,
-        farClip: CAMERA_FAR,
-        fov: 70,
-        toneMapping: pc.TONEMAP_ACES,
-        gammaCorrection: pc.GAMMA_SRGB,
-        layers: [rtLayer.id, skyboxLayer.id],
-        renderTarget: renderTarget
-    });
+rtCamera.setLocalPosition(-4, 5, 22);
+rtCamera.lookAt(0, 0, 1);
+app.root.addChild(rtCamera);
 
-    // Add orbit camera script
-    rtCamera.addComponent('script');
-    rtCamera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: statueEntity,
-            distanceMax: 500,
-            frameOnStart: false
-        }
-    });
-    rtCamera.script.create('orbitCameraInputMouse');
-    rtCamera.script.create('orbitCameraInputTouch');
+// Create main camera (for final view - only immediate layer for drawTexture)
+const immediateLayer = app.scene.layers.getLayerByName('Immediate');
+const mainCamera = new pc.Entity('mainCamera');
+mainCamera.addComponent('camera', {
+    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    layers: [immediateLayer.id]
+});
+mainCamera.setPosition(0, 0, 0);
+app.root.addChild(mainCamera);
 
-    rtCamera.setLocalPosition(-4, 5, 22);
-    rtCamera.lookAt(0, 0, 1);
-    app.root.addChild(rtCamera);
-
-    // Create main camera (for final view - only immediate layer for drawTexture)
-    const immediateLayer = app.scene.layers.getLayerByName('Immediate');
-    const mainCamera = new pc.Entity('mainCamera');
-    mainCamera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1),
-        layers: [immediateLayer.id]
-    });
-    mainCamera.setPosition(0, 0, 0);
-    app.root.addChild(mainCamera);
-
-    if (!device.supportsCompute) {
-        return;
-    }
-
+if (device.supportsCompute) {
     // Shader defines - TILE_SIZE is used in both shaders
     const shaderDefines = new Map([['{TILE_SIZE}', `${TILE_SIZE}`]]);
 
@@ -291,7 +284,13 @@ assetListLoader.load(() => {
 
         computeBindGroupFormat: new pc.BindGroupFormat(device, [
             new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-            new pc.BindTextureFormat('depthTexture', pc.SHADERSTAGE_COMPUTE, pc.TEXTUREDIMENSION_2D, pc.SAMPLETYPE_DEPTH, false), // depth texture, no sampler
+            new pc.BindTextureFormat(
+                'depthTexture',
+                pc.SHADERSTAGE_COMPUTE,
+                pc.TEXTUREDIMENSION_2D,
+                pc.SAMPLETYPE_DEPTH,
+                false
+            ), // depth texture, no sampler
             // Tile lists populated by scan shader, consumed by effect shaders
             new pc.BindStorageBufferFormat('edgeTileList', pc.SHADERSTAGE_COMPUTE),
             new pc.BindStorageBufferFormat('smoothTileList', pc.SHADERSTAGE_COMPUTE),
@@ -322,7 +321,13 @@ assetListLoader.load(() => {
         computeBindGroupFormat: new pc.BindGroupFormat(device, [
             new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
             new pc.BindStorageBufferFormat('tileList', pc.SHADERSTAGE_COMPUTE, true), // read-only
-            new pc.BindTextureFormat('inputTexture', pc.SHADERSTAGE_COMPUTE, pc.TEXTUREDIMENSION_2D, pc.SAMPLETYPE_FLOAT, false), // no sampler, using textureLoad
+            new pc.BindTextureFormat(
+                'inputTexture',
+                pc.SHADERSTAGE_COMPUTE,
+                pc.TEXTUREDIMENSION_2D,
+                pc.SAMPLETYPE_FLOAT,
+                false
+            ), // no sampler, using textureLoad
             new pc.BindStorageTextureFormat('outputTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
         ])
     });
@@ -334,7 +339,7 @@ assetListLoader.load(() => {
 
     // Set initial data values
     data.set('data', {
-        threshold: 15     // threshold is in world units - depth range within tile that triggers edge detection
+        threshold: 15 // threshold is in world units - depth range within tile that triggers edge detection
     });
 
     // Update loop
@@ -405,4 +410,4 @@ assetListLoader.load(() => {
         // Bottom half: compute-processed texture (red edge tiles, blue smooth tiles)
         app.drawTexture(0, -0.5 + gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, outputTexture);
     });
-});
+}

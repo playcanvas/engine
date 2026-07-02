@@ -7,9 +7,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    grey_button: new pc.Asset('grey_button', 'texture', {
-        url: './assets/button/grey_button.png'
-    }, { srgb: true })
+    grey_button: new pc.Asset(
+        'grey_button',
+        'texture',
+        {
+            url: './assets/button/grey_button.png'
+        },
+        { srgb: true }
+    )
 };
 
 const gfxOptions = {
@@ -47,126 +52,127 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Create a camera
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
-    });
-    app.root.addChild(camera);
+app.start();
 
-    // Create a 2D screen
-    const screen = new pc.Entity();
-    screen.addComponent('screen', {
-        referenceResolution: new pc.Vec2(1280, 720),
-        scaleBlend: 0.5,
-        scaleMode: pc.SCALEMODE_BLEND,
-        screenSpace: true
-    });
-    app.root.addChild(screen);
+// Create a camera
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
+});
+app.root.addChild(camera);
 
-    // Create a simple panel
-    const panel = new pc.Entity();
-    panel.addComponent('element', {
-        anchor: [0.5, 0.5, 0.5, 0.5],
-        width: 400,
-        height: 200,
-        pivot: [0.5, 0.5],
-        type: pc.ELEMENTTYPE_IMAGE,
-        useInput: true
-    });
-    screen.addChild(panel);
+// Create a 2D screen
+const screen = new pc.Entity();
+screen.addComponent('screen', {
+    referenceResolution: new pc.Vec2(1280, 720),
+    scaleBlend: 0.5,
+    scaleMode: pc.SCALEMODE_BLEND,
+    screenSpace: true
+});
+app.root.addChild(screen);
 
-    // Prepare the atlas with a single frame
-    const texture = assets.grey_button.resource;
-    texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-    texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-    texture.minFilter = pc.FILTER_NEAREST;
-    texture.magFilter = pc.FILTER_NEAREST;
+// Create a simple panel
+const panel = new pc.Entity();
+panel.addComponent('element', {
+    anchor: [0.5, 0.5, 0.5, 0.5],
+    width: 400,
+    height: 200,
+    pivot: [0.5, 0.5],
+    type: pc.ELEMENTTYPE_IMAGE,
+    useInput: true
+});
+screen.addChild(panel);
 
-    const atlas = new pc.TextureAtlas();
-    atlas.frames = {
-        0: {
-            // x, y, width, height properties of the frame in pixels
-            rect: new pc.Vec4(0, 0, 240, 135),
+// Prepare the atlas with a single frame
+const texture = assets.grey_button.resource;
+texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+texture.minFilter = pc.FILTER_NEAREST;
+texture.magFilter = pc.FILTER_NEAREST;
 
-            // The pivot of the frame - values are between 0-1
-            pivot: new pc.Vec2(0.5, 0.5),
+const atlas = new pc.TextureAtlas();
+atlas.frames = {
+    0: {
+        // x, y, width, height properties of the frame in pixels
+        rect: new pc.Vec4(0, 0, 240, 135),
 
-            // Nine-slice border: left, bottom, right, top border in pixels
-            border: new pc.Vec4(21, 28, 21, 33)
-        }
-    };
-    atlas.texture = texture;
+        // The pivot of the frame - values are between 0-1
+        pivot: new pc.Vec2(0.5, 0.5),
 
-    /**
-     * @param {string} frame - Frame key for pc.Sprite.
-     * @returns {pc.Asset} The asset.
-     */
-    const createSpriteAsset = function (frame) {
-        const sprite = new pc.Sprite(app.graphicsDevice, {
-            atlas: atlas,
-            frameKeys: [frame],
-            pixelsPerUnit: 1,
-            renderMode: pc.SPRITE_RENDERMODE_SLICED
-        });
+        // Nine-slice border: left, bottom, right, top border in pixels
+        border: new pc.Vec4(21, 28, 21, 33)
+    }
+};
+atlas.texture = texture;
 
-        const spriteAsset = new pc.Asset('sprite', 'sprite', { url: '' });
-        spriteAsset.resource = sprite;
-        spriteAsset.loaded = true;
-        app.assets.add(spriteAsset);
-        return spriteAsset;
-    };
-
-    panel.element.spriteAsset = createSpriteAsset('0').id;
-
-    // Animation variables
-    let scaleXDirection = 1;
-    let scaleYDirection = 1;
-    const scaleXSpeed = 3;
-    const scaleYSpeed = 1.5;
-
-    app.on('update', (dt) => {
-        const currentWidth = panel.element.width;
-        const currentHeight = panel.element.height;
-
-        let targetWidth = currentWidth + scaleXDirection * scaleXSpeed;
-        let targetHeight = currentHeight + scaleYDirection * scaleYSpeed;
-
-        // Bounce logic for width
-        if (targetWidth > 800) {
-            targetWidth = 800;
-            scaleXDirection = -1;
-        } else if (targetWidth < 100) {
-            targetWidth = 100;
-            scaleXDirection = 1;
-        }
-
-        // Bounce logic for height
-        if (targetHeight > 676) {
-            targetHeight = 676;
-            scaleYDirection = -1;
-        } else if (targetHeight < 100) {
-            targetHeight = 100;
-            scaleYDirection = 1;
-        }
-
-        panel.element.width = targetWidth;
-        panel.element.height = targetHeight;
+/**
+ * @param {string} frame - Frame key for pc.Sprite.
+ * @returns {pc.Asset} The asset.
+ */
+const createSpriteAsset = function (frame) {
+    const sprite = new pc.Sprite(app.graphicsDevice, {
+        atlas: atlas,
+        frameKeys: [frame],
+        pixelsPerUnit: 1,
+        renderMode: pc.SPRITE_RENDERMODE_SLICED
     });
 
-    // apply UI changes
-    data.on('*:set', (/** @type {string} */ path, value) => {
-        if (path === 'data.sliced') {
-            panel.element.sprite.renderMode = value ? pc.SPRITE_RENDERMODE_SLICED : pc.SPRITE_RENDERMODE_SIMPLE;
-        }
-    });
+    const spriteAsset = new pc.Asset('sprite', 'sprite', { url: '' });
+    spriteAsset.resource = sprite;
+    spriteAsset.loaded = true;
+    app.assets.add(spriteAsset);
+    return spriteAsset;
+};
 
-    // set initial values
-    data.set('data', {
-        sliced: true
-    });
+panel.element.spriteAsset = createSpriteAsset('0').id;
+
+// Animation variables
+let scaleXDirection = 1;
+let scaleYDirection = 1;
+const scaleXSpeed = 3;
+const scaleYSpeed = 1.5;
+
+app.on('update', dt => {
+    const currentWidth = panel.element.width;
+    const currentHeight = panel.element.height;
+
+    let targetWidth = currentWidth + scaleXDirection * scaleXSpeed;
+    let targetHeight = currentHeight + scaleYDirection * scaleYSpeed;
+
+    // Bounce logic for width
+    if (targetWidth > 800) {
+        targetWidth = 800;
+        scaleXDirection = -1;
+    } else if (targetWidth < 100) {
+        targetWidth = 100;
+        scaleXDirection = 1;
+    }
+
+    // Bounce logic for height
+    if (targetHeight > 676) {
+        targetHeight = 676;
+        scaleYDirection = -1;
+    } else if (targetHeight < 100) {
+        targetHeight = 100;
+        scaleYDirection = 1;
+    }
+
+    panel.element.width = targetWidth;
+    panel.element.height = targetHeight;
+});
+
+// apply UI changes
+data.on('*:set', (/** @type {string} */ path, value) => {
+    if (path === 'data.sliced') {
+        panel.element.sprite.renderMode = value ? pc.SPRITE_RENDERMODE_SLICED : pc.SPRITE_RENDERMODE_SIMPLE;
+    }
+});
+
+// set initial values
+data.set('data', {
+    sliced: true
 });

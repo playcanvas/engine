@@ -49,89 +49,90 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    app.scene.skyboxMip = 1;
-    app.scene.envAtlas = assets.helipad.resource;
-
-    // Create an entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(0, 9, 9);
-    camera.rotate(-48, 0, 0);
-    app.root.addChild(camera);
-
-    // Create an entity with a directional light component
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'directional'
-    });
-    app.root.addChild(light);
-    const e = light.getLocalEulerAngles();
-    light.setLocalEulerAngles(e.x + 90, e.y - 75, e.z);
-
-    const NUM_SPHERES_X = 11;
-    const NUM_SPHERES_Z = 6;
-    /**
-     * @param {number} x - The x coordinate.
-     * @param {number} y - The y coordinate.
-     * @param {number} z - The z coordinate.
-     */
-    const createSphere = function (x, y, z) {
-        const material = new pc.StandardMaterial();
-        material.metalness = 1.0;
-        material.gloss = z / (NUM_SPHERES_Z - 1);
-        material.useMetalness = true;
-        material.anisotropyIntensity = x / (NUM_SPHERES_X - 1);
-
-        material.enableGGXSpecular = true;
-        material.update();
-
-        const sphere = new pc.Entity();
-
-        sphere.addComponent('render', {
-            material: material,
-            type: 'sphere'
-        });
-        sphere.setLocalPosition(x - (NUM_SPHERES_X - 1) * 0.5, y, z - (NUM_SPHERES_Z - 1) * 0.5);
-        sphere.setLocalScale(0.7, 0.7, 0.7);
-        app.root.addChild(sphere);
-    };
-    /**
-     * @param {pc.Asset} fontAsset - The font asset.
-     * @param {string} message - The message.
-     * @param {number} x - The x coordinate.
-     * @param {number} y - The y coordinate.
-     * @param {number} z - The z coordinate.
-     * @param {number} rotx - Rotation around x coordinate (euler angles).
-     * @param {number} roty - Rotation around y coordinate (euler angles).
-     */
-    const createText = function (fontAsset, message, x, y, z, rotx, roty) {
-        // Create a text element-based entity
-        const text = new pc.Entity();
-        text.addComponent('element', {
-            anchor: [0.5, 0.5, 0.5, 0.5],
-            fontAsset: fontAsset,
-            fontSize: 0.5,
-            pivot: [0.5, 0.5],
-            text: message,
-            type: pc.ELEMENTTYPE_TEXT
-        });
-        text.setLocalPosition(x, y, z);
-        text.setLocalEulerAngles(rotx, roty, 0);
-        app.root.addChild(text);
-    };
-
-    for (let i = 0; i < NUM_SPHERES_Z; i++) {
-        for (let j = 0; j < NUM_SPHERES_X; j++) {
-            createSphere(j, 0, i);
-        }
-    }
-
-    createText(assets.font, 'Anisotropy', 0, 0, (NUM_SPHERES_Z + 1) * 0.5, -90, 0);
-    createText(assets.font, 'Roughness', -(NUM_SPHERES_X + 1) * 0.5, 0, 0, -90, 90);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+app.scene.skyboxMip = 1;
+app.scene.envAtlas = assets.helipad.resource;
+
+// Create an entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.translate(0, 9, 9);
+camera.rotate(-48, 0, 0);
+app.root.addChild(camera);
+
+// Create an entity with a directional light component
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'directional'
+});
+app.root.addChild(light);
+const e = light.getLocalEulerAngles();
+light.setLocalEulerAngles(e.x + 90, e.y - 75, e.z);
+
+const NUM_SPHERES_X = 11;
+const NUM_SPHERES_Z = 6;
+/**
+ * @param {number} x - The x coordinate.
+ * @param {number} y - The y coordinate.
+ * @param {number} z - The z coordinate.
+ */
+const createSphere = function (x, y, z) {
+    const material = new pc.StandardMaterial();
+    material.metalness = 1.0;
+    material.gloss = z / (NUM_SPHERES_Z - 1);
+    material.useMetalness = true;
+    material.anisotropyIntensity = x / (NUM_SPHERES_X - 1);
+
+    material.enableGGXSpecular = true;
+    material.update();
+
+    const sphere = new pc.Entity();
+
+    sphere.addComponent('render', {
+        material: material,
+        type: 'sphere'
+    });
+    sphere.setLocalPosition(x - (NUM_SPHERES_X - 1) * 0.5, y, z - (NUM_SPHERES_Z - 1) * 0.5);
+    sphere.setLocalScale(0.7, 0.7, 0.7);
+    app.root.addChild(sphere);
+};
+/**
+ * @param {pc.Asset} fontAsset - The font asset.
+ * @param {string} message - The message.
+ * @param {number} x - The x coordinate.
+ * @param {number} y - The y coordinate.
+ * @param {number} z - The z coordinate.
+ * @param {number} rotx - Rotation around x coordinate (euler angles).
+ * @param {number} roty - Rotation around y coordinate (euler angles).
+ */
+const createText = function (fontAsset, message, x, y, z, rotx, roty) {
+    // Create a text element-based entity
+    const text = new pc.Entity();
+    text.addComponent('element', {
+        anchor: [0.5, 0.5, 0.5, 0.5],
+        fontAsset: fontAsset,
+        fontSize: 0.5,
+        pivot: [0.5, 0.5],
+        text: message,
+        type: pc.ELEMENTTYPE_TEXT
+    });
+    text.setLocalPosition(x, y, z);
+    text.setLocalEulerAngles(rotx, roty, 0);
+    app.root.addChild(text);
+};
+
+for (let i = 0; i < NUM_SPHERES_Z; i++) {
+    for (let j = 0; j < NUM_SPHERES_X; j++) {
+        createSphere(j, 0, i);
+    }
+}
+
+createText(assets.font, 'Anisotropy', 0, 0, (NUM_SPHERES_Z + 1) * 0.5, -90, 0);
+createText(assets.font, 'Roughness', -(NUM_SPHERES_X + 1) * 0.5, 0, 0, -90, 90);

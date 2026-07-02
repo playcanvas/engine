@@ -36,47 +36,48 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.start();
 
-    // create an entity with render assets
-    const entity = assets.statue.resource.instantiateModelEntity({
-        castShadows: true
-    });
+app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-    app.root.addChild(entity);
+// create an entity with render assets
+const entity = assets.statue.resource.instantiateModelEntity({
+    castShadows: true
+});
 
-    // clone a small version of the entity
-    const clone = entity.clone();
-    clone.setLocalScale(0.2, 0.2, 0.2);
-    clone.setLocalPosition(-4, 12, 0);
-    app.root.addChild(clone);
+app.root.addChild(entity);
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
-    });
-    camera.translate(0, 7, 24);
-    app.root.addChild(camera);
+// clone a small version of the entity
+const clone = entity.clone();
+clone.setLocalScale(0.2, 0.2, 0.2);
+clone.setLocalPosition(-4, 12, 0);
+app.root.addChild(clone);
 
-    // Create an Entity with a omni light component
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'omni',
-        color: new pc.Color(1, 1, 1),
-        range: 100,
-        castShadows: true
-    });
-    light.translate(5, 0, 15);
-    app.root.addChild(light);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5)
+});
+camera.translate(0, 7, 24);
+app.root.addChild(camera);
 
-    app.on('update', (dt) => {
-        if (entity) {
-            entity.rotate(0, 10 * dt, 0);
-        }
-    });
+// Create an Entity with a omni light component
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'omni',
+    color: new pc.Color(1, 1, 1),
+    range: 100,
+    castShadows: true
+});
+light.translate(5, 0, 15);
+app.root.addChild(light);
+
+app.on('update', dt => {
+    if (entity) {
+        entity.rotate(0, 10 * dt, 0);
+    }
 });

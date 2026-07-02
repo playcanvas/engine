@@ -43,56 +43,57 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    /** @type {pc.Entity[]} */
-    const cubeEntities = [];
+app.start();
 
-    // get the instance of the cube it set up with render component and add it to scene
-    cubeEntities[0] = assets.cube.resource.instantiateRenderEntity();
-    cubeEntities[0].setLocalPosition(7, 12, 0);
-    cubeEntities[0].setLocalScale(3, 3, 3);
-    app.root.addChild(cubeEntities[0]);
+/** @type {pc.Entity[]} */
+const cubeEntities = [];
 
-    // clone another copy of it and add it to scene
-    cubeEntities[1] = cubeEntities[0].clone();
-    cubeEntities[1].setLocalPosition(-7, 12, 0);
-    cubeEntities[1].setLocalScale(3, 3, 3);
-    app.root.addChild(cubeEntities[1]);
+// get the instance of the cube it set up with render component and add it to scene
+cubeEntities[0] = assets.cube.resource.instantiateRenderEntity();
+cubeEntities[0].setLocalPosition(7, 12, 0);
+cubeEntities[0].setLocalScale(3, 3, 3);
+app.root.addChild(cubeEntities[0]);
 
-    // get the instance of the statue and set up with render component
-    const statueEntity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(statueEntity);
+// clone another copy of it and add it to scene
+cubeEntities[1] = cubeEntities[0].clone();
+cubeEntities[1].setLocalPosition(-7, 12, 0);
+cubeEntities[1].setLocalScale(3, 3, 3);
+app.root.addChild(cubeEntities[1]);
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.1, 0.1),
-        farClip: 100,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(-20, 15, 20);
-    camera.lookAt(0, 7, 0);
-    app.root.addChild(camera);
+// get the instance of the statue and set up with render component
+const statueEntity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(statueEntity);
 
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 1;
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.1, 0.1),
+    farClip: 100,
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.translate(-20, 15, 20);
+camera.lookAt(0, 7, 0);
+app.root.addChild(camera);
 
-    // spin the meshes
-    app.on('update', (dt) => {
-        if (cubeEntities[0]) {
-            cubeEntities[0].rotate(3 * dt, 10 * dt, 6 * dt);
-        }
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
 
-        if (cubeEntities[1]) {
-            cubeEntities[1].rotate(-7 * dt, 5 * dt, -2 * dt);
-        }
+// spin the meshes
+app.on('update', dt => {
+    if (cubeEntities[0]) {
+        cubeEntities[0].rotate(3 * dt, 10 * dt, 6 * dt);
+    }
 
-        if (statueEntity) {
-            statueEntity.rotate(0, -12 * dt, 0);
-        }
-    });
+    if (cubeEntities[1]) {
+        cubeEntities[1].rotate(-7 * dt, 5 * dt, -2 * dt);
+    }
+
+    if (statueEntity) {
+        statueEntity.rotate(0, -12 * dt, 0);
+    }
 });

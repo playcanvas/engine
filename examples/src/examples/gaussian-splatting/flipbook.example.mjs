@@ -76,115 +76,116 @@ const assets = {
     orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    // setup skydome
-    app.scene.skyboxMip = 2;
-    app.scene.envAtlas = assets.helipad.resource;
-
-    // add room model
-    const roomEntity = assets.apartment.resource.instantiateRenderEntity({
-        castShadows: false
-    });
-    roomEntity.setLocalScale(30, 30, 30);
-    app.root.addChild(roomEntity);
-
-    const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
-
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        toneMapping: pc.TONEMAP_ACES,
-        farClip: 1500,
-        fov: 80
-    });
-
-    const focusPoint = new pc.Entity();
-    focusPoint.setLocalPosition(-80, 80, -20);
-
-    // add orbit camera script with a mouse and a touch support
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: focusPoint,
-            distanceMax: 500,
-            frameOnStart: false
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    camera.setLocalPosition(-50, 100, 220);
-    camera.lookAt(0, 0, 100);
-    app.root.addChild(camera);
-
-    // Create player flipbook
-    const player = new pc.Entity('Player');
-    player.addComponent('gsplat', {
-        castShadows: true
-    });
-    player.addComponent('script');
-    const flipbook = player.script.create(GsplatFlipbook);
-    if (flipbook) {
-        flipbook.fps = 15;
-        flipbook.folder = 'https://code.playcanvas.com/examples_data/example_basketball_02';
-        flipbook.filenamePattern = '{frame:03}.compressed.ply';
-        flipbook.startFrame = 1;
-        flipbook.endFrame = 149;
-        flipbook.playMode = 'bounce';
-        flipbook.playing = true;
-    }
-    player.setLocalPosition(50, 0, -80);
-    player.setLocalEulerAngles(180, 20, 0);
-    player.setLocalScale(80, 80, 80);
-    app.root.addChild(player);
-
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
-        }
-    });
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-
-    app.scene.gsplat.alphaClip = 0.1;
-
-    // Create shadow catcher
-    const shadowCatcher = new pc.Entity('ShadowCatcher');
-    shadowCatcher.addComponent('render', {
-        type: 'plane',
-        castShadows: false
-    });
-    shadowCatcher.setLocalScale(300, 300, 300);
-
-    shadowCatcher.addComponent('script');
-    shadowCatcher.script?.create(ShadowCatcher, {
-        properties: {
-            geometry: shadowCatcher,
-            scale: new pc.Vec3(1000, 1000, 1000)
-        }
-    });
-    shadowCatcher.setLocalPosition(0, 1, -180);
-    app.root.addChild(shadowCatcher);
-
-    // Shadow casting directional light
-    const directionalLight = new pc.Entity('light');
-    directionalLight.addComponent('light', {
-        type: 'directional',
-        color: pc.Color.BLACK,
-        castShadows: true,
-        intensity: 0,
-        shadowBias: 0.1,
-        normalOffsetBias: 0.05,
-        shadowDistance: 800,
-        shadowIntensity: 0.3,
-        shadowResolution: 2048,
-        shadowType: pc.SHADOW_PCF5_16F
-    });
-    directionalLight.setEulerAngles(55, 70, 0);
-    app.root.addChild(directionalLight);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+// setup skydome
+app.scene.skyboxMip = 2;
+app.scene.envAtlas = assets.helipad.resource;
+
+// add room model
+const roomEntity = assets.apartment.resource.instantiateRenderEntity({
+    castShadows: false
+});
+roomEntity.setLocalScale(30, 30, 30);
+app.root.addChild(roomEntity);
+
+const miniStats = new pc.MiniStats(app, pc.MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
+
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    toneMapping: pc.TONEMAP_ACES,
+    farClip: 1500,
+    fov: 80
+});
+
+const focusPoint = new pc.Entity();
+focusPoint.setLocalPosition(-80, 80, -20);
+
+// add orbit camera script with a mouse and a touch support
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: focusPoint,
+        distanceMax: 500,
+        frameOnStart: false
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+camera.setLocalPosition(-50, 100, 220);
+camera.lookAt(0, 0, 100);
+app.root.addChild(camera);
+
+// Create player flipbook
+const player = new pc.Entity('Player');
+player.addComponent('gsplat', {
+    castShadows: true
+});
+player.addComponent('script');
+const flipbook = player.script.create(GsplatFlipbook);
+if (flipbook) {
+    flipbook.fps = 15;
+    flipbook.folder = 'https://code.playcanvas.com/examples_data/example_basketball_02';
+    flipbook.filenamePattern = '{frame:03}.compressed.ply';
+    flipbook.startFrame = 1;
+    flipbook.endFrame = 149;
+    flipbook.playMode = 'bounce';
+    flipbook.playing = true;
+}
+player.setLocalPosition(50, 0, -80);
+player.setLocalEulerAngles(180, 20, 0);
+player.setLocalScale(80, 80, 80);
+app.root.addChild(player);
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
+app.scene.gsplat.alphaClip = 0.1;
+
+// Create shadow catcher
+const shadowCatcher = new pc.Entity('ShadowCatcher');
+shadowCatcher.addComponent('render', {
+    type: 'plane',
+    castShadows: false
+});
+shadowCatcher.setLocalScale(300, 300, 300);
+
+shadowCatcher.addComponent('script');
+shadowCatcher.script?.create(ShadowCatcher, {
+    properties: {
+        geometry: shadowCatcher,
+        scale: new pc.Vec3(1000, 1000, 1000)
+    }
+});
+shadowCatcher.setLocalPosition(0, 1, -180);
+app.root.addChild(shadowCatcher);
+
+// Shadow casting directional light
+const directionalLight = new pc.Entity('light');
+directionalLight.addComponent('light', {
+    type: 'directional',
+    color: pc.Color.BLACK,
+    castShadows: true,
+    intensity: 0,
+    shadowBias: 0.1,
+    normalOffsetBias: 0.05,
+    shadowDistance: 800,
+    shadowIntensity: 0.3,
+    shadowResolution: 2048,
+    shadowType: pc.SHADOW_PCF5_16F
+});
+directionalLight.setEulerAngles(55, 70, 0);
+app.root.addChild(directionalLight);

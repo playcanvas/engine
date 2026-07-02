@@ -64,64 +64,66 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.scene.envAtlas = assets.helipad.resource;
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
-    });
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            distanceMin: 2,
-            distanceMax: 15
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    camera.translate(0, 1, 4);
-    camera.lookAt(0, 0, 0);
-    app.root.addChild(camera);
+app.scene.envAtlas = assets.helipad.resource;
 
-    // Create an Entity with a omni light component and a sphere model component.
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'omni',
-        color: pc.Color.RED,
-        intensity: 2,
-        range: 10
-    });
-    light.translate(0, 1, 0);
-    app.root.addChild(light);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5)
+});
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        distanceMin: 2,
+        distanceMax: 15
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+camera.translate(0, 1, 4);
+camera.lookAt(0, 0, 0);
+app.root.addChild(camera);
 
-    const material = new pc.LitMaterial();
-    material.setParameter('texture_envAtlas', assets.helipad.resource);
-    material.setParameter('material_reflectivity', 1.0);
-    material.setParameter('material_normalMapIntensity', 1.0);
-    material.setParameter('texture_diffuseMap', assets.color.resource);
-    material.setParameter('texture_glossMap', assets.gloss.resource);
-    material.setParameter('texture_normalMap', assets.normal.resource);
+// Create an Entity with a omni light component and a sphere model component.
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'omni',
+    color: pc.Color.RED,
+    intensity: 2,
+    range: 10
+});
+light.translate(0, 1, 0);
+app.root.addChild(light);
 
-    material.useSkybox = true;
-    material.hasSpecular = true;
+const material = new pc.LitMaterial();
+material.setParameter('texture_envAtlas', assets.helipad.resource);
+material.setParameter('material_reflectivity', 1.0);
+material.setParameter('material_normalMapIntensity', 1.0);
+material.setParameter('texture_diffuseMap', assets.color.resource);
+material.setParameter('texture_glossMap', assets.gloss.resource);
+material.setParameter('texture_normalMap', assets.normal.resource);
 
-    material.hasSpecularityFactor = true;
-    material.hasNormals = true;
-    //    material.hasMetalness = true;
-    material.hasMetalness = false;
-    material.occludeSpecular = pc.SPECOCC_AO;
+material.useSkybox = true;
+material.hasSpecular = true;
 
-    // shadows not ported yet
-    app.scene.lighting.shadowsEnabled = false;
-    app.scene.lighting.cookiesEnabled = false;
+material.hasSpecularityFactor = true;
+material.hasNormals = true;
+//    material.hasMetalness = true;
+material.hasMetalness = false;
+material.occludeSpecular = pc.SPECOCC_AO;
 
-    material.shaderChunkGLSL = /* glsl */`
+// shadows not ported yet
+app.scene.lighting.shadowsEnabled = false;
+app.scene.lighting.cookiesEnabled = false;
+
+material.shaderChunkGLSL = /* glsl */ `
 
         #include "litShaderCorePS"
 
@@ -148,7 +150,7 @@ assetListLoader.load(() => {
             litArgs_opacity = 1.0;
         }`;
 
-    material.shaderChunkWGSL = /* wgsl */`
+material.shaderChunkWGSL = /* wgsl */ `
 
         #include "litShaderCorePS"
 
@@ -178,26 +180,25 @@ assetListLoader.load(() => {
             litArgs_opacity = 1.0;
         }`;
 
-    material.update();
+material.update();
 
-    // create primitive
-    const primitive = new pc.Entity();
-    primitive.addComponent('render', {
-        type: 'sphere',
-        material: material
-    });
+// create primitive
+const primitive = new pc.Entity();
+primitive.addComponent('render', {
+    type: 'sphere',
+    material: material
+});
 
-    // set position and scale and add it to scene
-    app.root.addChild(primitive);
+// set position and scale and add it to scene
+app.root.addChild(primitive);
 
-    let time = 0;
-    app.on('update', (/** @type {number} */ dt) => {
-        time += dt;
-        material.setParameter('material_specularRgb', [
-            (Math.sin(time) + 1.0) * 0.5,
-            (Math.cos(time * 0.5) + 1.0) * 0.5,
-            (Math.sin(time * 0.7) + 1.0) * 0.5
-        ]);
-        material.setParameter('material_normalMapIntensity', (Math.sin(time) + 1.0) * 0.5);
-    });
+let time = 0;
+app.on('update', (/** @type {number} */ dt) => {
+    time += dt;
+    material.setParameter('material_specularRgb', [
+        (Math.sin(time) + 1.0) * 0.5,
+        (Math.cos(time * 0.5) + 1.0) * 0.5,
+        (Math.sin(time * 0.7) + 1.0) * 0.5
+    ]);
+    material.setParameter('material_normalMapIntensity', (Math.sin(time) + 1.0) * 0.5);
 });

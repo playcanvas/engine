@@ -44,7 +44,7 @@ const assets = {
  * @returns {Promise<void>} The promise.
  */
 function loadAssets(assetList, assetRegistry) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         const assetListLoader = new pc.AssetListLoader(assetList, assetRegistry);
         assetListLoader.load(resolve);
     });

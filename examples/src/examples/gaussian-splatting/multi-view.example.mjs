@@ -59,105 +59,106 @@ const assets = {
     )
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
+app.start();
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
+// setup skydome
+app.scene.skyboxMip = 2;
+app.scene.envAtlas = assets.helipad.resource;
+
+// create a splat entity and place it in the world
+const logoEntity1 = new pc.Entity();
+logoEntity1.addComponent('gsplat', {
+    asset: assets.logo
+});
+logoEntity1.setLocalPosition(0, 0.05, 0);
+logoEntity1.setLocalEulerAngles(180, 90, 0);
+logoEntity1.setLocalScale(0.7, 0.7, 0.7);
+app.root.addChild(logoEntity1);
+
+// create another splat entity and place it in the world
+const logoEntity2 = new pc.Entity();
+logoEntity2.addComponent('gsplat', {
+    asset: assets.logo
+});
+logoEntity2.setLocalPosition(0, -0.5, 0);
+logoEntity2.setLocalEulerAngles(-90, -90, 0);
+logoEntity2.setLocalScale(2, 2, 2);
+app.root.addChild(logoEntity2);
+
+// Create left camera
+const cameraLeft = new pc.Entity('LeftCamera');
+cameraLeft.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    farClip: 500,
+    rect: new pc.Vec4(0, 0, 0.5, 0.5),
+    toneMapping: pc.TONEMAP_ACES
+});
+cameraLeft.setLocalPosition(-0.8, 2, 3);
+app.root.addChild(cameraLeft);
+
+// Create right orthographic camera
+const cameraRight = new pc.Entity('RightCamera');
+cameraRight.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    farClip: 500,
+    rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
+    projection: pc.PROJECTION_ORTHOGRAPHIC,
+    orthoHeight: 4,
+    toneMapping: pc.TONEMAP_ACES
+});
+cameraRight.translate(0, 8, 0);
+cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
+app.root.addChild(cameraRight);
+
+// Create top camera
+const cameraTop = new pc.Entity('TopCamera');
+cameraTop.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    farClip: 500,
+    rect: new pc.Vec4(0, 0.5, 1, 0.5),
+    toneMapping: pc.TONEMAP_ACES
+});
+cameraTop.translate(-2, 6, 9);
+app.root.addChild(cameraTop);
+
+// add orbit camera script with a mouse and a touch support to top camera
+cameraTop.addComponent('script');
+if (cameraTop.script) {
+    cameraTop.script.create('orbitCamera', {
+        attributes: {
+            inertiaFactor: 0.2,
+            focusEntity: logoEntity2,
+            distanceMax: 60,
+            frameOnStart: false
         }
     });
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+    cameraTop.script.create('orbitCameraInputMouse');
+    cameraTop.script.create('orbitCameraInputTouch');
+}
 
-    // setup skydome
-    app.scene.skyboxMip = 2;
-    app.scene.envAtlas = assets.helipad.resource;
+// update function called once per frame
+let time = 0;
+app.on('update', dt => {
+    time += dt;
 
-    // create a splat entity and place it in the world
-    const logoEntity1 = new pc.Entity();
-    logoEntity1.addComponent('gsplat', {
-        asset: assets.logo
-    });
-    logoEntity1.setLocalPosition(0, 0.05, 0);
-    logoEntity1.setLocalEulerAngles(180, 90, 0);
-    logoEntity1.setLocalScale(0.7, 0.7, 0.7);
-    app.root.addChild(logoEntity1);
+    // orbit left camera around the splat
+    cameraLeft.setLocalPosition(6 * Math.sin(time * 0.2), 2, 6 * Math.cos(time * 0.2));
+    cameraLeft.lookAt(logoEntity2.getPosition());
 
-    // create another splat entity and place it in the world
-    const logoEntity2 = new pc.Entity();
-    logoEntity2.addComponent('gsplat', {
-        asset: assets.logo
-    });
-    logoEntity2.setLocalPosition(0, -0.5, 0);
-    logoEntity2.setLocalEulerAngles(-90, -90, 0);
-    logoEntity2.setLocalScale(2, 2, 2);
-    app.root.addChild(logoEntity2);
-
-    // Create left camera
-    const cameraLeft = new pc.Entity('LeftCamera');
-    cameraLeft.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        farClip: 500,
-        rect: new pc.Vec4(0, 0, 0.5, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    cameraLeft.setLocalPosition(-0.8, 2, 3);
-    app.root.addChild(cameraLeft);
-
-    // Create right orthographic camera
-    const cameraRight = new pc.Entity('RightCamera');
-    cameraRight.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        farClip: 500,
-        rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
-        projection: pc.PROJECTION_ORTHOGRAPHIC,
-        orthoHeight: 4,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    cameraRight.translate(0, 8, 0);
-    cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
-    app.root.addChild(cameraRight);
-
-    // Create top camera
-    const cameraTop = new pc.Entity('TopCamera');
-    cameraTop.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        farClip: 500,
-        rect: new pc.Vec4(0, 0.5, 1, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    cameraTop.translate(-2, 6, 9);
-    app.root.addChild(cameraTop);
-
-    // add orbit camera script with a mouse and a touch support to top camera
-    cameraTop.addComponent('script');
-    if (cameraTop.script) {
-        cameraTop.script.create('orbitCamera', {
-            attributes: {
-                inertiaFactor: 0.2,
-                focusEntity: logoEntity2,
-                distanceMax: 60,
-                frameOnStart: false
-            }
-        });
-        cameraTop.script.create('orbitCameraInputMouse');
-        cameraTop.script.create('orbitCameraInputTouch');
-    }
-
-    // update function called once per frame
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
-
-        // orbit left camera around the splat
-        cameraLeft.setLocalPosition(6 * Math.sin(time * 0.2), 2, 6 * Math.cos(time * 0.2));
-        cameraLeft.lookAt(logoEntity2.getPosition());
-
-        // rotate camera right around splat differently
-        cameraRight.setLocalPosition(6 * Math.sin(-time * 0.4), 2, 6 * Math.cos(-time * 0.4));
-        cameraRight.lookAt(logoEntity2.getPosition());
-    });
+    // rotate camera right around splat differently
+    cameraRight.setLocalPosition(6 * Math.sin(-time * 0.4), 2, 6 * Math.cos(-time * 0.4));
+    cameraRight.lookAt(logoEntity2.getPosition());
 });

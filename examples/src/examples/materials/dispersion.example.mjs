@@ -52,41 +52,42 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.skyboxMip = 1;
-
-    // get the instance of the cube it set up with render component and add it to scene
-    const glbEntity = assets.model.resource.instantiateRenderEntity();
-    app.root.addChild(glbEntity);
-
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        nearClip: 0.01,
-        farClip: 2,
-        toneMapping: pc.TONEMAP_ACES
-    });
-
-    // the color grab pass is needed
-    camera.camera.requestSceneColorMap(true);
-
-    // Adjust the camera position
-    camera.translate(0, 0.3, 1);
-
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            distanceMax: 0.15
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
+
+// get the instance of the cube it set up with render component and add it to scene
+const glbEntity = assets.model.resource.instantiateRenderEntity();
+app.root.addChild(glbEntity);
+
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    nearClip: 0.01,
+    farClip: 2,
+    toneMapping: pc.TONEMAP_ACES
+});
+
+// the color grab pass is needed
+camera.camera.requestSceneColorMap(true);
+
+// Adjust the camera position
+camera.translate(0, 0.3, 1);
+
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        distanceMax: 0.15
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+app.root.addChild(camera);

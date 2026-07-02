@@ -140,7 +140,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-const DISPLAY = 96;   // on-screen size of each texture
+const DISPLAY = 96; // on-screen size of each texture
 const GAP = 24;
 let rowY = 70;
 
@@ -180,132 +180,142 @@ function equalPixels(a, b) {
     return true;
 }
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(async () => {
-    app.start();
-
-    // orthographic camera so the screen renders
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1)
-    });
-    app.root.addChild(camera);
-
-    const results = [];
-
-    /**
-     * Run one test row: display source + copy, then verify the copy via readback.
-     *
-     * @param {string} label - Row label.
-     * @param {pc.Texture} source - Source texture (shown left).
-     * @param {pc.Texture} dest - Destination texture (shown right).
-     * @param {object} options - Copy options.
-     * @param {Uint8Array} expected - Expected destination pixels (mip 0 of the copied region).
-     * @param {number} readW - Width to read back from dest.
-     * @param {number} readH - Height to read back from dest.
-     */
-    const runRow = async (label, source, dest, options, expected, readW, readH) => {
-        const ok = dest.copy(source, options);
-        addImage(source, 0, rowY);
-        addImage(dest, 1, rowY);
-        rowY += DISPLAY + GAP;
-
-        let passed = ok;
-        let detail = '';
-        if (ok) {
-            const actual = await dest.read(0, 0, readW, readH, { immediate: true });
-            passed = equalPixels(expected, actual);
-            if (!passed) detail = ' (pixel mismatch)';
-        } else {
-            detail = ' (copy returned false)';
-        }
-        console.log(`${passed ? 'PASS' : 'FAIL'}: ${label}${detail}`);
-        results.push({ label, passed });
-    };
-
-    const RED = [220, 40, 40, 255];
-    const GREEN = [40, 200, 40, 255];
-    const BLUE = [40, 80, 230, 255];
-    const YELLOW = [230, 220, 40, 255];
-
-    // Row 1: loaded texture, full copy of mip 0
-    {
-        const src = assets.playcanvas.resource;
-        const w = src.width;
-        const h = src.height;
-        const dst = new pc.Texture(device, {
-            name: 'copy-loaded',
-            width: w,
-            height: h,
-            format: src.format,
-            mipmaps: false,
-            minFilter: pc.FILTER_NEAREST,
-            magFilter: pc.FILTER_NEAREST,
-            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE
-        });
-        const expected = await src.read(0, 0, w, h, { immediate: true });
-        await runRow('loaded texture, full copy', src, dst, {}, expected, w, h);
-    }
-
-    // Row 2: procedural quadrants, full copy of mip 0
-    {
-        const size = 64;
-        const src = createTexture('quads-src', size, false);
-        fillQuadrants(src, size, [RED, GREEN, BLUE, YELLOW]);
-        src.upload();
-        const dst = createTexture('quads-dst', size, false);
-        const expected = await src.read(0, 0, size, size, { immediate: true });
-        await runRow('procedural, full copy', src, dst, {}, expected, size, size);
-    }
-
-    // Row 3: copy source mip 1 into a destination's mip 0. The source is a mipmapped quadrant
-    // texture; the expected result is a direct read of the source's mip 1, so this verifies that
-    // the copy correctly selects the requested source mip level (independent of how mips are made).
-    {
-        const size = 64;
-        const src = createTexture('mips-src', size, true);
-        fillQuadrants(src, size, [RED, GREEN, BLUE, YELLOW]);
-        src.upload();
-        const mip1Size = size >> 1;
-        const dst = createTexture('mips-dst', mip1Size, false);
-        const expected = await src.read(0, 0, mip1Size, mip1Size, { mipLevel: 1, immediate: true });
-        await runRow('source mip 1 -> dest mip 0', src, dst, { sourceMipLevel: 1 }, expected, mip1Size, mip1Size);
-    }
-
-    // Row 4: sub-rect - copy the top-left 32x32 quadrant of the source into dest at offset (32, 32)
-    {
-        const size = 64;
-        const src = createTexture('subrect-src', size, false);
-        fillQuadrants(src, size, [RED, GREEN, BLUE, YELLOW]);
-        src.upload();
-        const dst = createTexture('subrect-dst', size, false);
-        // pre-fill dest with a flat background so the copied region is visible
-        fillLevel(dst, 0, [60, 60, 60, 255]);
-        dst.upload();
-        const half = size / 2;
-        // build expected: grey background with the source's top-left (RED) quadrant placed at (32,32)
-        const expected = new Uint8Array(size * size * 4);
-        for (let y = 0; y < size; y++) {
-            for (let x = 0; x < size; x++) {
-                const o = (y * size + x) * 4;
-                const inRegion = x >= half && y >= half;
-                const c = inRegion ? RED : [60, 60, 60, 255];
-                expected[o] = c[0]; expected[o + 1] = c[1]; expected[o + 2] = c[2]; expected[o + 3] = c[3];
-            }
-        }
-        await runRow('sub-rect copy (offset)', src, dst,
-            { sourceX: 0, sourceY: 0, width: half, height: half, destX: half, destY: half },
-            expected, size, size);
-    }
-
-    // summary
-    const passedCount = results.filter(r => r.passed).length;
-    const allPassed = passedCount === results.length;
-    const lines = results.map(r => `${r.passed ? '✓' : '✗'} ${r.label}`);
-    resultOverlay.textContent = `${allPassed ? 'ALL TESTS PASSED' : 'TESTS FAILED'} (${passedCount}/${results.length})\n${lines.join('\n')}`;
-    resultOverlay.style.color = allPassed ? '#7CFC7C' : '#FF6B6B';
-    console.log(`Texture.copy: ${passedCount}/${results.length} passed on ${device.deviceType.toUpperCase()}`);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+// orthographic camera so the screen renders
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.1, 0.1, 0.1)
+});
+app.root.addChild(camera);
+
+const results = [];
+
+/**
+ * Run one test row: display source + copy, then verify the copy via readback.
+ *
+ * @param {string} label - Row label.
+ * @param {pc.Texture} source - Source texture (shown left).
+ * @param {pc.Texture} dest - Destination texture (shown right).
+ * @param {object} options - Copy options.
+ * @param {Uint8Array} expected - Expected destination pixels (mip 0 of the copied region).
+ * @param {number} readW - Width to read back from dest.
+ * @param {number} readH - Height to read back from dest.
+ */
+const runRow = async (label, source, dest, options, expected, readW, readH) => {
+    const ok = dest.copy(source, options);
+    addImage(source, 0, rowY);
+    addImage(dest, 1, rowY);
+    rowY += DISPLAY + GAP;
+
+    let passed = ok;
+    let detail = '';
+    if (ok) {
+        const actual = await dest.read(0, 0, readW, readH, { immediate: true });
+        passed = equalPixels(expected, actual);
+        if (!passed) detail = ' (pixel mismatch)';
+    } else {
+        detail = ' (copy returned false)';
+    }
+    console.log(`${passed ? 'PASS' : 'FAIL'}: ${label}${detail}`);
+    results.push({ label, passed });
+};
+
+const RED = [220, 40, 40, 255];
+const GREEN = [40, 200, 40, 255];
+const BLUE = [40, 80, 230, 255];
+const YELLOW = [230, 220, 40, 255];
+
+// Row 1: loaded texture, full copy of mip 0
+{
+    const src = assets.playcanvas.resource;
+    const w = src.width;
+    const h = src.height;
+    const dst = new pc.Texture(device, {
+        name: 'copy-loaded',
+        width: w,
+        height: h,
+        format: src.format,
+        mipmaps: false,
+        minFilter: pc.FILTER_NEAREST,
+        magFilter: pc.FILTER_NEAREST,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+    });
+    const expected = await src.read(0, 0, w, h, { immediate: true });
+    await runRow('loaded texture, full copy', src, dst, {}, expected, w, h);
+}
+
+// Row 2: procedural quadrants, full copy of mip 0
+{
+    const size = 64;
+    const src = createTexture('quads-src', size, false);
+    fillQuadrants(src, size, [RED, GREEN, BLUE, YELLOW]);
+    src.upload();
+    const dst = createTexture('quads-dst', size, false);
+    const expected = await src.read(0, 0, size, size, { immediate: true });
+    await runRow('procedural, full copy', src, dst, {}, expected, size, size);
+}
+
+// Row 3: copy source mip 1 into a destination's mip 0. The source is a mipmapped quadrant
+// texture; the expected result is a direct read of the source's mip 1, so this verifies that
+// the copy correctly selects the requested source mip level (independent of how mips are made).
+{
+    const size = 64;
+    const src = createTexture('mips-src', size, true);
+    fillQuadrants(src, size, [RED, GREEN, BLUE, YELLOW]);
+    src.upload();
+    const mip1Size = size >> 1;
+    const dst = createTexture('mips-dst', mip1Size, false);
+    const expected = await src.read(0, 0, mip1Size, mip1Size, { mipLevel: 1, immediate: true });
+    await runRow('source mip 1 -> dest mip 0', src, dst, { sourceMipLevel: 1 }, expected, mip1Size, mip1Size);
+}
+
+// Row 4: sub-rect - copy the top-left 32x32 quadrant of the source into dest at offset (32, 32)
+{
+    const size = 64;
+    const src = createTexture('subrect-src', size, false);
+    fillQuadrants(src, size, [RED, GREEN, BLUE, YELLOW]);
+    src.upload();
+    const dst = createTexture('subrect-dst', size, false);
+    // pre-fill dest with a flat background so the copied region is visible
+    fillLevel(dst, 0, [60, 60, 60, 255]);
+    dst.upload();
+    const half = size / 2;
+    // build expected: grey background with the source's top-left (RED) quadrant placed at (32,32)
+    const expected = new Uint8Array(size * size * 4);
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const o = (y * size + x) * 4;
+            const inRegion = x >= half && y >= half;
+            const c = inRegion ? RED : [60, 60, 60, 255];
+            expected[o] = c[0];
+            expected[o + 1] = c[1];
+            expected[o + 2] = c[2];
+            expected[o + 3] = c[3];
+        }
+    }
+    await runRow(
+        'sub-rect copy (offset)',
+        src,
+        dst,
+        { sourceX: 0, sourceY: 0, width: half, height: half, destX: half, destY: half },
+        expected,
+        size,
+        size
+    );
+}
+
+// summary
+const passedCount = results.filter(r => r.passed).length;
+const allPassed = passedCount === results.length;
+const lines = results.map(r => `${r.passed ? '✓' : '✗'} ${r.label}`);
+resultOverlay.textContent = `${allPassed ? 'ALL TESTS PASSED' : 'TESTS FAILED'} (${passedCount}/${results.length})\n${lines.join('\n')}`;
+resultOverlay.style.color = allPassed ? '#7CFC7C' : '#FF6B6B';
+console.log(`Texture.copy: ${passedCount}/${results.length} passed on ${device.deviceType.toUpperCase()}`);
 
 export { app };

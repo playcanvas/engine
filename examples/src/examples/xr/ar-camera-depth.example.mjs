@@ -44,15 +44,8 @@ createOptions.touch = new pc.TouchDevice(canvas);
 createOptions.keyboard = new pc.Keyboard(window);
 createOptions.xr = pc.XrManager;
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -168,9 +161,9 @@ plane.setLocalEulerAngles(90, 0, 0);
 plane.enabled = false;
 camera.addChild(plane);
 
-const touchToStartMsg = depthPlaneGlOnly ?
-    'Touch screen to start AR session (depth texture preview is WebGL-only on WebGPU; check console for depthGpuOptimized / depthPixelFormat).' :
-    'Touch screen to start AR session';
+const touchToStartMsg = depthPlaneGlOnly
+    ? 'Touch screen to start AR session (depth texture preview is WebGL-only on WebGPU; check console for depthGpuOptimized / depthPixelFormat).'
+    : 'Touch screen to start AR session';
 
 if (app.xr.supported) {
     const activate = function () {
@@ -195,7 +188,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', (evt) => {
+        app.touch.on('touchend', evt => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -210,7 +203,7 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', (evt) => {
+    app.keyboard.on('keydown', evt => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -226,7 +219,7 @@ if (app.xr.supported) {
         message('Immersive AR session has ended');
         plane.enabled = false;
     });
-    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
+    app.xr.on(`available:${pc.XRTYPE_AR}`, available => {
         if (available) {
             if (!app.xr.views.supportedDepth) {
                 message('AR Camera Depth is not supported');

@@ -44,79 +44,80 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
-    });
-    camera.translate(0, 7, 25);
+app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-    // Create an Entity with a omni light component and a sphere model component.
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'omni',
-        color: new pc.Color(1, 1, 1),
-        radius: 10
-    });
-    light.translate(0, 1, 0);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5)
+});
+camera.translate(0, 7, 25);
 
-    // Add entities into scene hierarchy
-    app.root.addChild(camera);
-    app.root.addChild(light);
+// Create an Entity with a omni light component and a sphere model component.
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'omni',
+    color: new pc.Color(1, 1, 1),
+    radius: 10
+});
+light.translate(0, 1, 0);
 
-    // Create a new material with a custom shader
-    const material = new pc.ShaderMaterial({
-        uniqueName: 'wobble',
-        vertexGLSL: shaderGlslVert,
-        fragmentGLSL: shaderGlslFrag,
-        vertexWGSL: shaderWgslVert,
-        fragmentWGSL: shaderWgslFrag,
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0
+// Add entities into scene hierarchy
+app.root.addChild(camera);
+app.root.addChild(light);
+
+// Create a new material with a custom shader
+const material = new pc.ShaderMaterial({
+    uniqueName: 'wobble',
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: shaderGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: shaderWgslFrag,
+    attributes: {
+        aPosition: pc.SEMANTIC_POSITION,
+        aUv0: pc.SEMANTIC_TEXCOORD0
+    }
+});
+
+// create a hierarchy of entities with render components, representing the statue model
+const entity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(entity);
+
+/**
+ * Set the new material on all meshes in the model, and use original texture from the model on the new material
+ * @type {pc.Texture|null}
+ */
+let originalTexture = null;
+/** @type {Array<pc.RenderComponent>} */
+const renders = entity.findComponents('render');
+renders.forEach(render => {
+    const meshInstances = render.meshInstances;
+    for (let i = 0; i < meshInstances.length; i++) {
+        const meshInstance = meshInstances[i];
+        if (!originalTexture) {
+            /** @type {pc.StandardMaterial} */
+            const originalMaterial = meshInstance.material;
+            originalTexture = originalMaterial.diffuseMap;
         }
-    });
+        meshInstance.material = material;
+    }
+});
 
-    // create a hierarchy of entities with render components, representing the statue model
-    const entity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
+// material is set up, update it
+material.setParameter('uDiffuseMap', originalTexture);
+material.update();
 
-    /**
-     * Set the new material on all meshes in the model, and use original texture from the model on the new material
-     * @type {pc.Texture|null}
-     */
-    let originalTexture = null;
-    /** @type {Array<pc.RenderComponent>} */
-    const renders = entity.findComponents('render');
-    renders.forEach((render) => {
-        const meshInstances = render.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const meshInstance = meshInstances[i];
-            if (!originalTexture) {
-                /** @type {pc.StandardMaterial} */
-                const originalMaterial = meshInstance.material;
-                originalTexture = originalMaterial.diffuseMap;
-            }
-            meshInstance.material = material;
-        }
-    });
+let time = 0;
+app.on('update', dt => {
+    time += dt;
 
-    // material is set up, update it
-    material.setParameter('uDiffuseMap', originalTexture);
+    // set time parameter for the shader
+    material.setParameter('uTime', time);
     material.update();
-
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
-
-        // set time parameter for the shader
-        material.setParameter('uTime', time);
-        material.update();
-    });
 });

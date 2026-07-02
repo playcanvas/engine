@@ -36,63 +36,64 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.start();
 
-    // material with the diffuse texture
-    const material = new pc.StandardMaterial();
-    material.diffuseMap = assets.clouds.resource;
-    material.update();
+app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-    // Create a Entity with a Box model component
-    const box = new pc.Entity();
-    box.addComponent('render', {
-        type: 'box',
-        material: material
-    });
+// material with the diffuse texture
+const material = new pc.StandardMaterial();
+material.diffuseMap = assets.clouds.resource;
+material.update();
 
-    // Create an Entity with a omni light component and a sphere model component.
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'omni',
-        color: new pc.Color(1, 0, 0),
-        radius: 10
-    });
-    light.addComponent('render', {
-        type: 'sphere'
-    });
-    // Scale the sphere down to 0.1m
-    light.setLocalScale(0.1, 0.1, 0.1);
+// Create a Entity with a Box model component
+const box = new pc.Entity();
+box.addComponent('render', {
+    type: 'box',
+    material: material
+});
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
-    });
+// Create an Entity with a omni light component and a sphere model component.
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'omni',
+    color: new pc.Color(1, 0, 0),
+    radius: 10
+});
+light.addComponent('render', {
+    type: 'sphere'
+});
+// Scale the sphere down to 0.1m
+light.setLocalScale(0.1, 0.1, 0.1);
 
-    // Add the new Entities to the hierarchy
-    app.root.addChild(box);
-    app.root.addChild(light);
-    app.root.addChild(camera);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5)
+});
 
-    // Move the camera 10m along the z-axis
-    camera.translate(0, 0, 10);
+// Add the new Entities to the hierarchy
+app.root.addChild(box);
+app.root.addChild(light);
+app.root.addChild(camera);
 
-    // Set an update function on the app's update event
-    let angle = 0;
-    app.on('update', (dt) => {
-        angle += dt;
-        if (angle > 360) {
-            angle = 0;
-        }
+// Move the camera 10m along the z-axis
+camera.translate(0, 0, 10);
 
-        // Move the light in a circle
-        light.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));
+// Set an update function on the app's update event
+let angle = 0;
+app.on('update', dt => {
+    angle += dt;
+    if (angle > 360) {
+        angle = 0;
+    }
 
-        // Rotate the box
-        box.setEulerAngles(angle * 2, angle * 4, angle * 8);
-    });
+    // Move the light in a circle
+    light.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));
+
+    // Rotate the box
+    box.setEulerAngles(angle * 2, angle * 4, angle * 8);
 });

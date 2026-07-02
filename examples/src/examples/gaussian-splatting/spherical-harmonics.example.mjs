@@ -52,100 +52,103 @@ const assets = {
     orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
-        }
-    });
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+app.start();
 
-    // create a splat entity and place it in the world
-    const skull = new pc.Entity();
-    skull.addComponent('gsplat', {
-        asset: assets.skull,
-        castShadows: true
-    });
-    skull.setLocalPosition(-1.5, 0.05, 0);
-    skull.setLocalEulerAngles(180, 90, 0);
-    skull.setLocalScale(0.7, 0.7, 0.7);
-    app.root.addChild(skull);
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
 
-    const ORBIT_PIVOT = new pc.Vec3().copy(skull.getPosition());
-    ORBIT_PIVOT.y += 0.2;
-    const ORBIT_DISTANCE = 4;
-    const ORBIT_INITIAL_YAW = 32;
-    const ORBIT_INITIAL_PITCH = -10;
+// create a splat entity and place it in the world
+const skull = new pc.Entity();
+skull.addComponent('gsplat', {
+    asset: assets.skull,
+    castShadows: true
+});
+skull.setLocalPosition(-1.5, 0.05, 0);
+skull.setLocalEulerAngles(180, 90, 0);
+skull.setLocalScale(0.7, 0.7, 0.7);
+app.root.addChild(skull);
 
-    // scene-level alpha clip for splats (shadows / cutout)
-    app.scene.gsplat.alphaClip = 0.1;
+const ORBIT_PIVOT = new pc.Vec3().copy(skull.getPosition());
+ORBIT_PIVOT.y += 0.2;
+const ORBIT_DISTANCE = 4;
+const ORBIT_INITIAL_YAW = 32;
+const ORBIT_INITIAL_PITCH = -10;
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    app.root.addChild(camera);
+// scene-level alpha clip for splats (shadows / cutout)
+app.scene.gsplat.alphaClip = 0.1;
 
-    camera.addComponent('script');
-    const orbitCam = /** @type {any} */ (camera.script.create('orbitCamera', {
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    toneMapping: pc.TONEMAP_ACES
+});
+app.root.addChild(camera);
+
+camera.addComponent('script');
+const orbitCam = /** @type {any} */ (
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             distanceMax: 60,
             frameOnStart: false
         }
-    }));
-    if (orbitCam) {
-        orbitCam.pivotPoint.copy(ORBIT_PIVOT);
-        orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
-        orbitCam._updatePosition();
-    }
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
+    })
+);
+if (orbitCam) {
+    orbitCam.pivotPoint.copy(ORBIT_PIVOT);
+    orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
+    orbitCam._updatePosition();
+}
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
 
-    // create ground to receive shadows
-    const material = new pc.StandardMaterial();
-    material.diffuse = new pc.Color(0.5, 0.5, 0.4);
-    material.gloss = 0.2;
-    material.metalness = 0.5;
-    material.useMetalness = true;
-    material.update();
+// create ground to receive shadows
+const material = new pc.StandardMaterial();
+material.diffuse = new pc.Color(0.5, 0.5, 0.4);
+material.gloss = 0.2;
+material.metalness = 0.5;
+material.useMetalness = true;
+material.update();
 
-    const ground = new pc.Entity();
-    ground.addComponent('render', {
-        type: 'box',
-        material: material,
-        castShadows: false
-    });
-    ground.setLocalScale(10, 1, 10);
-    ground.setLocalPosition(0, -0.45, 0);
-    app.root.addChild(ground);
-
-    // shadow casting directional light
-    // Note: it does not affect gsplat, as lighting is not supported there currently
-    const directionalLight = new pc.Entity();
-    directionalLight.addComponent('light', {
-        type: 'directional',
-        color: pc.Color.WHITE,
-        castShadows: true,
-        intensity: 1,
-        shadowBias: 0.2,
-        normalOffsetBias: 0.05,
-        shadowDistance: 10,
-        shadowIntensity: 0.5,
-        shadowResolution: 2048,
-        shadowType: pc.SHADOW_PCSS_32F,
-        penumbraSize: 0.05,
-        penumbraFalloff: 4,
-        shadowSamples: 16,
-        shadowBlockerSamples: 16
-    });
-    directionalLight.setEulerAngles(55, 90, 20);
-    app.root.addChild(directionalLight);
+const ground = new pc.Entity();
+ground.addComponent('render', {
+    type: 'box',
+    material: material,
+    castShadows: false
 });
+ground.setLocalScale(10, 1, 10);
+ground.setLocalPosition(0, -0.45, 0);
+app.root.addChild(ground);
+
+// shadow casting directional light
+// Note: it does not affect gsplat, as lighting is not supported there currently
+const directionalLight = new pc.Entity();
+directionalLight.addComponent('light', {
+    type: 'directional',
+    color: pc.Color.WHITE,
+    castShadows: true,
+    intensity: 1,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05,
+    shadowDistance: 10,
+    shadowIntensity: 0.5,
+    shadowResolution: 2048,
+    shadowType: pc.SHADOW_PCSS_32F,
+    penumbraSize: 0.05,
+    penumbraFalloff: 4,
+    shadowSamples: 16,
+    shadowBlockerSamples: 16
+});
+directionalLight.setEulerAngles(55, 90, 20);
+app.root.addChild(directionalLight);

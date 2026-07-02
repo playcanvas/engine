@@ -58,94 +58,95 @@ const assets = {
     gravel: new pc.Asset('gravel', 'audio', { url: './assets/sounds/footsteps.mp3' })
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(1, 0, 0)
-    });
-    camera.addComponent('audiolistener');
-    camera.rotateLocal(-30, 0, 0);
-    camera.translateLocal(0, 0, 5);
-    app.root.addChild(camera);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Create an Entity for the ground
-    const material = new pc.StandardMaterial();
-    material.diffuse = pc.Color.GRAY;
-    material.update();
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(1, 0, 0)
+});
+camera.addComponent('audiolistener');
+camera.rotateLocal(-30, 0, 0);
+camera.translateLocal(0, 0, 5);
+app.root.addChild(camera);
 
-    const ground = new pc.Entity();
-    ground.addComponent('render', {
-        type: 'box',
-        material: material
-    });
-    ground.setLocalScale(50, 1, 50);
-    ground.setLocalPosition(0, -0.5, 0);
-    app.root.addChild(ground);
+// Create an Entity for the ground
+const material = new pc.StandardMaterial();
+material.diffuse = pc.Color.GRAY;
+material.update();
 
-    // Create an entity with a light component
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'directional',
-        color: new pc.Color(1, 1, 1),
-        castShadows: true,
-        intensity: 2,
-        shadowBias: 0.2,
-        shadowDistance: 16,
-        normalOffsetBias: 0.05,
-        shadowResolution: 2048
-    });
-    light.setLocalEulerAngles(45, 30, 0);
-    app.root.addChild(light);
+const ground = new pc.Entity();
+ground.addComponent('render', {
+    type: 'box',
+    material: material
+});
+ground.setLocalScale(50, 1, 50);
+ground.setLocalPosition(0, -0.5, 0);
+app.root.addChild(ground);
 
-    app.start();
+// Create an entity with a light component
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'directional',
+    color: new pc.Color(1, 1, 1),
+    castShadows: true,
+    intensity: 2,
+    shadowBias: 0.2,
+    shadowDistance: 16,
+    normalOffsetBias: 0.05,
+    shadowResolution: 2048
+});
+light.setLocalEulerAngles(45, 30, 0);
+app.root.addChild(light);
 
-    // Create walking dude
-    const entity = new pc.Entity();
+app.start();
 
-    // add sound component
-    entity.addComponent('sound', {
-        maxDistance: 9
-    });
+// Create walking dude
+const entity = new pc.Entity();
 
-    // add footsteps slot
-    entity.sound.addSlot('footsteps', {
-        asset: assets.gravel.id,
-        pitch: 1.7,
-        loop: true,
-        autoPlay: true
-    });
+// add sound component
+entity.addComponent('sound', {
+    maxDistance: 9
+});
 
-    // add model
-    entity.addComponent('model', {
-        type: 'asset',
-        asset: assets.model,
-        castShadows: true
-    });
+// add footsteps slot
+entity.sound.addSlot('footsteps', {
+    asset: assets.gravel.id,
+    pitch: 1.7,
+    loop: true,
+    autoPlay: true
+});
 
-    // add animation
-    entity.addComponent('animation', {
-        assets: [assets.runAnim],
-        speed: 0.8
-    });
+// add model
+entity.addComponent('model', {
+    type: 'asset',
+    asset: assets.model,
+    castShadows: true
+});
 
-    // add entity in the hierarchy
-    app.root.addChild(entity);
+// add animation
+entity.addComponent('animation', {
+    assets: [assets.runAnim],
+    speed: 0.8
+});
 
-    let angle = 135;
-    const radius = 3;
-    const height = 0; // 1.1;
-    app.on('update', (dt) => {
-        angle += 30 * dt;
-        if (angle > 360) {
-            angle -= 360;
-        }
-        entity.setLocalPosition(
-            radius * Math.sin(angle * pc.math.DEG_TO_RAD),
-            height,
-            radius * Math.cos(angle * pc.math.DEG_TO_RAD)
-        );
-        entity.setLocalEulerAngles(0, angle + 90, 0);
-    });
+// add entity in the hierarchy
+app.root.addChild(entity);
+
+let angle = 135;
+const radius = 3;
+const height = 0; // 1.1;
+app.on('update', dt => {
+    angle += 30 * dt;
+    if (angle > 360) {
+        angle -= 360;
+    }
+    entity.setLocalPosition(
+        radius * Math.sin(angle * pc.math.DEG_TO_RAD),
+        height,
+        radius * Math.cos(angle * pc.math.DEG_TO_RAD)
+    );
+    entity.setLocalEulerAngles(0, angle + 90, 0);
 });

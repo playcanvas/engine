@@ -86,130 +86,129 @@ const assets = {
     )
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.envAtlas = assets.envatlas.resource;
-    app.scene.skyboxMip = 3;
-    app.scene.exposure = 1.5;
+app.start();
 
-    // Add a custom varying stream: written once per splat by the vertex stage customization
-    // using setClipState(value), and read per fragment using getClipState()
-    app.scene.gsplat.varyings.add([
-        { name: 'clipState', type: pc.TYPE_UINT32, components: 1 }
-    ]);
+// setup skydome
+app.scene.envAtlas = assets.envatlas.resource;
+app.scene.skyboxMip = 3;
+app.scene.exposure = 1.5;
 
-    // apply the clipping customization to the scene-wide gsplat material
-    const material = app.scene.gsplat.material;
-    material.getShaderChunks('glsl').set('gsplatModifyVS', clipGlslVert);
-    material.getShaderChunks('wgsl').set('gsplatModifyVS', clipWgslVert);
-    material.getShaderChunks('glsl').set('gsplatModifyPS', clipGlslFrag);
-    material.getShaderChunks('wgsl').set('gsplatModifyPS', clipWgslFrag);
-    material.update();
+// Add a custom varying stream: written once per splat by the vertex stage customization
+// using setClipState(value), and read per fragment using getClipState()
+app.scene.gsplat.varyings.add([{ name: 'clipState', type: pc.TYPE_UINT32, components: 1 }]);
 
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
-        }
-    });
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-    data.set('animate', true);
+// apply the clipping customization to the scene-wide gsplat material
+const material = app.scene.gsplat.material;
+material.getShaderChunks('glsl').set('gsplatModifyVS', clipGlslVert);
+material.getShaderChunks('wgsl').set('gsplatModifyVS', clipWgslVert);
+material.getShaderChunks('glsl').set('gsplatModifyPS', clipGlslFrag);
+material.getShaderChunks('wgsl').set('gsplatModifyPS', clipWgslFrag);
+material.update();
 
-    // enable rotation-based LOD updates and behind-camera penalty
-    app.scene.gsplat.lodUpdateAngle = 90;
-    app.scene.gsplat.lodBehindPenalty = 4;
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+data.set('animate', true);
 
-    // allow rendering with lower LOD quality when optimal is not yet loaded
-    app.scene.gsplat.lodUnderfillLimit = 10;
+// enable rotation-based LOD updates and behind-camera penalty
+app.scene.gsplat.lodUpdateAngle = 90;
+app.scene.gsplat.lodBehindPenalty = 4;
 
-    data.set('splatBudget', pc.platform.mobile ? 1 : 3);
+// allow rendering with lower LOD quality when optimal is not yet loaded
+app.scene.gsplat.lodUnderfillLimit = 10;
 
-    // create grid of instances centered around origin on XZ plane
-    const half = (GRID_SIZE - 1) * 0.5;
-    for (let z = 0; z < GRID_SIZE; z++) {
-        for (let x = 0; x < GRID_SIZE; x++) {
-            const entity = new pc.Entity(`playbot-${x}-${z}`);
-            entity.addComponent('gsplat', {
-                asset: assets.playbot
-            });
-            const px = (x - half) * GRID_SPACING;
-            const pz = (z - half) * GRID_SPACING;
-            entity.setLocalPosition(px, 0, pz);
-            entity.setLocalEulerAngles(180, 0, 0);
-            app.root.addChild(entity);
-            const gs = /** @type {any} */ (entity.gsplat);
-            gs.lodBaseDistance = 1.2;
-        }
+data.set('splatBudget', pc.platform.mobile ? 1 : 3);
+
+// create grid of instances centered around origin on XZ plane
+const half = (GRID_SIZE - 1) * 0.5;
+for (let z = 0; z < GRID_SIZE; z++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
+        const entity = new pc.Entity(`playbot-${x}-${z}`);
+        entity.addComponent('gsplat', {
+            asset: assets.playbot
+        });
+        const px = (x - half) * GRID_SPACING;
+        const pz = (z - half) * GRID_SPACING;
+        entity.setLocalPosition(px, 0, pz);
+        entity.setLocalEulerAngles(180, 0, 0);
+        app.root.addChild(entity);
+        const gs = /** @type {any} */ (entity.gsplat);
+        gs.lodBaseDistance = 1.2;
+    }
+}
+
+const applySplatBudget = () => {
+    const millions = data.get('splatBudget');
+    app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
+};
+
+applySplatBudget();
+data.on('splatBudget:set', applySplatBudget);
+
+// Create a camera with fly controls
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    fov: 75,
+    toneMapping: pc.TONEMAP_ACES
+});
+
+camera.setLocalPosition(4, 2.6, 4);
+app.root.addChild(camera);
+
+camera.addComponent('script');
+const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
+Object.assign(cc, {
+    sceneSize: 500,
+    moveSpeed: 1.5,
+    moveFastSpeed: 5,
+    enableOrbit: true,
+    enablePan: true,
+    focusPoint: new pc.Vec3(0, 0.8, 0)
+});
+
+// the animated clipping box
+const clipCenter = new pc.Vec3(0, 0.8, 0);
+const clipHalf = new pc.Vec3(2.1, 1, 2.1);
+const clipCenterArray = [clipCenter.x, clipCenter.y, clipCenter.z];
+const clipHalfArray = [clipHalf.x, clipHalf.y, clipHalf.z];
+const invViewProj = new pc.Mat4();
+const boxMin = new pc.Vec3();
+const boxMax = new pc.Vec3();
+
+let time = 0;
+app.on('update', dt => {
+    if (data.get('animate')) {
+        time += dt;
     }
 
-    const applySplatBudget = () => {
-        const millions = data.get('splatBudget');
-        app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
-    };
+    // stretch the box along x and z using different sin waves
+    clipHalf.x = 2.1 + Math.sin(time * 0.7) * 1.05;
+    clipHalf.z = 2.1 + Math.sin(time * 1.1) * 1.05;
+    clipHalfArray[0] = clipHalf.x;
+    clipHalfArray[2] = clipHalf.z;
 
-    applySplatBudget();
-    data.on('splatBudget:set', applySplatBudget);
+    // drive the clipping uniforms
+    material.setParameter('uClipCenter', clipCenterArray);
+    material.setParameter('uClipHalf', clipHalfArray);
+    invViewProj.mul2(camera.camera.projectionMatrix, camera.camera.viewMatrix).invert();
+    material.setParameter('uInvViewProj', invViewProj.data);
+    material.update();
 
-    // Create a camera with fly controls
-    const camera = new pc.Entity('camera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        fov: 75,
-        toneMapping: pc.TONEMAP_ACES
-    });
+    // draw the clipping box
+    boxMin.copy(clipCenter).sub(clipHalf);
+    boxMax.copy(clipCenter).add(clipHalf);
+    app.drawWireAlignedBox(boxMin, boxMax, pc.Color.YELLOW);
 
-    camera.setLocalPosition(4, 2.6, 4);
-    app.root.addChild(camera);
-
-    camera.addComponent('script');
-    const cc = /** @type { CameraControls} */ (camera.script.create(CameraControls));
-    Object.assign(cc, {
-        sceneSize: 500,
-        moveSpeed: 1.5,
-        moveFastSpeed: 5,
-        enableOrbit: true,
-        enablePan: true,
-        focusPoint: new pc.Vec3(0, 0.8, 0)
-    });
-
-    // the animated clipping box
-    const clipCenter = new pc.Vec3(0, 0.8, 0);
-    const clipHalf = new pc.Vec3(2.1, 1, 2.1);
-    const clipCenterArray = [clipCenter.x, clipCenter.y, clipCenter.z];
-    const clipHalfArray = [clipHalf.x, clipHalf.y, clipHalf.z];
-    const invViewProj = new pc.Mat4();
-    const boxMin = new pc.Vec3();
-    const boxMax = new pc.Vec3();
-
-    let time = 0;
-    app.on('update', (dt) => {
-        if (data.get('animate')) {
-            time += dt;
-        }
-
-        // stretch the box along x and z using different sin waves
-        clipHalf.x = 2.1 + Math.sin(time * 0.7) * 1.05;
-        clipHalf.z = 2.1 + Math.sin(time * 1.1) * 1.05;
-        clipHalfArray[0] = clipHalf.x;
-        clipHalfArray[2] = clipHalf.z;
-
-        // drive the clipping uniforms
-        material.setParameter('uClipCenter', clipCenterArray);
-        material.setParameter('uClipHalf', clipHalfArray);
-        invViewProj.mul2(camera.camera.projectionMatrix, camera.camera.viewMatrix).invert();
-        material.setParameter('uInvViewProj', invViewProj.data);
-        material.update();
-
-        // draw the clipping box
-        boxMin.copy(clipCenter).sub(clipHalf);
-        boxMax.copy(clipCenter).add(clipHalf);
-        app.drawWireAlignedBox(boxMin, boxMax, pc.Color.YELLOW);
-
-        // stats
-        data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
-    });
+    // stats
+    data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
 });

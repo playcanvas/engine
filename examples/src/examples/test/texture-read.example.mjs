@@ -191,7 +191,6 @@ async function testFormat(formatInfo) {
         const error = `Mismatch at index ${result.firstMismatchIndex}: expected ${result.expectedValue}, got ${result.actualValue}`;
         console.error(`  ✗ ${name}: FAILED - ${error}`);
         return { name, passed: false, error };
-
     } catch (err) {
         const error = err.message || String(err);
         console.error(`  ✗ ${name}: ERROR - ${error}`);
@@ -209,12 +208,15 @@ async function runTests() {
 
     // Run tests sequentially to avoid resource conflicts
     /** @type {{name: string, passed: boolean, error?: string}[]} */
-    const results = await formatsToTest.reduce(async (accPromise, formatInfo) => {
-        const acc = await accPromise;
-        const result = await testFormat(formatInfo);
-        acc.push(result);
-        return acc;
-    }, Promise.resolve(/** @type {{name: string, passed: boolean, error?: string}[]} */([])));
+    const results = await formatsToTest.reduce(
+        async (accPromise, formatInfo) => {
+            const acc = await accPromise;
+            const result = await testFormat(formatInfo);
+            acc.push(result);
+            return acc;
+        },
+        Promise.resolve(/** @type {{name: string, passed: boolean, error?: string}[]} */ ([]))
+    );
 
     // Summary
     console.log('='.repeat(60));

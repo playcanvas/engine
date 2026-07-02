@@ -56,74 +56,75 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Set skybox
-    app.scene.skyboxMip = 1;
-    app.scene.skyboxIntensity = 1.4;
-    app.scene.envAtlas = assets.helipad.resource;
+app.start();
 
-    // Create directional light
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'directional'
-    });
-    light.setLocalEulerAngles(45, 0, 45);
+// Set skybox
+app.scene.skyboxMip = 1;
+app.scene.skyboxIntensity = 1.4;
+app.scene.envAtlas = assets.helipad.resource;
 
-    // Construct material
-    const material = new pc.StandardMaterial();
-    material.useMetalness = true;
-    material.gloss = 0.8;
-    material.metalness = 0.7;
-    material.diffuseMap = assets.color.resource;
-    material.normalMap = assets.normal.resource;
-    material.glossMap = assets.gloss.resource;
-    material.diffuseMapTiling.set(7, 7);
-    material.normalMapTiling.set(7, 7);
-    material.glossMapTiling.set(7, 7);
-    material.update();
+// Create directional light
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'directional'
+});
+light.setLocalEulerAngles(45, 0, 45);
 
-    // Create a torus shape
-    const torus = pc.Mesh.fromGeometry(
-        app.graphicsDevice,
-        new pc.TorusGeometry({
-            tubeRadius: 0.2,
-            ringRadius: 0.3,
-            segments: 50,
-            sides: 40
-        })
-    );
-    const shape = new pc.Entity();
-    shape.addComponent('render', {
-        material: material,
-        meshInstances: [new pc.MeshInstance(torus, material)]
-    });
-    shape.setPosition(0, 0, 0);
-    shape.setLocalScale(2, 2, 2);
+// Construct material
+const material = new pc.StandardMaterial();
+material.useMetalness = true;
+material.gloss = 0.8;
+material.metalness = 0.7;
+material.diffuseMap = assets.color.resource;
+material.normalMap = assets.normal.resource;
+material.glossMap = assets.gloss.resource;
+material.diffuseMapTiling.set(7, 7);
+material.normalMapTiling.set(7, 7);
+material.glossMapTiling.set(7, 7);
+material.update();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
+// Create a torus shape
+const torus = pc.Mesh.fromGeometry(
+    app.graphicsDevice,
+    new pc.TorusGeometry({
+        tubeRadius: 0.2,
+        ringRadius: 0.3,
+        segments: 50,
+        sides: 40
+    })
+);
+const shape = new pc.Entity();
+shape.addComponent('render', {
+    material: material,
+    meshInstances: [new pc.MeshInstance(torus, material)]
+});
+shape.setPosition(0, 0, 0);
+shape.setLocalScale(2, 2, 2);
 
-    // Adjust the camera position
-    camera.translate(0, 0, 4);
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    toneMapping: pc.TONEMAP_ACES
+});
 
-    // Add the new Entities to the hierarchy
-    app.root.addChild(light);
-    app.root.addChild(shape);
-    app.root.addChild(camera);
+// Adjust the camera position
+camera.translate(0, 0, 4);
 
-    // Set an update function on the app's update event
-    let angle = 0;
-    app.on('update', (dt) => {
-        angle = (angle + dt * 10) % 360;
+// Add the new Entities to the hierarchy
+app.root.addChild(light);
+app.root.addChild(shape);
+app.root.addChild(camera);
 
-        // Rotate the boxes
-        shape.setEulerAngles(angle, angle * 2, angle * 4);
-    });
+// Set an update function on the app's update event
+let angle = 0;
+app.on('update', dt => {
+    angle = (angle + dt * 10) % 360;
+
+    // Rotate the boxes
+    shape.setEulerAngles(angle, angle * 2, angle * 4);
 });

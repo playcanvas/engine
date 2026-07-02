@@ -115,7 +115,7 @@ app.root.addChild(entity);
 // Set an update function on the app's update event
 let time = 0,
     previousTime;
-app.on('update', (dt) => {
+app.on('update', dt => {
     previousTime = time;
     time += dt;
 

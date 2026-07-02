@@ -42,38 +42,39 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    // set skybox
-    app.scene.envAtlas = assets.helipad.resource;
-    app.scene.exposure = 1.6;
-    app.scene.skyboxMip = 1;
-
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5),
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.translate(0, 7, 25);
-    app.root.addChild(camera);
-
-    const entity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
-
-    const mouse = new pc.Mouse(document.body);
-
-    let x = 0;
-    const y = 0;
-
-    mouse.on('mousemove', (event) => {
-        if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
-            x += event.dx;
-
-            entity.setLocalEulerAngles(0.2 * y, 0.2 * x, 0);
-        }
-    });
-    app.on('destroy', () => mouse.detach());
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+// set skybox
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.exposure = 1.6;
+app.scene.skyboxMip = 1;
+
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.4, 0.45, 0.5),
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.translate(0, 7, 25);
+app.root.addChild(camera);
+
+const entity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(entity);
+
+const mouse = new pc.Mouse(document.body);
+
+let x = 0;
+const y = 0;
+
+mouse.on('mousemove', event => {
+    if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
+        x += event.dx;
+
+        entity.setLocalEulerAngles(0.2 * y, 0.2 * x, 0);
+    }
+});
+app.on('destroy', () => mouse.detach());

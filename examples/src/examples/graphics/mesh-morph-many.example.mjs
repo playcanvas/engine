@@ -53,52 +53,53 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.skyboxMip = 2;
-    app.scene.exposure = 1.2;
-    app.scene.envAtlas = assets.helipad.resource;
+app.start();
 
-    // create an instance of the morph target model
-    const morphEntity = assets.morph.resource.instantiateRenderEntity();
-    app.root.addChild(morphEntity);
+// setup skydome
+app.scene.skyboxMip = 2;
+app.scene.exposure = 1.2;
+app.scene.envAtlas = assets.helipad.resource;
 
-    // get the morph instance, which we apply the weights to
-    const morphInstance = morphEntity.render.meshInstances[1].morphInstance;
+// create an instance of the morph target model
+const morphEntity = assets.morph.resource.instantiateRenderEntity();
+app.root.addChild(morphEntity);
 
-    // Create an entity with a directional light component
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'directional',
-        castShadows: true,
-        shadowBias: 0.5,
-        normalOffsetBias: 0.2,
-        shadowDistance: 25
-    });
-    app.root.addChild(light);
-    light.setLocalEulerAngles(45, 45, 0);
+// get the morph instance, which we apply the weights to
+const morphInstance = morphEntity.render.meshInstances[1].morphInstance;
 
-    // Create an entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera');
-    app.root.addChild(camera);
+// Create an entity with a directional light component
+const light = new pc.Entity();
+light.addComponent('light', {
+    type: 'directional',
+    castShadows: true,
+    shadowBias: 0.5,
+    normalOffsetBias: 0.2,
+    shadowDistance: 25
+});
+app.root.addChild(light);
+light.setLocalEulerAngles(45, 45, 0);
 
-    // position the camera
-    camera.setLocalPosition(0, 4, 9);
-    camera.lookAt(pc.Vec3.ZERO);
+// Create an entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera');
+app.root.addChild(camera);
 
-    // update function called once per frame
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
+// position the camera
+camera.setLocalPosition(0, 4, 9);
+camera.lookAt(pc.Vec3.ZERO);
 
-        // modify weights of all morph targets along sin curve
-        const targetsCount = morphInstance.morph.targets.length;
-        for (let i = 0; i < targetsCount; i++) {
-            morphInstance.setWeight(i, Math.abs(Math.sin(time + i * 0.4)));
-        }
-    });
+// update function called once per frame
+let time = 0;
+app.on('update', dt => {
+    time += dt;
+
+    // modify weights of all morph targets along sin curve
+    const targetsCount = morphInstance.morph.targets.length;
+    for (let i = 0; i < targetsCount; i++) {
+        morphInstance.setWeight(i, Math.abs(Math.sin(time + i * 0.4)));
+    }
 });

@@ -51,10 +51,7 @@ async function createApp(deviceType) {
         pc.ScreenComponentSystem,
         pc.ElementComponentSystem
     ];
-    createOptions.resourceHandlers = [
-        pc.TextureHandler,
-        pc.FontHandler
-    ];
+    createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
@@ -69,7 +66,7 @@ async function createApp(deviceType) {
         window.removeEventListener('resize', resize);
     });
 
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
         new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
     });
 

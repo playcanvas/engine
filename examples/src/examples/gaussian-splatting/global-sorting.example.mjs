@@ -55,77 +55,78 @@ const assets = {
     orbit: new pc.Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    data.on('renderer:set', () => {
-        app.scene.gsplat.renderer = data.get('renderer');
-        const current = app.scene.gsplat.currentRenderer;
-        if (current !== data.get('renderer')) {
-            setTimeout(() => data.set('renderer', current), 0);
-        }
-    });
-
-    data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
-
-    // instantiate garage gsplat
-    const hotel = new pc.Entity('garage');
-    hotel.addComponent('gsplat', {
-        asset: assets.hotel
-    });
-    hotel.setLocalEulerAngles(180, 0, 0);
-    app.root.addChild(hotel);
-
-    // create biker1
-    const biker1 = new pc.Entity('biker1');
-    biker1.addComponent('gsplat', {
-        asset: assets.biker
-    });
-    biker1.setLocalPosition(0, -1.8, -2);
-    biker1.setLocalEulerAngles(180, 90, 0);
-    app.root.addChild(biker1);
-
-    // clone the biker and add the clone to the scene
-    const biker2 = biker1.clone();
-    biker2.setLocalPosition(0, -1.8, 2);
-    biker2.rotate(0, 150, 0);
-    app.root.addChild(biker2);
-
-    // create guitar
-    const guitar = new pc.Entity('guitar');
-    guitar.addComponent('gsplat', {
-        asset: assets.guitar
-    });
-    guitar.setLocalPosition(2, -1.8, -0.5);
-    guitar.setLocalEulerAngles(0, 0, 180);
-    guitar.setLocalScale(0.7, 0.7, 0.7);
-    app.root.addChild(guitar);
-
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: pc.Color.BLACK,
-        fov: 80,
-        toneMapping: pc.TONEMAP_ACES
-    });
-    camera.setLocalPosition(3, 1, 0.5);
-
-    // add orbit camera script with a mouse and a touch support
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            distanceMax: 3.2,
-            frameOnStart: false
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
-
-    // orbit around the statue's world-space centre
-    const orbitPivot = new pc.Vec3();
-    hotel.getWorldTransform().transformPoint(new pc.Vec3(0, 0.2, 0), orbitPivot);
-    camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(3, 1, 0.5), orbitPivot);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+
+data.set('renderer', pc.GSPLAT_RENDERER_AUTO);
+
+// instantiate garage gsplat
+const hotel = new pc.Entity('garage');
+hotel.addComponent('gsplat', {
+    asset: assets.hotel
+});
+hotel.setLocalEulerAngles(180, 0, 0);
+app.root.addChild(hotel);
+
+// create biker1
+const biker1 = new pc.Entity('biker1');
+biker1.addComponent('gsplat', {
+    asset: assets.biker
+});
+biker1.setLocalPosition(0, -1.8, -2);
+biker1.setLocalEulerAngles(180, 90, 0);
+app.root.addChild(biker1);
+
+// clone the biker and add the clone to the scene
+const biker2 = biker1.clone();
+biker2.setLocalPosition(0, -1.8, 2);
+biker2.rotate(0, 150, 0);
+app.root.addChild(biker2);
+
+// create guitar
+const guitar = new pc.Entity('guitar');
+guitar.addComponent('gsplat', {
+    asset: assets.guitar
+});
+guitar.setLocalPosition(2, -1.8, -0.5);
+guitar.setLocalEulerAngles(0, 0, 180);
+guitar.setLocalScale(0.7, 0.7, 0.7);
+app.root.addChild(guitar);
+
+// Create an Entity with a camera component
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    clearColor: pc.Color.BLACK,
+    fov: 80,
+    toneMapping: pc.TONEMAP_ACES
+});
+camera.setLocalPosition(3, 1, 0.5);
+
+// add orbit camera script with a mouse and a touch support
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        distanceMax: 3.2,
+        frameOnStart: false
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+app.root.addChild(camera);
+
+// orbit around the statue's world-space centre
+const orbitPivot = new pc.Vec3();
+hotel.getWorldTransform().transformPoint(new pc.Vec3(0, 0.2, 0), orbitPivot);
+camera.script.orbitCamera.resetAndLookAtPoint(new pc.Vec3(3, 1, 0.5), orbitPivot);

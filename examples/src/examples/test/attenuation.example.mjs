@@ -54,44 +54,45 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
-
-    const leftEntity = assets.model.resource.instantiateRenderEntity();
-    leftEntity.setLocalEulerAngles(0, 90, 0);
-    leftEntity.setPosition(0, 0, 1);
-    leftEntity.setLocalScale(0.8, 0.8, 0.8);
-    app.root.addChild(leftEntity);
-
-    // Create a camera with an orbit camera script
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        toneMapping: pc.TONEMAP_LINEAR
-    });
-    camera.camera.requestSceneColorMap(true);
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2
-        }
-    });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
-    app.root.addChild(camera);
-    camera.script.orbitCamera.yaw = 90;
-    camera.script.orbitCamera.distance = 24;
-
-    // test with camera frame which uses linear rendering
-    const cameraFrame = false;
-
-    if (cameraFrame) {
-        const cameraFrame = new pc.CameraFrame(app, camera.camera);
-        cameraFrame.rendering.samples = 4;
-        cameraFrame.rendering.toneMapping = pc.TONEMAP_LINEAR;
-        cameraFrame.rendering.sceneColorMap = true;
-        cameraFrame.update();
-    }
-
-    app.scene.ambientLight = new pc.Color(0.9, 0.9, 0.9);
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
+
+app.start();
+
+const leftEntity = assets.model.resource.instantiateRenderEntity();
+leftEntity.setLocalEulerAngles(0, 90, 0);
+leftEntity.setPosition(0, 0, 1);
+leftEntity.setLocalScale(0.8, 0.8, 0.8);
+app.root.addChild(leftEntity);
+
+// Create a camera with an orbit camera script
+const camera = new pc.Entity();
+camera.addComponent('camera', {
+    toneMapping: pc.TONEMAP_LINEAR
+});
+camera.camera.requestSceneColorMap(true);
+camera.addComponent('script');
+camera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2
+    }
+});
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
+app.root.addChild(camera);
+camera.script.orbitCamera.yaw = 90;
+camera.script.orbitCamera.distance = 24;
+
+// test with camera frame which uses linear rendering
+const cameraFrame = false;
+
+if (cameraFrame) {
+    const cameraFrame = new pc.CameraFrame(app, camera.camera);
+    cameraFrame.rendering.samples = 4;
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_LINEAR;
+    cameraFrame.rendering.sceneColorMap = true;
+    cameraFrame.update();
+}
+
+app.scene.ambientLight = new pc.Color(0.9, 0.9, 0.9);

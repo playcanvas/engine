@@ -50,144 +50,145 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise(resolve => {
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.skyboxMip = 0;
-    app.scene.exposure = 2;
-    app.scene.envAtlas = assets.helipad.resource;
+app.start();
 
-    // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
-    // Move the depth layer to take place after World and Skydome layers, to capture both of them.
-    const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
-    app.scene.layers.remove(depthLayer);
-    app.scene.layers.insertOpaque(depthLayer, 2);
+// setup skydome
+app.scene.skyboxMip = 0;
+app.scene.exposure = 2;
+app.scene.envAtlas = assets.helipad.resource;
 
-    /**
-     * Helper function to create a primitive with shape type, position, scale, color.
-     *
-     * @param {string} primitiveType - The primitive type.
-     * @param {pc.Vec3} position - The position.
-     * @param {pc.Vec3} scale - The scale.
-     * @param {pc.Color} color - The color.
-     * @returns {pc.Entity} - The created primitive entity.
-     */
-    function createPrimitive(primitiveType, position, scale, color) {
-        // create material of specified color
-        const material = new pc.StandardMaterial();
-        material.diffuse = color;
-        material.gloss = 0.6;
-        material.metalness = 0.4;
-        material.useMetalness = true;
-        material.update();
+// Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+// Move the depth layer to take place after World and Skydome layers, to capture both of them.
+const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+app.scene.layers.remove(depthLayer);
+app.scene.layers.insertOpaque(depthLayer, 2);
 
-        // create primitive
-        const primitive = new pc.Entity();
-        primitive.addComponent('render', {
-            type: primitiveType,
-            material: material
-        });
+/**
+ * Helper function to create a primitive with shape type, position, scale, color.
+ *
+ * @param {string} primitiveType - The primitive type.
+ * @param {pc.Vec3} position - The position.
+ * @param {pc.Vec3} scale - The scale.
+ * @param {pc.Color} color - The color.
+ * @returns {pc.Entity} - The created primitive entity.
+ */
+function createPrimitive(primitiveType, position, scale, color) {
+    // create material of specified color
+    const material = new pc.StandardMaterial();
+    material.diffuse = color;
+    material.gloss = 0.6;
+    material.metalness = 0.4;
+    material.useMetalness = true;
+    material.update();
 
-        // set position and scale and add it to scene
-        primitive.setLocalPosition(position);
-        primitive.setLocalScale(scale);
-        app.root.addChild(primitive);
+    // create primitive
+    const primitive = new pc.Entity();
+    primitive.addComponent('render', {
+        type: primitiveType,
+        material: material
+    });
 
-        return primitive;
+    // set position and scale and add it to scene
+    primitive.setLocalPosition(position);
+    primitive.setLocalScale(scale);
+    app.root.addChild(primitive);
+
+    return primitive;
+}
+
+/**
+ * create few primitives, keep their references to rotate them later
+ * @type {pc.Entity[]}
+ */
+const primitives = [];
+const count = 7;
+const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
+for (let i = 0; i < count; i++) {
+    const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
+    const color = new pc.Color(Math.random(), Math.random(), Math.random());
+    const angle = (2 * Math.PI * i) / count;
+    const pos = new pc.Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
+    primitives.push(createPrimitive(shapeName, pos, new pc.Vec3(4, 8, 4), color));
+}
+
+// Create the camera, which renders entities
+const camera = new pc.Entity('SceneCamera');
+camera.addComponent('camera', {
+    clearColor: new pc.Color(0.2, 0.2, 0.2),
+    toneMapping: pc.TONEMAP_ACES
+});
+app.root.addChild(camera);
+camera.setLocalPosition(0, 10, 20);
+camera.lookAt(pc.Vec3.ZERO);
+
+// enable the camera to render the scene's color map.
+camera.camera.requestSceneColorMap(true);
+
+// create a primitive which uses refraction shader to distort the view behind it
+const glass = createPrimitive('box', new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
+glass.render.castShadows = false;
+glass.render.receiveShadows = false;
+
+// reflection material using the shader
+const refractionMaterial = new pc.ShaderMaterial({
+    uniqueName: 'RefractionShader',
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: shaderGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: shaderWgslFrag,
+    attributes: {
+        vertex_position: pc.SEMANTIC_POSITION,
+        vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
     }
+});
+glass.render.material = refractionMaterial;
 
-    /**
-     * create few primitives, keep their references to rotate them later
-     * @type {pc.Entity[]}
-     */
-    const primitives = [];
-    const count = 7;
-    const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
-    for (let i = 0; i < count; i++) {
-        const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
-        const color = new pc.Color(Math.random(), Math.random(), Math.random());
-        const angle = (2 * Math.PI * i) / count;
-        const pos = new pc.Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
-        primitives.push(createPrimitive(shapeName, pos, new pc.Vec3(4, 8, 4), color));
-    }
+// set an offset map on the material
+refractionMaterial.setParameter('uOffsetMap', assets.normal.resource);
 
-    // Create the camera, which renders entities
-    const camera = new pc.Entity('SceneCamera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2),
-        toneMapping: pc.TONEMAP_ACES
+// set roughness map
+refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
+
+// tint colors
+refractionMaterial.setParameter(
+    'tints[0]',
+    new Float32Array([
+        1,
+        0.7,
+        0.7, // red
+        1,
+        1,
+        1, // white
+        0.7,
+        0.7,
+        1, // blue
+        1,
+        1,
+        1 // white
+    ])
+);
+
+// transparency
+refractionMaterial.blendType = pc.BLEND_NORMAL;
+refractionMaterial.update();
+
+// update things each frame
+let time = 0;
+app.on('update', dt => {
+    time += dt;
+
+    // rotate the primitives
+    primitives.forEach(prim => {
+        prim.rotate(0.3, 0.2, 0.1);
     });
-    app.root.addChild(camera);
-    camera.setLocalPosition(0, 10, 20);
-    camera.lookAt(pc.Vec3.ZERO);
 
-    // enable the camera to render the scene's color map.
-    camera.camera.requestSceneColorMap(true);
+    glass.rotate(-0.1, 0.1, -0.15);
 
-    // create a primitive which uses refraction shader to distort the view behind it
-    const glass = createPrimitive('box', new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
-    glass.render.castShadows = false;
-    glass.render.receiveShadows = false;
-
-    // reflection material using the shader
-    const refractionMaterial = new pc.ShaderMaterial({
-        uniqueName: 'RefractionShader',
-        vertexGLSL: shaderGlslVert,
-        fragmentGLSL: shaderGlslFrag,
-        vertexWGSL: shaderWgslVert,
-        fragmentWGSL: shaderWgslFrag,
-        attributes: {
-            vertex_position: pc.SEMANTIC_POSITION,
-            vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
-        }
-    });
-    glass.render.material = refractionMaterial;
-
-    // set an offset map on the material
-    refractionMaterial.setParameter('uOffsetMap', assets.normal.resource);
-
-    // set roughness map
-    refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
-
-    // tint colors
-    refractionMaterial.setParameter(
-        'tints[0]',
-        new Float32Array([
-            1,
-            0.7,
-            0.7, // red
-            1,
-            1,
-            1, // white
-            0.7,
-            0.7,
-            1, // blue
-            1,
-            1,
-            1 // white
-        ])
-    );
-
-    // transparency
-    refractionMaterial.blendType = pc.BLEND_NORMAL;
-    refractionMaterial.update();
-
-    // update things each frame
-    let time = 0;
-    app.on('update', (dt) => {
-        time += dt;
-
-        // rotate the primitives
-        primitives.forEach((prim) => {
-            prim.rotate(0.3, 0.2, 0.1);
-        });
-
-        glass.rotate(-0.1, 0.1, -0.15);
-
-        // orbit the camera
-        camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
-        camera.lookAt(new pc.Vec3(0, 2, 0));
-    });
+    // orbit the camera
+    camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
+    camera.lookAt(new pc.Vec3(0, 2, 0));
 });
