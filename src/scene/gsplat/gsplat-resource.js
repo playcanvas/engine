@@ -100,6 +100,7 @@ class GSplatResource extends GSplatResourceBase {
         const cg = gsplatData.getProp('f_dc_1');
         const cb = gsplatData.getProp('f_dc_2');
         const ca = gsplatData.getProp('opacity');
+        const activated = gsplatData.activated;
 
         const SH_C0 = 0.28209479177387814;
 
@@ -107,7 +108,7 @@ class GSplatResource extends GSplatResourceBase {
             const r = (cr[i] * SH_C0 + 0.5);
             const g = (cg[i] * SH_C0 + 0.5);
             const b = (cb[i] * SH_C0 + 0.5);
-            const a = 1 / (1 + Math.exp(-ca[i]));
+            const a = activated ? ca[i] : 1 / (1 + Math.exp(-ca[i]));
 
             data[i * 4 + 0] = float2Half(r);
             data[i * 4 + 1] = float2Half(g);
