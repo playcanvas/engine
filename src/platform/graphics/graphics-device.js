@@ -1256,14 +1256,16 @@ class GraphicsDevice extends EventHandler {
     }
 
     updateClientRect() {
-        if (platform.worker) {
-            // Web Workers don't do page layout, so getBoundingClientRect is not available
-            this.clientRect.width = this.canvas.width;
-            this.clientRect.height = this.canvas.height;
-        } else {
+        if (typeof this.canvas.getBoundingClientRect === 'function') {
             const rect = this.canvas.getBoundingClientRect();
             this.clientRect.width = rect.width;
             this.clientRect.height = rect.height;
+        } else {
+            // getBoundingClientRect is not available on OffscreenCanvas (Web Workers don't do
+            // page layout) or on mock canvases used with NullGraphicsDevice in headless
+            // environments
+            this.clientRect.width = this.canvas.width ?? 0;
+            this.clientRect.height = this.canvas.height ?? 0;
         }
     }
 
