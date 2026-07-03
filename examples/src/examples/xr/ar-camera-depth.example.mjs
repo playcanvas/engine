@@ -88,7 +88,7 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera
+// Create camera
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
@@ -123,7 +123,7 @@ const fragShader = /* glsl */ `
     void main (void) {
         vec2 uvScreen = gl_FragCoord.xy * uScreenSize.zw;
 
-        // use texture array for multi-view
+        // Use texture array for multi-view
         #ifdef XRDEPTH_ARRAY
             uvScreen = uvScreen * vec2(2.0, 1.0) - vec2(view_index, 0.0);
             vec3 uv = vec3((matrix_depth_uv * vec4(uvScreen.xy, 0.0, 1.0)).xy, view_index);
@@ -134,7 +134,7 @@ const fragShader = /* glsl */ `
         #ifdef XRDEPTH_FLOAT
             float depth = texture2D(depthMap, uv).r;
         #else
-            // unpack from AlphaLuminance
+            // Unpack from AlphaLuminance
             vec2 packedDepth = texture2D(depthMap, uv).ra;
             float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0));
         #endif
@@ -196,7 +196,7 @@ if (app.xr.supported) {
         if (app.xr.isAvailable(XRTYPE_AR)) {
             camera.camera.startXr(XRTYPE_AR, XRSPACE_LOCALFLOOR, {
                 depthSensing: {
-                    // request access to camera depth
+                    // Request access to camera depth
                     usagePreference: XRDEPTHSENSINGUSAGE_GPU,
                     dataFormatPreference: XRDEPTHSENSINGFORMAT_F32
                 },
@@ -258,7 +258,7 @@ if (app.xr.supported) {
     });
 
     app.on('update', () => {
-        // if camera depth is available
+        // If camera depth is available
         if (app.xr.views.availableDepth) {
             if (depthPlaneGlOnly) {
                 plane.enabled = false;

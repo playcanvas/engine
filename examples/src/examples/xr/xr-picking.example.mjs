@@ -75,7 +75,7 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera
+// Create camera
 const c = new Entity();
 c.addComponent('camera', {
     clearColor: new Color(44 / 255, 62 / 255, 80 / 255),
@@ -111,7 +111,7 @@ const createCube = (x, y, z) => {
     cubes.push(cube);
 };
 
-// create a grid of cubes
+// Create a grid of cubes
 const SIZE = 4;
 for (let x = 0; x <= SIZE; x++) {
     for (let y = 0; y <= SIZE; y++) {
@@ -139,10 +139,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', evt => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 c.camera.endXr();
             }
 
@@ -151,7 +151,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -160,8 +160,8 @@ if (app.xr.supported) {
 
     message('Tap on screen to enter VR, and then pick objects');
 
-    // when input source is triggers select
-    // pick closest box and change its color
+    // When input source triggers select
+    // Pick closest box and change its color
     const ray = new Ray();
     app.xr.input.on('select', inputSource => {
         let candidate = null;
@@ -170,24 +170,24 @@ if (app.xr.supported) {
         for (let i = 0; i < cubes.length; i++) {
             const mesh = cubes[i].render.meshInstances[0];
 
-            // check if mesh bounding box intersects with input source ray
+            // Check if mesh bounding box intersects with input source ray
             ray.set(inputSource.getOrigin(), inputSource.getDirection());
             if (mesh.aabb.intersectsRay(ray)) {
-                // check distance to camera
+                // Check distance to camera
                 const dist = mesh.aabb.center.distance(c.getPosition());
 
-                // if it is closer than previous distance
+                // If it is closer than previous distance
                 if (dist < candidateDist) {
-                    // set new candidate
+                    // Set new candidate
                     candidate = mesh;
                     candidateDist = dist;
                 }
             }
         }
 
-        // if we have picked candidate
+        // If we have picked candidate
         if (candidate) {
-            // randomize its color
+            // Randomize its color
             candidate.material.diffuse.set(Math.random(), Math.random(), Math.random());
             candidate.material.update();
         }
@@ -195,8 +195,8 @@ if (app.xr.supported) {
 
     const tmpVec = new Vec3();
 
-    // on each app update
-    // render input source rays as a line
+    // On each app update
+    // Render input source rays as a line
     app.on('update', () => {
         for (let i = 0; i < app.xr.input.inputSources.length; i++) {
             const inputSource = app.xr.input.inputSources[i];

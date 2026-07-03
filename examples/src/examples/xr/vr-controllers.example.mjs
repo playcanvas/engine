@@ -89,7 +89,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// create camera
+// Create camera
 const c = new Entity();
 c.addComponent('camera', {
     clearColor: new Color(44 / 255, 62 / 255, 80 / 255)
@@ -123,7 +123,7 @@ const createCube = (x, y, z) => {
 };
 
 const controllers = [];
-// create controller model
+// Create controller model
 const createController = inputSource => {
     const entity = new Entity();
     entity.addComponent('model', {
@@ -136,7 +136,7 @@ const createController = inputSource => {
     entity.inputSource = inputSource;
     controllers.push(entity);
 
-    // destroy input source related entity
+    // Destroy input source related entity
     // when input source is removed
     inputSource.on('remove', () => {
         controllers.splice(controllers.indexOf(entity), 1);
@@ -144,7 +144,7 @@ const createController = inputSource => {
     });
 };
 
-// create a grid of cubes
+// Create a grid of cubes
 const SIZE = 4;
 for (let x = 0; x <= SIZE; x++) {
     for (let y = 0; y <= SIZE; y++) {
@@ -184,14 +184,14 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
-    // when new input source added
+    // When new input source added
     app.xr.input.on('add', inputSource => {
         message('Controller Added');
         createController(inputSource);
@@ -199,17 +199,17 @@ if (app.xr.supported) {
 
     message('Tap on screen to enter VR, and see controllers');
 
-    // update position and rotation for each controller
+    // Update position and rotation for each controller
     app.on('update', () => {
         for (let i = 0; i < controllers.length; i++) {
             const inputSource = controllers[i].inputSource;
             if (inputSource.grip) {
-                // some controllers can be gripped
+                // Some controllers can be gripped
                 controllers[i].enabled = true;
                 controllers[i].setLocalPosition(inputSource.getLocalPosition());
                 controllers[i].setLocalRotation(inputSource.getLocalRotation());
             } else {
-                // some controllers cannot be gripped
+                // Some controllers cannot be gripped
                 controllers[i].enabled = false;
             }
         }

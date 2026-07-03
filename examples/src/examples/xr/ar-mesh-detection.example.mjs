@@ -112,7 +112,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// create camera
+// Create camera
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
@@ -195,7 +195,7 @@ if (app.xr.supported) {
 
     const entities = new Map();
 
-    // materials
+    // Materials
     const materialDefault = new StandardMaterial();
 
     const materialGlobalMesh = new StandardMaterial();
@@ -207,7 +207,7 @@ if (app.xr.supported) {
 
     // create entities for each XrMesh as they are added
     app.xr.meshDetection.on('add', xrMesh => {
-        // solid mesh
+        // Solid mesh
         const mesh = new Mesh(app.graphicsDevice);
         mesh.clear(true, false);
         mesh.setPositions(xrMesh.vertices);
@@ -217,7 +217,7 @@ if (app.xr.supported) {
         const material = xrMesh.label === 'global mesh' ? materialGlobalMesh : materialDefault;
         const meshInstance = new MeshInstance(mesh, material);
 
-        // wireframe mesh
+        // Wireframe mesh
         const meshWireframe = new Mesh(app.graphicsDevice);
         meshWireframe.clear(true, false);
         meshWireframe.setPositions(xrMesh.vertices);
@@ -234,7 +234,7 @@ if (app.xr.supported) {
         const meshInstanceWireframe = new MeshInstance(meshWireframe, materialWireframe);
         meshInstanceWireframe.renderStyle = RENDERSTYLE_WIREFRAME;
 
-        // entity
+        // Entity
         const entity = new Entity();
         entity.addComponent('render', {
             meshInstances: [meshInstance, meshInstanceWireframe]
@@ -242,7 +242,7 @@ if (app.xr.supported) {
         app.root.addChild(entity);
         entities.set(xrMesh, entity);
 
-        // label
+        // Label
         const label = new Entity();
         label.setLocalPosition(0, 0, 0);
         label.addComponent('element', {
@@ -259,12 +259,12 @@ if (app.xr.supported) {
         label.setLocalPosition(0, 0, 0.05);
         entity.label = label;
 
-        // transform
+        // Transform
         entity.setPosition(xrMesh.getPosition());
         entity.setRotation(xrMesh.getRotation());
     });
 
-    // when XrMesh is removed, destroy related entity
+    // When XrMesh is removed, destroy related entity
     app.xr.meshDetection.on('remove', xrMesh => {
         const entity = entities.get(xrMesh);
         if (entity) {
@@ -280,22 +280,22 @@ if (app.xr.supported) {
 
     app.on('update', () => {
         if (app.xr.active && app.xr.meshDetection.supported) {
-            // iterate through each XrMesh
+            // Iterate through each XrMesh
             for (let i = 0; i < app.xr.meshDetection.meshes.length; i++) {
                 const mesh = app.xr.meshDetection.meshes[i];
 
                 const entity = entities.get(mesh);
                 if (entity) {
-                    // update entity transforms based on XrMesh
+                    // Update entity transforms based on XrMesh
                     entity.setPosition(mesh.getPosition());
                     entity.setRotation(mesh.getRotation());
 
-                    // make sure label is looking at the camera
+                    // Make sure label is looking at the camera
                     entity.label.lookAt(camera.getPosition());
                     entity.label.rotateLocal(0, 180, 0);
                 }
 
-                // render XrMesh gizmo axes
+                // Render XrMesh gizmo axes
                 transform.setTRS(mesh.getPosition(), mesh.getRotation(), Vec3.ONE);
                 vec3A.set(0.2, 0, 0);
                 vec3B.set(0, 0.2, 0);

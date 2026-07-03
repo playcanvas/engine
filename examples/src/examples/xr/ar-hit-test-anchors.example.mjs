@@ -77,7 +77,7 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera
+// Create camera
 const c = new Entity();
 c.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
@@ -151,10 +151,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', evt => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 c.camera.endXr();
             }
 
@@ -163,7 +163,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -173,8 +173,8 @@ if (app.xr.supported) {
     app.xr.hitTest.on('available', () => {
         if (!app.xr.hitTest.supported || !app.xr.anchors.supported) return;
 
-        // provide gaze-like way to create anchors
-        // best for mobile phones
+        // Provide gaze-like way to create anchors
+        // Best for mobile phones
         let lastHitTestResult = null;
 
         app.xr.hitTest.start({
@@ -222,7 +222,7 @@ if (app.xr.supported) {
         }
     });
 
-    // create hit test sources for all input sources
+    // Create hit test sources for all input sources
     if (app.xr.hitTest.supported && app.xr.anchors.supported) {
         app.xr.input.on('add', inputSource => {
             inputSource.hitTestStart({
@@ -239,7 +239,7 @@ if (app.xr.supported) {
 
                     let lastHitTestResult = null;
 
-                    // persistent input sources
+                    // Persistent input sources
                     if (inputSource.targetRayMode === XRTARGETRAY_POINTER) {
                         inputSource.on('select', () => {
                             if (lastHitTestResult) createAnchor(lastHitTestResult);
@@ -256,7 +256,7 @@ if (app.xr.supported) {
                         target.destroy();
                         target = null;
 
-                        // mobile screen input source
+                        // Mobile screen input source
                         if (inputSource.targetRayMode === XRTARGETRAY_SCREEN && lastHitTestResult) {
                             createAnchor(lastHitTestResult);
                         }

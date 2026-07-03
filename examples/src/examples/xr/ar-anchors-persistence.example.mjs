@@ -83,7 +83,7 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera
+// Create camera
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
@@ -144,10 +144,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', evt => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 camera.camera.endXr();
             }
 
@@ -156,7 +156,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -166,7 +166,7 @@ if (app.xr.supported) {
     app.xr.anchors.on('available', () => {
         message('Anchors became available');
 
-        // restore all persistent anchors
+        // Restore all persistent anchors
         if (app.xr.anchors.persistence) {
             const uuids = app.xr.anchors.uuids;
             for (let i = 0; i < uuids.length; i++) {
@@ -197,7 +197,7 @@ if (app.xr.supported) {
         }
     });
 
-    // create hit test sources for all input sources
+    // Create hit test sources for all input sources
     if (app.xr.hitTest.supported && app.xr.anchors.supported) {
         app.xr.input.on('add', inputSource => {
             inputSource.hitTestStart({
@@ -214,7 +214,7 @@ if (app.xr.supported) {
 
                     let lastHitTestResult = null;
 
-                    // persistent input sources
+                    // Persistent input sources
                     if (inputSource.targetRayMode === XRTARGETRAY_POINTER) {
                         inputSource.on('select', () => {
                             if (lastHitTestResult) createAnchor(lastHitTestResult);
@@ -231,7 +231,7 @@ if (app.xr.supported) {
                         target.destroy();
                         target = null;
 
-                        // mobile screen input source
+                        // Mobile screen input source
                         if (inputSource.targetRayMode === XRTARGETRAY_SCREEN && lastHitTestResult) {
                             createAnchor(lastHitTestResult);
                         }
@@ -256,7 +256,7 @@ if (app.xr.supported) {
 
                     if (b === 0) continue;
 
-                    // clear all persistent anchors
+                    // Clear all persistent anchors
                     const uuids = app.xr.anchors.uuids;
                     for (let a = 0; a < uuids.length; a++) {
                         app.xr.anchors.forget(uuids[a]);
@@ -267,7 +267,7 @@ if (app.xr.supported) {
         });
     }
 
-    // create entity for anchors
+    // Create entity for anchors
     app.xr.anchors.on('add', anchor => {
         let entity = cone.clone();
         app.root.addChild(entity);

@@ -82,7 +82,7 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera
+// Create camera
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
@@ -90,7 +90,7 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// light
+// Light
 const l = new Entity();
 l.addComponent('light', {
     type: 'spot',
@@ -99,7 +99,7 @@ l.addComponent('light', {
 l.translate(0, 10, 0);
 app.root.addChild(l);
 
-// placeable cone
+// Placeable cone
 const cone = new Entity();
 cone.addComponent('render', {
     type: 'cone'
@@ -114,7 +114,7 @@ if (app.xr.supported) {
         if (app.xr.isAvailable(XRTYPE_AR)) {
             camera.camera.startXr(XRTYPE_AR, XRSPACE_LOCALFLOOR, {
                 depthSensing: {
-                    // request access to camera depth
+                    // Request access to camera depth
                     usagePreference: XRDEPTHSENSINGUSAGE_GPU,
                     dataFormatPreference: XRDEPTHSENSINGFORMAT_F32
                 },
@@ -134,10 +134,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', evt => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 camera.camera.endXr();
             }
 
@@ -146,7 +146,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -183,7 +183,7 @@ if (app.xr.supported) {
     });
 
     app.on('update', () => {
-        // if camera depth is available
+        // If camera depth is available
         if (app.xr.views.availableDepth) {
             const view = app.xr.views.list[0];
             const depth = view.getDepth(0.5, 0.5);
@@ -192,7 +192,7 @@ if (app.xr.supported) {
                 tmpVec3A.copy(camera.forward);
                 tmpVec3A.mulScalar(depth);
                 tmpVec3A.add(camera.getPosition());
-                tmpVec3A.y += 0.05; // offset based on cone scale
+                tmpVec3A.y += 0.05; // Offset based on cone scale
 
                 cone.enabled = true;
                 cone.setLocalPosition(tmpVec3A);

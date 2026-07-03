@@ -122,7 +122,7 @@ app.start();
 const colorCamera = new Color(44 / 255, 62 / 255, 80 / 255);
 const colorTransparent = new Color(0, 0, 0, 0);
 
-// create camera
+// Create camera
 const cameraEntity = new Entity();
 cameraEntity.addComponent('camera', {
     clearColor: colorCamera
@@ -130,18 +130,18 @@ cameraEntity.addComponent('camera', {
 cameraEntity.setLocalPosition(0, 1, 1);
 app.root.addChild(cameraEntity);
 
-// virtual monitor from a template
+// Virtual monitor from a template
 const monitor = assets.monitor.resource.instantiate();
 monitor.setLocalEulerAngles(45, 0, 0);
 monitor.setLocalPosition(0, 1, -1);
 app.root.addChild(monitor);
 
-// resize scrollable area to match its content
+// Resize scrollable area to match its content
 const entityText = monitor.findByName('Lorem');
 entityText.element.text = uiText;
 monitor.findByName('Content').element.height = entityText.element.height + 40;
 
-// fps counter
+// FPS counter
 const entityFps = monitor.findByName('FPS');
 let ticks = 0;
 let fpsTime = 0;
@@ -163,12 +163,12 @@ if (app.xr.supported) {
         element?.classList.toggle('active', available);
     });
 
-    // reset camera color on XR end
+    // Reset camera color on XR end
     app.xr.on('end', () => {
         cameraEntity.camera.clearColor = colorCamera;
     });
 
-    // button handler
+    // Button handler
     const onXrButtonClick = event => {
         const button = /** @type {HTMLElement} */ (event.currentTarget);
         if (!button.classList.contains('active')) return;
@@ -184,13 +184,13 @@ if (app.xr.supported) {
         });
     };
 
-    // button clicks
+    // Button clicks
     const buttons = document.querySelectorAll('.container > .button');
     for (let i = 0; i < buttons.length; i++) {
         buttons[i].addEventListener('click', onXrButtonClick);
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -198,7 +198,7 @@ if (app.xr.supported) {
     });
 
     app.on('update', () => {
-        // fps meter
+        // FPS meter
         const now = Date.now();
         if (now - fpsTime >= 1000) {
             fpsTime = now;
@@ -207,11 +207,11 @@ if (app.xr.supported) {
         }
         ticks++;
 
-        // visualize input source rays
+        // Visualize input source rays
         for (let i = 0; i < app.xr.input.inputSources.length; i++) {
             const inputSource = app.xr.input.inputSources[i];
 
-            // draw ray
+            // Draw ray
             if (inputSource.targetRayMode === XRTARGETRAY_POINTER) {
                 vec3A.copy(inputSource.getDirection()).mulScalar(10).add(inputSource.getOrigin());
                 const color = inputSource.selecting ? Color.GREEN : Color.WHITE;

@@ -77,11 +77,11 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera parent
+// Create camera parent
 const cameraParent = new Entity();
 app.root.addChild(cameraParent);
 
-// create camera
+// Create camera
 const c = new Entity();
 c.addComponent('camera', {
     clearColor: new Color(44 / 255, 62 / 255, 80 / 255),
@@ -114,7 +114,7 @@ const createCube = (x, y, z) => {
 };
 
 const controllers = [];
-// create controller box
+// Create controller box
 const createController = inputSource => {
     const entity = new Entity();
     entity.addComponent('render', {
@@ -126,7 +126,7 @@ const createController = inputSource => {
     entity.inputSource = inputSource;
     controllers.push(entity);
 
-    // destroy input source related entity
+    // Destroy input source related entity
     // when input source is removed
     inputSource.on('remove', () => {
         controllers.splice(controllers.indexOf(entity), 1);
@@ -134,7 +134,7 @@ const createController = inputSource => {
     });
 };
 
-// create a grid of cubes
+// Create a grid of cubes
 const SIZE = 4;
 for (let x = 0; x <= SIZE; x++) {
     for (let y = 0; y <= SIZE; y++) {
@@ -174,14 +174,14 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
-    // when new input source added
+    // When new input source added
     app.xr.input.on('add', inputSource => {
         createController(inputSource);
     });
@@ -200,50 +200,50 @@ if (app.xr.supported) {
     const tmpVec3B = new Vec3();
     const lineColor = new Color(1, 1, 1);
 
-    // update position and rotation for each controller
+    // Update position and rotation for each controller
     app.on('update', dt => {
         let i, inputSource;
 
-        // first we update movement
+        // First we update movement
         for (i = 0; i < controllers.length; i++) {
             inputSource = controllers[i].inputSource;
 
-            // should have gamepad
+            // Should have gamepad
             if (!inputSource.gamepad) continue;
 
-            // left controller - for movement
+            // Left controller - for movement
             if (inputSource.handedness === XRHAND_LEFT) {
-                // set vector based on gamepad thumbstick axes values
+                // Set vector based on gamepad thumbstick axes values
                 tmpVec2A.set(inputSource.gamepad.axes[2], inputSource.gamepad.axes[3]);
 
-                // if there is input
+                // If there is input
                 if (tmpVec2A.length()) {
                     tmpVec2A.normalize();
 
-                    // we need to take in account camera facing
-                    // so we figure out Yaw of camera
+                    // We need to take in account camera facing
+                    // So we figure out Yaw of camera
                     tmpVec2B.x = c.forward.x;
                     tmpVec2B.y = c.forward.z;
                     tmpVec2B.normalize();
 
                     const rad = Math.atan2(tmpVec2B.x, tmpVec2B.y) - Math.PI / 2;
-                    // and rotate our movement vector based on camera yaw
+                    // And rotate our movement vector based on camera yaw
                     const t = tmpVec2A.x * Math.sin(rad) - tmpVec2A.y * Math.cos(rad);
                     tmpVec2A.y = tmpVec2A.y * Math.sin(rad) + tmpVec2A.x * Math.cos(rad);
                     tmpVec2A.x = t;
 
-                    // set movement speed
+                    // Set movement speed
                     tmpVec2A.mulScalar(movementSpeed * dt);
-                    // move camera parent based on calculated movement vector
+                    // Move camera parent based on calculated movement vector
                     cameraParent.translate(tmpVec2A.x, 0, tmpVec2A.y);
                 }
 
-                // right controller - for rotation
+                // Right controller - for rotation
             } else if (inputSource.handedness === XRHAND_RIGHT) {
-                // get rotation from thumbsitck
+                // Get rotation from thumbstick
                 const rotate = -inputSource.gamepad.axes[2];
 
-                // each rotate should be done by moving thumbstick to the side enough
+                // Each rotate should be done by moving thumbstick to the side enough
                 // then thumbstick should be moved back close to neutral position
                 // before it can be used again to rotate
                 if (lastRotateValue > 0 && rotate < rotateResetThreshold) {
@@ -252,11 +252,11 @@ if (app.xr.supported) {
                     lastRotateValue = 0;
                 }
 
-                // if thumbstick is reset and moved enough to the side
+                // If thumbstick is reset and moved enough to the side
                 if (lastRotateValue === 0 && Math.abs(rotate) > rotateThreshold) {
                     lastRotateValue = Math.sign(rotate);
 
-                    // we want to rotate relative to camera position
+                    // We want to rotate relative to camera position
                     tmpVec3A.copy(c.getLocalPosition());
                     cameraParent.translateLocal(tmpVec3A);
                     cameraParent.rotateLocal(0, Math.sign(rotate) * rotateSpeed, 0);
@@ -265,25 +265,25 @@ if (app.xr.supported) {
             }
         }
 
-        // after movement and rotation is done
-        // we update/render controllers
+        // After movement and rotation is done
+        // We update/render controllers
         for (i = 0; i < controllers.length; i++) {
             inputSource = controllers[i].inputSource;
 
-            // render controller ray
+            // Render controller ray
             tmpVec3A.copy(inputSource.getOrigin());
             tmpVec3B.copy(inputSource.getDirection());
             tmpVec3B.mulScalar(100).add(tmpVec3A);
             app.drawLine(tmpVec3A, tmpVec3B, lineColor);
 
-            // render controller
+            // Render controller
             if (inputSource.grip) {
-                // some controllers can be gripped
+                // Some controllers can be gripped
                 controllers[i].render.enabled = true;
                 controllers[i].setLocalPosition(inputSource.getLocalPosition());
                 controllers[i].setLocalRotation(inputSource.getLocalRotation());
             } else {
-                // some controllers cannot be gripped
+                // Some controllers cannot be gripped
                 controllers[i].render.enabled = false;
             }
         }

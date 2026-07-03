@@ -80,7 +80,7 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera
+// Create camera
 const c = new Entity();
 c.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
@@ -114,7 +114,7 @@ const createCube = (x, y, z) => {
     app.root.addChild(cube);
 };
 
-// create a grid of cubes
+// Create a grid of cubes
 const SIZE = 4;
 for (let x = 0; x < SIZE; x++) {
     for (let y = 0; y < SIZE; y++) {
@@ -143,10 +143,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', evt => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 c.camera.endXr();
             }
 
@@ -155,7 +155,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -181,22 +181,22 @@ if (app.xr.supported) {
     });
 
     app.on('update', () => {
-        // if camera color is available
+        // If camera color is available
         if (app.xr.views.availableColor) {
             for (let i = 0; i < app.xr.views.list.length; i++) {
                 const view = app.xr.views.list[i];
-                // check if color texture is available
+                // Check if color texture is available
                 if (!view.textureColor) {
                     continue;
                 }
 
-                // apply camera color texture to material diffuse channel
+                // Apply camera color texture to material diffuse channel
                 if (!material.diffuseMap) {
                     material.diffuseMap = view.textureColor;
                     material.update();
                 }
 
-                // debug draw camera color texture on the screen
+                // Debug draw camera color texture on the screen
                 app.drawTexture(0.5, -0.5, 1, 1, view.textureColor);
             }
         }
@@ -205,7 +205,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         if (!material.diffuseMap) return;
 
-        // clear camera color texture when XR session ends
+        // Clear camera color texture when XR session ends
         material.diffuseMap = null;
         material.update();
     });

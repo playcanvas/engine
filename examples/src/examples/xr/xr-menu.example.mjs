@@ -73,7 +73,7 @@ await new Promise(resolve => {
     WasmModule.getInstance('Ammo', () => resolve());
 });
 
-// create UI
+// Create UI
 // html
 const div = document.createElement('div');
 div.innerHTML = uiHtml;
@@ -169,7 +169,7 @@ app.start();
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxMip = 0;
 
-// create camera parent for locomotion (XrSession attaches to this)
+// Create camera parent for locomotion (XrSession attaches to this)
 const cameraParent = new Entity('CameraParent');
 app.root.addChild(cameraParent);
 
@@ -204,7 +204,7 @@ cameraParent.script.create(XrControllers);
 // Add XrNavigation script - handles teleportation and smooth locomotion
 cameraParent.script.create(XrNavigation);
 
-// add directional light
+// Add directional light
 const light = new Entity('Light');
 light.addComponent('light', {
     type: 'directional',

@@ -112,7 +112,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// create camera
+// Create camera
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
@@ -149,10 +149,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', evt => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 camera.camera.endXr();
             }
 
@@ -161,7 +161,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
@@ -171,7 +171,7 @@ if (app.xr.supported) {
     app.xr.on('start', () => {
         message('Immersive AR session has started');
 
-        // trigger manual scanning on session start
+        // Trigger manual scanning on session start
         // app.xr.initiateRoomCapture((err) => { });
     });
     app.xr.on('end', () => {
@@ -259,7 +259,7 @@ if (app.xr.supported) {
     const entities = new Map();
 
     app.xr.planeDetection.on('add', xrPlane => {
-        // entity
+        // Entity
         const entity = new Entity();
         entity.addComponent('render');
         app.root.addChild(entity);
@@ -267,7 +267,7 @@ if (app.xr.supported) {
 
         updateMesh(xrPlane, entity);
 
-        // label
+        // Label
         const label = new Entity();
         label.setLocalPosition(0, 0, 0);
         label.addComponent('element', {
@@ -284,7 +284,7 @@ if (app.xr.supported) {
         label.setLocalPosition(0, -0.05, 0);
         entity.label = label;
 
-        // transform
+        // Transform
         entity.setPosition(xrPlane.getPosition());
         entity.setRotation(xrPlane.getRotation());
 
@@ -293,7 +293,7 @@ if (app.xr.supported) {
         });
     });
 
-    // when XrPlane is removed, destroy related entity
+    // When XrPlane is removed, destroy related entity
     app.xr.planeDetection.on('remove', xrPlane => {
         const entity = entities.get(xrPlane);
         if (entity) {
@@ -309,24 +309,24 @@ if (app.xr.supported) {
 
     app.on('update', () => {
         if (app.xr.active && app.xr.planeDetection.supported) {
-            // iterate through each XrMesh
+            // Iterate through each XrPlane
             for (let i = 0; i < app.xr.planeDetection.planes.length; i++) {
                 const plane = app.xr.planeDetection.planes[i];
 
                 const entity = entities.get(plane);
                 if (entity) {
-                    // update entity transforms based on XrPlane
+                    // Update entity transforms based on XrPlane
                     entity.setPosition(plane.getPosition());
                     entity.setRotation(plane.getRotation());
 
-                    // make sure label is looking at the camera
+                    // Make sure label is looking at the camera
                     entity.label.setLocalPosition(0, -0.05, 0);
                     entity.label.lookAt(camera.getPosition());
                     entity.label.rotateLocal(0, 180, 0);
                     entity.label.translateLocal(0, 0, 0.05);
                 }
 
-                // render XrPlane gizmo axes
+                // Render XrPlane gizmo axes
                 transform.setTRS(plane.getPosition(), plane.getRotation(), Vec3.ONE);
                 vec3A.set(0.2, 0, 0);
                 vec3B.set(0, 0.2, 0);
