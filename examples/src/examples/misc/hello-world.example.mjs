@@ -46,14 +46,14 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// create box entity
+// Create box entity
 const box = new Entity('cube');
 box.addComponent('render', {
     type: 'box'
 });
 app.root.addChild(box);
 
-// create camera entity
+// Create camera entity
 const camera = new Entity('camera');
 camera.addComponent('camera', {
     clearColor: new Color(0.5, 0.6, 0.9)
@@ -61,11 +61,11 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 camera.setPosition(0, 0, 3);
 
-// create directional light entity
+// Create directional light entity
 const light = new Entity('light');
 light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(45, 0, 0);
 
-// rotate the box according to the delta time since the last frame
+// Rotate the box according to the delta time since the last frame
 app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));

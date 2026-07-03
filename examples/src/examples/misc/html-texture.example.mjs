@@ -212,7 +212,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxMip = 0;
 app.scene.skyboxIntensity = 2;

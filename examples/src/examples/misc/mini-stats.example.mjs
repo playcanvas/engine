@@ -61,23 +61,23 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// set up options for mini-stats, start with the default options
+// Set up options for mini-stats, start with the default options
 const options = MiniStats.getDefaultOptions();
 
-// configure sizes
+// Configure sizes
 options.sizes = [
     { width: 128, height: 16, spacing: 0, graphs: false },
     { width: 256, height: 32, spacing: 2, graphs: true },
     { width: 500, height: 64, spacing: 2, graphs: true }
 ];
 
-// when the application starts, use the largest size
+// When the application starts, use the largest size
 options.startSizeIndex = 2;
 
-// display additional counters
+// Display additional counters
 // Note: for most of these to report values, either debug or profiling engine build needs to be used.
 options.stats = [
-    // frame update time in ms
+    // Frame update time in ms
     {
         name: 'Update',
         stats: ['frame.updateTime'],
@@ -86,14 +86,14 @@ options.stats = [
         watermark: 33
     },
 
-    // total number of draw calls
+    // Total number of draw calls
     {
         name: 'DrawCalls',
         stats: ['drawCalls.total'],
         watermark: 2000
     },
 
-    // total number of triangles, in 1000s
+    // Total number of triangles, in 1000s
     {
         name: 'triCount',
         stats: ['frame.triangles'],
@@ -103,14 +103,14 @@ options.stats = [
         watermark: 500
     },
 
-    // number of materials used in a frame
+    // Number of materials used in a frame
     {
         name: 'materials',
         stats: ['frame.materials'],
         watermark: 2000
     },
 
-    // frame time it took to do frustum culling
+    // Frame time it took to do frustum culling
     {
         name: 'cull',
         stats: ['frame.cullTime'],
@@ -119,7 +119,7 @@ options.stats = [
         unitsName: 'ms'
     },
 
-    // used VRAM in MB
+    // Used VRAM in MB
     {
         name: 'VRAM',
         stats: ['vram.totalUsed'],
@@ -129,14 +129,14 @@ options.stats = [
         watermark: 100
     },
 
-    // frames per second
+    // Frames per second
     {
         name: 'FPS',
         stats: ['frame.fps'],
         watermark: 60
     },
 
-    // delta time
+    // Delta time
     {
         name: 'Frame',
         stats: ['frame.ms'],
@@ -146,10 +146,10 @@ options.stats = [
     }
 ];
 
-// create mini-stats system
+// Create mini-stats system
 const miniStats = new MiniStats(app, options); // eslint-disable-line no-unused-vars
 
-// add directional lights to the scene
+// Add directional lights to the scene
 const light = new Entity();
 light.addComponent('light', {
     type: 'directional'
@@ -175,26 +175,26 @@ camera.lookAt(Vec3.ZERO);
  * @returns {Entity} The new primitive entity.
  */
 function createPrimitive(primitiveType, position, scale) {
-    // create material of random color
+    // Create material of random color
     const material = new StandardMaterial();
     material.diffuse = new Color(Math.random(), Math.random(), Math.random());
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity();
     primitive.addComponent('model', {
         type: primitiveType
     });
     primitive.model.material = material;
 
-    // set position and scale
+    // Set position and scale
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
 
     return primitive;
 }
 
-// list of all created engine resources
+// List of all created engine resources
 /** @type {Entity[]} */
 const entities = [];
 /** @type {any[]} */
@@ -202,7 +202,7 @@ const vertexBuffers = [];
 /** @type {any[]} */
 const textures = [];
 
-// update function called every frame
+// Update function called every frame
 let adding = true;
 const step = 10,
     max = 2000;
@@ -213,11 +213,11 @@ let vertexBuffer;
 /** @type {{ destroy: () => void}} */
 let texture;
 app.on('update', () => {
-    // execute some tasks multiple times per frame
+    // Execute some tasks multiple times per frame
     for (let i = 0; i < step; i++) {
-        // allocating resources
+        // Allocating resources
         if (adding) {
-            // add entity (they used shared geometry internally, and we create individual material for each)
+            // Add entity (they used shared geometry internally, and we create individual material for each)
             const shape = Math.random() < 0.5 ? 'box' : 'sphere';
             const position = new Vec3(Math.random() * 10, Math.random() * 10, Math.random() * 10);
             const scale = 0.5 + Math.random();
@@ -225,12 +225,12 @@ app.on('update', () => {
             entities.push(entity);
             app.root.addChild(entity);
 
-            // if allocation reached the max limit, switch to removing mode
+            // If allocation reached the max limit, switch to removing mode
             if (entities.length >= max) {
                 adding = false;
             }
 
-            // add vertex buffer
+            // Add vertex buffer
             const vertexCount = 500;
             const data = new Float32Array(vertexCount * 16);
             const format = VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
@@ -239,7 +239,7 @@ app.on('update', () => {
             });
             vertexBuffers.push(vertexBuffer);
 
-            // allocate texture
+            // Allocate texture
             const texture = new Texture(app.graphicsDevice, {
                 width: 64,
                 height: 64,
@@ -248,7 +248,7 @@ app.on('update', () => {
             });
             textures.push(texture);
 
-            // ensure texture is uploaded (actual VRAM is allocated)
+            // Ensure texture is uploaded (actual VRAM is allocated)
             texture.lock();
             texture.unlock();
 
@@ -257,21 +257,21 @@ app.on('update', () => {
                 app.graphicsDevice.setTexture(texture, 0);
             }
         } else {
-            // de-allocating resources
+            // De-allocating resources
 
             if (entities.length > 0) {
-                // destroy entities
+                // Destroy entities
                 entity = entities[entities.length - 1];
                 // @ts-ignore engine-tsd
                 entity.destroy();
                 entities.length--;
 
-                // destroy vertex buffer
+                // Destroy vertex buffer
                 vertexBuffer = vertexBuffers[vertexBuffers.length - 1];
                 vertexBuffer.destroy();
                 vertexBuffers.length--;
 
-                // destroy texture
+                // Destroy texture
                 texture = textures[textures.length - 1];
                 texture.destroy();
                 textures.length--;

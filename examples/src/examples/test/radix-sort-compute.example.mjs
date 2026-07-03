@@ -82,7 +82,7 @@ errorOverlay.style.cssText = `
 document.body.appendChild(errorOverlay);
 
 // Create benchmark status overlay (shown while running) and a results
-// container (shown after completion). Both are full-screen-ish panels on top
+// Container (shown after completion). Both are full-screen-ish panels on top
 // of the canvas so the user doesn't need to look at devtools.
 const benchStatus = document.createElement('div');
 benchStatus.style.cssText = `
@@ -163,7 +163,7 @@ let originalValues = [];
 let needsRegen = true;
 
 // Valid radix modes. After benchmarking across NVIDIA / Apple / Mali / IMG
-// the surviving variants are:
+// The surviving variants are:
 //   - '4-shared-mem': the universal portable fallback
 //     (ComputeRadixSort with kind=RADIX_SORT_PORTABLE), subgroup-free,
 //     shipped as the production default on every non-NVIDIA device.
@@ -180,7 +180,7 @@ const DEFAULT_MODE = '4-shared-mem';
 
 // Lazy cache of ComputeRadixSort instances, keyed by the mode dropdown.
 // Instances are created on first use and retained, so subsequent toggles
-// between configurations are free (no shader rebuild). Each instance grows
+// Between configurations are free (no shader rebuild). Each instance grows
 // its internal buffers on demand.
 /** @type {Map<string, ComputeRadixSort>} */
 const radixSortCache = new Map();
@@ -226,7 +226,7 @@ function buildGpuLine(sep) {
     }
     if (device.isWebGPU) {
         // Read from device fields captured at init (adapter.limits for
-        // subgroup entries can be cleared after requestDevice on some
+        // Subgroup entries can be cleared after requestDevice on some
         // browsers, so a live re-read is unreliable - e.g. on M4 Chrome).
         const maxSg = device.maxSubgroupSize;
         const minSg = device.minSubgroupSize;
@@ -390,9 +390,9 @@ function runSort(verify = false) {
 
     const sort = getActiveRadixSort();
     // Round up numBits to a multiple of the active radix width so the sort
-    // asserts don't fire when the user picks e.g. 12 bits while in 8-bit mode.
+    // Asserts don't fire when the user picks e.g. 12 bits while in 8-bit mode.
     // Keys never exceed (1 << currentNumBits) - 1 (see regenerateData), so
-    // sorting with extra high bits is still correct.
+    // Sorting with extra high bits is still correct.
     const alignedBits = Math.ceil(currentNumBits / sort.radixBits) * sort.radixBits;
     sortedIndicesBuffer = sort.sort(keysBuffer, currentNumElements, alignedBits);
 
@@ -501,8 +501,8 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
     const cpuSorted = capturedOriginalValues.slice().sort((a, b) => a - b);
 
     // Compare GPU result against CPU reference. Keep the first and last 5
-    // mismatches so we can see both where corruption starts and whether the
-    // tail of the array is also off (e.g. a shift-by-one cascade drops the
+    // Mismatches so we can see both where corruption starts and whether the
+    // Tail of the array is also off (e.g. a shift-by-one cascade drops the
     // last element and duplicates an earlier one).
     let errorCount = 0;
     const firstErrors = [];
@@ -537,7 +537,7 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
             }
         }
         // Dump the final few GPU/expected pairs unconditionally so we can
-        // confirm whether the very end of the array is shifted (a stable
+        // Confirm whether the very end of the array is shifted (a stable
         // shift-by-one drops the last original element) or intact.
         const tailStart = Math.max(0, capturedNumElements - TAIL_SIZE);
         for (let i = tailStart; i < capturedNumElements; i++) {
@@ -573,12 +573,12 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         }
     } else if (path === 'options.mode') {
         // Switching radix mode changes the active shader set; force a
-        // re-sort on next frame and refresh the overlay.
+        // Re-sort on next frame and refresh the overlay.
         needsRegen = true;
         updateDeviceInfo();
     } else if (path === 'options.validation' && !value) {
         // Clear any stale error overlay when validation is turned off -
-        // a previous failure is no longer being re-checked each frame.
+        // A previous failure is no longer being re-checked each frame.
         errorOverlay.style.display = 'none';
     }
 });
@@ -598,7 +598,7 @@ data.set('options', {
 
 // Benchmark covers the full dynamic range we care about for gsplat sorts.
 // 100K and 500K expose per-dispatch fixed-cost floors; 30M+ probes DRAM
-// bandwidth ceilings. 24-bit keys is the gsplat-representative bit width.
+// Bandwidth ceilings. 24-bit keys is the gsplat-representative bit width.
 const BENCH_SIZES = [
     100_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000, 8_000_000, 10_000_000,
     15_000_000, 20_000_000, 25_000_000, 30_000_000, 40_000_000, 50_000_000
@@ -727,7 +727,7 @@ function startBenchmark() {
     };
 
     // Force off visualization (saves fragment shader cost during timing) and
-    // hide any stale error overlay from a prior interactive session.
+    // Hide any stale error overlay from a prior interactive session.
     unsortedPlane.enabled = false;
     sortedPlane.enabled = false;
     errorOverlay.style.display = 'none';
@@ -770,7 +770,7 @@ function stepBenchmark() {
         // per-config-and-size there's no need to share).
         //
         // We recreate the sort instance for each (config, size) so that
-        // capacity growth from earlier smaller sizes doesn't leak into
+        // Capacity growth from earlier smaller sizes doesn't leak into
         // timings (the current allocation scheme only grows).
         if (s.sortInst) {
             s.sortInst.destroy();
@@ -788,7 +788,7 @@ function stepBenchmark() {
         const alignedBits = Math.ceil(BENCH_BITS / s.sortInst.radixBits) * s.sortInst.radixBits;
 
         // Prime: one throwaway sort so shader compilation, pipeline
-        // creation and buffer allocations land outside the warmup window.
+        // Creation and buffer allocations land outside the warmup window.
         s.sortInst.sort(s.keysBuf, size, alignedBits);
 
         s.phase = 'warmup';
@@ -815,7 +815,7 @@ function stepBenchmark() {
         return;
     }
 
-    // phase === 'measure': collect timings from the previous frame's work.
+    // Phase === 'measure': collect timings from the previous frame's work.
     // Timestamp queries resolve async so the values we read now correspond
     // to the sort dispatched ~1 frame ago; over MEASURE frames this is
     // amortized away. We deliberately exclude the `Forward` (scene render)
@@ -857,7 +857,7 @@ function stepBenchmark() {
     });
 
     // Order: inner loop is config (so both configs at the same size are
-    // measured back-to-back, equalizing GPU boost-clock / thermal state
+    // Measured back-to-back, equalizing GPU boost-clock / thermal state
     // across configs at that size). Outer loop is size.
     s.configIdx++;
     if (s.configIdx >= BENCH_CONFIGS.length) {
@@ -894,7 +894,7 @@ function finishBenchmark() {
     }
 
     // Hide the device info HUD so it doesn't overlap the results title, and
-    // keep the visualization planes disabled while the overlay is shown -
+    // Keep the visualization planes disabled while the overlay is shown -
     // restoring both only when the user clicks Close. We don't restore the
     // render / elementsK / bits / mode observer values here for the same
     // reason: doing so would trigger regen and a visible cube / planes

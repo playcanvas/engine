@@ -65,11 +65,11 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 const app = new AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-// load assets
+// Load assets
 const assets = {
     font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
@@ -99,10 +99,10 @@ const createColorMaterial = color => {
     return material;
 };
 
-// scene settings
+// Scene settings
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// create entities
+// Create entities
 const box = new Entity('box');
 box.addComponent('render', {
     type: 'box',
@@ -136,7 +136,7 @@ capsule.addComponent('render', {
 capsule.setPosition(1, 0, -1);
 app.root.addChild(capsule);
 
-// camera
+// Camera
 data.set('camera', {
     proj: PROJECTION_PERSPECTIVE + 1,
     dist: 1,
@@ -153,7 +153,7 @@ const cameraOffset = 4 * camera.camera.aspectRatio;
 camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
 
-// camera controls
+// Camera controls
 const cc = /** @type {CameraControls} */ (camera.script.create(CameraControls));
 Object.assign(cc, {
     focusPoint: Vec3.ZERO,
@@ -165,7 +165,7 @@ app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
     cc.enabled = !hasPointer;
 });
 
-// outline renderer
+// Outline renderer
 const outlineLayer = new Layer({ name: 'OutlineLayer' });
 app.scene.layers.push(outlineLayer);
 const immediateLayer = /** @type {Layer} */ (app.scene.layers.getLayerByName('Immediate'));
@@ -174,7 +174,7 @@ app.on('update', () => {
     outlineRenderer.frameUpdate(camera, immediateLayer, false);
 });
 
-// grid
+// Grid
 const gridEntity = new Entity('grid');
 gridEntity.setLocalScale(8, 1, 8);
 app.root.addChild(gridEntity);
@@ -186,7 +186,7 @@ data.set('grid', {
     resolution: grid.resolution + 1
 });
 
-// create light entity
+// Create light entity
 const light = new Entity('light');
 light.addComponent('light', {
     intensity: 1
@@ -194,7 +194,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// gizmos
+// Gizmos
 let skipObserverFire = false;
 const gizmoHandler = new GizmoHandler(camera.camera);
 const setGizmoControls = () => {
@@ -211,7 +211,7 @@ const setGizmoControls = () => {
 gizmoHandler.switch('translate');
 setGizmoControls();
 
-// view cube
+// View cube
 const viewCube = new ViewCube(new Vec4(0, 1, 1, 0));
 viewCube.dom.style.margin = '20px';
 data.set('viewCube', {
@@ -237,7 +237,7 @@ app.on('prerender', () => {
     viewCube.update(camera.getWorldTransform());
 });
 
-// selector
+// Selector
 const layers = app.scene.layers;
 const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
 selector.on('select', (/** @type {Entity} */ node, /** @type {boolean} */ clear) => {
@@ -248,7 +248,7 @@ selector.on('select', (/** @type {Entity} */ node, /** @type {boolean} */ clear)
     outlineRenderer.addEntity(node, Color.WHITE);
 });
 selector.on('deselect', () => {
-    // do not deselect when view cube has just aligned the camera
+    // Do not deselect when view cube has just aligned the camera
     if (aligned) {
         aligned = false;
         return;
@@ -257,7 +257,7 @@ selector.on('deselect', () => {
     outlineRenderer.removeAllEntities();
 });
 
-// ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
+// Ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
 const resize = () => {
     app.resizeCanvas();
     const bounds = canvas.getBoundingClientRect();
@@ -268,7 +268,7 @@ const resize = () => {
 window.addEventListener('resize', resize);
 resize();
 
-// key event handlers
+// Key event handlers
 const keydown = (/** @type {KeyboardEvent} */ e) => {
     gizmoHandler.gizmo.snap = !!e.shiftKey;
     gizmoHandler.gizmo.uniform = !e.ctrlKey;
@@ -316,7 +316,7 @@ window.addEventListener('keydown', keydown);
 window.addEventListener('keyup', keyup);
 window.addEventListener('keypress', keypress);
 
-// gizmo and camera set handler
+// Gizmo and camera set handler
 const tmpC1 = new Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
@@ -387,7 +387,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     }
 });
 
-// destroy handlers
+// Destroy handlers
 app.on('destroy', () => {
     gizmoHandler.destroy();
     selector.destroy();
@@ -399,8 +399,8 @@ app.on('destroy', () => {
     window.removeEventListener('keypress', keypress);
 });
 
-// initial selection
+// Initial selection
 selector.fire('select', box, true);
 
-// focus canvas
+// Focus canvas
 window.focus();
