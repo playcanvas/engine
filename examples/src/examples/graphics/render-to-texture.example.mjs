@@ -63,9 +63,9 @@ const gfxOptions = {
 
     // Request the main back-buffer's MSAA color and depth attachments to be allocated as transient
     // ("memoryless") attachments. On tile-based GPUs (mobile / Apple Silicon) this lets the driver
-    // keep their contents in fast on-chip memory and skip VRAM allocation entirely. This is valid
-    // here because the back-buffer is cleared each frame and never read back: there is no scene
-    // color grab (sceneColorMap) and no scene depth grab (sceneDepthMap) / depth prepass. These are
+    // Keep their contents in fast on-chip memory and skip VRAM allocation entirely. This is valid
+    // Here because the back-buffer is cleared each frame and never read back: there is no scene
+    // Color grab (sceneColorMap) and no scene depth grab (sceneDepthMap) / depth prepass. These are
     // WebGPU-only hints and are silently ignored on WebGL2 or where the feature is unsupported.
     transientColor: true,
     transientDepth: true
@@ -119,12 +119,12 @@ app.start();
  * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, color, layer) {
-    // create material of specified color
+    // Create material of specified color
     const material = new StandardMaterial();
     material.diffuse = color;
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
@@ -132,7 +132,7 @@ function createPrimitive(primitiveType, position, scale, color, layer) {
         material: material
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -145,7 +145,7 @@ function createPrimitive(primitiveType, position, scale, color, layer) {
  * @param {Vec3} position - The position.
  */
 function createParticleSystem(position) {
-    // make particles move in different directions
+    // Make particles move in different directions
     const localVelocityCurve = new CurveSet([
         [0, 0, 0.5, 8],
         [0, 0, 0.5, 8],
@@ -157,7 +157,7 @@ function createParticleSystem(position) {
         [0, 0, 0.5, -8]
     ]);
 
-    // increasing gravity
+    // Increasing gravity
     const worldVelocityCurve = new CurveSet([
         [0, 0],
         [0, 0, 0.2, 6, 1, -48],
@@ -169,7 +169,7 @@ function createParticleSystem(position) {
     app.root.addChild(entity);
     entity.setLocalPosition(position);
 
-    // add particlesystem component to entity
+    // Add particlesystem component to entity
     entity.addComponent('particlesystem', {
         numParticles: 200,
         lifetime: 1,
@@ -181,7 +181,7 @@ function createParticleSystem(position) {
     });
 }
 
-// create texture and render target for rendering into, including depth buffer
+// Create texture and render target for rendering into, including depth buffer
 const texture = new Texture(app.graphicsDevice, {
     width: 512,
     height: 256,
@@ -199,30 +199,30 @@ const renderTarget = new RenderTarget({
 
     // Allocate this render target's MSAA color and depth attachments as transient
     // ("memoryless") attachments (WebGPU only; ignored elsewhere). The multi-sampled color
-    // buffer is only ever resolved into the single-sampled `texture` we sample below - the MSAA
-    // buffer itself is never sampled, stored or reloaded - and the depth buffer is used only for
-    // in-pass depth testing and is never grabbed or resolved. Both therefore only need their
-    // contents within the render pass, so tile-based GPUs can keep them on-chip. Note that
-    // transientColor requires MSAA (samples > 1); it is a no-op for single-sampled color.
+    // Buffer is only ever resolved into the single-sampled `texture` we sample below - the MSAA
+    // Buffer itself is never sampled, stored or reloaded - and the depth buffer is used only for
+    // In-pass depth testing and is never grabbed or resolved. Both therefore only need their
+    // Contents within the render pass, so tile-based GPUs can keep them on-chip. Note that
+    // TransientColor requires MSAA (samples > 1); it is a no-op for single-sampled color.
     transientColor: true,
     transientDepth: true
 });
 
-// create a layer for object that do not render into texture, add it right after the world layer
+// Create a layer for object that do not render into texture, add it right after the world layer
 const excludedLayer = new Layer({ name: 'Excluded' });
 app.scene.layers.insert(excludedLayer, 1);
 
-// get existing layers
+// Get existing layers
 const worldLayer = app.scene.layers.getLayerByName('World');
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
-// create ground plane and 3 primitives, visible in world layer
+// Create ground plane and 3 primitives, visible in world layer
 const plane = createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), new Color(3, 4, 2), [worldLayer.id]);
 /** @type {StandardMaterial} */
 const planeMaterial = plane.render.meshInstances[0].material;
 
-// make the texture tiles and use anisotropic filtering to prevent blurring
+// Make the texture tiles and use anisotropic filtering to prevent blurring
 planeMaterial.diffuseMap = assets.checkerboard.resource;
 planeMaterial.diffuseMapTiling.set(10, 10);
 
@@ -230,7 +230,7 @@ createPrimitive('sphere', new Vec3(-2, 1, 0), new Vec3(2, 2, 2), Color.RED, [wor
 createPrimitive('cone', new Vec3(0, 1, -2), new Vec3(2, 2, 2), Color.CYAN, [worldLayer.id]);
 createPrimitive('box', new Vec3(2, 1, 0), new Vec3(2, 2, 2), Color.YELLOW, [worldLayer.id]);
 
-// particle system
+// Particle system
 createParticleSystem(new Vec3(2, 3, 0));
 
 // Create main camera, which renders entities in world, excluded and skybox layers
@@ -244,7 +244,7 @@ camera.translate(0, 9, 15);
 camera.lookAt(1, 4, 0);
 app.root.addChild(camera);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -263,15 +263,15 @@ textureCamera.addComponent('camera', {
     layers: [worldLayer.id, skyboxLayer.id],
     toneMapping: TONEMAP_ACES,
 
-    // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
-    // to make it rendered first each frame
+    // Set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
+    // To make it rendered first each frame
     priority: -1,
 
-    // this camera renders into texture target
+    // This camera renders into texture target
     renderTarget: renderTarget
 });
 
-// add sphere at the position of this camera to see it in the world
+// Add sphere at the position of this camera to see it in the world
 textureCamera.addComponent('render', {
     type: 'sphere'
 });
@@ -289,8 +289,8 @@ light.addComponent('light', {
 light.translate(0, 2, 5);
 app.root.addChild(light);
 
-// create a plane called tv which we use to display rendered texture
-// this is only added to excluded Layer, so it does not render into texture
+// Create a plane called tv which we use to display rendered texture
+// This is only added to excluded Layer, so it does not render into texture
 const tv = createPrimitive('plane', new Vec3(6, 8, -5), new Vec3(20, 10, 10), Color.BLACK, [excludedLayer.id]);
 tv.setLocalEulerAngles(90, 0, 0);
 tv.render.castShadows = false;
@@ -302,20 +302,20 @@ material.emissiveMap = texture; // assign the rendered texture as an emissive te
 material.emissive = Color.WHITE;
 material.update();
 
-// setup skydome, use top mipmap level of cubemap (full resolution)
+// Setup skydome, use top mipmap level of cubemap (full resolution)
 app.scene.skyboxMip = 0;
 app.scene.envAtlas = assets.helipad.resource;
 
-// update things each frame
+// Update things each frame
 let time = 0;
 let switchTime = 0;
 app.on('update', dt => {
-    // rotate texture camera around the objects
+    // Rotate texture camera around the objects
     time += dt;
     textureCamera.setLocalPosition(12 * Math.sin(time), 3, 12 * Math.cos(time));
     textureCamera.lookAt(Vec3.ZERO);
 
-    // every 5 seconds switch texture camera between perspective and orthographic projection
+    // Every 5 seconds switch texture camera between perspective and orthographic projection
     switchTime += dt;
     if (switchTime > 5) {
         switchTime = 0;
@@ -327,7 +327,7 @@ app.on('update', dt => {
         }
     }
 
-    // debug draw the texture on the screen in the excludedLayer layer of the main camera
+    // Debug draw the texture on the screen in the excludedLayer layer of the main camera
     // @ts-ignore engine-tsd
     app.drawTexture(0.7, -0.7, 0.5, 0.5, texture, null, excludedLayer);
 });

@@ -87,7 +87,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxIntensity = 0.5;
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
@@ -141,7 +141,7 @@ lightDirEntity.addComponent('light', {
 lightDirEntity.setLocalEulerAngles(25, 0, -80);
 app.root.addChild(lightDirEntity);
 
-// make particles move in different directions
+// Make particles move in different directions
 const localVelocityCurve = new CurveSet([
     [0, 0, 0.5, 8],
     [0, 0, 0.5, 8],
@@ -153,14 +153,14 @@ const localVelocityCurve2 = new CurveSet([
     [0, 0, 0.5, -8]
 ]);
 
-// increasing gravity
+// Increasing gravity
 const worldVelocityCurve = new CurveSet([
     [0, 0],
     [0, 0, 0.2, 12, 1, -2],
     [0, 0]
 ]);
 
-// color changes throughout lifetime
+// Color changes throughout lifetime
 const colorCurve = new CurveSet([
     [0, 1, 0.25, 1, 0.375, 0.5, 0.5, 0], // r
     [0, 0, 0.125, 0.25, 0.25, 0.5, 0.375, 0.75, 0.5, 1], // g
@@ -172,7 +172,7 @@ const entity = new Entity('Emitter');
 app.root.addChild(entity);
 entity.setLocalPosition(0, 1, 0);
 
-// when texture is loaded add particlesystem component to entity
+// When texture is loaded add particlesystem component to entity
 entity.addComponent('particlesystem', {
     numParticles: 150,
     lifetime: 1,
@@ -185,7 +185,7 @@ entity.addComponent('particlesystem', {
     emitterShape: EMITTERSHAPE_SPHERE,
     emitterRadius: 1,
 
-    // mesh asset and rendering settings
+    // Mesh asset and rendering settings
     renderAsset: assets.torus.resource.renders[0],
     blendType: BLEND_NONE,
     depthWrite: true,
@@ -193,7 +193,7 @@ entity.addComponent('particlesystem', {
     halfLambert: true,
     alignToMotion: true,
 
-    // texture applied to the mesh particles using the mesh UVs
+    // Texture applied to the mesh particles using the mesh UVs
     colorMap: assets.color.resource
 });
 
@@ -209,8 +209,8 @@ data.set('settings', {
 data.on('*:set', (/** @type {string} */ path, value) => {
     const propertyName = path.split('.')[1];
 
-    // the 'textured' toggle switches the color map on and off (null falls back to the
-    // default white texture), demonstrating mesh UVs are used for texturing
+    // The 'textured' toggle switches the color map on and off (null falls back to the
+    // Default white texture), demonstrating mesh UVs are used for texturing
     if (propertyName === 'textured') {
         entity.particlesystem.colorMap = value ? assets.color.resource : null;
         return;

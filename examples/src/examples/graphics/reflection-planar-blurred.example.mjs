@@ -75,12 +75,12 @@ app.start();
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxIntensity = 2;
 
-// get existing layers
+// Get existing layers
 const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 const depthLayer = app.scene.layers.getLayerById(LAYERID_DEPTH);
 
-// create a layer for the reflection plane (excluded from reflection rendering)
+// Create a layer for the reflection plane (excluded from reflection rendering)
 // Layer order needed: World(opaque) -> Excluded(opaque) -> Depth -> World(transp) -> Excluded(transp)
 const excludedLayer = new Layer({ name: 'Excluded' });
 app.scene.layers.insertOpaque(excludedLayer, app.scene.layers.getOpaqueIndex(worldLayer) + 1);
@@ -110,7 +110,7 @@ cameraControls.enableFly = false; // Only orbit mode
 cameraControls.pitchRange = new Vec2(-85, -4); // Limit pitch to keep camera above ground
 cameraControls.zoomRange = new Vec2(0.1, 1.0); // Limit zoom distance
 
-// get the instance of the sunglasses model
+// Get the instance of the sunglasses model
 const sunglassesEntity = assets.sunglasses.resource.instantiateRenderEntity();
 app.root.addChild(sunglassesEntity);
 

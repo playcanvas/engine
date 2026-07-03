@@ -81,7 +81,7 @@ cameraEntity.addComponent('camera', {
 cameraEntity.rotateLocal(0, 0, 0);
 cameraEntity.translateLocal(0, 7, 10);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -106,7 +106,7 @@ lightDirEntity.setLocalEulerAngles(45, 0, 0);
 app.root.addChild(cameraEntity);
 app.root.addChild(lightDirEntity);
 
-// set up random downwards velocity from -0.4 to -0.7
+// Set up random downwards velocity from -0.4 to -0.7
 const velocityCurve = new CurveSet([
     [0, 0], // x
     [0, -0.7], // y
@@ -118,11 +118,11 @@ const velocityCurve2 = new CurveSet([
     [0, 0] // z
 ]);
 
-// set up random rotation speed from -100 to 100 degrees per second
+// Set up random rotation speed from -100 to 100 degrees per second
 const rotCurve = new Curve([0, 100]);
 const rotCurve2 = new Curve([0, -100]);
 
-// scale is constant at 0.1
+// Scale is constant at 0.1
 const scaleCurve = new Curve([0, 0.2]);
 
 // Create entity for particle system
@@ -156,13 +156,13 @@ ground.setLocalPosition(0, 0, 0);
 app.root.addChild(ground);
 
 data.on('*:set', (/** @type {string} */ _path, _value) => {
-    // toggle the depth softening on the particle system and the depth texture on the camera
+    // Toggle the depth softening on the particle system and the depth texture on the camera
     const soft = data.get('data.soft');
     entity.particlesystem.depthSoftening = soft ? 0.08 : 0;
     cameraEntity.camera.requestSceneDepthMap(soft);
 });
 
-// initial values
+// Initial values
 data.set('data', {
     soft: true
 });

@@ -82,7 +82,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxMip = 1;
 app.scene.skyboxIntensity = 1.7; // make it brighter
@@ -99,7 +99,7 @@ app.scene.skyboxIntensity = 1.7; // make it brighter
  * @returns {Entity} The created entity.
  */
 function createPrimitive(primitiveType, position, scale, color, layer, material = null) {
-    // create material of specified color
+    // Create material of specified color
     if (!material) {
         const standardMaterial = new StandardMaterial();
         standardMaterial.diffuse = color;
@@ -110,7 +110,7 @@ function createPrimitive(primitiveType, position, scale, color, layer, material 
         material = standardMaterial;
     }
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
@@ -118,7 +118,7 @@ function createPrimitive(primitiveType, position, scale, color, layer, material 
         material: material
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -126,17 +126,17 @@ function createPrimitive(primitiveType, position, scale, color, layer, material 
     return primitive;
 }
 
-// get existing layers
+// Get existing layers
 const worldLayer = app.scene.layers.getLayerByName('World');
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
-// create a layer for objects that do not render into texture
+// Create a layer for objects that do not render into texture
 const excludedLayer = new Layer({ name: 'Excluded' });
 app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
 // Create the shader from the vertex and fragment shaders
-// reflective ground
+// Reflective ground
 // This is in the excluded layer so it does not render into reflection texture
 const groundMaterial = new ShaderMaterial({
     uniqueName: 'MyShader',
@@ -158,7 +158,7 @@ createPrimitive(
     groundMaterial
 );
 
-// get the instance of the statue and set up with render component
+// Get the instance of the statue and set up with render component
 const statueEntity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(statueEntity);
 
@@ -183,7 +183,7 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// create reflection camera, which renders entities in world and skybox layers only
+// Create reflection camera, which renders entities in world and skybox layers only
 const reflectionCamera = new Entity('ReflectionCamera');
 reflectionCamera.addComponent('camera', {
     fov: 60,
@@ -192,7 +192,7 @@ reflectionCamera.addComponent('camera', {
     toneMapping: TONEMAP_ACES
 });
 
-// add planarRenderer script which renders the reflection texture
+// Add planarRenderer script which renders the reflection texture
 reflectionCamera.addComponent('script');
 reflectionCamera.script.create('planarRenderer', {
     attributes: {
@@ -206,12 +206,12 @@ reflectionCamera.script.create('planarRenderer', {
 });
 app.root.addChild(reflectionCamera);
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // rotate primitives around their center and also orbit them around the shiny sphere
+    // Rotate primitives around their center and also orbit them around the shiny sphere
     for (let e = 0; e < entities.length; e++) {
         const scale = (e + 1) / entities.length;
         const offset = time + e * 200;
@@ -219,14 +219,14 @@ app.on('update', dt => {
         entities[e].rotate(1 * scale, 2 * scale, 3 * scale);
     }
 
-    // slowly orbit camera around
+    // Slowly orbit camera around
     camera.setLocalPosition(30 * Math.cos(time * 0.2), 10, 30 * Math.sin(time * 0.2));
     camera.lookAt(Vec3.ZERO);
 
-    // animate FOV
+    // Animate FOV
     camera.camera.fov = 60 + 20 * Math.sin(time * 0.5);
 
-    // trigger reflection camera update (must be called after all parameters of the main camera are updated)
+    // Trigger reflection camera update (must be called after all parameters of the main camera are updated)
     // @ts-ignore engine-tsd
     const reflectionTexture = reflectionCamera.script.planarRenderer.frameUpdate();
     groundMaterial.setParameter('uDiffuseMap', reflectionTexture);

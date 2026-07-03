@@ -50,7 +50,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable anti-aliasing as TAA is used to smooth edges
+    // Disable anti-aliasing as TAA is used to smooth edges
     antialias: false
 };
 
@@ -90,12 +90,12 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome with low intensity
+// Setup skydome with low intensity
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxMip = 0;
 app.scene.exposure = 2.5;
 
-// create an instance of the house and add it to the scene
+// Create an instance of the house and add it to the scene
 const houseEntity = assets.house.resource.instantiateRenderEntity();
 houseEntity.setLocalScale(100, 100, 100);
 app.root.addChild(houseEntity);
@@ -108,7 +108,7 @@ cameraEntity.addComponent('camera', {
     fov: 80
 });
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -124,7 +124,7 @@ cameraEntity.setLocalPosition(0, 40, -220);
 cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
-// add a shadow casting directional light
+// Add a shadow casting directional light
 const lightColor = new Color(1, 1, 1);
 const light = new Entity();
 light.addComponent('light', {
@@ -163,7 +163,7 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// apply UI changes
+// Apply UI changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     applySettings();
 
@@ -174,7 +174,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 });
 
-// set initial values
+// Set initial values
 data.set('data', {
     scene: {
         scale: 1,

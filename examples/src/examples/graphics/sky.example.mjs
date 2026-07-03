@@ -57,7 +57,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable HDR rendering if supported
+    // Enable HDR rendering if supported
     displayFormat: DISPLAYFORMAT_HDR
 };
 
@@ -92,7 +92,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// add an instance of the statue
+// Add an instance of the statue
 const statueEntity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(statueEntity);
 
@@ -102,12 +102,12 @@ cameraEntity.addComponent('camera', {
     farClip: 500,
     fov: 60,
 
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    // If the device renders in HDR mode, disable tone mapping to output HDR values without any processing
     toneMapping: device.isHdr ? TONEMAP_NONE : TONEMAP_ACES,
     gammaCorrection: GAMMA_SRGB
 });
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -120,7 +120,7 @@ cameraEntity.script.create('orbitCamera', {
 cameraEntity.script.create('orbitCameraInputMouse');
 cameraEntity.script.create('orbitCameraInputTouch');
 
-// position the camera in the world
+// Position the camera in the world
 cameraEntity.setLocalPosition(-4, 5, 22);
 cameraEntity.lookAt(0, 0, 1);
 app.root.addChild(cameraEntity);
@@ -129,7 +129,7 @@ app.root.addChild(cameraEntity);
 const cameraFrame = new CameraFrame(app, cameraEntity.camera);
 cameraFrame.update();
 
-// skydome presets
+// Skydome presets
 const presetStreetDome = {
     skybox: {
         preset: 'Street Dome',
@@ -166,39 +166,39 @@ const presetRoom = {
     }
 };
 
-// apply hdri texture
+// Apply hdri texture
 const applyHdri = source => {
-    // convert it to high resolution cubemap for the skybox
-    // this is optional in case you want a really high resolution skybox
+    // Convert it to high resolution cubemap for the skybox
+    // This is optional in case you want a really high resolution skybox
     const skybox = EnvLighting.generateSkyboxCubemap(source);
     app.scene.skybox = skybox;
 
-    // generate env-atlas texture for the lighting
-    // this would also be used as low resolution skybox if high resolution is not available
+    // Generate env-atlas texture for the lighting
+    // This would also be used as low resolution skybox if high resolution is not available
     const lighting = EnvLighting.generateLightingSource(source);
     const envAtlas = EnvLighting.generateAtlas(lighting);
     lighting.destroy();
     app.scene.envAtlas = envAtlas;
 };
 
-// when UI value changes, update skybox data
+// When UI value changes, update skybox data
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
 
     if (pathArray[2] === 'preset' && pathArray.length === 3) {
-        // apply preset
+        // Apply preset
         if (data.get('data.skybox.preset') === value) {
-            // apply preset data
+            // Apply preset data
             data.set(
                 'data',
                 value === 'Room' ? presetRoom : value === 'Street Dome' ? presetStreetDome : presetStreetInfinite
             );
 
-            // update hdri texture
+            // Update hdri texture
             applyHdri(value === 'Room' ? assets.hdri_room.resource : assets.hdri_street.resource);
         }
     } else {
-        // apply individual settings
+        // Apply individual settings
         app.scene.sky.type = data.get('data.skybox.type');
         app.scene.sky.node.setLocalScale(new Vec3(data.get('data.skybox.scale') ?? [1, 1, 1]));
         app.scene.sky.node.setLocalPosition(new Vec3(data.get('data.skybox.position') ?? [0, 0, 0]));
@@ -206,7 +206,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, data.get('data.skybox.rotation'), 0);
         app.scene.exposure = data.get('data.skybox.exposure');
 
-        // colorEnhance
+        // ColorEnhance
         cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
         cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
         cameraFrame.colorEnhance.highlights = data.get('data.colorEnhance.highlights');
@@ -217,10 +217,10 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 });
 
-// apply initial preset
+// Apply initial preset
 data.set('data.skybox.preset', 'Street Dome');
 
-// set initial colorEnhance values (AFTER preset so it doesn't get overwritten)
+// Set initial colorEnhance values (AFTER preset so it doesn't get overwritten)
 data.set('data.colorEnhance', {
     enabled: false,
     shadows: 0,

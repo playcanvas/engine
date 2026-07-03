@@ -111,7 +111,7 @@ video.playsInline = true;
 video.crossOrigin = 'anonymous';
 
 // Make sure that the video is in view on the page otherwise it doesn't
-// load on some browsers, especially mobile
+// Load on some browsers, especially mobile
 video.setAttribute(
     'style',
     'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
@@ -129,7 +129,7 @@ video.addEventListener('loadedmetadata', () => {
     videoTexture.resize(video.videoWidth, video.videoHeight);
 });
 
-// create an entity to render the tv mesh
+// Create an entity to render the tv mesh
 const entity = assets.tv.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
@@ -140,7 +140,7 @@ material.emissiveMap = videoTexture;
 material.emissive = Color.WHITE;
 material.update();
 
-// set the material on the screen mesh
+// Set the material on the screen mesh
 entity.render.meshInstances[1].material = material;
 
 video.load();
@@ -157,7 +157,7 @@ let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // rotate the tv object
+    // Rotate the tv object
     entity.setLocalEulerAngles(100 + Math.sin(time) * 50, 0, -90);
 
     // Upload the video data to the texture every other frame

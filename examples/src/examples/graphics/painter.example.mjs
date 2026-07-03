@@ -78,7 +78,7 @@ app.on('destroy', () => {
  * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, layer, material) {
-    // create primitive
+    // Create primitive
     const primitive = new Entity(`Brush-${primitiveType}`);
     primitive.addComponent('render', {
         type: primitiveType,
@@ -88,7 +88,7 @@ function createPrimitive(primitiveType, position, scale, layer, material) {
         receiveShadows: false
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -96,7 +96,7 @@ function createPrimitive(primitiveType, position, scale, layer, material) {
     return primitive;
 }
 
-// create texture and render target for rendering into
+// Create texture and render target for rendering into
 const texture = new Texture(app.graphicsDevice, {
     width: 1024,
     height: 1024,
@@ -110,11 +110,11 @@ const renderTarget = new RenderTarget({
     depth: false
 });
 
-// create a layer for rendering to texture, and add it to the beginning of layers to render into it first
+// Create a layer for rendering to texture, and add it to the beginning of layers to render into it first
 const paintLayer = new Layer({ name: 'paintLayer' });
 app.scene.layers.insert(paintLayer, 0);
 
-// create a material we use for the paint brush - it uses emissive color to control its color, which is assigned later
+// Create a material we use for the paint brush - it uses emissive color to control its color, which is assigned later
 const brushMaterial = new StandardMaterial();
 brushMaterial.useLighting = false;
 brushMaterial.update();
@@ -128,11 +128,11 @@ function getBrush() {
     /** @type {Entity} */
     let brush;
     if (brushes.length === 0) {
-        // create new brush - use sphere primitive, but could use plane with a texture as well
+        // Create new brush - use sphere primitive, but could use plane with a texture as well
         // Note: plane would need to be rotated by -90 degrees along x-axis to face camera and be visible
         brush = createPrimitive('sphere', new Vec3(2, 1, 0), new Vec3(1, 1, 1), [paintLayer.id], brushMaterial);
     } else {
-        // reuse already allocated brush
+        // Reuse already allocated brush
         brush = brushes.pop();
         brush.enabled = true;
     }
@@ -149,7 +149,7 @@ paintCamera.addComponent('camera', {
     priority: -1
 });
 
-// make it look at the center of the render target, some distance away
+// Make it look at the center of the render target, some distance away
 paintCamera.setLocalPosition(0, 0, -10);
 paintCamera.lookAt(Vec3.ZERO);
 app.root.addChild(paintCamera);
@@ -163,7 +163,7 @@ camera.translate(0, 0, 30);
 camera.lookAt(Vec3.ZERO);
 app.root.addChild(camera);
 
-// material used to add render target into the world
+// Material used to add render target into the world
 const material = new StandardMaterial();
 material.name = 'EmissiveMaterial';
 material.emissiveMap = texture;
@@ -171,7 +171,7 @@ material.emissive = Color.WHITE;
 material.useLighting = false;
 material.update();
 
-// create a box which we use to display rendered texture in the world layer
+// Create a box which we use to display rendered texture in the world layer
 const worldLayer = app.scene.layers.getLayerByName('World');
 const box = createPrimitive('box', new Vec3(0, 0, 0), new Vec3(15, 15, 15), [worldLayer.id], material);
 
@@ -186,50 +186,50 @@ const pos = new Vec3();
 /** @type {Entity[]} */
 const usedBrushes = [];
 
-// update things each frame
+// Update things each frame
 app.on('update', dt => {
-    // if the last brush stroke is finished, generate new random one
+    // If the last brush stroke is finished, generate new random one
     if (progress >= 1) {
         progress = 0;
 
-        // generate start and end position for the stroke
+        // Generate start and end position for the stroke
         startPos = new Vec3(Math.random() * 20 - 10, Math.random() * 20 - 10, 0);
         endPos = new Vec3(Math.random() * 20 - 10, Math.random() * 20 - 10, 0);
 
-        // random width (scale)
+        // Random width (scale)
         scale = 0.1 + Math.random();
 
-        // assign random color to the brush
+        // Assign random color to the brush
         brushMaterial.emissive = new Color(Math.random(), Math.random(), Math.random());
         brushMaterial.update();
     }
 
-    // disable brushes from the previous frame and return them to the free pool
+    // Disable brushes from the previous frame and return them to the free pool
     while (usedBrushes.length > 0) {
         const brush = usedBrushes.pop();
         brush.enabled = false;
         brushes.push(brush);
     }
 
-    // step along the brush line multiple times each frame to make the line smooth
+    // Step along the brush line multiple times each frame to make the line smooth
     const stepCount = 30;
     const stepProgress = 0.005;
 
-    // in each step
+    // In each step
     for (let i = 0; i < stepCount; i++) {
-        // move position little bit
+        // Move position little bit
         pos.lerp(startPos, endPos, progress);
 
-        // setup brush to be rendered this frame
+        // Setup brush to be rendered this frame
         const activeBrush = getBrush();
         activeBrush.setLocalPosition(pos);
         activeBrush.setLocalScale(scale, scale, scale);
         usedBrushes.push(activeBrush);
 
-        // progress for the next step
+        // Progress for the next step
         progress += stepProgress;
     }
 
-    // rotate the box in the world
+    // Rotate the box in the world
     box.rotate(5 * dt, 10 * dt, 15 * dt);
 });

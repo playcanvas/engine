@@ -28,7 +28,7 @@ import { deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// initialize basis
+// Initialize basis
 basisInitialize({
     glueUrl: './assets/wasm/basis/basis.wasm.js',
     wasmUrl: './assets/wasm/basis/basis.wasm.wasm',

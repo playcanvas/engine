@@ -53,7 +53,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -77,8 +77,8 @@ const gfxOptions = {
     deviceTypes: [deviceType],
 
     // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
-    // to avoid the additional cost. This is only used for the UI which renders on top of the
-    // post-processed scene, and we're typically happy with some aliasing on the UI.
+    // To avoid the additional cost. This is only used for the UI which renders on top of the
+    // Post-processed scene, and we're typically happy with some aliasing on the UI.
     antialias: false
 };
 
@@ -121,20 +121,20 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome with low intensity
+// Setup skydome with low intensity
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.3;
 
-// disable skydome rendering itself, we don't need it as we use camera clear color
+// Disable skydome rendering itself, we don't need it as we use camera clear color
 app.scene.layers.getLayerByName('Skybox').enabled = false;
 
-// create an instance of the platform and add it to the scene
+// Create an instance of the platform and add it to the scene
 const platformEntity = assets.platform.resource.instantiateRenderEntity();
 platformEntity.setLocalScale(10, 10, 10);
 app.root.addChild(platformEntity);
 
-// get a list of emissive materials from the scene to allow their intensity to be changed
+// Get a list of emissive materials from the scene to allow their intensity to be changed
 const emissiveMaterials = [];
 const emissiveNames = new Set(['Light_Upper_Light-Upper_0', 'Emissive_Cyan__0']);
 platformEntity.findComponents('render').forEach(render => {
@@ -143,36 +143,36 @@ platformEntity.findComponents('render').forEach(render => {
     }
 });
 
-// add an instance of the mosquito mesh
+// Add an instance of the mosquito mesh
 const mosquitoEntity = assets.mosquito.resource.instantiateRenderEntity();
 mosquitoEntity.setLocalScale(600, 600, 600);
 mosquitoEntity.setLocalPosition(0, 20, 0);
 app.root.addChild(mosquitoEntity);
 
-// helper function to create a box primitive
+// Helper function to create a box primitive
 const createBox = (x, y, z, r, g, b, emissive, name) => {
-    // create material of random color
+    // Create material of random color
     const material = new StandardMaterial();
     material.diffuse = Color.BLACK;
     material.emissive = new Color(r, g, b);
     material.emissiveIntensity = emissive;
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity(name);
     primitive.addComponent('render', {
         type: 'box',
         material: material
     });
 
-    // set position and scale
+    // Set position and scale
     primitive.setLocalPosition(x, y, z);
     app.root.addChild(primitive);
 
     return primitive;
 };
 
-// create 3 emissive boxes
+// Create 3 emissive boxes
 const boxes = [
     createBox(100, 20, 0, 1, 0, 0, 60, 'boxRed'),
     createBox(-50, 20, 100, 0, 1, 0, 60, 'boxGreen'),
@@ -186,10 +186,10 @@ cameraEntity.addComponent('camera', {
     fov: 80
 });
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.script.create('orbitCamera', {
     attributes: {
         inertiaFactor: 0.2,
@@ -215,7 +215,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// add a shadow casting directional light
+// Add a shadow casting directional light
 const lightColor = new Color(1, 0.7, 0.1);
 const light = new Entity();
 light.addComponent('light', {
@@ -232,14 +232,14 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(80, 10, 0);
 
-// a helper function to add a label to the screen
+// A helper function to add a label to the screen
 const addLabel = (name, text, x, y, layer) => {
     const label = new Entity(name);
     label.addComponent('element', {
         text: text,
 
-        // very bright color to affect the bloom - this is not correct, as this is sRGB color that
-        // is valid only in 0..1 range, but UI does not expose emissive intensity currently
+        // Very bright color to affect the bloom - this is not correct, as this is sRGB color that
+        // Is valid only in 0..1 range, but UI does not expose emissive intensity currently
         color: new Color(18, 15, 5),
 
         anchor: new Vec4(x, y, 0.5, 0.5),
@@ -253,11 +253,11 @@ const addLabel = (name, text, x, y, layer) => {
     screen.addChild(label);
 };
 
-// add a label on the world layer, which will be affected by post-processing
+// Add a label on the world layer, which will be affected by post-processing
 const worldLayer = app.scene.layers.getLayerByName('World');
 addLabel('WorldUI', 'Text on the World layer affected by post-processing', 0.1, 0.9, worldLayer);
 
-// add a label on the UI layer, which will be rendered after the post-processing
+// Add a label on the UI layer, which will be rendered after the post-processing
 const uiLayer = app.scene.layers.getLayerById(LAYERID_UI);
 addLabel('TopUI', 'Text on theUI layer after the post-processing', 0.1, 0.1, uiLayer);
 
@@ -268,7 +268,7 @@ cameraFrame.rendering.sceneColorMap = true;
 cameraFrame.update();
 
 const applySettings = () => {
-    // background
+    // Background
     const background = data.get('data.scene.background');
     cameraEntity.camera.clearColor = new Color(
         lightColor.r * background,
@@ -277,14 +277,14 @@ const applySettings = () => {
     );
     light.light.intensity = background;
 
-    // emissive
+    // Emissive
     const emissive = data.get('data.scene.emissive');
     emissiveMaterials.forEach(material => {
         material.emissiveIntensity = emissive;
         material.update();
     });
 
-    // enabled
+    // Enabled
     cameraFrame.enabled = data.get('data.enabled');
 
     // Scene
@@ -301,13 +301,13 @@ const applySettings = () => {
         : 0;
     cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
 
-    // grading
+    // Grading
     cameraFrame.grading.enabled = data.get('data.grading.enabled');
     cameraFrame.grading.saturation = data.get('data.grading.saturation');
     cameraFrame.grading.brightness = data.get('data.grading.brightness');
     cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
-    // colorEnhance
+    // ColorEnhance
     cameraFrame.colorEnhance.enabled = data.get('data.colorEnhance.enabled');
     if (cameraFrame.colorEnhance.enabled) {
         cameraFrame.colorEnhance.shadows = data.get('data.colorEnhance.shadows');
@@ -317,7 +317,7 @@ const applySettings = () => {
         cameraFrame.colorEnhance.dehaze = data.get('data.colorEnhance.dehaze');
     }
 
-    // vignette
+    // Vignette
     cameraFrame.vignette.inner = data.get('data.vignette.inner');
     cameraFrame.vignette.outer = data.get('data.vignette.outer');
     cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
@@ -327,10 +327,10 @@ const applySettings = () => {
         cameraFrame.vignette.color.set(vignetteColor[0], vignetteColor[1], vignetteColor[2]);
     }
 
-    // fringing
+    // Fringing
     cameraFrame.fringing.intensity = data.get('data.fringing.enabled') ? data.get('data.fringing.intensity') : 0;
 
-    // debug
+    // Debug
     switch (data.get('data.scene.debug')) {
         case 0:
             cameraFrame.debug = null;
@@ -346,16 +346,16 @@ const applySettings = () => {
             break;
     }
 
-    // apply all settings
+    // Apply all settings
     cameraFrame.update();
 };
 
-// apply UI changes
+// Apply UI changes
 data.on('*:set', () => {
     applySettings();
 });
 
-// set initial values
+// Set initial values
 data.set('data', {
     enabled: true,
     scene: {
@@ -402,18 +402,18 @@ data.set('data', {
     }
 });
 
-// update things every frame
+// Update things every frame
 let angle = 0;
 app.on('update', (/** @type {number} */ dt) => {
     angle += dt;
 
-    // scale the boxes
+    // Scale the boxes
     for (let i = 0; i < boxes.length; i++) {
         const offset = (Math.PI * 2 * i) / boxes.length;
         const scale = 25 + Math.sin(angle + offset) * 10;
         boxes[i].setLocalScale(scale, scale, scale);
     }
 
-    // rotate the mosquitoEntity
+    // Rotate the mosquitoEntity
     mosquitoEntity.setLocalEulerAngles(0, angle * 30, 0);
 });

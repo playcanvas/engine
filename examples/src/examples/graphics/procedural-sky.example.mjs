@@ -56,7 +56,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -108,7 +108,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// get the instance of the laboratory
+// Get the instance of the laboratory
 const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
     castShadows: true,
     receiveShadows: true
@@ -116,7 +116,7 @@ const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
 laboratoryEntity.setLocalScale(100, 100, 100);
 app.root.addChild(laboratoryEntity);
 
-// set up materials to use SSAO only (disable baked AO map)
+// Set up materials to use SSAO only (disable baked AO map)
 laboratoryEntity.findComponents('render').forEach(render => {
     render.meshInstances.forEach(meshInstance => {
         meshInstance.material.depthState = DepthState.DEFAULT;
@@ -126,7 +126,7 @@ laboratoryEntity.findComponents('render').forEach(render => {
     });
 });
 
-// detect the torches in the model (all named 'Fackel*') and add a warm omni light at each.
+// Detect the torches in the model (all named 'Fackel*') and add a warm omni light at each.
 // Their intensity is driven by the day/night cycle so they only glow between sunset and sunrise.
 const torchIntensity = 60;
 const torchLights = [];
@@ -142,31 +142,31 @@ laboratoryEntity
             color: new Color(1.0, 0.55, 0.2),
             intensity: 0,
             range: 480,
-            // keep the warm light contained to the torch's surroundings
+            // Keep the warm light contained to the torch's surroundings
             falloffMode: LIGHTFALLOFF_INVERSESQUARED
         });
-        // place at the flame's world-space position
+        // Place at the flame's world-space position
         light.setPosition(render.meshInstances[0].aabb.center);
         app.root.addChild(light);
         torchLights.push(light);
     });
 
-// use the dry-sand terrain as the ground. Instantiate it, measure its native bounds, scale it
-// up to cover the scene out to the horizon, and drop it so its surface sits where the lab rests.
+// Use the dry-sand terrain as the ground. Instantiate it, measure its native bounds, scale it
+// Up to cover the scene out to the horizon, and drop it so its surface sits where the lab rests.
 const terrain = assets.terrain.resource.instantiateRenderEntity({
     castShadows: true,
     receiveShadows: true
 });
 app.root.addChild(terrain);
 
-// accumulate the native (unscaled) world bounds of all the terrain mesh instances
+// Accumulate the native (unscaled) world bounds of all the terrain mesh instances
 const terrainMeshes = terrain.findComponents('render').flatMap(render => render.meshInstances);
 const terrainAabb = new BoundingBox();
 terrainMeshes.forEach((mi, i) => (i === 0 ? terrainAabb.copy(mi.aabb) : terrainAabb.add(mi.aabb)));
 
-// scale so the terrain spans ~3000 units (out to the camera far clip), then centre it on the lab
-// and lower it so the top of the terrain sits near the old ground height, plus a hand-tuned
-// offset that beds the laboratory nicely into the dunes
+// Scale so the terrain spans ~3000 units (out to the camera far clip), then centre it on the lab
+// And lower it so the top of the terrain sits near the old ground height, plus a hand-tuned
+// Offset that beds the laboratory nicely into the dunes
 const groundLevel = -40;
 const terrainScale = 3000 / (2 * Math.max(terrainAabb.halfExtents.x, terrainAabb.halfExtents.z));
 terrain.setLocalScale(terrainScale, terrainScale, terrainScale);
@@ -175,7 +175,7 @@ const tc = terrainAabb.center;
 const terrainTop = (tc.y + terrainAabb.halfExtents.y) * terrainScale;
 terrain.setLocalPosition(-tc.x * terrainScale - 71.6, groundLevel - terrainTop + 267.1, -tc.z * terrainScale + 395.8);
 
-// dim the terrain albedo (diffuse) by 0.5 to balance the bright sand against the darker building.
+// Dim the terrain albedo (diffuse) by 0.5 to balance the bright sand against the darker building.
 // Scaling diffuse multiplies the albedo texture, darkening the surface in direct and ambient light.
 const dimmedTerrainMaterials = new Set();
 terrain.findComponents('render').forEach(render => {
@@ -188,13 +188,13 @@ terrain.findComponents('render').forEach(render => {
     });
 });
 
-// a single directional light, kept in sync with the sun by the procedural sky script. It uses
+// A single directional light, kept in sync with the sun by the procedural sky script. It uses
 // PCSS soft shadows so the shadow penumbra reacts to the (moving) sun.
 const sunLight = new Entity('Sun');
 sunLight.addComponent('light', {
     type: 'directional',
     castShadows: true,
-    // daytime peak intensity - the procedural sky captures this and fades it across the day/night cycle
+    // Daytime peak intensity - the procedural sky captures this and fades it across the day/night cycle
     intensity: 6,
     shadowType: SHADOW_PCSS_32F,
     penumbraSize: 0.03,
@@ -203,20 +203,20 @@ sunLight.addComponent('light', {
     shadowBlockerSamples: 16,
     shadowResolution: 2048,
     // 4 cascades: each covers a smaller area at the same resolution, giving tighter shadow
-    // texels close to the camera (less acne)
+    // Texels close to the camera (less acne)
     numCascades: 4,
     cascadeDistribution: 0.35,
     shadowBias: 0.18,
     normalOffsetBias: 0.82,
     shadowDistance: 2400,
-    // the sun moves every frame, so the shadow map must be re-rendered in realtime
+    // The sun moves every frame, so the shadow map must be re-rendered in realtime
     // (SHADOWUPDATE_THISFRAME would render it once and then stop)
     shadowUpdateMode: SHADOWUPDATE_REALTIME
 });
 app.root.addChild(sunLight);
 
-// procedural sky - renders the visible sky and generates the image-based lighting, driving the
-// sun light's direction, color and intensity
+// Procedural sky - renders the visible sky and generates the image-based lighting, driving the
+// Sun light's direction, color and intensity
 const sky = new Entity('ProceduralSky');
 sky.addComponent('script');
 const skyScript = sky.script.create(ProceduralSky);
@@ -234,10 +234,10 @@ cameraEntity.setLocalPosition(240, 85, 240);
 cameraEntity.addComponent('script');
 app.root.addChild(cameraEntity);
 
-// add camera controls, framing the model with the sky behind it
+// Add camera controls, framing the model with the sky behind it
 const cc = /** @type {any} */ (cameraEntity.script.create(CameraControls));
 cc.focusPoint = new Vec3(0, 25, 0);
-// limit how far the camera can orbit out, keeping it in the sharp near-cascade zone (x = min, y = max)
+// Limit how far the camera can orbit out, keeping it in the sharp near-cascade zone (x = min, y = max)
 cc.zoomRange = new Vec2(1, 500);
 
 // ------ Custom render passes set up ------
@@ -269,7 +269,7 @@ data.on('data.effects.ssao:set', (/** @type {boolean} */ value) => {
     cameraFrame.update();
 });
 
-// initial control values
+// Initial control values
 data.set('data', {
     time: {
         hour: 9,
@@ -284,13 +284,13 @@ data.set('data', {
         ssao: true,
         bloom: true
     },
-    // night key light (the directional light fades to this once the sun is below the horizon)
+    // Night key light (the directional light fades to this once the sun is below the horizon)
     moon: {
         intensity: 1.0,
         color: [0.792, 0.918, 1.0],
         direction: [-1.53, 0.85, 0.35]
     },
-    // procedural night sky (gradient + twilight glow + stars + moon disk), shown below the horizon
+    // Procedural night sky (gradient + twilight glow + stars + moon disk), shown below the horizon
     night: {
         color: [0.114, 0.247, 0.408],
         brightness: 0.052,
@@ -301,7 +301,7 @@ data.set('data', {
         moonSize: 0.6,
         moonGlow: 3
     },
-    // editable keyframe curves - each entry is an [x, y] pair, smoothstepped between keys.
+    // Editable keyframe curves - each entry is an [x, y] pair, smoothstepped between keys.
     // These are exposed in the inspector as arrays of vec2 and rebuilt on the fly.
     curves: {
         elevation: [
@@ -325,7 +325,7 @@ data.set('data', {
     }
 });
 
-// build a Curve from an array of [x, y] keyframe pairs (as edited in the inspector)
+// Build a Curve from an array of [x, y] keyframe pairs (as edited in the inspector)
 const buildCurve = pairs => {
     const curve = new Curve(pairs.flat());
     curve.type = CURVE_SMOOTHSTEP;
@@ -336,7 +336,7 @@ let lastBloom = -1;
 const timeSpeed = 1; // hours per second
 
 app.on('update', dt => {
-    // advance the time of day, skipping the (boring) night by jumping from 20:00 back to 05:00
+    // Advance the time of day, skipping the (boring) night by jumping from 20:00 back to 05:00
     if (data.get('data.time.animate')) {
         let hour = data.get('data.time.hour') + dt * timeSpeed;
         if (hour >= 20) hour -= 15; // 20:00 -> 05:00
@@ -344,29 +344,29 @@ app.on('update', dt => {
     }
     const hour = data.get('data.time.hour');
 
-    // rebuild the editable curves and evaluate them
+    // Rebuild the editable curves and evaluate them
     const elevation = buildCurve(data.get('data.curves.elevation')).value(hour);
     const luminance = buildCurve(data.get('data.curves.luminance')).value(elevation);
     const bloomCurve = buildCurve(data.get('data.curves.bloom'));
 
-    // sun: elevation from the time curve, azimuth sweeping east -> west across the day
+    // Sun: elevation from the time curve, azimuth sweeping east -> west across the day
     skyScript.elevation = elevation;
     skyScript.azimuth = (hour / 24) * 360;
 
-    // sky look
+    // Sky look
     skyScript.luminance = luminance;
     skyScript.turbidity = data.get('data.sky.turbidity');
     skyScript.rayleigh = data.get('data.sky.rayleigh');
     app.scene.exposure = data.get('data.sky.exposure');
 
-    // moonlight (night key light)
+    // Moonlight (night key light)
     skyScript.moonIntensity = data.get('data.moon.intensity');
     const mc = data.get('data.moon.color');
     skyScript.moonColor.set(mc[0], mc[1], mc[2]);
     const md = data.get('data.moon.direction');
     skyScript.moonDirection.set(md[0], md[1], md[2]);
 
-    // procedural night sky
+    // Procedural night sky
     const nc = data.get('data.night.color');
     skyScript.nightColor.set(nc[0], nc[1], nc[2]);
     skyScript.nightBrightness = data.get('data.night.brightness');
@@ -377,7 +377,7 @@ app.on('update', dt => {
     skyScript.moonSize = data.get('data.night.moonSize');
     skyScript.moonGlow = data.get('data.night.moonGlow');
 
-    // bloom is a toggle whose intensity is driven by elevation - CameraFrame needs update() on change
+    // Bloom is a toggle whose intensity is driven by elevation - CameraFrame needs update() on change
     const bloom = data.get('data.effects.bloom') ? bloomCurve.value(elevation) : 0;
     if (bloom !== lastBloom) {
         cameraFrame.bloom.intensity = bloom;
@@ -385,7 +385,7 @@ app.on('update', dt => {
         lastBloom = bloom;
     }
 
-    // torches glow between sunset and sunrise
+    // Torches glow between sunset and sunrise
     const nightFactor = 1 - math.smoothstep(-3, 3, elevation);
     for (let i = 0; i < torchLights.length; i++) {
         torchLights[i].light.intensity = torchIntensity * nightFactor;

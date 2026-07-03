@@ -136,10 +136,10 @@ const particleEntity2 = new Entity();
 app.root.addChild(particleEntity2);
 particleEntity2.setLocalPosition(3, 3, 0);
 
-// gradually make particles bigger
+// Gradually make particles bigger
 const scaleCurve = new Curve([0, 0.1, 1, 0.5]);
 
-// make particles fade in and out
+// Make particles fade in and out
 const alphaCurve = new Curve([0, 0, 0.5, 1, 1, 0]);
 
 /**
@@ -167,20 +167,20 @@ const particleSystemConfiguration = (asset, animTilesX, animTilesY) => {
     };
 };
 
-// add particlesystem component to particle entity
+// Add particlesystem component to particle entity
 particleEntity1.addComponent(
     'particlesystem',
     Object.assign(particleSystemConfiguration(assets.particlesCoinsTexture, 4, 6), {
-        // set the number of animations in the sprite sheet to 4
+        // Set the number of animations in the sprite sheet to 4
         animNumAnimations: 4,
-        // set the number of frames in each animation to 6
+        // Set the number of frames in each animation to 6
         animNumFrames: 6,
-        // set the particle system to randomly select a different animation for each particle
+        // Set the particle system to randomly select a different animation for each particle
         randomizeAnimIndex: true
     })
 );
 
-// display the full coin texture to the left of the panel
+// Display the full coin texture to the left of the panel
 panel.addComponent('element', {
     anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
     pivot: new Vec2(1.75, 1.0),
@@ -190,20 +190,20 @@ panel.addComponent('element', {
     textureAsset: assets.particlesCoinsTexture
 });
 
-// add particlesystem component to particle entity
+// Add particlesystem component to particle entity
 particleEntity2.addComponent(
     'particlesystem',
     Object.assign(particleSystemConfiguration(assets.particlesBonusTexture, 4, 2), {
-        // set the number of animations in the sprite sheet to 7
+        // Set the number of animations in the sprite sheet to 7
         animNumAnimations: 7,
-        // set the number of frames in each animation to 1
+        // Set the number of frames in each animation to 1
         animNumFrames: 1,
-        // set the particle system to randomly select a different animation for each particle
+        // Set the particle system to randomly select a different animation for each particle
         randomizeAnimIndex: true
     })
 );
 
-// display the full bonus item texture to the left of the panel
+// Display the full bonus item texture to the left of the panel
 panel2.addComponent('element', {
     anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
     pivot: new Vec2(-0.5, 1.0),

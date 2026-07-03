@@ -52,7 +52,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable HDR rendering if supported
+    // Enable HDR rendering if supported
     displayFormat: DISPLAYFORMAT_HDR
 };
 
@@ -98,7 +98,7 @@ const depthLayer = app.scene.layers.getLayerById(LAYERID_DEPTH);
 app.scene.layers.remove(depthLayer);
 app.scene.layers.insertOpaque(depthLayer, 2);
 
-// add an instance of the statue
+// Add an instance of the statue
 const statueEntity = assets.statue.resource.instantiateRenderEntity({
     castShadows: true
 });
@@ -111,12 +111,12 @@ cameraEntity.addComponent('camera', {
     farClip: 500,
     fov: 60,
 
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    // If the device renders in HDR mode, disable tone mapping to output HDR values without any processing
     toneMapping: device.isHdr ? TONEMAP_NONE : TONEMAP_ACES,
     gammaCorrection: GAMMA_SRGB
 });
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -129,27 +129,27 @@ cameraEntity.script.create('orbitCamera', {
 cameraEntity.script.create('orbitCameraInputMouse');
 cameraEntity.script.create('orbitCameraInputTouch');
 
-// position the camera in the world
+// Position the camera in the world
 cameraEntity.setLocalPosition(35, 12, -17);
 cameraEntity.lookAt(0, 0, 1);
 app.root.addChild(cameraEntity);
 
-// apply hdri texture
+// Apply hdri texture
 const applyHdri = source => {
-    // convert it to high resolution cubemap for the skybox
-    // this is optional in case you want a really high resolution skybox
+    // Convert it to high resolution cubemap for the skybox
+    // This is optional in case you want a really high resolution skybox
     const skybox = EnvLighting.generateSkyboxCubemap(source);
     app.scene.skybox = skybox;
 
-    // generate env-atlas texture for the lighting
-    // this would also be used as low resolution skybox if high resolution is not available
+    // Generate env-atlas texture for the lighting
+    // This would also be used as low resolution skybox if high resolution is not available
     const lighting = EnvLighting.generateLightingSource(source);
     const envAtlas = EnvLighting.generateAtlas(lighting);
     lighting.destroy();
     app.scene.envAtlas = envAtlas;
 };
 
-// when device is lost, we need to regenerate the skybox textures from HDRI
+// When device is lost, we need to regenerate the skybox textures from HDRI
 device.on('devicerestored', () => {
     applyHdri(assets.hdri_street.resource);
 });
@@ -161,10 +161,10 @@ app.scene.sky.node.setLocalScale(new Vec3(200, 200, 200));
 app.scene.sky.node.setLocalPosition(Vec3.ZERO);
 app.scene.sky.center = new Vec3(0, 0.05, 0);
 
-// enable depth writing for the sky, for DOF to work on it
+// Enable depth writing for the sky, for DOF to work on it
 app.scene.sky.depthWrite = true;
 
-// create two directional lights which cast shadows
+// Create two directional lights which cast shadows
 const light1 = new Entity('Light1');
 light1.addComponent('light', {
     type: 'directional',
@@ -199,7 +199,7 @@ light2.setLocalEulerAngles(45, -30, 0);
 app.root.addChild(light2);
 
 // Create an entity with a shadow catcher script, and create a shadow catcher geometry plane
-// with a specified scale
+// With a specified scale
 const shadowCatcher = new Entity('ShadowCatcher');
 shadowCatcher.addComponent('script').create(ShadowCatcher, {
     properties: {
@@ -207,13 +207,13 @@ shadowCatcher.addComponent('script').create(ShadowCatcher, {
     }
 });
 
-// offset it slightly above the ground (skydome) - this is needed when DOF is enabled and the skydome
-// writes depth to the depth buffer, to avoid depth conflicts with the shadow catcher plane
+// Offset it slightly above the ground (skydome) - this is needed when DOF is enabled and the skydome
+// Writes depth to the depth buffer, to avoid depth conflicts with the shadow catcher plane
 shadowCatcher.setLocalPosition(0, 0.01, 0);
 
 app.root.addChild(shadowCatcher);
 
-// set initial values
+// Set initial values
 data.set('data', {
     affectScene: false,
     catcher: true,
@@ -221,7 +221,7 @@ data.set('data', {
     dof: true
 });
 
-// set up CameraFrame rendering, to give us access to Depth of Field
+// Set up CameraFrame rendering, to give us access to Depth of Field
 const cameraFrame = new CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.dof.enabled = true;
@@ -235,7 +235,7 @@ cameraFrame.dof.highQuality = true;
 cameraFrame.update();
 
 app.on('update', dt => {
-    // toggle DOF
+    // Toggle DOF
     cameraFrame.dof.enabled = data.get('data.dof');
 
     // DOF distance - distance between the camera and the entity
@@ -243,20 +243,20 @@ app.on('update', dt => {
     cameraFrame.dof.focusDistance = distance;
     cameraFrame.update();
 
-    // adjust shadow distance to never clip them
+    // Adjust shadow distance to never clip them
     light1.light.shadowDistance = distance + 15;
     light2.light.shadowDistance = distance + 15;
 
-    // enable the shadow catcher
+    // Enable the shadow catcher
     shadowCatcher.enabled = data.get('data.catcher');
 
-    // rotate the light
+    // Rotate the light
     if (data.get('data.rotate')) {
         light1.rotate(0, 20 * dt, 0);
         light2.rotate(0, -30 * dt, 0);
     }
 
-    // if lights should not affect the scene, set their intensity to 0
+    // If lights should not affect the scene, set their intensity to 0
     const affectScene = data.get('data.affectScene');
     light1.light.intensity = affectScene ? 1 : 0;
     light2.light.intensity = affectScene ? 1 : 0;

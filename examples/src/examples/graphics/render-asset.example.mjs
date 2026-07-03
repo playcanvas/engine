@@ -69,19 +69,19 @@ app.start();
 /** @type {Entity[]} */
 const cubeEntities = [];
 
-// get the instance of the cube it set up with render component and add it to scene
+// Get the instance of the cube it set up with render component and add it to scene
 cubeEntities[0] = assets.cube.resource.instantiateRenderEntity();
 cubeEntities[0].setLocalPosition(7, 12, 0);
 cubeEntities[0].setLocalScale(3, 3, 3);
 app.root.addChild(cubeEntities[0]);
 
-// clone another copy of it and add it to scene
+// Clone another copy of it and add it to scene
 cubeEntities[1] = cubeEntities[0].clone();
 cubeEntities[1].setLocalPosition(-7, 12, 0);
 cubeEntities[1].setLocalScale(3, 3, 3);
 app.root.addChild(cubeEntities[1]);
 
-// get the instance of the statue and set up with render component
+// Get the instance of the statue and set up with render component
 const statueEntity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(statueEntity);
 
@@ -96,11 +96,11 @@ camera.translate(-20, 15, 20);
 camera.lookAt(0, 7, 0);
 app.root.addChild(camera);
 
-// set skybox
+// Set skybox
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// spin the meshes
+// Spin the meshes
 app.on('update', dt => {
     if (cubeEntities[0]) {
         cubeEntities[0].rotate(3 * dt, 10 * dt, 6 * dt);

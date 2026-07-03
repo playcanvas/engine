@@ -105,31 +105,31 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 3;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, -70, 0);
 
-// instantiate the terrain
+// Instantiate the terrain
 /** @type {Entity} */
 const terrain = assets.terrain.resource.instantiateRenderEntity();
 terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
-// get the clouds so that we can animate them
+// Get the clouds so that we can animate them
 /** @type {Array<Entity>} */
 const srcClouds = terrain.find(node => {
     const isCloud = node.name.includes('Icosphere');
 
     if (isCloud) {
-        // no shadow receiving for clouds
+        // No shadow receiving for clouds
         node.render.receiveShadows = false;
     }
 
     return isCloud;
 });
 
-// clone some additional clouds
+// Clone some additional clouds
 /** @type {Array<Entity>} */
 const clouds = [];
 srcClouds.forEach(cloud => {
@@ -143,14 +143,14 @@ srcClouds.forEach(cloud => {
     }
 });
 
-// shuffle the array to give clouds random order
+// Shuffle the array to give clouds random order
 clouds.sort(() => Math.random() - 0.5);
 
-// find a tree in the middle to use as a focus point
+// Find a tree in the middle to use as a focus point
 // @ts-ignore
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
-// create an Entity with a camera component
+// Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.9, 0.9, 0.9),
@@ -158,10 +158,10 @@ camera.addComponent('camera', {
     toneMapping: TONEMAP_ACES
 });
 
-// and position it in the world
+// And position it in the world
 camera.setLocalPosition(300, 160, 25);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -184,7 +184,7 @@ dirLight.addComponent('light', {
         normalOffsetBias: 0.2,
         intensity: 1.0,
 
-        // enable shadow casting
+        // Enable shadow casting
         castShadows: true,
         shadowDistance: 1000
     },
@@ -193,10 +193,10 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(45, 350, 20);
 
-// update mode of cascades
+// Update mode of cascades
 let updateEveryFrame = true;
 
-// handle HUD changes - update properties on the light
+// Handle HUD changes - update properties on the light
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
 
@@ -214,17 +214,17 @@ let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
 
-    // on the first frame, when camera is updated, move it further away from the focus tree
+    // On the first frame, when camera is updated, move it further away from the focus tree
     if (frameNumber === 0) {
         // @ts-ignore engine-tsd
         camera.script.orbitCamera.distance = 470;
     }
 
     if (updateEveryFrame) {
-        // no per cascade rendering control
+        // No per cascade rendering control
         dirLight.light.shadowUpdateOverrides = null;
     } else {
-        // set up shadow update overrides, nearest cascade updates each frame, then next one every 5 and so on
+        // Set up shadow update overrides, nearest cascade updates each frame, then next one every 5 and so on
         dirLight.light.shadowUpdateOverrides = [
             SHADOWUPDATE_THISFRAME,
             frameNumber % 5 === 0 ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_NONE,
@@ -233,7 +233,7 @@ app.on('update', (/** @type {number} */ dt) => {
         ];
     }
 
-    // move the clouds around
+    // Move the clouds around
     clouds.forEach((cloud, index) => {
         const redialOffset = (index / clouds.length) * (6.24 / cloudSpeed);
         const radius = 9 + 4 * Math.sin(redialOffset);

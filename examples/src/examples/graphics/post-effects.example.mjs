@@ -50,7 +50,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -118,7 +118,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 2;
 app.scene.exposure = 1;
@@ -133,7 +133,7 @@ app.scene.exposure = 1;
  * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, brightness, _allowEmissive = true) {
-    // create a material
+    // Create a material
     const material = new StandardMaterial();
     material.gloss = 0.4;
     material.metalness = 0.6;
@@ -141,7 +141,7 @@ function createPrimitive(primitiveType, position, scale, brightness, _allowEmiss
     material.emissive = Color.YELLOW;
     material.update();
 
-    // create the primitive using the material
+    // Create the primitive using the material
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
@@ -150,24 +150,24 @@ function createPrimitive(primitiveType, position, scale, brightness, _allowEmiss
         receiveShadows: false
     });
 
-    // set scale and add it to scene
+    // Set scale and add it to scene
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
 
     return primitive;
 }
 
-// get the instance of the chess board and set up with render component
+// Get the instance of the chess board and set up with render component
 const boardEntity = assets.board.resource.instantiateRenderEntity({
     castShadows: true,
     receiveShadows: true
 });
 app.root.addChild(boardEntity);
 
-// create a sphere which represents the point of focus for the bokeh filter
+// Create a sphere which represents the point of focus for the bokeh filter
 const focusPrimitive = createPrimitive('sphere', Vec3.ZERO, new Vec3(3, 3, 3), 1.5, false);
 
-// add an omni light as a child of this sphere
+// Add an omni light as a child of this sphere
 const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
@@ -222,7 +222,7 @@ Object.keys(data.get('scripts')).forEach(key => {
     });
 });
 
-// position the camera in the world
+// Position the camera in the world
 camera.setLocalPosition(0, 30, -60);
 camera.lookAt(0, 0, 100);
 app.root.addChild(camera);
@@ -231,7 +231,7 @@ app.root.addChild(camera);
 app.keyboard.on(
     'keydown',
     e => {
-        // if the user is editing an input field, ignore key presses
+        // If the user is editing an input field, ignore key presses
         if (e.element.constructor.name === 'HTMLInputElement') return;
         switch (e.key) {
             case KEY_1:
@@ -267,7 +267,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// create a text element to show which effects are enabled
+// Create a text element to show which effects are enabled
 const text = new Entity();
 text.addComponent('element', {
     anchor: new Vec4(0.1, 0.1, 0.5, 0.5),
@@ -282,28 +282,28 @@ screen.addChild(text);
 // Display some UI text which the post processing can be tested against
 text.element.text = 'Test UI Text';
 
-// update things every frame
+// Update things every frame
 let angle = 0;
 app.on('update', (/** @type {number} */ dt) => {
     angle += dt;
 
-    // rotate the skydome
+    // Rotate the skydome
     app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, angle * 20, 0);
 
-    // move the focus sphere in the world
+    // Move the focus sphere in the world
     const focusPosition = new Vec3(0, 30, Math.sin(1 + angle * 0.3) * 90);
     focusPrimitive.setPosition(focusPosition);
 
-    // set the focus distance to the bokeh effect
+    // Set the focus distance to the bokeh effect
     // - it's a negative distance between the camera and the focus sphere
     camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
 
-    // orbit the camera around
+    // Orbit the camera around
     camera.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));
     focusPosition.y -= 20;
     camera.lookAt(focusPosition);
 
-    // display the depth texture if it was rendered
+    // Display the depth texture if it was rendered
     if (data.get('scripts.bokeh.enabled') || data.get('scripts.ssao.enabled')) {
         // @ts-ignore engine-tsd
         app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);

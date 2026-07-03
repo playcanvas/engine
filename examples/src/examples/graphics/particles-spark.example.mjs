@@ -94,7 +94,7 @@ const localPosCurve = new CurveSet([
 ]);
 localPosCurve.type = CURVE_LINEAR;
 
-// make particles move in different directions
+// Make particles move in different directions
 const localVelocityCurve = new CurveSet([
     [0, 0, 1, 8],
     [0, 0, 1, 6],
@@ -106,20 +106,20 @@ const localVelocityCurve2 = new CurveSet([
     [0, 0, 1, 0]
 ]);
 
-// increasing gravity
+// Increasing gravity
 const worldVelocityCurve = new CurveSet([
     [0, 0],
     [0, 0, 0.2, 6, 1, -48],
     [0, 0]
 ]);
 
-// gradually make sparks bigger
+// Gradually make sparks bigger
 const scaleCurve = new Curve([0, 0, 0.5, 0.3, 0.8, 0.2, 1, 0.1]);
 
-// rotate sparks 360 degrees per second
+// Rotate sparks 360 degrees per second
 const angleCurve = new Curve([0, 360]);
 
-// color changes throughout lifetime
+// Color changes throughout lifetime
 const colorCurve = new CurveSet([
     [0, 1, 0.25, 1, 0.375, 0.5, 0.5, 0],
     [0, 0, 0.125, 0.25, 0.25, 0.5, 0.375, 0.75, 0.5, 1],
@@ -131,7 +131,7 @@ const entity = new Entity('Sparks');
 app.root.addChild(entity);
 entity.setLocalPosition(0, 0, 0);
 
-// when texture is loaded add particlesystem component to entity
+// When texture is loaded add particlesystem component to entity
 entity.addComponent('particlesystem', {
     numParticles: 200,
     lifetime: 2,

@@ -89,7 +89,7 @@ class RenderPassTint extends RenderPassShaderQuad {
     }
 }
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -140,12 +140,12 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 2;
 app.scene.exposure = 5;
 
-// get the instance of the chess board and set up with render component
+// Get the instance of the chess board and set up with render component
 const boardEntity = assets.board.resource.instantiateRenderEntity({
     castShadows: false,
     receiveShadows: false
@@ -159,12 +159,12 @@ cameraEntity.addComponent('camera', {
     farClip: 500
 });
 
-// position the camera in the world
+// Position the camera in the world
 cameraEntity.setLocalPosition(0, 30, -60);
 cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
-// the scene gets rendered to a texture first
+// The scene gets rendered to a texture first
 const texture = new Texture(device, {
     name: 'RTTexture',
     width: 4,
@@ -182,41 +182,41 @@ const rt = new RenderTarget({
     depth: true
 });
 
-// layers used in rendering
+// Layers used in rendering
 const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerById(LAYERID_UI);
 
-// use the render pass to render the world and ui layers to the created texture
+// Use the render pass to render the world and ui layers to the created texture
 const renderPass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
 
-// this render pass resizes the texture to match the size of are on the scene we render to
+// This render pass resizes the texture to match the size of are on the scene we render to
 renderPass.init(rt, {
     resizeSource: null
 });
 renderPass.addLayer(cameraEntity.camera, worldLayer, false);
 renderPass.addLayer(cameraEntity.camera, uiLayer, true);
 
-// tint pass uses the scene rendered to a texture, and applies a tint to it
+// Tint pass uses the scene rendered to a texture, and applies a tint to it
 const tintPass = new RenderPassTint(app.graphicsDevice, texture);
 
-// rendering goes directly to the front-buffer
+// Rendering goes directly to the front-buffer
 tintPass.init(null);
 
-// assign those two passes to the camera to be used instead of its default rendering
+// Assign those two passes to the camera to be used instead of its default rendering
 cameraEntity.camera.framePasses = [renderPass, tintPass];
 
-// update things every frame
+// Update things every frame
 let angle = 3;
 app.on('update', (/** @type {number} */ dt) => {
     angle += dt;
 
-    // move the focus position in the world
+    // Move the focus position in the world
     const focusPosition = new Vec3(0, 10, Math.sin(1 + angle * 0.3) * 90);
 
-    // orbit the camera around
+    // Orbit the camera around
     cameraEntity.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));
     cameraEntity.lookAt(focusPosition);
 
-    // tint color
+    // Tint color
     tintPass.tint.lerp(Color.YELLOW, Color.CYAN, Math.sin(angle * 0.5) * 0.5 + 0.5);
 });

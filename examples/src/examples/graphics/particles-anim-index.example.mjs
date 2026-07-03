@@ -123,9 +123,9 @@ const particleEntity4 = new Entity();
 app.root.addChild(particleEntity4);
 particleEntity4.setLocalPosition(3, -3, 0);
 
-// when the texture is loaded add particlesystem components to particle entities
+// When the texture is loaded add particlesystem components to particle entities
 
-// gradually make sparks bigger
+// Gradually make sparks bigger
 const scaleCurve = new Curve([0, 0, 1, 1]);
 
 const particleSystemConfiguration = {
@@ -147,38 +147,38 @@ const particleSystemConfiguration = {
 let options;
 
 options = Object.assign(particleSystemConfiguration, {
-    // states that each animation in the sprite sheet has 4 frames
+    // States that each animation in the sprite sheet has 4 frames
     animNumFrames: 4,
-    // set the animation index of the first particle system to 0
+    // Set the animation index of the first particle system to 0
     animIndex: 0
 });
 particleEntity1.addComponent('particlesystem', options);
 
 options = Object.assign(particleSystemConfiguration, {
-    // states that each animation in the sprite sheet has 4 frames
+    // States that each animation in the sprite sheet has 4 frames
     animNumFrames: 4,
-    // set the animation index of the second particle system to 1
+    // Set the animation index of the second particle system to 1
     animIndex: 1
 });
 particleEntity2.addComponent('particlesystem', options);
 
 options = Object.assign(particleSystemConfiguration, {
-    // states that each animation in the sprite sheet has 4 frames
+    // States that each animation in the sprite sheet has 4 frames
     animNumFrames: 4,
-    // set the animation index of the third particle system to 2
+    // Set the animation index of the third particle system to 2
     animIndex: 2
 });
 particleEntity3.addComponent('particlesystem', options);
 
 options = Object.assign(particleSystemConfiguration, {
-    // states that each animation in the sprite sheet has 4 frames
+    // States that each animation in the sprite sheet has 4 frames
     animNumFrames: 4,
-    // set the animation index of the fourth particle system to 3
+    // Set the animation index of the fourth particle system to 3
     animIndex: 3
 });
 particleEntity4.addComponent('particlesystem', options);
 
-// add the full particle texture to the panel
+// Add the full particle texture to the panel
 panel.addComponent('element', {
     anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
     pivot: new Vec2(0.5, 0.5),

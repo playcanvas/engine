@@ -35,7 +35,7 @@ import { deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -91,12 +91,12 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 2;
 app.scene.exposure = 2.5;
 
-// get the instance of the laboratory
+// Get the instance of the laboratory
 const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity();
 laboratoryEntity.setLocalScale(100, 100, 100);
 app.root.addChild(laboratoryEntity);
@@ -109,7 +109,7 @@ cameraEntity.addComponent('camera', {
     farClip: 600
 });
 
-// add orbit camera script
+// Add orbit camera script
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -121,21 +121,21 @@ cameraEntity.script.create('orbitCamera', {
 cameraEntity.script.create('orbitCameraInputMouse');
 cameraEntity.script.create('orbitCameraInputTouch');
 
-// position the camera in the world
+// Position the camera in the world
 cameraEntity.setLocalPosition(-60, 30, 60);
 app.root.addChild(cameraEntity);
 
-// create the outline renderer
+// Create the outline renderer
 const outlineRenderer = new OutlineRenderer(app);
 
-// add entities to the outline renderer
+// Add entities to the outline renderer
 outlineRenderer.addEntity(laboratoryEntity.findByName('Weltkugel'), Color.RED);
 outlineRenderer.addEntity(laboratoryEntity.findByName('Stuhl'), Color.WHITE);
 outlineRenderer.addEntity(laboratoryEntity.findByName('Teleskop'), Color.GREEN);
 
 app.on('update', (/** @type {number} */ _dt) => {
-    // update the outline renderer each frame, and render the outlines inside the opaque sub-layer
-    // of the immediate layer
+    // Update the outline renderer each frame, and render the outlines inside the opaque sub-layer
+    // Of the immediate layer
     const immediateLayer = app.scene.layers.getLayerByName('Immediate');
     outlineRenderer.frameUpdate(cameraEntity, immediateLayer, false);
 });

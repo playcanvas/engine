@@ -94,15 +94,15 @@ data.set('settings', {
     reflectivity: 0.5
 });
 
-// get existing layers
+// Get existing layers
 const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
-// create a layer for object that do not render into reflection cubemap
+// Create a layer for object that do not render into reflection cubemap
 const excludedLayer = new Layer({ name: 'Excluded' });
 app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
-// create an envAtlas texture, which will hold a prefiltered lighting generated from the cubemap.
+// Create an envAtlas texture, which will hold a prefiltered lighting generated from the cubemap.
 // This represents a reflection prefiltered for different levels of roughness
 const envAtlas = new Texture(app.graphicsDevice, {
     width: 512,
@@ -115,7 +115,7 @@ const envAtlas = new Texture(app.graphicsDevice, {
     mipmaps: false
 });
 
-// material for the walls
+// Material for the walls
 const roomMaterial = new StandardMaterial();
 roomMaterial.useMetalness = true;
 roomMaterial.diffuse = Color.WHITE;
@@ -128,25 +128,25 @@ roomMaterial.reflectivity = 0.3;
 roomMaterial.envAtlas = envAtlas; // use reflection from env atlas
 roomMaterial.metalness = 0.5;
 
-// the material uses box projected cubemap for reflections. Set its bounding box the the size of the room
-// so that the reflections line up
+// The material uses box projected cubemap for reflections. Set its bounding box the the size of the room
+// So that the reflections line up
 roomMaterial.cubeMapProjection = CUBEPROJ_BOX;
 roomMaterial.cubeMapProjectionBox = new BoundingBox(new Vec3(0, 200, 0), new Vec3(400, 200, 400));
 roomMaterial.update();
 
-// material for the magenta emissive beams
+// Material for the magenta emissive beams
 const emissiveMaterial = new StandardMaterial();
 emissiveMaterial.emissive = Color.MAGENTA;
 emissiveMaterial.diffuse = Color.BLACK;
 emissiveMaterial.update();
 
-// material for the white sphere representing an omni light
+// Material for the white sphere representing an omni light
 const lightMaterial = new StandardMaterial();
 lightMaterial.emissive = Color.WHITE;
 lightMaterial.diffuse = Color.BLACK;
 lightMaterial.update();
 
-// material for the reflective sphere in the center
+// Material for the reflective sphere in the center
 const sphereMaterial = new StandardMaterial();
 sphereMaterial.useMetalness = true;
 sphereMaterial.diffuse = Color.WHITE;
@@ -159,7 +159,7 @@ sphereMaterial.reflectivity = 0.3;
 // @ts-ignore
 sphereMaterial.envAtlas = envAtlas; // use reflection from env atlas
 sphereMaterial.update();
-// set up video playback into a texture
+// Set up video playback into a texture
 const videoTexture = new Texture(app.graphicsDevice, {
     format: PIXELFORMAT_RGBA8,
     mipmaps: false,
@@ -169,7 +169,7 @@ const videoTexture = new Texture(app.graphicsDevice, {
     addressV: ADDRESS_CLAMP_TO_EDGE
 });
 
-// create a HTML element with the video
+// Create a HTML element with the video
 /** @type {HTMLVideoElement} */
 const video = document.createElement('video');
 video.id = 'vid';
@@ -193,7 +193,7 @@ video.addEventListener('loadedmetadata', () => {
     videoTexture.resize(video.videoWidth, video.videoHeight);
 });
 
-// materials used on the TV screen to display the video texture
+// Materials used on the TV screen to display the video texture
 const screenMaterial = new StandardMaterial();
 screenMaterial.useLighting = false;
 screenMaterial.emissiveMap = videoTexture;
@@ -209,7 +209,7 @@ screenMaterial.update();
  * @param {Material} material - The material.
  */
 function createPrimitive(primitiveType, position, scale, material) {
-    // create the primitive using the material
+    // Create the primitive using the material
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
@@ -219,23 +219,23 @@ function createPrimitive(primitiveType, position, scale, material) {
         receiveShadows: false
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
 }
 
-// create the ground plane from the boxes
+// Create the ground plane from the boxes
 createPrimitive('box', new Vec3(0, 0, 0), new Vec3(800, 2, 800), roomMaterial);
 createPrimitive('box', new Vec3(0, 400, 0), new Vec3(800, 2, 800), roomMaterial);
 
-// walls
+// Walls
 createPrimitive('box', new Vec3(400, 200, 0), new Vec3(2, 400, 800), roomMaterial);
 createPrimitive('box', new Vec3(-400, 200, 0), new Vec3(2, 400, 800), roomMaterial);
 createPrimitive('box', new Vec3(0, 200, -400), new Vec3(800, 400, 0), roomMaterial);
 createPrimitive('box', new Vec3(0, 200, 400), new Vec3(800, 400, 0), roomMaterial);
 
-// emissive pillars
+// Emissive pillars
 createPrimitive('box', new Vec3(400, 200, -50), new Vec3(20, 400, 20), emissiveMaterial);
 createPrimitive('box', new Vec3(400, 200, 50), new Vec3(20, 400, 20), emissiveMaterial);
 createPrimitive('box', new Vec3(-400, 200, 50), new Vec3(20, 400, 20), emissiveMaterial);
@@ -243,10 +243,10 @@ createPrimitive('box', new Vec3(-400, 200, -50), new Vec3(20, 400, 20), emissive
 createPrimitive('box', new Vec3(0, 400, 50), new Vec3(800, 20, 20), emissiveMaterial);
 createPrimitive('box', new Vec3(0, 400, -50), new Vec3(800, 20, 20), emissiveMaterial);
 
-// screen
+// Screen
 createPrimitive('box', new Vec3(0, 200, 400), new Vec3(500, 250, 5), screenMaterial);
 
-// shiny sphere
+// Shiny sphere
 const sphereEntity = new Entity();
 sphereEntity.addComponent('render', {
     type: 'sphere',
@@ -258,7 +258,7 @@ sphereEntity.setLocalScale(300, 300, 300);
 sphereEntity.setLocalPosition(0, 150, 0);
 app.root.addChild(sphereEntity);
 
-// create an omni light white orbits the room to avoid it being completely dark
+// Create an omni light white orbits the room to avoid it being completely dark
 const lightOmni = new Entity();
 lightOmni.addComponent('light', {
     type: 'omni',
@@ -269,7 +269,7 @@ lightOmni.addComponent('light', {
     range: 1000
 });
 
-// add a white sphere to light so that we can see where it is. This sphere is excluded from the reflections.
+// Add a white sphere to light so that we can see where it is. This sphere is excluded from the reflections.
 lightOmni.addComponent('render', {
     type: 'sphere',
     layers: [excludedLayer.id],
@@ -280,7 +280,7 @@ lightOmni.addComponent('render', {
 lightOmni.setLocalScale(20, 20, 20);
 app.root.addChild(lightOmni);
 
-// create an Entity with a camera component
+// Create an Entity with a camera component
 const camera = new Entity('MainCamera');
 camera.addComponent('camera', {
     fov: 100,
@@ -289,7 +289,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(270, 90, -260);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -302,22 +302,22 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// create a probe object with cubemapRenderer script which takes care of rendering dynamic cubemap
+// Create a probe object with cubemapRenderer script which takes care of rendering dynamic cubemap
 const probe = new Entity('probeCamera');
 probe.addComponent('script');
 
-// add camera component to the probe - this defines camera properties for cubemap rendering
+// Add camera component to the probe - this defines camera properties for cubemap rendering
 probe.addComponent('camera', {
-    // optimization - no need to clear as all pixels get overwritten
+    // Optimization - no need to clear as all pixels get overwritten
     clearColorBuffer: false,
 
-    // priority - render before world camera
+    // Priority - render before world camera
     priority: -1,
 
-    // only render meshes on the worldLayer (and not excluded layer)
+    // Only render meshes on the worldLayer (and not excluded layer)
     layers: [worldLayer.id],
 
-    // disable as this is not a camera that renders cube map but only a container for properties for cube map rendering
+    // Disable as this is not a camera that renders cube map but only a container for properties for cube map rendering
     enabled: false,
 
     nearClip: 1,
@@ -325,7 +325,7 @@ probe.addComponent('camera', {
 });
 
 // Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly usable
-// as a lighting source for envAtlas generation
+// As a lighting source for envAtlas generation
 // Position it in the center of the room.
 probe.script.create('cubemapRenderer', {
     attributes: {
@@ -337,9 +337,9 @@ probe.script.create('cubemapRenderer', {
 probe.setPosition(0, 200, 0);
 app.root.addChild(probe);
 
-// handle onCubemapPostRender event fired by the cubemapRenderer when all faces of the cubemap are done rendering
+// Handle onCubemapPostRender event fired by the cubemapRenderer when all faces of the cubemap are done rendering
 probe.on('onCubemapPostRender', () => {
-    // prefilter just rendered cubemap into envAtlas, so that it can be used for reflection during the rest of the frame
+    // Prefilter just rendered cubemap into envAtlas, so that it can be used for reflection during the rest of the frame
     // @ts-ignore
     EnvLighting.generateAtlas(probe.script.cubemapRenderer.cubeMap, {
         target: envAtlas
@@ -359,23 +359,23 @@ app.on('update', (/** @type {number} */ dt) => {
     }
     updateVideo = !updateVideo;
 
-    // move the light around
+    // Move the light around
     lightOmni.setLocalPosition(300 * Math.sin(time), 300, 300 * Math.cos(time));
 
-    // update the reflection probe as needed
+    // Update the reflection probe as needed
     const updateFrequency = data.get('settings.updateFrequency');
     updateProbeCount--;
     if (updateFrequency === 0) updateProbeCount = 1;
 
     if (updateProbeCount <= 0) {
-        // enable probe rendering
+        // Enable probe rendering
         probe.enabled = true;
         updateProbeCount = updateFrequency;
     } else {
         probe.enabled = false;
     }
 
-    // update material properties based on settings
+    // Update material properties based on settings
     const gloss = data.get('settings.gloss');
     const metalness = data.get('settings.metalness');
     const bumpiness = data.get('settings.bumpiness');

@@ -79,21 +79,21 @@ app.on('destroy', () => {
 
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// create small 2D texture representing movement direction (wind)
+// Create small 2D texture representing movement direction (wind)
 const textureResolution = 10;
 const textureData = new Uint8ClampedArray(textureResolution * textureResolution * 4);
 
 for (let i = 0; i < textureResolution * textureResolution; i++) {
-    // rgb store biased movement direction
+    // Rgb store biased movement direction
     textureData[i * 4] = 127 + Math.random() * 50 - 25;
     textureData[i * 4 + 1] = 127 + Math.random() * 50 - 25;
     textureData[i * 4 + 2] = 127 + Math.random() * 50 - 25;
 
-    // set alpha to 255 for debugging purposes
+    // Set alpha to 255 for debugging purposes
     textureData[i * 4 + 3] = 255;
 }
 
-// create texture
+// Create texture
 const texture = new Texture(app.graphicsDevice, {
     width: textureResolution,
     height: textureResolution,
@@ -106,7 +106,7 @@ const texture = new Texture(app.graphicsDevice, {
     addressV: ADDRESS_CLAMP_TO_EDGE
 });
 
-// initialize it with data
+// Initialize it with data
 const pixels = texture.lock();
 pixels.set(textureData);
 texture.unlock();
@@ -118,38 +118,38 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// set up texture transform part, on webgl2 devices only
+// Set up texture transform part, on webgl2 devices only
 let tf;
 let shader;
 const areaSize = 30;
 
-// resolve parameters to simulation shader parameters
+// Resolve parameters to simulation shader parameters
 const areaSizeUniform = app.graphicsDevice.scope.resolve('areaSize');
 const deltaTimeUniform = app.graphicsDevice.scope.resolve('deltaTime');
 const directionSampler = app.graphicsDevice.scope.resolve('directionSampler');
 
 // @ts-ignore engine-tsd
 if (app.graphicsDevice.isWebGL2) {
-    // simulated particles
+    // Simulated particles
     const maxNumPoints = 200000;
     const positions = new Float32Array(4 * maxNumPoints);
 
-    // generate random data, these are used as seeds to generate particles in vertex shader
+    // Generate random data, these are used as seeds to generate particles in vertex shader
     for (let i = 0; i < maxNumPoints; i++) {
         positions[i * 4] = Math.random();
         positions[i * 4 + 1] = Math.random();
         positions[i * 4 + 2] = Math.random();
 
-        // set life time to 0 which triggers particle restart in shader
+        // Set life time to 0 which triggers particle restart in shader
         positions[i * 4 + 3] = 0;
     }
 
-    // store these in a vertex buffer of a mesh
+    // Store these in a vertex buffer of a mesh
     const mesh = new Mesh(app.graphicsDevice);
     mesh.setPositions(positions, 4);
     mesh.update(PRIMITIVE_POINTS, false);
 
-    // set large bounding box so we don't need to update it each frame
+    // Set large bounding box so we don't need to update it each frame
     mesh.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(100, 100, 100));
 
     // Create the material from the vertex and fragment shaders which is used to render point sprites
@@ -166,7 +166,7 @@ if (app.graphicsDevice.isWebGL2) {
     // Create the mesh instance
     const meshInstance = new MeshInstance(mesh, material);
 
-    // create an entity used to render the mesh instance using a render component
+    // Create an entity used to render the mesh instance using a render component
     const entity = new Entity();
     entity.addComponent('render', {
         type: 'asset',
@@ -174,29 +174,29 @@ if (app.graphicsDevice.isWebGL2) {
     });
     app.root.addChild(entity);
 
-    // set up transform feedback. This creates a clone of the vertex buffer, and sets up rendering to ping pong between them
+    // Set up transform feedback. This creates a clone of the vertex buffer, and sets up rendering to ping pong between them
     tf = new TransformFeedback(mesh.vertexBuffer);
     shader = TransformFeedback.createShader(app.graphicsDevice, shaderFeedbackVert, 'transformShaderExample', [
         'updated_vertex_position'
     ]);
 }
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', dt => {
-    // rotate camera around
+    // Rotate camera around
     time += dt;
     camera.setLocalPosition(9 * Math.sin(time * 0.2), 6, 25 * Math.cos(time * 0.2));
     camera.lookAt(new Vec3(0, 3, 0));
 
-    // if transform feedback was initialized
+    // If transform feedback was initialized
     if (tf) {
-        // set up simulation parameters
+        // Set up simulation parameters
         areaSizeUniform.setValue(areaSize);
         deltaTimeUniform.setValue(dt);
         directionSampler.setValue(texture);
 
-        // execute simulation
+        // Execute simulation
         tf.process(shader);
     }
 });

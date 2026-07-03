@@ -94,7 +94,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+// Set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 app.scene.skyboxIntensity = 0.7;
@@ -116,14 +116,14 @@ Rotator.prototype.update = function (/** @type {number} */ dt) {
 //////////////////////////////////////////////////
 const Portal = createScript('portal');
 
-// initialize code called once per entity
+// Initialize code called once per entity
 Portal.prototype.initialize = function () {
-    // increment value in stencil (from 0 to 1) for stencil geometry
+    // Increment value in stencil (from 0 to 1) for stencil geometry
     const stencil = new StencilParameters({
         zpass: STENCILOP_INCREMENT
     });
 
-    // set the stencil and other parameters on all materials
+    // Set the stencil and other parameters on all materials
     /** @type {Array<RenderComponent>} */
     const renders = this.entity.findComponents('render');
     renders.forEach(render => {
@@ -152,14 +152,14 @@ PortalGeometry.attributes.add('inside', {
 });
 
 PortalGeometry.prototype.initialize = function () {
-    // based on value in the stencil buffer (0 outside, 1 inside), either render
-    // the geometry when the value is equal, or not equal to zero.
+    // Based on value in the stencil buffer (0 outside, 1 inside), either render
+    // The geometry when the value is equal, or not equal to zero.
     const stencil = new StencilParameters({
         func: this.inside ? FUNC_NOTEQUAL : FUNC_EQUAL,
         ref: 0
     });
 
-    // set the stencil parameters on all materials
+    // Set the stencil parameters on all materials
     /** @type {Array<RenderComponent>} */
     const renders = this.entity.findComponents('render');
     renders.forEach(render => {
@@ -171,21 +171,21 @@ PortalGeometry.prototype.initialize = function () {
 
 /////////////////////////////////////////////////////////////////////////////
 
-// find world layer - majority of objects render to this layer
+// Find world layer - majority of objects render to this layer
 const worldLayer = app.scene.layers.getLayerByName('World');
 
-// find skybox layer - to enable it for the camera
+// Find skybox layer - to enable it for the camera
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
-// portal layer - this is where the portal geometry is written to the stencil
-// buffer, and this needs to render first, so insert it before the world layer
+// Portal layer - this is where the portal geometry is written to the stencil
+// Buffer, and this needs to render first, so insert it before the world layer
 const portalLayer = new Layer({ name: 'Portal' });
 app.scene.layers.insert(portalLayer, 0);
 
 // Create an Entity with a camera component
-// this camera renders both world and portal layers
+// This camera renders both world and portal layers
 const camera = new Entity();
 camera.addComponent('camera', {
     layers: [worldLayer.id, portalLayer.id, skyboxLayer.id, uiLayer.id],
@@ -235,8 +235,8 @@ group.script.create('rotator');
 app.root.addChild(group);
 
 // Create the portal entity - this plane is written to stencil buffer,
-// which is then used to test for inside / outside. This needs to render
-// before all elements requiring stencil buffer, so add to to a portalLayer.
+// Which is then used to test for inside / outside. This needs to render
+// Before all elements requiring stencil buffer, so add to to a portalLayer.
 // This is the plane that fills the inside of the portal geometry.
 const portal = new Entity('Portal');
 portal.addComponent('render', {
