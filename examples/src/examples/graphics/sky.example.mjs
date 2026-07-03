@@ -86,7 +86,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -167,7 +167,7 @@ const presetRoom = {
 };
 
 // Apply hdri texture
-const applyHdri = source => {
+const applyHdri = (source) => {
     // Convert it to high resolution cubemap for the skybox
     // This is optional in case you want a really high resolution skybox
     const skybox = EnvLighting.generateSkyboxCubemap(source);

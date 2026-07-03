@@ -94,7 +94,7 @@ WasmModule.setConfig('DracoDecoderModule', {
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
 });
 
@@ -220,7 +220,7 @@ const assets = {
     )
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -530,7 +530,7 @@ data.on('omniColor:set', () => {
 });
 data.on('omniShadows:set', () => {
     const castShadows = !!data.get('omniShadows');
-    omniLights.forEach(entity => {
+    omniLights.forEach((entity) => {
         entity.light.castShadows = castShadows;
         if (castShadows) {
             // Render the newly enabled shadows once
@@ -568,7 +568,7 @@ meshMaterial.update();
 relighting.configureMaterial(meshMaterial);
 meshEntity.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     render.layers = [relightLayer.id];
-    render.meshInstances.forEach(meshInstance => {
+    render.meshInstances.forEach((meshInstance) => {
         meshInstance.material = meshMaterial;
     });
 });
@@ -677,13 +677,13 @@ const applyEnvironment = async (/** @type {string} */ name) => {
 };
 
 data.on('environment:set', () => {
-    applyEnvironment(data.get('environment')).catch(err => {
+    applyEnvironment(data.get('environment')).catch((err) => {
         console.warn('Environment load failed:', err);
     });
 });
 
 // Apply the initial environment
-applyEnvironment(data.get('environment')).catch(err => {
+applyEnvironment(data.get('environment')).catch((err) => {
     console.warn('Environment load failed:', err);
 });
 
@@ -805,7 +805,7 @@ data.on('orientation:set', () => {
 
 data.on('url:set', () => {
     const url = data.get('url');
-    loadGsplat(url || null).catch(err => {
+    loadGsplat(url || null).catch((err) => {
         console.warn('Loading failed, reverting to default:', err);
         loadGsplat(null);
     });

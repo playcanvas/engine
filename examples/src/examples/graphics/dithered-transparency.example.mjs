@@ -103,7 +103,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -155,15 +155,15 @@ createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(60, 1, 30), new Color(0.8, 
  * @param {Vec3} position - The world-space position to place the table at.
  * @returns {StandardMaterial[]} The alpha-blended materials of the instantiated table.
  */
-const spawnTable = position => {
+const spawnTable = (position) => {
     const entity = assets.table.resource.instantiateRenderEntity();
     entity.setLocalScale(3, 3, 3);
     entity.setLocalPosition(position);
     app.root.addChild(entity);
 
     const materials = [];
-    entity.findComponents('render').forEach(render => {
-        render.meshInstances.forEach(meshInstance => {
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((meshInstance) => {
             if (meshInstance.material.blendType !== BLEND_NONE) {
                 meshInstance.material = meshInstance.material.clone();
                 materials.push(meshInstance.material);
@@ -243,7 +243,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     const propertyName = path.split('.')[1];
     const targets = rightOnly.has(propertyName) ? rightMaterials : [...leftMaterials, ...rightMaterials];
 
-    targets.forEach(material => {
+    targets.forEach((material) => {
         material[propertyName] = value;
         material.update();
     });

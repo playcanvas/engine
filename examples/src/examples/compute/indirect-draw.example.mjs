@@ -84,7 +84,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -203,7 +203,7 @@ compute.setParameter('indirectMetaData', sphereMeshInst.getIndirectMetaData());
 // Set an update function on the app's update event
 let angle = 0;
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // Obtain available slot in the indirect draw buffer - this needs to be done each frame

@@ -74,7 +74,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -202,11 +202,11 @@ refractionMaterial.update();
 
 // Update things each frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // Rotate the primitives
-    primitives.forEach(prim => {
+    primitives.forEach((prim) => {
         prim.rotate(0.3, 0.2, 0.1);
     });
 

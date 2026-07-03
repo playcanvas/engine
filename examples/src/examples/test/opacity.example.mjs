@@ -85,7 +85,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -232,7 +232,7 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // Rotate the boxes
     rot.setFromEulerAngles(20 * time, 30 * time, 0);
-    boxes.forEach(box => {
+    boxes.forEach((box) => {
         box.setRotation(rot);
     });
 });

@@ -55,7 +55,7 @@ WasmModule.setConfig('DracoDecoderModule', {
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
@@ -124,7 +124,7 @@ const rtLayer = new Layer({ name: 'RTLayer' });
 app.scene.layers.push(rtLayer);
 
 // Load assets and create the scene
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -153,7 +153,7 @@ mainCamera.setPosition(0, 0, 0);
 app.root.addChild(mainCamera);
 
 // Create the render target with MSAA support
-const createRenderTarget = useMsaa => {
+const createRenderTarget = (useMsaa) => {
     // Use screen dimensions (half height for each texture)
     rtWidth = device.width;
     rtHeight = Math.floor(device.height / 2);
@@ -215,7 +215,7 @@ const createComputeShader = () => {
 
 // Create camera that renders to the render target
 let cameraAngle = 0;
-const createRTCamera = rt => {
+const createRTCamera = (rt) => {
     const cam = new Entity('rtCamera');
     cam.addComponent('camera', {
         clearColor: new Color(1, 1, 1),
@@ -258,7 +258,7 @@ if (device.supportsCompute && computeShader) {
 
 // Update loop
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // Orbit camera around the scene

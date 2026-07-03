@@ -107,7 +107,7 @@ const assets = {
     bicycle: new Asset('gsplat', 'gsplat', { url: './assets/splats/bicycle.sog' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 

@@ -119,7 +119,7 @@ const assets = {
     )
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -277,7 +277,7 @@ let time = 0;
 const centerVec = new Vec3(worldCenter.x, worldCenter.y + orbitHeight, worldCenter.z);
 const rollSpeed1 = 90; // degrees per second
 const rollSpeed2 = 120; // degrees per second
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // Orbit logo 1 around world center

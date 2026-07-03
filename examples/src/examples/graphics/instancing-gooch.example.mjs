@@ -81,7 +81,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -89,8 +89,8 @@ app.start();
 
 // A helper function to apply a material to all mesh instances of an entity
 const applyMaterial = (entity, materials) => {
-    entity.findComponents('render').forEach(render => {
-        render.meshInstances.forEach(meshInstance => {
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((meshInstance) => {
             const goochMaterial = createGoochMaterial(meshInstance.material.diffuseMap);
             meshInstance.material = goochMaterial;
             materials.push(goochMaterial);
@@ -183,14 +183,14 @@ bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
 // Set an update function on the app's update event
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // Generate a light direction that rotates around the scene, and set it on the materials
     const lightDir = new Vec3(Math.sin(time), -0.5, Math.cos(time)).normalize();
     const lightDirArray = [-lightDir.x, -lightDir.y, -lightDir.z];
 
-    materials.forEach(mat => {
+    materials.forEach((mat) => {
         mat.setParameter('uLightDir', lightDirArray);
         mat.update();
     });

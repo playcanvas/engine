@@ -95,7 +95,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -115,8 +115,8 @@ laboratoryEntity.setLocalScale(100, 100, 100);
 app.root.addChild(laboratoryEntity);
 
 // Set up materials
-laboratoryEntity.findComponents('render').forEach(render => {
-    render.meshInstances.forEach(meshInstance => {
+laboratoryEntity.findComponents('render').forEach((render) => {
+    render.meshInstances.forEach((meshInstance) => {
         // Disable blending / enable depth writes
         meshInstance.material.depthState = DepthState.DEFAULT;
         meshInstance.material.blendType = BLEND_NONE;
@@ -128,8 +128,8 @@ laboratoryEntity.findComponents('render').forEach(render => {
 });
 
 // Add lights to the torches
-const torches = laboratoryEntity.find(node => node.name.indexOf('Fackel') !== -1);
-torches.forEach(torch => {
+const torches = laboratoryEntity.find((node) => node.name.indexOf('Fackel') !== -1);
+torches.forEach((torch) => {
     const light = new Entity('Omni');
     light.addComponent('light', {
         type: 'omni',

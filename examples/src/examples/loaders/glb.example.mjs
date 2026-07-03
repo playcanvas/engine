@@ -57,7 +57,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -78,7 +78,7 @@ app.root.addChild(entity);
 
 // Find all cameras - by default they are disabled
 camerasComponents = entity.findComponents('camera');
-camerasComponents.forEach(component => {
+camerasComponents.forEach((component) => {
     // Set the aspect ratio to automatic to work with any window size
     component.aspectRatioMode = ASPECT_AUTO;
 
@@ -91,13 +91,13 @@ camerasComponents.forEach(component => {
 /** @type {LightComponent[]} */
 const lightComponents = entity.findComponents('light');
 // Enable all lights from the glb
-lightComponents.forEach(component => {
+lightComponents.forEach((component) => {
     component.enabled = true;
 });
 
 let time = 0;
 let activeCamera = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time -= dt;
 
     // Change the camera every few seconds

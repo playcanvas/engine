@@ -187,7 +187,7 @@ const pos = new Vec3();
 const usedBrushes = [];
 
 // Update things each frame
-app.on('update', dt => {
+app.on('update', (dt) => {
     // If the last brush stroke is finished, generate new random one
     if (progress >= 1) {
         progress = 0;

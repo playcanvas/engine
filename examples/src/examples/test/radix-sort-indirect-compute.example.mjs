@@ -361,7 +361,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         // (4 for Multipass, 8 for OneSweep). Snapping to an invalid
         // multiple would trigger the sortIndirect assert every frame.
         const rb = radixSort ? radixSort.radixBits : 4;
-        const validBits = [4, 8, 12, 16, 20, 24, 28, 32].filter(b => b % rb === 0);
+        const validBits = [4, 8, 12, 16, 20, 24, 28, 32].filter((b) => b % rb === 0);
         const nearest = validBits.reduce((prev, curr) =>
             Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
         );

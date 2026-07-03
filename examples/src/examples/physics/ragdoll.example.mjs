@@ -41,7 +41,7 @@ WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise(resolve => {
+await new Promise((resolve) => {
     WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -465,19 +465,19 @@ function shootBall(x, y) {
     ball.rigidbody.linearVelocity = direction.mulScalar(30);
 }
 
-app.mouse.on(EVENT_MOUSEDOWN, event => {
+app.mouse.on(EVENT_MOUSEDOWN, (event) => {
     if (!startGrab(event.x, event.y)) {
         shootBall(event.x, event.y);
     }
 });
-app.mouse.on(EVENT_MOUSEMOVE, event => {
+app.mouse.on(EVENT_MOUSEMOVE, (event) => {
     moveGrab(event.x, event.y);
 });
 app.mouse.on(EVENT_MOUSEUP, () => {
     endGrab();
 });
 
-app.touch.on(EVENT_TOUCHSTART, event => {
+app.touch.on(EVENT_TOUCHSTART, (event) => {
     const touch = event.touches[0];
     if (touch && !startGrab(touch.x, touch.y)) {
         shootBall(touch.x, touch.y);
@@ -485,7 +485,7 @@ app.touch.on(EVENT_TOUCHSTART, event => {
     // Prevent the browser generating a synthetic mousedown for this touch
     event.event.preventDefault();
 });
-app.touch.on(EVENT_TOUCHMOVE, event => {
+app.touch.on(EVENT_TOUCHMOVE, (event) => {
     const touch = event.touches[0];
     if (touch) {
         moveGrab(touch.x, touch.y);

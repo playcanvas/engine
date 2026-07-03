@@ -74,7 +74,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -127,7 +127,7 @@ app.root.addChild(entity);
 let originalTexture = null;
 /** @type {Array<RenderComponent>} */
 const renders = entity.findComponents('render');
-renders.forEach(render => {
+renders.forEach((render) => {
     const meshInstances = render.meshInstances;
     for (let i = 0; i < meshInstances.length; i++) {
         const meshInstance = meshInstances[i];
@@ -145,7 +145,7 @@ material.setParameter('uDiffuseMap', originalTexture);
 material.update();
 
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += 0.2 * dt;
 
     // Reverse time

@@ -87,7 +87,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -111,7 +111,7 @@ const PIXELS_PER_UNIT = 100;
  *
  * @param {Texture} t - The texture to configure.
  */
-const configurePixelArt = t => {
+const configurePixelArt = (t) => {
     t.addressU = ADDRESS_CLAMP_TO_EDGE;
     t.addressV = ADDRESS_CLAMP_TO_EDGE;
     t.minFilter = FILTER_NEAREST;
@@ -248,7 +248,7 @@ let currentClip = 'idle';
 
 // Roll and attack are one-shot, non-looping clips; clear the flag when
 // they end so the state machine can return to idle/walk
-caveman.sprite.on('end', clip => {
+caveman.sprite.on('end', (clip) => {
     if (clip.name === 'attack') {
         attacking = false;
     } else if (clip.name === 'roll') {

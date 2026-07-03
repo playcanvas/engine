@@ -90,7 +90,7 @@ const assets = {
     )
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -175,7 +175,7 @@ const picker = new Picker(app, 1, 1, true);
 
 // Update things each frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt * 0.3;
 
     // Rotate splats around their center and also orbit them around
@@ -222,14 +222,14 @@ const handlePointer = (x, y) => {
     picker.prepare(camera.camera, app.scene, [worldLayer]);
 
     // Get the world position at the clicked point
-    picker.getWorldPointAsync(x * pickerScale, y * pickerScale).then(worldPoint => {
+    picker.getWorldPointAsync(x * pickerScale, y * pickerScale).then((worldPoint) => {
         if (worldPoint) {
             // Get the meshInstance of the picked object
-            picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then(meshInstances => {
+            picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
                 if (meshInstances.length > 0) {
                     // Unified mode: picker returns the GSplatComponent directly
                     const picked = meshInstances[0];
-                    const entity = entities.find(e => e.entity.gsplat === picked);
+                    const entity = entities.find((e) => e.entity.gsplat === picked);
 
                     if (entity) {
                         // Trigger the visual effect only if not already animating
@@ -263,11 +263,11 @@ const handlePointer = (x, y) => {
     });
 };
 
-app.mouse.on(EVENT_MOUSEDOWN, event => {
+app.mouse.on(EVENT_MOUSEDOWN, (event) => {
     handlePointer(event.x, event.y);
 });
 
-app.touch.on(EVENT_TOUCHSTART, event => {
+app.touch.on(EVENT_TOUCHSTART, (event) => {
     const touch = event.touches[0];
     handlePointer(touch.x, touch.y);
 });

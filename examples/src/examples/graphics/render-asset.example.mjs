@@ -60,7 +60,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -101,7 +101,7 @@ app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
 // Spin the meshes
-app.on('update', dt => {
+app.on('update', (dt) => {
     if (cubeEntities[0]) {
         cubeEntities[0].rotate(3 * dt, 10 * dt, 6 * dt);
     }

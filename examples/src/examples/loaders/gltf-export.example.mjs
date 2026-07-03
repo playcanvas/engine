@@ -61,7 +61,7 @@ WasmModule.setConfig('DracoDecoderModule', {
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
-await new Promise(resolve => {
+await new Promise((resolve) => {
     WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
 });
 
@@ -113,7 +113,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -181,7 +181,7 @@ const options = {
 
 new GltfExporter()
     .build(app.root, options)
-    .then(arrayBuffer => {
+    .then((arrayBuffer) => {
         const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
         // @ts-ignore

@@ -90,7 +90,7 @@ app.on('destroy', () => {
 });
 
 // Load assets
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -118,13 +118,13 @@ app.root.addChild(terrain);
 
 // Find source clouds (Icosphere nodes)
 /** @type {Array<Entity>} */
-const srcClouds = terrain.find(node => {
+const srcClouds = terrain.find((node) => {
     return node.name.includes('Icosphere');
 });
 
 // Store cloud parents for later and remove clouds from terrain hierarchy
-const cloudParents = srcClouds.map(cloud => cloud.parent);
-srcClouds.forEach(cloud => {
+const cloudParents = srcClouds.map((cloud) => cloud.parent);
+srcClouds.forEach((cloud) => {
     cloud.parent.removeChild(cloud);
 });
 
@@ -155,8 +155,8 @@ revealScript.edgeTint.set(5, 2, 0); // orange/gold edge
 revealScript.tint.set(1, 1, 1);
 
 // Now disable the original terrain render components (keep gsplat visible)
-const terrainRenders = terrain.find(node => node.render && !node.name.includes('Gsplat'));
-terrainRenders.forEach(node => {
+const terrainRenders = terrain.find((node) => node.render && !node.name.includes('Gsplat'));
+terrainRenders.forEach((node) => {
     node.render.enabled = false;
 });
 
@@ -173,7 +173,7 @@ srcClouds.forEach((srcCloud, srcIndex) => {
 
     // Set cloud to semi-transparent for fluffy look
     if (srcCloud.render) {
-        srcCloud.render.meshInstances.forEach(mi => {
+        srcCloud.render.meshInstances.forEach((mi) => {
             if (mi.material) {
                 mi.material.blendType = BLEND_NORMAL;
                 mi.material.opacity = 0.2;

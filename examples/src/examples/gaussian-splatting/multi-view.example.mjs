@@ -86,7 +86,7 @@ const assets = {
     )
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -178,7 +178,7 @@ if (cameraTop.script) {
 
 // Update function called once per frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // Orbit left camera around the splat

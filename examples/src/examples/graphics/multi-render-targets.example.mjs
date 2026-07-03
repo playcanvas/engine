@@ -105,7 +105,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -189,7 +189,7 @@ app.root.addChild(boardEntity);
 // chunk which outputs to multiple render targets during our custom shader pass
 /** @type {Array<RenderComponent>} */
 const renders = boardEntity.findComponents('render');
-renders.forEach(render => {
+renders.forEach((render) => {
     const meshInstances = render.meshInstances;
     for (let i = 0; i < meshInstances.length; i++) {
         const material = meshInstances[i].material;

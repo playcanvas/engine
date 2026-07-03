@@ -77,7 +77,7 @@ const assets = {
     orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -135,7 +135,7 @@ const getMaterial = () => app.scene.gsplat?.material;
 /**
  * @param {boolean} precise - Whether to enable precise cropping
  */
-const updatePreciseDefine = precise => {
+const updatePreciseDefine = (precise) => {
     const material = getMaterial();
     if (material) {
         if (precise) {
@@ -233,7 +233,7 @@ const minSize = 0.4;
 const maxSize = 1.75;
 let elapsedTime = 0;
 
-app.on('update', dt => {
+app.on('update', (dt) => {
     // Re-enable auto-rotate after delay
     if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
         autoRotateEnabled = true;

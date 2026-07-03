@@ -76,7 +76,7 @@ const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -215,7 +215,7 @@ const bandRadius = 1; // half-width in grid units (~2-entry band)
 const rotRps = 0.1; // revolutions per second for spinning line
 let time = 0;
 
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
     // Spinning band: infinite line through grid center with angle theta; hide patches within distance <= bandRadius
     const cx = (patchesX - 1) * 0.5;

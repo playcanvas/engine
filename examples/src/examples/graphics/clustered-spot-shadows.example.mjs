@@ -81,7 +81,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -320,7 +320,7 @@ function updateLightCount() {
     data.set('settings.numLights', spotLightList.length);
 
     // Shadow update mode (need to force render shadow when we add / remove light, as they all move)
-    spotLightList.forEach(spot => {
+    spotLightList.forEach((spot) => {
         spot.light.shadowUpdateMode = lightsStatic ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_REALTIME;
     });
 }

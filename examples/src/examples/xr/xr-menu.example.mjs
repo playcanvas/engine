@@ -69,7 +69,7 @@ WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise(resolve => {
+await new Promise((resolve) => {
     WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -86,7 +86,7 @@ document.head.appendChild(css);
 /**
  * @param {string} msg - The message.
  */
-const message = msg => {
+const message = (msg) => {
     /** @type {HTMLElement | null} */
     const el = document.querySelector('.message');
     if (el) {
@@ -159,7 +159,7 @@ app.on('destroy', () => {
 });
 
 // Load assets
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -286,7 +286,7 @@ app.on('menu:spawnCube', spawnCube);
 app.on('menu:reset', resetScene);
 
 // Keyboard shortcuts
-app.keyboard.on('keydown', e => {
+app.keyboard.on('keydown', (e) => {
     if (e.key === KEY_B) {
         spawnCube();
     } else if (e.key === KEY_R) {
@@ -310,7 +310,7 @@ if (app.xr.supported) {
     });
 
     // Button handler - fires events that XrSession listens to
-    const onXrButtonClick = e => {
+    const onXrButtonClick = (e) => {
         const button = /** @type {HTMLElement} */ (e.currentTarget);
         if (!button.classList.contains('active')) return;
 
@@ -323,7 +323,7 @@ if (app.xr.supported) {
     };
 
     // Button clicks
-    document.querySelectorAll('.container > .button').forEach(button => {
+    document.querySelectorAll('.container > .button').forEach((button) => {
         button.addEventListener('click', onXrButtonClick);
     });
 

@@ -169,7 +169,7 @@ const assets = {
     sky: new Asset('sky', 'texture', { url: './assets/hdri/space.webp' }, { mipmaps: false })
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -237,8 +237,8 @@ const spacingX = (mx.x - mn.x) * LAYOUT.spacingFactor;
 const spacingZ = (mx.z - mn.z) * LAYOUT.spacingFactor;
 
 const numSplatsPerInstance = /** @type {any} */ (assets.scene.resource).numSplats;
-const toM = v => `${(v / 1e6).toFixed(1)}M`;
-const toB = v => `${(v / 1e9).toFixed(1)}B`;
+const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
+const toB = (v) => `${(v / 1e9).toFixed(1)}B`;
 
 // --- LOD tuning (temporary): seed defaults and live-apply on change ---
 data.set('lodBaseDistance', DEFAULT_LOD_BASE_DISTANCE);
@@ -267,7 +267,7 @@ const refRows = ringSize;
 const offX = (cols - 1) * 0.5 * spacingX;
 
 // Map a position-within-ring counter (0, 1, 2, …) to a centre-out signed offset: 0, +1, -1, …
-const rowOffset = r => Math.ceil(r / 2) * (r % 2 === 1 ? 1 : -1);
+const rowOffset = (r) => Math.ceil(r / 2) * (r % 2 === 1 ? 1 : -1);
 
 // Cylindrical bend along the length (Z): map each tile's centre-out length coordinate onto an
 // arc so the ground curves up to both sides and each tile tilts to stay tangent to the
@@ -288,7 +288,7 @@ if (USE_CYLINDER_CONTROLLER) {
 
 // Returns the world position and X-axis euler angle (including the 180° capture flip) for a
 // given instance index.
-const layoutForIndex = idx => {
+const layoutForIndex = (idx) => {
     const c = Math.floor(idx / ringSize); // ring index = axial column (fill one ring first)
     const r = idx % ringSize; // position within the ring
     const x = c * spacingX - offX;
@@ -312,7 +312,7 @@ const lodRange = { min: worstLod, max: worstLod };
 const applyLodRange = (min, max) => {
     lodRange.min = min;
     lodRange.max = max;
-    gsInstances.forEach(gs => {
+    gsInstances.forEach((gs) => {
         gs.lodRangeMin = min;
         gs.lodRangeMax = max;
     });

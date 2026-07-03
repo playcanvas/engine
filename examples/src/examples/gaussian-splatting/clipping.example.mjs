@@ -115,7 +115,7 @@ const assets = {
     )
 };
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -215,7 +215,7 @@ const boxMin = new Vec3();
 const boxMax = new Vec3();
 
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     if (data.get('animate')) {
         time += dt;
     }

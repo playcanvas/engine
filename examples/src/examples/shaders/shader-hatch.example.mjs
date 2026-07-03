@@ -121,7 +121,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -129,8 +129,8 @@ app.start();
 
 // A helper function to apply a material to all mesh instances of an entity
 const applyMaterial = (entity, material) => {
-    entity.findComponents('render').forEach(render => {
-        render.meshInstances.forEach(meshInstance => {
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((meshInstance) => {
             meshInstance.material = material;
         });
     });
@@ -234,14 +234,14 @@ app.root.addChild(camera);
 
 // Update things each frame
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
 
     // Generate a light direction that rotates around the scene, and set it on the materials
     const lightDir = new Vec3(Math.sin(time), -0.5, Math.cos(time)).normalize();
     const lightDirArray = [-lightDir.x, -lightDir.y, -lightDir.z];
 
-    materials.forEach(mat => {
+    materials.forEach((mat) => {
         mat.setParameter('uLightDir', lightDirArray);
         mat.update();
     });
@@ -266,13 +266,13 @@ data.on('*:set', (path, value) => {
         app.scene.fog.end = 300;
     }
     if (propertyName === 'metalness') {
-        materials.forEach(mat => {
+        materials.forEach((mat) => {
             mat.setParameter('uMetalness', value);
             mat.update();
         });
     }
     if (propertyName === 'toon') {
-        materials.forEach(mat => {
+        materials.forEach((mat) => {
             // Set a define that will be used inside the shader to switch between toon and hatch shading
             mat.setDefine('TOON', value);
             mat.update();

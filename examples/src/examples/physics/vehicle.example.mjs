@@ -36,7 +36,7 @@ WasmModule.setConfig('Ammo', {
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -88,7 +88,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -120,7 +120,7 @@ const wheels = [
     { name: 'Front Right Wheel', pos: new Vec3(-0.8, 0.4, 1.2), front: true },
     { name: 'Back Left Wheel', pos: new Vec3(0.8, 0.4, -1.2), front: false },
     { name: 'Back Right Wheel', pos: new Vec3(-0.8, 0.4, -1.2), front: false }
-].map(wheelDef => {
+].map((wheelDef) => {
     // Create a wheel
     const wheel = new Entity(wheelDef.name);
     wheel.addComponent('script');
@@ -174,7 +174,7 @@ cab.addComponent('collision', {
 cab.setLocalPosition(0, 1.2, -0.25);
 
 // Add the vehicle to the hierarchy
-wheels.forEach(wheel => {
+wheels.forEach((wheel) => {
     vehicle.addChild(wheel);
 });
 vehicle.addChild(chassis);
@@ -238,7 +238,7 @@ app.root.script.create('renderPhysics', {
     }
 });
 
-app.keyboard.on('keydown', e => {
+app.keyboard.on('keydown', (e) => {
     if (e.key === KEY_R) {
         app.fire('reset');
     }

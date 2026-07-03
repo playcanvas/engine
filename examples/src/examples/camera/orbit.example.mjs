@@ -81,7 +81,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -113,7 +113,7 @@ app.root.addChild(statue);
 const calcEntityAABB = (bbox, entity) => {
     bbox.center.set(0, 0, 0);
     bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach(render => {
+    entity.findComponents('render').forEach((render) => {
         render.meshInstances.forEach((/** @type {MeshInstance} */ mi) => {
             bbox.add(mi.aabb);
         });

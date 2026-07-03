@@ -32,7 +32,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = msg => {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -110,7 +110,7 @@ const materialStandard = new StandardMaterial();
 const materialPersistent = new StandardMaterial();
 materialPersistent.diffuse = new Color(0.5, 1, 0.5);
 
-const createAnchor = hitTestResult => {
+const createAnchor = (hitTestResult) => {
     app.xr.anchors.create(hitTestResult, (err, anchor) => {
         if (err) return message('Failed creating Anchor');
         if (!anchor) return message('Anchor has not been created');
@@ -128,7 +128,7 @@ if (app.xr.supported) {
         if (app.xr.isAvailable(XRTYPE_AR)) {
             camera.camera.startXr(XRTYPE_AR, XRSPACE_LOCALFLOOR, {
                 anchors: true,
-                callback: err => {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -142,7 +142,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', evt => {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // If not in VR, activate
                 activate();
@@ -157,7 +157,7 @@ if (app.xr.supported) {
     }
 
     // End session by keyboard ESC
-    app.keyboard.on('keydown', evt => {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -181,7 +181,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on(`available:${XRTYPE_AR}`, available => {
+    app.xr.on(`available:${XRTYPE_AR}`, (available) => {
         if (available) {
             if (!app.xr.hitTest.supported) {
                 message('AR Hit Test is not supported');
@@ -199,7 +199,7 @@ if (app.xr.supported) {
 
     // Create hit test sources for all input sources
     if (app.xr.hitTest.supported && app.xr.anchors.supported) {
-        app.xr.input.on('add', inputSource => {
+        app.xr.input.on('add', (inputSource) => {
             inputSource.hitTestStart({
                 entityTypes: [XRTRACKABLE_MESH],
                 callback: (err, hitTestSource) => {
@@ -268,7 +268,7 @@ if (app.xr.supported) {
     }
 
     // Create entity for anchors
-    app.xr.anchors.on('add', anchor => {
+    app.xr.anchors.on('add', (anchor) => {
         let entity = cone.clone();
         app.root.addChild(entity);
         entity.setPosition(anchor.getPosition());

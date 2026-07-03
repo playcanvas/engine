@@ -78,7 +78,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -132,7 +132,7 @@ screen.addChild(entity);
 
 // Update the material's 'amount' parameter to animate the inverse effect
 let time = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time += dt;
     // Animate the amount as a sine wave varying from 0 to 1
     material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);

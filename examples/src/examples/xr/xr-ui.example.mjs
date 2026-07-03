@@ -56,7 +56,7 @@ document.head.appendChild(css);
 /**
  * @param {string} msg - The message.
  */
-const message = msg => {
+const message = (msg) => {
     document.querySelector('.message').textContent = msg;
 };
 
@@ -113,7 +113,7 @@ app.on('destroy', () => {
     css.remove();
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -169,7 +169,7 @@ if (app.xr.supported) {
     });
 
     // Button handler
-    const onXrButtonClick = event => {
+    const onXrButtonClick = (event) => {
         const button = /** @type {HTMLElement} */ (event.currentTarget);
         if (!button.classList.contains('active')) return;
 
@@ -178,7 +178,7 @@ if (app.xr.supported) {
         cameraEntity.camera.clearColor = type === XRTYPE_AR ? colorTransparent : colorCamera;
 
         app.xr.start(cameraEntity.camera, type, XRSPACE_LOCALFLOOR, {
-            callback: err => {
+            callback: (err) => {
                 if (err) message(`XR ${type} failed to start: ${err.message}`);
             }
         });
@@ -191,7 +191,7 @@ if (app.xr.supported) {
     }
 
     // End session by keyboard ESC
-    app.keyboard.on('keydown', evt => {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -226,7 +226,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive XR session has ended');
     });
-    app.xr.on(`available:${XRTYPE_AR}`, available => {
+    app.xr.on(`available:${XRTYPE_AR}`, (available) => {
         message(`Immersive XR is ${available ? 'available' : 'unavailable'}`);
     });
 

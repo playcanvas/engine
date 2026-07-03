@@ -34,7 +34,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = msg => {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -200,7 +200,7 @@ if (app.xr.supported) {
                     usagePreference: XRDEPTHSENSINGUSAGE_GPU,
                     dataFormatPreference: XRDEPTHSENSINGFORMAT_F32
                 },
-                callback: err => {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -214,7 +214,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', evt => {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // If not in VR, activate
                 activate();
@@ -229,7 +229,7 @@ if (app.xr.supported) {
     }
 
     // End session by keyboard ESC
-    app.keyboard.on('keydown', evt => {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -245,7 +245,7 @@ if (app.xr.supported) {
         message('Immersive AR session has ended');
         plane.enabled = false;
     });
-    app.xr.on(`available:${XRTYPE_AR}`, available => {
+    app.xr.on(`available:${XRTYPE_AR}`, (available) => {
         if (available) {
             if (!app.xr.views.supportedDepth) {
                 message('AR Camera Depth is not supported');

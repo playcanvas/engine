@@ -79,7 +79,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -180,7 +180,7 @@ function createPlayer(id, startingAngle, speed, radius) {
     // Normally, this would be taking inputs, running physics simulation, etc
     let angle = startingAngle;
     const height = 0.5;
-    app.on('update', dt => {
+    app.on('update', (dt) => {
         angle += dt * speed;
         if (angle > 360) {
             angle -= 360;

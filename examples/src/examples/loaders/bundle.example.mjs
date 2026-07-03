@@ -67,7 +67,7 @@ app.on('destroy', () => {
 
 // Load assets
 // Notice that scene and torus are loaded as blob's and only tar file is downloaded
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -93,7 +93,7 @@ entityTorus.setLocalPosition(0, 0, 2);
 
 // Find all cameras - by default they are disabled
 camerasComponents = entity.findComponents('camera');
-camerasComponents.forEach(component => {
+camerasComponents.forEach((component) => {
     // Set the aspect ratio to automatic to work with any window size
     component.aspectRatioMode = ASPECT_AUTO;
 
@@ -105,13 +105,13 @@ camerasComponents.forEach(component => {
 
 /** @type {LightComponent[]} */
 const lightComponents = entity.findComponents('light');
-lightComponents.forEach(component => {
+lightComponents.forEach((component) => {
     component.enabled = true;
 });
 
 let time = 0;
 let activeCamera = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     time -= dt;
 
     entityTorus.rotateLocal(360 * dt, 0, 0);

@@ -67,7 +67,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise(resolve => {
+await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -147,7 +147,7 @@ cylinderMeshInst.setInstancing(vertexBuffer);
 
 // Set an update function on the app's update event
 let angle = 0;
-app.on('update', dt => {
+app.on('update', (dt) => {
     // Orbit camera around
     angle += dt * 0.2;
     camera.setLocalPosition(8 * Math.sin(angle), 0, 8 * Math.cos(angle));

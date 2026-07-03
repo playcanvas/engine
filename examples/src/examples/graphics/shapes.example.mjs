@@ -56,7 +56,7 @@ const shapes = ['box', 'plane', 'cone', 'cylinder', 'sphere', 'capsule'];
 let x = -1,
     y = -1;
 
-shapes.forEach(shape => {
+shapes.forEach((shape) => {
     // Create an entity with a render component
     const entity = new Entity(shape);
     entity.addComponent('render', {
