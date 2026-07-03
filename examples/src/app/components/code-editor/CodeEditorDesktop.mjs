@@ -280,6 +280,12 @@ class CodeEditorDesktop extends CodeEditorBase {
             }
         }
         for (const model of monaco.editor.getModels()) {
+            // never dispose the model the editor holds: mid-switch the path prop hasn't changed
+            // yet, so the wrapper would call getFullModelRange() on a null model and crash. the
+            // stale model is picked up by the next sync once the editor has moved off it.
+            if (model === monacoEditor?.getModel()) {
+                continue;
+            }
             const uri = model.uri.toString();
             const dir = uri.startsWith(EXAMPLE_MODEL_DIR) ? EXAMPLE_MODEL_DIR :
                 uri.startsWith(ASSET_MODEL_DIR) ? ASSET_MODEL_DIR : null;
