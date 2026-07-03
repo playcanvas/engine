@@ -37,7 +37,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -95,7 +95,7 @@ data.on('renderer:set', () => {
 
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 
-// instantiate garage gsplat
+// Instantiate garage gsplat
 const hotel = new Entity('garage');
 hotel.addComponent('gsplat', {
     asset: assets.hotel
@@ -103,7 +103,7 @@ hotel.addComponent('gsplat', {
 hotel.setLocalEulerAngles(180, 0, 0);
 app.root.addChild(hotel);
 
-// create biker1
+// Create biker1
 const biker1 = new Entity('biker1');
 biker1.addComponent('gsplat', {
     asset: assets.biker
@@ -112,13 +112,13 @@ biker1.setLocalPosition(0, -1.8, -2);
 biker1.setLocalEulerAngles(180, 90, 0);
 app.root.addChild(biker1);
 
-// clone the biker and add the clone to the scene
+// Clone the biker and add the clone to the scene
 const biker2 = biker1.clone();
 biker2.setLocalPosition(0, -1.8, 2);
 biker2.rotate(0, 150, 0);
 app.root.addChild(biker2);
 
-// create guitar
+// Create guitar
 const guitar = new Entity('guitar');
 guitar.addComponent('gsplat', {
     asset: assets.guitar
@@ -137,7 +137,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(3, 1, 0.5);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -150,7 +150,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// orbit around the statue's world-space centre
+// Orbit around the statue's world-space centre
 const orbitPivot = new Vec3();
 hotel.getWorldTransform().transformPoint(new Vec3(0, 0.2, 0), orbitPivot);
 camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(3, 1, 0.5), orbitPivot);

@@ -56,7 +56,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -84,7 +84,7 @@ app.init(createOptions);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-// auto resolution: treat DPR >= 2 as high-DPI (drops to half)
+// Auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
     device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
@@ -101,7 +101,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// configuration for grid instances
+// Configuration for grid instances
 const GRID_SIZE = 5; // N x N grid
 const GRID_SPACING = 2; // spacing between instances in world units
 
@@ -121,7 +121,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxMip = 3;
 app.scene.exposure = 1.5;
@@ -130,7 +130,7 @@ app.scene.exposure = 1.5;
 // using setClipState(value), and read per fragment using getClipState()
 app.scene.gsplat.varyings.add([{ name: 'clipState', type: TYPE_UINT32, components: 1 }]);
 
-// apply the clipping customization to the scene-wide gsplat material
+// Apply the clipping customization to the scene-wide gsplat material
 const material = app.scene.gsplat.material;
 material.getShaderChunks('glsl').set('gsplatModifyVS', clipGlslVert);
 material.getShaderChunks('wgsl').set('gsplatModifyVS', clipWgslVert);
@@ -148,16 +148,16 @@ data.on('renderer:set', () => {
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('animate', true);
 
-// enable rotation-based LOD updates and behind-camera penalty
+// Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 4;
 
-// allow rendering with lower LOD quality when optimal is not yet loaded
+// Allow rendering with lower LOD quality when optimal is not yet loaded
 app.scene.gsplat.lodUnderfillLimit = 10;
 
 data.set('splatBudget', platform.mobile ? 1 : 3);
 
-// create grid of instances centered around origin on XZ plane
+// Create grid of instances centered around origin on XZ plane
 const half = (GRID_SIZE - 1) * 0.5;
 for (let z = 0; z < GRID_SIZE; z++) {
     for (let x = 0; x < GRID_SIZE; x++) {
@@ -205,7 +205,7 @@ Object.assign(cc, {
     focusPoint: new Vec3(0, 0.8, 0)
 });
 
-// the animated clipping box
+// The animated clipping box
 const clipCenter = new Vec3(0, 0.8, 0);
 const clipHalf = new Vec3(2.1, 1, 2.1);
 const clipCenterArray = [clipCenter.x, clipCenter.y, clipCenter.z];
@@ -220,20 +220,20 @@ app.on('update', dt => {
         time += dt;
     }
 
-    // stretch the box along x and z using different sin waves
+    // Stretch the box along x and z using different sin waves
     clipHalf.x = 2.1 + Math.sin(time * 0.7) * 1.05;
     clipHalf.z = 2.1 + Math.sin(time * 1.1) * 1.05;
     clipHalfArray[0] = clipHalf.x;
     clipHalfArray[2] = clipHalf.z;
 
-    // drive the clipping uniforms
+    // Drive the clipping uniforms
     material.setParameter('uClipCenter', clipCenterArray);
     material.setParameter('uClipHalf', clipHalfArray);
     invViewProj.mul2(camera.camera.projectionMatrix, camera.camera.viewMatrix).invert();
     material.setParameter('uInvViewProj', invViewProj.data);
     material.update();
 
-    // draw the clipping box
+    // Draw the clipping box
     boxMin.copy(clipCenter).sub(clipHalf);
     boxMax.copy(clipCenter).add(clipHalf);
     app.drawWireAlignedBox(boxMin, boxMax, Color.YELLOW);

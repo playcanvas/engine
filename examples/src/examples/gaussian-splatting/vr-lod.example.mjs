@@ -315,7 +315,7 @@ const xrNavigation = /** @type {any} */ (
 );
 
 // In-XR debug HUD: an always-visible, camera-following menu. Label-only rows (no eventName)
-// act as live readouts updated each frame via setItemLabel. Starting with FPS.
+// Act as live readouts updated each frame via setItemLabel. Starting with FPS.
 // Base scale at full framebuffer resolution; scaled up at lower resolutions for readability.
 const HUD_BASE_SCALE = 1.2;
 const menuEntity = new Entity('XrHud');
@@ -597,7 +597,7 @@ const setScene = index => {
     if (scene.asset.loaded) {
         loadGsplat(scene);
     } else {
-        // load on demand; guard against a newer selection completing first
+        // Load on demand; guard against a newer selection completing first
         scene.asset.once('load', () => {
             if (SCENES[sceneIndex] === scene) loadGsplat(scene);
         });
@@ -626,7 +626,7 @@ const tryStartVr = () => {
         return;
     }
     if (app.xr.isAvailable(XRTYPE_VR)) {
-        // local-floor: WebXR puts the local-space origin at the floor below the viewer at
+        // Local-floor: WebXR puts the local-space origin at the floor below the viewer at
         // session start, so the camera (child of the rig) ends up at rig + ~1.6 m on Y.
         // `local` would put the head at rig.y, sinking the viewpoint into the scene floor.
         //

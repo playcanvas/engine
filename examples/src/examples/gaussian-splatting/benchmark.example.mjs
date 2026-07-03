@@ -935,7 +935,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     canvas.height = 0;
     canvas.remove();
 
-    // allow GC to reclaim GPU/asset memory before the next run (helps on mobile)
+    // Allow GC to reclaim GPU/asset memory before the next run (helps on mobile)
     await new Promise(resolve => {
         setTimeout(resolve, 1000);
     });

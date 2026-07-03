@@ -40,7 +40,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -101,11 +101,11 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create a splat entity and place it in the world
+// Create a splat entity and place it in the world
 const logoEntity1 = new Entity();
 logoEntity1.addComponent('gsplat', {
     asset: assets.logo
@@ -115,7 +115,7 @@ logoEntity1.setLocalEulerAngles(180, 90, 0);
 logoEntity1.setLocalScale(0.7, 0.7, 0.7);
 app.root.addChild(logoEntity1);
 
-// create another splat entity and place it in the world
+// Create another splat entity and place it in the world
 const logoEntity2 = new Entity();
 logoEntity2.addComponent('gsplat', {
     asset: assets.logo
@@ -161,7 +161,7 @@ cameraTop.addComponent('camera', {
 cameraTop.translate(-2, 6, 9);
 app.root.addChild(cameraTop);
 
-// add orbit camera script with a mouse and a touch support to top camera
+// Add orbit camera script with a mouse and a touch support to top camera
 cameraTop.addComponent('script');
 if (cameraTop.script) {
     cameraTop.script.create('orbitCamera', {
@@ -176,16 +176,16 @@ if (cameraTop.script) {
     cameraTop.script.create('orbitCameraInputTouch');
 }
 
-// update function called once per frame
+// Update function called once per frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // orbit left camera around the splat
+    // Orbit left camera around the splat
     cameraLeft.setLocalPosition(6 * Math.sin(time * 0.2), 2, 6 * Math.cos(time * 0.2));
     cameraLeft.lookAt(logoEntity2.getPosition());
 
-    // rotate camera right around splat differently
+    // Rotate camera right around splat differently
     cameraRight.setLocalPosition(6 * Math.sin(-time * 0.4), 2, 6 * Math.cos(-time * 0.4));
     cameraRight.lookAt(logoEntity2.getPosition());
 });

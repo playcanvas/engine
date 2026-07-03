@@ -34,7 +34,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -88,7 +88,7 @@ const posScale = (gridSize / 2) * 0.5; // positions range from -posScale to +pos
 const format = new GSplatFormat(
     device,
     [
-        // this line gives us 'loadData' function in the shader, returning vec4
+        // This line gives us 'loadData' function in the shader, returning vec4
         { name: 'data', format: PIXELFORMAT_RGBA8 }
     ],
     {

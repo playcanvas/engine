@@ -353,7 +353,7 @@ const createClonedSplat = (selectedData, aabbCenter) => {
 
         // Fill remapping texture on CPU
         const remapData = remapTexture.lock();
-        remapData.fill(0xffffffff); // mark all as "skip"
+        remapData.fill(0xffffffff); // Mark all as "skip"
         for (let i = 0; i < mapping.srcIndices.length; i++) {
             remapData[mapping.destStartOffset + i] = mapping.srcIndices[i];
         }

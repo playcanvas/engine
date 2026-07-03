@@ -77,7 +77,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -141,7 +141,7 @@ app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxIntensity = 2.6;
 app.scene.layers.getLayerById(LAYERID_SKYBOX).enabled = false;
 
-// global splat settings
+// Global splat settings
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.radialSorting = true;
@@ -363,7 +363,7 @@ const buildOriginalTransform = (/** @type {typeof sceneConfigs[number]} */ confi
         new Quat().setFromEulerAngles(config.intrinsicEuler.x, config.intrinsicEuler.y, config.intrinsicEuler.z),
         Vec3.ONE
     );
-    // entity = Tworld * Tlocal^(-1) * Tintrinsic
+    // Entity = Tworld * Tlocal^(-1) * Tintrinsic
     return new Mat4().mul2(portalWorldMat, portalLocalMat.invert()).mul(intrinsicMat);
 };
 
@@ -383,7 +383,7 @@ sceneConfigs.forEach(config => {
         layers: [config.layer.id],
         lodBaseDistance: config.lodBaseDistance,
         lodMultiplier: config.lodMultiplier,
-        // start with the lowest LOD until the first frame settles, then unlock the full range
+        // Start with the lowest LOD until the first frame settles, then unlock the full range
         lodRangeMin: 4,
         lodRangeMax: 5
     });
@@ -488,7 +488,7 @@ maskPlane.addComponent('render', {
     material: maskMaterial,
     layers: [portalMaskLayer.id]
 });
-// match the inner opening of the portal model and orient it as a vertical doorway
+// Match the inner opening of the portal model and orient it as a vertical doorway
 maskPlane.setLocalPosition(0, 0.55, 0);
 maskPlane.setLocalEulerAngles(90, 0, 0);
 maskPlane.setLocalScale(3.5, 1, 6.7);
@@ -597,8 +597,8 @@ const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 const cameraInstance = /** @type {any} */ (camera.camera).camera;
 
 // Tracks which world the user is currently *in*.
-// false = Parish is from-scene (around user) and Skatepark is through-scene.
-// true  = swapped: Skatepark is from-scene and Parish is through-scene.
+// False = Parish is from-scene (around user) and Skatepark is through-scene.
+// True  = swapped: Skatepark is from-scene and Parish is through-scene.
 let swapped = false;
 
 const isLayerThrough = (/** @type {Layer} */ layer) => {
@@ -653,7 +653,7 @@ const updatePortalSide = () => {
     planeWorldInv.transformPoint(prevCamWorldPos, localPrev);
     planeWorldInv.transformPoint(currCamWorldPos, localCurr);
 
-    // expose current world to the Stats panel
+    // Expose current world to the Stats panel
     data.set('data.stats.world', swapped ? 'Skatepark' : 'Parish');
 
     // Did the camera cross the plane between frames?
@@ -687,7 +687,7 @@ const updatePortalSide = () => {
     prevCamWorldPos.copy(currCamWorldPos);
 };
 
-// unlock the full LOD range once the first frame is ready
+// Unlock the full LOD range once the first frame is ready
 const onFrameReady = (
     /** @type {any} */ cam,
     /** @type {any} */ layer,

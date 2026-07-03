@@ -70,7 +70,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -98,7 +98,7 @@ app.init(createOptions);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-// auto resolution: treat DPR >= 2 as high-DPI (drops to half)
+// Auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
     device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
@@ -126,7 +126,7 @@ const config = {
     lodUnderfillLimit: 5,
     cameraPosition: [10.3, 2, -10],
     focusPoint: [12, 3, 0],
-    // camera fly speeds — the instanced world is enormous. Normal speed is 10x the lod-streaming
+    // Camera fly speeds — the instanced world is enormous. Normal speed is 10x the lod-streaming
     // example; fast (shift) is 80x.
     moveSpeed: 4 * 10, // 40
     moveFastSpeed: 15 * 20 * 4 // 1200
@@ -137,10 +137,10 @@ const config = {
 // axis). Instance count is driven by the 'instances' observer at runtime — the desktop default of
 // 50 tiles (~104M splats each) is two full rings and tens of billions of splats at full detail.
 const LAYOUT = {
-    // number of rings (full loops) the layout is wide along the cylinder axis at max capacity;
+    // Number of rings (full loops) the layout is wide along the cylinder axis at max capacity;
     // MAX_INSTANCES / maxCols tiles make one ring (a complete loop)
     maxCols: 4,
-    // multiplier applied to the tile's world-space footprint to derive grid spacing.
+    // Multiplier applied to the tile's world-space footprint to derive grid spacing.
     // 0.8 = 20% overlap so neighbouring AABBs interpenetrate and hide the seams
     spacingFactor: 0.8,
     // Bend the strip into the inside of a very large cylinder along its length (Z), so the
@@ -175,7 +175,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// custom mini stats showing gsplat counts
+// Custom mini stats showing gsplat counts
 const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
 // --- infinite skybox backdrop from the equirectangular LDR image ---
@@ -363,7 +363,7 @@ const onFrameReady = (
     if (ready && loadingCount === 0) {
         gsplatSystem.off('frame:ready', onFrameReady);
         applyLodRange(0, worstLod);
-        // reveal the backdrop now, together with the loaded scene (not before it)
+        // Reveal the backdrop now, together with the loaded scene (not before it)
         app.scene.skybox = skyboxCubemap;
     }
 };
@@ -385,7 +385,7 @@ camera.addComponent('camera', {
     clearColor: new Color(0, 0, 0),
     fov: 75,
     toneMapping: TONEMAP_LINEAR,
-    // huge world — extend the far clip so distant instances are not culled
+    // Huge world — extend the far clip so distant instances are not culled
     farClip: 100000
 });
 camera.setLocalPosition(tile0Center.x + camX, camY, tile0Center.z + camZ);
@@ -401,7 +401,7 @@ if (USE_CYLINDER_CONTROLLER) {
         startHeight: camY,
         moveSpeed: config.moveSpeed,
         moveFastSpeed: config.moveFastSpeed,
-        // strong movement damping for a smooth, floaty glide (higher = stronger; default 0.99)
+        // Strong movement damping for a smooth, floaty glide (higher = stronger; default 0.99)
         moveDamping: 0.997
     });
     app.on('update', (/** @type {number} */ dt) => controller.update(dt));
@@ -413,7 +413,7 @@ if (USE_CYLINDER_CONTROLLER) {
         sceneSize: 500,
         moveSpeed: config.moveSpeed,
         moveFastSpeed: config.moveFastSpeed,
-        // higher damping (default 0.98) eases the camera into a new speed, so toggling shift
+        // Higher damping (default 0.98) eases the camera into a new speed, so toggling shift
         // between normal and fast ramps smoothly instead of snapping
         moveDamping: 0.995,
         enableOrbit: false,

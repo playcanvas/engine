@@ -38,7 +38,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -93,7 +93,7 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 
-// create a splat entity and place it in the world
+// Create a splat entity and place it in the world
 const skull = new Entity();
 skull.addComponent('gsplat', {
     asset: assets.skull,
@@ -110,7 +110,7 @@ const ORBIT_DISTANCE = 4;
 const ORBIT_INITIAL_YAW = 32;
 const ORBIT_INITIAL_PITCH = -10;
 
-// scene-level alpha clip for splats (shadows / cutout)
+// Scene-level alpha clip for splats (shadows / cutout)
 app.scene.gsplat.alphaClip = 0.1;
 
 // Create an Entity with a camera component
@@ -139,7 +139,7 @@ if (orbitCam) {
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-// create ground to receive shadows
+// Create ground to receive shadows
 const material = new StandardMaterial();
 material.diffuse = new Color(0.5, 0.5, 0.4);
 material.gloss = 0.2;
@@ -157,7 +157,7 @@ ground.setLocalScale(10, 1, 10);
 ground.setLocalPosition(0, -0.45, 0);
 app.root.addChild(ground);
 
-// shadow casting directional light
+// Shadow casting directional light
 // Note: it does not affect gsplat, as lighting is not supported there currently
 const directionalLight = new Entity();
 directionalLight.addComponent('light', {

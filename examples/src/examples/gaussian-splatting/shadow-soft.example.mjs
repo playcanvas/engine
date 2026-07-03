@@ -45,7 +45,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -188,7 +188,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// orbit around the scene center (the bikes' average center / cylinder center)
+// Orbit around the scene center (the bikes' average center / cylinder center)
 camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(-3, 2, 4), new Vec3(0, 0, 0));
 
 // Single directional light casting soft shadows
@@ -210,7 +210,7 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(55, 30, 0);
 
-// handle HUD changes - update properties on the light
+// Handle HUD changes - update properties on the light
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     if (pathArray[0] !== 'settings' || pathArray[1] !== 'light' || pathArray.length < 3) {

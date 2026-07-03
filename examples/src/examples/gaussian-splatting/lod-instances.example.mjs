@@ -52,7 +52,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -80,7 +80,7 @@ app.init(createOptions);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-// auto resolution: treat DPR >= 2 as high-DPI (drops to half)
+// Auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
     device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
@@ -97,7 +97,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// configuration for grid instances
+// Configuration for grid instances
 const GRID_SIZE = 20; // N x N grid
 const GRID_SPACING = 2; // spacing between instances in world units
 
@@ -171,7 +171,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxMip = 3;
 app.scene.exposure = 1.5;
@@ -253,16 +253,16 @@ data.on('colorize:set', () => {
     applyColorize(data.get('colorize'));
 });
 
-// enable rotation-based LOD updates and behind-camera penalty
+// Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 4;
 
-// allow rendering with lower LOD quality when optimal is not yet loaded
+// Allow rendering with lower LOD quality when optimal is not yet loaded
 app.scene.gsplat.lodUnderfillLimit = 10;
 
 data.set('splatBudget', platform.mobile ? 1 : 3);
 
-// create grid of instances centered around origin on XZ plane
+// Create grid of instances centered around origin on XZ plane
 const half = (GRID_SIZE - 1) * 0.5;
 
 // Create a grid of playbot instances
@@ -316,7 +316,7 @@ Object.assign(cc, {
     focusPoint: new Vec3(2, 0.6, 0)
 });
 
-// update HUD stats and animate colors every frame
+// Update HUD stats and animate colors every frame
 let currentTime = 0;
 app.on('update', dt => {
     currentTime += dt;

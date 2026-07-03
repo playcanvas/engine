@@ -37,7 +37,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -83,7 +83,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// instantiate the container - this creates an entity hierarchy with a gsplat component
+// Instantiate the container - this creates an entity hierarchy with a gsplat component
 // note: unlike ply files, the glb file stores the splat data in the glTF coordinate system
 // (y-up), so no flip rotation is needed here
 const biker = assets.biker.resource.instantiateRenderEntity();
@@ -92,7 +92,7 @@ biker.setLocalEulerAngles(0, -90, 0);
 biker.setLocalScale(0.7, 0.7, 0.7);
 app.root.addChild(biker);
 
-// enable shadow casting on the instantiated gsplat component
+// Enable shadow casting on the instantiated gsplat component
 const gsplatComponent = biker.findComponent('gsplat');
 if (gsplatComponent) {
     gsplatComponent.castShadows = true;
@@ -130,7 +130,7 @@ if (orbitCam) {
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-// create ground to receive shadows
+// Create ground to receive shadows
 const material = new StandardMaterial();
 material.diffuse = new Color(0.5, 0.5, 0.4);
 material.gloss = 0.2;
@@ -148,7 +148,7 @@ ground.setLocalScale(10, 1, 10);
 ground.setLocalPosition(0, -0.45, 0);
 app.root.addChild(ground);
 
-// shadow casting directional light
+// Shadow casting directional light
 // Note: it does not affect gsplat, as lighting is not supported there currently
 const directionalLight = new Entity();
 directionalLight.addComponent('light', {

@@ -39,7 +39,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -88,10 +88,10 @@ app.start();
 data.set('ringWidth', 1);
 data.set('ringAlpha', 0.25);
 
-// update spherical harmonics colors every degree of camera movement
+// Update spherical harmonics colors every degree of camera movement
 app.scene.gsplat.colorUpdateAngle = 1;
 
-// apply the custom fragment chunk to the scene-wide gsplat material
+// Apply the custom fragment chunk to the scene-wide gsplat material
 const material = app.scene.gsplat.material;
 material.getShaderChunks('glsl').set('gsplatModifyPS', shaderGlslFrag);
 material.getShaderChunks('wgsl').set('gsplatModifyPS', shaderWgslFrag);
@@ -114,7 +114,7 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 const orbitCam = /** @type {any} */ (
     camera.script?.create('orbitCamera', {
@@ -158,7 +158,7 @@ let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // drive the shader uniforms
+    // Drive the shader uniforms
     material.setParameter('uRingWidth', data.get('ringWidth'));
     material.setParameter('uRingAlpha', data.get('ringAlpha'));
     material.setParameter('uTime', time);

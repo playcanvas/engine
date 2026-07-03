@@ -58,7 +58,7 @@ import { data, deviceType, win } from 'examples/context';
  * @import { Texture } from 'playcanvas'
  */
 
-// allow overriding scene url and orientation via hash query params, e.g.
+// Allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
 const hashQuery = (win.location.hash || window.location.hash || '').split('?')[1] || '';
 const hashParams = new URLSearchParams(hashQuery);
@@ -71,7 +71,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -103,7 +103,7 @@ app.setCanvasResolution(RESOLUTION_AUTO);
 data.set('highRes', !!data.get('highRes'));
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
-    // auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
+    // Auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
     device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
 };
 applyResolution();
@@ -120,7 +120,7 @@ app.on('destroy', () => {
 });
 
 // Roman-Parish configuration
-// original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
+// Original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
 const config = {
     name: 'Roman-Parish',
     url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json',
@@ -217,7 +217,7 @@ app.start();
 
 const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
-// enable rotation-based LOD updates and behind-camera penalty
+// Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.radialSorting = true;
@@ -254,7 +254,7 @@ data.on('compact:set', () => {
 
 const MAX_PERSPECTIVE_FOV = 140;
 
-// initialize UI settings (must be after observer registration)
+// Initialize UI settings (must be after observer registration)
 data.set('fisheye', 0);
 data.set('cameraFov', 75);
 data.set('toneMapping', TONEMAP_LINEAR);
@@ -579,7 +579,7 @@ data.on('logBuffers', () => {
 });
 
 app.on('update', () => {
-    // log textures for one frame if requested
+    // Log textures for one frame if requested
     Tracing.set(TRACEID_TEXTURES, logTexturesRequested);
     logTexturesRequested = false;
 

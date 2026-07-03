@@ -66,7 +66,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -94,7 +94,7 @@ app.init(createOptions);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-// auto resolution: treat DPR >= 2 as high-DPI (drops to half)
+// Auto resolution: treat DPR >= 2 as high-DPI (drops to half)
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
     device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
@@ -129,16 +129,16 @@ const config = {
     sceneRotation: [-90, 0, 0],
     lodUpdateDistance: 4,
     lodUnderfillLimit: 5,
-    // distance-based LOD ramp base distance (LOD = 1 + log(d / base) / log(mult)); the multiplier
+    // Distance-based LOD ramp base distance (LOD = 1 + log(d / base) / log(mult)); the multiplier
     // is derived from the splat budget — see the budget section below
     lodBaseDistance: 20,
-    // fly speeds
+    // Fly speeds
     moveSpeed: 13,
     moveFastSpeed: 100,
-    // default start view
+    // Default start view
     cameraPosition: [-87.42, -14.23, 179.97],
     cameraRotation: [-14.85, -64.12, 0],
-    // partly-cloudy HDRI backdrop, downloaded at runtime from Poly Haven (CC0)
+    // Partly-cloudy HDRI backdrop, downloaded at runtime from Poly Haven (CC0)
     skyUrl: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr'
 };
 
@@ -156,7 +156,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// custom mini stats showing gsplat counts
+// Custom mini stats showing gsplat counts
 const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
 const pieces = [assets.ssog0, assets.ssog1, assets.ssog2, assets.ssog3];
@@ -205,7 +205,7 @@ for (let i = 0; i < pieces.length; i++) {
 const toM = v => `${(v / 1e6).toFixed(1)}M`;
 data.set('data.stats.splatsTotal', toM(totalSplats));
 
-// combined world-space bounds, for framing the camera
+// Combined world-space bounds, for framing the camera
 const worldAabb = new BoundingBox();
 root.children.forEach((entity, i) => {
     const res = /** @type {any} */ (pieces[i].resource);
@@ -265,7 +265,7 @@ const onFrameReady = (
             gs.lodRangeMin = 0;
             gs.lodRangeMax = worstLod;
         });
-        // reveal the backdrop and sweep the splats in, together, now that the scene is ready
+        // Reveal the backdrop and sweep the splats in, together, now that the scene is ready
         app.scene.skybox = skyboxCubemap;
         revealStarted = true;
         reveal.effectTime = 0;
@@ -285,7 +285,7 @@ camera.setLocalPosition(config.cameraPosition[0], config.cameraPosition[1], conf
 camera.setLocalEulerAngles(config.cameraRotation[0], config.cameraRotation[1], config.cameraRotation[2]);
 app.root.addChild(camera);
 
-// focus point straight ahead of the camera's initial orientation — CameraControls derives the
+// Focus point straight ahead of the camera's initial orientation — CameraControls derives the
 // starting yaw/pitch from (position -> focus), reproducing the configured rotation.
 const focusPoint = camera.forward
     .clone()
@@ -298,7 +298,7 @@ Object.assign(cc, {
     sceneSize: radius,
     moveSpeed: config.moveSpeed,
     moveFastSpeed: config.moveFastSpeed,
-    // high damping: the camera accelerates / decelerates much more gradually (floaty glide),
+    // High damping: the camera accelerates / decelerates much more gradually (floaty glide),
     // most noticeable at fast (shift) speed
     moveDamping: 0.997,
     enableOrbit: false,
@@ -370,7 +370,7 @@ const qualityButtons = QUALITY.map(([label, budget]) => {
 document.body.appendChild(qualityBar);
 app.on('destroy', () => qualityBar.remove());
 
-// highlight the button matching the current budget (none, if the slider is on another value)
+// Highlight the button matching the current budget (none, if the slider is on another value)
 const updateQualityButtons = () => {
     const v = data.get('splatBudget');
     qualityButtons.forEach((b, i) => {
@@ -387,7 +387,7 @@ data.on('splatBudget:set', updateQualityButtons);
 // event), when the camera moves, or on a resize / UI change (handled where those occur). This
 // keeps the GPU idle while the huge city sits still, yet still streams in the background.
 
-// render whenever streaming produced new data (or a CPU sort result became ready to apply)
+// Render whenever streaming produced new data (or a CPU sort result became ready to apply)
 app.systems.gsplat.on('frame:request', () => {
     app.renderNextFrame = true;
 });
@@ -398,10 +398,10 @@ const lastCamRot = new Quat();
 
 // --- Stats + on-demand driver ---
 app.on('update', () => {
-    // keep the reveal frozen (all splats hidden) until it is released on frame:ready
+    // Keep the reveal frozen (all splats hidden) until it is released on frame:ready
     if (!revealStarted) reveal.effectTime = -1e6;
 
-    // update HUD stats
+    // Update HUD stats
     data.set('data.stats.gsplats', toM(app.stats.frame.gsplats));
     const bb = app.graphicsDevice.backBufferSize;
     data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
@@ -423,7 +423,7 @@ app.on('update', () => {
             lastCamRot.copy(camera.getRotation());
         }
     } else {
-        // keep the fly camera interactive: render when it has moved or rotated this frame
+        // Keep the fly camera interactive: render when it has moved or rotated this frame
         const pos = camera.getPosition();
         const rot = camera.getRotation();
         if (!pos.equals(lastCamPos) || !rot.equals(lastCamRot)) {

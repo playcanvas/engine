@@ -45,7 +45,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -125,11 +125,11 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 1;
 app.scene.exposure = 1.5;
 
-// enable rotation-based LOD updates and behind-camera penalty
+// Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 2;
 app.scene.gsplat.radialSorting = true;
@@ -137,7 +137,7 @@ app.scene.gsplat.minPixelSize = 1;
 app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
 app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-// set up SH update parameters
+// Set up SH update parameters
 app.scene.gsplat.colorUpdateAngle = 10;
 
 data.on('renderer:set', () => {
@@ -148,7 +148,7 @@ data.on('renderer:set', () => {
     }
 });
 
-// initialize UI settings
+// Initialize UI settings
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('debug', GSPLAT_DEBUG_NONE);
 data.set('splatBudget', platform.mobile ? 1 : 4);

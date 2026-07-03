@@ -48,7 +48,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -142,18 +142,18 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 1;
 app.scene.exposure = 1.5;
 
-// enable rotation-based LOD updates and behind-camera penalty
+// Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 2;
 app.scene.gsplat.radialSorting = true;
 app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
 app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
-// set up SH update parameters
+// Set up SH update parameters
 app.scene.gsplat.colorUpdateAngle = 10;
 
 data.on('renderer:set', () => {
@@ -164,7 +164,7 @@ data.on('renderer:set', () => {
     }
 });
 
-// initialize UI settings
+// Initialize UI settings
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('debug', GSPLAT_DEBUG_NONE);
 data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
@@ -263,7 +263,7 @@ Object.assign(cc, {
 // camera moves. This lets an otherwise-idle app keep loading splats in the background while
 // staying GPU-idle until there's something new to draw.
 
-// render whenever streaming produced new data (or a CPU sort result became ready to apply)
+// Render whenever streaming produced new data (or a CPU sort result became ready to apply)
 app.systems.gsplat.on('frame:request', () => {
     app.renderNextFrame = true;
 });
@@ -273,11 +273,11 @@ const lastCamPos = new Vec3();
 const lastCamRot = new Quat();
 
 app.on('update', () => {
-    // update HUD stats
+    // Update HUD stats
     data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
 
     if (revealPlaying) {
-        // the reveal script disables itself when its animation completes; once that happens,
+        // The reveal script disables itself when its animation completes; once that happens,
         // stop rendering every frame and switch to on-demand rendering.
         if (revealScript && !revealScript.enabled) {
             revealPlaying = false;
@@ -293,7 +293,7 @@ app.on('update', () => {
             lastCamRot.copy(camera.getRotation());
         }
     } else {
-        // keep the fly camera interactive: render when it has moved or rotated this frame
+        // Keep the fly camera interactive: render when it has moved or rotated this frame
         const pos = camera.getPosition();
         const rot = camera.getRotation();
         if (!pos.equals(lastCamPos) || !rot.equals(lastCamRot)) {

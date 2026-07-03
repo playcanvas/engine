@@ -37,7 +37,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -171,7 +171,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(3, 1, 0.5);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script?.create('orbitCamera', {
     attributes: {

@@ -40,7 +40,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -117,7 +117,7 @@ data.set('alphaClipForward', 1 / 255);
 app.scene.gsplat.alphaClip = data.get('alphaClip');
 app.scene.gsplat.alphaClipForward = data.get('alphaClipForward');
 
-// create a splat entity and place it in the world
+// Create a splat entity and place it in the world
 const biker = new Entity();
 biker.addComponent('gsplat', {
     asset: assets.biker,
@@ -160,7 +160,7 @@ if (orbitCam) {
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-// create ground to receive shadows
+// Create ground to receive shadows
 const material = new StandardMaterial();
 material.diffuse = new Color(0.5, 0.5, 0.4);
 material.gloss = 0.2;
@@ -178,7 +178,7 @@ ground.setLocalScale(10, 1, 10);
 ground.setLocalPosition(0, -0.45, 0);
 app.root.addChild(ground);
 
-// shadow casting directional light
+// Shadow casting directional light
 // Note: it does not affect gsplat, as lighting is not supported there currently
 const directionalLight = new Entity();
 directionalLight.addComponent('light', {
@@ -211,13 +211,13 @@ let renderOnDemand = false;
 const lastCamPos = new Vec3();
 const lastCamRot = new Quat();
 
-// the gsplat system asks for a render when it has new data to show — here, the initial load
+// The gsplat system asks for a render when it has new data to show — here, the initial load
 // and sort, or an async CPU sort result becoming ready to apply after a camera move
 app.systems.gsplat.on('frame:request', () => {
     app.renderNextFrame = true;
 });
 
-// once the splat has loaded, sorted and drawn its first complete frame, switch to on-demand.
+// Once the splat has loaded, sorted and drawn its first complete frame, switch to on-demand.
 // This also guarantees the one render needed to register the camera before going idle.
 const onFrameReady = (
     /** @type {any} */ cam,
@@ -235,7 +235,7 @@ const onFrameReady = (
 };
 app.systems.gsplat.on('frame:ready', onFrameReady);
 
-// keep the orbit camera interactive: render when it has moved or rotated this frame
+// Keep the orbit camera interactive: render when it has moved or rotated this frame
 app.on('update', () => {
     if (!renderOnDemand) return;
     const pos = camera.getPosition();

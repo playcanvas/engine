@@ -56,7 +56,7 @@ const gfxOptions = {
     glslangUrl: './assets/wasm/glslang/glslang.js',
     twgslUrl: './assets/wasm/twgsl/twgsl.js',
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -109,11 +109,11 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// add room model
+// Add room model
 const roomEntity = assets.apartment.resource.instantiateRenderEntity({
     castShadows: false
 });
@@ -134,7 +134,7 @@ camera.addComponent('camera', {
 const focusPoint = new Entity();
 focusPoint.setLocalPosition(-80, 80, -20);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {

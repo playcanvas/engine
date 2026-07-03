@@ -69,7 +69,7 @@ WasmModule.setConfig('Ammo', {
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
-// the collision GLB uses Draco-compressed meshes, so the Draco decoder is required
+// The collision GLB uses Draco-compressed meshes, so the Draco decoder is required
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -88,7 +88,7 @@ await Promise.all([
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -395,7 +395,7 @@ characterModel.anim.loadStateGraph({
                     priority: 0,
                     conditions: [{ parameterName: 'dance', predicate: ANIM_EQUAL_TO, value: true }]
                 },
-                // exit dance as soon as the player starts moving again
+                // Exit dance as soon as the player starts moving again
                 {
                     from: 'Dance',
                     to: 'Walk',

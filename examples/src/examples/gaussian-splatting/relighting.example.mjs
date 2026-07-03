@@ -77,7 +77,7 @@ import { data, deviceType, win } from 'examples/context';
  * @import { Layer, LightComponent, MeshInstance, RenderComponent, Texture } from 'playcanvas'
  */
 
-// allow overriding scene url and orientation via hash query params, e.g.
+// Allow overriding scene url and orientation via hash query params, e.g.
 // #/gaussian-splatting/relighting?url=https://example.com/scene/lod-meta.json&orientation=90
 const hashQuery = (win.location.hash || window.location.hash || '').split('?')[1] || '';
 const hashParams = new URLSearchParams(hashQuery);
@@ -101,7 +101,7 @@ await new Promise(resolve => {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -133,7 +133,7 @@ app.setCanvasResolution(RESOLUTION_AUTO);
 data.set('highRes', !!data.get('highRes'));
 const applyResolution = () => {
     const dpr = window.devicePixelRatio || 1;
-    // auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
+    // Auto: treat DPR >= 2 as high-DPI (drops to half); High Res forces native capped at 2
     device.maxPixelRatio = data.get('highRes') ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
 };
 applyResolution();
@@ -150,7 +150,7 @@ app.on('destroy', () => {
 });
 
 // Roman-Parish configuration
-// original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
+// Original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
 const config = {
     name: 'Roman-Parish',
     url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json',
@@ -207,7 +207,7 @@ const LOD_PRESETS = {
 const assets = {
     church: new Asset('gsplat', 'gsplat', { url: config.url }),
 
-    // draco compressed mesh matching the splat scene, with positions and normals
+    // Draco compressed mesh matching the splat scene, with positions and normals
     mesh: new Asset('mesh', 'container', {
         url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/roman-parish-mesh.glb'
     }),
@@ -228,7 +228,7 @@ app.start();
 
 const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
 
-// enable rotation-based LOD updates and behind-camera penalty
+// Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.radialSorting = true;
@@ -265,7 +265,7 @@ data.on('compact:set', () => {
 
 const MAX_PERSPECTIVE_FOV = 140;
 
-// initialize UI settings (must be after observer registration)
+// Initialize UI settings (must be after observer registration)
 const initialSettings = {
     fisheye: 0,
     cameraFov: 75,
@@ -378,7 +378,7 @@ app.root.addChild(light);
 
 const gizmoLayer = Gizmo.createLayer(app);
 
-// rotation gizmo to orient the directional light; disable camera controls while dragging it
+// Rotation gizmo to orient the directional light; disable camera controls while dragging it
 const lightGizmo = new RotateGizmo(camera.camera, gizmoLayer);
 lightGizmo.size = 0.5;
 lightGizmo.attach(light);
@@ -396,7 +396,7 @@ data.on('lightIntensity:set', () => {
     const intensity = data.get('lightIntensity');
     light.light.intensity = intensity;
 
-    // disable the light completely when intensity is 0, including its gizmo
+    // Disable the light completely when intensity is 0, including its gizmo
     light.enabled = intensity > 0;
     if (intensity > 0) {
         lightGizmo.attach(light);
@@ -447,18 +447,18 @@ OMNI_LIGHTS.forEach((def, index) => {
         shadowBias: 0.2,
         normalOffsetBias: 0.05,
 
-        // the lights are static unless moved by their gizmo, so render their shadows once
+        // The lights are static unless moved by their gizmo, so render their shadows once
         shadowUpdateMode: SHADOWUPDATE_THISFRAME
     });
     entity.setLocalPosition(def.position[0], def.position[1], def.position[2]);
     app.root.addChild(entity);
     omniLights.push(entity);
 
-    // translate gizmo to position the light; disable camera controls while dragging it
+    // Translate gizmo to position the light; disable camera controls while dragging it
     const gizmo = new TranslateGizmo(camera.camera, gizmoLayer);
     gizmo.size = 0.5;
 
-    // double the size of the plane-movement squares
+    // Double the size of the plane-movement squares
     gizmo.axisPlaneSize *= 2;
     gizmo.attach(entity);
     gizmo.on(
@@ -467,13 +467,13 @@ OMNI_LIGHTS.forEach((def, index) => {
             if (meshInstance) {
                 cc.enabled = false;
 
-                // select this light for color / radius edits and sync the UI to its values
+                // Select this light for color / radius edits and sync the UI to its values
                 selectedOmni = index;
                 const lightComponent = /** @type {LightComponent} */ (entity.light);
                 data.set('omniColor', [lightComponent.color.r, lightComponent.color.g, lightComponent.color.b]);
                 data.set('omniRadius', lightComponent.range);
 
-                // update shadows every frame while the light is being moved
+                // Update shadows every frame while the light is being moved
                 lightComponent.shadowUpdateMode = SHADOWUPDATE_REALTIME;
             }
         }
@@ -481,7 +481,7 @@ OMNI_LIGHTS.forEach((def, index) => {
     gizmo.on('pointer:up', () => {
         cc.enabled = true;
 
-        // render the shadows once more, then stop updating them
+        // Render the shadows once more, then stop updating them
         entity.light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
     });
     omniGizmos.push(gizmo);
@@ -495,7 +495,7 @@ const applyOmniIntensity = () => {
         entity.light.intensity = OMNI_LIGHTS[index].intensity * multiplier;
         entity.enabled = multiplier > 0;
         if (multiplier > 0) {
-            // refresh the static shadows after re-enabling
+            // Refresh the static shadows after re-enabling
             entity.light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
         }
     });
@@ -515,7 +515,7 @@ data.on('omniRadius:set', () => {
         if (selectedOmni === -1 || selectedOmni === index) {
             entity.light.range = radius;
 
-            // radius affects the shadow projection, refresh the static shadows
+            // Radius affects the shadow projection, refresh the static shadows
             entity.light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
         }
     });
@@ -533,7 +533,7 @@ data.on('omniShadows:set', () => {
     omniLights.forEach(entity => {
         entity.light.castShadows = castShadows;
         if (castShadows) {
-            // render the newly enabled shadows once
+            // Render the newly enabled shadows once
             entity.light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
         }
     });
@@ -573,7 +573,7 @@ meshEntity.findComponents('render').forEach((/** @type {RenderComponent} */ rend
     });
 });
 
-// wrap in a parent so the same orientation as the splat can be applied
+// Wrap in a parent so the same orientation as the splat can be applied
 const meshParent = new Entity('mesh-parent');
 meshParent.addChild(meshEntity);
 meshParent.setLocalEulerAngles(data.get('orientation'), 0, 0);
@@ -645,7 +645,7 @@ const applyEnvironment = async (/** @type {string} */ name) => {
     const url = ENV_PRESETS[name];
     if (!url) {
         app.scene.skybox = null;
-        // restore the default environment used to light the proxy mesh
+        // Restore the default environment used to light the proxy mesh
         app.scene.envAtlas = assets.envatlas.resource;
         return;
     }
@@ -682,7 +682,7 @@ data.on('environment:set', () => {
     });
 });
 
-// apply the initial environment
+// Apply the initial environment
 applyEnvironment(data.get('environment')).catch(err => {
     console.warn('Environment load failed:', err);
 });
@@ -828,7 +828,7 @@ app.on('update', () => {
         app.drawTexture(0.6, -0.6, 0.7, 0.7, relighting.texture);
     }
 
-    // log textures for one frame if requested
+    // Log textures for one frame if requested
     Tracing.set(TRACEID_TEXTURES, logTexturesRequested);
     logTexturesRequested = false;
 

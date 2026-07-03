@@ -57,7 +57,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// physics engine (Ammo) - required for the character controller and the mesh collider
+// Physics engine (Ammo) - required for the character controller and the mesh collider
 WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
@@ -139,10 +139,10 @@ app.start();
 
 app.systems.rigidbody?.gravity.set(0, -10, 0);
 
-// cap the number of rendered splats - lower on mobile to keep performance up
+// Cap the number of rendered splats - lower on mobile to keep performance up
 app.scene.gsplat.splatBudget = (platform.mobile ? 1 : 3) * 1000000;
 
-// use the GPU-sort raster renderer on WebGPU, CPU-sort on WebGL
+// Use the GPU-sort raster renderer on WebGPU, CPU-sort on WebGL
 app.scene.gsplat.renderer = device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
 
 // ------ Content root ------
@@ -184,13 +184,13 @@ app.systems.gsplat.on('frame:ready', onFrameReady);
 // depth prepass used by DOF, but we exclude it from the forward (color) pass via the mesh
 // instance shaderPassMask, so it contributes depth only and is never visible.
 const proxy = assets.proxy.resource.instantiateRenderEntity();
-// the reconstructed mesh is flipped relative to the splat, so flip just the proxy to match
+// The reconstructed mesh is flipped relative to the splat, so flip just the proxy to match
 proxy.setLocalEulerAngles(180, 0, 0);
 content.addChild(proxy);
 
 proxy.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     render.meshInstances.forEach(mi => {
-        // keep the mesh in the depth prepass but exclude it from the forward (color) pass
+        // Keep the mesh in the depth prepass but exclude it from the forward (color) pass
         mi.shaderPassMask &= ~(1 << SHADER_FORWARD);
     });
 });
@@ -230,7 +230,7 @@ camera.setLocalPosition(0, 0.35, 0);
 // sits just above the floor - spawning higher would straddle the ceiling and the physics solver
 // would eject the body out of the world.
 const characterController = new Entity('character-controller');
-// camera sits 0.35 above the controller, so the controller Y is the desired eye Y minus 0.35
+// Camera sits 0.35 above the controller, so the controller Y is the desired eye Y minus 0.35
 characterController.setPosition(0.1, -0.45, 0.06);
 characterController.addChild(camera);
 characterController.addComponent('collision', {
@@ -259,7 +259,7 @@ const fpc = /** @type {any} */ (
         }
     })
 );
-// seed the initial look direction (pitch, yaw) - the controller keeps both in the camera's
+// Seed the initial look direction (pitch, yaw) - the controller keeps both in the camera's
 // local euler angles, matching the values logged from the camera
 fpc._angles.set(-10.2, 35.3, 0);
 app.root.addChild(characterController);
@@ -275,7 +275,7 @@ cameraFrame.vignette.inner = 0.5;
 cameraFrame.vignette.outer = 1.4;
 cameraFrame.vignette.curvature = 0.5;
 cameraFrame.vignette.intensity = 0.4;
-// near blur and high quality are left on; focus distance / range are driven by autofocus below
+// Near blur and high quality are left on; focus distance / range are driven by autofocus below
 cameraFrame.dof.nearBlur = true;
 cameraFrame.dof.highQuality = true;
 cameraFrame.update();
@@ -286,12 +286,12 @@ const applySettings = () => {
     cameraFrame.dof.blurRadius = data.get('data.dof.blurRadius');
     cameraFrame.dof.blurRings = data.get('data.dof.blurRings');
     cameraFrame.dof.blurRingPoints = data.get('data.dof.blurRingPoints');
-    // enable sharpening together with DOF (both kick in on the first ready frame)
+    // Enable sharpening together with DOF (both kick in on the first ready frame)
     cameraFrame.rendering.sharpness = dofEnabled ? 1 : 0;
     cameraFrame.update();
 };
 
-// apply UI changes
+// Apply UI changes
 data.on('*:set', () => {
     applySettings();
 });
@@ -311,12 +311,12 @@ const rayStart = new Vec3();
 const rayDir = new Vec3();
 const rayEnd = new Vec3();
 
-// smoothed focus distance, eased toward the ray hit for a cinematic focus pull (~0.5s settle)
+// Smoothed focus distance, eased toward the ray hit for a cinematic focus pull (~0.5s settle)
 let smoothedFocus = 5;
 let targetFocus = 5;
 const FOCUS_TAU = 0.15;
 
-// focus range driven from the focus distance: linear through (0.5, 0.15) and (10, 2), so it is
+// Focus range driven from the focus distance: linear through (0.5, 0.15) and (10, 2), so it is
 // a tight macro-like range up close and widens with distance
 const focusRangeForDistance = d => {
     const range = 0.15 + ((d - 0.5) * (2 - 0.15)) / (10 - 0.5);
@@ -330,7 +330,7 @@ app.on('update', dt => {
     }
     const camPos = camera.getPosition();
     rayDir.copy(camera.forward);
-    // start a little ahead of the camera so the ray does not hit the player's own capsule
+    // Start a little ahead of the camera so the ray does not hit the player's own capsule
     rayStart.copy(rayDir).mulScalar(0.3).add(camPos);
     rayEnd.copy(rayDir).mulScalar(1000).add(camPos);
     const hit = app.systems.rigidbody.raycastFirst(rayStart, rayEnd);
@@ -341,14 +341,14 @@ app.on('update', dt => {
         focusReticle.style.display = 'none';
     }
 
-    // ease the focus distance toward the target (frame-rate independent), and derive the range
+    // Ease the focus distance toward the target (frame-rate independent), and derive the range
     smoothedFocus += (targetFocus - smoothedFocus) * (1 - Math.exp(-dt / FOCUS_TAU));
     cameraFrame.dof.focusDistance = smoothedFocus;
     cameraFrame.dof.focusRange = focusRangeForDistance(smoothedFocus);
     cameraFrame.update();
 });
 
-// set initial values
+// Set initial values
 data.set('data', {
     dof: {
         // enabled once the first (coarse) splat frame is ready - see the frame:ready handler

@@ -44,7 +44,7 @@ window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -102,13 +102,13 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 
-// camera placement
+// Camera placement
 const ORBIT_PIVOT = new Vec3(0, 0.8, 0);
 const ORBIT_DISTANCE = 5;
 const ORBIT_INITIAL_YAW = 28;
 const ORBIT_INITIAL_PITCH = -8;
 
-// get the instance of the gallery and set up with render component
+// Get the instance of the gallery and set up with render component
 const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
 app.root.addChild(galleryEntity);
 

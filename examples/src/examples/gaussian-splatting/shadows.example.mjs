@@ -51,7 +51,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };
 
@@ -252,7 +252,7 @@ app.on('update', (/** @type {number} */ dt) => {
     currentTime += dt;
     sceneMat.setParameter('uTime', currentTime);
 
-    // re-dirty the scene gsplat material each frame so the per-frame uTime propagates to the
+    // Re-dirty the scene gsplat material each frame so the per-frame uTime propagates to the
     // renderer's material copy (the quad renderer only re-copies template params when dirty)
     sceneMat.update();
 });
