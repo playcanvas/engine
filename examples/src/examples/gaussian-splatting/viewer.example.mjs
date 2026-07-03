@@ -135,7 +135,7 @@ const assets = {
     hdri: new Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -157,7 +157,7 @@ app.scene.gsplat.minContribution = 2;
 const calcEntityAABB = (bbox, entity) => {
     bbox.center.set(0, 0, 0);
     bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach((render) => {
+    entity.findComponents('render').forEach(render => {
         render.meshInstances.forEach((/** @type {MeshInstance} */ mi) => {
             bbox.add(mi.aabb);
         });
@@ -191,11 +191,7 @@ app.root.addChild(light);
 
 // Setup CameraFrame
 const cameraFrame = new CameraFrame(app, camera.camera);
-cameraFrame.rendering.renderFormats = [
-    PIXELFORMAT_RGBA16F,
-    PIXELFORMAT_RGBA32F,
-    PIXELFORMAT_111110F
-];
+cameraFrame.rendering.renderFormats = [PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_111110F];
 cameraFrame.rendering.samples = 1;
 cameraFrame.grading.enabled = true;
 
@@ -310,18 +306,18 @@ data.on('*:set', (/** @type {string} */ path) => {
 });
 
 // Setup drag and drop handlers
-canvas.addEventListener('dragover', (e) => {
+canvas.addEventListener('dragover', e => {
     e.preventDefault();
 });
 
-canvas.addEventListener('drop', async (e) => {
+canvas.addEventListener('drop', async e => {
     e.preventDefault();
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
 
     // Detect unpacked SOG: a meta.json file was dropped (with any number of sibling webp files).
-    const metaFile = files.find((f) => f.name.toLowerCase() === 'meta.json');
+    const metaFile = files.find(f => f.name.toLowerCase() === 'meta.json');
     const isUnpackedSog = !!metaFile;
 
     // Otherwise expect a single gsplat/glb file
@@ -355,18 +351,24 @@ canvas.addEventListener('drop', async (e) => {
         const metaBlobUrl = URL.createObjectURL(metaFile);
 
         // Create gsplat asset manually so we can pass the mapUrl option
-        const asset = new Asset(metaFile.name, 'gsplat', {
-            url: metaBlobUrl,
-            filename: metaFile.name
-        }, null, {
-            mapUrl: (filename) => blobMap.get(filename)
-        });
+        const asset = new Asset(
+            metaFile.name,
+            'gsplat',
+            {
+                url: metaBlobUrl,
+                filename: metaFile.name
+            },
+            null,
+            {
+                mapUrl: filename => blobMap.get(filename)
+            }
+        );
 
         app.assets.add(asset);
 
         await new Promise((resolve, reject) => {
             asset.once('load', () => resolve(asset));
-            asset.once('error', (err) => reject(err));
+            asset.once('error', err => reject(err));
             app.assets.load(asset);
         });
 
@@ -380,7 +382,7 @@ canvas.addEventListener('drop', async (e) => {
 
         splatEntity = entity;
 
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             requestAnimationFrame(resolve);
         });
 
@@ -421,7 +423,7 @@ canvas.addEventListener('drop', async (e) => {
         data.set('data.orientation', orientation);
 
         // Wait a frame for customAabb to be available
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             requestAnimationFrame(resolve);
         });
 
@@ -468,11 +470,7 @@ canvas.addEventListener('drop', async (e) => {
 
     // Update camera for the loaded asset
     camera.camera.farClip = size * 10;
-    camera.setLocalPosition(
-        center.x,
-        center.y + size * 0.3,
-        center.z + cameraDistance
-    );
+    camera.setLocalPosition(center.x, center.y + size * 0.3, center.z + cameraDistance);
 
     // Add orbit camera script
     camera.addComponent('script');

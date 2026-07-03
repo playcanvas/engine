@@ -54,7 +54,7 @@ WasmModule.setConfig('Ammo', {
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     WasmModule.getInstance('Ammo', () => resolve(true));
 });
 
@@ -104,7 +104,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -227,7 +227,7 @@ const createJoystickUI = (side, baseSize = 100, stickSize = 60) => {
     /**
      * @param {HTMLElement} el - The element to hide.
      */
-    const hide = (el) => {
+    const hide = el => {
         el.style.display = 'none';
     };
 

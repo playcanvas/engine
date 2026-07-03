@@ -78,7 +78,7 @@ const assets = {
     orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -168,14 +168,14 @@ const dissolveScript = hotel.script?.create(GsplatDissolveShaderEffect);
 // Wire up parameter sliders - each updates the script live
 /** @type {Record<string, (value: any) => void>} */
 const paramHandlers = {
-    duration: (v) => dissolveScript && (dissolveScript.duration = v),
-    noiseFrequency: (v) => dissolveScript && (dissolveScript.noiseFrequency = v),
-    edgeWidth: (v) => dissolveScript && (dissolveScript.edgeWidth = v),
-    liftDistance: (v) => dissolveScript && (dissolveScript.liftDistance = v),
-    waveAmplitude: (v) => dissolveScript && (dissolveScript.waveAmplitude = v),
-    waveFrequency: (v) => dissolveScript && (dissolveScript.waveFrequency = v)
+    duration: v => dissolveScript && (dissolveScript.duration = v),
+    noiseFrequency: v => dissolveScript && (dissolveScript.noiseFrequency = v),
+    edgeWidth: v => dissolveScript && (dissolveScript.edgeWidth = v),
+    liftDistance: v => dissolveScript && (dissolveScript.liftDistance = v),
+    waveAmplitude: v => dissolveScript && (dissolveScript.waveAmplitude = v),
+    waveFrequency: v => dissolveScript && (dissolveScript.waveFrequency = v)
 };
-Object.keys(paramHandlers).forEach((key) => {
+Object.keys(paramHandlers).forEach(key => {
     data.on(`${key}:set`, () => paramHandlers[key](data.get(key)));
 });
 
@@ -222,7 +222,7 @@ const applyAabb = () => {
 /**
  * @param {any} config - The style configuration object
  */
-const applyStyleConfig = (config) => {
+const applyStyleConfig = config => {
     if (!dissolveScript) return;
 
     // Not exposed in controls - set directly
@@ -344,7 +344,7 @@ if (app.touch) {
 }
 
 // Auto-rotate update
-app.on('update', (dt) => {
+app.on('update', dt => {
     // Re-enable auto-rotate after delay
     if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
         autoRotateEnabled = true;

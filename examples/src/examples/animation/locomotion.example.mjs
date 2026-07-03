@@ -46,7 +46,7 @@ WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -113,7 +113,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 

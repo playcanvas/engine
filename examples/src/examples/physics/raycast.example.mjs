@@ -41,7 +41,7 @@ WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -85,7 +85,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -178,7 +178,7 @@ const temp = new Vec3();
 // Set an update function on the application's update event
 let time = 0;
 let y = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt;
 
     // Reset all shapes to green
@@ -210,7 +210,7 @@ app.on('update', (dt) => {
     app.drawLine(start, end, white);
 
     const results = app.systems.rigidbody.raycastAll(start, end);
-    results.forEach((result) => {
+    results.forEach(result => {
         result.entity.render.material = red;
 
         // Render the normal on the surface from the hit point

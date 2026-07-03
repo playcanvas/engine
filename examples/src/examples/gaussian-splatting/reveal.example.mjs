@@ -78,7 +78,7 @@ const assets = {
     orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -169,7 +169,7 @@ const createGridScript = () => {
  * Function to create and start an effect based on its name
  * @param {string} effectName - Name of the effect to create
  */
-const createEffect = (effectName) => {
+const createEffect = effectName => {
     // Destroy any existing reveal scripts
     hotel.script?.destroy(GsplatRevealRadial.scriptName);
     hotel.script?.destroy(GsplatRevealRain.scriptName);
@@ -263,7 +263,7 @@ if (app.touch) {
 }
 
 // Auto-rotate update
-app.on('update', (dt) => {
+app.on('update', dt => {
     // Re-enable auto-rotate after delay
     if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
         autoRotateEnabled = true;

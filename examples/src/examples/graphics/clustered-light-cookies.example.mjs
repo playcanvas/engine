@@ -51,7 +51,7 @@ WasmModule.setConfig('DracoDecoderModule', {
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
@@ -94,7 +94,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -137,7 +137,7 @@ const proceduralCookie = new Texture(app.graphicsDevice, {
 
 // fill the procedural cookie with an animated radial pattern - 'phase' shifts each regeneration
 // so the content varies but stays recognizable. unlock() uploads it, bumping its uploadVersion.
-const updateProceduralCookie = (phase) => {
+const updateProceduralCookie = phase => {
     const pixels = proceduralCookie.lock();
     const half = cookieSize * 0.5;
     for (let y = 0; y < cookieSize; y++) {

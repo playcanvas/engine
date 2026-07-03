@@ -86,7 +86,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -135,7 +135,7 @@ cameraEntity.lookAt(0, 0, 1);
 app.root.addChild(cameraEntity);
 
 // apply hdri texture
-const applyHdri = (source) => {
+const applyHdri = source => {
     // convert it to high resolution cubemap for the skybox
     // this is optional in case you want a really high resolution skybox
     const skybox = EnvLighting.generateSkyboxCubemap(source);
@@ -234,7 +234,7 @@ cameraFrame.dof.blurRingPoints = 5;
 cameraFrame.dof.highQuality = true;
 cameraFrame.update();
 
-app.on('update', (dt) => {
+app.on('update', dt => {
     // toggle DOF
     cameraFrame.dof.enabled = data.get('data.dof');
 

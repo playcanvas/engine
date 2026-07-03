@@ -60,7 +60,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -88,7 +88,7 @@ const mouse = new Mouse(document.body);
 let x = 0;
 const y = 0;
 
-mouse.on('mousemove', (event) => {
+mouse.on('mousemove', event => {
     if (event.buttons[MOUSEBUTTON_LEFT]) {
         x += event.dx;
 

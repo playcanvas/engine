@@ -70,7 +70,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -128,7 +128,7 @@ app.root.addChild(omniLight);
 
 const orbitRadius = 2;
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt * 0.5;
     omniLight.setPosition(Math.cos(time) * orbitRadius, Math.sin(time) * orbitRadius, 0);
 });

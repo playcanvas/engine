@@ -54,7 +54,7 @@ WasmModule.setConfig('DracoDecoderModule', {
     fallbackUrl: './assets/wasm/draco/draco.js'
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
@@ -114,7 +114,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -346,7 +346,7 @@ let resizeControlPanel = true;
 let time = 0;
 let timeDiff = 0;
 let index = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     if (time === 0) {
         // @ts-ignore engine-tsd
         camera.script.orbitCamera.distance = 25;

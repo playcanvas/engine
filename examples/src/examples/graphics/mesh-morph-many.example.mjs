@@ -72,7 +72,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -113,7 +113,7 @@ camera.lookAt(Vec3.ZERO);
 
 // update function called once per frame
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt;
 
     // modify weights of all morph targets along sin curve

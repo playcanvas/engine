@@ -88,7 +88,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -110,7 +110,7 @@ app.root.addChild(house);
 // change its materials to lightmapping
 /** @type {Array<RenderComponent>} */
 const renders = house.findComponents('render');
-renders.forEach((render) => {
+renders.forEach(render => {
     render.castShadows = true;
     render.castShadowsLightmap = true;
     render.lightmapped = true;
@@ -279,7 +279,7 @@ data.set('data', {
 });
 
 // Set an update function on the app's update event
-app.on('update', (_dt) => {
+app.on('update', _dt => {
     // bake lightmaps when HUD properties change
     if (needBake) {
         needBake = false;

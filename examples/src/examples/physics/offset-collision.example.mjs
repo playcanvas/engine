@@ -39,7 +39,7 @@ WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -96,7 +96,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -259,7 +259,7 @@ let timer = 0;
 let count = 40;
 
 // Set an update function on the application's update event
-app.on('update', (dt) => {
+app.on('update', dt => {
     // create a falling box every 0.2 seconds
     if (count > 0) {
         timer -= dt;

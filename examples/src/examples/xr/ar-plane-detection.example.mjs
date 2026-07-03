@@ -46,7 +46,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = (msg) => {
+const message = msg => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -106,7 +106,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -133,7 +133,7 @@ if (app.xr.supported) {
         if (app.xr.isAvailable(XRTYPE_AR)) {
             camera.camera.startXr(XRTYPE_AR, XRSPACE_LOCALFLOOR, {
                 planeDetection: true,
-                callback: (err) => {
+                callback: err => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -147,7 +147,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', (evt) => {
+        app.touch.on('touchend', evt => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -162,7 +162,7 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', (evt) => {
+    app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -177,7 +177,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on(`available:${XRTYPE_AR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_AR}`, available => {
         if (available) {
             if (app.xr.planeDetection.supported) {
                 message('Touch screen to start AR session and look at the floor or walls');
@@ -258,7 +258,7 @@ if (app.xr.supported) {
 
     const entities = new Map();
 
-    app.xr.planeDetection.on('add', (xrPlane) => {
+    app.xr.planeDetection.on('add', xrPlane => {
         // entity
         const entity = new Entity();
         entity.addComponent('render');
@@ -294,7 +294,7 @@ if (app.xr.supported) {
     });
 
     // when XrPlane is removed, destroy related entity
-    app.xr.planeDetection.on('remove', (xrPlane) => {
+    app.xr.planeDetection.on('remove', xrPlane => {
         const entity = entities.get(xrPlane);
         if (entity) {
             entity.destroy();

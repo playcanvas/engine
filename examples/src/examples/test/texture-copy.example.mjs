@@ -202,7 +202,7 @@ function equalPixels(a, b) {
     return true;
 }
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -333,9 +333,9 @@ const YELLOW = [230, 220, 40, 255];
 }
 
 // summary
-const passedCount = results.filter((r) => r.passed).length;
+const passedCount = results.filter(r => r.passed).length;
 const allPassed = passedCount === results.length;
-const lines = results.map((r) => `${r.passed ? '✓' : '✗'} ${r.label}`);
+const lines = results.map(r => `${r.passed ? '✓' : '✗'} ${r.label}`);
 resultOverlay.textContent = `${allPassed ? 'ALL TESTS PASSED' : 'TESTS FAILED'} (${passedCount}/${results.length})\n${lines.join('\n')}`;
 resultOverlay.style.color = allPassed ? '#7CFC7C' : '#FF6B6B';
 console.log(`Texture.copy: ${passedCount}/${results.length} passed on ${device.deviceType.toUpperCase()}`);

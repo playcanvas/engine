@@ -70,7 +70,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -122,8 +122,8 @@ app.root.addChild(entity);
  */
 /** @type {Array<RenderComponent>} */
 const renders = entity.findComponents('render');
-renders.forEach((render) => {
-    render.meshInstances.forEach((meshInstance) => {
+renders.forEach(render => {
+    render.meshInstances.forEach(meshInstance => {
         meshInstance.material = material;
     });
 });
@@ -134,6 +134,6 @@ material.setParameter('uLightPos', lightPosArray);
 material.update();
 
 // rotate the statue
-app.on('update', (dt) => {
+app.on('update', dt => {
     entity.rotate(0, 60 * dt, 0);
 });

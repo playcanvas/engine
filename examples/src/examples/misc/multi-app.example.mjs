@@ -93,7 +93,7 @@ async function createApp(deviceType) {
         window.removeEventListener('resize', resize);
     });
 
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
         new AssetListLoader(Object.values(assets), app.assets).load(resolve);
     });
 

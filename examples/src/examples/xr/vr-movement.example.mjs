@@ -33,7 +33,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = (msg) => {
+const message = msg => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -115,7 +115,7 @@ const createCube = (x, y, z) => {
 
 const controllers = [];
 // create controller box
-const createController = (inputSource) => {
+const createController = inputSource => {
     const entity = new Entity();
     entity.addComponent('render', {
         type: 'box'
@@ -146,7 +146,7 @@ if (app.xr.supported) {
     const activate = () => {
         if (app.xr.isAvailable(XRTYPE_VR)) {
             c.camera.startXr(XRTYPE_VR, XRSPACE_LOCAL, {
-                callback: (err) => {
+                callback: err => {
                     if (err) message(`Immersive VR failed to start: ${err.message}`);
                 }
             });
@@ -160,7 +160,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', (evt) => {
+        app.touch.on('touchend', evt => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -175,14 +175,14 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', (evt) => {
+    app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
     // when new input source added
-    app.xr.input.on('add', (inputSource) => {
+    app.xr.input.on('add', inputSource => {
         createController(inputSource);
     });
 
@@ -201,7 +201,7 @@ if (app.xr.supported) {
     const lineColor = new Color(1, 1, 1);
 
     // update position and rotation for each controller
-    app.on('update', (dt) => {
+    app.on('update', dt => {
         let i, inputSource;
 
         // first we update movement

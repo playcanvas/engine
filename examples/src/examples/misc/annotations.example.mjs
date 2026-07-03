@@ -95,14 +95,14 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
 // Setup HDR environment
-const applyHdri = (source) => {
+const applyHdri = source => {
     const skybox = EnvLighting.generateSkyboxCubemap(source);
     app.scene.skybox = skybox;
 

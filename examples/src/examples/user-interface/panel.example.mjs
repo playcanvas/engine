@@ -80,7 +80,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -141,7 +141,7 @@ atlas.texture = texture;
  * @param {string} frame - Frame key for Sprite.
  * @returns {Asset} The asset.
  */
-const createSpriteAsset = (frame) => {
+const createSpriteAsset = frame => {
     const sprite = new Sprite(app.graphicsDevice, {
         atlas: atlas,
         frameKeys: [frame],
@@ -164,7 +164,7 @@ let scaleYDirection = 1;
 const scaleXSpeed = 3;
 const scaleYSpeed = 1.5;
 
-app.on('update', (_dt) => {
+app.on('update', _dt => {
     const currentWidth = panel.element.width;
     const currentHeight = panel.element.height;
 

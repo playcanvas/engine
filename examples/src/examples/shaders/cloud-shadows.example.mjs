@@ -84,7 +84,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -184,7 +184,7 @@ let time = 0;
 let offsetX = 0;
 let offsetY = 0;
 
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt;
 
     const speed = data.get('data.speed');

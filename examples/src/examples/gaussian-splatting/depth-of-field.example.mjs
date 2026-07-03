@@ -72,10 +72,10 @@ WasmModule.setConfig('DracoDecoderModule', {
 });
 
 await Promise.all([
-    new Promise((resolve) => {
+    new Promise(resolve => {
         WasmModule.getInstance('Ammo', () => resolve(true));
     }),
-    new Promise((resolve) => {
+    new Promise(resolve => {
         WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
@@ -131,7 +131,7 @@ const assets = {
     collision: new Asset('collision', 'container', { url: './assets/models/cave-collision.glb' })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -189,7 +189,7 @@ proxy.setLocalEulerAngles(180, 0, 0);
 content.addChild(proxy);
 
 proxy.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
-    render.meshInstances.forEach((mi) => {
+    render.meshInstances.forEach(mi => {
         // keep the mesh in the depth prepass but exclude it from the forward (color) pass
         mi.shaderPassMask &= ~(1 << SHADER_FORWARD);
     });
@@ -318,12 +318,12 @@ const FOCUS_TAU = 0.15;
 
 // focus range driven from the focus distance: linear through (0.5, 0.15) and (10, 2), so it is
 // a tight macro-like range up close and widens with distance
-const focusRangeForDistance = (d) => {
+const focusRangeForDistance = d => {
     const range = 0.15 + ((d - 0.5) * (2 - 0.15)) / (10 - 0.5);
     return Math.max(0.05, range);
 };
 
-app.on('update', (dt) => {
+app.on('update', dt => {
     if (!data.get('data.dof.enabled')) {
         focusReticle.style.display = 'none';
         return;

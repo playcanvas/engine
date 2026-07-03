@@ -507,7 +507,7 @@ window.addEventListener('resize', () => {
     window.clearTimeout(uiResizeTimer);
     uiResizeTimer = window.setTimeout(() => {
         updateGpuInfo();
-        if (!storedResults.some((r) => r !== null)) return;
+        if (!storedResults.some(r => r !== null)) return;
         refreshChartAndDownload();
     }, 200);
 });
@@ -615,7 +615,7 @@ function getGpuInfo(device) {
  * @returns {Promise<{avgGpu: number, effectiveFps: number, avgSplats: number, avgPassTimings: Map<string, number>}>} Results.
  */
 function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         const gpuTimes = [];
         const splatCounts = [];
         /** @type {Map<string, number[]>} */
@@ -682,7 +682,7 @@ function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
  * @returns {Promise<void>}
  */
 function waitForReady(gsplatSystem, app, statusPrefix, timeoutMs = 10000) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         let resolved = false;
         let sawNotReady = false;
 
@@ -794,7 +794,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     });
 
     setStatus(`${config.label}  Loading assets...`);
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
         new AssetListLoader([bicycleAsset, logoAsset, churchAsset], app.assets).load(resolve);
     });
 
@@ -936,7 +936,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     canvas.remove();
 
     // allow GC to reclaim GPU/asset memory before the next run (helps on mobile)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
         setTimeout(resolve, 1000);
     });
 }
@@ -987,7 +987,7 @@ function refreshChartAndDownload() {
     fpsChartWrap.innerHTML = '';
     chartActionsRow.innerHTML = '';
 
-    const anyResults = storedResults.some((r) => r !== null);
+    const anyResults = storedResults.some(r => r !== null);
     if (!anyResults) return;
 
     const chartGpu = document.createElement('canvas');
@@ -1054,7 +1054,7 @@ function refreshChartAndDownload() {
  */
 function buildDownloadText() {
     const COL_W = 10;
-    const budgetHeader = BUDGETS.map((b) => `${b}M`.padStart(COL_W)).join('');
+    const budgetHeader = BUDGETS.map(b => `${b}M`.padStart(COL_W)).join('');
     const lineW = 24 + BUDGETS.length * COL_W;
 
     let text = 'GSplat Benchmark Results\n';
@@ -1102,8 +1102,8 @@ function buildDownloadText() {
         text += `\n${splatLine}\n`;
     }
 
-    const fmtGpu = (g) => (g >= 0 ? g.toFixed(2) : 'N/A');
-    const fmtEff = (f) => (f > 0 ? f.toFixed(1) : '\u2014');
+    const fmtGpu = g => (g >= 0 ? g.toFixed(2) : 'N/A');
+    const fmtEff = f => (f > 0 ? f.toFixed(1) : '\u2014');
 
     text += '\nGPU Frame Time (ms)\n';
     text += `${'Renderer'.padEnd(22)} ${budgetHeader}\n`;
@@ -1167,7 +1167,7 @@ function buildDownloadText() {
     }
 
     text += `\nConfig: ${WARMUP_FRAMES} warmup + ${MEASURE_FRAMES} measured frames per budget level\n`;
-    text += `Budgets: ${BUDGETS.map((b) => `${b}M`).join(', ')}\n`;
+    text += `Budgets: ${BUDGETS.map(b => `${b}M`).join(', ')}\n`;
     text += `UserAgent: ${navigator.userAgent}\n`;
     text += `Date: ${new Date().toISOString()}\n`;
     return text;
@@ -1221,7 +1221,7 @@ async function pageToPngBlob() {
     clone.style.minHeight = `${H}px`;
     clone.style.overflow = 'visible';
 
-    clone.querySelectorAll('table').forEach((t) => {
+    clone.querySelectorAll('table').forEach(t => {
         t.style.width = 'max-content';
         t.style.maxWidth = 'none';
     });
@@ -1271,7 +1271,7 @@ async function pageToPngBlob() {
      * @param {number} i - Index into data (rgba byte index of R).
      * @returns {boolean} True if pixel is not uniform background.
      */
-    const isContent = (i) => {
+    const isContent = i => {
         if (data[i + 3] < 255) {
             return true;
         }
@@ -1311,7 +1311,7 @@ async function pageToPngBlob() {
     out.width = x1 - x0 + 1;
     out.height = y1 - y0 + 1;
     /** @type {CanvasRenderingContext2D} */ (out.getContext('2d')).drawImage(canvas, -x0, -y0);
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         out.toBlob(resolve, 'image/png');
     });
 }
@@ -1362,7 +1362,7 @@ function drawBudgetChart(chartCanvas, mode) {
      * @param {number} millions - Splat budget in millions.
      * @returns {number} Canvas x in plot area.
      */
-    const budgetToX = (millions) => {
+    const budgetToX = millions => {
         if (chartSpanM <= 0) {
             return PAD.left + plotW * 0.5;
         }
@@ -1566,7 +1566,7 @@ async function runRow(budgetIndex) {
     setButtonsEnabled(false);
     setTestingMode(true);
 
-    const indices = BUDGETS.map((_, i) => i).filter((i) => i <= budgetIndex);
+    const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
     for (let c = 0; c < RENDERERS.length; c++) {
         await runTests(c, indices); // eslint-disable-line no-await-in-loop
     }
@@ -1607,7 +1607,7 @@ async function runCell(colIndex, budgetIndex) {
     setButtonsEnabled(false);
     setTestingMode(true);
 
-    const indices = BUDGETS.map((_, i) => i).filter((i) => i <= budgetIndex);
+    const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
     await runTests(colIndex, indices);
 
     setTestingMode(false);

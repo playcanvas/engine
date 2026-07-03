@@ -73,7 +73,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -158,7 +158,7 @@ createObject(0, 0, 1, materialAO, 0.7);
 
 // update things each frame
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     // rotate camera around the objects
     time += dt;
     camera.setLocalPosition(4 * Math.sin(time * 0.5), 0, 4 * Math.cos(time * 0.5));

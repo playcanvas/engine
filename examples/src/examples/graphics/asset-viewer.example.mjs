@@ -114,7 +114,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -254,7 +254,7 @@ app.scene.skyboxIntensity = 1.5;
 
 window.addEventListener(
     'touchstart',
-    (event) => {
+    event => {
         const touch = event.touches[0];
         const entity = data.get('selection.focusEntity');
         let newEntity = entity;

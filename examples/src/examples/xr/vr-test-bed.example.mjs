@@ -50,7 +50,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = (msg) => {
+const message = msg => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -115,7 +115,7 @@ const assets = {
     font: new Asset('font', 'font', { url: './assets/fonts/roboto-extralight.json' })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -195,7 +195,7 @@ refreshFovLabel(); // seed the label so it shows "0.00" before the XR session st
 // applies it to the live XR layer, and refreshes the label. + / - / toggle all funnel here.
 // When the runtime reports fixedFoveation as unsupported, fov is force-clamped to 0 so the
 // button still flashes (click feedback) but the value visibly never moves off 0.00.
-const setFov = (newFov) => {
+const setFov = newFov => {
     const requested = math.clamp(newFov, 0, 1);
     fov = fovSupported ? requested : 0;
     if (fov > 0) lastNonZeroFov = fov;
@@ -244,7 +244,7 @@ if (app.xr.supported) {
     const activate = () => {
         if (app.xr.isAvailable(XRTYPE_VR)) {
             c.camera.startXr(XRTYPE_VR, XRSPACE_LOCALFLOOR, {
-                callback: (err) => {
+                callback: err => {
                     if (err) message(`WebXR Immersive VR failed to start: ${err.message}`);
                 }
             });
@@ -258,7 +258,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', (evt) => {
+        app.touch.on('touchend', evt => {
             if (!app.xr.active) {
                 activate();
             } else {
@@ -270,7 +270,7 @@ if (app.xr.supported) {
         });
     }
 
-    app.keyboard.on('keydown', (evt) => {
+    app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
@@ -282,7 +282,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive VR session has ended');
     });
-    app.xr.on(`available:${XRTYPE_VR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_VR}`, available => {
         message(`Immersive VR is ${available ? 'available' : 'unavailable'}`);
     });
 

@@ -147,7 +147,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -186,7 +186,7 @@ const textureArray = new Texture(app.graphicsDevice, textureArrayOptions);
 
 // generate mipmaps for visualization
 const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);
-const levels = mipmaps.map((data) => {
+const levels = mipmaps.map(data => {
     const textures = [];
     for (let i = 0; i < textureArrayOptions.arrayLength; i++) {
         textures.push(data);
@@ -285,7 +285,7 @@ app.root.addChild(camera);
 // Set an update function on the app's update event
 let angle = 0;
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt;
     angle = (angle + dt * 10) % 360;
 

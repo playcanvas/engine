@@ -209,7 +209,7 @@ const assets = {
     )
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -428,7 +428,7 @@ const applyEnvironment = async (/** @type {string} */ name) => {
 };
 
 data.on('environment:set', () => {
-    applyEnvironment(data.get('environment')).catch((err) => {
+    applyEnvironment(data.get('environment')).catch(err => {
         console.warn('Environment load failed:', err);
     });
 });
@@ -562,7 +562,7 @@ data.on('orientation:set', () => {
 
 data.on('url:set', () => {
     const url = data.get('url');
-    loadGsplat(url || null).catch((err) => {
+    loadGsplat(url || null).catch(err => {
         console.warn('Loading failed, reverting to default:', err);
         loadGsplat(null);
     });

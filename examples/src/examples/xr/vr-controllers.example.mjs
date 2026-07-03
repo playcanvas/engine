@@ -32,7 +32,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = (msg) => {
+const message = msg => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -83,7 +83,7 @@ const assets = {
     glb: new Asset('glb', 'container', { url: './assets/models/vr-controller.glb' })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -124,7 +124,7 @@ const createCube = (x, y, z) => {
 
 const controllers = [];
 // create controller model
-const createController = (inputSource) => {
+const createController = inputSource => {
     const entity = new Entity();
     entity.addComponent('model', {
         type: 'asset',
@@ -156,7 +156,7 @@ if (app.xr.supported) {
     const activate = () => {
         if (app.xr.isAvailable(XRTYPE_VR)) {
             c.camera.startXr(XRTYPE_VR, XRSPACE_LOCAL, {
-                callback: (err) => {
+                callback: err => {
                     if (err) message(`Immersive VR failed to start: ${err.message}`);
                 }
             });
@@ -170,7 +170,7 @@ if (app.xr.supported) {
     });
 
     if (app.touch) {
-        app.touch.on('touchend', (evt) => {
+        app.touch.on('touchend', evt => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -185,14 +185,14 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', (evt) => {
+    app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
     // when new input source added
-    app.xr.input.on('add', (inputSource) => {
+    app.xr.input.on('add', inputSource => {
         message('Controller Added');
         createController(inputSource);
     });

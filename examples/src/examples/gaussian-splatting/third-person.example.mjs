@@ -77,10 +77,10 @@ WasmModule.setConfig('DracoDecoderModule', {
 });
 
 await Promise.all([
-    new Promise((resolve) => {
+    new Promise(resolve => {
         WasmModule.getInstance('Ammo', () => resolve(true));
     }),
-    new Promise((resolve) => {
+    new Promise(resolve => {
         WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
     })
 ]);
@@ -154,7 +154,7 @@ const assets = {
     )
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 

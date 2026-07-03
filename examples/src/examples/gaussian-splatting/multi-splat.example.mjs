@@ -87,7 +87,7 @@ const assets = {
     orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -173,7 +173,7 @@ const sceneMat = app.scene.gsplat.material;
 /**
  * @param {boolean} enabled - Whether to apply the shared gsplatModifyVS chunk.
  */
-const applyCustomShader = (enabled) => {
+const applyCustomShader = enabled => {
     if (enabled) {
         sceneMat.getShaderChunks('glsl').set('gsplatModifyVS', glslVs);
         sceneMat.getShaderChunks('wgsl').set('gsplatModifyVS', wgslVs);
@@ -191,7 +191,7 @@ applyCustomShader(false);
 data.set('shader', false);
 
 let currentTime = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     currentTime += dt;
 
     sceneMat.setParameter('uTime', currentTime);

@@ -87,7 +87,7 @@ const assets = {
     })
 };
 
-await new Promise((resolve) => {
+await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
@@ -156,8 +156,8 @@ app.root.addChild(weatherEntity);
 const PSIZE_LO = 0.0001,
     PSIZE_HI = 0.04,
     PSIZE_RANGE = PSIZE_HI - PSIZE_LO;
-const sizeToSlider = (v) => (v - PSIZE_LO) / PSIZE_RANGE;
-const sliderToSize = (v) => PSIZE_LO + v * PSIZE_RANGE;
+const sizeToSlider = v => (v - PSIZE_LO) / PSIZE_RANGE;
+const sliderToSize = v => PSIZE_LO + v * PSIZE_RANGE;
 
 const presets = {
     none: {
@@ -198,7 +198,7 @@ const presets = {
     }
 };
 
-const applyFog = (density) => {
+const applyFog = density => {
     if (density > 0) {
         app.scene.fog.type = FOG_EXP;
         app.scene.fog.density = density;
@@ -208,7 +208,7 @@ const applyFog = (density) => {
     }
 };
 
-const applyPreset = (name) => {
+const applyPreset = name => {
     const p = presets[name];
     if (!p) return;
     weatherEntity.enabled = name !== 'none';

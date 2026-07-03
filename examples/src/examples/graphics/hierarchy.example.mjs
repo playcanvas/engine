@@ -141,7 +141,7 @@ app.root.addChild(light);
 
 // update each frame
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     time += dt;
 
     // rotation quaternion changing with time

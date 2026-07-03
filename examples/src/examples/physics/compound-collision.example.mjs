@@ -37,7 +37,7 @@ WasmModule.setConfig('Ammo', {
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
-await new Promise((resolve) => {
+await new Promise(resolve => {
     WasmModule.getInstance('Ammo', () => resolve());
 });
 
@@ -383,7 +383,7 @@ function parseEntity(e) {
     }
 
     if (e.components) {
-        e.components.forEach((c) => {
+        e.components.forEach(c => {
             entity.addComponent(c.type, c.options);
         });
     }
@@ -399,7 +399,7 @@ function parseEntity(e) {
 
 // Parse the scene data above into entities and add them to the scene's root entity
 function parseScene(s) {
-    s.forEach((e) => {
+    s.forEach(e => {
         app.root.addChild(parseEntity(e));
     });
 }
@@ -420,7 +420,7 @@ function spawnChair() {
 
 // Set an update function on the application's update event
 let time = 0;
-app.on('update', (dt) => {
+app.on('update', dt => {
     // Add a new chair every 250 ms
     time += dt;
     if (time > 0.25 && numChairs < 20) {

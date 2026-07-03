@@ -79,7 +79,7 @@ const assets = {
  * @returns {Promise<void>} The promise.
  */
 const loadAssets = (assetList, assetRegistry) => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         const assetListLoader = new AssetListLoader(assetList, assetRegistry);
         assetListLoader.load(resolve);
     });
@@ -92,7 +92,7 @@ app.start();
  * @param {Color} color - The color.
  * @returns {Material} - The standard material.
  */
-const createColorMaterial = (color) => {
+const createColorMaterial = color => {
     const material = new StandardMaterial();
     material.diffuse = color;
     material.update();
