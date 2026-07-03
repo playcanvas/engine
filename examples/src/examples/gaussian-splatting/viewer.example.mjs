@@ -7,11 +7,18 @@
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
+import { SpzParser } from 'playcanvas/scripts/esm/parsers/spz-parser.mjs';
 
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
+
+// Set up the ZSTD decompression module, used by the spz parser
+pc.WasmModule.setConfig('ZstdDecoderModule', {
+    glueUrl: './assets/wasm/zstd/zstd.wasm.js',
+    wasmUrl: './assets/wasm/zstd/zstd.wasm.wasm'
+});
 
 // Create HTML overlay for drop instructions
 const dropOverlay = document.createElement('div');
@@ -41,7 +48,7 @@ dropBox.style.cssText = `
     text-align: center;
     line-height: 1.4;
 `;
-dropBox.innerHTML = 'Drop .ply, .sog, or .glb file to view<br>or unpacked SOG (meta.json + .webp files)';
+dropBox.innerHTML = 'Drop .ply, .sog, .spz, or .glb file to view<br>or unpacked SOG (meta.json + .webp files)';
 dropOverlay.appendChild(dropBox);
 document.body.appendChild(dropOverlay);
 
@@ -70,6 +77,10 @@ createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.Scr
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
+
+// register the spz parser with the gsplat resource handler
+const gsplatHandler = /** @type {pc.GSplatHandler} */ (app.loader.getHandler('gsplat'));
+gsplatHandler.addParser(new SpzParser(app));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -283,11 +294,12 @@ assetListLoader.load(() => {
         // Otherwise expect a single gsplat/glb file
         const file = files[0];
         const fileName = file.name.toLowerCase();
-        const isGsplat = !isUnpackedSog && (fileName.endsWith('.ply') || fileName.endsWith('.sog'));
+        const isSpz = !isUnpackedSog && fileName.endsWith('.spz');
+        const isGsplat = !isUnpackedSog && (fileName.endsWith('.ply') || fileName.endsWith('.sog') || isSpz);
         const isGlb = !isUnpackedSog && fileName.endsWith('.glb');
 
         if (!isUnpackedSog && !isGsplat && !isGlb) {
-            console.warn('Please drop a .ply, .sog, .glb, or an unpacked SOG (meta.json + .webp files)');
+            console.warn('Please drop a .ply, .sog, .spz, .glb, or an unpacked SOG (meta.json + .webp files)');
             return;
         }
 
@@ -365,11 +377,15 @@ assetListLoader.load(() => {
             entity.addComponent('gsplat', {
                 asset: asset
             });
-            entity.setLocalEulerAngles(180, 0, 0);
+
+            // unlike ply/sog, spz files store data with +Y up, so no flip rotation is needed
+            const orientation = isSpz ? 0 : 180;
+            entity.setLocalEulerAngles(orientation, 0, 0);
             app.root.addChild(entity);
 
-            // Store reference for orientation updates
+            // Store reference for orientation updates and sync the orientation control
             splatEntity = entity;
+            data.set('data.orientation', orientation);
 
             // Wait a frame for customAabb to be available
             await new Promise((resolve) => {
