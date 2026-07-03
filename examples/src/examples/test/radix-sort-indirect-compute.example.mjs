@@ -5,7 +5,30 @@
 // @flag WEBGL_DISABLED
 // @flag HIDDEN
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    BUFFERUSAGE_COPY_DST,
+    BUFFERUSAGE_COPY_SRC,
+    BindGroupFormat,
+    BindStorageBufferFormat,
+    BindUniformBufferFormat,
+    CameraComponentSystem,
+    Color,
+    Compute,
+    ComputeRadixSort,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    RESOLUTION_AUTO,
+    SHADERLANGUAGE_WGSL,
+    SHADERSTAGE_COMPUTE,
+    Shader,
+    StorageBuffer,
+    UNIFORMTYPE_UINT,
+    UniformBufferFormat,
+    UniformFormat,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -18,7 +41,7 @@ const gfxOptions = {
     twgslUrl: './assets/wasm/twgsl/twgsl.js'
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // Status overlay
@@ -42,17 +65,17 @@ statusOverlay.style.cssText = `
 statusOverlay.textContent = `Device: ${device.deviceType.toUpperCase()}\nInitializing...`;
 document.body.appendChild(statusOverlay);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.componentSystems = [pc.CameraComponentSystem];
+createOptions.componentSystems = [CameraComponentSystem];
 createOptions.resourceHandlers = [];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -61,8 +84,8 @@ app.on('destroy', () => {
 });
 
 // Camera (required for app to render)
-const camera = new pc.Entity('camera');
-camera.addComponent('camera', { clearColor: new pc.Color(0.1, 0.1, 0.15) });
+const camera = new Entity('camera');
+camera.addComponent('camera', { clearColor: new Color(0.1, 0.1, 0.15) });
 camera.setPosition(0, 0, 1);
 app.root.addChild(camera);
 
@@ -72,11 +95,11 @@ app.root.addChild(camera);
 let currentMaxElements = 0;
 /** @type {number} */
 let currentNumBits = 0;
-/** @type {pc.StorageBuffer|null} */
+/** @type {StorageBuffer|null} */
 let keysBuffer = null;
-/** @type {pc.ComputeRadixSort|null} */
+/** @type {ComputeRadixSort|null} */
 let radixSort = null;
-/** @type {pc.StorageBuffer|null} */
+/** @type {StorageBuffer|null} */
 let sortElementCountBuffer = null;
 /** @type {number[]} */
 let originalValues = [];
@@ -105,10 +128,10 @@ function logError(msg) {
 }
 
 // Create radix sort instance in indirect mode — sortIndirect requires this.
-radixSort = new pc.ComputeRadixSort(device, { indirect: true });
+radixSort = new ComputeRadixSort(device, { indirect: true });
 
 // Create sortElementCount buffer (single u32, GPU-readable storage buffer)
-sortElementCountBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+sortElementCountBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
 // ==================== PREPARE-INDIRECT COMPUTE SHADER ====================
 // Simulates the GSplat pipeline's prepareIndirect: a compute shader writes
@@ -117,9 +140,9 @@ sortElementCountBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_SRC
 //
 // The shader mirrors the sortIndirectArgsCS WGSL chunk: it uses the slot
 // count and per-slot granularities from ComputeRadixSort#prepareIndirect()
-// to support any backend (Multipass = 1 slot, OneSweep = 2 slots).
+// To support any backend (Multipass = 1 slot, OneSweep = 2 slots).
 
-const prepareSource = /* wgsl */`
+const prepareSource = /* wgsl */ `
     @group(0) @binding(0) var<storage, read_write> sortElementCountBuf: array<u32>;
     @group(0) @binding(1) var<storage, read_write> indirectDispatchArgs: array<u32>;
     struct PrepareUniforms {
@@ -166,33 +189,33 @@ const prepareSource = /* wgsl */`
     }
 `;
 
-const prepareUniformFormat = new pc.UniformBufferFormat(device, [
-    new pc.UniformFormat('visibleCount', pc.UNIFORMTYPE_UINT),
-    new pc.UniformFormat('sortSlotBase', pc.UNIFORMTYPE_UINT),
-    new pc.UniformFormat('_pad0', pc.UNIFORMTYPE_UINT),
-    new pc.UniformFormat('_pad1', pc.UNIFORMTYPE_UINT),
-    new pc.UniformFormat('sortInfoX', pc.UNIFORMTYPE_UINT),
-    new pc.UniformFormat('sortInfoY', pc.UNIFORMTYPE_UINT),
-    new pc.UniformFormat('sortInfoZ', pc.UNIFORMTYPE_UINT),
-    new pc.UniformFormat('sortInfoW', pc.UNIFORMTYPE_UINT)
+const prepareUniformFormat = new UniformBufferFormat(device, [
+    new UniformFormat('visibleCount', UNIFORMTYPE_UINT),
+    new UniformFormat('sortSlotBase', UNIFORMTYPE_UINT),
+    new UniformFormat('_pad0', UNIFORMTYPE_UINT),
+    new UniformFormat('_pad1', UNIFORMTYPE_UINT),
+    new UniformFormat('sortInfoX', UNIFORMTYPE_UINT),
+    new UniformFormat('sortInfoY', UNIFORMTYPE_UINT),
+    new UniformFormat('sortInfoZ', UNIFORMTYPE_UINT),
+    new UniformFormat('sortInfoW', UNIFORMTYPE_UINT)
 ]);
 
-const prepareBindGroupFormat = new pc.BindGroupFormat(device, [
-    new pc.BindStorageBufferFormat('sortElementCountBuf', pc.SHADERSTAGE_COMPUTE, false),
-    new pc.BindStorageBufferFormat('indirectDispatchArgs', pc.SHADERSTAGE_COMPUTE, false),
-    new pc.BindUniformBufferFormat('uniforms', pc.SHADERSTAGE_COMPUTE)
+const prepareBindGroupFormat = new BindGroupFormat(device, [
+    new BindStorageBufferFormat('sortElementCountBuf', SHADERSTAGE_COMPUTE, false),
+    new BindStorageBufferFormat('indirectDispatchArgs', SHADERSTAGE_COMPUTE, false),
+    new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
 ]);
 
-const prepareShader = new pc.Shader(device, {
+const prepareShader = new Shader(device, {
     name: 'PrepareIndirectTest',
-    shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+    shaderLanguage: SHADERLANGUAGE_WGSL,
     cshader: prepareSource,
     computeEntryPoint: 'main',
     computeBindGroupFormat: prepareBindGroupFormat,
     computeUniformBufferFormats: { uniforms: prepareUniformFormat }
 });
 
-const prepareCompute = new pc.Compute(device, prepareShader, 'PrepareIndirectTest');
+const prepareCompute = new Compute(device, prepareShader, 'PrepareIndirectTest');
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -202,13 +225,13 @@ const prepareCompute = new pc.Compute(device, prepareShader, 'PrepareIndirectTes
 function regenerateData() {
     const maxElements = currentMaxElements;
     const numBits = currentNumBits;
-    const maxValue = numBits >= 32 ? 0xFFFFFFFF : (1 << numBits) - 1;
+    const maxValue = numBits >= 32 ? 0xffffffff : (1 << numBits) - 1;
 
     if (keysBuffer) {
         keysBuffer.destroy();
     }
 
-    keysBuffer = new pc.StorageBuffer(device, maxElements * 4, pc.BUFFERUSAGE_COPY_SRC | pc.BUFFERUSAGE_COPY_DST);
+    keysBuffer = new StorageBuffer(device, maxElements * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
 
     const keysData = new Uint32Array(maxElements);
     originalValues = [];
@@ -226,7 +249,7 @@ function regenerateData() {
 /**
  * Verifies the indirect sort results against CPU reference.
  *
- * @param {pc.StorageBuffer} sortedIndices - Sorted indices buffer.
+ * @param {StorageBuffer} sortedIndices - Sorted indices buffer.
  * @param {number[]} capturedValues - Copy of original key values.
  * @param {number} maxElements - Total element count.
  * @param {number} visibleCount - Number of elements that were sorted.
@@ -280,7 +303,7 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
     const sortedValues = [];
     for (let i = 0; i < visibleCount; i++) {
         const idx = indicesData[i];
-        sortedValues.push(idx < capturedValues.length ? capturedValues[idx] : 0xFFFFFFFF);
+        sortedValues.push(idx < capturedValues.length ? capturedValues[idx] : 0xffffffff);
     }
     for (let i = 1; i < visibleCount; i++) {
         if (sortedValues[i] < sortedValues[i - 1]) {
@@ -300,15 +323,26 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
         }
     }
 
-    const passed = outOfRangeCount === 0 && duplicateCount === 0 && missingCount === 0 && orderErrors === 0 && valueMismatches === 0;
+    const passed =
+        outOfRangeCount === 0 &&
+        duplicateCount === 0 &&
+        missingCount === 0 &&
+        orderErrors === 0 &&
+        valueMismatches === 0;
 
     if (passed) {
         totalPassed++;
-        log(`✓ Test ${totalTests}: sortIndirect OK — ${visibleCount}/${maxElements} elements, ${numBits} bits (${totalPassed} passed, ${totalFailed} failed)`);
+        log(
+            `✓ Test ${totalTests}: sortIndirect OK — ${visibleCount}/${maxElements} elements, ${numBits} bits (${totalPassed} passed, ${totalFailed} failed)`
+        );
     } else {
         totalFailed++;
-        logError(`✗ Test ${totalTests}: sortIndirect FAILED — ${visibleCount}/${maxElements} elements, ${numBits} bits`);
-        logError(`  outOfRange=${outOfRangeCount} duplicates=${duplicateCount} missing=${missingCount} orderErrors=${orderErrors} valueMismatches=${valueMismatches}`);
+        logError(
+            `✗ Test ${totalTests}: sortIndirect FAILED — ${visibleCount}/${maxElements} elements, ${numBits} bits`
+        );
+        logError(
+            `  outOfRange=${outOfRangeCount} duplicates=${duplicateCount} missing=${missingCount} orderErrors=${orderErrors} valueMismatches=${valueMismatches}`
+        );
         logError(`  (${totalPassed} passed, ${totalFailed} failed)`);
     }
 }
@@ -327,8 +361,10 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         // (4 for Multipass, 8 for OneSweep). Snapping to an invalid
         // multiple would trigger the sortIndirect assert every frame.
         const rb = radixSort ? radixSort.radixBits : 4;
-        const validBits = [4, 8, 12, 16, 20, 24, 28, 32].filter(b => b % rb === 0);
-        const nearest = validBits.reduce((prev, curr) => (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev));
+        const validBits = [4, 8, 12, 16, 20, 24, 28, 32].filter((b) => b % rb === 0);
+        const nearest = validBits.reduce((prev, curr) =>
+            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+        );
         if (nearest !== currentNumBits) {
             currentNumBits = nearest;
             needsRegen = true;
@@ -365,7 +401,7 @@ app.on('update', () => {
     const minPercent = 10;
     const maxPercent = 90;
     const percent = minPercent + (maxPercent - minPercent) * (0.5 + 0.5 * Math.sin(t));
-    varyingVisibleCount = Math.max(1, Math.floor(currentMaxElements * percent / 100));
+    varyingVisibleCount = Math.max(1, Math.floor((currentMaxElements * percent) / 100));
 
     // Override the visible count for this frame (don't use currentVisiblePercent)
     const maxElements = currentMaxElements;
@@ -399,14 +435,17 @@ app.on('update', () => {
 
     // Run indirect sort with varying visible count
     const sortedIndicesBuffer = radixSort.sortIndirect(
-        keysBuffer, maxElements, numBits, dispatchSlot, sortElementCountBuffer
+        keysBuffer,
+        maxElements,
+        numBits,
+        dispatchSlot,
+        sortElementCountBuffer
     );
 
     // Verify every 10 frames to catch intermittent failures without overwhelming readbacks
     if (frameCount % 10 === 0 && !verificationPending) {
         verificationPending = true;
-        doVerification(sortedIndicesBuffer, originalValues.slice(), maxElements, visibleCount, numBits)
-        .then(() => {
+        doVerification(sortedIndicesBuffer, originalValues.slice(), maxElements, visibleCount, numBits).then(() => {
             verificationPending = false;
         });
     }

@@ -8,13 +8,32 @@
 //
 // This example demonstrates the HTML-in-Canvas API: a styled HTML element with
 // CSS animations is appended to a canvas marked with the "layoutsubtree"
-// attribute, then captured into a GPU texture (texElementImage2D on WebGL,
+// Attribute, then captured into a GPU texture (texElementImage2D on WebGL,
 // copyElementImageToTexture on WebGPU).
 //
 // Fallback: when device.supportsHtmlTextures is false, a static 2D canvas with
 // hand-drawn placeholder graphics is used as the texture source instead.
 //
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    PIXELFORMAT_RGBA8,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    Texture,
+    TextureHandler,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -26,11 +45,11 @@ canvas.setAttribute('layoutsubtree', 'true');
 window.focus();
 
 const assets = {
-    envatlas: new pc.Asset(
+    envatlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
@@ -38,20 +57,20 @@ const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
@@ -64,7 +83,8 @@ htmlElement.setAttribute('inert', '');
 htmlElement.style.width = '512px';
 htmlElement.style.height = '512px';
 htmlElement.style.padding = '10px';
-htmlElement.style.background = 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24)';
+htmlElement.style.background =
+    'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24)';
 htmlElement.style.backgroundSize = '400% 400%';
 htmlElement.style.animation = 'gradient-shift 4s ease infinite';
 htmlElement.style.borderRadius = '0';
@@ -106,10 +126,10 @@ document.head.appendChild(style);
 canvas.appendChild(htmlElement);
 
 // Create texture
-const htmlTexture = new pc.Texture(device, {
+const htmlTexture = new Texture(device, {
     width: 512,
     height: 512,
-    format: pc.PIXELFORMAT_RGBA8,
+    format: PIXELFORMAT_RGBA8,
     name: 'htmlTexture'
 });
 
@@ -171,9 +191,13 @@ app.on('destroy', () => {
 if (device.supportsHtmlTextures) {
     // The browser must paint the HTML element before texElementImage2D can use it.
     // Wait for the 'paint' event, then set the HTML element as the texture source.
-    canvas.addEventListener('paint', () => {
-        htmlTexture.setSource(/** @type {any} */ (htmlElement));
-    }, { once: true });
+    canvas.addEventListener(
+        'paint',
+        () => {
+            htmlTexture.setSource(/** @type {any} */ (htmlElement));
+        },
+        { once: true }
+    );
     canvas.requestPaint();
 
     // Re-upload the texture whenever the browser repaints the HTML children
@@ -182,47 +206,48 @@ if (device.supportsHtmlTextures) {
     console.warn('HTML textures are not supported - using canvas fallback');
 }
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // setup skydome
-    app.scene.envAtlas = assets.envatlas.resource;
-    app.scene.skyboxMip = 0;
-    app.scene.skyboxIntensity = 2;
-    app.scene.exposure = 1.5;
+app.start();
 
-    // Create metallic material with the HTML texture for mirror-like reflections
-    const material = new pc.StandardMaterial();
-    material.diffuseMap = htmlTexture;
-    material.useMetalness = true;
-    material.metalness = 0.7;
-    material.gloss = 0.9;
-    material.update();
+// Setup skydome
+app.scene.envAtlas = assets.envatlas.resource;
+app.scene.skyboxMip = 0;
+app.scene.skyboxIntensity = 2;
+app.scene.exposure = 1.5;
 
-    const box = new pc.Entity('cube');
-    box.addComponent('render', {
-        type: 'box',
-        material: material
-    });
-    app.root.addChild(box);
+// Create metallic material with the HTML texture for mirror-like reflections
+const material = new StandardMaterial();
+material.diffuseMap = htmlTexture;
+material.useMetalness = true;
+material.metalness = 0.7;
+material.gloss = 0.9;
+material.update();
 
-    const camera = new pc.Entity('camera');
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
-    });
-    app.root.addChild(camera);
-    camera.setPosition(0, 0, 3);
+const box = new Entity('cube');
+box.addComponent('render', {
+    type: 'box',
+    material: material
+});
+app.root.addChild(box);
 
-    const light = new pc.Entity('light');
-    light.addComponent('light', {
-        type: 'directional',
-        intensity: 1.5
-    });
-    app.root.addChild(light);
-    light.setEulerAngles(45, 30, 0);
+const camera = new Entity('camera');
+camera.addComponent('camera', {
+    clearColor: new Color(0.2, 0.2, 0.2)
+});
+app.root.addChild(camera);
+camera.setPosition(0, 0, 3);
 
-    app.on('update', (/** @type {number} */ dt) => {
-        box.rotate(3 * dt, 5 * dt, 6 * dt);
-    });
+const light = new Entity('light');
+light.addComponent('light', {
+    type: 'directional',
+    intensity: 1.5
+});
+app.root.addChild(light);
+light.setEulerAngles(45, 30, 0);
+
+app.on('update', (/** @type {number} */ dt) => {
+    box.rotate(3 * dt, 5 * dt, 6 * dt);
 });

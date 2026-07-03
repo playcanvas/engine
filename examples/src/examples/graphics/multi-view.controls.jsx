@@ -1,6 +1,18 @@
 import { BindingTwoWay, LabelGroup, Panel, SelectInput } from '@playcanvas/pcui/react';
 
-import * as pc from 'playcanvas';
+import {
+    SHADERPASS_ALBEDO,
+    SHADERPASS_AO,
+    SHADERPASS_EMISSION,
+    SHADERPASS_FORWARD,
+    SHADERPASS_GLOSS,
+    SHADERPASS_LIGHTING,
+    SHADERPASS_METALNESS,
+    SHADERPASS_OPACITY,
+    SHADERPASS_SPECULARITY,
+    SHADERPASS_UV0,
+    SHADERPASS_WORLDNORMAL
+} from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -21,17 +33,17 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'settings.shaderPassName' }}
                         type='string'
                         options={[
-                            { v: pc.SHADERPASS_FORWARD, t: 'None' },
-                            { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
-                            { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
-                            { v: pc.SHADERPASS_WORLDNORMAL, t: 'World Normal' },
-                            { v: pc.SHADERPASS_SPECULARITY, t: 'Specularity' },
-                            { v: pc.SHADERPASS_GLOSS, t: 'Gloss' },
-                            { v: pc.SHADERPASS_METALNESS, t: 'Metalness' },
-                            { v: pc.SHADERPASS_AO, t: 'AO' },
-                            { v: pc.SHADERPASS_EMISSION, t: 'Emission' },
-                            { v: pc.SHADERPASS_LIGHTING, t: 'Lighting' },
-                            { v: pc.SHADERPASS_UV0, t: 'UV0' }
+                            { v: SHADERPASS_FORWARD, t: 'None' },
+                            { v: SHADERPASS_ALBEDO, t: 'Albedo' },
+                            { v: SHADERPASS_OPACITY, t: 'Opacity' },
+                            { v: SHADERPASS_WORLDNORMAL, t: 'World Normal' },
+                            { v: SHADERPASS_SPECULARITY, t: 'Specularity' },
+                            { v: SHADERPASS_GLOSS, t: 'Gloss' },
+                            { v: SHADERPASS_METALNESS, t: 'Metalness' },
+                            { v: SHADERPASS_AO, t: 'AO' },
+                            { v: SHADERPASS_EMISSION, t: 'Emission' },
+                            { v: SHADERPASS_LIGHTING, t: 'Lighting' },
+                            { v: SHADERPASS_UV0, t: 'UV0' }
                         ]}
                     />
                 </LabelGroup>

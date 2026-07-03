@@ -1,4 +1,37 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    CanvasFont,
+    Color,
+    ELEMENTTYPE_GROUP,
+    ELEMENTTYPE_IMAGE,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FITTING_BOTH,
+    FontHandler,
+    LayoutChildComponentSystem,
+    LayoutGroupComponentSystem,
+    Mouse,
+    ORIENTATION_HORIZONTAL,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SCALEMODE_BLEND,
+    ScreenComponentSystem,
+    ScrollViewComponentSystem,
+    ScrollbarComponentSystem,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec4,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -6,41 +39,41 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.elementInput = new pc.ElementInput(canvas);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.elementInput = new ElementInput(canvas);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ButtonComponentSystem,
-    pc.ElementComponentSystem,
-    pc.LayoutGroupComponentSystem,
-    pc.ScrollViewComponentSystem,
-    pc.ScrollbarComponentSystem,
-    pc.LayoutChildComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    ScreenComponentSystem,
+    ButtonComponentSystem,
+    ElementComponentSystem,
+    LayoutGroupComponentSystem,
+    ScrollViewComponentSystem,
+    ScrollbarComponentSystem,
+    LayoutChildComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.FontHandler];
+createOptions.resourceHandlers = [TextureHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -49,121 +82,122 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Create a camera
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
-    });
-    app.root.addChild(camera);
+app.start();
 
-    // Create a 2D screen
-    const screen = new pc.Entity();
-    screen.addComponent('screen', {
-        referenceResolution: new pc.Vec2(1280, 720),
-        scaleBlend: 0.5,
-        scaleMode: pc.SCALEMODE_BLEND,
-        screenSpace: true
-    });
-    app.root.addChild(screen);
+// Create a camera
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: new Color(30 / 255, 30 / 255, 30 / 255)
+});
+app.root.addChild(camera);
 
-    // some sample text
-    const firstLineText = 'PlayCanvas supports Emojis via CanvasFont!';
-    const flagsText = 'Flags: 🇺🇸🇩🇪🇮🇪🇮🇹🏴‍☠️🇨🇦';
-    const complexText = 'Complex emoji: 👨🏿3️⃣👁️‍🗨️';
+// Create a 2D screen
+const screen = new Entity();
+screen.addComponent('screen', {
+    referenceResolution: new Vec2(1280, 720),
+    scaleBlend: 0.5,
+    scaleMode: SCALEMODE_BLEND,
+    screenSpace: true
+});
+app.root.addChild(screen);
 
-    // Create a canvas font asset
-    const size = 64;
-    const elSize = 32;
+// Some sample text
+const firstLineText = 'PlayCanvas supports Emojis via CanvasFont!';
+const flagsText = 'Flags: 🇺🇸🇩🇪🇮🇪🇮🇹🏴‍☠️🇨🇦';
+const complexText = 'Complex emoji: 👨🏿3️⃣👁️‍🗨️';
 
-    const canvasFont = new pc.CanvasFont(app, {
-        color: new pc.Color(1, 1, 1), // white
-        fontName: 'Arial',
-        fontSize: size,
-        width: 256,
-        height: 256
-    });
+// Create a canvas font asset
+const size = 64;
+const elSize = 32;
 
-    // The first texture update needs to be `createTextures()`. Follow-up calls need to be `updateTextures()`.
-    canvasFont.createTextures(firstLineText);
-    canvasFont.updateTextures(flagsText);
-    canvasFont.updateTextures(complexText);
+const canvasFont = new CanvasFont(app, {
+    color: new Color(1, 1, 1), // white
+    fontName: 'Arial',
+    fontSize: size,
+    width: 256,
+    height: 256
+});
 
-    /**
-     * Create the text entities.
-     * @param {number} y - The y coordinate.
-     * @param {string} text - The element component's text.
-     */
-    function createText(y, text) {
-        const canvasElementEntity = new pc.Entity();
-        canvasElementEntity.setLocalPosition(0, y, 0);
-        canvasElementEntity.addComponent('element', {
-            pivot: new pc.Vec2(0.5, 0.5),
-            anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-            fontSize: elSize,
-            text: text,
-            type: pc.ELEMENTTYPE_TEXT
-        });
-        canvasElementEntity.element.font = canvasFont;
-        screen.addChild(canvasElementEntity);
-    }
-    createText(225, firstLineText);
-    createText(150, flagsText);
-    createText(100, complexText);
+// The first texture update needs to be `createTextures()`. Follow-up calls need to be `updateTextures()`.
+canvasFont.createTextures(firstLineText);
+canvasFont.updateTextures(flagsText);
+canvasFont.updateTextures(complexText);
 
-    // Canvas Fonts Debug - you shouldn't do this in your actual project
-    const debugText = new pc.Entity();
-    debugText.setLocalPosition(0, -50, 0);
-    debugText.addComponent('element', {
-        pivot: new pc.Vec2(0.5, 0.5),
-        anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-        fontAsset: assets.font.id,
+/**
+ * Create the text entities.
+ * @param {number} y - The y coordinate.
+ * @param {string} text - The element component's text.
+ */
+function createText(y, text) {
+    const canvasElementEntity = new Entity();
+    canvasElementEntity.setLocalPosition(0, y, 0);
+    canvasElementEntity.addComponent('element', {
+        pivot: new Vec2(0.5, 0.5),
+        anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
         fontSize: elSize,
-        text: 'The following are the CanvasFont\'s Texture Atlases,\ncontaining all the rendered characters:',
-        type: pc.ELEMENTTYPE_TEXT
+        text: text,
+        type: ELEMENTTYPE_TEXT
     });
-    screen.addChild(debugText);
+    canvasElementEntity.element.font = canvasFont;
+    screen.addChild(canvasElementEntity);
+}
+createText(225, firstLineText);
+createText(150, flagsText);
+createText(100, complexText);
 
-    // Create Layout Group Entity
-    const group = new pc.Entity();
-    group.setLocalPosition(0, -150, 0);
-    group.addComponent('element', {
-        // a Layout Group needs a 'group' element component
-        type: pc.ELEMENTTYPE_GROUP,
+// Canvas Fonts Debug - you shouldn't do this in your actual project
+const debugText = new Entity();
+debugText.setLocalPosition(0, -50, 0);
+debugText.addComponent('element', {
+    pivot: new Vec2(0.5, 0.5),
+    anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
+    fontAsset: assets.font.id,
+    fontSize: elSize,
+    text: "The following are the CanvasFont's Texture Atlases,\ncontaining all the rendered characters:",
+    type: ELEMENTTYPE_TEXT
+});
+screen.addChild(debugText);
+
+// Create Layout Group Entity
+const group = new Entity();
+group.setLocalPosition(0, -150, 0);
+group.addComponent('element', {
+    // A Layout Group needs a 'group' element component
+    type: ELEMENTTYPE_GROUP,
+    anchor: [0.5, 0.5, 0.5, 0.5],
+    pivot: [0.5, 0.5],
+    // The element's width and height dictate the group's bounds
+    width: 300,
+    height: 100
+});
+group.addComponent('layoutgroup', {
+    orientation: ORIENTATION_HORIZONTAL,
+    // fit_both for width and height, making all child elements take the entire space
+    widthFitting: FITTING_BOTH,
+    heightFitting: FITTING_BOTH,
+    // Wrap children
+    wrap: true
+});
+screen.addChild(group);
+
+// Create 1 child per texture
+for (let i = 0; i < canvasFont.textures.length; i++) {
+    const texture = canvasFont.textures[i];
+
+    // Create a random-colored panel
+    const child = new Entity();
+    child.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         pivot: [0.5, 0.5],
-        // the element's width and height dictate the group's bounds
-        width: 300,
-        height: 100
+        texture: texture,
+        type: ELEMENTTYPE_IMAGE
     });
-    group.addComponent('layoutgroup', {
-        orientation: pc.ORIENTATION_HORIZONTAL,
-        // fit_both for width and height, making all child elements take the entire space
-        widthFitting: pc.FITTING_BOTH,
-        heightFitting: pc.FITTING_BOTH,
-        // wrap children
-        wrap: true
+    child.addComponent('layoutchild', {
+        excludeFromLayout: false
     });
-    screen.addChild(group);
-
-    // create 1 child per texture
-    for (let i = 0; i < canvasFont.textures.length; i++) {
-        const texture = canvasFont.textures[i];
-
-        // create a random-colored panel
-        const child = new pc.Entity();
-        child.addComponent('element', {
-            anchor: [0.5, 0.5, 0.5, 0.5],
-            pivot: [0.5, 0.5],
-            texture: texture,
-            type: pc.ELEMENTTYPE_IMAGE
-        });
-        child.addComponent('layoutchild', {
-            excludeFromLayout: false
-        });
-        group.addChild(child);
-    }
-});
+    group.addChild(child);
+}

@@ -1,4 +1,26 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    DISPLAYFORMAT_HDR,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial,
+    TextureHandler,
+    TouchDevice,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -7,39 +29,43 @@ import shaderGlslVert from './shader.glsl.vert';
 import shaderWgslFrag from './shader.wgsl.frag';
 import shaderWgslVert from './shader.wgsl.vert';
 
+/**
+ * @import { RenderComponent, StandardMaterial, Texture } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    clouds: new pc.Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    clouds: new Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
 
     // Enable HDR rendering if supported
-    displayFormat: pc.DISPLAYFORMAT_HDR
+    displayFormat: DISPLAYFORMAT_HDR
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -48,86 +74,87 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.start();
 
-    // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
-    });
-    camera.translate(0, 7, 24);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-    // Create an Entity with a omni light component and a sphere model component.
-    const light = new pc.Entity();
-    light.addComponent('light', {
-        type: 'omni',
-        color: new pc.Color(1, 1, 1),
-        radius: 10
-    });
-    light.translate(0, 1, 0);
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: new Color(0.4, 0.45, 0.5)
+});
+camera.translate(0, 7, 24);
 
-    // Add entities into scene hierarchy
-    app.root.addChild(camera);
-    app.root.addChild(light);
+// Create an Entity with a omni light component and a sphere model component.
+const light = new Entity();
+light.addComponent('light', {
+    type: 'omni',
+    color: new Color(1, 1, 1),
+    radius: 10
+});
+light.translate(0, 1, 0);
 
-    // Create a new material with the custom shader
-    const material = new pc.ShaderMaterial({
-        uniqueName: 'burn',
-        vertexGLSL: shaderGlslVert,
-        fragmentGLSL: shaderGlslFrag,
-        vertexWGSL: shaderWgslVert,
-        fragmentWGSL: shaderWgslFrag,
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0
+// Add entities into scene hierarchy
+app.root.addChild(camera);
+app.root.addChild(light);
+
+// Create a new material with the custom shader
+const material = new ShaderMaterial({
+    uniqueName: 'burn',
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: shaderGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: shaderWgslFrag,
+    attributes: {
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
+    }
+});
+material.setParameter('uHeightMap', assets.clouds.resource);
+
+// Create a hierarchy of entities with render components, representing the statue model
+const entity = assets.statue.resource.instantiateRenderEntity();
+app.root.addChild(entity);
+
+/**
+ * Set the new material on all meshes in the model, and use original texture from the model on the new material
+ * @type {Texture}
+ */
+let originalTexture = null;
+/** @type {Array<RenderComponent>} */
+const renders = entity.findComponents('render');
+renders.forEach((render) => {
+    const meshInstances = render.meshInstances;
+    for (let i = 0; i < meshInstances.length; i++) {
+        const meshInstance = meshInstances[i];
+        if (!originalTexture) {
+            /** @type {StandardMaterial} */
+            const originalMaterial = meshInstance.material;
+            originalTexture = originalMaterial.diffuseMap;
         }
-    });
-    material.setParameter('uHeightMap', assets.clouds.resource);
+        meshInstance.material = material;
+    }
+});
 
-    // create a hierarchy of entities with render components, representing the statue model
-    const entity = assets.statue.resource.instantiateRenderEntity();
-    app.root.addChild(entity);
+// Material is set up, update it
+material.setParameter('uDiffuseMap', originalTexture);
+material.update();
 
-    /**
-     * Set the new material on all meshes in the model, and use original texture from the model on the new material
-     * @type {pc.Texture}
-     */
-    let originalTexture = null;
-    /** @type {Array<pc.RenderComponent>} */
-    const renders = entity.findComponents('render');
-    renders.forEach((render) => {
-        const meshInstances = render.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const meshInstance = meshInstances[i];
-            if (!originalTexture) {
-                /** @type {pc.StandardMaterial} */
-                const originalMaterial = meshInstance.material;
-                originalTexture = originalMaterial.diffuseMap;
-            }
-            meshInstance.material = material;
-        }
-    });
+let time = 0;
+app.on('update', (dt) => {
+    time += 0.2 * dt;
 
-    // material is set up, update it
-    material.setParameter('uDiffuseMap', originalTexture);
+    // Reverse time
+    let t = time % 2;
+    if (t > 1) {
+        t = 1 - (t - 1);
+    }
+
+    // Set time parameter for the shader
+    material.setParameter('uTime', t);
     material.update();
-
-    let time = 0;
-    app.on('update', (dt) => {
-        time += 0.2 * dt;
-
-        // reverse time
-        let t = time % 2;
-        if (t > 1) {
-            t = 1 - (t - 1);
-        }
-
-        // set time parameter for the shader
-        material.setParameter('uTime', t);
-        material.update();
-    });
 });

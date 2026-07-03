@@ -8,7 +8,7 @@ import {
 } from '@playcanvas/pcui/react';
 import { useState } from 'react';
 
-import * as pc from 'playcanvas';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -21,7 +21,7 @@ import * as pc from 'playcanvas';
  */
 export function Controls({ observer }) {
     const [type, setType] = useState('translate');
-    const [proj, setProj] = useState(pc.PROJECTION_PERSPECTIVE);
+    const [proj, setProj] = useState(PROJECTION_PERSPECTIVE);
 
     // observe changes to the camera and gizmo type
     observer.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
@@ -95,15 +95,15 @@ export function Controls({ observer }) {
                 <LabelGroup text='Projection'>
                     <SelectInput
                         options={[
-                            { v: pc.PROJECTION_PERSPECTIVE + 1, t: 'Perspective' },
-                            { v: pc.PROJECTION_ORTHOGRAPHIC + 1, t: 'Orthographic' }
+                            { v: PROJECTION_PERSPECTIVE + 1, t: 'Perspective' },
+                            { v: PROJECTION_ORTHOGRAPHIC + 1, t: 'Orthographic' }
                         ]}
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'camera.proj' }}
-                        onSelect={value => setProj((parseInt(value, 10) || 1) - 1)}
+                        onSelect={(value) => setProj((parseInt(value, 10) || 1) - 1)}
                     />
                 </LabelGroup>
-                {proj === pc.PROJECTION_PERSPECTIVE && (
+                {proj === PROJECTION_PERSPECTIVE && (
                     <LabelGroup text='FOV'>
                         <SliderInput
                             binding={new BindingTwoWay()}

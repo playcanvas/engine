@@ -12,7 +12,34 @@
 // author: Andrii Shramko
 // source: https://www.linkedin.com/in/andrii-shramko/
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TextureHandler,
+    Vec3,
+    WebglGraphicsDevice,
+    WebgpuGraphicsDevice
+} from 'playcanvas';
+
+/**
+ * @import { GraphicsDevice } from 'playcanvas'
+ */
 
 const WARMUP_FRAMES = 10;
 const MEASURE_FRAMES = 60;
@@ -21,18 +48,19 @@ const MEASURE_FRAMES = 60;
 const CAMERA_SIDE_TRANSLATE_UNITS = 12;
 
 /** Lateral delta each measure frame (warmup: yaw only). */
-const CAMERA_SIDE_STEP = MEASURE_FRAMES > 0 ? CAMERA_SIDE_TRANSLATE_UNITS / MEASURE_FRAMES : CAMERA_SIDE_TRANSLATE_UNITS;
+const CAMERA_SIDE_STEP =
+    MEASURE_FRAMES > 0 ? CAMERA_SIDE_TRANSLATE_UNITS / MEASURE_FRAMES : CAMERA_SIDE_TRANSLATE_UNITS;
 
 /** Camera pivot rest position (world == local under root). */
-const benchPivotBasePos = new pc.Vec3(10.3, 2, -10);
+const benchPivotBasePos = new Vec3(10.3, 2, -10);
 
 /** Wall-clock duration for idle rAF sampling before any benchmark run (reference FPS). */
 const IDLE_FPS_SAMPLE_MS = 1000;
 
 const RENDERERS = [
-    { device: 'webgl2', renderer: pc.GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGL2 CPU Sort', shortLabel: 'GL2 CPU' },
-    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGPU CPU Sort', shortLabel: 'GPU CPU' },
-    { device: 'webgpu', renderer: pc.GSPLAT_RENDERER_RASTER_GPU_SORT, label: 'WebGPU GPU Sort', shortLabel: 'GPU Sort' }
+    { device: 'webgl2', renderer: GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGL2 CPU Sort', shortLabel: 'GL2 CPU' },
+    { device: 'webgpu', renderer: GSPLAT_RENDERER_RASTER_CPU_SORT, label: 'WebGPU CPU Sort', shortLabel: 'GPU CPU' },
+    { device: 'webgpu', renderer: GSPLAT_RENDERER_RASTER_GPU_SORT, label: 'WebGPU GPU Sort', shortLabel: 'GPU Sort' }
 ];
 
 const BUDGETS = [1, 2, 3, 4, 6, 8, 10, 15, 20, 25, 30, 35]; // millions
@@ -69,7 +97,7 @@ let webglGpuProfilingUnavailable = false;
  */
 function getBenchmarkMaxPixelRatio() {
     const dpr = window.devicePixelRatio || 1;
-    return highRes ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
+    return highRes ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
 }
 
 /**
@@ -105,7 +133,8 @@ function formatEffectiveFpsCell(effectiveFps) {
 
 // Override main.css which sets touch-action:none on * and overflow:hidden on body
 const overrideStyle = document.createElement('style');
-overrideStyle.textContent = '*, *::before, *::after { touch-action: auto !important; } html, body { overflow: auto !important; height: auto !important; }';
+overrideStyle.textContent =
+    '*, *::before, *::after { touch-action: auto !important; } html, body { overflow: auto !important; height: auto !important; }';
 document.head.appendChild(overrideStyle);
 
 const appEl = document.getElementById('app');
@@ -127,7 +156,8 @@ Object.assign(containerEl.style, {
 document.body.appendChild(containerEl);
 
 const styleEl = document.createElement('style');
-styleEl.textContent = '.bench-cell { background: #1a1a2e; border-radius: 3px; transition: background 0.15s; } .bench-cell:hover { background: #2a2a4e; }';
+styleEl.textContent =
+    '.bench-cell { background: #1a1a2e; border-radius: 3px; transition: background 0.15s; } .bench-cell:hover { background: #2a2a4e; }';
 document.head.appendChild(styleEl);
 
 const titleEl = document.createElement('h2');
@@ -192,7 +222,15 @@ containerEl.appendChild(benchmarkLegendEl);
 
 // High Res toggle
 const highResLabel = document.createElement('label');
-Object.assign(highResLabel.style, { display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px', color: '#aaa', fontSize: '13px', cursor: 'pointer' });
+Object.assign(highResLabel.style, {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginBottom: '12px',
+    color: '#aaa',
+    fontSize: '13px',
+    cursor: 'pointer'
+});
 const highResCheckbox = document.createElement('input');
 highResCheckbox.type = 'checkbox';
 highResCheckbox.checked = highRes;
@@ -219,11 +257,14 @@ const headerBtnCss = [
     'white-space: nowrap'
 ].join(';');
 
-const compactBtnCss = headerBtnCss.replace('padding: 6px 14px', 'padding: 3px 6px').replace('font-size: 14px', 'font-size: 11px');
+const compactBtnCss = headerBtnCss
+    .replace('padding: 6px 14px', 'padding: 3px 6px')
+    .replace('font-size: 14px', 'font-size: 11px');
 const compactRowOnlyBtnCss = compactBtnCss.replace('#4a9eff', '#2fa36b');
 const compactRunAllBtnCss = compactBtnCss.replace('#4a9eff', '#e05555');
 
-const narrowCellBase = 'padding: 4px 5px; border: 1px solid #333; text-align: center; white-space: nowrap; background: #222; color: #fff;';
+const narrowCellBase =
+    'padding: 4px 5px; border: 1px solid #333; text-align: center; white-space: nowrap; background: #222; color: #fff;';
 /** Same width for Run All / budget column (left) and Only column (right). */
 const COL_EDGE_W = Math.round(58 * 1.3);
 const narrowEdgeColCss = `${narrowCellBase} box-sizing: border-box; width: ${COL_EDGE_W}px; min-width: ${COL_EDGE_W}px; max-width: ${COL_EDGE_W}px;`;
@@ -466,7 +507,7 @@ window.addEventListener('resize', () => {
     window.clearTimeout(uiResizeTimer);
     uiResizeTimer = window.setTimeout(() => {
         updateGpuInfo();
-        if (!storedResults.some(r => r !== null)) return;
+        if (!storedResults.some((r) => r !== null)) return;
         refreshChartAndDownload();
     }, 200);
 });
@@ -532,23 +573,20 @@ if (existingCanvas) {
 /**
  * @param {HTMLCanvasElement} canvas - The canvas.
  * @param {string} deviceType - 'webgpu' or 'webgl2'.
- * @returns {Promise<pc.GraphicsDevice>} The device.
+ * @returns {Promise<GraphicsDevice>} The device.
  */
 async function createDevice(canvas, deviceType) {
     const opts = { antialias: false };
     if (deviceType === 'webgpu') {
-        const device = new pc.WebgpuGraphicsDevice(canvas, opts);
-        await device.initWebGpu(
-            './assets/wasm/glslang/glslang.js',
-            './assets/wasm/twgsl/twgsl.js'
-        );
+        const device = new WebgpuGraphicsDevice(canvas, opts);
+        await device.initWebGpu('./assets/wasm/glslang/glslang.js', './assets/wasm/twgsl/twgsl.js');
         return device;
     }
-    return new pc.WebglGraphicsDevice(canvas, opts);
+    return new WebglGraphicsDevice(canvas, opts);
 }
 
 /**
- * @param {pc.GraphicsDevice} device - The device.
+ * @param {GraphicsDevice} device - The device.
  * @returns {string} GPU info summary.
  */
 function getGpuInfo(device) {
@@ -569,8 +607,8 @@ function getGpuInfo(device) {
 }
 
 /**
- * @param {pc.AppBase} app - The app.
- * @param {pc.GraphicsDevice} device - The device.
+ * @param {AppBase} app - The app.
+ * @param {GraphicsDevice} device - The device.
  * @param {string} label - Status label.
  * @param {string} budgetLabel - Budget label.
  * @param {boolean} gpuTimingSupported - False disables GPU timer collection (WebGL without disjoint timer query).
@@ -619,8 +657,10 @@ function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
                 const wallEnd = performance.now();
                 const wallSec = wallStart !== null ? Math.max(1e-9, (wallEnd - wallStart) / 1000) : 1e-9;
                 const effectiveFps = MEASURE_FRAMES / wallSec;
-                const avgGpu = gpuTimingSupported && gpuTimes.length === MEASURE_FRAMES ?
-                    gpuTimes.reduce((a, b) => a + b, 0) / MEASURE_FRAMES : -1;
+                const avgGpu =
+                    gpuTimingSupported && gpuTimes.length === MEASURE_FRAMES
+                        ? gpuTimes.reduce((a, b) => a + b, 0) / MEASURE_FRAMES
+                        : -1;
                 const avgSplats = splatCounts.reduce((a, b) => a + b, 0) / splatCounts.length;
                 /** @type {Map<string, number>} */
                 const avgPass = new Map();
@@ -636,7 +676,7 @@ function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
 
 /**
  * @param {any} gsplatSystem - The gsplat system.
- * @param {pc.AppBase} app - The app.
+ * @param {AppBase} app - The app.
  * @param {string} statusPrefix - Prefix for status message.
  * @param {number} [timeoutMs] - Max wait in ms.
  * @returns {Promise<void>}
@@ -646,7 +686,12 @@ function waitForReady(gsplatSystem, app, statusPrefix, timeoutMs = 10000) {
         let resolved = false;
         let sawNotReady = false;
 
-        const onReady = (/** @type {any} */ cam, /** @type {any} */ layer, /** @type {boolean} */ ready, /** @type {number} */ loadingCount) => {
+        const onReady = (
+            /** @type {any} */ cam,
+            /** @type {any} */ layer,
+            /** @type {boolean} */ ready,
+            /** @type {number} */ loadingCount
+        ) => {
             const splats = (app.stats.frame.gsplats / 1000000).toFixed(1);
             setStatus(`${statusPrefix}  Waiting... (${splats}M splats)`);
 
@@ -700,7 +745,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 
     const device = await createDevice(canvas, config.device);
     const dpr = window.devicePixelRatio || 1;
-    device.maxPixelRatio = highRes ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
+    device.maxPixelRatio = highRes ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
     const gpuInfo = getGpuInfo(device);
 
     const extDisjointTimerQuery = /** @type {any} */ (device).extDisjointTimerQuery;
@@ -710,26 +755,21 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         syncBenchBanner();
     }
 
-    const createOptions = new pc.AppOptions();
+    const createOptions = new AppOptions();
     createOptions.graphicsDevice = device;
     createOptions.componentSystems = [
-        pc.RenderComponentSystem,
-        pc.CameraComponentSystem,
-        pc.LightComponentSystem,
-        pc.ScriptComponentSystem,
-        pc.GSplatComponentSystem
+        RenderComponentSystem,
+        CameraComponentSystem,
+        LightComponentSystem,
+        ScriptComponentSystem,
+        GSplatComponentSystem
     ];
-    createOptions.resourceHandlers = [
-        pc.TextureHandler,
-        pc.ContainerHandler,
-        pc.ScriptHandler,
-        pc.GSplatHandler
-    ];
+    createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
-    const app = new pc.AppBase(canvas);
+    const app = new AppBase(canvas);
     app.init(createOptions);
-    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+    app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+    app.setCanvasResolution(RESOLUTION_AUTO);
 
     const resize = () => app.resizeCanvas();
     window.addEventListener('resize', resize);
@@ -743,51 +783,51 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         device.gpuProfiler.enabled = true;
     }
 
-    const bicycleAsset = new pc.Asset('bicycle', 'gsplat', {
+    const bicycleAsset = new Asset('bicycle', 'gsplat', {
         url: './assets/splats/bicycle.sog'
     });
-    const logoAsset = new pc.Asset('logo', 'gsplat', {
+    const logoAsset = new Asset('logo', 'gsplat', {
         url: './assets/splats/playcanvas-logo/meta.json'
     });
-    const churchAsset = new pc.Asset('church', 'gsplat', {
+    const churchAsset = new Asset('church', 'gsplat', {
         url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json'
     });
 
     setStatus(`${config.label}  Loading assets...`);
     await new Promise((resolve) => {
-        new pc.AssetListLoader([bicycleAsset, logoAsset, churchAsset], app.assets).load(resolve);
+        new AssetListLoader([bicycleAsset, logoAsset, churchAsset], app.assets).load(resolve);
     });
 
-    const bicycle = new pc.Entity('bicycle');
+    const bicycle = new Entity('bicycle');
     bicycle.addComponent('gsplat', { asset: bicycleAsset });
     bicycle.setLocalPosition(11.2, 0, -3.5);
     bicycle.setLocalEulerAngles(0, 90, 180);
     bicycle.setLocalScale(2, 2, 2);
     app.root.addChild(bicycle);
 
-    const logo = new pc.Entity('logo');
+    const logo = new Entity('logo');
     logo.addComponent('gsplat', { asset: logoAsset });
     logo.setLocalPosition(8, 0, 2.6);
     logo.setLocalEulerAngles(180, 0, 0);
     logo.setLocalScale(2, 2, 2);
     app.root.addChild(logo);
 
-    const church = new pc.Entity('church');
+    const church = new Entity('church');
     church.addComponent('gsplat', { asset: churchAsset });
     church.setLocalEulerAngles(-90, 0, 0);
     app.root.addChild(church);
 
-    const cameraPivot = new pc.Entity('cameraPivot');
+    const cameraPivot = new Entity('cameraPivot');
     cameraPivot.setLocalPosition(benchPivotBasePos.x, benchPivotBasePos.y, benchPivotBasePos.z);
     app.root.addChild(cameraPivot);
 
-    const camera = new pc.Entity('camera');
+    const camera = new Entity('camera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1),
+        clearColor: new Color(0.1, 0.1, 0.1),
         fov: 75
     });
     cameraPivot.addChild(camera);
-    camera.lookAt(new pc.Vec3(12, 3, 0));
+    camera.lookAt(new Vec3(12, 3, 0));
 
     app.start();
     app.resizeCanvas();
@@ -798,7 +838,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     let benchMotionFrame = 0;
     let benchLateralAccum = 0;
     let benchLateralCaptured = false;
-    const benchLateralDir = new pc.Vec3();
+    const benchLateralDir = new Vec3();
 
     /**
      * Warmup (measureFrames): camera frozen. Measure phase: yaw + lateral together each frameend (fixed steps, no dt).
@@ -878,7 +918,12 @@ async function runBenchmark(config, colIndex, budgetIndices) {
             avgPassTimings: result.avgPassTimings
         };
 
-        setBenchCells(`${millions}M:${colIndex}`, formatGpuMsCell(result.avgGpu), formatEffectiveFpsCell(result.effectiveFps), '#fff');
+        setBenchCells(
+            `${millions}M:${colIndex}`,
+            formatGpuMsCell(result.avgGpu),
+            formatEffectiveFpsCell(result.effectiveFps),
+            '#fff'
+        );
     }
 
     if (!storedGpuInfos[config.device]) storedGpuInfos[config.device] = gpuInfo;
@@ -890,7 +935,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
     canvas.height = 0;
     canvas.remove();
 
-    // allow GC to reclaim GPU/asset memory before the next run (helps on mobile)
+    // Allow GC to reclaim GPU/asset memory before the next run (helps on mobile)
     await new Promise((resolve) => {
         setTimeout(resolve, 1000);
     });
@@ -918,7 +963,8 @@ function layoutBenchmarkChartCanvas(chartCanvas, sizeTable) {
     const cssW = Math.max(1, Math.ceil(tw));
     const fallbackH = Math.ceil(cssW * (CHART_REF_H / CHART_REF_W));
     const cssH = Math.max(1, th > 0 ? Math.ceil(th) : fallbackH);
-    const dpr = typeof window.devicePixelRatio === 'number' && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
+    const dpr =
+        typeof window.devicePixelRatio === 'number' && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     const pixW = Math.max(1, Math.round(cssW * dpr));
     const pixH = Math.max(1, Math.round(cssH * dpr));
 
@@ -941,7 +987,7 @@ function refreshChartAndDownload() {
     fpsChartWrap.innerHTML = '';
     chartActionsRow.innerHTML = '';
 
-    const anyResults = storedResults.some(r => r !== null);
+    const anyResults = storedResults.some((r) => r !== null);
     if (!anyResults) return;
 
     const chartGpu = document.createElement('canvas');
@@ -1008,13 +1054,14 @@ function refreshChartAndDownload() {
  */
 function buildDownloadText() {
     const COL_W = 10;
-    const budgetHeader = BUDGETS.map(b => `${b}M`.padStart(COL_W)).join('');
+    const budgetHeader = BUDGETS.map((b) => `${b}M`.padStart(COL_W)).join('');
     const lineW = 24 + BUDGETS.length * COL_W;
 
     let text = 'GSplat Benchmark Results\n';
     text += `${'\u2550'.repeat(lineW)}\n`;
     if (webglGpuProfilingUnavailable) {
-        text += 'Note: WebGL GPU timings unavailable (no EXT_disjoint_timer_query). WebGL GPU ms are N/A; Effective FPS is still reported.\n\n';
+        text +=
+            'Note: WebGL GPU timings unavailable (no EXT_disjoint_timer_query). WebGL GPU ms are N/A; Effective FPS is still reported.\n\n';
     }
     if (storedGpuInfos.webgl2) text += `WebGL2:  ${storedGpuInfos.webgl2}\n`;
     if (storedGpuInfos.webgpu) text += `WebGPU:  ${storedGpuInfos.webgpu}\n`;
@@ -1055,8 +1102,8 @@ function buildDownloadText() {
         text += `\n${splatLine}\n`;
     }
 
-    const fmtGpu = g => (g >= 0 ? g.toFixed(2) : 'N/A');
-    const fmtEff = f => (f > 0 ? f.toFixed(1) : '\u2014');
+    const fmtGpu = (g) => (g >= 0 ? g.toFixed(2) : 'N/A');
+    const fmtEff = (f) => (f > 0 ? f.toFixed(1) : '\u2014');
 
     text += '\nGPU Frame Time (ms)\n';
     text += `${'Renderer'.padEnd(22)} ${budgetHeader}\n`;
@@ -1120,7 +1167,7 @@ function buildDownloadText() {
     }
 
     text += `\nConfig: ${WARMUP_FRAMES} warmup + ${MEASURE_FRAMES} measured frames per budget level\n`;
-    text += `Budgets: ${BUDGETS.map(b => `${b}M`).join(', ')}\n`;
+    text += `Budgets: ${BUDGETS.map((b) => `${b}M`).join(', ')}\n`;
     text += `UserAgent: ${navigator.userAgent}\n`;
     text += `Date: ${new Date().toISOString()}\n`;
     return text;
@@ -1373,11 +1420,7 @@ function drawBudgetChart(chartCanvas, mode) {
     ctx.font = `${12 * scale}px monospace`;
     ctx.textAlign = 'center';
     const yLabel = mode === 'gpu' ? 'GPU frame time (ms)' : 'Effective FPS';
-    ctx.fillText(
-        `${yLabel} vs Splat Budget (M, linear x: ${chartMinM}M–${chartMaxM}M)`,
-        W / 2,
-        18 * scale
-    );
+    ctx.fillText(`${yLabel} vs Splat Budget (M, linear x: ${chartMinM}M–${chartMaxM}M)`, W / 2, 18 * scale);
 
     for (let c = 0; c < RENDERERS.length; c++) {
         const r = storedResults[c];
@@ -1523,7 +1566,7 @@ async function runRow(budgetIndex) {
     setButtonsEnabled(false);
     setTestingMode(true);
 
-    const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
+    const indices = BUDGETS.map((_, i) => i).filter((i) => i <= budgetIndex);
     for (let c = 0; c < RENDERERS.length; c++) {
         await runTests(c, indices); // eslint-disable-line no-await-in-loop
     }
@@ -1564,7 +1607,7 @@ async function runCell(colIndex, budgetIndex) {
     setButtonsEnabled(false);
     setTestingMode(true);
 
-    const indices = BUDGETS.map((_, i) => i).filter(i => i <= budgetIndex);
+    const indices = BUDGETS.map((_, i) => i).filter((i) => i <= budgetIndex);
     await runTests(colIndex, indices);
 
     setTestingMode(false);

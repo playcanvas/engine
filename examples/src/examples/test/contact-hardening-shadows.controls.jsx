@@ -7,7 +7,7 @@ import {
     BooleanInput
 } from '@playcanvas/pcui/react';
 
-import * as pc from 'playcanvas';
+import { SHADOW_PCF5_32F, SHADOW_PCSS_32F } from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -50,8 +50,8 @@ export function Controls({ observer }) {
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'script.area.shadowType' }}
                         options={[
-                            { v: pc.SHADOW_PCSS_32F, t: 'PCSS_32F' },
-                            { v: pc.SHADOW_PCF5_32F, t: 'PCF_32F' }
+                            { v: SHADOW_PCSS_32F, t: 'PCSS_32F' },
+                            { v: SHADOW_PCF5_32F, t: 'PCF_32F' }
                         ]}
                     />
                 </LabelGroup>
@@ -85,8 +85,8 @@ export function Controls({ observer }) {
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'script.point.shadowType' }}
                         options={[
-                            { v: pc.SHADOW_PCSS_32F, t: 'PCSS_32F' },
-                            { v: pc.SHADOW_PCF5_32F, t: 'PCF_32F' }
+                            { v: SHADOW_PCSS_32F, t: 'PCSS_32F' },
+                            { v: SHADOW_PCF5_32F, t: 'PCF_32F' }
                         ]}
                     />
                 </LabelGroup>
@@ -120,8 +120,8 @@ export function Controls({ observer }) {
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'script.directional.shadowType' }}
                         options={[
-                            { v: pc.SHADOW_PCSS_32F, t: 'PCSS_32F' },
-                            { v: pc.SHADOW_PCF5_32F, t: 'PCF_32F' }
+                            { v: SHADOW_PCSS_32F, t: 'PCSS_32F' },
+                            { v: SHADOW_PCF5_32F, t: 'PCF_32F' }
                         ]}
                     />
                 </LabelGroup>
