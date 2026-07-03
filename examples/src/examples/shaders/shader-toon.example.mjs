@@ -112,7 +112,7 @@ const material = new ShaderMaterial({
     }
 });
 
-// create a hierarchy of entities with render components, representing the statue model
+// Create a hierarchy of entities with render components, representing the statue model
 const entity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
@@ -128,12 +128,12 @@ renders.forEach(render => {
     });
 });
 
-// material parameters
+// Material parameters
 const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
 material.setParameter('uLightPos', lightPosArray);
 material.update();
 
-// rotate the statue
+// Rotate the statue
 app.on('update', dt => {
     entity.rotate(0, 60 * dt, 0);
 });

@@ -102,19 +102,19 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// sphere material
+// Sphere material
 const material = new StandardMaterial();
 material.diffuseMap = assets.color.resource;
 material.normalMap = assets.normal.resource;
 material.glossMap = assets.gloss.resource;
 material.update();
 
-// sphere mesh and entity
+// Sphere mesh and entity
 const entity = new Entity('Sphere');
 app.root.addChild(entity);
 
@@ -141,7 +141,7 @@ cameraEntity.addComponent('camera', {
 });
 cameraEntity.translate(0, 0, 5);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -160,7 +160,7 @@ const shader = device.supportsCompute
           shaderLanguage: SHADERLANGUAGE_WGSL,
           cshader: computeShaderWgsl,
 
-          // format of a uniform buffer used by the compute shader
+          // Format of a uniform buffer used by the compute shader
           computeUniformBufferFormats: {
               ub: new UniformBufferFormat(device, [
                   new UniformFormat('count', UNIFORMTYPE_UINT),
@@ -170,24 +170,24 @@ const shader = device.supportsCompute
               ])
           },
 
-          // format of a bind group, providing resources for the compute shader
+          // Format of a bind group, providing resources for the compute shader
           computeBindGroupFormat: new BindGroupFormat(device, [
               // a uniform buffer we provided format for
               new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
-              // the vertex buffer we want to modify
+              // The vertex buffer we want to modify
               new BindStorageBufferFormat('vb', SHADERSTAGE_COMPUTE)
           ])
       })
     : null;
 
-// information about the vertex buffer format - offset of position and normal attributes
+// Information about the vertex buffer format - offset of position and normal attributes
 // Note: data is stored non-interleaved, positions together, normals together, so no need
 // to worry about stride
 const format = mesh.vertexBuffer.format;
 const positionElement = format.elements.find(e => e.name === SEMANTIC_POSITION);
 const normalElement = format.elements.find(e => e.name === SEMANTIC_NORMAL);
 
-// create an instance of the compute shader, and provide it the mesh vertex buffer
+// Create an instance of the compute shader, and provide it the mesh vertex buffer
 const compute = new Compute(device, shader, 'ComputeModifyVB');
 compute.setParameter('vb', mesh.vertexBuffer);
 compute.setParameter('count', mesh.vertexBuffer.numVertices);
@@ -198,16 +198,16 @@ let time = 0;
 app.on('update', dt => {
     time += dt;
     if (entity) {
-        // update non-constant parameters each frame
+        // Update non-constant parameters each frame
         compute.setParameter('time', time);
 
-        // set up both dispatches
+        // Set up both dispatches
         compute.setupDispatch(mesh.vertexBuffer.numVertices);
 
-        // dispatch the compute shader
+        // Dispatch the compute shader
         device.computeDispatch([compute], 'ModifyVBDispatch');
 
-        // solid / wireframe
+        // Solid / wireframe
         entity.render.renderStyle = Math.floor(time * 0.5) % 2 ? RENDERSTYLE_WIREFRAME : RENDERSTYLE_SOLID;
     }
 });

@@ -184,7 +184,7 @@ const textureArrayOptions = {
 
 const textureArray = new Texture(app.graphicsDevice, textureArrayOptions);
 
-// generate mipmaps for visualization
+// Generate mipmaps for visualization
 const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);
 const levels = mipmaps.map(data => {
     const textures = [];

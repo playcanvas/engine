@@ -93,17 +93,17 @@ const material = new ShaderMaterial({
     }
 });
 
-// find all render components
+// Find all render components
 const renderComponents = entity.findComponents('render');
 
-// for all render components
+// For all render components
 renderComponents.forEach((/** @type {RenderComponent} */ render) => {
     // For all meshes in the render component, assign new material
     render.meshInstances.forEach(meshInstance => {
         meshInstance.material = material;
     });
 
-    // set it to render as points
+    // Set it to render as points
     render.renderStyle = RENDERSTYLE_POINTS;
 });
 

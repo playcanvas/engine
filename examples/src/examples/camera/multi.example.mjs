@@ -138,7 +138,7 @@ Object.assign(cc, {
     moveSlowSpeed: sceneSize
 });
 
-// focus on entity when 'f' key is pressed
+// Focus on entity when 'f' key is pressed
 const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {
         case 'f': {

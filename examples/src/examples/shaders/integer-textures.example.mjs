@@ -77,7 +77,7 @@ const TEXTURE_RATIO = PLANE_WIDTH / PLANE_HEIGHT;
 const TEXTURE_HEIGHT = 512;
 const TEXTURE_WIDTH = TEXTURE_HEIGHT * TEXTURE_RATIO;
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -173,7 +173,7 @@ const outputTexture = new Texture(device, {
     addressV: ADDRESS_REPEAT
 });
 const outputRenderTarget = createPixelRenderTarget(2, outputTexture);
-// This is shader runs the sand simulation
+// This shader runs the sand simulation
 // It uses integer textures to store the state of each pixel
 const sandShader = ShaderUtils.createShader(device, {
     uniqueName: 'SandShader',
@@ -253,7 +253,7 @@ data.set('options', {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 2;
 app.scene.exposure = 1;
@@ -264,13 +264,13 @@ cameraEntity.addComponent('camera', {
     farClip: 500
 });
 
-// add camera to the world
+// Add camera to the world
 cameraEntity.setPosition(0, 5, 15);
 cameraEntity.lookAt(0, 5, 0);
 app.root.addChild(cameraEntity);
 
-// create a plane called gameScreen to display the sand
-// simulation visualization texture
+// Create a plane called gameScreen to display the sand
+// Simulation visualization texture
 const gameScreen = new Entity();
 gameScreen.addComponent('render', {
     type: 'plane',

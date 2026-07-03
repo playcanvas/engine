@@ -36,7 +36,7 @@ const gfxOptions = {
 const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// render to low resolution to make particles more visible on WebGPU, as it doesn't support point
+// Render to low resolution to make particles more visible on WebGPU, as it doesn't support point
 // size and those are very small otherwise. This is not a proper solution, and only a temporary
 // workaround specifically for this example use case.
 if (device.isWebGPU) {
@@ -72,20 +72,20 @@ camera.addComponent('camera', {
 // Add entity into scene hierarchy
 app.root.addChild(camera);
 
-// allocate two buffers to store positions of particles
+// Allocate two buffers to store positions of particles
 const maxNumPoints = 100000;
 let visiblePoints = 10000;
 const positions = new Float32Array(3 * maxNumPoints);
 const oldPositions = new Float32Array(3 * maxNumPoints);
 
-// generate random positions and old positions within small cube (delta between them represents velocity)
+// Generate random positions and old positions within small cube (delta between them represents velocity)
 for (let i = 0; i < 3 * maxNumPoints; i++) {
     positions[i] = Math.random() * 2 - 1;
     oldPositions[i] = positions[i] + Math.random() * 0.04 - 0.01;
 }
 
 /**
- * helper function to update vertex of the mesh
+ * Helper function to update vertex of the mesh
  * @param {Mesh} mesh - The mesh.
  */
 function updateMesh(mesh) {
@@ -101,7 +101,7 @@ const mesh = new Mesh(app.graphicsDevice);
 mesh.clear(true);
 updateMesh(mesh);
 
-// set large bounding box so we don't need to update it each frame
+// Set large bounding box so we don't need to update it each frame
 mesh.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(15, 15, 15));
 
 // Create a new material with a custom shader
@@ -138,26 +138,26 @@ app.on('update', dt => {
     previousTime = time;
     time += dt;
 
-    // update particle positions using simple Verlet integration, and keep them inside a sphere boundary
+    // Update particle positions using simple Verlet integration, and keep them inside a sphere boundary
     let dist;
     const pos = new Vec3();
     const old = new Vec3();
     const delta = new Vec3();
     const next = new Vec3();
     for (let i = 0; i < maxNumPoints; i++) {
-        // read positions from buffers
+        // Read positions from buffers
         old.set(oldPositions[i * 3], oldPositions[i * 3 + 1], oldPositions[i * 3 + 2]);
         pos.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
 
-        // verlet integration to move them
+        // Verlet integration to move them
         delta.sub2(pos, old);
         next.add2(pos, delta);
 
-        // boundary collision to keep them inside a sphere. If outside, simply move them in opposite direction
+        // Boundary collision to keep them inside a sphere. If outside, simply move them in opposite direction
         dist = next.length();
         if (dist > 15) next.copy(old);
 
-        // write out changed positions
+        // Write out changed positions
         positions[i * 3] = next.x;
         positions[i * 3 + 1] = next.y;
         positions[i * 3 + 2] = next.z;
@@ -167,12 +167,12 @@ app.on('update', dt => {
         oldPositions[i * 3 + 2] = pos.z;
     }
 
-    // once a second change how many points are visible
+    // Once a second change how many points are visible
     if (Math.round(time) !== Math.round(previousTime)) {
         visiblePoints = Math.floor(50000 + Math.random() * maxNumPoints - 50000);
     }
 
-    // update mesh vertices
+    // Update mesh vertices
     updateMesh(mesh);
 
     // Rotate the camera around

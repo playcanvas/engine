@@ -80,7 +80,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 0;
 app.scene.exposure = 2;
 app.scene.envAtlas = assets.helipad.resource;
@@ -101,7 +101,7 @@ app.scene.layers.insertOpaque(depthLayer, 2);
  * @returns {Entity} - The created primitive entity.
  */
 function createPrimitive(primitiveType, position, scale, color) {
-    // create material of specified color
+    // Create material of specified color
     const material = new StandardMaterial();
     material.diffuse = color;
     material.gloss = 0.6;
@@ -109,14 +109,14 @@ function createPrimitive(primitiveType, position, scale, color) {
     material.useMetalness = true;
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -125,7 +125,7 @@ function createPrimitive(primitiveType, position, scale, color) {
 }
 
 /**
- * create few primitives, keep their references to rotate them later
+ * Create few primitives, keep their references to rotate them later
  * @type {Entity[]}
  */
 const primitives = [];
@@ -149,15 +149,15 @@ app.root.addChild(camera);
 camera.setLocalPosition(0, 10, 20);
 camera.lookAt(Vec3.ZERO);
 
-// enable the camera to render the scene's color map.
+// Enable the camera to render the scene's color map.
 camera.camera.requestSceneColorMap(true);
 
-// create a primitive which uses refraction shader to distort the view behind it
+// Create a primitive which uses refraction shader to distort the view behind it
 const glass = createPrimitive('box', new Vec3(1, 3, 0), new Vec3(10, 10, 10), new Color(1, 1, 1));
 glass.render.castShadows = false;
 glass.render.receiveShadows = false;
 
-// reflection material using the shader
+// Refraction material using the shader
 const refractionMaterial = new ShaderMaterial({
     uniqueName: 'RefractionShader',
     vertexGLSL: shaderGlslVert,
@@ -171,13 +171,13 @@ const refractionMaterial = new ShaderMaterial({
 });
 glass.render.material = refractionMaterial;
 
-// set an offset map on the material
+// Set an offset map on the material
 refractionMaterial.setParameter('uOffsetMap', assets.normal.resource);
 
-// set roughness map
+// Set roughness map
 refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
 
-// tint colors
+// Tint colors
 refractionMaterial.setParameter(
     'tints[0]',
     new Float32Array([
@@ -196,23 +196,23 @@ refractionMaterial.setParameter(
     ])
 );
 
-// transparency
+// Transparency
 refractionMaterial.blendType = BLEND_NORMAL;
 refractionMaterial.update();
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // rotate the primitives
+    // Rotate the primitives
     primitives.forEach(prim => {
         prim.rotate(0.3, 0.2, 0.1);
     });
 
     glass.rotate(-0.1, 0.1, -0.15);
 
-    // orbit the camera
+    // Orbit the camera
     camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
     camera.lookAt(new Vec3(0, 2, 0));
 });

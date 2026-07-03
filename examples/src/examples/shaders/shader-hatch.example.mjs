@@ -57,7 +57,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -72,7 +72,7 @@ const assets = {
     danceAnim: new Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
     morph: new Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' }),
 
-    // hatch textures, sorted from light to dark
+    // Hatch textures, sorted from light to dark
     hatch0: new Asset('hatch0', 'texture', { url: './assets/textures/hatch-0.jpg' }, { srgb: true }),
     hatch1: new Asset('hatch1', 'texture', { url: './assets/textures/hatch-1.jpg' }, { srgb: true }),
     hatch2: new Asset('hatch2', 'texture', { url: './assets/textures/hatch-2.jpg' }, { srgb: true }),
@@ -127,7 +127,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// a helper function to apply a material to all mesh instances of an entity
+// A helper function to apply a material to all mesh instances of an entity
 const applyMaterial = (entity, material) => {
     entity.findComponents('render').forEach(render => {
         render.meshInstances.forEach(meshInstance => {
@@ -148,17 +148,17 @@ const material = createHatchMaterial(app.graphicsDevice, [
 ]);
 material.setParameter('uDensity', 10);
 
-// store al materials to allow for easy modification
+// Store all materials to allow for easy modification
 const materials = [material];
 
-// create an instance of the chess-board
+// Create an instance of the chess-board
 const entity = assets.board.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
-// assign the hatch material to all mesh instances of the entity
+// Assign the hatch material to all mesh instances of the entity
 applyMaterial(entity, material);
 
-// create an instance of the morph target model with a clone of the hatch material, and play
+// Create an instance of the morph target model with a clone of the hatch material, and play
 // a morphing animation on it
 const morphMaterial = material.clone();
 morphMaterial.setParameter('uColor', [1, 0.21, 0.4]);
@@ -172,7 +172,7 @@ const morphAnimation = assets.morph.resource.animations[1].resource;
 morphEntity.anim.assignAnimation('Default', morphAnimation, undefined, 0.62);
 applyMaterial(morphEntity, morphMaterial);
 
-// create an inverted skydome, using clone of the hatching material with culling turned off
+// Create an inverted skydome, using clone of the hatching material with culling turned off
 // to see it from the inside
 const skyMaterial = material.clone();
 materials.push(skyMaterial);
@@ -195,7 +195,7 @@ sky.addComponent('render', {
 sky.setLocalScale(1000, 1000, 1000);
 app.root.addChild(sky);
 
-// animated / morphed bitmoji model
+// Animated / morphed bitmoji model
 const bitmojiEntity = assets.bitmoji.resource.instantiateRenderEntity({
     castShadows: false
 });
@@ -207,7 +207,7 @@ materials.push(bitmojiMaterial);
 bitmojiMaterial.setParameter('uColor', [1.0, 0.65, 0.0]);
 applyMaterial(bitmojiEntity, bitmojiMaterial);
 
-// play the animation
+// Play the animation
 bitmojiEntity.addComponent('anim', { activate: true });
 const walkTrack = assets.danceAnim.resource.animations[0].resource;
 bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
@@ -219,7 +219,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(30, 30, 30);
 
-// add orbit camera script to the camera
+// Add orbit camera script to the camera
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -232,12 +232,12 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // generate a light direction that rotates around the scene, and set it on the materials
+    // Generate a light direction that rotates around the scene, and set it on the materials
     const lightDir = new Vec3(Math.sin(time), -0.5, Math.cos(time)).normalize();
     const lightDirArray = [-lightDir.x, -lightDir.y, -lightDir.z];
 
@@ -247,7 +247,7 @@ app.on('update', dt => {
     });
 });
 
-// handle UI changes
+// Handle UI changes
 data.on('*:set', (path, value) => {
     const propertyName = path.split('.')[1];
     if (propertyName === 'color') {
@@ -255,11 +255,11 @@ data.on('*:set', (path, value) => {
         material.update();
     }
     if (propertyName === 'tonemapping') {
-        // set up selected tone-mapping
+        // Set up selected tone-mapping
         camera.camera.toneMapping = value;
     }
     if (propertyName === 'fog') {
-        // turn on/off fog and set up its properties
+        // Turn on/off fog and set up its properties
         app.scene.fog.type = value ? FOG_LINEAR : FOG_NONE;
         app.scene.fog.color = new Color(0.8, 0.8, 0.8);
         app.scene.fog.start = 100;
@@ -273,14 +273,14 @@ data.on('*:set', (path, value) => {
     }
     if (propertyName === 'toon') {
         materials.forEach(mat => {
-            // set a define that will be used inside the shader to switch between toon and hatch shading
+            // Set a define that will be used inside the shader to switch between toon and hatch shading
             mat.setDefine('TOON', value);
             mat.update();
         });
     }
 });
 
-// initial values
+// Initial values
 data.set('data', {
     color: 1,
     metalness: 0.5,

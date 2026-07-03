@@ -116,7 +116,7 @@ const material = new ShaderMaterial({
 });
 material.setParameter('uHeightMap', assets.clouds.resource);
 
-// create a hierarchy of entities with render components, representing the statue model
+// Create a hierarchy of entities with render components, representing the statue model
 const entity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
@@ -140,7 +140,7 @@ renders.forEach(render => {
     }
 });
 
-// material is set up, update it
+// Material is set up, update it
 material.setParameter('uDiffuseMap', originalTexture);
 material.update();
 
@@ -148,13 +148,13 @@ let time = 0;
 app.on('update', dt => {
     time += 0.2 * dt;
 
-    // reverse time
+    // Reverse time
     let t = time % 2;
     if (t > 1) {
         t = 1 - (t - 1);
     }
 
-    // set time parameter for the shader
+    // Set time parameter for the shader
     material.setParameter('uTime', t);
     material.update();
 });

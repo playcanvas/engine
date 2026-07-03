@@ -90,7 +90,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.7;
 app.scene.envAtlas = assets.helipad.resource;
@@ -103,7 +103,7 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 camera.translate(0, 0, 10);
 
-// create standard material that will be used on the instanced spheres
+// Create standard material that will be used on the instanced spheres
 const material = new StandardMaterial();
 material.diffuse = new Color(1, 1, 0.5);
 material.gloss = 1;
@@ -119,10 +119,10 @@ sphere.addComponent('render', {
 });
 app.root.addChild(sphere);
 
-// number of instances to render
+// Number of instances to render
 const instanceCount = 1000;
 
-// store matrices for individual instances into array
+// Store matrices for individual instances into array
 const matrices = new Float32Array(instanceCount * 16);
 let matrixIndex = 0;
 
@@ -133,7 +133,7 @@ const scl = new Vec3();
 const matrix = new Mat4();
 
 for (let i = 0; i < instanceCount; i++) {
-    // generate positions / scales and rotations
+    // Generate positions / scales and rotations
     pos.set(
         Math.random() * radius - radius * 0.5,
         Math.random() * radius - radius * 0.5,
@@ -143,53 +143,53 @@ for (let i = 0; i < instanceCount; i++) {
     rot.setFromEulerAngles(0, 0, 0);
     matrix.setTRS(pos, rot, scl);
 
-    // copy matrix elements into array of floats
+    // Copy matrix elements into array of floats
     for (let m = 0; m < 16; m++) matrices[matrixIndex++] = matrix.data[m];
 }
 
-// create static vertex buffer containing the matrices
+// Create static vertex buffer containing the matrices
 const vbFormat = VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
 const vertexBuffer = new VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
     data: matrices
 });
 
-// initialize instancing using the vertex buffer on meshInstance of the created sphere
+// Initialize instancing using the vertex buffer on meshInstance of the created sphere
 const sphereMeshInst = sphere.render.meshInstances[0];
 sphereMeshInst.setInstancing(vertexBuffer);
 
-// create a compute shader which will be used to update the number of instances to be rendered each frame
+// Create a compute shader which will be used to update the number of instances to be rendered each frame
 const shader = device.supportsCompute
     ? new Shader(device, {
           name: 'ComputeShader',
           shaderLanguage: SHADERLANGUAGE_WGSL,
           cshader: computeShaderWgsl,
 
-          // include all WGSL chunks to be available for including in the compute shader
+          // Include all WGSL chunks to be available for including in the compute shader
           cincludes: ShaderChunks.get(device, SHADERLANGUAGE_WGSL),
 
-          // format of a uniform buffer used by the compute shader
+          // Format of a uniform buffer used by the compute shader
           computeUniformBufferFormats: {
               ub: new UniformBufferFormat(device, [
                   // metadata about the mesh (how many indicies it has and similar, used to generate draw call parameters)
                   new UniformFormat('indirectMetaData', UNIFORMTYPE_IVEC4),
 
-                  // time to animate number of visible instances
+                  // Time to animate number of visible instances
                   new UniformFormat('time', UNIFORMTYPE_FLOAT),
 
-                  // maximum number of instances
+                  // Maximum number of instances
                   new UniformFormat('maxInstanceCount', UNIFORMTYPE_UINT),
 
-                  // indirect slot into storage buffer which stored draw call parameters
+                  // Indirect slot into storage buffer which stored draw call parameters
                   new UniformFormat('indirectSlot', UNIFORMTYPE_UINT)
               ])
           },
 
-          // format of a bind group, providing resources for the compute shader
+          // Format of a bind group, providing resources for the compute shader
           computeBindGroupFormat: new BindGroupFormat(device, [
               // a uniform buffer we provided format for
               new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
 
-              // the buffer with indirect draw arguments
+              // The buffer with indirect draw arguments
               new BindStorageBufferFormat('indirectDrawBuffer', SHADERSTAGE_COMPUTE)
           ])
       })
@@ -206,26 +206,26 @@ let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // obtain available slot in the indirect draw buffer - this needs to be done each frame
+    // Obtain available slot in the indirect draw buffer - this needs to be done each frame
     const indirectSlot = app.graphicsDevice.getIndirectDrawSlot();
 
     // and assign it to the mesh instance for all cameras (null parameter)
     sphereMeshInst.setIndirect(null, indirectSlot);
 
-    // give compute shader the indirect draw buffer - this can change between frames, so assign it each frame
+    // Give compute shader the indirect draw buffer - this can change between frames, so assign it each frame
     compute.setParameter('indirectDrawBuffer', app.graphicsDevice.indirectDrawBuffer);
 
-    // update compute shader parameters
+    // Update compute shader parameters
     compute.setParameter('time', time);
     compute.setParameter('indirectSlot', indirectSlot);
 
-    // set up the compute dispatch
+    // Set up the compute dispatch
     compute.setupDispatch(1);
 
-    // dispatch the compute shader
+    // Dispatch the compute shader
     device.computeDispatch([compute], 'ComputeIndirectDraw');
 
-    // orbit camera around
+    // Orbit camera around
     angle += dt * 0.2;
     camera.setLocalPosition(8 * Math.sin(angle), 0, 8 * Math.cos(angle));
     camera.lookAt(Vec3.ZERO);

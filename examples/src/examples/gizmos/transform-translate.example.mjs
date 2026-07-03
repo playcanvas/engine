@@ -59,11 +59,11 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 const app = new AppBase(canvas);
 app.init(createOptions);
 
-// set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-// load assets
+// Load assets
 const assets = {
     font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
@@ -82,17 +82,17 @@ await loadAssets(Object.values(assets), app.assets);
 
 app.start();
 
-// scene settings
+// Scene settings
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// create entities
+// Create entities
 const box = new Entity('box');
 box.addComponent('render', {
     type: 'box'
 });
 app.root.addChild(box);
 
-// camera
+// Camera
 data.set('camera', {
     proj: PROJECTION_PERSPECTIVE + 1,
     dist: 1,
@@ -109,7 +109,7 @@ const cameraOffset = 4 * camera.camera.aspectRatio;
 camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
 
-// camera controls
+// Camera controls
 const cc = /** @type {CameraControls} */ (camera.script.create(CameraControls));
 Object.assign(cc, {
     focusPoint: Vec3.ZERO,
@@ -125,13 +125,13 @@ app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
     cc.enabled = !hasPointer;
 });
 
-// create light entity
+// Create light entity
 const light = new Entity('light');
 light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// create gizmo
+// Create gizmo
 const layer = Gizmo.createLayer(app);
 const gizmo = new TranslateGizmo(camera.camera, layer);
 gizmo.on('pointer:down', (_x, _y, /** @type {MeshInstance} */ meshInstance) => {
@@ -182,14 +182,14 @@ data.set('gizmo', {
     axisCenterSize: gizmo.axisCenterSize
 });
 
-// create grid
+// Create grid
 const gridEntity = new Entity('grid');
 gridEntity.setLocalScale(4, 1, 4);
 app.root.addChild(gridEntity);
 gridEntity.addComponent('script');
 gridEntity.script.create(Grid);
 
-// controls hook
+// Controls hook
 const tmpC = new Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key, ...parts] = path.split('.');
@@ -227,7 +227,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     }
 });
 
-// ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
+// Ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
 const resize = () => {
     app.resizeCanvas();
     const bounds = canvas.getBoundingClientRect();

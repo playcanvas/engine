@@ -86,12 +86,12 @@ await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// set up some general scene rendering properties
+// Set up some general scene rendering properties
 app.scene.skyboxMip = 2;
 app.scene.skyboxIntensity = 0.2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create camera entity
+// Create camera entity
 const cameraEntity = new Entity('camera');
 cameraEntity.addComponent('camera', {
     toneMapping: TONEMAP_ACES
@@ -99,7 +99,7 @@ cameraEntity.addComponent('camera', {
 app.root.addChild(cameraEntity);
 cameraEntity.setPosition(-150, -60, 190);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -128,7 +128,7 @@ const shader = device.supportsCompute
     : null;
 
 // Create a storage buffer to store particles
-// see the particle size / alignment / padding here: https://tinyurl.com/particle-structure
+// See the particle size / alignment / padding here: https://tinyurl.com/particle-structure
 const particleFloatSize = 12;
 const particleStructSize = particleFloatSize * 4; // 4 bytes per float
 const particleStorageBuffer = new StorageBuffer(
@@ -138,43 +138,43 @@ const particleStorageBuffer = new StorageBuffer(
         BUFFERUSAGE_COPY_DST // CPU copies initial data to it
 );
 
-// generate initial particle data
+// Generate initial particle data
 const particleData = new Float32Array(numParticles * particleFloatSize);
 const velocity = new Vec3();
 for (let i = 0; i < numParticles; ++i) {
-    // random velocity inside a cone
+    // Random velocity inside a cone
     const r = 0.4 * Math.sqrt(Math.random());
     const theta = Math.random() * 2 * Math.PI;
     velocity.set(r * Math.cos(theta), -1, r * Math.sin(theta));
     const speed = 0.6 + Math.random() * 0.6;
     velocity.normalize().mulScalar(speed);
 
-    // store the data in the buffer at matching offsets
+    // Store the data in the buffer at matching offsets
     const base = i * particleFloatSize;
 
-    // position
+    // Position
     particleData[base + 0] = velocity.x;
     particleData[base + 1] = velocity.y;
     particleData[base + 2] = velocity.z;
 
-    // time since collision - large as no recent collision
+    // Time since collision - large as no recent collision
     particleData[base + 3] = 100;
 
-    // old position (spawn position)
+    // Old position (spawn position)
     particleData[base + 4] = 0;
     particleData[base + 5] = 0;
     particleData[base + 6] = 0;
 
-    // original velocity
+    // Original velocity
     particleData[base + 8] = velocity.x;
     particleData[base + 9] = velocity.y;
     particleData[base + 10] = velocity.z;
 }
 
-// upload the data to the buffer
+// Upload the data to the buffer
 particleStorageBuffer.write(0, particleData);
 
-// collision spheres
+// Collision spheres
 const numSpheres = 3;
 const sphereData = new Float32Array(numSpheres * 4);
 
@@ -204,15 +204,15 @@ const addSphere = (index, x, y, z, r) => {
     return sphere;
 };
 
-// add 3 sphere
+// Add 3 sphere
 addSphere(0, 28, -70, 0, 27);
 const s1 = addSphere(1, -38, -130, 0, 35);
 addSphere(2, 45, -210, 35, 70);
 
-// camera focuses on one of the spheres
+// Camera focuses on one of the spheres
 cameraEntity.script.orbitCamera.focusEntity = s1;
 
-// upload the sphere data to the buffer
+// Upload the sphere data to the buffer
 const sphereStorageBuffer = new StorageBuffer(device, numSpheres * 16, BUFFERUSAGE_COPY_DST);
 sphereStorageBuffer.write(0, sphereData);
 
@@ -221,20 +221,20 @@ const compute = new Compute(device, shader, 'ComputeParticles');
 compute.setParameter('particles', particleStorageBuffer);
 compute.setParameter('spheres', sphereStorageBuffer);
 
-// constant uniforms
+// Constant uniforms
 compute.setParameter('count', numParticles);
 compute.setParameter('sphereCount', numSpheres);
 
 // ------- Particle rendering -------
 
-// material to render the particles using WGSL shader as GLSL does not have access to storage buffers
+// Material to render the particles using WGSL shader as GLSL does not have access to storage buffers
 const material = new ShaderMaterial({
     uniqueName: 'ParticleRenderShader',
     vertexWGSL: shaderSharedWgsl + shaderRenderingVertexWgsl,
     fragmentWGSL: shaderSharedWgsl + shaderRenderingFragmentWgsl
 });
 
-// rendering shader needs the particle storage buffer to read the particle data
+// Rendering shader needs the particle storage buffer to read the particle data
 material.setParameter('particles', particleStorageBuffer);
 
 // index buffer - two triangles (6 indices) per particle using 4 vertices
@@ -250,7 +250,7 @@ for (let i = 0; i < numParticles; ++i) {
     indices[triBase + 5] = vertBase + 3;
 }
 
-// create a mesh without vertex buffer - we will use the particle storage buffer to supply positions
+// Create a mesh without vertex buffer - we will use the particle storage buffer to supply positions
 const mesh = new Mesh(device);
 mesh.setIndices(indices);
 mesh.update();
@@ -265,10 +265,10 @@ app.root.addChild(entity);
 
 app.on('update', (/** @type {number} */ dt) => {
     if (device.supportsCompute) {
-        // update non-constant parameters each frame
+        // Update non-constant parameters each frame
         compute.setParameter('dt', dt);
 
-        // dispatch the compute shader to simulate the particles
+        // Dispatch the compute shader to simulate the particles
         compute.setupDispatch(1024 / 64, 1024);
         device.computeDispatch([compute], 'ComputeParticlesDispatch');
     }

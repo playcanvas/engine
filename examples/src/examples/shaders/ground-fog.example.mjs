@@ -105,24 +105,24 @@ data.set('data', {
     softness: true
 });
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 3;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, -70, 0);
 
-// disable skydome rendering
+// Disable skydome rendering
 const skyLayer = app.scene.layers.getLayerById(LAYERID_SKYBOX);
 skyLayer.enabled = false;
 
-// instantiate the terrain
+// Instantiate the terrain
 const terrain = assets.terrain.resource.instantiateRenderEntity();
 terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
-// find a tree in the middle to use as a focus point
+// Find a tree in the middle to use as a focus point
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
-// create an Entity with a camera component
+// Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(150 / 255, 213 / 255, 63 / 255),
@@ -133,7 +133,7 @@ camera.addComponent('camera', {
 // and position it in the world
 camera.setLocalPosition(-200, 120, 225);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -146,7 +146,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// enable the camera to render the scene's depth map.
+// Enable the camera to render the scene's depth map.
 camera.camera.requestSceneDepthMap(true);
 
 // Create a directional light casting cascaded shadows
@@ -158,7 +158,7 @@ dirLight.addComponent('light', {
     normalOffsetBias: 0.2,
     intensity: 1.0,
 
-    // enable shadow casting
+    // Enable shadow casting
     castShadows: true,
     shadowDistance: 1000,
     shadowResolution: 2048,
@@ -184,7 +184,7 @@ material.depthWrite = false;
 material.blendType = BLEND_NORMAL;
 material.update();
 
-// create a subdivided plane mesh, to allow for vertex animation by the shader
+// Create a subdivided plane mesh, to allow for vertex animation by the shader
 const mesh = Mesh.fromGeometry(app.graphicsDevice, new PlaneGeometry({ widthSegments: 20, lengthSegments: 20 }));
 const meshInstance = new MeshInstance(mesh, material);
 const ground = new Entity();
@@ -201,7 +201,7 @@ app.root.addChild(ground);
 let firstFrame = true;
 let currentTime = 0;
 app.on('update', dt => {
-    // on the first frame, when camera is updated, move it further away from the focus tree
+    // On the first frame, when camera is updated, move it further away from the focus tree
     if (firstFrame) {
         firstFrame = false;
         // @ts-ignore engine-tsd
@@ -212,9 +212,9 @@ app.on('update', dt => {
     currentTime += dt;
     material.setParameter('uTime', currentTime);
 
-    // based on sofness toggle, set shader parameter
+    // Based on softness toggle, set shader parameter
     material.setParameter('uSoftening', data.get('data.softness') ? 50 : 1000);
 
-    // debug rendering of the deptht texture in the corner
+    // Debug rendering of the depth texture in the corner
     app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
 });

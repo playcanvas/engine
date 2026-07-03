@@ -93,7 +93,7 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// add a shadow casting directional light
+// Add a shadow casting directional light
 const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -105,10 +105,10 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
-// number of tree instances to render
+// Number of tree instances to render
 const instanceCount = 1000;
 
-// store matrices for individual instances into array
+// Store matrices for individual instances into array
 const matrices = new Float32Array(instanceCount * 16);
 let matrixIndex = 0;
 
@@ -118,42 +118,42 @@ const scl = new Vec3();
 const matrix = new Mat4();
 
 for (let i = 0; i < instanceCount; i++) {
-    // random points in the circle
+    // Random points in the circle
     const maxRadius = 20;
     const angle = Math.random() * 2 * Math.PI;
     const radius = Math.sqrt(Math.random() * maxRadius ** 2);
 
-    // generate random positions / scales and rotations
+    // Generate random positions / scales and rotations
     pos.set(radius * Math.cos(angle), 0, radius * Math.sin(angle));
     scl.set(0.1 + Math.random() * 0.2, 0.1 + Math.random() * 0.3, 0.1 + Math.random() * 0.2);
     pos.y = -1.5 + scl.y * 4.5;
     matrix.setTRS(pos, rot, scl);
 
-    // copy matrix elements into array of floats
+    // Copy matrix elements into array of floats
     for (let m = 0; m < 16; m++) matrices[matrixIndex++] = matrix.data[m];
 }
 
-// create static vertex buffer containing the matrices
+// Create static vertex buffer containing the matrices
 const vbFormat = VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
 const vertexBuffer = new VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
     data: matrices
 });
 
-// create a forest by setting up the tree model for instancing
+// Create a forest by setting up the tree model for instancing
 const forest = assets.tree.resource.instantiateRenderEntity();
 app.root.addChild(forest);
 const meshInstance = forest.findComponent('render').meshInstances[0];
 meshInstance.setInstancing(vertexBuffer);
 
-// apply shader chunks to the tree material
+// Apply shader chunks to the tree material
 const treeChunks = meshInstance.material.getShaderChunks(shaderLanguage);
 treeChunks.add(shaderChunks);
 meshInstance.material.shaderChunksVersion = '2.8';
 
-// create a ground material - all chunks apart from swaying in the wind, so fog and color blending
+// Create a ground material - all chunks apart from swaying in the wind, so fog and color blending
 const groundMaterial = new StandardMaterial();
 const groundChunks = groundMaterial.getShaderChunks(shaderLanguage);
-// only add the chunks we need (excluding transformCoreVS which is for tree swaying)
+// Only add the chunks we need (excluding transformCoreVS which is for tree swaying)
 groundChunks.add({
     diffusePS: shaderChunks.diffusePS,
     litUserMainEndPS: shaderChunks.litUserMainEndPS,
@@ -170,17 +170,17 @@ ground.setLocalScale(50, 1, 50);
 ground.setLocalPosition(0, -2, 0);
 app.root.addChild(ground);
 
-// update things every frame
+// Update things every frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // update uniforms once per frame. Note that this needs to use unique uniform names, to make sure
+    // Update uniforms once per frame. Note that this needs to use unique uniform names, to make sure
     // nothing overrides those. Alternatively, you could 'setParameter' on the materials.
     app.graphicsDevice.scope.resolve('myTime').setValue(time);
     app.graphicsDevice.scope.resolve('myFogParams').setValue([-2, 2]);
 
-    // orbit camera around
+    // Orbit camera around
     camera.setLocalPosition(18 * Math.sin(time * 0.05), 10, 18 * Math.cos(time * 0.05));
     camera.lookAt(Vec3.ZERO);
 });

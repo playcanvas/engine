@@ -44,7 +44,7 @@ import shaderWgslVert from './shader.wgsl.vert';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// load the textures
+// Load the textures
 const assets = {
     helipad: new Asset(
         'helipad-env-atlas',
@@ -94,7 +94,7 @@ app.scene.skyboxIntensity = 1;
 app.scene.skyboxMip = 2;
 
 /**
- * helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
+ * Helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
  * @param {Material} material - The material.
  * @param {number[]} layer - The render component's layers.
  * @returns {Entity} The returned entity.
@@ -104,7 +104,7 @@ const createHighQualitySphere = (material, layer) => {
     const entity = new Entity('HighResSphere');
     app.root.addChild(entity);
 
-    // create hight resolution sphere
+    // Create high resolution sphere
     const mesh = Mesh.fromGeometry(app.graphicsDevice, new SphereGeometry({ latitudeBands: 200, longitudeBands: 200 }));
 
     // Add a render component with the mesh
@@ -125,7 +125,7 @@ const renderTarget = new RenderTarget({
     depth: false
 });
 
-// create a layer for rendering to decals
+// Create a layer for rendering to decals
 const decalLayer = new Layer({ name: 'decalLayer' });
 app.scene.layers.insert(decalLayer, 0);
 
@@ -153,7 +153,7 @@ camera.translate(20, 10, 40);
 camera.lookAt(new Vec3(0, -7, 0));
 app.root.addChild(camera);
 
-// material used on the sphere
+// Material used on the sphere
 const material = new StandardMaterial();
 material.diffuseMap = texture;
 material.gloss = 0.6;
@@ -161,7 +161,7 @@ material.metalness = 0.4;
 material.useMetalness = true;
 material.update();
 
-// sphere with the texture
+// Sphere with the texture
 const worldLayer = app.scene.layers.getLayerByName('World');
 const meshEntity = createHighQualitySphere(material, [worldLayer.id]);
 meshEntity.setLocalScale(15, 15, 15);
@@ -183,7 +183,7 @@ decalMaterial.blendType = BLEND_NORMAL;
 decalMaterial.setParameter('uDecalMap', assets.decal.resource);
 
 // To render into uv space of the mesh, we need to render the mesh using our custom shader into
-// the texture. In order to do this, we creates a new entity, containing the same mesh instances,
+// the texture. In order to do this, we create a new entity, containing the same mesh instances,
 // but using our custom shader. We make it a child of the original entity, to use its transform.
 const meshInstances = meshEntity.render.meshInstances.map(srcMeshInstance => {
     return new MeshInstance(srcMeshInstance.mesh, decalMaterial);
@@ -206,43 +206,43 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 90, 0);
 
-// update things each frame
+// Update things each frame
 let time = 0;
 let decalTime = 0;
 const decalFrequency = 0.5;
 app.on('update', dt => {
     time += dt * 0.7;
 
-    // a decal projection box is an orthographic projection from some position. We calculate position
+    // A decal projection box is an orthographic projection from some position. We calculate position
     // here to be in an orbit around the sphere. Draw a line showing the projection point and direction.
     const decalProjectionPos = new Vec3(8 * Math.cos(time), 8 * Math.cos(time * 0.3), 8 * Math.sin(time));
     app.drawLine(decalProjectionPos, Vec3.ZERO, Color.WHITE);
 
-    // render recal every half a second
+    // Render decal every half a second
     decalTime += dt;
     if (decalTime > decalFrequency) {
         decalTime -= decalFrequency;
 
-        // enable decal camera, which renders the decal
+        // Enable decal camera, which renders the decal
         decalCamera.enabled = true;
 
-        // construct a view matrix, looking from the decal position to the center of the sphere
+        // Construct a view matrix, looking from the decal position to the center of the sphere
         const viewMatrix = new Mat4().setLookAt(decalProjectionPos, Vec3.ZERO, Vec3.UP);
         viewMatrix.invert();
 
-        // ortographics projection matrix - this defines the size of the decal, but also its depth range (0..5)
+        // Orthographic projection matrix - this defines the size of the decal, but also its depth range (0..5)
         const projMatrix = new Mat4().setOrtho(-1, 1, -1, 1, 0, 5);
 
-        // final matrix is a combination of view and projection matrix. Make it available to the shader.
+        // Final matrix is a combination of view and projection matrix. Make it available to the shader.
         const viewProj = new Mat4();
         viewProj.mul2(projMatrix, viewMatrix);
         decalMaterial.setParameter('matrix_decal_viewProj', viewProj.data);
     } else {
-        // otherwise the decal camera is disabled
+        // Otherwise the decal camera is disabled
         decalCamera.enabled = false;
     }
 
-    // draw the texture we render decals to for demonstration purposes
+    // Draw the texture we render decals to for demonstration purposes
     // @ts-ignore engine-tsd
     app.drawTexture(0, -0.6, 1.4, 0.6, texture);
 });

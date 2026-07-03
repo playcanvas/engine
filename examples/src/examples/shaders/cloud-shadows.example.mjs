@@ -94,7 +94,7 @@ app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxMip = 1;
 app.scene.exposure = 0.4;
 
-// camera
+// Camera
 const camera = new Entity();
 camera.addComponent('camera', {
     toneMapping: TONEMAP_ACES,
@@ -102,7 +102,7 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// directional light with shadows
+// Directional light with shadows
 const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -114,7 +114,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
-// instanced trees
+// Instanced trees
 const instanceCount = 1000;
 const matrices = new Float32Array(instanceCount * 16);
 let matrixIndex = 0;
@@ -147,12 +147,12 @@ app.root.addChild(forest);
 const meshInstance = forest.findComponent('render').meshInstances[0];
 meshInstance.setInstancing(vertexBuffer);
 
-// apply cloud shadow chunks to tree material
+// Apply cloud shadow chunks to tree material
 const treeMaterial = meshInstance.material;
 treeMaterial.getShaderChunks(shaderLanguage).add(shaderChunks);
 treeMaterial.shaderChunksVersion = '2.8';
 
-// ground plane with cloud shadow chunks
+// Ground plane with cloud shadow chunks
 const groundMaterial = new StandardMaterial();
 groundMaterial.getShaderChunks(shaderLanguage).add(shaderChunks);
 groundMaterial.shaderChunksVersion = '2.8';
@@ -166,12 +166,12 @@ ground.setLocalScale(50, 1, 50);
 ground.setLocalPosition(0, -2, 0);
 app.root.addChild(ground);
 
-// ensure the cloud texture wraps so the scrolling tiles seamlessly
+// Ensure the cloud texture wraps so the scrolling tiles seamlessly
 const cloudTexture = assets.clouds.resource;
 cloudTexture.addressU = ADDRESS_REPEAT;
 cloudTexture.addressV = ADDRESS_REPEAT;
 
-// set default control values
+// Set default control values
 data.set('data', {
     speed: 0.03,
     direction: 30,
@@ -192,18 +192,18 @@ app.on('update', dt => {
     const intensity = data.get('data.intensity');
     const scale = data.get('data.scale');
 
-    // scroll direction from angle
+    // Scroll direction from angle
     const dirRad = (directionDeg * Math.PI) / 180;
     offsetX += Math.cos(dirRad) * speed * dt;
     offsetY += Math.sin(dirRad) * speed * dt;
 
-    // set cloud shadow uniforms globally - all materials with the chunk receive them
+    // Set cloud shadow uniforms globally - all materials with the chunk receive them
     scope.resolve('cloudShadowTexture').setValue(cloudTexture);
     scope.resolve('cloudShadowOffset').setValue([offsetX, offsetY]);
     scope.resolve('cloudShadowScale').setValue(scale);
     scope.resolve('cloudShadowIntensity').setValue(intensity);
 
-    // orbit camera
+    // Orbit camera
     camera.setLocalPosition(18 * Math.sin(time * 0.05), 10, 18 * Math.cos(time * 0.05));
     camera.lookAt(Vec3.ZERO);
 });

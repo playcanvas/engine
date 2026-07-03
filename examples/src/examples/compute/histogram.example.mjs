@@ -97,12 +97,12 @@ await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.skyboxIntensity = 0.3;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create camera entity
+// Create camera entity
 const camera = new Entity('camera');
 camera.addComponent('camera', {
     toneMapping: TONEMAP_ACES
@@ -114,7 +114,7 @@ camera.setPosition(0, 0, 5);
 // This allows us to use the rendered scene as an input for the histogram compute shader.
 camera.camera.requestSceneColorMap(true);
 
-// create directional light entity
+// Create directional light entity
 const light = new Entity('light');
 light.addComponent('light', {
     type: 'directional',
@@ -124,24 +124,24 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setEulerAngles(45, 0, 40);
 
-// a helper script that rotates the entity
+// A helper script that rotates the entity
 const Rotator = createScript('rotator');
 Rotator.prototype.update = function (/** @type {number} */ dt) {
     this.entity.rotate(5 * dt, 10 * dt, -15 * dt);
 };
 
-// a compute shader that will compute the histogram of the input texture and write the result to the storage buffer
+// A compute shader that will compute the histogram of the input texture and write the result to the storage buffer
 const shader = device.supportsCompute
     ? new Shader(device, {
           name: 'ComputeShader',
           shaderLanguage: SHADERLANGUAGE_WGSL,
           cshader: computeShaderWgsl,
 
-          // format of a bind group, providing resources for the compute shader
+          // Format of a bind group, providing resources for the compute shader
           computeBindGroupFormat: new BindGroupFormat(device, [
-              // input texture - the scene color map, without a sampler
+              // Input texture - the scene color map, without a sampler
               new BindTextureFormat('uSceneColorMap', SHADERSTAGE_COMPUTE, undefined, undefined, false),
-              // output storage buffer
+              // Output storage buffer
               new BindStorageBufferFormat('outBuffer', SHADERSTAGE_COMPUTE)
           ])
       })
@@ -157,11 +157,11 @@ const histogramStorageBuffer = new StorageBuffer(
 );
 
 // Create an instance of the compute shader, and set the input and output data. Note that we do
-// not provide a value for `uSceneColorMap` as this is done by the engine internally.
+// Not provide a value for `uSceneColorMap` as this is done by the engine internally.
 const compute = new Compute(device, shader, 'ComputeHistogram');
 compute.setParameter('outBuffer', histogramStorageBuffer);
 
-// instantiate the spinning mesh
+// Instantiate the spinning mesh
 const solid = assets.solid.resource.instantiateRenderEntity();
 solid.addComponent('script');
 solid.script.create('rotator');
@@ -179,10 +179,10 @@ app.on('update', (/** @type {number} */ _dt) => {
     }
 
     if (device.supportsCompute) {
-        // clear the storage buffer, to avoid the accumulation buildup
+        // Clear the storage buffer, to avoid the accumulation buildup
         histogramStorageBuffer.clear();
 
-        // dispatch the compute shader
+        // Dispatch the compute shader
         compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
         device.computeDispatch([compute], 'HistogramDispatch');
 
@@ -191,7 +191,7 @@ app.on('update', (/** @type {number} */ _dt) => {
         // screen will be up to few frames behind.
         const histogramData = new Uint32Array(numBins);
         histogramStorageBuffer.read(0, undefined, histogramData).then(data => {
-            // render the histogram using lines
+            // Render the histogram using lines
             const scale = 1 / 50000;
             const positions = [];
             for (let x = 0; x < data.length; x++) {

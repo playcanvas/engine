@@ -79,7 +79,7 @@ const material = new ShaderMaterial({
 material.setParameter('diffuseTexture', assets.diffuse.resource);
 material.update();
 
-// create box entity
+// Create box entity
 const box = new Entity('cube');
 box.addComponent('render', {
     type: 'box',
@@ -87,7 +87,7 @@ box.addComponent('render', {
 });
 app.root.addChild(box);
 
-// create camera entity
+// Create camera entity
 const camera = new Entity('camera');
 camera.addComponent('camera', {
     clearColor: new Color(0.5, 0.6, 0.9)
@@ -102,6 +102,6 @@ app.on('update', (/** @type {number} */ dt) => {
     box.rotate(10 * dt, 20 * dt, 30 * dt);
 
     time += dt;
-    // animate the amount as a sine wave varying from 0 to 1
+    // Animate the amount as a sine wave varying from 0 to 1
     material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
 });
