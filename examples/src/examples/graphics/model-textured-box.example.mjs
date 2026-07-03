@@ -59,7 +59,7 @@ app.start();
 
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// material with the diffuse texture
+// Material with the diffuse texture
 const material = new StandardMaterial();
 material.diffuseMap = assets.clouds.resource;
 material.update();

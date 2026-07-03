@@ -69,7 +69,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 1;
 app.scene.envAtlas = assets.helipad.resource;
@@ -82,22 +82,22 @@ camera.addComponent('camera', {
 camera.translate(0, 7, 24);
 app.root.addChild(camera);
 
-// create a hierarchy of entities with render components, representing the statue model
+// Create a hierarchy of entities with render components, representing the statue model
 const entity = assets.statue.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
-// collect positions from all mesh instances to work on
+// Collect positions from all mesh instances to work on
 /** @type {object[]} */
 const allMeshes = [];
 /** @type {Array<RenderComponent>} */
 const renders = entity.findComponents('render');
 renders.forEach(render => {
-    // collect positions from all mesh instances on this render component
+    // Collect positions from all mesh instances on this render component
     const meshInstances = render.meshInstances;
     for (let i = 0; i < meshInstances.length; i++) {
         const meshInstance = meshInstances[i];
 
-        // get positions from the mesh
+        // Get positions from the mesh
         const mesh = meshInstance.mesh;
         /** @type {number[]} */
         const srcPositions = [];

@@ -49,7 +49,7 @@ app.on('destroy', () => {
 
 app.start();
 
-// create two material
+// Create two materials
 const material1 = new StandardMaterial();
 material1.diffuse = new Color(1, 1, 0);
 material1.gloss = 0.4;
@@ -64,21 +64,21 @@ material2.metalness = 0.5;
 material2.useMetalness = true;
 material2.update();
 
-// create a single BatchGroup. Make it dynamic to allow batched meshes to be freely moved every frame.
+// Create a single BatchGroup. Make it dynamic to allow batched meshes to be freely moved every frame.
 const batchGroup = app.batcher.addGroup('Meshes', true, 100);
 
-// create various primitive instances using one of the two materials
+// Create various primitive instances using one of the two materials
 const numInstances = 500;
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 /** @type {Entity[]} */
 const entities = [];
 for (let i = 0; i < numInstances; i++) {
-    // random shape
+    // Random shape
     const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
 
     const entity = new Entity();
 
-    // create render component
+    // Create render component
     entity.addComponent('render', {
         type: shapeName,
         material: Math.random() < 0.5 ? material1 : material2,
@@ -89,10 +89,10 @@ for (let i = 0; i < numInstances; i++) {
         batchGroupId: batchGroup.id
     });
 
-    // add entity for rendering
+    // Add entity for rendering
     app.root.addChild(entity);
 
-    // keep in the list to adjust positions each frame
+    // Keep in the list to adjust positions each frame
     entities.push(entity);
 }
 
@@ -131,7 +131,7 @@ let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
 
-    // move all entities along orbits
+    // Move all entities along orbits
     for (let i = 0; i < entities.length; i++) {
         const radius = 5 + (20.0 * i) / numInstances;
         const speed = i / numInstances;
@@ -143,7 +143,7 @@ app.on('update', (/** @type {number} */ dt) => {
         entities[i].lookAt(Vec3.ZERO);
     }
 
-    // orbit camera around
+    // Orbit camera around
     camera.setLocalPosition(70 * Math.sin(time), 0, 70 * Math.cos(time));
     camera.lookAt(Vec3.ZERO);
 });

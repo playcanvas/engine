@@ -73,7 +73,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.3;
 app.scene.envAtlas = assets.helipad.resource;
@@ -104,13 +104,13 @@ cylinder.addComponent('render', {
     type: 'cylinder'
 });
 
-// add the box entity to the hierarchy
+// Add the box entity to the hierarchy
 app.root.addChild(cylinder);
 
-// number of instances to render
+// Number of instances to render
 const instanceCount = 1000;
 
-// store matrices for individual instances into array
+// Store matrices for individual instances into array
 const matrices = new Float32Array(instanceCount * 16);
 let matrixIndex = 0;
 
@@ -121,7 +121,7 @@ const scl = new Vec3();
 const matrix = new Mat4();
 
 for (let i = 0; i < instanceCount; i++) {
-    // generate random positions / scales and rotations
+    // Generate random positions / scales and rotations
     pos.set(
         Math.random() * radius - radius * 0.5,
         Math.random() * radius - radius * 0.5,
@@ -131,17 +131,17 @@ for (let i = 0; i < instanceCount; i++) {
     rot.setFromEulerAngles(i * 30, i * 50, i * 70);
     matrix.setTRS(pos, rot, scl);
 
-    // copy matrix elements into array of floats
+    // Copy matrix elements into array of floats
     for (let m = 0; m < 16; m++) matrices[matrixIndex++] = matrix.data[m];
 }
 
-// create static vertex buffer containing the matrices
+// Create static vertex buffer containing the matrices
 const vbFormat = VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
 const vertexBuffer = new VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
     data: matrices
 });
 
-// initialize instancing using the vertex buffer on meshInstance of the created box
+// Initialize instancing using the vertex buffer on meshInstance of the created box
 const cylinderMeshInst = cylinder.render.meshInstances[0];
 cylinderMeshInst.setInstancing(vertexBuffer);
 

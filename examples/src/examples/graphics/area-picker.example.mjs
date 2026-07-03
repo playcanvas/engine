@@ -86,12 +86,12 @@ app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxIntensity = 0.1;
 
-// use a quarter resolution for picker render target (faster but less precise - can miss small objects)
+// Use a quarter resolution for picker render target (faster but less precise - can miss small objects)
 const pickerScale = 0.25;
 let mouseX = 0,
     mouseY = 0;
 
-// generate a box area with specified size of random primitives
+// Generate a box area with specified size of random primitives
 const size = 30;
 const halfSize = size * 0.5;
 for (let i = 0; i < 300; i++) {
@@ -106,7 +106,7 @@ for (let i = 0; i < 300; i++) {
     app.root.addChild(entity);
 }
 
-// handle mouse move event and store current mouse position to use as a position to pick from the scene
+// Handle mouse move event and store current mouse position to use as a position to pick from the scene
 new Mouse(document.body).on(
     'mousemove',
     event => {
@@ -117,7 +117,7 @@ new Mouse(document.body).on(
 );
 
 // Create an instance of the picker class
-// Lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
+// Let's use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
 const picker = new Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale, true);
 
 /**
@@ -129,7 +129,7 @@ const picker = new Picker(app, canvas.clientWidth * pickerScale, canvas.clientHe
  * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale) {
-    // create material of random color
+    // Create material of random color
     const material = new StandardMaterial();
     material.diffuse = new Color(Math.random(), Math.random(), Math.random());
     material.gloss = 0.6;
@@ -137,14 +137,14 @@ function createPrimitive(primitiveType, position, scale) {
     material.useMetalness = true;
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
     });
 
-    // set position and scale
+    // Set position and scale
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
 
@@ -161,7 +161,7 @@ camera.addComponent('camera', {
 camera.addComponent('script');
 app.root.addChild(camera);
 
-// auto-rotation is active until the first right-click; at that point we create CameraControls
+// Auto-rotation is active until the first right-click; at that point we create CameraControls
 // (which attaches at the camera's current pose, so there's no jump) and hand control to the
 // user, never auto-rotating again
 let autoRotate = true;
@@ -194,13 +194,13 @@ cameraFrame.update();
 function drawRectangle(x, y, w, h) {
     const pink = new Color(1, 0.02, 0.58);
 
-    // transform 4 2D screen points into world space
+    // Transform 4 2D screen points into world space
     const pt0 = camera.camera.screenToWorld(x, y, 1);
     const pt1 = camera.camera.screenToWorld(x + w, y, 1);
     const pt2 = camera.camera.screenToWorld(x + w, y + h, 1);
     const pt3 = camera.camera.screenToWorld(x, y + h, 1);
 
-    // and connect them using white lines
+    // And connect them using white lines
     const points = [pt0, pt1, pt1, pt2, pt2, pt3, pt3, pt0];
     const colors = [pink, pink, pink, pink, pink, pink, pink, pink];
     app.drawLines(points, colors);
@@ -218,7 +218,7 @@ function highlightMaterial(material, color) {
     material.update();
 }
 
-// array of highlighted materials
+// Array of highlighted materials
 /** @type {StandardMaterial[]} */
 const highlights = [];
 
@@ -236,11 +236,11 @@ marker.render.meshInstances[0].pick = false;
 marker.enabled = false;
 app.root.addChild(marker);
 
-// store pending pick request
+// Store pending pick request
 /** @type {{ x: number, y: number } | null} */
 let pendingPickRequest = null;
 
-// handle mouse buttons: left button picks a world point (auto-rotation continues, so the picked
+// Handle mouse buttons: left button picks a world point (auto-rotation continues, so the picked
 // marker can be seen from a moving viewpoint), right button hands control to the user and stops
 // the auto-rotation. The context menu is disabled so the right button is usable.
 const mouse = new Mouse(document.body);
@@ -258,7 +258,7 @@ mouse.on('mousedown', event => {
     }
 });
 
-// update each frame
+// Update each frame
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     // auto-orbit the camera until the user takes control
@@ -274,7 +274,7 @@ app.on('update', (/** @type {number} */ dt) => {
         picker.prepare(camera.camera, app.scene, pickerLayers);
     }
 
-    // areas we want to sample - two larger rectangles, one small square, and one pixel at a mouse position
+    // Areas we want to sample - two larger rectangles, one small square, and one pixel at a mouse position
     // assign them different highlight colors as well
     const areas = [
         {
@@ -300,17 +300,17 @@ app.on('update', (/** @type {number} */ dt) => {
         }
     ];
 
-    // process all areas every frame
+    // Process all areas every frame
     const promises = [];
     for (let a = 0; a < areas.length; a++) {
         const areaPos = areas[a].pos;
         const areaSize = areas[a].size;
 
-        // display 2D rectangle around it
+        // Display 2D rectangle around it
         drawRectangle(areaPos.x, areaPos.y, areaSize.x, areaSize.y);
 
-        // get list of meshInstances inside the area from the picker
-        // this scans the pixels inside the render target and maps the id value stored there into meshInstances
+        // Get list of meshInstances inside the area from the picker
+        // This scans the pixels inside the render target and maps the id value stored there into meshInstances
         // Note that this is an async function returning a promise. Store it in the promises array.
         const promise = picker.getSelectionAsync(
             areaPos.x * pickerScale,
@@ -322,9 +322,9 @@ app.on('update', (/** @type {number} */ dt) => {
         promises.push(promise);
     }
 
-    // when all promises are resolved, we can highlight the meshes
+    // When all promises are resolved, we can highlight the meshes
     Promise.all(promises).then(results => {
-        // turn off previously highlighted meshes
+        // Turn off previously highlighted meshes
         for (let h = 0; h < highlights.length; h++) {
             highlightMaterial(highlights[h], Color.BLACK);
             // Reset emissive intensity when turning off
@@ -332,7 +332,7 @@ app.on('update', (/** @type {number} */ dt) => {
         }
         highlights.length = 0;
 
-        // process the results
+        // Process the results
         for (let i = 0; i < results.length; i++) {
             const meshInstances = results[i];
 
@@ -347,7 +347,7 @@ app.on('update', (/** @type {number} */ dt) => {
         }
     });
 
-    // process pending pick request after picker.prepare has been called
+    // Process pending pick request after picker.prepare has been called
     if (pendingPickRequest && picker) {
         const { x, y } = pendingPickRequest;
         pendingPickRequest = null;
@@ -362,7 +362,7 @@ app.on('update', (/** @type {number} */ dt) => {
         });
     }
 
-    // display the picker's buffers side by side in the bottom right corner
+    // Display the picker's buffers side by side in the bottom right corner
     // color buffer (left) and depth buffer (right), with equal margins from edges
     if (picker.colorBuffer) {
         // @ts-ignore engine-tsd

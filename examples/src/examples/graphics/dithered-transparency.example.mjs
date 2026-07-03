@@ -65,7 +65,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable anti-aliasing as TAA is used to smooth edges
+    // Disable anti-aliasing as TAA is used to smooth edges
     antialias: false
 };
 
@@ -78,7 +78,7 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
-// render at full native resolution
+// Render at full native resolution
 device.maxPixelRatio = window.devicePixelRatio;
 
 createOptions.componentSystems = [
@@ -109,7 +109,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxMip = 2;
 app.scene.exposure = 4.5;
@@ -124,20 +124,20 @@ app.scene.exposure = 4.5;
  * @returns {Material} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, color) {
-    // create material of specified color
+    // Create material of specified color
     const material = new StandardMaterial();
     material.diffuse = color;
     material.diffuseMap = assets.diffuse.resource;
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity(primitiveType);
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -145,7 +145,7 @@ function createPrimitive(primitiveType, position, scale, color) {
     return material;
 }
 
-// create a ground plane
+// Create a ground plane
 createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(60, 1, 30), new Color(0.8, 0.8, 0.8));
 
 /**

@@ -72,14 +72,14 @@ await new Promise(resolve => {
 
 app.start();
 
-// create material used on the geometry
+// Create material used on the geometry
 const material = new StandardMaterial();
 material.gloss = 0.6;
 material.metalness = 0.4;
 material.useMetalness = true;
 material.update();
 
-// ground plane
+// Ground plane
 const ground = new Entity();
 ground.addComponent('render', {
     castShadows: false,

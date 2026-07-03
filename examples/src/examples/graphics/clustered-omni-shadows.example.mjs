@@ -98,25 +98,25 @@ data.set('settings', {
     cookiesEnabled: true
 });
 
-// enabled clustered lighting. This is a temporary API and will change in the future
+// Enable clustered lighting. This is a temporary API and will change in the future
 app.scene.clusteredLightingEnabled = true;
 
-// adjust default clustered lighting parameters to handle many lights
+// Adjust default clustered lighting parameters to handle many lights
 const lighting = app.scene.lighting;
 
-// 1) subdivide space with lights into this many cells
+// 1) Subdivide space with lights into this many cells
 lighting.cells = new Vec3(16, 12, 16);
 
-// 2) and allow this many lights per cell
+// 2) And allow this many lights per cell
 lighting.maxLightsPerCell = 12;
 
-// enable clustered shadows (it's enabled by default as well)
+// Enable clustered shadows (it's enabled by default as well)
 lighting.shadowsEnabled = true;
 
-// enable clustered cookies
+// Enable clustered cookies
 lighting.cookiesEnabled = true;
 
-// resolution of the shadow and cookie atlas
+// Resolution of the shadow and cookie atlas
 lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
 lighting.cookieAtlasResolution = 2048;
 
@@ -128,23 +128,23 @@ lighting.cookieAtlasResolution = 2048;
  * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale) {
-    // create a material
+    // Create a material
     const material = new StandardMaterial();
     material.diffuse = new Color(0.7, 0.7, 0.7);
 
-    // normal map
+    // Normal map
     material.normalMap = assets.normal.resource;
     material.normalMapTiling.set(5, 5);
     material.bumpiness = 0.7;
 
-    // enable specular
+    // Enable specular
     material.gloss = 0.4;
     material.metalness = 0.3;
     material.useMetalness = true;
 
     material.update();
 
-    // create the primitive using the material
+    // Create the primitive using the material
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,

@@ -204,7 +204,7 @@ app.root.addChild(cameraEntity);
 const cameraFrame = new CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 
-// use 16but render target for better precision, improves quality with TAA and randomized SSAO
+// Use 16-bit render target for better precision, improves quality with TAA and randomized SSAO
 cameraFrame.rendering.renderFormats = [PIXELFORMAT_RGBA16F];
 
 const applySettings = () => {

@@ -94,20 +94,20 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome - this is the main source of ambient light
+// Setup skydome - this is the main source of ambient light
 app.scene.skyboxMip = 3;
 app.scene.skyboxIntensity = 0.6;
 app.scene.envAtlas = assets.helipad.resource;
 
-// if skydome cubemap is disabled using HUD, a constant ambient color is used instead
+// If skydome cubemap is disabled using HUD, a constant ambient color is used instead
 app.scene.ambientLight = new Color(0.1, 0.3, 0.4);
 
-// instantiate the house model, which has unwrapped texture coordinates for lightmap in UV1
+// Instantiate the house model, which has unwrapped texture coordinates for lightmap in UV1
 const house = assets.house.resource.instantiateRenderEntity();
 house.setLocalScale(100, 100, 100);
 app.root.addChild(house);
 
-// change its materials to lightmapping
+// Change its materials to lightmapping
 /** @type {Array<RenderComponent>} */
 const renders = house.findComponents('render');
 renders.forEach(render => {
@@ -116,7 +116,7 @@ renders.forEach(render => {
     render.lightmapped = true;
 });
 
-// directional light
+// Directional light
 const lightDirectional = new Entity('Directional');
 lightDirectional.addComponent('light', {
     type: 'directional',

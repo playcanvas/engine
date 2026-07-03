@@ -44,7 +44,7 @@ import { deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the chess board glb is draco compressed
+// Set up and load draco module, as the chess board glb is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -100,19 +100,19 @@ await new Promise(resolve => {
 
 app.start();
 
-// enable clustered lighting - this is what routes the cookie textures through the shared cookie
+// Enable clustered lighting - this is what routes the cookie textures through the shared cookie
 // atlas (and the code path that this example exercises). It's a temporary API and will change.
 app.scene.clusteredLightingEnabled = true;
 
-// cookies are disabled by default for clustered lighting, enable them
+// Cookies are disabled by default for clustered lighting, enable them
 const lighting = app.scene.lighting;
 lighting.cookiesEnabled = true;
 lighting.shadowsEnabled = false;
 
-// resolution of the cookie atlas storing both cookies
+// Resolution of the cookie atlas storing both cookies
 lighting.cookieAtlasResolution = 2048;
 
-// instantiate the chess board model - the board and its pieces are what the cookies project onto
+// Instantiate the chess board model - the board and its pieces are what the cookies project onto
 const board = assets.board.resource.instantiateRenderEntity({
     castShadows: false,
     receiveShadows: false
@@ -120,7 +120,7 @@ const board = assets.board.resource.instantiateRenderEntity({
 board.setLocalScale(0.25, 0.25, 0.25);
 app.root.addChild(board);
 
-// ----- cookie 1: a procedurally generated texture, regenerated every few frames -----
+// ----- Cookie 1: a procedurally generated texture, regenerated every few frames -----
 
 const cookieSize = 256;
 const proceduralCookie = new Texture(app.graphicsDevice, {
@@ -135,7 +135,7 @@ const proceduralCookie = new Texture(app.graphicsDevice, {
     addressV: ADDRESS_CLAMP_TO_EDGE
 });
 
-// fill the procedural cookie with an animated radial pattern - 'phase' shifts each regeneration
+// Fill the procedural cookie with an animated radial pattern - 'phase' shifts each regeneration
 // so the content varies but stays recognizable. unlock() uploads it, bumping its uploadVersion.
 const updateProceduralCookie = phase => {
     const pixels = proceduralCookie.lock();
@@ -147,12 +147,12 @@ const updateProceduralCookie = phase => {
             const dist = Math.sqrt(dx * dx + dy * dy);
             const angle = Math.atan2(dy, dx);
 
-            // moving concentric rings combined with rotating spokes
+            // Moving concentric rings combined with rotating spokes
             const rings = Math.sin(dist * 18.0 - phase * 3.0);
             const spokes = Math.sin(angle * 6.0 + phase * 2.0);
             let v = 0.5 + 0.5 * rings * spokes;
 
-            // circular vignette so the cookie fades to black at the edges
+            // Circular vignette so the cookie fades to black at the edges
             v *= Math.max(0, 1.0 - dist);
 
             const c = Math.floor(math.clamp(v, 0, 1) * 255);
@@ -167,7 +167,7 @@ const updateProceduralCookie = phase => {
 };
 updateProceduralCookie(0);
 
-// ----- cookie 2: a video texture, uploaded every frame -----
+// ----- Cookie 2: a video texture, uploaded every frame -----
 
 const videoCookie = new Texture(app.graphicsDevice, {
     name: 'videoCookie',
@@ -188,7 +188,7 @@ video.autoplay = true;
 video.playsInline = true;
 video.crossOrigin = 'anonymous';
 
-// keep the video element in view (but invisible) so it loads/plays on all browsers
+// Keep the video element in view (but invisible) so it loads/plays on all browsers
 video.setAttribute(
     'style',
     'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
@@ -199,7 +199,7 @@ const onCanPlay = () => videoCookie.setSource(video);
 video.addEventListener('canplaythrough', onCanPlay);
 video.load();
 
-// clean up the video when the app is destroyed, so a late 'canplaythrough' does not call
+// Clean up the video when the app is destroyed, so a late 'canplaythrough' does not call
 // setSource on an already torn-down graphics device
 app.on('destroy', () => {
     video.removeEventListener('canplaythrough', onCanPlay);
@@ -207,9 +207,9 @@ app.on('destroy', () => {
     video.remove();
 });
 
-// ----- four spot lights, one per quadrant of the board -----
-// each light sits just above its quadrant and points straight down, so the four cookies project
-// onto different areas of the board. Two use the procedural cookie, two use the video cookie.
+// ----- Four spot lights, one per quadrant of the board -----
+// Each light sits just above its quadrant and points straight down, so the four cookies project
+// Onto different areas of the board. Two use the procedural cookie, two use the video cookie.
 const quadrantOffset = 11;
 const lightHeight = 20;
 const quadrants = [
@@ -253,7 +253,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(0, 50, 70);
 
-// add orbit camera script with mouse and touch support
+// Add orbit camera script with mouse and touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -272,16 +272,16 @@ let phase = 0;
 app.on('update', () => {
     frame++;
 
-    // regenerate the procedural cookie every 10 frames, with a small variation each time
+    // Regenerate the procedural cookie every 10 frames, with a small variation each time
     if (frame % 10 === 0) {
         phase += 0.35;
         updateProceduralCookie(phase);
     }
 
-    // upload the latest video frame to its cookie texture every frame
+    // Upload the latest video frame to its cookie texture every frame
     videoCookie.upload();
 
-    // debug: draw the cookie atlas in the corner so the dynamic updates are visible directly
+    // Debug: draw the cookie atlas in the corner so the dynamic updates are visible directly
     // @ts-ignore engine-tsd
     app.drawTexture(-0.7, -0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
 });

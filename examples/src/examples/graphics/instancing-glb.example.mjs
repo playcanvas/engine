@@ -98,7 +98,7 @@ camera.addComponent('camera', {
 });
 camera.translate(15, 15, -25);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -113,7 +113,7 @@ camera.script.create('orbitCameraInputTouch');
 
 app.root.addChild(camera);
 
-// set skybox
+// Set skybox
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 

@@ -53,7 +53,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable HDR rendering if supported
+    // Enable HDR rendering if supported
     displayFormat: DISPLAYFORMAT_HDR
 };
 
@@ -93,25 +93,25 @@ await new Promise(resolve => {
 
 app.start();
 
-// adjust default clustered lighting parameters to handle many lights
+// Adjust default clustered lighting parameters to handle many lights
 const lighting = app.scene.lighting;
 
-// 1) subdivide space with lights into this many cells
+// 1) Subdivide space with lights into this many cells
 lighting.cells = new Vec3(30, 2, 30);
 
-// 2) and allow this many lights per cell
+// 2) And allow this many lights per cell
 lighting.maxLightsPerCell = 20;
 
 lighting.areaLightsEnabled = true;
 lighting.shadowsEnabled = false;
 
-// pure black material - used on back side of light objects
+// Pure black material - used on back side of light objects
 const blackMaterial = new StandardMaterial();
 blackMaterial.diffuse = new Color(0, 0, 0);
 blackMaterial.useLighting = false;
 blackMaterial.update();
 
-// ground material
+// Ground material
 const groundMaterial = new StandardMaterial();
 groundMaterial.diffuse = Color.GRAY;
 groundMaterial.gloss = 0.8;
@@ -140,14 +140,14 @@ function createPrimitive(primitiveType, position, scale, assetManifest) {
 
     groundMaterial.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: groundMaterial
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -187,20 +187,20 @@ function createAreaLight(type, shape, position, scale, color, intensity, range) 
     }
     app.root.addChild(light);
 
-    // emissive material that is the light source color
+    // Emissive material that is the light source color
     const brightMaterial = new StandardMaterial();
     brightMaterial.emissive = color;
     brightMaterial.emissiveIntensity = intensity * 10;
     brightMaterial.useLighting = false;
     brightMaterial.update();
 
-    // primitive shape that matches light source shape
+    // Primitive shape that matches light source shape
     const lightPrimitive = shape === LIGHTSHAPE_SPHERE ? 'sphere' : shape === LIGHTSHAPE_DISK ? 'cylinder' : 'box';
 
-    // primitive scale - flatten it to disk / rectangle
+    // Primitive scale - flatten it to disk / rectangle
     const primitiveScale = new Vec3(1, shape !== LIGHTSHAPE_SPHERE ? 0.001 : 1, 1);
 
-    // bright primitive representing the area light source
+    // Bright primitive representing the area light source
     const brightShape = new Entity();
     brightShape.addComponent('render', {
         type: lightPrimitive,
@@ -209,7 +209,7 @@ function createAreaLight(type, shape, position, scale, color, intensity, range) 
     brightShape.setLocalScale(primitiveScale);
     light.addChild(brightShape);
 
-    // black primitive representing the back of the light source which is not emitting light
+    // Black primitive representing the back of the light source which is not emitting light
     if (type === 'spot') {
         const blackShape = new Entity();
         blackShape.addComponent('render', {
@@ -225,11 +225,11 @@ function createAreaLight(type, shape, position, scale, color, intensity, range) 
     return light;
 }
 
-// set the loaded area light LUT data
+// Set the loaded area light LUT data
 const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
-// create ground plane
+// Create ground plane
 const ground = createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(45, 1, 45), assets);
 
 // Create the camera, which renders entities
@@ -241,7 +241,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(3, 3, 12);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -255,17 +255,17 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// custom render passes
+// Custom render passes
 const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.samples = 4;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.bloom.blurLevel = 4;
 cameraFrame.update();
 
-// if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+// If the device renders in HDR mode, disable tone mapping to output HDR values without any processing
 cameraFrame.rendering.toneMapping = device.isHdr ? TONEMAP_NONE : TONEMAP_NEUTRAL;
 
-// generate a grid of area lights of sphere, disk and rect shapes
+// Generate a grid of area lights of sphere, disk and rect shapes
 for (let x = -20; x <= 20; x += 5) {
     for (let y = -20; y <= 20; y += 5) {
         const pos = new Vec3(x, 0.6, y);
@@ -281,7 +281,7 @@ for (let x = -20; x <= 20; x += 5) {
     }
 }
 
-// handle HUD changes - update properties on the material
+// Handle HUD changes - update properties on the material
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     if (pathArray[2] === 'gloss') groundMaterial.gloss = value;

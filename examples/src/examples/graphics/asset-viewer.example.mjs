@@ -166,7 +166,7 @@ const createVisual = (resource, pos, scale) => {
 
 let currentAssetIndex = 0;
 
-// create the scene by instantiating glbs
+// Create the scene by instantiating glbs
 const mosquito = createVisual(assets.mosquito.resource, new Vec3(0, 0.5, 0), 25);
 createText(assets.font, 'KHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission', 0, 2);
 
@@ -273,7 +273,7 @@ window.addEventListener(
  * @param {number} offset - The offset to jump to.
  */
 function jumpToAsset(offset) {
-    // wrap around
+    // Wrap around
     const count = assetList.length - 1;
     currentAssetIndex += offset;
     if (currentAssetIndex < 0) currentAssetIndex = count;
@@ -294,7 +294,7 @@ data.on('previous', () => {
     jumpToAsset(-1);
 });
 
-// remove light button handler
+// Handle next button
 data.on('next', () => {
     jumpToAsset(1);
 });

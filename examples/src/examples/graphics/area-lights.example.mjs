@@ -91,7 +91,7 @@ await new Promise(resolve => {
  * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, assetManifest) {
-    // create material of specified color
+    // Create material of specified color
     const material = new StandardMaterial();
     material.gloss = 0.8;
     material.useMetalness = true;
@@ -109,14 +109,14 @@ function createPrimitive(primitiveType, position, scale, assetManifest) {
 
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity(primitiveType);
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -160,7 +160,7 @@ function createAreaLight(type, shape, position, scale, color, intensity, shadows
     light.setLocalScale(scale, scale, scale);
     lightParent.addChild(light);
 
-    // emissive material that is the light source color
+    // Emissive material that is the light source color
     const brightMaterial = new StandardMaterial();
     brightMaterial.emissive = color;
     brightMaterial.useLighting = false;
@@ -168,7 +168,7 @@ function createAreaLight(type, shape, position, scale, color, intensity, shadows
     brightMaterial.update();
 
     const brightShape = new Entity();
-    // primitive shape that matches light source shape
+    // Primitive shape that matches light source shape
     brightShape.addComponent('render', {
         type: shape === LIGHTSHAPE_SPHERE ? 'sphere' : shape === LIGHTSHAPE_DISK ? 'cone' : 'plane',
         material: brightMaterial,
@@ -181,9 +181,9 @@ function createAreaLight(type, shape, position, scale, color, intensity, shadows
     );
     lightParent.addChild(brightShape);
 
-    // add black primitive shape if not omni-directional or global directional
+    // Add black primitive shape if not omni-directional or global directional
     if (type === 'spot') {
-        // black material
+        // Black material
         const blackMaterial = new StandardMaterial();
         blackMaterial.diffuse = new Color(0, 0, 0);
         blackMaterial.useLighting = false;
@@ -207,7 +207,7 @@ const far = 5000.0;
 
 app.start();
 
-// enable area lights which are disabled by default for clustered lighting
+// Enable area lights which are disabled by default for clustered lighting
 app.scene.lighting.areaLightsEnabled = true;
 
 // set the loaded area light LUT data

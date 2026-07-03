@@ -84,12 +84,12 @@ function createLight(color, scale) {
         castShadows: false
     });
 
-    // create material of specified color
+    // Create material of specified color
     const material = new StandardMaterial();
     material.emissive = color;
     material.update();
 
-    // add sphere at the position of light
+    // Add sphere at the position of light
     light.addComponent('render', {
         type: 'sphere',
         material: material

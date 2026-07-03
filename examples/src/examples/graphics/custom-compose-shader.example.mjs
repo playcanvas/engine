@@ -107,29 +107,29 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome with low intensity
+// Setup skydome with low intensity
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.exposure = 1.2;
 
-// create an instance of the apartment and add it to the scene
+// Create an instance of the apartment and add it to the scene
 const platformEntity = assets.apartment.resource.instantiateRenderEntity();
 platformEntity.setLocalScale(30, 30, 30);
 app.root.addChild(platformEntity);
 
-// load a love sign model and add it to the scene
+// Load a love sign model and add it to the scene
 const loveEntity = assets.love.resource.instantiateRenderEntity();
 loveEntity.setLocalPosition(-80, 30, -20);
 loveEntity.setLocalScale(130, 130, 130);
 loveEntity.rotate(0, -90, 0);
 app.root.addChild(loveEntity);
 
-// make the love sign emissive to bloom
+// Make the love sign emissive to bloom
 const loveMaterial = loveEntity.findByName('s.0009_Standard_FF00BB_0').render.meshInstances[0].material;
 loveMaterial.emissive = Color.YELLOW;
 loveMaterial.emissiveIntensity = 200;
 loveMaterial.update();
 
-// adjust all materials of the love sign to disable dynamic refraction
+// Adjust all materials of the love sign to disable dynamic refraction
 loveEntity.findComponents('render').forEach(render => {
     render.meshInstances.forEach(meshInstance => {
         meshInstance.material.useDynamicRefraction = false;
@@ -146,7 +146,7 @@ cameraEntity.addComponent('camera', {
 const focusPoint = new Entity();
 focusPoint.setLocalPosition(-80, 80, -20);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {

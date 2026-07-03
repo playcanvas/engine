@@ -57,31 +57,31 @@ app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
  * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale) {
-    // create material of random color
+    // Create material of random color
     const material = new StandardMaterial();
     material.diffuse = new Color(Math.random(), Math.random(), Math.random());
     material.update();
 
-    // create primitive with a render component
+    // Create primitive with a render component
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
     });
 
-    // set position and scale
+    // Set position and scale
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
 
     return primitive;
 }
 
-// list of all created entities
+// List of all created entities
 /** @type {Array<Entity>} */
 const entities = [];
 
 /**
- * helper recursive function to create a next layer of entities for a specified parent
+ * Helper recursive function to create a next layer of entities for a specified parent
  * @param {Entity} parent - The parent.
  * @param {number} gridSize - The grid size.
  * @param {number} scale - The scale.

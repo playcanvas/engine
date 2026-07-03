@@ -106,18 +106,18 @@ data.set('settings', {
     shaderPassName: SHADERPASS_FORWARD
 });
 
-// get few existing layers and create a new layer for the spot light
+// Get few existing layers and create a new layer for the spot light
 const worldLayer = app.scene.layers.getLayerByName('World');
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const spotLightLayer = new Layer({ name: 'SpotLightLayer' });
 app.scene.layers.insert(spotLightLayer, 0);
 
-// get the instance of the chess board and set up with render component
+// Get the instance of the chess board and set up with render component
 const boardEntity = assets.board.resource.instantiateRenderEntity({
     castShadows: true,
     receiveShadows: true,
 
-    // add it to both layers with lights, as we want it to lit by directional light and spot light,
+    // Add it to both layers with lights, as we want it to lit by directional light and spot light,
     // depending on the camera
     layers: [worldLayer.id, spotLightLayer.id]
 });

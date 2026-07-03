@@ -59,14 +59,14 @@ app.start();
 
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// create an entity with render assets
+// Create an entity with render assets
 const entity = assets.statue.resource.instantiateModelEntity({
     castShadows: true
 });
 
 app.root.addChild(entity);
 
-// clone a small version of the entity
+// Clone a small version of the entity
 const clone = entity.clone();
 clone.setLocalScale(0.2, 0.2, 0.2);
 clone.setLocalPosition(-4, 12, 0);

@@ -45,7 +45,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable HDR rendering if supported
+    // Enable HDR rendering if supported
     displayFormat: DISPLAYFORMAT_HDR
 };
 
@@ -92,34 +92,34 @@ const spotLightList = [];
 /** @type {Entity|null} */
 let dirLight = null;
 
-// enabled clustered lighting. This is a temporary API and will change in the future
+// Enable clustered lighting. This is a temporary API and will change in the future
 app.scene.clusteredLightingEnabled = true;
 
-// adjust default clustered lighting parameters to handle many lights
+// Adjust default clustered lighting parameters to handle many lights
 const lighting = app.scene.lighting;
 
-// 1) subdivide space with lights into this many cells
+// 1) Subdivide space with lights into this many cells
 lighting.cells = new Vec3(12, 16, 12);
 
-// 2) and allow this many lights per cell
+// 2) And allow this many lights per cell
 lighting.maxLightsPerCell = 48;
 
 lighting.shadowsEnabled = false;
 
-// material with tiled normal map
+// Material with tiled normal map
 let material = new StandardMaterial();
 material.normalMap = assets.normal.resource;
 material.normalMapTiling.set(5, 5);
 material.bumpiness = 1;
 
-// enable specular
+// Enable specular
 material.gloss = 0.5;
 material.metalness = 0.3;
 material.useMetalness = true;
 
 material.update();
 
-// ground plane
+// Ground plane
 const ground = new Entity();
 ground.addComponent('render', {
     type: 'plane',

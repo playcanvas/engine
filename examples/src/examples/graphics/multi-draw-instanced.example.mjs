@@ -79,19 +79,19 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.3;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.ambientLight = new Color(0.1, 0.1, 0.1);
 
-// camera
+// Camera
 const camera = new Entity();
 camera.addComponent('camera', { toneMapping: TONEMAP_ACES });
 app.root.addChild(camera);
 camera.translate(0, 0, 16);
 
-// material
+// Material
 const material = new StandardMaterial();
 material.gloss = 0.6;
 material.metalness = 0.7;

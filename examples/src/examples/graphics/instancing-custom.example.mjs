@@ -78,12 +78,12 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.8;
 app.scene.envAtlas = assets.helipad.resource;
 
-// set up some general scene rendering properties
+// Set up some general scene rendering properties
 app.scene.ambientLight = new Color(0.1, 0.1, 0.1);
 
 // Create an Entity with a camera component
@@ -93,13 +93,13 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// create static vertex buffer containing the instancing data
+// Create static vertex buffer containing the instancing data
 const vbFormat = new VertexFormat(app.graphicsDevice, [
     { semantic: SEMANTIC_ATTR12, components: 3, type: TYPE_FLOAT32 }, // position
     { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_FLOAT32 } // scale
 ]);
 
-// store data for individual instances into array, 4 floats each
+// Store data for individual instances into array, 4 floats each
 const instanceCount = 3000;
 const data = new Float32Array(instanceCount * 4);
 
@@ -116,18 +116,18 @@ const vertexBuffer = new VertexBuffer(app.graphicsDevice, vbFormat, instanceCoun
     data: data
 });
 
-// create standard material - this will be used for instanced, but also non-instanced rendering
+// Create standard material - this will be used for instanced, but also non-instanced rendering
 const material = new StandardMaterial();
 material.gloss = 0.5;
 material.metalness = 1;
 material.diffuse = new Color(0.7, 0.5, 0.7);
 material.useMetalness = true;
 
-// set up additional attributes needed for instancing
+// Set up additional attributes needed for instancing
 material.setAttribute('aInstPosition', SEMANTIC_ATTR12);
 material.setAttribute('aInstScale', SEMANTIC_ATTR13);
 
-// and a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
+// And a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
 material.shaderChunksVersion = '2.8';
 material.getShaderChunks(SHADERLANGUAGE_GLSL).set('transformInstancingVS', transformInstancingGlslVert);
 material.getShaderChunks(SHADERLANGUAGE_WGSL).set('transformInstancingVS', transformInstancingWgslVert);
@@ -142,11 +142,11 @@ instancingEntity.addComponent('render', {
 });
 app.root.addChild(instancingEntity);
 
-// initialize instancing using the vertex buffer on meshInstance of the created mesh instance
+// Initialize instancing using the vertex buffer on meshInstance of the created mesh instance
 const meshInst = instancingEntity.render.meshInstances[0];
 meshInst.setInstancing(vertexBuffer);
 
-// add a non-instanced sphere, using the same material. A non-instanced version of the shader
+// Add a non-instanced sphere, using the same material. A non-instanced version of the shader
 // is automatically created by the engine
 const sphere = new Entity('sphere');
 sphere.addComponent('render', {

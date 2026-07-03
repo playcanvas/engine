@@ -90,7 +90,7 @@ directionallight.addComponent('light', {
 });
 app.root.addChild(directionallight);
 
-// create a circle of meshes
+// Create a circle of meshes
 /** @type {Array<Entity>} */
 const meshes = [];
 const numMeshes = 10;

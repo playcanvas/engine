@@ -87,7 +87,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// a helper function to apply a material to all mesh instances of an entity
+// A helper function to apply a material to all mesh instances of an entity
 const applyMaterial = (entity, materials) => {
     entity.findComponents('render').forEach(render => {
         render.meshInstances.forEach(meshInstance => {
@@ -98,7 +98,7 @@ const applyMaterial = (entity, materials) => {
     });
 };
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
@@ -109,20 +109,20 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// number of instanced trees to render
+// Number of instanced trees to render
 const instanceCount = 500;
 
-// create static vertex buffer containing the instancing data
+// Create static vertex buffer containing the instancing data
 const vbFormat = new VertexFormat(app.graphicsDevice, [
     { semantic: SEMANTIC_ATTR12, components: 3, type: TYPE_FLOAT32 }, // position
     { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_FLOAT32 } // scale
 ]);
 
-// store data for individual instances into array, 4 floats each
+// Store data for individual instances into array, 4 floats each
 const data = new Float32Array(instanceCount * 4);
 
 for (let i = 0; i < instanceCount; i++) {
-    // random points in the ring
+    // Random points in the ring
     const radius0 = 2;
     const radius1 = 10;
     const angle = Math.random() * 2 * Math.PI;
@@ -141,11 +141,11 @@ const vertexBuffer = new VertexBuffer(app.graphicsDevice, vbFormat, instanceCoun
     data: data
 });
 
-// create a forest by instantiating a tree model and setting it up for instancing
+// Create a forest by instantiating a tree model and setting it up for instancing
 const forest = assets.tree.resource.instantiateRenderEntity();
 app.root.addChild(forest);
 
-// find the mesh instance we want to instantiate, and swap its material for the custom gooch material,
+// Find the mesh instance we want to instantiate, and swap its material for the custom gooch material,
 // while preserving its texture
 const meshInstance = forest.findComponent('render').meshInstances[0];
 const material = createGoochMaterial(meshInstance.material.diffuseMap);

@@ -54,11 +54,11 @@ const layer = new Layer({
     name: 'Front Layer'
 });
 
-// get the world layer index
+// Get the world layer index
 const worldLayer = app.scene.layers.getLayerByName('World');
 const idx = app.scene.layers.getTransparentIndex(worldLayer);
 
-// insert the new layer after the world layer
+// Insert the new layer after the world layer
 app.scene.layers.insert(layer, idx + 1);
 
 // Create an Entity with a camera component
@@ -83,20 +83,20 @@ light.addComponent('light', {
 light.translate(5, 0, 15);
 app.root.addChild(light);
 
-// red material is semi-transparent
+// Red material is semi-transparent
 const red = new StandardMaterial();
 red.diffuse.set(1, 0, 0);
 red.blendType = BLEND_NORMAL;
 red.opacity = 0.5;
 red.update();
 
-// blue material does not test the existing depth buffer
+// Blue material does not test the existing depth buffer
 const blue = new StandardMaterial();
 blue.diffuse.set(0, 0, 1);
 blue.depthTest = false;
 blue.update();
 
-// red box is rendered first in World layer
+// Red box is rendered first in World layer
 const redBox = new Entity();
 redBox.addComponent('render', {
     type: 'box',
@@ -105,10 +105,10 @@ redBox.addComponent('render', {
 redBox.setLocalScale(5, 5, 5);
 app.root.addChild(redBox);
 
-// blue box is rendered in the Front Layer which is after World
-// because it does not test for depth
-// and is in a later layer
-// it is visible even though it should be inside the red box
+// Blue box is rendered in the Front Layer which is after World
+// Because it does not test for depth
+// And is in a later layer
+// It is visible even though it should be inside the red box
 const blueBox = new Entity();
 blueBox.addComponent('render', {
     type: 'box',

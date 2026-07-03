@@ -78,16 +78,16 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 1.2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create an instance of the morph target model
+// Create an instance of the morph target model
 const morphEntity = assets.morph.resource.instantiateRenderEntity();
 app.root.addChild(morphEntity);
 
-// get the morph instance, which we apply the weights to
+// Get the morph instance, which we apply the weights to
 const morphInstance = morphEntity.render.meshInstances[1].morphInstance;
 
 // Create an entity with a directional light component

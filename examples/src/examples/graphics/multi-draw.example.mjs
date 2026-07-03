@@ -82,13 +82,13 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 1;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.ambientLight = new Color(0.1, 0.1, 0.1);
 
-// camera
+// Camera
 const camera = new Entity();
 camera.addComponent('camera', { toneMapping: TONEMAP_ACES });
 camera.addComponent('script');
@@ -101,12 +101,12 @@ Object.assign(cc, {
     enableFly: false
 });
 
-// material
+// Material
 const material = new StandardMaterial();
 material.diffuseMap = assets.diffuse.resource;
 material.update();
 
-// terrain params
+// Terrain params
 const terrainWidth = 120;
 const terrainDepth = 120;
 const minHeight = -50;
@@ -115,7 +115,7 @@ const patchesX = 40;
 const patchesZ = 40;
 const patchSegments = 32; // segments per side for each patch (increased detail)
 
-// heightmap buffer
+// Heightmap buffer
 const img = assets.height.resource.getSource();
 const bufferWidth = img.width;
 const bufferHeight = img.height;

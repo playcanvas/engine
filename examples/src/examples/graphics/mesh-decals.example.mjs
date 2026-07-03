@@ -86,7 +86,7 @@ primitive.addComponent('render', {
     material: planeMaterial
 });
 
-// set scale and add it to scene
+// Set scale and add it to scene
 primitive.setLocalScale(new Vec3(20, 20, 20));
 app.root.addChild(primitive);
 

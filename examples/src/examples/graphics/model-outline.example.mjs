@@ -81,12 +81,12 @@ app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
  * @returns {Entity} The new primitive entity.
  */
 function createPrimitive(primitiveType, position, scale, color, layer) {
-    // create material of specified color
+    // Create material of specified color
     const material = new StandardMaterial();
     material.diffuse = color;
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
@@ -94,7 +94,7 @@ function createPrimitive(primitiveType, position, scale, color, layer) {
         material: material
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);

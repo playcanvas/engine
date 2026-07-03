@@ -111,11 +111,11 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// get existing layers
+// Get existing layers
 const worldLayer = app.scene.layers.getLayerByName('World');
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
