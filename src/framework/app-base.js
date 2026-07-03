@@ -1523,27 +1523,19 @@ class AppBase extends EventHandler {
      */
     setSkybox(asset) {
         if (asset !== this._skyboxAsset) {
-            const onSkyboxRemoved = () => {
-                this.setSkybox(null);
-            };
-
-            const onSkyboxChanged = () => {
-                this.scene.setSkybox(this._skyboxAsset ? this._skyboxAsset.resources : null);
-            };
-
             // cleanup previous asset
             if (this._skyboxAsset) {
-                this.assets.off(`load:${this._skyboxAsset.id}`, onSkyboxChanged, this);
-                this.assets.off(`remove:${this._skyboxAsset.id}`, onSkyboxRemoved, this);
-                this._skyboxAsset.off('change', onSkyboxChanged, this);
+                this.assets.off(`load:${this._skyboxAsset.id}`, this._onSkyboxChanged, this);
+                this.assets.off(`remove:${this._skyboxAsset.id}`, this._onSkyboxRemoved, this);
+                this._skyboxAsset.off('change', this._onSkyboxChanged, this);
             }
 
             // set new asset
             this._skyboxAsset = asset;
             if (this._skyboxAsset) {
-                this.assets.on(`load:${this._skyboxAsset.id}`, onSkyboxChanged, this);
-                this.assets.once(`remove:${this._skyboxAsset.id}`, onSkyboxRemoved, this);
-                this._skyboxAsset.on('change', onSkyboxChanged, this);
+                this.assets.on(`load:${this._skyboxAsset.id}`, this._onSkyboxChanged, this);
+                this.assets.once(`remove:${this._skyboxAsset.id}`, this._onSkyboxRemoved, this);
+                this._skyboxAsset.on('change', this._onSkyboxChanged, this);
 
                 if (this.scene.skyboxMip === 0 && !this._skyboxAsset.loadFaces) {
                     this._skyboxAsset.loadFaces = true;
@@ -1552,8 +1544,18 @@ class AppBase extends EventHandler {
                 this.assets.load(this._skyboxAsset);
             }
 
-            onSkyboxChanged();
+            this._onSkyboxChanged();
         }
+    }
+
+    /** @private */
+    _onSkyboxRemoved() {
+        this.setSkybox(null);
+    }
+
+    /** @private */
+    _onSkyboxChanged() {
+        this.scene.setSkybox(this._skyboxAsset ? this._skyboxAsset.resources : null);
     }
 
     /** @private */
