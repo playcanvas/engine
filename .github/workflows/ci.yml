@@ -147,10 +147,18 @@ jobs:
       - name: Install dependencies
         run: npm clean-install --progress=false --no-fund
 
+      - name: Install examples dependencies
+        working-directory: ./examples
+        run: npm clean-install --progress=false --no-fund
+
+      - name: Run Prettier on examples
+        working-directory: ./examples
+        run: npm run fmt
+
+      - name: Run ESLint on examples
+        working-directory: ./examples
+        run: npm run lint
+
       - name: Build Examples Browser
         working-directory: ./examples
-        run: |
-          npm clean-install --progress=false --no-fund
-          npm run fmt
-          npm run lint
-          npm run build
+        run: npm run build
