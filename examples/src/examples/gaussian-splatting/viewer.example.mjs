@@ -7,7 +7,7 @@
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import * as pc from 'playcanvas';
-import { SpzParser } from 'playcanvas/scripts/esm/gsplat/spz-parser.mjs';
+import { SpzParser } from 'playcanvas/scripts/esm/parsers/spz-parser.mjs';
 
 import { data, deviceType } from 'examples/context';
 

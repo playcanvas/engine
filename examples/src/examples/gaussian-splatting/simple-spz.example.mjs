@@ -5,7 +5,7 @@
 // the application.
 
 import * as pc from 'playcanvas';
-import { SpzParser } from 'playcanvas/scripts/esm/gsplat/spz-parser.mjs';
+import { SpzParser } from 'playcanvas/scripts/esm/parsers/spz-parser.mjs';
 
 import { deviceType } from 'examples/context';
 
