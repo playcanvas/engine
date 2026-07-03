@@ -1,6 +1,10 @@
-// Sample Obj model parser. This is not added to built into the engine library by default.
+import { Geometry, GraphNode, Http, Mesh, MeshInstance, Model, StandardMaterial } from 'playcanvas';
+
+// Sample Obj model parser. This is not built into the engine library by default.
 //
 // To use, first register the parser:
+//
+// import { ObjModelParser } from 'playcanvas/scripts/esm/parsers/obj-model.mjs';
 //
 // // add parser to model resource handler
 // const objParser = new ObjModelParser(this.app.graphicsDevice);
@@ -20,11 +24,10 @@
 // - can't handle meshes larger than 65535 verts
 // - assigns default material to all meshes
 // - doesn't created indexed geometry
-// eslint-disable-next-line no-unused-vars -- exposed as a global for external use (see usage comment above)
 class ObjModelParser {
     constructor(device) {
         this._device = device;
-        this._defaultMaterial = new pc.StandardMaterial();
+        this._defaultMaterial = new StandardMaterial();
     }
 
     canParse(context) {
@@ -32,7 +35,7 @@ class ObjModelParser {
     }
 
     load(url, callback, asset) {
-        this.handler.fetch(url, pc.Http.ResponseType.TEXT, (err, response) => {
+        this.handler.fetch(url, Http.ResponseType.TEXT, (err, response) => {
             if (err) {
                 callback(err);
             } else {
@@ -106,14 +109,14 @@ class ObjModelParser {
                         } // expand normals from indices
                     }
                 } else {
-                    console.error(pc.string.format('OBJ uses unsupported {0}-gons', parts.length - 1));
+                    console.error(`OBJ uses unsupported ${parts.length - 1}-gons`);
                 }
             }
         }
 
-        const model = new pc.Model();
+        const model = new Model();
         const groupNames = Object.keys(parsed);
-        const root = new pc.GraphNode();
+        const root = new GraphNode();
         // create a new mesh instance for each "group"
         for (let i = 0; i < groupNames.length; i++) {
             const currentGroup = parsed[groupNames[i]];
@@ -122,7 +125,7 @@ class ObjModelParser {
                 console.warn('Warning: mesh with more than 65535 vertices');
             }
 
-            const geom = new pc.Geometry();
+            const geom = new Geometry();
             geom.positions = currentGroup.verts;
             if (currentGroup.normals.length > 0) {
                 geom.normals = currentGroup.normals;
@@ -131,9 +134,9 @@ class ObjModelParser {
                 geom.uvs = currentGroup.uvs;
             }
 
-            const mesh = pc.Mesh.fromGeometry(this._device, geom);
+            const mesh = Mesh.fromGeometry(this._device, geom);
 
-            const mi = new pc.MeshInstance(mesh, this._defaultMaterial, new pc.GraphNode());
+            const mi = new MeshInstance(mesh, this._defaultMaterial, new GraphNode());
             model.meshInstances.push(mi);
             root.addChild(mi.node);
         }
@@ -153,3 +156,5 @@ class ObjModelParser {
         return result;
     }
 }
+
+export { ObjModelParser };

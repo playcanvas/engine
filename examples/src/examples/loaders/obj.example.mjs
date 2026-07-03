@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { ObjModelParser } from 'playcanvas/scripts/esm/parsers/obj-model.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -40,33 +41,28 @@ app.on('destroy', () => {
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
+// OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
+app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
+
 const objurl = './assets/models/monkey.obj';
-const scripturl = './scripts/parsers/obj-model.js';
 /** @type {pc.Entity} */
 let entity;
-app.assets.loadFromUrl(scripturl, 'script', () => {
-    // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
-    // set up obj parser
-    // @ts-ignore globally loaded ObjModelParser
-    app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
+app.assets.loadFromUrl(objurl, 'model', (err, asset) => {
+    app.start();
 
-    app.assets.loadFromUrl(objurl, 'model', (err, asset) => {
-        app.start();
+    entity = new pc.Entity();
+    entity.addComponent('model');
+    entity.model.model = asset.resource;
+    app.root.addChild(entity);
 
-        entity = new pc.Entity();
-        entity.addComponent('model');
-        entity.model.model = asset.resource;
-        app.root.addChild(entity);
-
-        // add a randomly generated material to all mesh instances
-        const mis = entity.model.meshInstances;
-        for (let i = 0; i < mis.length; i++) {
-            const material = new pc.StandardMaterial();
-            material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
-            material.update();
-            mis[i].material = material;
-        }
-    });
+    // add a randomly generated material to all mesh instances
+    const mis = entity.model.meshInstances;
+    for (let i = 0; i < mis.length; i++) {
+        const material = new pc.StandardMaterial();
+        material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
+        material.update();
+        mis[i].material = material;
+    }
 });
 
 // Create an Entity with a camera component
