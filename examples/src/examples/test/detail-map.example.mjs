@@ -105,7 +105,7 @@ camera.addComponent('camera', {
 camera.translate(0, 0, 3);
 app.root.addChild(camera);
 
-// add fly camera script
+// Add fly camera script
 camera.addComponent('script');
 camera.script.create('flyCamera', {
     attributes: {
@@ -129,7 +129,7 @@ light.setLocalScale(30, 30, 30);
 light.setLocalPosition(200, -100, 0);
 app.root.addChild(light);
 
-// material with detail maps
+// Material with detail maps
 const tiling = 3;
 const material = new StandardMaterial();
 material.diffuseMap = assets.diffuse.resource;
@@ -152,7 +152,7 @@ material.update();
  * @param {Material} material - The material.
  */
 function createPrimitive(primitiveType, position, scale, material) {
-    // create the primitive using the material
+    // Create the primitive using the material
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
@@ -161,13 +161,13 @@ function createPrimitive(primitiveType, position, scale, material) {
         receiveShadows: false
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
 }
 
-// create the ground plane from the boxes
+// Create the ground plane from the boxes
 createPrimitive('box', new Vec3(0, -200, 0), new Vec3(800, 2, 800), material);
 createPrimitive('box', new Vec3(0, 200, 0), new Vec3(800, 2, 800), material);
 
@@ -177,30 +177,30 @@ createPrimitive('box', new Vec3(-400, 0, 0), new Vec3(2, 400, 800), material);
 createPrimitive('box', new Vec3(0, 0, -400), new Vec3(800, 400, 0), material);
 createPrimitive('box', new Vec3(0, 0, 400), new Vec3(800, 400, 0), material);
 
-// initial values
+// Initial values
 data.set('data', {
     diffuse: true,
     normal: true,
     ao: true
 });
 
-// update things each frame
+// Update things each frame
 app.on('update', _dt => {
-    // toggle diffuse detail map
+    // Toggle diffuse detail map
     const diffuseEnabled = !!material.diffuseDetailMap;
     if (diffuseEnabled !== data.get('data.diffuse')) {
         material.diffuseDetailMap = diffuseEnabled ? null : assets.diffuseDetail.resource;
         material.update();
     }
 
-    // toggle normal detail map
+    // Toggle normal detail map
     const normalEnabled = !!material.normalDetailMap;
     if (normalEnabled !== data.get('data.normal')) {
         material.normalDetailMap = normalEnabled ? null : assets.normalDetail.resource;
         material.update();
     }
 
-    // toggle ao detail map
+    // Toggle ao detail map
     const aoEnabled = !!material.aoDetailMap;
     if (aoEnabled !== data.get('data.ao')) {
         material.aoDetailMap = aoEnabled ? null : assets.aoDetail.resource;

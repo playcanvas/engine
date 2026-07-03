@@ -44,7 +44,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -101,12 +101,12 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 2;
 app.scene.exposure = 2.5;
 
-// get the instance of the laboratory
+// Get the instance of the laboratory
 const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
     castShadows: true,
     receiveShadows: true
@@ -114,20 +114,20 @@ const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
 laboratoryEntity.setLocalScale(100, 100, 100);
 app.root.addChild(laboratoryEntity);
 
-// set up materials
+// Set up materials
 laboratoryEntity.findComponents('render').forEach(render => {
     render.meshInstances.forEach(meshInstance => {
-        // disable blending / enable depth writes
+        // Disable blending / enable depth writes
         meshInstance.material.depthState = DepthState.DEFAULT;
         meshInstance.material.blendType = BLEND_NONE;
 
-        // disable baked AO map as we want to use SSAO only
+        // Disable baked AO map as we want to use SSAO only
         meshInstance.material.aoMap = null;
         meshInstance.material.update();
     });
 });
 
-// add lights to the torches
+// Add lights to the torches
 const torches = laboratoryEntity.find(node => node.name.indexOf('Fackel') !== -1);
 torches.forEach(torch => {
     const light = new Entity('Omni');
@@ -145,7 +145,7 @@ torches.forEach(torch => {
     app.root.addChild(light);
 });
 
-// add a ground plane
+// Add a ground plane
 const planeMaterial = new StandardMaterial();
 planeMaterial.diffuse = new Color(0.2, 0.2, 0.2);
 planeMaterial.update();
@@ -183,7 +183,7 @@ cameraEntity.addComponent('camera', {
     toneMapping: TONEMAP_NEUTRAL
 });
 
-// add orbit camera script
+// Add orbit camera script
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -195,7 +195,7 @@ cameraEntity.script.create('orbitCamera', {
 cameraEntity.script.create('orbitCameraInputMouse');
 cameraEntity.script.create('orbitCameraInputTouch');
 
-// position the camera in the world
+// Position the camera in the world
 cameraEntity.setLocalPosition(-60, 30, 60);
 app.root.addChild(cameraEntity);
 
@@ -231,11 +231,11 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// apply UI changes
+// Apply UI changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     applySettings();
 
-    // if scale has changed, adjust min angle based on scale to avoid depth related artifacts
+    // If scale has changed, adjust min angle based on scale to avoid depth related artifacts
     const pathArray = path.split('.');
     if (pathArray[2] === 'scale') {
         if (value < 0.6) {
@@ -248,7 +248,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 });
 
-// initial settings
+// Initial settings
 data.set('data', {
     enabled: true,
     ssao: {

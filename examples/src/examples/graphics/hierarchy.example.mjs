@@ -107,11 +107,11 @@ function createChildren(parent, gridSize, scale, scaleDelta, spacing, levels) {
     }
 }
 
-// dummy root entity
+// Dummy root entity
 const root = new Entity();
 app.root.addChild(root);
 
-// generate hierarchy of children entities
+// Generate hierarchy of children entities
 const levels = 5;
 const gridSize = 2;
 const scale = 1.7;
@@ -139,16 +139,16 @@ light.addComponent('light', {
 light.translate(40, 60, 50);
 app.root.addChild(light);
 
-// update each frame
+// Update each frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // rotation quaternion changing with time
+    // Rotation quaternion changing with time
     const rot = new Quat();
     rot.setFromEulerAngles(time * 5, time * 13, time * 6);
 
-    // apply it to all entities
+    // Apply it to all entities
     for (let e = 0; e < entities.length; e++) {
         entities[e].setLocalRotation(rot);
     }

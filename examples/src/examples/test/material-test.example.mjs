@@ -115,7 +115,7 @@ const createObject = (x, y, z, material, scale) => {
     app.root.addChild(obj);
 };
 
-// red pill it the sheen material
+// Red pill it the sheen material
 const materialSheen = new StandardMaterial();
 materialSheen.diffuse = new Color(0.9, 0.6, 0.6);
 materialSheen.useMetalness = true; // sheen requires metalness workflow
@@ -128,7 +128,7 @@ materialSheen.sheenGlossMap = assets.diffuse.resource;
 materialSheen.sheenGloss = 0.7;
 materialSheen.update();
 
-// green pill - specular & specularity factor
+// Green pill - specular & specularity factor
 const materialSpecFactor = new StandardMaterial();
 materialSpecFactor.diffuse = new Color(0.6, 0.9, 0.6);
 materialSpecFactor.gloss = 0.6;
@@ -145,7 +145,7 @@ materialSpecFactor.specularMap = assets.colors.resource;
 materialSpecFactor.glossMap = assets.gloss.resource;
 materialSpecFactor.update();
 
-// blue pill - AO
+// Blue pill - AO
 const materialAO = new StandardMaterial();
 materialAO.diffuse = new Color(0.6, 0.6, 0.9);
 materialAO.aoMap = assets.gloss.resource;
@@ -156,10 +156,10 @@ createObject(-1, 0, 0, materialSheen, 0.7);
 createObject(1, 0, 0, materialSpecFactor, 0.7);
 createObject(0, 0, 1, materialAO, 0.7);
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', dt => {
-    // rotate camera around the objects
+    // Rotate camera around the objects
     time += dt;
     camera.setLocalPosition(4 * Math.sin(time * 0.5), 0, 4 * Math.cos(time * 0.5));
     camera.lookAt(Vec3.ZERO);

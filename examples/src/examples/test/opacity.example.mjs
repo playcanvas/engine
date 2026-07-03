@@ -98,7 +98,7 @@ camera.addComponent('camera', {
 });
 camera.translate(10, 6, 22);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -126,20 +126,20 @@ const blendModes = [BLEND_ADDITIVE, BLEND_ADDITIVEALPHA, BLEND_SCREEN, BLEND_NOR
 const createPrimitive = (x, y, z) => {
     const material = new StandardMaterial();
 
-    // emissive color
+    // Emissive color
     material.emissive = new Color(x, y, 1 - y);
 
-    // emissive texture
+    // Emissive texture
     material.emissiveMap = assets.rocks.resource;
 
-    // opacity map - use a separate texture
+    // Opacity map - use a separate texture
     material.opacityMap = assets.opacity.resource;
     material.opacityMapChannel = 'r';
 
-    // disable culling to see back faces as well
+    // Disable culling to see back faces as well
     material.cull = CULLFACE_NONE;
 
-    // set up alpha test value
+    // Set up alpha test value
     material.alphaTest = (x + 1) / (NUM_BOXES + 1) - 0.1;
 
     // alpha blend mode
@@ -192,7 +192,7 @@ const createText = (fontAsset, message, x, y, z, rot) => {
 createText(assets.font, 'Alpha Test', 0, (NUM_BOXES + 1) * 0.5, 0, 0);
 createText(assets.font, 'Alpha Blend', -(NUM_BOXES + 1) * 0.5, 0, 0, 90);
 
-// ground
+// Ground
 const groundMaterial = new StandardMaterial();
 groundMaterial.diffuse = new Color(0.5, 0.5, 0.5);
 groundMaterial.gloss = 0.4;
@@ -209,7 +209,7 @@ ground.setLocalScale(30, 1, 30);
 ground.setLocalPosition(0, -3, 0);
 app.root.addChild(ground);
 
-// light
+// Light
 const directionalLight = new Entity();
 directionalLight.addComponent('light', {
     type: 'directional',
@@ -230,7 +230,7 @@ const rot = new Quat();
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
 
-    // rotate the boxes
+    // Rotate the boxes
     rot.setFromEulerAngles(20 * time, 30 * time, 0);
     boxes.forEach(box => {
         box.setRotation(rot);

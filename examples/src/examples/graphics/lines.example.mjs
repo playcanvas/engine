@@ -66,7 +66,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.2;
 app.scene.envAtlas = assets.helipad.resource;
@@ -98,12 +98,12 @@ for (let i = 0; i < numMeshes; i++) {
     const entity = new Entity();
     entity.setLocalScale(4, 4, 4);
 
-    // use material with random color
+    // Use material with random color
     const material = new StandardMaterial();
     material.diffuse = new Color(Math.random(), Math.random(), Math.random());
     material.update();
 
-    // create render component
+    // Create render component
     entity.addComponent('render', {
         type: i % 2 ? 'sphere' : 'cylinder',
         material: material,
@@ -114,7 +114,7 @@ for (let i = 0; i < numMeshes; i++) {
         entity.setLocalScale(3, 5, 3);
     }
 
-    // add entity for rendering
+    // Add entity for rendering
     app.root.addChild(entity);
     meshes.push(entity);
 }
@@ -145,12 +145,12 @@ let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // generate grid of lines - store positions and colors as an arrays of numbers instead of
+    // Generate grid of lines - store positions and colors as an arrays of numbers instead of
     // Vec3s and Colors to improve performance
     const positions = [];
     const colors = [];
 
-    // temporary instances for calculations
+    // Temporary instances for calculations
     const pt1 = new Vec3();
     const pt2 = new Vec3();
     const pt3 = new Vec3();
@@ -160,23 +160,23 @@ app.on('update', dt => {
 
     for (let x = 1; x < 60; x++) {
         for (let z = 1; z < 60; z++) {
-            // generate 3 points: one start point, one along x and one along z axis
+            // Generate 3 points: one start point, one along x and one along z axis
             pt1.set(x, groundElevation(time, x, z), z);
             pt2.set(x - 1, groundElevation(time, x - 1, z), z);
             pt3.set(x, groundElevation(time, x, z - 1), z - 1);
 
-            // generate colors for the 3 points
+            // Generate colors for the 3 points
             groundColor(c1, pt1);
             groundColor(c2, pt2);
             groundColor(c3, pt3);
 
-            // add line connecting points along z axis
+            // Add line connecting points along z axis
             if (x > 1) {
                 positions.push(pt1.x, pt1.y, pt1.z, pt2.x, pt2.y, pt2.z);
                 colors.push(c1.r, c1.g, c1.b, c1.a, c2.r, c2.g, c2.b, c2.a);
             }
 
-            // add line connecting points along x axis
+            // Add line connecting points along x axis
             if (z > 1) {
                 positions.push(pt1.x, pt1.y, pt1.z, pt3.x, pt3.y, pt3.z);
                 colors.push(c1.r, c1.g, c1.b, c1.a, c3.r, c3.g, c3.b, c3.a);
@@ -184,16 +184,16 @@ app.on('update', dt => {
         }
     }
 
-    // submit the generated arrays of lines and colors for rendering
+    // Submit the generated arrays of lines and colors for rendering
     app.drawLineArrays(positions, colors);
 
-    // array of Vec3 and Color classes for different way to render lines
+    // Array of Vec3 and Color classes for different way to render lines
     const grayLinePositions = [];
     const grayLineColors = [];
 
-    // handle the array of meshes
+    // Handle the array of meshes
     for (let i = 0; i < numMeshes; i++) {
-        // move them equally spaced out around in the circle
+        // Move them equally spaced out around in the circle
         const offset = (i * Math.PI * 2) / numMeshes;
         const entity = meshes[i];
         entity.setLocalPosition(
@@ -202,18 +202,18 @@ app.on('update', dt => {
             30 + 20 * Math.cos(time * 0.2 + offset)
         );
 
-        // rotate the meshes
+        // Rotate the meshes
         entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);
 
-        // draw a single magenta line from this mesh to the next mesh
+        // Draw a single magenta line from this mesh to the next mesh
         const nextEntity = meshes[(i + 1) % meshes.length];
         app.drawLine(entity.getPosition(), nextEntity.getPosition(), Color.MAGENTA);
 
-        // store positions and colors of lines connecting objects to a center point
+        // Store positions and colors of lines connecting objects to a center point
         grayLinePositions.push(entity.getPosition(), new Vec3(0, 10, 0));
         grayLineColors.push(Color.GRAY, Color.GRAY);
     }
 
-    // render all gray lines
+    // Render all gray lines
     app.drawLines(grayLinePositions, grayLineColors);
 });

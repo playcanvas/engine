@@ -151,7 +151,7 @@ const meshInstance = forest.findComponent('render').meshInstances[0];
 const material = createGoochMaterial(meshInstance.material.diffuseMap);
 meshInstance.material = material;
 
-// initialize instancing using the vertex buffer on meshInstance
+// Initialize instancing using the vertex buffer on meshInstance
 meshInstance.setInstancing(vertexBuffer);
 
 // Create an Entity for the ground - this is a static geometry. Create a new instance of the gooch material,
@@ -166,17 +166,17 @@ ground.setLocalScale(30, 1, 30);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// store al materials to allow for easy modification
+// Store al materials to allow for easy modification
 const materials = [material, groundMaterial];
 
-// animated / morphed bitmoji model
+// Animated / morphed bitmoji model
 const bitmojiEntity = assets.bitmoji.resource.instantiateRenderEntity({ castShadows: false });
 bitmojiEntity.setLocalScale(2.5, 2.5, 2.5);
 bitmojiEntity.setLocalPosition(0, 0, 0);
 app.root.addChild(bitmojiEntity);
 applyMaterial(bitmojiEntity, materials);
 
-// play the animation
+// Play the animation
 bitmojiEntity.addComponent('anim', { activate: true });
 const walkTrack = assets.danceAnim.resource.animations[0].resource;
 bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
@@ -186,7 +186,7 @@ let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // generate a light direction that rotates around the scene, and set it on the materials
+    // Generate a light direction that rotates around the scene, and set it on the materials
     const lightDir = new Vec3(Math.sin(time), -0.5, Math.cos(time)).normalize();
     const lightDirArray = [-lightDir.x, -lightDir.y, -lightDir.z];
 
@@ -195,7 +195,7 @@ app.on('update', dt => {
         mat.update();
     });
 
-    // orbit the camera
+    // Orbit the camera
     camera.setLocalPosition(8 * Math.sin(time * 0.01), 3, 8 * Math.cos(time * 0.01));
     camera.lookAt(new Vec3(0, 1, 0));
 });

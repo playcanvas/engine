@@ -72,17 +72,17 @@ let camerasComponents = null;
 // glb lights use physical units
 app.scene.physicalUnits = true;
 
-// create an instance using render component
+// Create an instance using render component
 const entity = assets.scene.resource.instantiateRenderEntity({});
 app.root.addChild(entity);
 
-// find all cameras - by default they are disabled
+// Find all cameras - by default they are disabled
 camerasComponents = entity.findComponents('camera');
 camerasComponents.forEach(component => {
-    // set the aspect ratio to automatic to work with any window size
+    // Set the aspect ratio to automatic to work with any window size
     component.aspectRatioMode = ASPECT_AUTO;
 
-    // set up exposure for physical units
+    // Set up exposure for physical units
     component.aperture = 4;
     component.shutter = 1 / 100;
     component.sensitivity = 500;
@@ -90,7 +90,7 @@ camerasComponents.forEach(component => {
 
 /** @type {LightComponent[]} */
 const lightComponents = entity.findComponents('light');
-// enable all lights from the glb
+// Enable all lights from the glb
 lightComponents.forEach(component => {
     component.enabled = true;
 });
@@ -100,14 +100,14 @@ let activeCamera = 0;
 app.on('update', dt => {
     time -= dt;
 
-    // change the camera every few seconds
+    // Change the camera every few seconds
     if (time <= 0) {
         time = 2;
 
-        // disable current camera
+        // Disable current camera
         camerasComponents[activeCamera].enabled = false;
 
-        // activate next camera
+        // Activate next camera
         activeCamera = (activeCamera + 1) % camerasComponents.length;
         camerasComponents[activeCamera].enabled = true;
     }

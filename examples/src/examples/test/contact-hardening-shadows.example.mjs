@@ -125,11 +125,11 @@ app.scene.ambientLight.set(0, 0, 0);
 app.scene.ambientLuminance = 0;
 app.scene.setSkybox(assets.helipad.resources);
 
-// enable area lights which are disabled by default for clustered lighting
+// Enable area lights which are disabled by default for clustered lighting
 app.scene.clusteredLightingEnabled = false;
 app.scene.skyboxIntensity = 0.1;
 
-// set the loaded area light LUT data
+// Set the loaded area light LUT data
 const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
@@ -206,7 +206,7 @@ areaLight.setLocalScale(3, 1, 3);
 areaLight.setEulerAngles(45, 90, 0);
 areaLight.setLocalPosition(4, 7, 0);
 
-// emissive material that is the light source color
+// Emissive material that is the light source color
 const brightMaterial = new StandardMaterial();
 brightMaterial.emissive = areaLight.light.color;
 brightMaterial.emissiveIntensity = areaLight.light.intensity;
@@ -215,7 +215,7 @@ brightMaterial.cull = CULLFACE_NONE;
 brightMaterial.update();
 
 const brightShape = new Entity();
-// primitive shape that matches light source shape
+// Primitive shape that matches light source shape
 brightShape.addComponent('render', {
     type: 'plane',
     material: brightMaterial,
@@ -389,7 +389,7 @@ app.on('update', dt => {
         areaLight.setLocalPosition(-x * 4, 7, -z * 4);
     }
 
-    // resize control panel to fit the content better
+    // Resize control panel to fit the content better
     if (resizeControlPanel) {
         const panel = win.document.getElementById('controlPanel');
         if (panel) {

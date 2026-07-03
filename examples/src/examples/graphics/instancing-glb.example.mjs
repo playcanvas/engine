@@ -83,7 +83,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// get the instance of the cube it set up with render component and add it to scene
+// Get the instance of the cube it set up with render component and add it to scene
 const entity = assets.glb.resource.instantiateRenderEntity({
     castShadows: true
 });

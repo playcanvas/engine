@@ -40,7 +40,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -158,7 +158,7 @@ cameraTop.translate(-100, 75, 100);
 cameraTop.lookAt(0, 7, 0);
 app.root.addChild(cameraTop);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraTop.addComponent('script');
 cameraTop.script.create('orbitCamera', {
     attributes: {
@@ -204,28 +204,28 @@ spotLight.addComponent('light', {
 });
 app.root.addChild(spotLight);
 
-// set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+// Set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// handle HUD changes - update the debug mode for the top and right cameras
+// Handle HUD changes - update the debug mode for the top and right cameras
 data.on('*:set', (/** @type {string} */ path, value) => {
     cameraTop.camera.setShaderPass(value);
     cameraRight.camera.setShaderPass(value);
 });
 
-// update function called once per frame
+// Update function called once per frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // orbit camera left around
+    // Orbit camera left around
     cameraLeft.setLocalPosition(100 * Math.sin(time * 0.2), 35, 100 * Math.cos(time * 0.2));
     cameraLeft.lookAt(Vec3.ZERO);
 
-    // move the spot light around
+    // Move the spot light around
     spotLight.setLocalPosition(40 * Math.sin(time * 0.5), 60, 40 * Math.cos(time * 0.5));
 
-    // zoom in and out the orthographic camera
+    // Zoom in and out the orthographic camera
     cameraRight.camera.orthoHeight = 90 + Math.sin(time * 0.3) * 60;
 });

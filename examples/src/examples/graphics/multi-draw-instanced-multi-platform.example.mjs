@@ -103,12 +103,12 @@ material.gloss = 0.6;
 material.metalness = 0.7;
 material.useMetalness = true;
 
-// build 3 primitive geometries (unit size)
+// Build 3 primitive geometries (unit size)
 const sphereGeom = new SphereGeometry({ radius: 0.5, latitudeBands: 24, longitudeBands: 24 });
 const boxGeom = new BoxGeometry();
 const cylGeom = new CylinderGeometry({ radius: 0.5, height: 1, heightSegments: 1, radialSegments: 32 });
 
-// combine into single geometry
+// Combine into single geometry
 const combine = new Geometry();
 const pushGeom = (g, vertexOffset) => {
     // positions / normals / uvs
@@ -118,35 +118,35 @@ const pushGeom = (g, vertexOffset) => {
     if (g.uvs) combine.uvs ??= [];
     if (g.uvs) combine.uvs.push(...g.uvs);
 
-    // indices with offset
+    // Indices with offset
     const base = vertexOffset;
     const srcIdx = g.indices;
     for (let i = 0; i < srcIdx.length; i++) combine.indices.push(srcIdx[i] + base);
 };
 
-// initialize arrays
+// Initialize arrays
 combine.positions = [];
 combine.normals = [];
 combine.uvs = [];
 combine.indices = [];
 
-// vertex offsets and firstIndex tracking (in indices)
+// Vertex offsets and firstIndex tracking (in indices)
 const vtxCounts = [sphereGeom.positions.length / 3, boxGeom.positions.length / 3, cylGeom.positions.length / 3];
 const idxCounts = [sphereGeom.indices.length, boxGeom.indices.length, cylGeom.indices.length];
 const firstIndex = [0, idxCounts[0], idxCounts[0] + idxCounts[1]];
 
-// append geometries
+// Append geometries
 pushGeom(sphereGeom, 0);
 pushGeom(boxGeom, vtxCounts[0]);
 pushGeom(cylGeom, vtxCounts[0] + vtxCounts[1]);
 
-// create mesh
+// Create mesh
 const mesh = Mesh.fromGeometry(app.graphicsDevice, combine);
 
 // MeshInstance
 const meshInst = new MeshInstance(mesh, material);
 
-// entity to render our MeshInstance
+// Entity to render our MeshInstance
 const entity = new Entity('MultiDrawEntity');
 entity.addComponent('render', { meshInstances: [meshInst] });
 app.root.addChild(entity);
@@ -159,7 +159,7 @@ const matrices = new Float32Array(totalInstances * 16);
 const instanceIndexes = new Uint32Array(totalInstances);
 const drawOffsets = new Float32Array(ringCounts.length);
 
-// populate matrices on 3 concentric rings; assign groups sequentially
+// Populate matrices on 3 concentric rings; assign groups sequentially
 const tmpPos = new Vec3();
 const tmpRot = new Quat();
 const tmpScl = new Vec3(1, 1, 1);
@@ -194,7 +194,7 @@ if (app.graphicsDevice.isWebGL2 && app.graphicsDevice.supportsMultiDraw) {
     // update shader transform instancing chunk
     material.shaderChunks.glsl.set('transformInstancingVS', transformInstancingVert);
 
-    // store matrices in texture
+    // Store matrices in texture
     const matricesDataTexture = new Texture(app.graphicsDevice, {
         width: (totalInstances * 16) / 4, // write rbga as vec4
         height: 1,
@@ -239,7 +239,7 @@ cmd.add(1, idxCounts[1], ringCounts[1], firstIndex[1], 0, firstInstance[1]);
 cmd.add(2, idxCounts[2], ringCounts[2], firstIndex[2], 0, firstInstance[2]);
 cmd.update(3);
 
-// draw helper lines around each ring to visualize distribution
+// Draw helper lines around each ring to visualize distribution
 const linesPositions = [];
 const linesColors = [];
 const ringColor = [Color.RED, Color.GREEN, Color.YELLOW];
@@ -257,7 +257,7 @@ for (let ring = 0; ring < 3; ring++) {
     }
 }
 
-// orbit camera
+// Orbit camera
 let angle = 0;
 app.on('update', dt => {
     angle += dt * 0.2;

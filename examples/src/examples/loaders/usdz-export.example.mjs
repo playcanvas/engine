@@ -31,7 +31,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// add AR button to download the usdz file
+// Add AR button to download the usdz file
 const appInner = /** @type {HTMLElement} */ (document.getElementById('appInner'));
 const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
@@ -85,7 +85,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// get the instance of the bench and set up with render component
+// Get the instance of the bench and set up with render component
 const entity = assets.bench.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
@@ -100,14 +100,14 @@ camera.translate(-3, 1, 2);
 camera.lookAt(0, 0.5, 0);
 app.root.addChild(camera);
 
-// set skybox
+// Set skybox
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
 // a link element, created in the html part of the examples.
 const link = document.getElementById('ar-link');
 
-// convert the loaded entity into asdz file
+// Convert the loaded entity into asdz file
 const options = {
     maxTextureSize: 1024
 };
@@ -125,12 +125,12 @@ new UsdzExporter()
     })
     .catch(console.error);
 
-// when clicking on the download UI button, trigger the download
+// When clicking on the download UI button, trigger the download
 data.on('download', () => {
     link.click();
 });
 
-// spin the meshe
+// Spin the meshe
 app.on('update', dt => {
     if (entity) {
         entity.rotate(0, -12 * dt, 0);

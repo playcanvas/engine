@@ -43,7 +43,7 @@ app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically
-// change resolution to be the same as the canvas size
+// Change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
@@ -98,7 +98,7 @@ const shortestDistance = (x, y, z, a, b, c) => {
  * @returns {MorphTarget} The morph target.
  */
 const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
-    // modify vertices to separate array
+    // Modify vertices to separate array
     const modifiedPositions = new Float32Array(positions.length);
     /** @type {number} */
     let dist;
@@ -108,30 +108,30 @@ const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
     let displacement;
     const limit = 0.2;
     for (i = 0; i < positions.length; i += 3) {
-        // distance of the point to the specified plane
+        // Distance of the point to the specified plane
         dist = shortestDistance(positions[i], positions[i + 1], positions[i + 2], nx, ny, nz);
 
-        // modify distance to displacement amount - displace nearby points more than distant points
+        // Modify distance to displacement amount - displace nearby points more than distant points
         displacement = math.smoothstep(0, limit, dist);
         displacement = 1 - displacement;
 
-        // generate new position by extruding vertex along normal by displacement
+        // Generate new position by extruding vertex along normal by displacement
         modifiedPositions[i] = positions[i] + normals[i] * displacement;
         modifiedPositions[i + 1] = positions[i + 1] + normals[i + 1] * displacement;
         modifiedPositions[i + 2] = positions[i + 2] + normals[i + 2] * displacement;
     }
 
-    // generate normals based on modified positions and indices
+    // Generate normals based on modified positions and indices
     // @ts-ignore engine-tsd
     const modifiedNormals = new Float32Array(calculateNormals(modifiedPositions, indices));
 
-    // generate delta positions and normals - as morph targets store delta between base position / normal and modified position / normal
+    // Generate delta positions and normals - as morph targets store delta between base position / normal and modified position / normal
     for (i = 0; i < modifiedNormals.length; i++) {
         modifiedPositions[i] -= positions[i];
         modifiedNormals[i] -= normals[i];
     }
 
-    // create a morph target
+    // Create a morph target
     // @ts-ignore engine-tsd
     return new MorphTarget({
         deltaPositions: modifiedPositions,
@@ -146,10 +146,10 @@ const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
  * @returns {MorphInstance} The morph instance.
  */
 const createMorphInstance = (x, y, z) => {
-    // create the base mesh - a sphere, with higher amount of vertices / triangles
+    // Create the base mesh - a sphere, with higher amount of vertices / triangles
     const mesh = Mesh.fromGeometry(app.graphicsDevice, new SphereGeometry({ latitudeBands: 200, longitudeBands: 200 }));
 
-    // obtain base mesh vertex / index data
+    // Obtain base mesh vertex / index data
     /** @type {number[]} */
     const srcPositions = [];
     /** @type {number[]} */
@@ -160,20 +160,20 @@ const createMorphInstance = (x, y, z) => {
     mesh.getNormals(srcNormals);
     mesh.getIndices(indices);
 
-    // build 3 targets by expanding a part of sphere along 3 planes, specified by the normal
+    // Build 3 targets by expanding a part of sphere along 3 planes, specified by the normal
     const targets = [];
     targets.push(createMorphTarget(srcPositions, srcNormals, indices, 1, 0, 0));
     targets.push(createMorphTarget(srcPositions, srcNormals, indices, 0, 1, 0));
     targets.push(createMorphTarget(srcPositions, srcNormals, indices, 0, 0, 1));
 
-    // create a morph using these 3 targets
+    // Create a morph using these 3 targets
     mesh.morph = new Morph(targets, app.graphicsDevice);
 
     // Create the mesh instance
     const material = new StandardMaterial();
     const meshInstance = new MeshInstance(mesh, material);
 
-    // add morph instance - this is where currently set weights are stored
+    // Add morph instance - this is where currently set weights are stored
     const morphInstance = new MorphInstance(mesh.morph);
     meshInstance.morphInstance = morphInstance;
 
@@ -191,26 +191,26 @@ const createMorphInstance = (x, y, z) => {
     return morphInstance;
 };
 
-// create 3 morph instances
+// Create 3 morph instances
 /** @type {MorphInstance[]} */
 const morphInstances = [];
 for (let k = 0; k < 3; k++) {
     morphInstances.push(createMorphInstance(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 6 - 3));
 }
 
-// update function called once per frame
+// Update function called once per frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
     for (let m = 0; m < morphInstances.length; m++) {
-        // modify weights of all 3 morph targets along some sin curve with different frequency
+        // Modify weights of all 3 morph targets along some sin curve with different frequency
         morphInstances[m].setWeight(0, Math.abs(Math.sin(time + m)));
         morphInstances[m].setWeight(1, Math.abs(Math.sin(time * 0.3 + m)));
         morphInstances[m].setWeight(2, Math.abs(Math.sin(time * 0.7 + m)));
     }
 
-    // orbit camera around
+    // Orbit camera around
     camera.setLocalPosition(16 * Math.sin(time * 0.2), 4, 16 * Math.cos(time * 0.2));
     camera.lookAt(Vec3.ZERO);
 });

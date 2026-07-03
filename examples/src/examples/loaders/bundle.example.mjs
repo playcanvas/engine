@@ -65,8 +65,8 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// load assets
-// notice that scene and torus are loaded as blob's and only tar file is downloaded
+// Load assets
+// Notice that scene and torus are loaded as blob's and only tar file is downloaded
 await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
@@ -82,22 +82,22 @@ let camerasComponents = null;
 // glb lights use physical units
 app.scene.physicalUnits = true;
 
-// create an instance using render component
+// Create an instance using render component
 const entity = assets.scene.resource.instantiateRenderEntity();
 app.root.addChild(entity);
 
-// create an instance using render component
+// Create an instance using render component
 const entityTorus = assets.torus.resource.instantiateRenderEntity();
 app.root.addChild(entityTorus);
 entityTorus.setLocalPosition(0, 0, 2);
 
-// find all cameras - by default they are disabled
+// Find all cameras - by default they are disabled
 camerasComponents = entity.findComponents('camera');
 camerasComponents.forEach(component => {
-    // set the aspect ratio to automatic to work with any window size
+    // Set the aspect ratio to automatic to work with any window size
     component.aspectRatioMode = ASPECT_AUTO;
 
-    // set up exposure for physical units
+    // Set up exposure for physical units
     component.aperture = 4;
     component.shutter = 1 / 100;
     component.sensitivity = 500;
@@ -116,14 +116,14 @@ app.on('update', dt => {
 
     entityTorus.rotateLocal(360 * dt, 0, 0);
 
-    // change the camera every few seconds
+    // Change the camera every few seconds
     if (time <= 0) {
         time = 2;
 
-        // disable current camera
+        // Disable current camera
         camerasComponents[activeCamera].enabled = false;
 
-        // activate next camera
+        // Activate next camera
         activeCamera = (activeCamera + 1) % camerasComponents.length;
         camerasComponents[activeCamera].enabled = true;
     }

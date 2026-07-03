@@ -106,10 +106,10 @@ app.scene.skyboxMip = 1;
 app.scene.ambientLight.set(1, 0, 0);
 app.scene.ambientLuminance = 20000;
 
-// enable area lights which are disabled by default for clustered lighting
+// Enable area lights which are disabled by default for clustered lighting
 app.scene.lighting.areaLightsEnabled = true;
 
-// set the loaded area light LUT data
+// Set the loaded area light LUT data
 const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
@@ -131,7 +131,7 @@ app.root.addChild(sheen2);
 const lights = assets.lights.resource.instantiateRenderEntity({
     castShadows: true
 });
-// enable all lights from the glb
+// Enable all lights from the glb
 /** @type {Array<LightComponent>} */
 const lightComponents = lights.findComponents('light');
 lightComponents.forEach(component => {
@@ -255,7 +255,7 @@ areaLight.setLocalScale(4, 1, 5);
 areaLight.setEulerAngles(70, 180, 0);
 areaLight.setLocalPosition(5, 3, -5);
 
-// emissive material that is the light source color
+// Emissive material that is the light source color
 const brightMaterial = new StandardMaterial();
 brightMaterial.emissive = Color.YELLOW;
 brightMaterial.emissiveIntensity = areaLight.light.luminance;
@@ -264,7 +264,7 @@ brightMaterial.cull = CULLFACE_NONE;
 brightMaterial.update();
 
 const brightShape = new Entity();
-// primitive shape that matches light source shape
+// Primitive shape that matches light source shape
 brightShape.addComponent('render', {
     type: 'plane',
     material: brightMaterial,
@@ -335,7 +335,7 @@ let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // resize control panel to fit the content better
+    // Resize control panel to fit the content better
     if (resizeControlPanel) {
         const panel = win.document.getElementById('controlPanel');
         if (panel) {

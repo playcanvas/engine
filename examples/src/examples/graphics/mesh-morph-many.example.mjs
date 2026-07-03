@@ -107,16 +107,16 @@ const camera = new Entity();
 camera.addComponent('camera');
 app.root.addChild(camera);
 
-// position the camera
+// Position the camera
 camera.setLocalPosition(0, 4, 9);
 camera.lookAt(Vec3.ZERO);
 
-// update function called once per frame
+// Update function called once per frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // modify weights of all morph targets along sin curve
+    // Modify weights of all morph targets along sin curve
     const targetsCount = morphInstance.morph.targets.length;
     for (let i = 0; i < targetsCount; i++) {
         morphInstance.setWeight(i, Math.abs(Math.sin(time + i * 0.4)));

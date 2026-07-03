@@ -339,7 +339,7 @@ function spawnRagdoll(x, y, yaw) {
     app.root.addChild(ragdoll);
     ragdoll.enabled = true;
 
-    // tumble as it falls
+    // Tumble as it falls
     const pelvis = ragdoll.findByName('pelvis');
     pelvis.rigidbody.angularVelocity = new Vec3(
         Math.random() * 3 - 1.5,

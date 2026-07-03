@@ -43,7 +43,7 @@ import uiHtml from './ui.html';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// create UI
+// Create UI
 // html
 const div = document.createElement('div');
 div.innerHTML = uiHtml;

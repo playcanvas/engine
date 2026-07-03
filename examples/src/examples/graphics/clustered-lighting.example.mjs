@@ -128,7 +128,7 @@ ground.addComponent('render', {
 ground.setLocalScale(150, 150, 150);
 app.root.addChild(ground);
 
-// high polycount cylinder
+// High polycount cylinder
 const cylinderMesh = Mesh.fromGeometry(app.graphicsDevice, new CylinderGeometry({ capSegments: 200 }));
 const cylinder = new Entity();
 cylinder.addComponent('render', {
@@ -139,7 +139,7 @@ app.root.addChild(cylinder);
 cylinder.setLocalPosition(0, 50, 0);
 cylinder.setLocalScale(50, 100, 50);
 
-// create many omni lights that do not cast shadows
+// Create many omni lights that do not cast shadows
 let count = 30;
 for (let i = 0; i < count; i++) {
     const color = new Color(Math.random(), Math.random(), Math.random(), 1);
@@ -153,7 +153,7 @@ for (let i = 0; i < count; i++) {
         falloffMode: LIGHTFALLOFF_INVERSESQUARED
     });
 
-    // attach a render component with a small sphere to each light
+    // Attach a render component with a small sphere to each light
     const material = new StandardMaterial();
     material.emissive = color;
     material.emissiveIntensity = 10; // bright emissive to make it really bright on HDR displays
@@ -166,12 +166,12 @@ for (let i = 0; i < count; i++) {
     });
     lightPoint.setLocalScale(5, 5, 5);
 
-    // add it to the scene and also keep it in an array
+    // Add it to the scene and also keep it in an array
     app.root.addChild(lightPoint);
     pointLightList.push(lightPoint);
 }
 
-// create many spot lights
+// Create many spot lights
 count = 16;
 for (let i = 0; i < count; i++) {
     const color = new Color(Math.random(), Math.random(), Math.random(), 1);
@@ -186,7 +186,7 @@ for (let i = 0; i < count; i++) {
         castShadows: false
     });
 
-    // attach a render component with a small cone to each light
+    // Attach a render component with a small cone to each light
     material = new StandardMaterial();
     material.emissive = color;
     material.emissiveIntensity = 10; // bright emissive to make it really bright on HDR displays
@@ -225,14 +225,14 @@ camera.addComponent('camera', {
     farClip: 500,
     nearClip: 0.1,
 
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    // If the device renders in HDR mode, disable tone mapping to output HDR values without any processing
     toneMapping: device.isHdr ? TONEMAP_NONE : TONEMAP_ACES,
     gammaCorrection: GAMMA_SRGB
 });
 camera.setLocalPosition(140, 140, 140);
 camera.lookAt(new Vec3(0, 40, 0));
 
-// add orbit camera script with mouse and touch support
+// Add orbit camera script with mouse and touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -251,14 +251,14 @@ let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
 
-    // move lights along sin based waves around the cylinder
+    // Move lights along sin based waves around the cylinder
     pointLightList.forEach((light, i) => {
         const angle = (i / pointLightList.length) * Math.PI * 2;
         const y = Math.sin(time * 0.5 + 7 * angle) * 30 + 70;
         light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
     });
 
-    // rotate spot lights around
+    // Rotate spot lights around
     spotLightList.forEach((spotlight, i) => {
         const angle = (i / spotLightList.length) * Math.PI * 2;
         spotlight.setLocalPosition(40 * Math.sin(time + angle), 5, 40 * Math.cos(time + angle));
@@ -266,7 +266,7 @@ app.on('update', (/** @type {number} */ dt) => {
         spotlight.rotateLocal(90, 0, 0);
     });
 
-    // rotate directional light
+    // Rotate directional light
     if (dirLight) {
         dirLight.setLocalEulerAngles(25, -30 * time, 0);
     }

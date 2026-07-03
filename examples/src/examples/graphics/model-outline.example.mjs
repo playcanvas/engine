@@ -102,7 +102,7 @@ function createPrimitive(primitiveType, position, scale, color, layer) {
     return primitive;
 }
 
-// create texture and render target for rendering into, including depth buffer
+// Create texture and render target for rendering into, including depth buffer
 function createRenderTarget() {
     const texture = new Texture(app.graphicsDevice, {
         name: 'OutlineObjects',
@@ -121,15 +121,15 @@ function createRenderTarget() {
 
 let renderTarget = createRenderTarget();
 
-// create a layer for rendering to texture, and add it to the layers
+// Create a layer for rendering to texture, and add it to the layers
 const outlineLayer = new Layer({ name: 'OutlineLayer' });
 app.scene.layers.push(outlineLayer);
 
-// get existing layers
+// Get existing layers
 const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
-// create ground plane and 3 primitives, visible in both layers
+// Create ground plane and 3 primitives, visible in both layers
 createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), new Color(0.3, 0.5, 0.3), [worldLayer.id]);
 createPrimitive('sphere', new Vec3(-2, 1, 0), new Vec3(2, 2, 2), new Color(1, 0, 0), [worldLayer.id]);
 createPrimitive('box', new Vec3(2, 1, 0), new Vec3(2, 2, 2), new Color(1, 1, 0), [worldLayer.id, outlineLayer.id]);
@@ -151,8 +151,8 @@ outlineCamera.addComponent('camera', {
     layers: [outlineLayer.id],
     renderTarget: renderTarget,
 
-    // set the priority of outlineCamera to lower number than the priority of the main camera (which is at default 0)
-    // to make it rendered first each frame
+    // Set the priority of outlineCamera to lower number than the priority of the main camera (which is at default 0)
+    // To make it rendered first each frame
     priority: -1
 });
 app.root.addChild(outlineCamera);
@@ -183,7 +183,7 @@ app.root.addChild(light);
 const resize = () => {
     app.resizeCanvas();
 
-    // re-create the render target for the outline camera
+    // Re-create the render target for the outline camera
     renderTarget.colorBuffer.destroy();
     renderTarget.destroy();
     renderTarget = createRenderTarget();
@@ -195,16 +195,16 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', dt => {
     time += dt;
 
-    // rotate the camera around the objects
+    // Rotate the camera around the objects
     camera.setLocalPosition(12 * Math.sin(time), 5, 12 * Math.cos(time));
     camera.lookAt(Vec3.ZERO);
 
-    // outline camera needs to match the main camera
+    // Outline camera needs to match the main camera
     outlineCamera.setLocalPosition(camera.getLocalPosition());
     outlineCamera.setLocalRotation(camera.getLocalRotation());
 });

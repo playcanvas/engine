@@ -179,7 +179,7 @@ const createController = inputSource => {
     controllers.push(entity);
 
     // Destroy input source related entity
-    // when input source is removed
+    // When input source is removed
     inputSource.on('remove', () => {
         controllers.splice(controllers.indexOf(entity), 1);
         entity.destroy();

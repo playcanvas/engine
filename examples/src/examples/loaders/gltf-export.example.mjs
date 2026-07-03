@@ -44,7 +44,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// add AR button to download the glb file
+// Add AR button to download the glb file
 const appInner = /** @type {HTMLElement} */ (document.getElementById('appInner'));
 const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
@@ -55,7 +55,7 @@ div.innerHTML = `<div style="text-align: center;">
 </div>`;
 appInner.appendChild(div);
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -65,7 +65,7 @@ await new Promise(resolve => {
     WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
 });
 
-// initialize basis to allow to load compressed textures
+// Initialize basis to allow to load compressed textures
 basisInitialize({
     glueUrl: './assets/wasm/basis/basis.wasm.js',
     wasmUrl: './assets/wasm/basis/basis.wasm.wasm',
@@ -119,16 +119,16 @@ await new Promise(resolve => {
 
 app.start();
 
-// get the instance of the bench and set up with render component
+// Get the instance of the bench and set up with render component
 const entity1 = assets.bench.resource.instantiateRenderEntity();
 entity1.setLocalPosition(0, 0, -1.5);
 app.root.addChild(entity1);
 
-// the character
+// The character
 const entity2 = assets.model.resource.instantiateRenderEntity();
 app.root.addChild(entity2);
 
-// chess board
+// Chess board
 const entity3 = assets.board.resource.instantiateRenderEntity();
 entity3.setLocalScale(0.01, 0.01, 0.01);
 app.root.addChild(entity3);
@@ -166,7 +166,7 @@ camera.translate(-3, 1, 2);
 camera.lookAt(0, 0.5, 0);
 app.root.addChild(camera);
 
-// set skybox
+// Set skybox
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 app.scene.exposure = 1.5;
@@ -174,7 +174,7 @@ app.scene.exposure = 1.5;
 // a link element, created in the html part of the examples.
 const link = document.getElementById('ar-link');
 
-// export the whole scene into a glb format
+// Export the whole scene into a glb format
 const options = {
     maxTextureSize: 1024
 };
@@ -189,7 +189,7 @@ new GltfExporter()
     })
     .catch(console.error);
 
-// when clicking on the download UI button, trigger the download
+// When clicking on the download UI button, trigger the download
 data.on('download', () => {
     link.click();
 });

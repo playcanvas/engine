@@ -101,7 +101,7 @@ const startOffset = -((gridSize - 1) * spacing) / 2;
 
 for (let x = 0; x < gridSize; x++) {
     for (let z = 0; z < gridSize; z++) {
-        // deterministic shape based on grid position
+        // Deterministic shape based on grid position
         const shapeIndex = (x + z * gridSize) % shapes.length;
         const shape = shapes[shapeIndex];
 
@@ -116,7 +116,7 @@ for (let x = 0; x < gridSize; x++) {
         });
         app.root.addChild(entity);
 
-        // position in grid
+        // Position in grid
         const posX = startOffset + x * spacing;
         const posZ = startOffset + z * spacing;
         entity.setLocalPosition(posX, 1.5, posZ);
@@ -248,7 +248,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(1, 3, -1);
 
-// add orbit camera script with mouse and touch support
+// Add orbit camera script with mouse and touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -268,10 +268,10 @@ app.scene.lightmapMaxResolution = 2048;
 // For baked lights, this property perhaps has the biggest impact on lightmap resolution:
 app.scene.lightmapSizeMultiplier = 32;
 
-// bake when settings are changed only
+// Bake when settings are changed only
 let needBake = false;
 
-// handle data changes from HUD to modify light enabled state
+// Handle data changes from HUD to modify light enabled state
 data.on('*:set', (/** @type {string} */ path, value) => {
     let bakeSettingChanged = true;
     const pathArray = path.split('.');
@@ -296,7 +296,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         bakeSettingChanged = false;
     }
 
-    // trigger bake on the next frame if relevant settings were changed
+    // Trigger bake on the next frame if relevant settings were changed
     needBake ||= bakeSettingChanged;
 });
 
@@ -312,12 +312,12 @@ data.set('data', {
 
 // Set an update function on the app's update event
 app.on('update', _dt => {
-    // bake lightmaps when HUD properties change
+    // Bake lightmaps when HUD properties change
     if (needBake) {
         needBake = false;
         app.lightmapper.bake(null, bakeType);
     }
 });
 
-// initial bake
+// Initial bake
 app.lightmapper.bake(null, bakeType);

@@ -53,7 +53,7 @@ import outputWgslFrag from './output-wgsl.frag';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// set up and load draco module, as the glb we load is draco compressed
+// Set up and load draco module, as the glb we load is draco compressed
 WasmModule.setConfig('DracoDecoderModule', {
     glueUrl: './assets/wasm/draco/draco.wasm.js',
     wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
@@ -120,7 +120,7 @@ const worldLayer = app.scene.layers.getLayerByName('World');
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
-// create a layer for object that render into texture, add it right after the world layer
+// Create a layer for object that render into texture, add it right after the world layer
 const rtLayer = new Layer({ name: 'RTLayer' });
 app.scene.layers.insert(rtLayer, 1);
 
@@ -145,12 +145,12 @@ const createTexture = (name, width, height) => {
     });
 };
 
-// create textures and render target for rendering into, including depth buffer
+// Create textures and render target for rendering into, including depth buffer
 const texture0 = createTexture('RT-texture-0', 512, 512);
 const texture1 = createTexture('RT-texture-1', 512, 512);
 const texture2 = createTexture('RT-texture-2', 512, 512);
 
-// render to multiple targets if supported
+// Render to multiple targets if supported
 const colorBuffers = [texture0, texture1, texture2];
 const renderTarget = new RenderTarget({
     name: 'MRT',
@@ -167,25 +167,25 @@ textureCamera.addComponent('camera', {
     farClip: 500,
     toneMapping: TONEMAP_ACES,
 
-    // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
-    // to make it rendered first each frame
+    // Set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
+    // To make it rendered first each frame
     priority: -1,
 
-    // this camera renders into texture target
+    // This camera renders into texture target
     renderTarget: renderTarget
 });
 app.root.addChild(textureCamera);
 
-// set the shader pass to use MRT output
+// Set the shader pass to use MRT output
 textureCamera.camera.setShaderPass('MyMRT');
 
-// get the instance of the chess board. Render it into RTLayer only.
+// Get the instance of the chess board. Render it into RTLayer only.
 const boardEntity = assets.board.resource.instantiateRenderEntity({
     layers: [rtLayer.id]
 });
 app.root.addChild(boardEntity);
 
-// override output shader chunk for the material of the chess board, to inject our custom shader
+// Override output shader chunk for the material of the chess board, to inject our custom shader
 // chunk which outputs to multiple render targets during our custom shader pass
 /** @type {Array<RenderComponent>} */
 const renders = boardEntity.findComponents('render');
@@ -206,12 +206,12 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// update things every frame
+// Update things every frame
 let angle = 1;
 app.on('update', (/** @type {number} */ dt) => {
     angle += dt;
 
-    // orbit the camera around
+    // Orbit the camera around
     textureCamera.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));
     textureCamera.lookAt(Vec3.ZERO);
 

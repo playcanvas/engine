@@ -135,16 +135,16 @@ const patchGeom = new PlaneGeometry({
     lengthSegments: patchSegments
 });
 
-// combined buffers
+// Combined buffers
 const positions = [];
 const uvs = [];
 const indices = [];
 
-// per-patch draw info
+// Per-patch draw info
 const firstIndexPerPatch = [];
 const indexCountPerPatch = [];
 
-// helper to sample height from global (x,z) in world units, stored in R channel of heightmap
+// Helper to sample height from global (x,z) in world units, stored in R channel of heightmap
 const sampleHeight = (x, z) => {
     const u = (x + terrainWidth * 0.5) / terrainWidth;
     const v = 1 - (z + terrainDepth * 0.5) / terrainDepth;
@@ -155,14 +155,14 @@ const sampleHeight = (x, z) => {
     return minHeight + (maxHeight - minHeight) * r;
 };
 
-// build combined mesh from grid of patches
+// Build combined mesh from grid of patches
 let vertexBase = 0;
 for (let pz = 0; pz < patchesZ; pz++) {
     for (let px = 0; px < patchesX; px++) {
         const centerX = -terrainWidth * 0.5 + (px + 0.5) * patchWidth;
         const centerZ = -terrainDepth * 0.5 + (pz + 0.5) * patchDepth;
 
-        // record first index for this patch
+        // Record first index for this patch
         firstIndexPerPatch.push(indices.length);
 
         // positions, uvs
@@ -177,7 +177,7 @@ for (let pz = 0; pz < patchesZ; pz++) {
             uvs.push((wx + terrainWidth * 0.5) / terrainWidth, 1 - (wz + terrainDepth * 0.5) / terrainDepth);
         }
 
-        // indices
+        // Indices
         const srcIdx = patchGeom.indices;
         for (let i = 0; i < srcIdx.length; i++) {
             indices.push(vertexBase + srcIdx[i]);
@@ -191,7 +191,7 @@ for (let pz = 0; pz < patchesZ; pz++) {
 // normals after displacement
 const normals = calculateNormals(positions, indices);
 
-// create a single mesh from all patches
+// Create a single mesh from all patches
 const mesh = new Mesh(app.graphicsDevice);
 mesh.setPositions(positions);
 mesh.setNormals(normals);
@@ -202,7 +202,7 @@ mesh.update();
 // MeshInstance
 const meshInst = new MeshInstance(mesh, material);
 
-// entity to render our MeshInstance
+// Entity to render our MeshInstance
 const entity = new Entity('TerrainEntity');
 entity.addComponent('render', { meshInstances: [meshInst] });
 app.root.addChild(entity);
@@ -217,18 +217,18 @@ let time = 0;
 
 app.on('update', dt => {
     time += dt;
-    // spinning band: infinite line through grid center with angle theta; hide patches within distance <= bandRadius
+    // Spinning band: infinite line through grid center with angle theta; hide patches within distance <= bandRadius
     const cx = (patchesX - 1) * 0.5;
     const cz = (patchesZ - 1) * 0.5;
     const theta = time * rotRps * Math.PI * 2;
     const s = Math.sin(theta);
     const c = Math.cos(theta);
 
-    // repack visible draws into the front of the arrays, hiding patches within diagonal band
+    // Repack visible draws into the front of the arrays, hiding patches within diagonal band
     let write = 0;
     for (let pz = 0; pz < patchesZ; pz++) {
         for (let px = 0; px < patchesX; px++) {
-            // perpendicular distance in grid units to line through (cx,cz) at angle theta
+            // Perpendicular distance in grid units to line through (cx,cz) at angle theta
             const dx = px - cx;
             const dz = pz - cz;
             const dist = Math.abs(dx * s - dz * c);

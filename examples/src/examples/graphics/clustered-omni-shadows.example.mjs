@@ -151,7 +151,7 @@ function createPrimitive(primitiveType, position, scale) {
         material: material
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -159,7 +159,7 @@ function createPrimitive(primitiveType, position, scale) {
     return primitive;
 }
 
-// create the ground plane from the boxes
+// Create the ground plane from the boxes
 createPrimitive('box', new Vec3(0, 0, 0), new Vec3(800, 2, 800));
 createPrimitive('box', new Vec3(0, 400, 0), new Vec3(800, 2, 800));
 
@@ -185,7 +185,7 @@ for (let i = 0; i < numTowers; i++) {
     scale -= 1.5;
 }
 
-// construct the cubemap asset for the omni light cookie texture
+// Construct the cubemap asset for the omni light cookie texture
 // Note: the textures array could contain 6 texture asset names to load instead as well
 const cubemapAsset = new Asset('xmas_cubemap', 'cubemap', null, {
     textures: [
@@ -197,7 +197,7 @@ const cubemapAsset = new Asset('xmas_cubemap', 'cubemap', null, {
         assets.xmas_negz.id
     ],
 
-    // don't generate mipmaps for the cookie cubemap if clustered lighting is used,
+    // Don't generate mipmaps for the cookie cubemap if clustered lighting is used,
     // as only top levels are copied to the cookie atlas.
     mipmaps: !app.scene.clusteredLightingEnabled
 });
@@ -223,7 +223,7 @@ for (let i = 0; i < numLights; i++) {
         cookieChannel: 'rgb'
     });
 
-    // attach a render component with a small sphere to it
+    // Attach a render component with a small sphere to it
     const material = new StandardMaterial();
     material.emissive = Color.WHITE;
     material.update();
@@ -240,7 +240,7 @@ for (let i = 0; i < numLights; i++) {
     omniLights.push(lightOmni);
 }
 
-// create an Entity with a camera component
+// Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
     fov: 80,
@@ -252,7 +252,7 @@ camera.addComponent('camera', {
 // and position it in the world
 camera.setLocalPosition(300, 120, 25);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -266,7 +266,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// handle HUD changes - update properties on the scene
+// Handle HUD changes - update properties on the scene
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     // @ts-ignore
@@ -287,10 +287,10 @@ app.on('update', (/** @type {number} */ dt) => {
         );
     }
 
-    // display shadow texture (debug feature)
+    // Display shadow texture (debug feature)
     if (app.graphicsDevice.isWebGPU) {
         const texture = app.renderer.lightTextureAtlas.shadowAtlas?.texture;
-        // skip if texture is not ready (placeholder or destroyed)
+        // Skip if texture is not ready (placeholder or destroyed)
         if (texture?.device && texture.width > 1) {
             // @ts-ignore engine-tsd
             app.drawTexture(-0.7, -0.7, 0.5, 0.5, texture, undefined, undefined, false);

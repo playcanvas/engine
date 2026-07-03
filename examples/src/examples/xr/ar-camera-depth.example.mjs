@@ -216,10 +216,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', evt => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 camera.camera.endXr();
             }
 
@@ -228,7 +228,7 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', evt => {
         if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();

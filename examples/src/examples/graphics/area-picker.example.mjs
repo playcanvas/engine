@@ -81,7 +81,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxIntensity = 0.1;
@@ -222,11 +222,11 @@ function highlightMaterial(material, color) {
 /** @type {StandardMaterial[]} */
 const highlights = [];
 
-// the layers picker renders
+// The layers picker renders
 const worldLayer = app.scene.layers.getLayerByName('World');
 const pickerLayers = [worldLayer];
 
-// marker sphere to show the picked world point
+// Marker sphere to show the picked world point
 const marker = createPrimitive('sphere', Vec3.ZERO, new Vec3(0.2, 0.2, 0.2));
 const markerMaterial = new StandardMaterial();
 markerMaterial.emissive = new Color(0, 1, 0);
@@ -247,10 +247,10 @@ const mouse = new Mouse(document.body);
 mouse.disableContextMenu();
 mouse.on('mousedown', event => {
     if (event.button === MOUSEBUTTON_RIGHT) {
-        // right button stops the auto-rotation and hands control to the user
+        // Right button stops the auto-rotation and hands control to the user
         stopAutoRotate();
     } else if (event.button === MOUSEBUTTON_LEFT) {
-        // left button picks a world point; store the request to process after picker.prepare
+        // Left button picks a world point; store the request to process after picker.prepare
         pendingPickRequest = {
             x: event.x * pickerScale,
             y: event.y * pickerScale
@@ -261,7 +261,7 @@ mouse.on('mousedown', event => {
 // Update each frame
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
-    // auto-orbit the camera until the user takes control
+    // Auto-orbit the camera until the user takes control
     if (autoRotate) {
         time += dt * 0.1;
         camera.setLocalPosition(40 * Math.sin(time), 0, 40 * Math.cos(time));
@@ -293,7 +293,7 @@ app.on('update', (/** @type {number} */ dt) => {
             color: Color.MAGENTA
         },
         {
-            // area based on mouse position
+            // Area based on mouse position
             pos: new Vec2(mouseX, mouseY),
             size: new Vec2(1, 1),
             color: Color.RED

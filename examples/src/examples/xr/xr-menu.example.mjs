@@ -173,7 +173,7 @@ app.scene.skyboxMip = 0;
 const cameraParent = new Entity('CameraParent');
 app.root.addChild(cameraParent);
 
-// create camera
+// Create camera
 const cameraEntity = new Entity('Camera');
 cameraEntity.addComponent('camera', {
     toneMapping: TONEMAP_NEUTRAL

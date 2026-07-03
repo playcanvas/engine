@@ -205,7 +205,7 @@ cameraEntity.translate(-14, 12, 20);
 cameraEntity.lookAt(0, 4, 0);
 app.root.addChild(cameraEntity);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -238,7 +238,7 @@ const applySettings = () => {
 // to both tables so the only difference between them is alphaDither's null vs explicit state.
 const rightOnly = new Set(['alphaDither']);
 
-// handle UI changes
+// Handle UI changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     const propertyName = path.split('.')[1];
     const targets = rightOnly.has(propertyName) ? rightMaterials : [...leftMaterials, ...rightMaterials];
@@ -251,7 +251,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     applySettings();
 });
 
-// initial values — alphaDither starts at 0.5 to match opacity, so on load the right table's
+// Initial values — alphaDither starts at 0.5 to match opacity, so on load the right table's
 // dither matches the left's (both look identical). Drag Opacity and only the left's dither
 // density follows; drag Alpha Dither and only the right's does.
 data.set('data', {

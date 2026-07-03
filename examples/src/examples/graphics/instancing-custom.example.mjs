@@ -162,15 +162,15 @@ const spherePos = new Vec3();
 app.on('update', dt => {
     time += dt;
 
-    // move the large sphere up and down
+    // Move the large sphere up and down
     spherePos.set(0, Math.sin(time) * 2, 0);
     sphere.setLocalPosition(spherePos);
 
-    // update uniforms of the instancing material
+    // Update uniforms of the instancing material
     material.setParameter('uTime', time);
     material.setParameter('uCenter', [spherePos.x, spherePos.y, spherePos.z]);
 
-    // orbit camera around
+    // Orbit camera around
     camera.setLocalPosition(8 * Math.sin(time * 0.1), 0, 8 * Math.cos(time * 0.1));
     camera.lookAt(Vec3.ZERO);
 });

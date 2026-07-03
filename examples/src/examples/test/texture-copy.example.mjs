@@ -69,7 +69,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// device info overlay
+// Device info overlay
 const deviceInfo = document.createElement('div');
 deviceInfo.style.cssText = `
     position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
@@ -78,7 +78,7 @@ deviceInfo.style.cssText = `
 deviceInfo.textContent = `Device: ${device.deviceType.toUpperCase()} - left: source, right: Texture.copy() result`;
 document.body.appendChild(deviceInfo);
 
-// result overlay
+// Result overlay
 const resultOverlay = document.createElement('div');
 resultOverlay.style.cssText = `
     position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
@@ -152,7 +152,7 @@ function fillQuadrants(texture, size, colors) {
     texture.unlock();
 }
 
-// create a 2D screen for displaying the textures
+// Create a 2D screen for displaying the textures
 const screen = new Entity();
 screen.addComponent('screen', {
     referenceResolution: new Vec2(960, 720),
@@ -208,7 +208,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// orthographic camera so the screen renders
+// Orthographic camera so the screen renders
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.1, 0.1, 0.1)
@@ -308,7 +308,7 @@ const YELLOW = [230, 220, 40, 255];
     fillLevel(dst, 0, [60, 60, 60, 255]);
     dst.upload();
     const half = size / 2;
-    // build expected: grey background with the source's top-left (RED) quadrant placed at (32,32)
+    // Build expected: grey background with the source's top-left (RED) quadrant placed at (32,32)
     const expected = new Uint8Array(size * size * 4);
     for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {
@@ -332,7 +332,7 @@ const YELLOW = [230, 220, 40, 255];
     );
 }
 
-// summary
+// Summary
 const passedCount = results.filter(r => r.passed).length;
 const allPassed = passedCount === results.length;
 const lines = results.map(r => `${r.passed ? '✓' : '✗'} ${r.label}`);

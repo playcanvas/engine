@@ -69,7 +69,7 @@ app.start();
 
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// create an instance using render component
+// Create an instance using render component
 const entity = assets.heart.resource.instantiateRenderEntity({
     receiveShadows: false
 });

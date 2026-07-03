@@ -157,7 +157,7 @@ cameraEntity.addComponent('camera', {
 const focusPoint = new Entity();
 focusPoint.setLocalPosition(-80, 80, -20);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -217,7 +217,7 @@ cameraFrame.colorLUT.intensity = 1.0;
 
 cameraFrame.update();
 
-// apply UI changes
+// Apply UI changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.hdr') {
         cameraFrame.enabled = value;
@@ -236,7 +236,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 });
 
-// set initial values
+// Set initial values
 data.set('data', {
     hdr: true,
     sceneTonemapping: TONEMAP_ACES,

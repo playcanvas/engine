@@ -106,13 +106,13 @@ await new Promise(resolve => {
 
 app.start();
 
-// enable cookies which are disabled by default for clustered lighting
+// Enable cookies which are disabled by default for clustered lighting
 app.scene.lighting.cookiesEnabled = true;
 
-// ambient lighting
+// Ambient lighting
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// create an entity with the statue
+// Create an entity with the statue
 const entity = assets.statue.resource.instantiateRenderEntity();
 
 app.root.addChild(entity);
@@ -137,7 +137,7 @@ camera.script.create('orbitCamera', {
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-// ground material
+// Ground material
 const material = new StandardMaterial();
 material.diffuse = Color.GRAY;
 material.ambient = Color.GRAY;
@@ -156,7 +156,7 @@ ground.setLocalScale(70, 1, 70);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// setup light data
+// Setup light data
 data.set('lights', {
     spot: {
         enabled: true,
@@ -193,7 +193,7 @@ lights.spot.addComponent('light', {
         shadowBias: 0.05,
         normalOffsetBias: 0.03,
         shadowResolution: 2048,
-        // heart texture's alpha channel as a cookie texture
+        // Heart texture's alpha channel as a cookie texture
         cookie: assets.heart.resource,
         cookieChannel: 'a'
     },
@@ -209,7 +209,7 @@ cone.addComponent('render', {
 lights.spot.addChild(cone);
 app.root.addChild(lights.spot);
 
-// construct the cubemap asset for the omni light cookie texture
+// Construct the cubemap asset for the omni light cookie texture
 // Note: the textures array could contain 6 texture asset names to load instead as well
 const cubemapAsset = new Asset('xmas_cubemap', 'cubemap', null, {
     textures: [
@@ -268,7 +268,7 @@ app.root.addChild(lights.directional);
 app.keyboard.on(
     'keydown',
     e => {
-        // if the user is editing an input field, ignore key presses
+        // If the user is editing an input field, ignore key presses
         if (e.element.constructor.name === 'HTMLInputElement') return;
         switch (e.key) {
             case KEY_1:

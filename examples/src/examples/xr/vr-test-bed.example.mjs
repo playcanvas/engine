@@ -224,7 +224,7 @@ app.on('fov:toggle', () => setFov(fov > 0 ? 0 : lastNonZeroFov));
 app.on('xr:end', () => app.xr.end());
 
 // Draw a debug aim ray from each tracked-pointer XR input source (controllers, hand pointers)
-// every frame so the user can see where they're pointing at the menu buttons. Interaction
+// Every frame so the user can see where they're pointing at the menu buttons. Interaction
 // itself is wired through ElementInput on the canvas — these lines are purely visual.
 const rayColor = new Color(0.4, 0.8, 1, 1);
 const rayEnd = new Vec3();

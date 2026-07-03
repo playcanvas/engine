@@ -121,7 +121,7 @@ const lightDirectional = new Entity('Directional');
 lightDirectional.addComponent('light', {
     type: 'directional',
 
-    // disable to not have shadow map updated every frame,
+    // Disable to not have shadow map updated every frame,
     // as the scene does not have dynamically lit objects
     affectDynamic: false,
 
@@ -187,7 +187,7 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(40, 20, 40);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -205,27 +205,27 @@ const bakeType = BAKE_COLOR;
 app.scene.lightmapMode = bakeType;
 app.scene.lightmapMaxResolution = 1024;
 
-// multiplier for lightmap resolution
+// Multiplier for lightmap resolution
 app.scene.lightmapSizeMultiplier = 512;
 
-// bake when settings are changed only
+// Bake when settings are changed only
 let needBake = false;
 
-// handle data changes from HUD to modify baking properties
+// Handle data changes from HUD to modify baking properties
 data.on('*:set', (/** @type {string} */ path, value) => {
     let bakeSettingChanged = true;
     const pathArray = path.split('.');
 
-    // ambient light
+    // Ambient light
     if (pathArray[1] === 'ambient') {
         if (pathArray[2] === 'cubemap') {
-            // enable / disable cubemap
+            // Enable / disable cubemap
             app.scene.envAtlas = value ? assets.helipad.resource : null;
         } else if (pathArray[2] === 'hemisphere') {
-            // switch between smaller upper hemisphere and full sphere
+            // Switch between smaller upper hemisphere and full sphere
             app.scene.ambientBakeSpherePart = value ? 0.4 : 1;
         } else {
-            // all other values are set directly on the scene
+            // All other values are set directly on the scene
             // @ts-ignore engine-tsd
             app.scene[pathArray[2]] = value;
         }
@@ -241,15 +241,15 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         // @ts-ignore engine-tsd
         lightSpot.light[pathArray[2]] = value;
     } else {
-        // don't rebake if stats change
+        // Don't rebake if stats change
         bakeSettingChanged = false;
     }
 
-    // trigger bake on the next frame if relevant settings were changes
+    // Trigger bake on the next frame if relevant settings were changes
     needBake ||= bakeSettingChanged;
 });
 
-// bake properties connected to the HUD
+// Bake properties connected to the HUD
 data.set('data', {
     settings: {
         lightmapFilterEnabled: true,
@@ -280,12 +280,12 @@ data.set('data', {
 
 // Set an update function on the app's update event
 app.on('update', _dt => {
-    // bake lightmaps when HUD properties change
+    // Bake lightmaps when HUD properties change
     if (needBake) {
         needBake = false;
         app.lightmapper.bake(null, bakeType);
 
-        // update stats with the bake duration
+        // Update stats with the bake duration
         data.set('data.stats.duration', `${app.lightmapper.stats.totalRenderTime.toFixed(1)}ms`);
     }
 });

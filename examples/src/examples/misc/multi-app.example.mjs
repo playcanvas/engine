@@ -97,14 +97,14 @@ async function createApp(deviceType) {
         new AssetListLoader(Object.values(assets), app.assets).load(resolve);
     });
 
-    // create box entity
+    // Create box entity
     const box = new Entity('cube', app);
     box.addComponent('render', {
         type: 'box'
     });
     app.root.addChild(box);
 
-    // create camera entity
+    // Create camera entity
     const clearValue = 0.3 + Math.random() * 0.3;
     const camera = new Entity('camera', app);
     camera.addComponent('camera', {
@@ -113,7 +113,7 @@ async function createApp(deviceType) {
     app.root.addChild(camera);
     camera.setPosition(0, -0.4, 3);
 
-    // create directional light entity
+    // Create directional light entity
     const light = new Entity('light', app);
     light.addComponent('light');
     app.root.addChild(light);
@@ -145,7 +145,7 @@ async function createApp(deviceType) {
     });
     screen.addChild(text);
 
-    // rotate the box according to the delta time since the last frame
+    // Rotate the box according to the delta time since the last frame
     app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
 
     app.start();

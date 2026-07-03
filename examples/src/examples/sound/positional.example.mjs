@@ -134,12 +134,12 @@ app.start();
 // Create walking dude
 const entity = new Entity();
 
-// add sound component
+// Add sound component
 entity.addComponent('sound', {
     maxDistance: 9
 });
 
-// add footsteps slot
+// Add footsteps slot
 entity.sound.addSlot('footsteps', {
     asset: assets.gravel.id,
     pitch: 1.7,
@@ -147,20 +147,20 @@ entity.sound.addSlot('footsteps', {
     autoPlay: true
 });
 
-// add model
+// Add model
 entity.addComponent('model', {
     type: 'asset',
     asset: assets.model,
     castShadows: true
 });
 
-// add animation
+// Add animation
 entity.addComponent('animation', {
     assets: [assets.runAnim],
     speed: 0.8
 });
 
-// add entity in the hierarchy
+// Add entity in the hierarchy
 app.root.addChild(entity);
 
 let angle = 135;

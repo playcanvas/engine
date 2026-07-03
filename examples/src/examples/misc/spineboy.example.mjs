@@ -71,7 +71,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// create camera entity
+// Create camera entity
 const camera = new Entity('camera');
 camera.addComponent('camera', {
     clearColor: new Color(0.5, 0.6, 0.9)
@@ -95,7 +95,7 @@ const createSpineInstance = (position, scale, timeScale) => {
     spineEntity.setLocalScale(scale);
     app.root.addChild(spineEntity);
 
-    // play spine animation
+    // Play spine animation
     // @ts-ignore
     spineEntity.spine.state.setAnimation(0, 'portal', true);
 
@@ -103,8 +103,8 @@ const createSpineInstance = (position, scale, timeScale) => {
     spineEntity.spine.state.timeScale = timeScale;
 };
 
-// create spine entity 1
+// Create spine entity 1
 createSpineInstance(new Vec3(2, 2, 0), new Vec3(1, 1, 1), 1);
 
-// create spine entity 2
+// Create spine entity 2
 createSpineInstance(new Vec3(2, 10, 0), new Vec3(-0.5, 0.5, 0.5), 0.5);

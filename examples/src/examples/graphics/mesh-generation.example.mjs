@@ -102,7 +102,7 @@ function createLight(color, scale) {
     return light;
 }
 
-// create 4 lights that will move in the scene and deform the mesh as well
+// Create 4 lights that will move in the scene and deform the mesh as well
 const lights = [
     { radius: 7, speed: 1.0, scale: 2.5, light: createLight(new Color(0.3, 0.9, 0.6), 1.0) },
     { radius: 3, speed: 1.2, scale: 3.0, light: createLight(new Color(0.7, 0.2, 0.3), 1.3) },
@@ -170,7 +170,7 @@ function updateMesh(mesh, initAll) {
     // @ts-ignore engine-tsd
     mesh.setNormals(calculateNormals(positions, indexArray));
 
-    // update mesh Uvs and Indices only one time, as they do not change each frame
+    // Update mesh Uvs and Indices only one time, as they do not change each frame
     if (initAll) {
         mesh.setUvs(0, uvs);
         mesh.setIndices(indexArray);
@@ -185,7 +185,7 @@ const mesh = new Mesh(app.graphicsDevice);
 mesh.clear(true, false);
 updateMesh(mesh, true);
 
-// create material
+// Create material
 const material = new StandardMaterial();
 material.diffuseMap = assets.playcanvasGrey.resource;
 material.gloss = 0.5;
@@ -220,7 +220,7 @@ app.on('update', dt => {
         element.light.setLocalPosition(lightPos.x, 3, lightPos.y);
     }
 
-    // animate .y coordinate of grid vertices by moving them up when lights are close
+    // Animate .y coordinate of grid vertices by moving them up when lights are close
     let index = 0;
     for (let x = 0; x < resolution; x++) {
         for (let z = 0; z < resolution; z++) {
@@ -242,6 +242,6 @@ app.on('update', dt => {
         }
     }
 
-    // update the mesh
+    // Update the mesh
     updateMesh(mesh);
 });

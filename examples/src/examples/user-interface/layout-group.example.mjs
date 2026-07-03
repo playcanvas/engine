@@ -116,7 +116,7 @@ group.addComponent('layoutgroup', {
     // fit_both for width and height, making all child elements take the entire space
     widthFitting: FITTING_BOTH,
     heightFitting: FITTING_BOTH,
-    // wrap children
+    // Wrap children
     wrap: true
 });
 screen.addChild(group);

@@ -140,7 +140,7 @@ sortElementCountBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_SRC | BUF
 //
 // The shader mirrors the sortIndirectArgsCS WGSL chunk: it uses the slot
 // count and per-slot granularities from ComputeRadixSort#prepareIndirect()
-// to support any backend (Multipass = 1 slot, OneSweep = 2 slots).
+// To support any backend (Multipass = 1 slot, OneSweep = 2 slots).
 
 const prepareSource = /* wgsl */ `
     @group(0) @binding(0) var<storage, read_write> sortElementCountBuf: array<u32>;

@@ -287,7 +287,7 @@ function jumpToAsset(offset) {
     camera.script.orbitCamera.focusEntity = assetList[currentAssetIndex];
 }
 
-// focus on mosquito
+// Focus on mosquito
 jumpToAsset(3);
 
 data.on('previous', () => {

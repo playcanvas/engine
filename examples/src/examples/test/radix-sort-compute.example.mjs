@@ -623,7 +623,7 @@ const BENCH_BITS = 24;
 // Passes that are not part of the sort itself - excluded from per-cell
 // totals and per-pass breakdowns. `Forward` is the main PlayCanvas forward
 // render pass; its cost (and serialization-behind-compute timing artefacts)
-// would pollute the sort-only comparison.
+// Would pollute the sort-only comparison.
 const BENCH_EXCLUDED_PASSES = new Set(['Forward']);
 
 /**
@@ -819,7 +819,7 @@ function stepBenchmark() {
     // Timestamp queries resolve async so the values we read now correspond
     // to the sort dispatched ~1 frame ago; over MEASURE frames this is
     // amortized away. We deliberately exclude the `Forward` (scene render)
-    // pass - it's not part of the sort, and Metal/WebGPU timing of compute
+    // Pass - it's not part of the sort, and Metal/WebGPU timing of compute
     // followed by graphics serializes in a way that inflates its reported
     // time in proportion to the preceding compute workload. The total we
     // record is therefore the sum of sort-related passes only.

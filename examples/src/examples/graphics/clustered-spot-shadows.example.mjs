@@ -101,7 +101,7 @@ data.set('settings', {
     static: false
 });
 
-// setup skydome as ambient light
+// Setup skydome as ambient light
 app.scene.skyboxMip = 3;
 app.scene.skyboxIntensity = 0.1;
 app.scene.envAtlas = assets.helipad.resource;
@@ -109,7 +109,7 @@ app.scene.envAtlas = assets.helipad.resource;
 // enabled clustered lighting. This is a temporary API and will change in the future
 app.scene.clusteredLightingEnabled = true;
 
-// adjust default clustered lighting parameters to handle many lights
+// Adjust default clustered lighting parameters to handle many lights
 const lighting = app.scene.lighting;
 
 // 1) subdivide space with lights into this many cells
@@ -119,13 +119,13 @@ lighting.cells = new Vec3(12, 4, 12);
 const maxLights = 24;
 lighting.maxLightsPerCell = maxLights;
 
-// enable clustered shadows (it's enabled by default as well)
+// Enable clustered shadows (it's enabled by default as well)
 lighting.shadowsEnabled = observer.get('settings.shadowsEnabled');
 
-// enable clustered cookies
+// Enable clustered cookies
 lighting.cookiesEnabled = observer.get('settings.cookiesEnabled');
 
-// resolution of the shadow and cookie atlas
+// Resolution of the shadow and cookie atlas
 lighting.shadowAtlasResolution = observer.get('settings.shadowAtlasResolution');
 lighting.cookieAtlasResolution = 1500;
 
@@ -142,7 +142,7 @@ let lightsStatic = false;
 // debug rendering is enabled
 let debugAtlas = false;
 
-// ground material
+// Ground material
 const groundMaterial = new StandardMaterial();
 groundMaterial.gloss = 0.55;
 groundMaterial.metalness = 0.4;
@@ -152,7 +152,7 @@ groundMaterial.normalMapTiling.set(10, 10);
 groundMaterial.bumpiness = 0.5;
 groundMaterial.update();
 
-// cube material
+// Cube material
 const cubeMaterial = new StandardMaterial();
 cubeMaterial.gloss = 0.55;
 cubeMaterial.metalness = 0.4;
@@ -171,7 +171,7 @@ cubeMaterial.update();
  * @returns {Entity} The returned entity.
  */
 function createPrimitive(primitiveType, position, scale, mat) {
-    // create the primitive using the material
+    // Create the primitive using the material
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
@@ -179,7 +179,7 @@ function createPrimitive(primitiveType, position, scale, mat) {
         material: mat
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -187,7 +187,7 @@ function createPrimitive(primitiveType, position, scale, mat) {
     return primitive;
 }
 
-// create some visible geometry
+// Create some visible geometry
 const ground = createPrimitive('box', new Vec3(0, 0, 0), new Vec3(500, 1, 500), groundMaterial);
 
 const numTowers = 8;
@@ -232,7 +232,7 @@ function createLight(index) {
         normalOffsetBias: 0.1,
         shadowResolution: 512, // only used when clustering is off
 
-        // when lights are static, only render shadows one time (or as needed when they use different atlas slot)
+        // When lights are static, only render shadows one time (or as needed when they use different atlas slot)
         shadowUpdateMode: lightsStatic ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_REALTIME,
 
         // cookie texture
@@ -241,7 +241,7 @@ function createLight(index) {
         cookieIntensity: 0.5
     });
 
-    // attach a render component with a small cone to each light
+    // Attach a render component with a small cone to each light
     const material = new StandardMaterial();
     material.emissive = color;
     material.update();
@@ -256,7 +256,7 @@ function createLight(index) {
     spotLightList.push(lightSpot);
 }
 
-// create many spot lights
+// Create many spot lights
 const count = 10;
 for (let i = 0; i < count; i++) {
     createLight(i);
@@ -273,7 +273,7 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 camera.setLocalPosition(300 * Math.sin(0), 150, 300 * Math.cos(0));
 
-// add orbit camera script with mouse and touch support
+// Add orbit camera script with mouse and touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -286,20 +286,20 @@ camera.script.create('orbitCamera', {
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-// handle HUD changes - update properties on the scene
+// Handle HUD changes - update properties on the scene
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
     if (pathArray[1] === 'static') {
         lightsStatic = value;
         updateLightCount();
     } else if (pathArray[1] === 'atlasSplit') {
-        // assign atlas split option
+        // Assign atlas split option
         lighting.atlasSplit = splitOptions[value];
     } else if (pathArray[1] === 'debug') {
         // debug rendering of lighting clusters on world layer
         lighting.debugLayer = value ? app.scene.layers.getLayerByName('World').id : undefined;
     } else if (pathArray[1] === 'debugAtlas') {
-        // show debug atlas
+        // Show debug atlas
         debugAtlas = value;
     } else if (pathArray[1] === 'shadowIntensity') {
         for (let i = 0; i < spotLightList.length; i++) {
@@ -316,16 +316,16 @@ data.on('*:set', (/** @type {string} */ path, value) => {
 });
 
 function updateLightCount() {
-    // update the number on HUD
+    // Update the number on HUD
     data.set('settings.numLights', spotLightList.length);
 
-    // shadow update mode (need to force render shadow when we add / remove light, as they all move)
+    // Shadow update mode (need to force render shadow when we add / remove light, as they all move)
     spotLightList.forEach(spot => {
         spot.light.shadowUpdateMode = lightsStatic ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_REALTIME;
     });
 }
 
-// add light button handler
+// Add light button handler
 data.on('add', () => {
     if (spotLightList.length < maxLights) {
         createLight(spotLightList.length);
@@ -333,7 +333,7 @@ data.on('add', () => {
     }
 });
 
-// remove light button handler
+// Remove light button handler
 data.on('remove', () => {
     if (spotLightList.length) {
         const light = spotLightList.pop();
@@ -346,12 +346,12 @@ data.on('remove', () => {
 // Set an update function on the app's update event
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
-    // don't move lights around when they're static
+    // Don't move lights around when they're static
     if (!lightsStatic) {
         time += dt * 0.15;
     }
 
-    // rotate spot lights around
+    // Rotate spot lights around
     const lightPos = new Vec3();
     spotLightList.forEach((spotlight, i) => {
         const angle = (i / spotLightList.length) * Math.PI * 2;
@@ -366,7 +366,7 @@ app.on('update', (/** @type {number} */ dt) => {
         spotlight.rotateLocal(90, 0, 0);
     });
 
-    // display cookie texture (debug feature)
+    // Display cookie texture (debug feature)
     if (debugAtlas) {
         // @ts-ignore engine-tsd
         app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);

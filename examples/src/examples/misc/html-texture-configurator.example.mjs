@@ -103,9 +103,9 @@ class HtmlSync {
         const w = canvas.width;
         const h = canvas.height;
 
-        // world · pixelToLocal
+        // World · pixelToLocal
         this._t1.mul2(this.planeEntity.getWorldTransform(), this._pixelToLocal);
-        // projection · view
+        // Projection · view
         this._t2.mul2(cameraComponent.projectionMatrix, cameraComponent.viewMatrix);
         // viewProj · world · pixelToLocal
         this._drawTransform.mul2(this._t2, this._t1);

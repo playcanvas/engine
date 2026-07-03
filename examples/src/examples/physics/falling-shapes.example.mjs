@@ -182,7 +182,7 @@ camera.lookAt(0, 2, 0);
  * @returns {Entity} The new template entity.
  */
 const createTemplate = (type, collisionOptions, template) => {
-    // add a render component (visible mesh)
+    // Add a render component (visible mesh)
     if (!template) {
         template = new Entity();
         template.addComponent('render', {
@@ -244,7 +244,7 @@ createTemplate(
     meshTemplate
 );
 
-// add all the templates to an array so that
+// Add all the templates to an array so that
 // we can randomly spawn them
 const templates = [boxTemplate, sphereTemplate, capsuleTemplate, cylinderTemplate, meshTemplate];
 

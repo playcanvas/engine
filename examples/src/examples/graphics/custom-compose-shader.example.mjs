@@ -242,7 +242,7 @@ cameraFrame.vignette.intensity = 0.8;
 
 cameraFrame.update();
 
-// apply UI changes (tone mapping only)
+// Apply UI changes (tone mapping only)
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.sceneTonemapping') {
         // postprocessing tone mapping
@@ -251,7 +251,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 
     if (path === 'data.pixelSize') {
-        // global uniform for pixelation tile size
+        // Global uniform for pixelation tile size
         device.scope.resolve('pixelationTilePixels').setValue(value);
     }
 
@@ -260,7 +260,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 });
 
-// set initial values
+// Set initial values
 data.set('data', {
     sceneTonemapping: TONEMAP_NEUTRAL,
     pixelSize: 8,

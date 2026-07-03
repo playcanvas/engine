@@ -147,7 +147,7 @@ cameraEntity.addComponent('camera', {
     fov: 80
 });
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
 cameraEntity.script.create('orbitCamera', {
     attributes: {
@@ -195,7 +195,7 @@ const applySettings = () => {
     cameraFrame.dof.blurRingPoints = data.get('data.dof.blurRingPoints');
     cameraFrame.dof.highQuality = data.get('data.dof.highQuality');
 
-    // display number of bluring samples are used
+    // Display number of bluring samples are used
     const kernel = Kernel.concentric(cameraFrame.dof.blurRings, cameraFrame.dof.blurRingPoints);
     data.set('data.stats.blurSamples', `${kernel.length >> 1}`);
 
@@ -221,11 +221,11 @@ const applySettings = () => {
             break;
     }
 
-    // apply all settings
+    // Apply all settings
     cameraFrame.update();
 };
 
-// apply UI changes
+// Apply UI changes
 data.on('*:set', (/** @type {string} */ path) => {
     const pathArray = path.split('.');
     if (pathArray[1] !== 'stats') {
@@ -233,7 +233,7 @@ data.on('*:set', (/** @type {string} */ path) => {
     }
 });
 
-// set initial values
+// Set initial values
 data.set('data', {
     scene: {
         debug: 0

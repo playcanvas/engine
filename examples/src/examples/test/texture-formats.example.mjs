@@ -18,14 +18,14 @@ import { deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// the basis transcoder is required for both .basis and (basis-supercompressed) .ktx2 textures
+// The basis transcoder is required for both .basis and (basis-supercompressed) .ktx2 textures
 basisInitialize({
     glueUrl: './assets/wasm/basis/basis.wasm.js',
     wasmUrl: './assets/wasm/basis/basis.wasm.wasm',
     fallbackUrl: './assets/wasm/basis/basis.js'
 });
 
-// one texture per supported format, to exercise each texture parser (img / dds / ktx2 / basis / hdr).
+// One texture per supported format, to exercise each texture parser (img / dds / ktx2 / basis / hdr).
 // png, dds and ktx2 are the same source image (the PlayCanvas logo) in three encodings.
 const assets = {
     png: new Asset('png', 'texture', { url: './assets/textures/playcanvas.png' }, { srgb: true }),
@@ -75,7 +75,7 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// grid layout (screen-space NDC, -1..1), one tile per format
+// Grid layout (screen-space NDC, -1..1), one tile per format
 const grid = [
     { asset: assets.png, x: -0.5, y: 0.42 },
     { asset: assets.dds, x: 0.0, y: 0.42 },
@@ -84,7 +84,7 @@ const grid = [
     { asset: assets.hdr, x: 0.25, y: -0.42 }
 ];
 
-// immediate-mode texture draws must be re-issued every frame
+// Immediate-mode texture draws must be re-issued every frame
 app.on('update', () => {
     grid.forEach(({ asset, x, y }) => {
         app.drawTexture(x, y, 0.4, 0.6, asset.resource);

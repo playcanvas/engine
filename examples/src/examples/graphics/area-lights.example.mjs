@@ -210,19 +210,19 @@ app.start();
 // Enable area lights which are disabled by default for clustered lighting
 app.scene.lighting.areaLightsEnabled = true;
 
-// set the loaded area light LUT data
+// Set the loaded area light LUT data
 const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 1; // use top mipmap level of cubemap (full resolution)
 app.scene.skyboxIntensity = 0.4; // make it darker
 app.scene.envAtlas = assets.helipad.resource;
 
-// create ground plane
+// Create ground plane
 createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), assets);
 
-// get the instance of the statue and set up with render component
+// Get the instance of the statue and set up with render component
 const statue = assets.statue.resource.instantiateRenderEntity();
 statue.setLocalScale(0.4, 0.4, 0.4);
 app.root.addChild(statue);
@@ -253,7 +253,7 @@ const light3 = createAreaLight(
     far
 );
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;

@@ -102,7 +102,7 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 0;
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, -70, 0);
@@ -175,7 +175,7 @@ material.shaderChunkWGSL = `
         }`;
 material.update();
 
-// create primitive
+// Create primitive
 const primitive = new Entity();
 primitive.addComponent('render', {
     type: 'sphere',
@@ -209,7 +209,7 @@ const entity = new Entity('ParticleSystem');
 app.root.addChild(entity);
 entity.setLocalPosition(0, 20, 0);
 
-// add particlesystem component to entity
+// Add particlesystem component to entity
 entity.addComponent('particlesystem', {
     numParticles: 200,
     lifetime: 1,
@@ -227,7 +227,7 @@ entity.addComponent('particlesystem', {
 
 // --------
 
-// create an Entity with a camera component
+// Create an Entity with a camera component
 const camera = new Entity('MainCamera');
 camera.addComponent('camera', {
     clearColor: new Color(0.9, 0.9, 0.9),
@@ -245,7 +245,7 @@ camera.addComponent('camera', {
 // and position it in the world
 camera.setLocalPosition(-500, 60, 300);
 
-// add orbit camera script with a mouse and a touch support
+// Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
 camera.script.create('orbitCamera', {
     attributes: {
@@ -266,7 +266,7 @@ dirLight.addComponent('light', {
     normalOffsetBias: 0.2,
     intensity: 1.0,
 
-    // enable shadow casting
+    // Enable shadow casting
     castShadows: true,
     shadowType: SHADOW_PCF3_32F,
     shadowDistance: 1000,
@@ -275,11 +275,11 @@ dirLight.addComponent('light', {
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(75, 120, 20);
 
-// handle HUD changes
+// Handle HUD changes
 data.on('*:set', (path, value) => {
     const propertyName = path.split('.')[1];
     if (propertyName === 'tonemapping') {
-        // set up selected tone-mapping
+        // Set up selected tone-mapping
         camera.camera.toneMapping = value;
     }
     if (propertyName === 'fog') {
@@ -290,7 +290,7 @@ data.on('*:set', (path, value) => {
     }
 });
 
-// initial values
+// Initial values
 data.set('data', {
     tonemapping: TONEMAP_ACES,
     fog: FOG_LINEAR,

@@ -127,7 +127,7 @@ const createController = inputSource => {
     controllers.push(entity);
 
     // Destroy input source related entity
-    // when input source is removed
+    // When input source is removed
     inputSource.on('remove', () => {
         controllers.splice(controllers.indexOf(entity), 1);
         entity.destroy();
@@ -162,10 +162,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', evt => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 c.camera.endXr();
             }
 

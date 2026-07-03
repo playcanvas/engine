@@ -103,7 +103,7 @@ renders.forEach(render => {
         const srcPositions = [];
         mesh.getPositions(srcPositions);
 
-        // store it
+        // Store it
         allMeshes.push({
             mesh: mesh,
             srcPositions: srcPositions
@@ -111,7 +111,7 @@ renders.forEach(render => {
     }
 });
 
-// temporary work array of positions to avoid per frame allocations
+// Temporary work array of positions to avoid per frame allocations
 /** @type {number[]} */
 const tempPositions = [];
 
@@ -120,18 +120,18 @@ app.on('update', dt => {
     time += dt;
 
     if (entity) {
-        // orbit the camera
+        // Orbit the camera
         camera.setLocalPosition(25 * Math.sin(time * 0.2), 15, 25 * Math.cos(time * 0.2));
         camera.lookAt(new Vec3(0, 7, 0));
 
         const strength = 50;
 
-        // modify mesh positions on each frame
+        // Modify mesh positions on each frame
         for (let i = 0; i < allMeshes.length; i++) {
             tempPositions.length = 0;
             const srcPositions = allMeshes[i].srcPositions;
 
-            // loop over all positions, and fill up tempPositions array with waved version of positions from srcPositions array
+            // Loop over all positions, and fill up tempPositions array with waved version of positions from srcPositions array
             // modify .x and .z components based on sin function, which uses .y component
             for (let k = 0; k < srcPositions.length; k += 3) {
                 tempPositions[k] = srcPositions[k] + strength * Math.sin(time + srcPositions[k + 1] * 0.01);
@@ -139,7 +139,7 @@ app.on('update', dt => {
                 tempPositions[k + 2] = srcPositions[k + 2] + strength * Math.sin(time + srcPositions[k + 1] * 0.01);
             }
 
-            // set new positions on the mesh
+            // Set new positions on the mesh
             const mesh = allMeshes[i].mesh;
             mesh.setPositions(tempPositions);
             mesh.update();

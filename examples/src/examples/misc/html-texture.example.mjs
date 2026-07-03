@@ -8,7 +8,7 @@
 //
 // This example demonstrates the HTML-in-Canvas API: a styled HTML element with
 // CSS animations is appended to a canvas marked with the "layoutsubtree"
-// attribute, then captured into a GPU texture (texElementImage2D on WebGL,
+// Attribute, then captured into a GPU texture (texElementImage2D on WebGL,
 // copyElementImageToTexture on WebGPU).
 //
 // Fallback: when device.supportsHtmlTextures is false, a static 2D canvas with

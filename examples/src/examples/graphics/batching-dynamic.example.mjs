@@ -84,8 +84,8 @@ for (let i = 0; i < numInstances; i++) {
         material: Math.random() < 0.5 ? material1 : material2,
         castShadows: true,
 
-        // add it to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls.
-        // there will be at least 2 draw calls, one for each material
+        // Add it to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls.
+        // There will be at least 2 draw calls, one for each material
         batchGroupId: batchGroup.id
     });
 

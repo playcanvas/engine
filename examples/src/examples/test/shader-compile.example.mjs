@@ -98,7 +98,7 @@ app.start();
  * @returns {Entity} The entity.
  */
 function createPrimitive(primitiveType, position, scale, assetManifest, id = false) {
-    // create material of specified color
+    // Create material of specified color
     const material = new StandardMaterial();
     material.gloss = 0.4;
     material.useMetalness = true;
@@ -112,7 +112,7 @@ function createPrimitive(primitiveType, position, scale, assetManifest, id = fal
     material.normalMapTiling.set(7, 7);
     material.glossMapTiling.set(7, 7);
 
-    // do a small update to a chunk to generate unique shader each time, to avoid any shader compilation caching
+    // Do a small update to a chunk to generate unique shader each time, to avoid any shader compilation caching
     if (id) {
         material.getShaderChunks(SHADERLANGUAGE_GLSL).set(
             'viewDirPS',
@@ -127,14 +127,14 @@ function createPrimitive(primitiveType, position, scale, assetManifest, id = fal
 
     material.update();
 
-    // create primitive
+    // Create primitive
     const primitive = new Entity();
     primitive.addComponent('render', {
         type: primitiveType,
         material: material
     });
 
-    // set position and scale and add it to scene
+    // Set position and scale and add it to scene
     primitive.setLocalPosition(position);
     primitive.setLocalScale(scale);
     app.root.addChild(primitive);
@@ -142,19 +142,19 @@ function createPrimitive(primitiveType, position, scale, assetManifest, id = fal
     return primitive;
 }
 
-// enable area lights which are disabled by default for clustered lighting
+// Enable area lights which are disabled by default for clustered lighting
 app.scene.lighting.areaLightsEnabled = true;
 
-// set the loaded area light LUT data
+// Set the loaded area light LUT data
 const luts = assets.luts.resource;
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 1;
 app.scene.skyboxIntensity = 0.7;
 app.scene.envAtlas = assets.helipad.resource;
 
-// create ground plane
+// Create ground plane
 createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), assets);
 
 // Create the camera, which renders entities
@@ -169,7 +169,7 @@ app.root.addChild(camera);
 camera.setLocalPosition(0, 15, 40);
 camera.lookAt(0, 0, 0);
 
-// generate a grid of spheres, each with a unique material / shader
+// Generate a grid of spheres, each with a unique material / shader
 for (let x = -10; x <= 10; x += 6) {
     for (let y = -10; y <= 10; y += 6) {
         const pos = new Vec3(x, 0.6, y);
@@ -177,7 +177,7 @@ for (let x = -10; x <= 10; x += 6) {
     }
 }
 
-// create some omni lights
+// Create some omni lights
 const count = 10;
 /** @type {Array<Entity>} */
 const lights = [];
@@ -192,7 +192,7 @@ for (let i = 0; i < count; i++) {
         castShadows: false
     });
 
-    // attach a render component with a small cone to each light
+    // Attach a render component with a small cone to each light
     const material = new StandardMaterial();
     material.emissive = color;
     material.update();
@@ -207,12 +207,12 @@ for (let i = 0; i < count; i++) {
     lights.push(light);
 }
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
 
-    // orbit spot lights around
+    // Orbit spot lights around
     lights.forEach((light, i) => {
         const angle = (i / lights.length) * Math.PI * 2;
         light.setLocalPosition(8 * Math.sin(time + angle), 4, 8 * Math.cos(time + angle));

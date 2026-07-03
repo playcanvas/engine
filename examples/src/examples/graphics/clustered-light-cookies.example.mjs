@@ -233,7 +233,7 @@ quadrants.forEach((q, i) => {
         cookieIntensity: 1
     });
 
-    // position above the quadrant center and aim straight down (RIGHT as up to avoid a
+    // Position above the quadrant center and aim straight down (RIGHT as up to avoid a
     // degenerate look-at), then rotate so the spot cone points along -Y
     const x = q.x * quadrantOffset;
     const z = q.z * quadrantOffset;

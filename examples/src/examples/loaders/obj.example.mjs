@@ -74,7 +74,7 @@ app.assets.loadFromUrl(objurl, 'model', (err, asset) => {
     entity.model.model = asset.resource;
     app.root.addChild(entity);
 
-    // add a randomly generated material to all mesh instances
+    // Add a randomly generated material to all mesh instances
     const mis = entity.model.meshInstances;
     for (let i = 0; i < mis.length; i++) {
         const material = new StandardMaterial();

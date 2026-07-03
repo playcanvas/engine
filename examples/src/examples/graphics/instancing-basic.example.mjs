@@ -90,7 +90,7 @@ app.root.addChild(camera);
 // Move the camera back to see the cubes
 camera.translate(0, 0, 10);
 
-// create standard material and enable instancing on it
+// Create standard material and enable instancing on it
 const material = new StandardMaterial();
 material.gloss = 0.6;
 material.metalness = 0.7;
@@ -148,7 +148,7 @@ cylinderMeshInst.setInstancing(vertexBuffer);
 // Set an update function on the app's update event
 let angle = 0;
 app.on('update', dt => {
-    // orbit camera around
+    // Orbit camera around
     angle += dt * 0.2;
     camera.setLocalPosition(8 * Math.sin(angle), 0, 8 * Math.cos(angle));
     camera.lookAt(Vec3.ZERO);

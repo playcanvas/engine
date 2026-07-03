@@ -107,7 +107,7 @@ app.root.addChild(camera);
 camera.script.orbitCamera.yaw = 90;
 camera.script.orbitCamera.distance = 24;
 
-// test with camera frame which uses linear rendering
+// Test with camera frame which uses linear rendering
 const cameraFrame = false;
 
 if (cameraFrame) {

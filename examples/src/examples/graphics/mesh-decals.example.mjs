@@ -36,7 +36,7 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // enable HDR rendering if supported
+    // Enable HDR rendering if supported
     displayFormat: DISPLAYFORMAT_HDR
 };
 
@@ -71,7 +71,7 @@ app.start();
 
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// create material for the plane
+// Create material for the plane
 const planeMaterial = new StandardMaterial();
 planeMaterial.gloss = 0.6;
 planeMaterial.metalness = 0.5;
@@ -79,7 +79,7 @@ planeMaterial.useMetalness = true;
 planeMaterial.gloss = 0.6;
 planeMaterial.update();
 
-// create plane primitive
+// Create plane primitive
 const primitive = new Entity();
 primitive.addComponent('render', {
     type: 'plane',
@@ -109,7 +109,7 @@ const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.2, 0.2, 0.2),
 
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    // If the device renders in HDR mode, disable tone mapping to output HDR values without any processing
     toneMapping: device.isHdr ? TONEMAP_NONE : TONEMAP_ACES,
     gammaCorrection: GAMMA_SRGB
 });
@@ -158,11 +158,11 @@ for (let i = 0; i < numDecals; i++) {
  * @param {Vec3} pos - The position.
  */
 function createDecal(i, pos) {
-    // random size and rotation angle
+    // Random size and rotation angle
     const size = 0.5 + Math.random();
     let angle = Math.random() * Math.PI;
 
-    // random color
+    // Random color
     const r = Math.random() * 255;
     const g = Math.random() * 255;
     const b = Math.random() * 255;
@@ -174,7 +174,7 @@ function createDecal(i, pos) {
         colors[i * 16 + j * 4 + 3] = 0; // alpha is not used by shader
     }
 
-    // vertex positions to form a square quad with random rotation and size
+    // Vertex positions to form a square quad with random rotation and size
     positions[12 * i + 0] = pos.x + size * Math.sin(angle);
     positions[12 * i + 1] = 0;
     positions[12 * i + 2] = pos.z + size * Math.cos(angle);
@@ -204,13 +204,13 @@ function createDecal(i, pos) {
  * @param {boolean} [initAll] - Set UV's and indices.
  */
 function updateMesh(mesh, updatePositions, updateColors, initAll) {
-    // update positions when needed
+    // Update positions when needed
     if (updatePositions) mesh.setPositions(positions);
 
-    // update colors when needed
+    // Update colors when needed
     if (updateColors) mesh.setColors32(colors);
 
-    // update indices and uvs only one time, as they never change
+    // Update indices and uvs only one time, as they never change
     if (initAll) {
         mesh.setIndices(indices);
         mesh.setUvs(0, uvs);
@@ -224,7 +224,7 @@ const mesh = new Mesh(app.graphicsDevice);
 mesh.clear(true, false);
 updateMesh(mesh, true, true, true);
 
-// create material
+// Create material
 const material = new StandardMaterial();
 material.useLighting = false; // turn off lighting - we use emissive texture only. Also, lighting needs normal maps which we don't generate
 material.diffuse = new Color(0, 0, 0);
@@ -268,28 +268,28 @@ app.on('update', (/** @type {number} */ dt) => {
     let positionsUpdated = false;
     let colorsUpdated = false;
     if ((previousElevation < 0 && elevation >= 0) || (elevation < 0 && previousElevation >= 0)) {
-        // create new decal at next index, and roll the index around if out of range
+        // Create new decal at next index, and roll the index around if out of range
         createDecal(decalIndex, ball.getLocalPosition());
         decalIndex++;
         if (decalIndex >= numDecals) decalIndex = 0;
 
-        // both position and color streams were updated
+        // Both position and color streams were updated
         positionsUpdated = true;
         colorsUpdated = true;
     }
 
-    // fade out all vertex colors once a second
+    // Fade out all vertex colors once a second
     if (Math.round(time) !== Math.round(previousTime)) {
         for (let i = 0; i < colors.length; i++) colors[i] -= 2;
 
-        // colors were updated
+        // Colors were updated
         colorsUpdated = true;
     }
 
-    // update mesh with the streams that were updated
+    // Update mesh with the streams that were updated
     updateMesh(mesh, positionsUpdated, colorsUpdated);
 
-    // orbit camera around
+    // Orbit camera around
     camera.setLocalPosition(20 * Math.sin(time * 0.3), 10, 20 * Math.cos(time * 0.3));
     camera.lookAt(Vec3.ZERO);
 });
