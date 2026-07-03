@@ -75,26 +75,26 @@ await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// create the animation data for two static spot lights
+// Create the animation data for two static spot lights
 const animClipStaticLightData = {
     name: 'staticLight',
     duration: 1.0,
-    // curve keyframe inputs
+    // Curve keyframe inputs
     inputs: [[0.0]],
-    // curve keyframe outputs
+    // Curve keyframe outputs
     outputs: [
-        // a single RGBA color keyframe value of a green light
+        // A single RGBA color keyframe value of a green light
         {
             components: 4,
             data: [0.0, 1.0, 0.0, 1.0]
         },
-        // a single quaternion keyframe value with no rotation
+        // A single quaternion keyframe value with no rotation
         {
             components: 4,
             data: [0.0, 0.0, 0.0, 0.0]
         }
     ],
-    // the curves contained in the clip, each with the path to the property they animation, the index of
+    // The curves contained in the clip, each with the path to the property they animation, the index of
     // their input and output keyframes and the method of interpolation to be used
     curves: [
         {
@@ -124,34 +124,34 @@ const animClipStaticLightData = {
     ]
 };
 
-// create the animation data for two flashing spot lights
+// Create the animation data for two flashing spot lights
 const animClipFlashingLightData = {
     name: 'flashingLight',
     duration: 2.0,
-    // curve keyframe inputs
+    // Curve keyframe inputs
     inputs: [
         [0.0, 0.5, 1.0, 1.5, 2.0],
         [0, 1, 2]
     ],
-    // curve keyframe outputs
+    // Curve keyframe outputs
     outputs: [
-        //  keyframe outputs for a flashing red RGBA color
+        //  Keyframe outputs for a flashing red RGBA color
         {
             components: 4,
             data: [1.0, 0.0, 0.0, 1.0, 0.4, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.4, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]
         },
-        //  keyframe outputs for a quaternion rotation
+        //  Keyframe outputs for a quaternion rotation
         {
             components: 4,
             data: [4.0, 0.0, 0.0, 0.0, 4.0, 180.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0]
         },
-        //  keyframe outputs for a quaternion rotation
+        //  Keyframe outputs for a quaternion rotation
         {
             components: 4,
             data: [-4.0, 0.0, 0.0, 0.0, -4.0, 180.0, 0.0, 0.0, -4.0, 0.0, 0.0, 0.0]
         }
     ],
-    // the curves contained in the clip, each with the path to the property they animation, the index of
+    // The curves contained in the clip, each with the path to the property they animation, the index of
     // their input and output keyframes and the method of interpolation to be used
     curves: [
         {
@@ -250,13 +250,13 @@ app.root.addChild(lightsEntity);
 app.root.addChild(boxEntity);
 app.root.addChild(planeEntity);
 
-// add the anim component to the lights entity
+// Add the anim component to the lights entity
 lightsEntity.addComponent('anim', {
     speed: 1.0,
     activate: true
 });
 
-// assign animation clip asset resources to the appropriate states
+// Assign animation clip asset resources to the appropriate states
 lightsEntity.anim.assignAnimation('Static', animClipStaticLight);
 lightsEntity.anim.assignAnimation('Flash', animClipFlashingLight);
 

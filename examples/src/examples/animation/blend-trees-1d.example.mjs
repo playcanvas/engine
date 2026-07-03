@@ -75,7 +75,7 @@ await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// setup skydome
+// Setup skydome
 app.scene.exposure = 2;
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
@@ -102,17 +102,17 @@ lightEntity.addComponent('light', {
 app.root.addChild(lightEntity);
 lightEntity.setLocalEulerAngles(45, 30, 0);
 
-// create an entity from the loaded model using the render component
+// Create an entity from the loaded model using the render component
 const modelEntity = assets.model.resource.instantiateRenderEntity({
     castShadows: true
 });
 
-// add an anim component to the entity
+// Add an anim component to the entity
 modelEntity.addComponent('anim', {
     activate: true
 });
 
-// create an anim state graph
+// Create an anim state graph
 const animStateGraphData = {
     layers: [
         {
@@ -159,10 +159,10 @@ const animStateGraphData = {
     }
 };
 
-// load the state graph into the anim component
+// Load the state graph into the anim component
 modelEntity.anim.loadStateGraph(animStateGraphData);
 
-// load the state graph asset resource into the anim component
+// Load the state graph asset resource into the anim component
 const characterStateLayer = modelEntity.anim.baseLayer;
 characterStateLayer.assignAnimation('Movement.Idle', assets.idleAnim.resource.animations[0].resource);
 characterStateLayer.assignAnimation('Movement.Dance', assets.danceAnim.resource.animations[0].resource);

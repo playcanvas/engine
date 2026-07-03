@@ -149,10 +149,10 @@ clearCoatMaterial.update();
 
 createSphere(0.5, 0, 0, clearCoatMaterial);
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', dt => {
-    // rotate camera around the objects
+    // Rotate camera around the objects
     time += dt;
     camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));
     camera.lookAt(Vec3.ZERO);

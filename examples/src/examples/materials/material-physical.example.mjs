@@ -136,7 +136,7 @@ for (let i = 0; i < NUM_SPHERES; i++) {
 createText(assets.font, 'Glossiness', 0, -(NUM_SPHERES + 1) * 0.5, 0, 0);
 createText(assets.font, 'Metalness', -(NUM_SPHERES + 1) * 0.5, 0, 0, 90);
 
-// rotate the skybox using mouse input
+// Rotate the skybox using mouse input
 const mouse = new Mouse(document.body);
 
 let x = 0;

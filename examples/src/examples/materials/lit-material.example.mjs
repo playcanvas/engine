@@ -139,7 +139,7 @@ material.hasNormals = true;
 material.hasMetalness = false;
 material.occludeSpecular = SPECOCC_AO;
 
-// shadows not ported yet
+// Shadows not ported yet
 app.scene.lighting.shadowsEnabled = false;
 app.scene.lighting.cookiesEnabled = false;
 
@@ -202,14 +202,14 @@ material.shaderChunkWGSL = /* wgsl */ `
 
 material.update();
 
-// create primitive
+// Create primitive
 const primitive = new Entity();
 primitive.addComponent('render', {
     type: 'sphere',
     material: material
 });
 
-// set position and scale and add it to scene
+// Set position and scale and add it to scene
 app.root.addChild(primitive);
 
 let time = 0;

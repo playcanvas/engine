@@ -81,7 +81,7 @@ await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// setup skydome
+// Setup skydome
 app.scene.exposure = 2;
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
@@ -111,7 +111,7 @@ const boxes = {};
 /** @type {Entity[]} */
 const highlightedBoxes = [];
 
-// create a floor made up of box models
+// Create a floor made up of box models
 for (let i = -5; i <= 5; i++) {
     for (let j = -5; j <= 5; j++) {
         const material = new StandardMaterial();
@@ -149,12 +149,12 @@ const highlightBox = pos => {
     highlightedBoxes.push(boxes[`${i}${j}`]);
 };
 
-// create an entity from the loaded model using the render component
+// Create an entity from the loaded model using the render component
 const modelEntity = assets.model.resource.instantiateRenderEntity({
     castShadows: true
 });
 
-// add an anim component to the entity
+// Add an anim component to the entity
 modelEntity.addComponent('anim', {
     activate: true
 });
@@ -165,7 +165,7 @@ modelEntityParent.addChild(modelEntity);
 
 app.root.addChild(modelEntityParent);
 
-// rotate the model in a circle around the center of the scene
+// Rotate the model in a circle around the center of the scene
 app.on('update', (/** @type {number} */ dt) => {
     modelEntityParent.rotate(0, 13.8 * dt, 0);
 });
@@ -186,27 +186,27 @@ walkTrack.events = new AnimEvents([
     }
 ]);
 
-// add the animation track to the anim component, with a defined speed
+// Add the animation track to the anim component, with a defined speed
 modelEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
 modelEntity.anim.on('foot_step', event => {
-    // highlight the box that is under the foot's bone position
+    // Highlight the box that is under the foot's bone position
     highlightBox(modelEntity.findByName(event.bone).getPosition());
 });
 
 app.on('update', () => {
-    // on update, iterate over any currently highlighted boxes and reduce their emissive property
+    // On update, iterate over any currently highlighted boxes and reduce their emissive property
     highlightedBoxes.forEach(box => {
         const material = box.render.material;
         material.emissiveIntensity *= 0.95;
         material.update();
     });
-    // remove old highlighted boxes from the update loop
+    // Remove old highlighted boxes from the update loop
     while (highlightedBoxes.length > 5) {
         highlightedBoxes.shift();
     }
 
-    // set the camera to follow the model
+    // Set the camera to follow the model
     const modelPosition = modelEntity.getPosition().clone();
     modelPosition.y = 0.5;
     cameraEntity.lookAt(modelPosition);

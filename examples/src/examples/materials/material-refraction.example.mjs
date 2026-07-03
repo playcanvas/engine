@@ -98,7 +98,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setLocalEulerAngles(85, -100, 0);
 
-// ground
+// Ground
 const groundMaterial = new StandardMaterial();
 groundMaterial.diffuse = new Color(1, 2.5, 2.5);
 groundMaterial.diffuseMap = assets.diffuse.resource;
@@ -127,7 +127,7 @@ const createObject = (x, y, z, material, scale) => {
     app.root.addChild(obj);
 };
 
-// basic refractive material
+// Basic refractive material
 const material = new StandardMaterial();
 material.metalness = 0.0; // low metalness, otherwise it's reflective
 material.gloss = 1.0;
@@ -141,7 +141,7 @@ material.thickness = 0.4;
 material.thicknessMap = assets.other.resource;
 material.update();
 
-// clone and apply additional settings for the second material
+// Clone and apply additional settings for the second material
 const material2 = material.clone();
 material2.diffuse = new Color(0.9, 0.6, 0.6);
 material2.normalMap = assets.normal.resource;
@@ -149,11 +149,11 @@ material2.bumpiness = 2.0;
 material2.refractionMap = assets.diffuse.resource;
 material2.update();
 
-// two main objects with refraction materials
+// Two main objects with refraction materials
 createObject(-0.5, 0, 0, material, 0.7);
 createObject(0.5, 0, 0, material2, 0.7);
 
-// create a ring of objects with a simple color material as a background
+// Create a ring of objects with a simple color material as a background
 const objMaterial = new StandardMaterial();
 objMaterial.diffuse = new Color(0.5, 0.5, 2.5);
 objMaterial.gloss = 0.5;
@@ -166,20 +166,20 @@ for (let i = 0; i < count; i++) {
     createObject(Math.cos(angle) * 2.5, -0.3, Math.sin(angle) * 2.5, objMaterial, 0.2);
 }
 
-// initial values for the UI
+// Initial values for the UI
 data.set('data', {
     dynamic: false
 });
 
-// update things each frame
+// Update things each frame
 let time = 0;
 app.on('update', dt => {
-    // rotate camera around the objects
+    // Rotate camera around the objects
     time += dt;
     camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));
     camera.lookAt(Vec3.ZERO);
 
-    // handle dynamic refraction toggle
+    // Handle dynamic refraction toggle
     const dynamic = data.get('data.dynamic');
     if (material.useDynamicRefraction !== dynamic) {
         material.useDynamicRefraction = dynamic;
@@ -187,7 +187,7 @@ app.on('update', dt => {
         material2.useDynamicRefraction = dynamic;
         material2.update();
 
-        // when dynamic is enabled, the camera needs to render the scene's color map
+        // When dynamic is enabled, the camera needs to render the scene's color map
         camera.camera.requestSceneColorMap(dynamic);
     }
 });

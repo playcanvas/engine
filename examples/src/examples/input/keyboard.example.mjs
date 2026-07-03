@@ -67,7 +67,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// set skybox
+// Set skybox
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.exposure = 1.6;
 app.scene.skyboxMip = 1;

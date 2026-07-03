@@ -37,16 +37,16 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // disable anti-aliasing to make dithering more pronounced
+    // Disable anti-aliasing to make dithering more pronounced
     antialias: false,
 
-    // use sRGB for display format (only supported on WebGPU, fallbacks to LDR on WebGL2)
+    // Use sRGB for display format (only supported on WebGPU, fallbacks to LDR on WebGL2)
     displayFormat: DISPLAYFORMAT_LDR_SRGB
 };
 
 const device = await createGraphicsDevice(canvas, gfxOptions);
 
-// make dithering more pronounced by rendering to lower resolution
+// Make dithering more pronounced by rendering to lower resolution
 device.maxPixelRatio = 1;
 
 const createOptions = new AppOptions();
@@ -109,15 +109,15 @@ const createSphere = (x, z) => {
     material.useMetalness = true;
 
     if (ditherOptions[x] === DITHER_NONE) {
-        // alpha blending material
+        // Alpha blending material
         material.blendType = BLEND_NORMAL;
     } else {
-        // alpha dithering material
+        // Alpha dithering material
         material.opacityDither = ditherOptions[x];
     }
 
-    // we want the spheres to seem to fade out in a linear fashion, so we need to convert
-    // the perceived opacity value from sRGB to linear space
+    // We want the spheres to seem to fade out in a linear fashion, so we need to convert
+    // The perceived opacity value from sRGB to linear space
     const perceivedOpacity = (z + 1) / NUM_SPHERES_Z;
     const linearOpacity = Math.pow(perceivedOpacity, 2.2);
     material.opacity = linearOpacity;

@@ -80,11 +80,11 @@ await new Promise(resolve => {
 
 app.start();
 
-// set skybox
+// Set skybox
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// get the instance of the cube it set up with render component and add it to scene
+// Get the instance of the cube it set up with render component and add it to scene
 const glbEntity = assets.model.resource.instantiateRenderEntity();
 app.root.addChild(glbEntity);
 
@@ -97,7 +97,7 @@ camera.addComponent('camera', {
     toneMapping: TONEMAP_ACES
 });
 
-// the color grab pass is needed
+// The color grab pass is needed
 camera.camera.requestSceneColorMap(true);
 
 // Adjust the camera position

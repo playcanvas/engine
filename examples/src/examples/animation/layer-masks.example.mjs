@@ -85,7 +85,7 @@ await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// setup data
+// Setup data
 data.set('fullBodyLayer', {
     state: 'Idle',
     blendType: ANIM_LAYER_OVERWRITE
@@ -100,7 +100,7 @@ data.set('options', {
     skeleton: true
 });
 
-// setup skydome
+// Setup skydome
 app.scene.exposure = 2;
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
@@ -127,7 +127,7 @@ lightEntity.addComponent('light', {
 app.root.addChild(lightEntity);
 lightEntity.setLocalEulerAngles(45, 30, 0);
 
-// create an entity from the loaded model using the render component
+// Create an entity from the loaded model using the render component
 const modelEntity = assets.model.resource.instantiateRenderEntity({
     castShadows: true
 });
@@ -136,30 +136,30 @@ modelEntity.addComponent('anim', {
 });
 app.root.addChild(modelEntity);
 
-// retrieve the animation assets
+// Retrieve the animation assets
 const idleTrack = assets.idleAnim.resource.animations[0].resource;
 const walkTrack = assets.walkAnim.resource.animations[0].resource;
 const danceTrack = assets.danceAnim.resource.animations[0].resource;
 const idleEagerTrack = assets.idleEagerAnim.resource.animations[0].resource;
 
-// create the full body layer by assigning full body animations to the anim component
+// Create the full body layer by assigning full body animations to the anim component
 modelEntity.anim.assignAnimation('Idle', idleTrack);
 modelEntity.anim.assignAnimation('Walk', walkTrack);
 
-// set the default weight for the base layer
+// Set the default weight for the base layer
 modelEntity.anim.baseLayer.weight = 1.0 - data.get('options.blend');
 
-// create a mask for the upper body layer
+// Create a mask for the upper body layer
 const upperBodyMask = {
-    // set a path with the children property as true to include that path and all of its children in the mask
+    // Set a path with the children property as true to include that path and all of its children in the mask
     'RootNode/AVATAR/C_spine0001_bind_JNT/C_spine0002_bind_JNT': {
         children: true
     },
-    // set a path to true in the mask to include only that specific path
+    // Set a path to true in the mask to include only that specific path
     'RootNode/AVATAR/C_spine0001_bind_JNT/C_spine0002_bind_JNT/C_Head': true
 };
 
-// create a new layer for the upper body, with additive layer blending
+// Create a new layer for the upper body, with additive layer blending
 const upperBodyLayer = modelEntity.anim.addLayer(
     'UpperBody',
     data.get('options.blend'),
@@ -170,7 +170,7 @@ upperBodyLayer.assignAnimation('Eager', idleEagerTrack);
 upperBodyLayer.assignAnimation('Idle', idleTrack);
 upperBodyLayer.assignAnimation('Dance', danceTrack);
 
-// respond to changes in the data object made by the control panel
+// Respond to changes in the data object made by the control panel
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     if (path === 'fullBodyLayer.state') {
         modelEntity.anim.baseLayer.transition(value, 0.4);

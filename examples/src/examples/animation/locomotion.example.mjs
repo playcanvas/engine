@@ -117,7 +117,7 @@ await new Promise(resolve => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.skyboxIntensity = 0.7;
 app.scene.envAtlas = assets.helipad.resource;
@@ -151,22 +151,22 @@ app.root.addChild(light);
 
 const characterEntity = new Entity();
 
-// create an entity from the loaded model using the render component
+// Create an entity from the loaded model using the render component
 const renderEntity = assets.model.resource.instantiateRenderEntity({
     castShadows: true
 });
 
-// assign the renderEntity as the child of character entity. All transforms of the
+// Assign the renderEntity as the child of character entity. All transforms of the
 // renderEntity and its children are driven by the anim component.
 // The characterEntity transform will be controlled by the Locomotion script.
 characterEntity.addChild(renderEntity);
 
-// add an anim component to the entity
+// Add an anim component to the entity
 characterEntity.addComponent('anim', {
     activate: true
 });
 
-// create an anim state graph
+// Create an anim state graph
 const animStateGraphData = {
     layers: [
         {
@@ -298,10 +298,10 @@ const animStateGraphData = {
     }
 };
 
-// load the state graph into the anim component
+// Load the state graph into the anim component
 characterEntity.anim.loadStateGraph(animStateGraphData);
 
-// assign the loaded animation assets to each of the states present in the state graph
+// Assign the loaded animation assets to each of the states present in the state graph
 const locomotionLayer = characterEntity.anim.baseLayer;
 locomotionLayer.assignAnimation('Idle', assets.idleAnim.resource.animations[0].resource);
 locomotionLayer.assignAnimation('Walk', assets.walkAnim.resource.animations[0].resource);
@@ -337,14 +337,14 @@ data.on('jump', () => {
     }
 });
 
-// create a Locomotion script and initialize some variables
+// Create a Locomotion script and initialize some variables
 const Locomotion = createScript('Locomotion');
 
 let characterDirection;
 /** @type {Vec3} */
 let targetPosition;
 
-// initialize code called once per entity
+// Initialize code called once per entity
 Locomotion.prototype.initialize = function () {
     characterDirection = new Vec3(1, 0, 0);
     targetPosition = new Vec3(2, 0, 2);
@@ -392,7 +392,7 @@ function speedForState(state) {
 
 const currentPosition = new Vec3(0, 0, 0);
 
-// update code called every frame
+// Update code called every frame
 Locomotion.prototype.update = function (/** @type {number} */ dt) {
     if (characterEntity.anim.getInteger('speed')) {
         // Update position if target position is not the same as entity position. Base the movement speed on the current state

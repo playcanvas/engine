@@ -27,8 +27,6 @@ import { deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// Create the application and start the update loop
-
 const assets = {
     helipad: new Asset(
         'helipad-env-atlas',
@@ -72,7 +70,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// set skybox
+// Set skybox
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.exposure = 1.6;
 app.scene.skyboxMip = 1;
