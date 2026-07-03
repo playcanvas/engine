@@ -117,7 +117,7 @@ ground.setLocalScale(50, 1, 50);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// Create an entity with a light component
+// Create an Entity with a light component
 const light = new Entity();
 light.addComponent('light', {
     type: 'directional',

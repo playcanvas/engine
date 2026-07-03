@@ -130,39 +130,39 @@ panel.addChild(label);
 // Create entity for particle system
 const particles = new Entity();
 
-// insert sparks as a child of the panel, but before Label - that is the order for rendering
+// Insert sparks as a child of the panel, but before Label - that is the order for rendering
 panel.insertChild(particles, 0);
 
-// particles will render in UI layer
+// Particles will render in UI layer
 const UILayer = app.scene.layers.getLayerByName('UI');
 
-// particle size
+// Particle size
 const scaleCurve = new Curve([0, 0.03]);
 
-// color changes throughout lifetime
+// Color changes throughout lifetime
 const colorCurve = new CurveSet([
     [0, 1, 0.25, 1, 0.375, 0.5, 0.5, 0],
     [0, 0, 0.125, 0.25, 0.25, 0.5, 0.375, 0.75, 0.5, 1],
     [0, 0, 1, 0]
 ]);
 
-// increasing gravity to get them to move
+// Increasing gravity to get them to move
 const worldVelocityCurve = new CurveSet([
     [0, 0],
     [0, 0, 0.1, 0.1, 0.1, -0.1],
     [0, 0]
 ]);
 
-// rotate sparks 360 degrees per second
+// Rotate sparks 360 degrees per second
 const angleCurve = new Curve([0, 360]);
 
-// when texture is loaded add particlesystem component to entity
+// When texture is loaded add particlesystem component to entity
 particles.addComponent('particlesystem', {
     numParticles: 100,
     lifetime: 1,
     rate: 0.01,
 
-    // make them follow the buttn in screen-space
+    // Make them follow the button in screen-space
     localSpace: true,
     screenSpace: true,
 
@@ -178,13 +178,13 @@ particles.addComponent('particlesystem', {
     layers: [UILayer.id]
 });
 
-// sort all screen elements
+// Sort all screen elements
 screen.screen.syncDrawOrder();
 
 let time = 0;
 app.on('update', dt => {
     time += dt * 0.3;
 
-    // move buttons along the circular path
+    // Move buttons along the circular path
     panel.setLocalPosition(300 * Math.sin(time), 300 * Math.cos(time), 0);
 });

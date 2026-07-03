@@ -105,7 +105,7 @@ screen.addComponent('screen', {
 });
 app.root.addChild(screen);
 
-// some sample text
+// Some sample text
 const firstLineText = 'PlayCanvas supports Emojis via CanvasFont!';
 const flagsText = 'Flags: 🇺🇸🇩🇪🇮🇪🇮🇹🏴‍☠️🇨🇦';
 const complexText = 'Complex emoji: 👨🏿3️⃣👁️‍🗨️';
@@ -166,11 +166,11 @@ screen.addChild(debugText);
 const group = new Entity();
 group.setLocalPosition(0, -150, 0);
 group.addComponent('element', {
-    // a Layout Group needs a 'group' element component
+    // A Layout Group needs a 'group' element component
     type: ELEMENTTYPE_GROUP,
     anchor: [0.5, 0.5, 0.5, 0.5],
     pivot: [0.5, 0.5],
-    // the element's width and height dictate the group's bounds
+    // The element's width and height dictate the group's bounds
     width: 300,
     height: 100
 });
@@ -184,11 +184,11 @@ group.addComponent('layoutgroup', {
 });
 screen.addChild(group);
 
-// create 1 child per texture
+// Create 1 child per texture
 for (let i = 0; i < canvasFont.textures.length; i++) {
     const texture = canvasFont.textures[i];
 
-    // create a random-colored panel
+    // Create a random-colored panel
     const child = new Entity();
     child.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],

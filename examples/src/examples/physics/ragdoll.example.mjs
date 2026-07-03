@@ -87,7 +87,7 @@ app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
 app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
-// ragdolls are chains of small fast-moving bodies - a finer physics timestep prevents limbs
+// Ragdolls are chains of small fast-moving bodies - a finer physics timestep prevents limbs
 // tunnelling through the floor on impact
 app.systems.rigidbody.fixedTimeStep = 1 / 120;
 
@@ -117,7 +117,7 @@ floor.addComponent('rigidbody', { type: 'static' });
 floor.addComponent('collision', { type: 'box', halfExtents: new Vec3(12, 0.5, 6) });
 app.root.addChild(floor);
 
-// something for a ragdoll to drape over
+// Something for a ragdoll to drape over
 const obstacle = new Entity('obstacle');
 obstacle.addComponent('render', { type: 'box', material: wood });
 obstacle.setLocalScale(1.4, 0.7, 0.9);
@@ -213,7 +213,7 @@ function createRagdollTemplate() {
     const torso = createPart(root, 'torso', new Vec3(0.36, 0.46, 0.22), new Vec3(0, 1.26, 0), 10, blue);
     const head = createPart(root, 'head', new Vec3(0.22, 0.24, 0.24), new Vec3(0, 1.66, 0), 3, skin);
 
-    // a ball joint spine with tight limits and a freer ball joint neck - their X (twist) axes
+    // A ball joint spine with tight limits and a freer ball joint neck - their X (twist) axes
     // point up
     createJoint(root, 'spine', new Vec3(0, 1.02, 0), new Vec3(0, 0, 90), {
         type: JOINTTYPE_BALL,
@@ -237,7 +237,7 @@ function createRagdollTemplate() {
     for (const side of [-1, 1]) {
         const prefix = side < 0 ? 'l-' : 'r-';
 
-        // legs hang down - the hip twist axis points down the thigh, swinging further forwards
+        // Legs hang down - the hip twist axis points down the thigh, swinging further forwards
         // and backwards (Z) than sideways (Y)
         const thigh = createPart(
             root,
@@ -266,7 +266,7 @@ function createRagdollTemplate() {
             twistLimit: 20
         });
 
-        // the knee hinge axis points along world X, so positive rotation folds the shin
+        // The knee hinge axis points along world X, so positive rotation folds the shin
         // backwards
         createJoint(root, `${prefix}knee`, new Vec3(side * 0.11, 0.4, 0), new Vec3(0, 0, 0), {
             type: JOINTTYPE_HINGE,
@@ -276,7 +276,7 @@ function createRagdollTemplate() {
             limits: new Vec2(0, 140)
         });
 
-        // arms extend sideways in a T-pose - the shoulder twist axis points along the arm
+        // Arms extend sideways in a T-pose - the shoulder twist axis points along the arm
         const upperArm = createPart(
             root,
             `${prefix}upper-arm`,
@@ -304,7 +304,7 @@ function createRagdollTemplate() {
             twistLimit: 30
         });
 
-        // the elbow hinge axis points up - the limits are mirrored so that each arm folds
+        // The elbow hinge axis points up - the limits are mirrored so that each arm folds
         // towards the torso
         createJoint(root, `${prefix}elbow`, new Vec3(side * 0.51, 1.4, 0), new Vec3(0, 0, 90), {
             type: JOINTTYPE_HINGE,
@@ -315,7 +315,7 @@ function createRagdollTemplate() {
         });
     }
 
-    // the template is never simulated - spawned ragdolls are clones of it, with their joints
+    // The template is never simulated - spawned ragdolls are clones of it, with their joints
     // remapped to the cloned body parts
     root.enabled = false;
     return root;
@@ -356,7 +356,7 @@ spawnRagdoll(2.2, 1.5, -40);
 
 // ***********    Drag bodies with the pointer, or shoot balls   *******************
 
-// the grab anchor is a kinematic body that collides with nothing - the grabbed part is jointed
+// The grab anchor is a kinematic body that collides with nothing - the grabbed part is jointed
 // to it and follows as the anchor is moved under the pointer
 const anchor = new Entity('grab-anchor');
 anchor.addComponent('render', { type: 'sphere', material: red });
@@ -367,7 +367,7 @@ anchor.rigidbody.mask = BODYMASK_NONE;
 anchor.enabled = false;
 app.root.addChild(anchor);
 
-// the grab is a ball joint, so the grabbed part swings freely about the grip point
+// The grab is a ball joint, so the grabbed part swings freely about the grip point
 const grabJoint = new Entity('grab-joint');
 app.root.addChild(grabJoint);
 grabJoint.addComponent('joint', { type: JOINTTYPE_BALL });
@@ -393,7 +393,7 @@ function startGrab(x, y) {
     grabbed = hit.entity;
     grabDistance = hit.point.distance(start);
 
-    // place the anchor and the joint frame at the grip point before attaching, so the joint
+    // Place the anchor and the joint frame at the grip point before attaching, so the joint
     // frames are captured there - the grabbed body is assigned last, creating the constraint
     // once it is fully configured
     anchor.enabled = true;
@@ -482,7 +482,7 @@ app.touch.on(EVENT_TOUCHSTART, event => {
     if (touch && !startGrab(touch.x, touch.y)) {
         shootBall(touch.x, touch.y);
     }
-    // prevent the browser generating a synthetic mousedown for this touch
+    // Prevent the browser generating a synthetic mousedown for this touch
     event.event.preventDefault();
 });
 app.touch.on(EVENT_TOUCHMOVE, event => {

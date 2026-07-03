@@ -112,7 +112,7 @@ autoFontSizeContainer.addComponent('element', {
 // Create a text element with auto font size, and place it inside the container
 const autoFontSizeText = new Entity();
 autoFontSizeText.addComponent('element', {
-    // place the text taking the entire parent space
+    // Place the text taking the entire parent space
     pivot: new Vec2(0.5, 0.5),
     anchor: new Vec4(0, 0, 1, 1),
     margin: new Vec4(0, 0, 0, 0),
@@ -129,7 +129,7 @@ autoFontSizeText.addComponent('element', {
 screen.addChild(autoFontSizeContainer);
 autoFontSizeContainer.addChild(autoFontSizeText);
 
-// update the container's size to showcase the auto-sizing feature
+// Update the container's size to showcase the auto-sizing feature
 let time = 0;
 app.on('update', dt => {
     time += dt;

@@ -154,7 +154,7 @@ button.button.on('pressedend', () => {
     label.translateLocal(0, 4, 0);
 });
 
-// Apply the font to the text element
+// Configure texture and create atlas for button sprites
 const texture = assets.red_button_atlas.resource;
 texture.addressU = ADDRESS_CLAMP_TO_EDGE;
 texture.addressV = ADDRESS_CLAMP_TO_EDGE;

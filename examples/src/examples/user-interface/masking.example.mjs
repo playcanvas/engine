@@ -229,7 +229,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 });
 
-// set initial control values
+// Set initial control values
 data.set('data', {
     animate: true,
     mask: true

@@ -102,11 +102,11 @@ app.root.addChild(screen);
 // Create Layout Group Entity
 const group = new Entity();
 group.addComponent('element', {
-    // a Layout Group needs a 'group' element component
+    // A Layout Group needs a 'group' element component
     type: ELEMENTTYPE_GROUP,
     anchor: [0.5, 0.5, 0.5, 0.5],
     pivot: [0.5, 0.5],
-    // the element's width and height dictate the group's bounds
+    // The element's width and height dictate the group's bounds
     width: 350,
     height: 150
 });
@@ -121,9 +121,9 @@ group.addComponent('layoutgroup', {
 });
 screen.addChild(group);
 
-// create 15 children to show off the layout group
+// Create 15 children to show off the layout group
 for (let i = 0; i < 15; ++i) {
-    // create a random-colored panel
+    // Create a random-colored panel
     const child = new Entity();
     child.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
@@ -136,11 +136,11 @@ for (let i = 0; i < 15; ++i) {
     });
     group.addChild(child);
 
-    // add a text label
+    // Add a text label
     const childLabel = new Entity();
     childLabel.addComponent('element', {
-        // center-position and attach to the borders of parent
-        // meaning this text element will scale along with parent
+        // Center-position and attach to the borders of parent
+        // Meaning this text element will scale along with parent
         anchor: [0, 0, 1, 1],
         margin: [0, 0, 0, 0],
         pivot: [0.5, 0.5],
@@ -148,7 +148,7 @@ for (let i = 0; i < 15; ++i) {
         fontAsset: assets.font.id,
         text: `${i + 1}`,
         type: ELEMENTTYPE_TEXT,
-        // auto font size
+        // Auto font size
         autoWidth: false,
         autoHeight: false,
         autoFitWidth: true,

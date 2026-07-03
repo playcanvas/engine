@@ -102,12 +102,12 @@ app.systems.rigidbody.gravity.set(0, -9.81, 0);
 function createMaterial(color) {
     const material = new StandardMaterial();
     material.diffuse = color;
-    // we need to call material.update when we change its properties
+    // We need to call material.update when we change its properties
     material.update();
     return material;
 }
 
-// create a few materials for our objects
+// Create a few materials for our objects
 const red = createMaterial(new Color(1, 0.3, 0.3));
 const gray = createMaterial(new Color(0.7, 0.7, 0.7));
 
@@ -119,27 +119,27 @@ floor.addComponent('render', {
     material: gray
 });
 
-// scale it
+// Scale it
 floor.setLocalScale(10, 1, 10);
 
-// add a rigidbody component so that other objects collide with it
+// Add a rigidbody component so that other objects collide with it
 floor.addComponent('rigidbody', {
     type: 'static',
     restitution: 0.5
 });
 
-// add a collision component
+// Add a collision component
 floor.addComponent('collision', {
     type: 'box',
     halfExtents: new Vec3(5, 0.5, 5)
 });
 
-// add the floor to the hierarchy
+// Add the floor to the hierarchy
 app.root.addChild(floor);
 
 // ***********    Create lights   *******************
 
-// make our scene prettier by adding a directional light
+// Make our scene prettier by adding a directional light
 const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -151,7 +151,7 @@ light.addComponent('light', {
     shadowResolution: 2048
 });
 
-// set the direction for our light
+// Set the direction for our light
 light.setLocalEulerAngles(45, 30, 0);
 
 // Add the light to the hierarchy
@@ -166,7 +166,7 @@ camera.addComponent('camera', {
     farClip: 50
 });
 
-// add the camera to the hierarchy
+// Add the camera to the hierarchy
 app.root.addChild(camera);
 
 // Move the camera a little further away
@@ -248,21 +248,21 @@ createTemplate(
 // we can randomly spawn them
 const templates = [boxTemplate, sphereTemplate, capsuleTemplate, cylinderTemplate, meshTemplate];
 
-// disable the templates because we don't want them to be visible
-// we'll just use them to clone other Entities
+// Disable the templates because we don't want them to be visible
+// We'll just use them to clone other Entities
 templates.forEach(template => {
     template.enabled = false;
 });
 
 // ***********    Update Function   *******************
 
-// initialize variables for our update function
+// Initialize variables for our update function
 let timer = 0;
 let count = 40;
 
 // Set an update function on the application's update event
 app.on('update', dt => {
-    // create a falling box every 0.2 seconds
+    // Create a falling box every 0.2 seconds
     if (count > 0) {
         timer -= dt;
         if (timer <= 0) {
@@ -272,7 +272,7 @@ app.on('update', dt => {
             // Clone a random template and position it above the floor
             const template = templates[Math.floor(Math.random() * templates.length)];
             const clone = template.clone();
-            // enable the clone because the template is disabled
+            // Enable the clone because the template is disabled
             clone.enabled = true;
 
             app.root.addChild(clone);

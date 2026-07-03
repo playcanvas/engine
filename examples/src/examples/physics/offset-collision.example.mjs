@@ -102,12 +102,12 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.exposure = 2;
 app.scene.skyboxMip = 2;
 app.scene.envAtlas = assets.helipad.resource;
 
-// Create an entity with a light component
+// Create an Entity with a light component
 const lightEntity = new Entity();
 lightEntity.addComponent('light', {
     castShadows: true,
@@ -131,12 +131,12 @@ app.systems.rigidbody.gravity.set(0, -9.81, 0);
 function createMaterial(color) {
     const material = new StandardMaterial();
     material.diffuse = color;
-    // we need to call material.update when we change its properties
+    // We need to call material.update when we change its properties
     material.update();
     return material;
 }
 
-// create a few materials for our objects
+// Create a few materials for our objects
 const red = createMaterial(new Color(1, 0.3, 0.3));
 const gray = createMaterial(new Color(0.7, 0.7, 0.7));
 
@@ -175,7 +175,7 @@ modelEntity.addComponent('anim', {
     activate: true
 });
 
-// create an anim state graph
+// Create an anim state graph
 const animStateGraphData = {
     layers: [
         {
@@ -201,7 +201,7 @@ const animStateGraphData = {
     parameters: {}
 };
 
-// load the state graph into the anim component
+// Load the state graph into the anim component
 modelEntity.anim.loadStateGraph(animStateGraphData);
 
 // Add a rigid body and collision for the head with offset as the model's origin is
@@ -217,7 +217,7 @@ modelEntity.addComponent('collision', {
     linearOffset: [0, 1.25, 0]
 });
 
-// load the state graph asset resource into the anim component
+// Load the state graph asset resource into the anim component
 const characterStateLayer = modelEntity.anim.baseLayer;
 characterStateLayer.assignAnimation('Idle', assets.idleAnim.resource.animations[0].resource);
 
@@ -232,7 +232,7 @@ cameraEntity.lookAt(lookAtPosition.x, lookAtPosition.y + 0.75, lookAtPosition.z)
 
 app.root.addChild(cameraEntity);
 
-// create a ball template that we can clone in the update loop
+// Create a ball template that we can clone in the update loop
 const ball = new Entity();
 ball.tags.add('shape');
 ball.setLocalScale(0.4, 0.4, 0.4);
@@ -254,13 +254,13 @@ ball.addComponent('collision', {
 
 ball.enabled = false;
 
-// initialize variables for our update function
+// Initialize variables for our update function
 let timer = 0;
 let count = 40;
 
 // Set an update function on the application's update event
 app.on('update', dt => {
-    // create a falling box every 0.2 seconds
+    // Create a falling box every 0.2 seconds
     if (count > 0) {
         timer -= dt;
         if (timer <= 0) {

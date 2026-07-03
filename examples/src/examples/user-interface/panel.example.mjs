@@ -193,14 +193,14 @@ app.on('update', _dt => {
     panel.element.height = targetHeight;
 });
 
-// apply UI changes
+// Apply UI changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.sliced') {
         panel.element.sprite.renderMode = value ? SPRITE_RENDERMODE_SLICED : SPRITE_RENDERMODE_SIMPLE;
     }
 });
 
-// set initial values
+// Set initial values
 data.set('data', {
     sliced: true
 });

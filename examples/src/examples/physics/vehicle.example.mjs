@@ -94,7 +94,7 @@ await new Promise(resolve => {
 
 app.start();
 
-// setup skydome
+// Setup skydome
 app.scene.skyboxMip = 2;
 app.scene.exposure = 0.3;
 app.scene.envAtlas = assets.helipad.resource;
@@ -165,7 +165,7 @@ chassis.addComponent('collision', {
 });
 chassis.setLocalPosition(0, 0.65, 0);
 
-// Create the car chassis, offset upwards in Y from the compound body
+// Create the car cab, offset upwards in Y from the compound body
 const cab = new Entity('Cab');
 cab.addComponent('collision', {
     type: 'box',

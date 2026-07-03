@@ -110,7 +110,7 @@ ground.setLocalScale(50, 1, 50);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// Create an entity with a light component
+// Create an Entity with a light component
 const light = new Entity();
 light.addComponent('light', {
     type: 'directional',
@@ -146,18 +146,18 @@ app.root.addChild(screen);
 function worldToScreenSpace(worldPosition, camera, screen) {
     const screenPos = camera.worldToScreen(worldPosition);
 
-    // take pixel ratio into account
+    // Take pixel ratio into account
     const pixelRatio = app.graphicsDevice.maxPixelRatio;
     screenPos.x *= pixelRatio;
     screenPos.y *= pixelRatio;
 
-    // account for screen scaling
+    // Account for screen scaling
     const scale = screen.scale;
 
-    // invert the y position
+    // Invert the y position
     screenPos.y = screen.resolution.y - screenPos.y;
 
-    // put that into a Vec3
+    // Put that into a Vec3
     return new Vec3(screenPos.x / scale, screenPos.y / scale, screenPos.z / scale);
 }
 
@@ -176,8 +176,8 @@ function createPlayer(id, startingAngle, speed, radius) {
     });
     app.root.addChild(entity);
 
-    // update the player position every frame with some mock logic
-    // normally, this would be taking inputs, running physics simulation, etc
+    // Update the player position every frame with some mock logic
+    // Normally, this would be taking inputs, running physics simulation, etc
     let angle = startingAngle;
     const height = 0.5;
     app.on('update', dt => {
@@ -237,23 +237,23 @@ function createPlayer(id, startingAngle, speed, radius) {
     });
     playerInfo.addChild(healthBar);
 
-    // update the player text's position to always hover the player
+    // Update the player text's position to always hover the player
     app.on('update', () => {
-        // get the desired world position
+        // Get the desired world position
         const worldPosition = entity.getPosition();
-        worldPosition.y += 0.6; // slightly above the player's head
+        worldPosition.y += 0.6; // Slightly above the player's head
 
-        // convert to screen position
+        // Convert to screen position
         const screenPosition = worldToScreenSpace(worldPosition, camera.camera, screen.screen);
 
         if (screenPosition.z > 0) {
-            // if world position is in front of the camera, show it
+            // If world position is in front of the camera, show it
             playerInfo.enabled = true;
 
-            // set the UI position
+            // Set the UI position
             playerInfo.setLocalPosition(screenPosition);
         } else {
-            // if world position is actually *behind* the camera, hide the UI
+            // If world position is actually *behind* the camera, hide the UI
             playerInfo.enabled = false;
         }
     });

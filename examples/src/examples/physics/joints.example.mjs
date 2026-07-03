@@ -183,7 +183,7 @@ camera.lookAt(0, 2, 0);
 const doorFrame = createBox('door-frame', new Vec3(0.25, 3, 0.25), new Vec3(-10.5, 2, 0), wood, 'static', 0);
 const door = createBox('door', new Vec3(1.6, 2.4, 0.12), new Vec3(-9.55, 1.95, 0), green, 'dynamic', 20);
 
-// the hinge sits at the door frame and its X axis points up - the door swings about it,
+// The hinge sits at the door frame and its X axis points up - the door swings about it,
 // limited to 110 degrees of opening
 createJoint('door-hinge', new Vec3(-10.35, 1.95, 0), new Vec3(0, 0, 90), {
     type: JOINTTYPE_HINGE,
@@ -198,7 +198,7 @@ createJoint('door-hinge', new Vec3(-10.35, 1.95, 0), new Vec3(0, 0, 90), {
 const pole = createBox('pole', new Vec3(0.25, 4, 0.25), new Vec3(-5.5, 2, 0), wood, 'static', 0);
 const rotor = createBox('rotor', new Vec3(3.5, 0.35, 0.15), new Vec3(-5.5, 4, 0.3), blue, 'dynamic', 10);
 
-// the hinge axis points at the camera (world Z) and the motor spins the rotor at a constant
+// The hinge axis points at the camera (world Z) and the motor spins the rotor at a constant
 // angular speed
 createJoint('windmill-hinge', new Vec3(-5.5, 4, 0.3), new Vec3(0, -90, 0), {
     type: JOINTTYPE_HINGE,
@@ -215,7 +215,7 @@ for (let i = 0; i < 6; i++) {
     const link = createBox(`link-${i}`, new Vec3(0.18, 0.5, 0.18), new Vec3(-2, 5.25 - i * 0.5, 0), blue, 'dynamic', 2);
     links.push(link);
 
-    // each ball joint sits at the top of its link with its X axis pointing down the chain and
+    // Each ball joint sits at the top of its link with its X axis pointing down the chain and
     // its Y axis along world X - the chain can swing widely left and right (swingLimitY) but
     // barely forwards and backwards (swingLimitZ)
     createJoint(`chain-joint-${i}`, new Vec3(-2, 5.5 - i * 0.5, 0), new Vec3(0, 0, -90), {
@@ -229,12 +229,12 @@ for (let i = 0; i < 6; i++) {
     });
 }
 
-// start the chain swinging
+// Start the chain swinging
 links[5].rigidbody.applyImpulse(8, 0, 8);
 
 // ***********    Slider joint: a platform patrolling a rail   *******************
 
-// the rail is a visual guide only
+// The rail is a visual guide only
 const rail = new Entity('rail');
 rail.addComponent('render', {
     type: 'box',
@@ -246,7 +246,7 @@ app.root.addChild(rail);
 
 const platform = createBox('platform', new Vec3(0.8, 0.25, 0.6), new Vec3(1.5, 0.85, 0), green, 'dynamic', 10);
 
-// the slider is pinned to the world (entityB is null) - the platform can only translate along
+// The slider is pinned to the world (entityB is null) - the platform can only translate along
 // the joint's X axis, driven back and forth by the motor (active because maxMotorForce > 0)
 const sliderJoint = createJoint('slider', new Vec3(1.5, 0.85, 0), new Vec3(0, 0, 0), {
     type: JOINTTYPE_SLIDER,
@@ -259,7 +259,7 @@ const sliderJoint = createJoint('slider', new Vec3(1.5, 0.85, 0), new Vec3(0, 0,
 
 // ***********    6dof joint: a crate bobbing on a spring   *******************
 
-// the joint entity must be unscaled, so the visual marker lives on a scaled child
+// The joint entity must be unscaled, so the visual marker lives on a scaled child
 const anchor = new Entity('anchor');
 anchor.setPosition(5, 4, 0);
 app.root.addChild(anchor);
@@ -275,7 +275,7 @@ anchor.addChild(anchorVisual);
 const crate = createBox('crate', new Vec3(0.7, 0.7, 0.7), new Vec3(5, 4, 0), wood, 'dynamic', 5);
 crate.rigidbody.linearDamping = 0.2;
 
-// the anchor entity itself holds the joint - the crate hangs below it on a sprung, vertical
+// The anchor entity itself holds the joint - the crate hangs below it on a sprung, vertical
 // degree of freedom (a spring acts on any axis with a stiffness greater than 0). 6dof offsets
 // measure entityB (here the world anchor) relative to entityA (the crate), so a positive
 // equilibrium rests the crate below the anchor
@@ -306,7 +306,7 @@ for (let i = 0; i < 3; i++) {
         breakImpulse: 60
     });
 
-    // tint the separated boxes red when the weld breaks
+    // Tint the separated boxes red when the weld breaks
     weld.joint.on(JointComponent.EVENT_BREAK, () => {
         lower.render.meshInstances[0].material = red;
         upper.render.meshInstances[0].material = red;
@@ -341,7 +341,7 @@ app.mouse.on(EVENT_MOUSEDOWN, event => {
 
 // ***********    Update   *******************
 
-// reverse the slider motor at each end of the rail to patrol back and forth
+// Reverse the slider motor at each end of the rail to patrol back and forth
 let patrolTimer = 0;
 app.on('update', dt => {
     patrolTimer += dt;

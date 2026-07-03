@@ -130,10 +130,10 @@ entity.addComponent('element', {
 entity.element.material = material;
 screen.addChild(entity);
 
-// update the material's 'amount' parameter to animate the inverse effect
+// Update the material's 'amount' parameter to animate the inverse effect
 let time = 0;
 app.on('update', dt => {
     time += dt;
-    // animate the amount as a sine wave varying from 0 to 1
+    // Animate the amount as a sine wave varying from 0 to 1
     material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
 });
