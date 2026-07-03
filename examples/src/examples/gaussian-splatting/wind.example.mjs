@@ -1,12 +1,12 @@
 // @config
 //
-// Realistic wind swaying of the trees in a gaussian splat scene. Each tree is given a small
-// procedural skeleton: a vertical chain of bones running up through the green canopy, anchored
-// at the trunk. The bones sway as a cantilever - the trunk stays put and the motion grows
-// towards the branch tips, with a wave travelling up the tree, per-tree phase, gusts and a fast
-// leaf flutter. Splats are skinned to the nearby bones (a weighted blend) in the per-frame
-// vertex stage, so the foliage moves as a coherent surface rather than as random points. The
-// ground grass optionally gets a subtle coherent sway of its own.
+// Realistic wind swaying of the trees in a gaussian splat scene, driven by the reusable
+// GsplatTrees script. Each tree is marked by a sphere over its green canopy - the bottom of the
+// sphere is where the trunk connects, so the trunk stays put and the sway grows up and out
+// towards the branch tips. The script bakes each splat's binding to a tree into an extra work
+// buffer stream during the copy stage (cheap, not per-frame, and re-run automatically for
+// streamed LOD data), then a small per-frame vertex modifier applies the sway. Toggle Edit mode
+// to position the tree spheres with gizmos, and add or remove trees.
 //
 // @credit
 // title: Knock Community Hall
@@ -21,24 +21,29 @@ import {
     AssetListLoader,
     CameraComponentSystem,
     CameraFrame,
+    Color,
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
     GSplatComponentSystem,
     GSplatHandler,
+    Gizmo,
     LightComponentSystem,
     Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
+    ScaleGizmo,
     ScriptComponentSystem,
     ScriptHandler,
     TEXTURETYPE_RGBP,
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
-    createGraphicsDevice,
-    math
+    TranslateGizmo,
+    Vec3,
+    createGraphicsDevice
 } from 'playcanvas';
+import { GsplatTrees } from 'playcanvas/scripts/esm/gsplat/gsplat-trees.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -92,146 +97,6 @@ const assets = {
     )
 };
 
-// Tree skeletons, expressed in the splat's model space (the raw splat coordinates). The scene
-// entity is rotated 180 degrees about X, so world-up maps to model -Y: the ground grass sits at
-// model Y ~ -1 and the canopies rise (in the world) towards model Y ~ -9. These values were
-// measured by clustering the green foliage splats of this specific scene into two trees.
-const CANOPY_BOTTOM_Y = -1.8; // model Y where the canopy meets the trunk (bones anchored here)
-const CANOPY_TOP_Y = -9.0; // model Y at the tree tops (highest point in the world)
-const BONES_PER_TREE = 10;
-const TREES = [
-    { cx: -4.3, cz: -5.65, phase: 0.0 },
-    { cx: -4.6, cz: 2.64, phase: 2.1 }
-];
-const BONE_COUNT = TREES.length * BONES_PER_TREE;
-
-// Per-bone rest data as vec4 (xyz = model-space rest position, w = influence radius). vec4 is
-// used rather than vec3 so the uniform array has a matching 16-byte stride on WebGL2 and WebGPU.
-const boneData = new Float32Array(BONE_COUNT * 4);
-TREES.forEach((tree, ti) => {
-    for (let k = 0; k < BONES_PER_TREE; k++) {
-        const t = k / (BONES_PER_TREE - 1);
-        const y = CANOPY_BOTTOM_Y + (CANOPY_TOP_Y - CANOPY_BOTTOM_Y) * t;
-        // tighter influence near the trunk (keeps the trunk rigid), wider up in the canopy
-        const radius = 2.0 + 1.7 * t;
-        const o = (ti * BONES_PER_TREE + k) * 4;
-        boneData[o] = tree.cx;
-        boneData[o + 1] = y;
-        boneData[o + 2] = tree.cz;
-        boneData[o + 3] = radius;
-    }
-});
-
-// Per-bone horizontal offset (vec4, xyz used) recomputed every frame on the CPU.
-const boneOffset = new Float32Array(BONE_COUNT * 4);
-
-const windShaderGLSL = /* glsl */ `
-    uniform mat4 uInvWorld;                     // world -> model space of the splat entity
-    uniform mat4 uWorld;                        // model -> world space of the splat entity
-    uniform vec4 uBoneData[${BONE_COUNT}];      // xyz = model-space rest position, w = influence radius
-    uniform vec4 uBoneOffset[${BONE_COUNT}];    // xyz = current model-space horizontal offset
-    uniform float uTime;
-    uniform vec2 uGrassDir;                     // horizontal wind direction (model XZ)
-    uniform float uGrassAmp;
-
-    void modifySplatCenter(inout vec3 center) {
-        // the unified renderer provides world-space centers; work in the splat's model space
-        // (where the measured bone/grass values live) and transform the result back to world
-        vec3 mc = (uInvWorld * vec4(center, 1.0)).xyz;
-        vec3 model = vec3(0.0);
-
-        // foliage: blend the offsets of the nearby bones (compact-support weights), so the
-        // canopy skins to the swaying skeleton and the trunk (near the anchored base bone,
-        // whose offset is zero) stays still
-        vec3 disp = vec3(0.0);
-        float sumW = 0.0;
-        for (int i = 0; i < ${BONE_COUNT}; i++) {
-            vec3 delta = mc - uBoneData[i].xyz;
-            float rad = uBoneData[i].w;
-            float q = dot(delta, delta) / (rad * rad);
-            if (q < 1.0) {
-                float w = 1.0 - q;
-                w *= w;
-                disp += w * uBoneOffset[i].xyz;
-                sumW += w;
-            }
-        }
-        if (sumW > 0.0001) {
-            model = disp / sumW;
-        }
-
-        // grass: subtle coherent horizontal wave in a narrow band around the ground plane
-        float gw = smoothstep(-1.3, -1.05, mc.y) * (1.0 - smoothstep(-0.35, -0.1, mc.y));
-        if (gw > 0.0 && uGrassAmp > 0.0) {
-            vec2 p = mc.xz;
-            float wave = 0.7 * sin(dot(p, vec2(0.9, 0.6)) + uTime * 1.7) +
-                         0.3 * sin(dot(p, vec2(-0.5, 1.1)) * 1.7 + uTime * 2.3);
-            model.x += uGrassDir.x * (uGrassAmp * gw * wave);
-            model.z += uGrassDir.y * (uGrassAmp * gw * wave);
-        }
-
-        center += mat3(uWorld) * model;
-    }
-
-    void modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {
-    }
-
-    void modifySplatColor(vec3 center, inout vec4 color) {
-    }
-`;
-
-const windShaderWGSL = /* wgsl */ `
-    uniform uInvWorld: mat4x4f;                         // world -> model space of the splat entity
-    uniform uWorld: mat4x4f;                            // model -> world space of the splat entity
-    uniform uBoneData: array<vec4f, ${BONE_COUNT}>;     // xyz = model-space rest position, w = influence radius
-    uniform uBoneOffset: array<vec4f, ${BONE_COUNT}>;   // xyz = current model-space horizontal offset
-    uniform uTime: f32;
-    uniform uGrassDir: vec2f;                           // horizontal wind direction (model XZ)
-    uniform uGrassAmp: f32;
-
-    fn modifySplatCenter(center: ptr<function, vec3f>) {
-        // the unified renderer provides world-space centers; work in the splat's model space
-        // (where the measured bone/grass values live) and transform the result back to world
-        let mc = (uniform.uInvWorld * vec4f(*center, 1.0)).xyz;
-        var model = vec3f(0.0);
-
-        var disp = vec3f(0.0);
-        var sumW = 0.0;
-        for (var i = 0; i < ${BONE_COUNT}; i++) {
-            let delta = mc - uniform.uBoneData[i].xyz;
-            let rad = uniform.uBoneData[i].w;
-            let q = dot(delta, delta) / (rad * rad);
-            if (q < 1.0) {
-                var w = 1.0 - q;
-                w = w * w;
-                disp += w * uniform.uBoneOffset[i].xyz;
-                sumW += w;
-            }
-        }
-        if (sumW > 0.0001) {
-            model = disp / sumW;
-        }
-
-        let gw = smoothstep(-1.3, -1.05, mc.y) * (1.0 - smoothstep(-0.35, -0.1, mc.y));
-        if (gw > 0.0 && uniform.uGrassAmp > 0.0) {
-            let p = mc.xz;
-            let wave = 0.7 * sin(dot(p, vec2f(0.9, 0.6)) + uniform.uTime * 1.7) +
-                       0.3 * sin(dot(p, vec2f(-0.5, 1.1)) * 1.7 + uniform.uTime * 2.3);
-            model.x += uniform.uGrassDir.x * (uniform.uGrassAmp * gw * wave);
-            model.z += uniform.uGrassDir.y * (uniform.uGrassAmp * gw * wave);
-        }
-
-        let w3 = mat3x3f(uniform.uWorld[0].xyz, uniform.uWorld[1].xyz, uniform.uWorld[2].xyz);
-        *center += w3 * model;
-    }
-
-    fn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {
-    }
-
-    fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
-    }
-`;
-
 await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
@@ -250,7 +115,7 @@ data.set('speed', 1.0);
 data.set('direction', 45);
 data.set('gustiness', 0.4);
 data.set('flutter', 0.3);
-data.set('grass', 0.25);
+data.set('edit', false);
 
 // the splat scene
 const hall = new Entity('hall');
@@ -260,20 +125,48 @@ hall.addComponent('gsplat', {
 hall.setLocalEulerAngles(180, 0, 0);
 app.root.addChild(hall);
 
-// apply the wind vertex customization to the scene-wide gsplat material. modifySplatCenter runs
-// in the per-frame render vertex stage, so updating the uniforms each frame animates the sway
-// without re-rendering the work buffer.
-const material = app.scene.gsplat.material;
-material.getShaderChunks('glsl').set('gsplatModifyVS', windShaderGLSL);
-material.getShaderChunks('wgsl').set('gsplatModifyVS', windShaderWGSL);
-material.setParameter('uBoneData[0]', boneData);
-// the entity transform is static, so pass the model<->world matrices once. modifySplatCenter
-// receives world-space centers, which are converted to model space and back with these.
-const worldMatrix = hall.getWorldTransform();
-const invWorldMatrix = worldMatrix.clone().invert();
-material.setParameter('uWorld', worldMatrix.data);
-material.setParameter('uInvWorld', invWorldMatrix.data);
-material.update();
+// The GsplatTrees script drives the wind.
+hall.addComponent('script');
+const treesScript = /** @type {GsplatTrees} */ (hall.script.create(GsplatTrees));
+
+// Each tree is a helper entity whose world position is the sphere center and whose uniform scale
+// is the sphere radius; the gizmos move/scale these. The two default trees of this scene were
+// located by clustering the green foliage splats (their canopies sit around world Y ~ 5.4, with
+// the sphere bottom at the trunk/canopy junction).
+/** @type {Entity[]} */
+const treeItems = [];
+
+const createTreeItem = (center, radius) => {
+    const entity = new Entity(`Tree ${treeItems.length + 1}`);
+    entity.setLocalPosition(center);
+    entity.setLocalScale(radius, radius, radius);
+    app.root.addChild(entity);
+    treeItems.push(entity);
+    return entity;
+};
+
+createTreeItem(new Vec3(-4.3, 5.4, 5.65), 3.6);
+createTreeItem(new Vec3(-4.6, 5.4, -2.64), 3.8);
+
+// push the current tree helper entities to the script as spheres (triggers a re-bake)
+const pushSpheres = () => {
+    treesScript.setSpheres(treeItems.map(e => ({
+        center: e.getPosition(),
+        radius: e.getLocalScale().x
+    })));
+};
+pushSpheres();
+
+// drive the wind from the UI
+const applyControls = () => {
+    treesScript.strength = data.get('strength');
+    treesScript.speed = data.get('speed');
+    treesScript.direction = data.get('direction');
+    treesScript.gustiness = data.get('gustiness');
+    treesScript.flutter = data.get('flutter');
+};
+applyControls();
+data.on('*:set', applyControls);
 
 // Create an Entity with a camera component
 const camera = new Entity();
@@ -293,7 +186,7 @@ camera.script?.create('orbitCamera', {
         frameOnStart: true
     }
 });
-camera.script?.create('orbitCameraInputMouse');
+const orbitInputMouse = camera.script?.create('orbitCameraInputMouse');
 camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
@@ -303,37 +196,191 @@ cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.bloom.intensity = 0.02;
 cameraFrame.update();
 
-let time = 0;
+// ---------- Edit mode: gizmos + tree list ----------
+const gizmoLayer = Gizmo.createLayer(app);
+const translateGizmo = new TranslateGizmo(camera.camera, gizmoLayer);
+const scaleGizmo = new ScaleGizmo(camera.camera, gizmoLayer);
+scaleGizmo.uniform = true;
+
+let editMode = false;
+let gizmoMode = 'move';
+let selectedIndex = 0;
+let spheresDirty = false;
+
+const activeGizmo = () => (gizmoMode === 'move' ? translateGizmo : scaleGizmo);
+
+const attachGizmo = () => {
+    translateGizmo.detach();
+    scaleGizmo.detach();
+    if (editMode && selectedIndex >= 0 && selectedIndex < treeItems.length) {
+        activeGizmo().attach(treeItems[selectedIndex]);
+    }
+};
+
+// disable the orbit camera while dragging a gizmo, and re-bake on release
+const onGizmoDown = (_x, _y, meshInstance) => {
+    if (meshInstance && orbitInputMouse) {
+        orbitInputMouse.enabled = false;
+    }
+};
+const onGizmoUp = () => {
+    if (orbitInputMouse) {
+        orbitInputMouse.enabled = true;
+    }
+    pushSpheres();
+    spheresDirty = false;
+};
+translateGizmo.on('pointer:down', onGizmoDown);
+translateGizmo.on('pointer:up', onGizmoUp);
+scaleGizmo.on('pointer:down', onGizmoDown);
+scaleGizmo.on('pointer:up', onGizmoUp);
+
+// ---------- Tree list UI (shown only in edit mode) ----------
+const style = document.createElement('style');
+style.textContent = `
+    .trees-panel {
+        position: absolute; top: 50%; left: 10px; transform: translateY(-50%);
+        background: rgba(30, 30, 30, 0.9); border: 1px solid #444; border-radius: 5px;
+        padding: 10px; color: white; font-family: Arial, sans-serif; font-size: 12px;
+        min-width: 170px; z-index: 1000; display: none;
+    }
+    .trees-title { font-weight: bold; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #555; }
+    .trees-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    .trees-btn { flex: 1; background: #333; border: 1px solid #555; color: white; padding: 4px; border-radius: 3px; cursor: pointer; }
+    .trees-btn.active { background: #446; }
+    .trees-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; margin: 2px 0; background: #333; border-radius: 3px; cursor: pointer; }
+    .trees-item.active { background: #446; }
+    .trees-item span { flex-grow: 1; }
+    .trees-del { background: #833; border: none; color: white; padding: 2px 6px; border-radius: 3px; cursor: pointer; margin-left: 8px; }
+`;
+document.head.appendChild(style);
+
+const panel = document.createElement('div');
+panel.className = 'trees-panel';
+app.on('destroy', () => {
+    panel.remove();
+    style.remove();
+});
+
+const title = document.createElement('div');
+title.className = 'trees-title';
+title.textContent = 'Trees';
+panel.appendChild(title);
+
+// gizmo mode buttons
+const modeRow = document.createElement('div');
+modeRow.className = 'trees-row';
+const moveBtn = document.createElement('button');
+moveBtn.className = 'trees-btn';
+moveBtn.textContent = 'Move';
+const sizeBtn = document.createElement('button');
+sizeBtn.className = 'trees-btn';
+sizeBtn.textContent = 'Size';
+modeRow.appendChild(moveBtn);
+modeRow.appendChild(sizeBtn);
+panel.appendChild(modeRow);
+
+// add button
+const addRow = document.createElement('div');
+addRow.className = 'trees-row';
+const addBtn = document.createElement('button');
+addBtn.className = 'trees-btn';
+addBtn.textContent = '+ Add tree';
+addRow.appendChild(addBtn);
+panel.appendChild(addRow);
+
+const listContainer = document.createElement('div');
+panel.appendChild(listContainer);
+document.body.appendChild(panel);
+
+const updateList = () => {
+    moveBtn.className = gizmoMode === 'move' ? 'trees-btn active' : 'trees-btn';
+    sizeBtn.className = gizmoMode === 'size' ? 'trees-btn active' : 'trees-btn';
+
+    listContainer.innerHTML = '';
+    treeItems.forEach((entity, i) => {
+        const item = document.createElement('div');
+        item.className = i === selectedIndex ? 'trees-item active' : 'trees-item';
+
+        const name = document.createElement('span');
+        name.textContent = entity.name;
+        name.onclick = () => {
+            selectedIndex = i;
+            attachGizmo();
+            updateList();
+        };
+        item.appendChild(name);
+
+        const del = document.createElement('button');
+        del.className = 'trees-del';
+        del.textContent = 'X';
+        del.onclick = (e) => {
+            e.stopPropagation();
+            treeItems[i].destroy();
+            treeItems.splice(i, 1);
+            selectedIndex = Math.min(selectedIndex, treeItems.length - 1);
+            pushSpheres();
+            attachGizmo();
+            updateList();
+        };
+        item.appendChild(del);
+
+        listContainer.appendChild(item);
+    });
+};
+
+moveBtn.onclick = () => {
+    gizmoMode = 'move';
+    attachGizmo();
+    updateList();
+};
+sizeBtn.onclick = () => {
+    gizmoMode = 'size';
+    attachGizmo();
+    updateList();
+};
+addBtn.onclick = () => {
+    // add a new tree in front of the camera focus, at a default canopy height
+    const entity = createTreeItem(new Vec3(0, 5, 0), 3.5);
+    selectedIndex = treeItems.indexOf(entity);
+    pushSpheres();
+    attachGizmo();
+    updateList();
+};
+
+const setEditMode = (value) => {
+    editMode = value;
+    panel.style.display = value ? 'block' : 'none';
+    attachGizmo();
+    if (value) {
+        updateList();
+    }
+};
+data.on('edit:set', () => setEditMode(data.get('edit')));
+
+// re-bake at a modest rate while a sphere is being dragged (full re-bake also happens on release)
+let sinceBake = 0;
 app.on('update', (dt) => {
-    time += dt;
+    if (!editMode) {
+        return;
+    }
 
-    const strength = data.get('strength');
-    const speed = data.get('speed');
-    const gustiness = data.get('gustiness');
-    const flutter = data.get('flutter');
-    const angle = data.get('direction') * math.DEG_TO_RAD;
-    const dirX = Math.cos(angle);
-    const dirZ = Math.sin(angle);
-
-    // Cantilever chain sway per tree: motion is zero at the anchored base bone and grows towards
-    // the tips, with a wave travelling up the tree, a slow gust envelope and a fast flutter.
-    TREES.forEach((tree, ti) => {
-        const gust = 1.0 + gustiness * Math.sin(time * 0.5 + tree.phase * 1.7);
-        for (let k = 0; k < BONES_PER_TREE; k++) {
-            const t = k / (BONES_PER_TREE - 1);
-            const bend = Math.pow(t, 1.5);
-            const sway = strength * bend * gust * Math.sin(time * speed - t * 2.5 + tree.phase);
-            const flick = strength * flutter * bend * Math.sin(time * speed * 3.1 + t * 17.0 + tree.phase * 2.3);
-            const o = (ti * BONES_PER_TREE + k) * 4;
-            boneOffset[o] = dirX * sway - dirZ * flick;
-            boneOffset[o + 1] = 0;
-            boneOffset[o + 2] = dirZ * sway + dirX * flick;
-            boneOffset[o + 3] = 0;
-        }
+    // visualize each tree sphere; sync the dragged entity back into the (throttled) re-bake
+    treeItems.forEach((entity, i) => {
+        const center = entity.getPosition();
+        const radius = entity.getLocalScale().x;
+        const selected = i === selectedIndex;
+        app.drawWireSphere(center, radius, selected ? Color.YELLOW : Color.GRAY, 24);
     });
 
-    material.setParameter('uBoneOffset[0]', boneOffset);
-    material.setParameter('uTime', time);
-    material.setParameter('uGrassDir', [dirX, dirZ]);
-    material.setParameter('uGrassAmp', data.get('grass') * 0.12);
+    if (!orbitInputMouse?.enabled) {
+        // a gizmo is being dragged
+        spheresDirty = true;
+    }
+    sinceBake += dt;
+    if (spheresDirty && sinceBake > 0.12) {
+        pushSpheres();
+        sinceBake = 0;
+        spheresDirty = false;
+    }
 });

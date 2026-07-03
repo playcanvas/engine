@@ -1,4 +1,4 @@
-import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -12,6 +12,11 @@ import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/
 export function Controls({ observer }) {
     return (
         <>
+            <Panel headerText='Edit'>
+                <LabelGroup text='Edit mode'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer, path: 'edit' }} />
+                </LabelGroup>
+            </Panel>
             <Panel headerText='Wind'>
                 <LabelGroup text='Strength'>
                     <SliderInput
@@ -53,17 +58,6 @@ export function Controls({ observer }) {
                     <SliderInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'flutter' }}
-                        min={0}
-                        max={1}
-                        precision={2}
-                    />
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Grass'>
-                <LabelGroup text='Sway'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'grass' }}
                         min={0}
                         max={1}
                         precision={2}
