@@ -24,6 +24,8 @@ const tmpSegDir = new Vec3();
 const tmpToCam = new Vec3();
 const tmpSide = new Vec3();
 const tmpAimOrigin = new Vec3();
+const tmpAimDir = new Vec3();
+const tmpAimPoint = new Vec3();
 
 const arcVertexGLSL = /* glsl */ `
     attribute vec3 vertex_position;
@@ -565,20 +567,41 @@ class XrNavigation extends Script {
     }
 
     /**
-     * Returns the world-space point the aim visualization should start from. The target ray
-     * origin sits at the head for gaze/pinch-style input (e.g. Apple Vision Pro transient
-     * pointers), so prefer the handheld grip position when the input source has one.
+     * Computes the world-space aim ray for an input source, writing it into tmpAimOrigin and
+     * tmpAimDir. The arc launches from the handheld grip position when the input source has
+     * one, because the target ray origin sits at the head for gaze/pinch-style input (e.g.
+     * Apple Vision Pro transient pointers). The direction is then re-aimed from the grip
+     * toward the point the target ray indicates - using the raw target ray direction from the
+     * hand would offset the trajectory by the hand-to-head parallax, making the landing depend
+     * on where the hand happened to be when the pinch registered. For tracked-pointer
+     * controllers the grip and ray origin coincide, so this reduces to the target ray itself.
      *
      * @param {XrInputSource} inputSource - The aiming input source.
-     * @returns {Vec3} The world-space start point.
      * @private
      */
-    _getAimOrigin(inputSource) {
-        // Copy immediately: getPosition() and getOrigin() return references to the input
-        // source's internal vectors, which the engine reuses as scratch space on the next
-        // getDirection()/getOrigin() call
+    _getAimRay(inputSource) {
+        // Copy immediately: getOrigin()/getDirection()/getPosition() return references to the
+        // input source's internal vectors, which the engine reuses as scratch space on
+        // subsequent calls
+        tmpAimDir.copy(inputSource.getDirection());
+        tmpAimOrigin.copy(inputSource.getOrigin());
+
         const grip = inputSource.grip ? inputSource.getPosition() : null;
-        return tmpAimOrigin.copy(grip || inputSource.getOrigin());
+        if (!grip) return;
+
+        // Aim point: where the target ray meets the navigation plane, or a far point along
+        // the ray when it never descends to it
+        let t = this.maxTeleportDistance;
+        if (tmpAimDir.y < -0.001) {
+            const tPlane = (tmpAimOrigin.y - this.groundHeight) / -tmpAimDir.y;
+            if (tPlane > 0 && tPlane < this.maxTeleportDistance * 2) {
+                t = tPlane;
+            }
+        }
+        tmpAimPoint.copy(tmpAimDir).mulScalar(t).add(tmpAimOrigin);
+
+        tmpAimOrigin.copy(grip);
+        tmpAimDir.sub2(tmpAimPoint, tmpAimOrigin).normalize();
     }
 
     /**
@@ -646,7 +669,8 @@ class XrNavigation extends Script {
         if (!rec) {
             rec = { point: new Vec3(), valid: false };
             this._arcHits.set(inputSource, rec);
-            this._computeArcHit(this._getAimOrigin(inputSource), inputSource.getDirection(), rec);
+            this._getAimRay(inputSource);
+            this._computeArcHit(tmpAimOrigin, tmpAimDir, rec);
         }
         if (!rec.valid) return;
 
@@ -840,7 +864,8 @@ class XrNavigation extends Script {
                 rec = { point: new Vec3(), valid: false };
                 this._arcHits.set(inputSource, rec);
             }
-            this._computeArcHit(this._getAimOrigin(inputSource), inputSource.getDirection(), rec);
+            this._getAimRay(inputSource);
+            this._computeArcHit(tmpAimOrigin, tmpAimDir, rec);
 
             const visual = this._getArcVisual(inputSource);
             visual.entity.enabled = true;
