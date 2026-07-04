@@ -501,6 +501,11 @@ class XrNavigation extends Script {
         const onInputAdd = (inputSource) => {
             const handleSelectStart = () => {
                 this.activePointers.set(inputSource, true);
+                // Invalidate any hit cached from a previous aim session, so a select that
+                // starts and ends before the next update cannot teleport to a stale target.
+                // tryTeleport recomputes when no cached hit exists; otherwise it commits the
+                // last visualized hit, which is immune to the ray flicking on pinch release
+                this._arcHits.delete(inputSource);
             };
 
             const handleSelectEnd = () => {
@@ -590,9 +595,10 @@ class XrNavigation extends Script {
         if (!grip) return;
 
         // Aim point: where the target ray meets the navigation plane, or a far point along
-        // the ray when it never descends to it
+        // the ray when it never descends to it. When castRay replaces plane detection, the
+        // plane is meaningless for aiming, so always use the far point
         let t = this.maxTeleportDistance;
-        if (tmpAimDir.y < -0.001) {
+        if (!this.castRay && tmpAimDir.y < -0.001) {
             const tPlane = (tmpAimOrigin.y - this.groundHeight) / -tmpAimDir.y;
             if (tPlane > 0 && tPlane < this.maxTeleportDistance * 2) {
                 t = tPlane;
@@ -624,14 +630,27 @@ class XrNavigation extends Script {
 
         rec.valid = false;
 
-        // Closed-form flight time to the navigation plane: larger root of
-        // origin.y + vy*t - 0.5*g*t^2 = groundHeight
-        const disc = vy * vy + 2 * g * (origin.y - this.groundHeight);
-        let tFlight = disc >= 0 ? (vy + Math.sqrt(disc)) / g : 0;
-        const planeHit = tFlight > 0.001;
-        if (!planeHit) {
-            // Origin below the plane aiming down - draw a plausible full arc instead
-            tFlight = (2 * this.teleportArcSpeed) / g;
+        let tFlight;
+        let planeHit = false;
+        if (this.castRay) {
+            // castRay replaces plane detection, so the sampling window must not stop at the
+            // plane (hits below groundHeight would be unreachable). Fly until the arc reaches
+            // the deepest point that could still pass the distance check - that check measures
+            // from the rig position, which sits below the aim origin (the grip), so descend
+            // maxTeleportDistance below the rig, not below the origin
+            const fallDepth = this.maxTeleportDistance +
+                Math.max(0, origin.y - this.entity.getPosition().y);
+            tFlight = (vy + Math.sqrt(vy * vy + 2 * g * fallDepth)) / g;
+        } else {
+            // Closed-form flight time to the navigation plane: larger root of
+            // origin.y + vy*t - 0.5*g*t^2 = groundHeight
+            const disc = vy * vy + 2 * g * (origin.y - this.groundHeight);
+            tFlight = disc >= 0 ? (vy + Math.sqrt(disc)) / g : 0;
+            planeHit = tFlight > 0.001;
+            if (!planeHit) {
+                // Origin below the plane aiming down - draw a plausible full arc instead
+                tFlight = (2 * this.teleportArcSpeed) / g;
+            }
         }
 
         for (let i = 0; i <= segments; i++) {
