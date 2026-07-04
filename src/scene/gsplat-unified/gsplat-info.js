@@ -30,7 +30,10 @@ const _fullRangeInterval = [0, 0];
 /**
  * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
  * at a point in time and should not hold references back to the source placement. All required
- * data should be copied or referenced, allowing placement to be modified without affecting the info.
+ * data should be copied or referenced, allowing placement to be modified without affecting the
+ * info. The only exception is shader configuration and dirty state, which are deliberately read
+ * live through narrow accessor closures (see the fields documented as 'retrieved live'), so that
+ * changes raised after the snapshot was taken are still observed.
  *
  * @ignore
  */
@@ -184,12 +187,14 @@ class GSplatInfo {
     getInstanceStreams = null;
 
     /**
-     * The source placement this info renders (used to read dirty state per-consumer).
+     * Function to get the placement that owns the dirty state - the parent placement for octree
+     * file placements, the placement itself otherwise. Retrieved live (not snapshotted) so dirty
+     * requests raised after this info was created are still observed.
      *
-     * @type {GSplatPlacement|null}
+     * @type {(() => GSplatPlacement)|null}
      * @private
      */
-    _placement = null;
+    _getDirtySource = null;
 
     /**
      * The last {@link GSplatPlacement#dirtyVersion} this consumer re-copied at. Tracked here (per
@@ -214,7 +219,9 @@ class GSplatInfo {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatResourceBase} resource - The splat resource.
-     * @param {GSplatPlacement} placement - The placement of the splat.
+     * @param {GSplatPlacement} placement - The placement of the splat. Do not store it - snapshot
+     * its data instead, as the placement is mutated for future world states while this info still
+     * renders. Only shader configuration and dirty state may be read live, via accessor closures.
      * @param {GSplatOctreeNode[]|null} [octreeNodes] - Octree nodes for bounds lookup.
      * @param {NodeInfo[]|null} [nodeInfos] - Per-node info array from octree instance.
      */
@@ -239,7 +246,7 @@ class GSplatInfo {
         this.parameters = placement.parameters;
         this.getWorkBufferModifier = () => placement.workBufferModifier;
         this.getInstanceStreams = () => placement.streams;
-        this._placement = placement;
+        this._getDirtySource = () => placement.parentPlacement ?? placement;
         this.octreeNodes = octreeNodes;
         this.nodeInfos = nodeInfos;
 
@@ -463,8 +470,7 @@ class GSplatInfo {
         // the continuous update mode come from the placement - or its parent for octree file
         // placements. The last-seen version is tracked here (per consumer), so a single request
         // re-copies every consumer of a shared placement exactly once.
-        const placement = this._placement;
-        const source = placement.parentPlacement ?? placement;
+        const source = this._getDirtySource();
         if (this._lastDirtyVersion !== source.dirtyVersion) {
             this._lastDirtyVersion = source.dirtyVersion;
             dirty = true;
