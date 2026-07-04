@@ -182,13 +182,14 @@ const spheres = [
     { center: new Vec3(73.93, 9.1, 0.16), radius: 24.07 },
     { center: new Vec3(68.68, 15.58, -19.77), radius: 23.03 }
 ];
-spheres.forEach(s => createTreeItem(s.center, s.radius));
+spheres.forEach((s) => createTreeItem(s.center, s.radius));
 
 const pushSpheres = () => {
-    treesScript.setSpheres(treeItems.map(e => ({
-        center: e.getPosition(),
-        radius: e.getLocalScale().x
-    })));
+    const sphereData = treeItems.map((entity) => ({
+        center: entity.getPosition(),
+        radius: entity.getLocalScale().x
+    }));
+    treesScript.setSpheres(sphereData);
 };
 pushSpheres();
 
@@ -416,7 +417,12 @@ app.on('update', (dt) => {
     }
 
     treeItems.forEach((entity, i) => {
-        app.drawWireSphere(entity.getPosition(), entity.getLocalScale().x, i === selectedIndex ? Color.YELLOW : Color.GRAY, 20);
+        app.drawWireSphere(
+            entity.getPosition(),
+            entity.getLocalScale().x,
+            i === selectedIndex ? Color.YELLOW : Color.GRAY,
+            20
+        );
     });
 
     if (dragging) {

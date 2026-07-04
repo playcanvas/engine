@@ -1,4 +1,11 @@
-import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import {
+    BindingTwoWay,
+    BooleanInput,
+    LabelGroup,
+    Panel,
+    SelectInput,
+    SliderInput
+} from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -27,7 +34,11 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
                 <LabelGroup text='Edit mode'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer, path: 'edit' }} />
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'edit' }}
+                    />
                 </LabelGroup>
                 <LabelGroup text='Splat budget (M)'>
                     <SliderInput
