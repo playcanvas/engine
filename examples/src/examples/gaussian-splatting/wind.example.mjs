@@ -1,14 +1,7 @@
 // @config
 //
-// Wind swaying of trees in a streamed gaussian splat scene, driven by the reusable GsplatTrees
-// script. Trees are marked by spheres over their canopies - the bottom of a sphere is the trunk
-// anchor, so the sway is zero there and grows up and out towards the tips. Each splat's binding
-// to a tree is baked into an extra work buffer stream during the copy stage (cheap, not
-// per-frame; re-run automatically as LOD data streams in; accelerated by a uniform grid so many
-// trees stay affordable), and a small per-frame vertex modifier applies the sway. This example
-// scatters 50 spheres at random over the scene as a stress test rather than detecting real trees.
-// Toggle Edit mode to position the spheres with gizmos (the selected tree's splats are tinted),
-// and add or remove trees.
+// Wind swaying of trees in a streamed gaussian splat scene, using the reusable GsplatTrees script.
+// Trees are marked by spheres; toggle Edit mode to position them and drive the wind from the controls.
 //
 // @credit
 // title: Skatepark
@@ -26,6 +19,7 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
     GSplatComponentSystem,
     GSplatHandler,
     Gizmo,
@@ -120,10 +114,11 @@ app.scene.gsplat.lodUnderfillLimit = 10;
 app.scene.gsplat.colorUpdateAngle = 10;
 
 // default UI values
-data.set('strength', 0.25);
-data.set('speed', 1.0);
-data.set('direction', 45);
-data.set('gustiness', 0.4);
+data.set('renderer', GSPLAT_RENDERER_AUTO);
+data.set('strength', 0.6);
+data.set('speed', 0.7);
+data.set('direction', 0);
+data.set('gustiness', 0.5);
 data.set('flutter', 0.3);
 data.set('edit', false);
 data.set('splatBudget', 4);
@@ -134,6 +129,16 @@ const applySplatBudget = () => {
 };
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
+
+// renderer selection. GPU sort is WebGPU-only, so reflect the actually-resolved renderer back into
+// the dropdown when the requested one falls back (e.g. GPU sort -> CPU sort on WebGL).
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
 
 // the streamed splat scene. lodRangeMin/lodRangeMax are left at their defaults so the full LOD
 // range is used.
@@ -151,12 +156,10 @@ skatepark.addComponent('script');
 const treesScript = /** @type {GsplatTrees} */ (skatepark.script.create(GsplatTrees));
 
 // Each tree is a helper entity whose world position is the sphere center and whose uniform scale
-// is the sphere radius; the gizmos move/scale these. As a stress test we scatter 50 spheres at
-// random over the scene (no real tree detection) to see how the baking and per-frame cost hold up.
+// is the sphere radius; the gizmos move/scale these. Use Edit mode to reposition them, add or
+// remove trees, and Print the resulting list.
 /** @type {Entity[]} */
 const treeItems = [];
-
-const rand = (min, max) => min + Math.random() * (max - min);
 
 const createTreeItem = (center, radius) => {
     const entity = new Entity(`Tree ${treeItems.length + 1}`);
@@ -167,9 +170,19 @@ const createTreeItem = (center, radius) => {
     return entity;
 };
 
-for (let i = 0; i < 50; i++) {
-    createTreeItem(new Vec3(rand(-18, 18), rand(1.5, 4), rand(-18, 18)), rand(1.5, 3.5));
-}
+const spheres = [
+    { center: new Vec3(2.34, 8.91, 9.62), radius: 10.35 },
+    { center: new Vec3(5.42, 5.98, -6.74), radius: 7.78 },
+    { center: new Vec3(-31.19, 27.2, -6.46), radius: 30.63 },
+    { center: new Vec3(-7.78, 5.15, -3.33), radius: 5.4 },
+    { center: new Vec3(-12.29, 13.95, 41.06), radius: 17.55 },
+    { center: new Vec3(14.51, 5.8, 50.29), radius: 15.74 },
+    { center: new Vec3(39.92, 15.14, 39.35), radius: 23.57 },
+    { center: new Vec3(48.15, 9.5, 22.75), radius: 16.45 },
+    { center: new Vec3(73.93, 9.1, 0.16), radius: 24.07 },
+    { center: new Vec3(68.68, 15.58, -19.77), radius: 23.03 }
+];
+spheres.forEach(s => createTreeItem(s.center, s.radius));
 
 const pushSpheres = () => {
     treesScript.setSpheres(treeItems.map(e => ({
@@ -311,6 +324,10 @@ const addBtn = document.createElement('button');
 addBtn.className = 'trees-btn';
 addBtn.textContent = '+ Add tree';
 addRow.appendChild(addBtn);
+const printBtn = document.createElement('button');
+printBtn.className = 'trees-btn';
+printBtn.textContent = 'Print';
+addRow.appendChild(printBtn);
 panel.appendChild(addRow);
 
 const listContainer = document.createElement('div');
@@ -370,6 +387,15 @@ addBtn.onclick = () => {
     pushSpheres();
     attachGizmo();
     updateList();
+};
+// dump the current spheres to the console as a ready-to-paste array literal
+printBtn.onclick = () => {
+    const lines = treeItems.map((entity) => {
+        const c = entity.getPosition();
+        const r = entity.getLocalScale().x;
+        return `    { center: new Vec3(${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)}), radius: ${r.toFixed(2)} }`;
+    });
+    console.log(`const spheres = [\n${lines.join(',\n')}\n];`);
 };
 
 const setEditMode = (value) => {

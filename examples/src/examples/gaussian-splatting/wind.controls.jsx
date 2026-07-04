@@ -1,4 +1,4 @@
-import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -13,6 +13,19 @@ export function Controls({ observer }) {
     return (
         <>
             <Panel headerText='Scene'>
+                <LabelGroup text='Renderer'>
+                    <SelectInput
+                        type='number'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'renderer' }}
+                        value={observer.get('renderer') ?? 0}
+                        options={[
+                            { v: 0, t: 'Auto' },
+                            { v: 1, t: 'Raster (CPU Sort)' },
+                            { v: 2, t: 'Raster (GPU Sort)' }
+                        ]}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Edit mode'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer, path: 'edit' }} />
                 </LabelGroup>

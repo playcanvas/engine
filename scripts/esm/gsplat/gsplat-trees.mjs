@@ -474,6 +474,8 @@ class GsplatTrees extends Script {
         material.setParameter('uFlutter', this.flutter);
         material.setParameter('uWaveTravel', this.waveTravel);
         material.setParameter('uEditSelected', this.editSelected);
+
+        material.update();
     }
 }
 
