@@ -1,18 +1,19 @@
 // @config
 //
-// Realistic wind swaying of the trees in a gaussian splat scene, driven by the reusable
-// GsplatTrees script. Each tree is marked by a sphere over its green canopy - the bottom of the
-// sphere is where the trunk connects, so the trunk stays put and the sway grows up and out
-// towards the branch tips. The script bakes each splat's binding to a tree into an extra work
-// buffer stream during the copy stage (cheap, not per-frame, and re-run automatically for
-// streamed LOD data), then a small per-frame vertex modifier applies the sway. Toggle Edit mode
-// to position the tree spheres with gizmos, and add or remove trees.
+// Wind swaying of trees in a streamed gaussian splat scene, driven by the reusable GsplatTrees
+// script. Trees are marked by spheres over their canopies - the bottom of a sphere is the trunk
+// anchor, so the sway is zero there and grows up and out towards the tips. Each splat's binding
+// to a tree is baked into an extra work buffer stream during the copy stage (cheap, not
+// per-frame; re-run automatically as LOD data streams in; accelerated by a uniform grid so many
+// trees stay affordable), and a small per-frame vertex modifier applies the sway. This example
+// scatters 50 spheres at random over the scene as a stress test rather than detecting real trees.
+// Toggle Edit mode to position the spheres with gizmos (the selected tree's splats are tinted),
+// and add or remove trees.
 //
 // @credit
-// title: Knock Community Hall
-// author: scbenoit
-// source: https://superspl.at/scene/0ff2e6dc
-// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+// title: Skatepark
+// author: Christoph Schindelar
+// source: https://superspl.at/user?id=schindelar3d
 
 import {
     AppBase,
@@ -87,7 +88,9 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hall: new Asset('gsplat', 'gsplat', { url: './assets/splats/knock-community-hall.sog' }),
+    skatepark: new Asset('gsplat', 'gsplat', {
+        url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json'
+    }),
     orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     envAtlas: new Asset(
         'env-atlas',
@@ -103,11 +106,14 @@ await new Promise((resolve) => {
 
 app.start();
 
-// soft environment for the background and any reflections
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxMip = 2;
 app.scene.skyboxIntensity = 0.8;
-app.scene.exposure = 1.2;
+app.scene.exposure = 1.0;
+
+// streamed LOD settings
+app.scene.gsplat.lodBehindPenalty = 2;
+app.scene.gsplat.radialSorting = true;
 
 // default UI values
 data.set('strength', 0.25);
@@ -117,24 +123,25 @@ data.set('gustiness', 0.4);
 data.set('flutter', 0.3);
 data.set('edit', false);
 
-// the splat scene
-const hall = new Entity('hall');
-hall.addComponent('gsplat', {
-    asset: assets.hall
+// the streamed splat scene
+const skatepark = new Entity('skatepark');
+skatepark.addComponent('gsplat', {
+    asset: assets.skatepark
 });
-hall.setLocalEulerAngles(180, 0, 0);
-app.root.addChild(hall);
+skatepark.setLocalEulerAngles(-90, 0, 0);
+app.root.addChild(skatepark);
 
-// The GsplatTrees script drives the wind.
-hall.addComponent('script');
-const treesScript = /** @type {GsplatTrees} */ (hall.script.create(GsplatTrees));
+// the reusable wind script
+skatepark.addComponent('script');
+const treesScript = /** @type {GsplatTrees} */ (skatepark.script.create(GsplatTrees));
 
 // Each tree is a helper entity whose world position is the sphere center and whose uniform scale
-// is the sphere radius; the gizmos move/scale these. The two default trees of this scene were
-// located by clustering the green foliage splats (their canopies sit around world Y ~ 5.4, with
-// the sphere bottom at the trunk/canopy junction).
+// is the sphere radius; the gizmos move/scale these. As a stress test we scatter 50 spheres at
+// random over the scene (no real tree detection) to see how the baking and per-frame cost hold up.
 /** @type {Entity[]} */
 const treeItems = [];
+
+const rand = (min, max) => min + Math.random() * (max - min);
 
 const createTreeItem = (center, radius) => {
     const entity = new Entity(`Tree ${treeItems.length + 1}`);
@@ -145,10 +152,10 @@ const createTreeItem = (center, radius) => {
     return entity;
 };
 
-createTreeItem(new Vec3(-4.3, 5.4, 5.65), 3.6);
-createTreeItem(new Vec3(-4.6, 5.4, -2.64), 3.8);
+for (let i = 0; i < 50; i++) {
+    createTreeItem(new Vec3(rand(-18, 18), rand(1.5, 4), rand(-18, 18)), rand(1.5, 3.5));
+}
 
-// push the current tree helper entities to the script as spheres (triggers a re-bake)
 const pushSpheres = () => {
     treesScript.setSpheres(treeItems.map(e => ({
         center: e.getPosition(),
@@ -168,21 +175,21 @@ const applyControls = () => {
 applyControls();
 data.on('*:set', applyControls);
 
-// Create an Entity with a camera component
+// camera
 const camera = new Entity();
 camera.addComponent('camera', {
     fov: 60,
     toneMapping: TONEMAP_ACES
 });
-camera.setLocalPosition(6, 4, 10);
+camera.setLocalPosition(28, 18, 28);
 
 camera.addComponent('script');
 camera.script?.create('orbitCamera', {
     attributes: {
         inertiaFactor: 0.2,
-        focusEntity: hall,
+        focusEntity: skatepark,
         distanceMin: 3,
-        distanceMax: 40,
+        distanceMax: 120,
         frameOnStart: true
     }
 });
@@ -212,12 +219,14 @@ const activeGizmo = () => (gizmoMode === 'move' ? translateGizmo : scaleGizmo);
 const attachGizmo = () => {
     translateGizmo.detach();
     scaleGizmo.detach();
-    if (editMode && selectedIndex >= 0 && selectedIndex < treeItems.length) {
+    const valid = editMode && selectedIndex >= 0 && selectedIndex < treeItems.length;
+    if (valid) {
         activeGizmo().attach(treeItems[selectedIndex]);
     }
+    // highlight the selected tree's splats while editing
+    treesScript.editSelected = valid ? selectedIndex : -1;
 };
 
-// disable the orbit camera while dragging a gizmo, and re-bake on release
 const onGizmoDown = (_x, _y, meshInstance) => {
     if (meshInstance && orbitInputMouse) {
         orbitInputMouse.enabled = false;
@@ -248,6 +257,7 @@ style.textContent = `
     .trees-row { display: flex; gap: 6px; margin-bottom: 8px; }
     .trees-btn { flex: 1; background: #333; border: 1px solid #555; color: white; padding: 4px; border-radius: 3px; cursor: pointer; }
     .trees-btn.active { background: #446; }
+    .trees-list { max-height: 320px; overflow-y: auto; }
     .trees-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; margin: 2px 0; background: #333; border-radius: 3px; cursor: pointer; }
     .trees-item.active { background: #446; }
     .trees-item span { flex-grow: 1; }
@@ -267,7 +277,6 @@ title.className = 'trees-title';
 title.textContent = 'Trees';
 panel.appendChild(title);
 
-// gizmo mode buttons
 const modeRow = document.createElement('div');
 modeRow.className = 'trees-row';
 const moveBtn = document.createElement('button');
@@ -280,7 +289,6 @@ modeRow.appendChild(moveBtn);
 modeRow.appendChild(sizeBtn);
 panel.appendChild(modeRow);
 
-// add button
 const addRow = document.createElement('div');
 addRow.className = 'trees-row';
 const addBtn = document.createElement('button');
@@ -290,6 +298,7 @@ addRow.appendChild(addBtn);
 panel.appendChild(addRow);
 
 const listContainer = document.createElement('div');
+listContainer.className = 'trees-list';
 panel.appendChild(listContainer);
 document.body.appendChild(panel);
 
@@ -340,8 +349,7 @@ sizeBtn.onclick = () => {
     updateList();
 };
 addBtn.onclick = () => {
-    // add a new tree in front of the camera focus, at a default canopy height
-    const entity = createTreeItem(new Vec3(0, 5, 0), 3.5);
+    const entity = createTreeItem(new Vec3(0, 3, 0), 3);
     selectedIndex = treeItems.indexOf(entity);
     pushSpheres();
     attachGizmo();
@@ -358,23 +366,18 @@ const setEditMode = (value) => {
 };
 data.on('edit:set', () => setEditMode(data.get('edit')));
 
-// re-bake at a modest rate while a sphere is being dragged (full re-bake also happens on release)
+// re-bake at a modest rate while a sphere is being dragged (a full re-bake also happens on release)
 let sinceBake = 0;
 app.on('update', (dt) => {
     if (!editMode) {
         return;
     }
 
-    // visualize each tree sphere; sync the dragged entity back into the (throttled) re-bake
     treeItems.forEach((entity, i) => {
-        const center = entity.getPosition();
-        const radius = entity.getLocalScale().x;
-        const selected = i === selectedIndex;
-        app.drawWireSphere(center, radius, selected ? Color.YELLOW : Color.GRAY, 24);
+        app.drawWireSphere(entity.getPosition(), entity.getLocalScale().x, i === selectedIndex ? Color.YELLOW : Color.GRAY, 20);
     });
 
     if (!orbitInputMouse?.enabled) {
-        // a gizmo is being dragged
         spheresDirty = true;
     }
     sinceBake += dt;
