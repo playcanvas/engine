@@ -700,18 +700,26 @@ class XrMenu extends Script {
         const isLabel = !eventName;
         const button = new Entity(isLabel ? `MenuLabel_${index}` : `MenuButton_${index}`);
 
+        // Resting element color. Textured backgrounds only apply to interactive buttons (labels
+        // stay flat so they read as non-buttons), and a textured element must be tinted white to
+        // show the texture — so the "base" color to restore after hover/press is per-button, not
+        // always buttonColor.
+        const useTexture = !isLabel && !!this.buttonTexture?.resource;
+        const baseColor = useTexture ? new Color(1, 1, 1, this.buttonColor.a) : this.buttonColor;
+
         // Add button component for interactivity (interactive items only). We keep TINT mode
         // (the only auto-color mode the engine ships) but set all three tints equal to the
-        // base buttonColor, so the component's auto-tint is effectively a no-op. Visuals are
+        // button's base color, so the component's auto-tint is effectively a no-op — including
+        // when ElementInput's XR ray hover (selectenter/selectleave) drives it. Visuals are
         // driven manually by _setButtonHover / _setButtonPress, which works reliably for both
         // XR ray picking and finger touch even when ElementInput's XR hover events don't fire.
         if (!isLabel) {
             button.addComponent('button', {
                 active: true,
                 transitionMode: BUTTON_TRANSITION_MODE_TINT,
-                hoverTint: this.buttonColor,
-                pressedTint: this.buttonColor,
-                inactiveTint: this.buttonColor
+                hoverTint: baseColor,
+                pressedTint: baseColor,
+                inactiveTint: baseColor
             });
         }
 
@@ -723,16 +731,14 @@ class XrMenu extends Script {
             pivot: new Vec2(0.5, 0.5),
             width: widthPx,
             height: heightPx,
-            color: this.buttonColor,
+            color: baseColor,
             opacity: this.buttonColor.a,
             useInput: !isLabel,
             layers: [this.app.scene.layers.getLayerByName('UI')?.id ?? 0]
         };
 
-        // Textured background only for interactive buttons; labels stay flat so they read as non-buttons
-        if (!isLabel && this.buttonTexture?.resource) {
+        if (useTexture) {
             elementConfig.textureAsset = this.buttonTexture.id;
-            elementConfig.color = new Color(1, 1, 1, this.buttonColor.a); // Tint white to show texture
         }
 
         button.addComponent('element', elementConfig);
@@ -744,6 +750,7 @@ class XrMenu extends Script {
             eventName: eventName,
             index: index,
             isLabel: isLabel,
+            baseColor: baseColor,
             /** @type {import('playcanvas').ElementComponent|null} */
             textElement: null // populated after the text child is created below
         };
@@ -897,7 +904,8 @@ class XrMenu extends Script {
                 button.element.color = this.hoverColor;
                 button.setLocalScale(1.05, 1.05, 1);
             } else {
-                button.element.color = this.buttonColor;
+                // @ts-ignore - menuData is a custom property attached in _createButton
+                button.element.color = button.menuData?.baseColor ?? this.buttonColor;
                 button.setLocalScale(1, 1, 1);
             }
         }
@@ -921,7 +929,8 @@ class XrMenu extends Script {
             button.element.color = this.hoverColor;
             button.setLocalScale(1.05, 1.05, 1);
         } else {
-            button.element.color = this.buttonColor;
+            // @ts-ignore - menuData is a custom property attached in _createButton
+            button.element.color = button.menuData?.baseColor ?? this.buttonColor;
             button.setLocalScale(1, 1, 1);
         }
     }
@@ -1303,7 +1312,8 @@ class XrMenu extends Script {
 
                 if (!this._pressedButton && cooldownElapsed) {
                     this._pressedButton = closestButton;
-                    this._lastPressTime = now;
+                    // Note: _lastPressTime is owned by _onButtonClick — setting it here would
+                    // trip _onButtonClick's own debounce guard and swallow the click entirely.
                     this._onButtonClick(closestButton);
                 }
             } else if (this._pressedButton === closestButton && closestDist >= pressDist) {
