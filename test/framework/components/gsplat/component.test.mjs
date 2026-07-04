@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { Entity } from '../../../../src/framework/entity.js';
+import { GSplatPlacement } from '../../../../src/scene/gsplat-unified/gsplat-placement.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -66,6 +67,28 @@ describe('GSplatComponent', function () {
             e.addComponent('gsplat');
             e.gsplat.lodMultiplier = 1;
             expect(e.gsplat.lodMultiplier).to.equal(1.2);
+        });
+
+    });
+
+    describe('#parameters', function () {
+
+        it('marks the placement dirty on setParameter and deleteParameter', function () {
+            const e = new Entity();
+            e.addComponent('gsplat');
+
+            const placement = new GSplatPlacement(null, e);
+            e.gsplat._placement = placement;
+
+            const v0 = placement.dirtyVersion;
+            e.gsplat.setParameter('uTest', 1);
+            expect(e.gsplat.getParameter('uTest')).to.equal(1);
+            expect(placement.dirtyVersion).to.be.above(v0);
+
+            const v1 = placement.dirtyVersion;
+            e.gsplat.deleteParameter('uTest');
+            expect(e.gsplat.getParameter('uTest')).to.be.undefined;
+            expect(placement.dirtyVersion).to.be.above(v1);
         });
 
     });
