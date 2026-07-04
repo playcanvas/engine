@@ -12,9 +12,18 @@ import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@pl
 export function Controls({ observer }) {
     return (
         <>
-            <Panel headerText='Edit'>
+            <Panel headerText='Scene'>
                 <LabelGroup text='Edit mode'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer, path: 'edit' }} />
+                </LabelGroup>
+                <LabelGroup text='Splat budget (M)'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'splatBudget' }}
+                        min={1}
+                        max={8}
+                        precision={1}
+                    />
                 </LabelGroup>
             </Panel>
             <Panel headerText='Wind'>

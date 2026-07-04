@@ -44,6 +44,7 @@ import {
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatTrees } from 'playcanvas/scripts/esm/gsplat/gsplat-trees.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -91,7 +92,6 @@ const assets = {
     skatepark: new Asset('gsplat', 'gsplat', {
         url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json'
     }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     envAtlas: new Asset(
         'env-atlas',
         'texture',
@@ -107,13 +107,17 @@ await new Promise((resolve) => {
 app.start();
 
 app.scene.envAtlas = assets.envAtlas.resource;
-app.scene.skyboxMip = 2;
-app.scene.skyboxIntensity = 0.8;
-app.scene.exposure = 1.0;
+app.scene.skyboxMip = 1;
+app.scene.exposure = 1.5;
 
-// streamed LOD settings
+// streamed LOD settings (matching the World example)
+app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 2;
 app.scene.gsplat.radialSorting = true;
+app.scene.gsplat.minPixelSize = 1;
+app.scene.gsplat.lodUpdateDistance = 1;
+app.scene.gsplat.lodUnderfillLimit = 10;
+app.scene.gsplat.colorUpdateAngle = 10;
 
 // default UI values
 data.set('strength', 0.25);
@@ -122,13 +126,24 @@ data.set('direction', 45);
 data.set('gustiness', 0.4);
 data.set('flutter', 0.3);
 data.set('edit', false);
+data.set('splatBudget', 4);
 
-// the streamed splat scene
+// splat budget (in millions), matching the World example
+const applySplatBudget = () => {
+    app.scene.gsplat.splatBudget = Math.round(data.get('splatBudget') * 1000000);
+};
+applySplatBudget();
+data.on('splatBudget:set', applySplatBudget);
+
+// the streamed splat scene. lodRangeMin/lodRangeMax are left at their defaults so the full LOD
+// range is used.
 const skatepark = new Entity('skatepark');
 skatepark.addComponent('gsplat', {
     asset: assets.skatepark
 });
 skatepark.setLocalEulerAngles(-90, 0, 0);
+skatepark.gsplat.lodBaseDistance = 15;
+skatepark.gsplat.lodMultiplier = 4;
 app.root.addChild(skatepark);
 
 // the reusable wind script
@@ -175,27 +190,26 @@ const applyControls = () => {
 applyControls();
 data.on('*:set', applyControls);
 
-// camera
-const camera = new Entity();
+// camera with fly controls, matching the World example's setup and initial position
+const camera = new Entity('Camera');
 camera.addComponent('camera', {
-    fov: 60,
+    clearColor: new Color(0.2, 0.2, 0.2),
+    fov: 75,
     toneMapping: TONEMAP_ACES
 });
-camera.setLocalPosition(28, 18, 28);
+camera.setLocalPosition(32, 2, 2);
+app.root.addChild(camera);
 
 camera.addComponent('script');
-camera.script?.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: skatepark,
-        distanceMin: 3,
-        distanceMax: 120,
-        frameOnStart: true
-    }
+const cameraControls = /** @type {CameraControls} */ (camera.script.create(CameraControls));
+Object.assign(cameraControls, {
+    sceneSize: 500,
+    moveSpeed: 4,
+    moveFastSpeed: 15,
+    enableOrbit: false,
+    enablePan: false,
+    focusPoint: new Vec3(18, -1.3, 13.5)
 });
-const orbitInputMouse = camera.script?.create('orbitCameraInputMouse');
-camera.script?.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.samples = 4;
@@ -213,6 +227,7 @@ let editMode = false;
 let gizmoMode = 'move';
 let selectedIndex = 0;
 let spheresDirty = false;
+let dragging = false;
 
 const activeGizmo = () => (gizmoMode === 'move' ? translateGizmo : scaleGizmo);
 
@@ -228,14 +243,15 @@ const attachGizmo = () => {
 };
 
 const onGizmoDown = (_x, _y, meshInstance) => {
-    if (meshInstance && orbitInputMouse) {
-        orbitInputMouse.enabled = false;
+    if (meshInstance) {
+        // stop the fly camera from reacting while dragging a gizmo
+        cameraControls.enabled = false;
+        dragging = true;
     }
 };
 const onGizmoUp = () => {
-    if (orbitInputMouse) {
-        orbitInputMouse.enabled = true;
-    }
+    cameraControls.enabled = true;
+    dragging = false;
     pushSpheres();
     spheresDirty = false;
 };
@@ -377,7 +393,7 @@ app.on('update', (dt) => {
         app.drawWireSphere(entity.getPosition(), entity.getLocalScale().x, i === selectedIndex ? Color.YELLOW : Color.GRAY, 20);
     });
 
-    if (!orbitInputMouse?.enabled) {
+    if (dragging) {
         spheresDirty = true;
     }
     sinceBake += dt;
