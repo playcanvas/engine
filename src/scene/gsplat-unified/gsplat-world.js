@@ -613,7 +613,7 @@ class GSplatWorld {
                 continue;
             }
             p.ensureInstanceStreams(this._device);
-            const splatInfo = new GSplatInfo(this._device, p.resource, p, p.consumeRenderDirty.bind(p));
+            const splatInfo = new GSplatInfo(this._device, p.resource, p);
             splats.push(splatInfo);
         }
 
@@ -629,7 +629,7 @@ class GSplatWorld {
                     p.ensureInstanceStreams(this._device);
                     const octreeNodes = p.intervals.size > 0 ? inst.octree.nodes : null;
                     const nodeInfos = octreeNodes ? inst.nodeInfos : null;
-                    const splatInfo = new GSplatInfo(this._device, p.resource, p, p.consumeRenderDirty.bind(p), octreeNodes, nodeInfos);
+                    const splatInfo = new GSplatInfo(this._device, p.resource, p, octreeNodes, nodeInfos);
                     splats.push(splatInfo);
                 }
             });
