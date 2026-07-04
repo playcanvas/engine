@@ -176,10 +176,10 @@ class GSplatPlacement {
 
     /**
      * Monotonically increasing counter, bumped whenever this placement's splats need to be
-     * re-copied to the work buffer (parameter, modifier or AABB changes, or an explicit one-shot
-     * update request). Each consumer (a per-camera {@link GSplatInfo}) remembers the value it last
+     * re-copied to the work buffer (parameter or modifier changes, or an explicit one-shot update
+     * request). Each consumer (a per-camera {@link GSplatInfo}) remembers the value it last
      * copied at, so a single request re-copies every consumer of a shared placement exactly once,
-     * and octree file placements fan out from their parent's counter.
+     * and child placements (octree files, environment) fan out from their parent's counter.
      *
      * @type {number}
      * @ignore

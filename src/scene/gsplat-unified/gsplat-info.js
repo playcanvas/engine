@@ -187,9 +187,9 @@ class GSplatInfo {
     getInstanceStreams = null;
 
     /**
-     * Function to get the placement that owns the dirty state - the parent placement for octree
-     * file placements, the placement itself otherwise. Retrieved live (not snapshotted) so dirty
-     * requests raised after this info was created are still observed.
+     * Function to get the placement that owns the dirty state - the parent placement for child
+     * placements (octree files, environment), the placement itself otherwise. Retrieved live (not
+     * snapshotted) so dirty requests raised after this info was created are still observed.
      *
      * @type {(() => GSplatPlacement)|null}
      * @private
@@ -466,10 +466,10 @@ class GSplatInfo {
 
         let dirty = worldMatrixChanged;
 
-        // One-shot re-copy requests (parameter/modifier/AABB changes, or an explicit update) and
-        // the continuous update mode come from the placement - or its parent for octree file
-        // placements. The last-seen version is tracked here (per consumer), so a single request
-        // re-copies every consumer of a shared placement exactly once.
+        // One-shot re-copy requests (parameter or modifier changes, or an explicit update) and
+        // the continuous update mode come from the placement - or its parent for child placements
+        // (octree files, environment). The last-seen version is tracked here (per consumer), so a
+        // single request re-copies every consumer of a shared placement exactly once.
         const source = this._getDirtySource();
         if (this._lastDirtyVersion !== source.dirtyVersion) {
             this._lastDirtyVersion = source.dirtyVersion;
