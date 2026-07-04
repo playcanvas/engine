@@ -1,8 +1,0 @@
-Model Information:
-* title:	Knock Community Hall
-* source:	https://superspl.at/scene/0ff2e6dc
-* author:	scbenoit (https://superspl.at/user?id=scbenoit)
-
-Model License:
-* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-* requirements:	Author must be credited. Commercial use is allowed.
