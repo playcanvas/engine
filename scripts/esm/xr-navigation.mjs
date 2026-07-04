@@ -634,10 +634,13 @@ class XrNavigation extends Script {
         let planeHit = false;
         if (this.castRay) {
             // castRay replaces plane detection, so the sampling window must not stop at the
-            // plane (hits below groundHeight would be unreachable). Fly until the arc has
-            // descended maxTeleportDistance below the origin - anything deeper would fail
-            // the distance check anyway
-            tFlight = (vy + Math.sqrt(vy * vy + 2 * g * this.maxTeleportDistance)) / g;
+            // plane (hits below groundHeight would be unreachable). Fly until the arc reaches
+            // the deepest point that could still pass the distance check - that check measures
+            // from the rig position, which sits below the aim origin (the grip), so descend
+            // maxTeleportDistance below the rig, not below the origin
+            const fallDepth = this.maxTeleportDistance +
+                Math.max(0, origin.y - this.entity.getPosition().y);
+            tFlight = (vy + Math.sqrt(vy * vy + 2 * g * fallDepth)) / g;
         } else {
             // Closed-form flight time to the navigation plane: larger root of
             // origin.y + vy*t - 0.5*g*t^2 = groundHeight
