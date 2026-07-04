@@ -923,7 +923,7 @@ class GSplatComponent extends Component {
     setParameter(name, data) {
         const scopeId = this.system.app.graphicsDevice.scope.resolve(name);
         this._parameters.set(name, { scopeId, data });
-        if (this._placement) this._placement.renderDirty = true;
+        if (this._placement) this._placement.markDirty();
     }
 
     /**
@@ -943,7 +943,7 @@ class GSplatComponent extends Component {
      */
     deleteParameter(name) {
         this._parameters.delete(name);
-        if (this._placement) this._placement.renderDirty = true;
+        if (this._placement) this._placement.markDirty();
     }
 
     /**

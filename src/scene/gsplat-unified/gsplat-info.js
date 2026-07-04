@@ -5,6 +5,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
+import { WORKBUFFER_UPDATE_ALWAYS } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from "../../platform/graphics/graphics-device.js";
@@ -29,7 +30,10 @@ const _fullRangeInterval = [0, 0];
 /**
  * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
  * at a point in time and should not hold references back to the source placement. All required
- * data should be copied or referenced, allowing placement to be modified without affecting the info.
+ * data should be copied or referenced, allowing placement to be modified without affecting the
+ * info. The only exception is shader configuration and dirty state, which are deliberately read
+ * live through narrow accessor closures (see the fields documented as 'retrieved live'), so that
+ * changes raised after the snapshot was taken are still observed.
  *
  * @ignore
  */
@@ -183,24 +187,45 @@ class GSplatInfo {
     getInstanceStreams = null;
 
     /**
-     * Callback to consume render dirty flag from the source placement.
+     * Function to get the placement that owns the dirty state - the parent placement for child
+     * placements (octree files, environment), the placement itself otherwise. Retrieved live (not
+     * snapshotted) so dirty requests raised after this info was created are still observed.
      *
-     * @type {Function|null}
+     * @type {(() => GSplatPlacement)|null}
      * @private
      */
-    _consumeRenderDirty = null;
+    _getDirtySource = null;
+
+    /**
+     * The last {@link GSplatPlacement#dirtyVersion} this consumer re-copied at. Tracked here (per
+     * camera) rather than on the shared placement, so a single dirty request re-copies every
+     * consumer of the placement exactly once.
+     *
+     * @type {number}
+     * @private
+     */
+    _lastDirtyVersion = -1;
+
+    /**
+     * The last resource format extra-streams version this consumer re-copied at.
+     *
+     * @type {number}
+     * @private
+     */
+    _lastFormatVersion = -1;
 
     /**
      * Create a new GSplatInfo.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatResourceBase} resource - The splat resource.
-     * @param {GSplatPlacement} placement - The placement of the splat.
-     * @param {Function|null} [consumeRenderDirty] - Callback to consume render dirty flag.
+     * @param {GSplatPlacement} placement - The placement of the splat. Do not store it - snapshot
+     * its data instead, as the placement is mutated for future world states while this info still
+     * renders. Only shader configuration and dirty state may be read live, via accessor closures.
      * @param {GSplatOctreeNode[]|null} [octreeNodes] - Octree nodes for bounds lookup.
      * @param {NodeInfo[]|null} [nodeInfos] - Per-node info array from octree instance.
      */
-    constructor(device, resource, placement, consumeRenderDirty = null, octreeNodes = null, nodeInfos = null) {
+    constructor(device, resource, placement, octreeNodes = null, nodeInfos = null) {
         Debug.assert(resource);
         Debug.assert(placement);
 
@@ -221,7 +246,7 @@ class GSplatInfo {
         this.parameters = placement.parameters;
         this.getWorkBufferModifier = () => placement.workBufferModifier;
         this.getInstanceStreams = () => placement.streams;
-        this._consumeRenderDirty = consumeRenderDirty;
+        this._getDirtySource = () => placement.parentPlacement ?? placement;
         this.octreeNodes = octreeNodes;
         this.nodeInfos = nodeInfos;
 
@@ -439,9 +464,29 @@ class GSplatInfo {
             this.previousWorldTransform.copy(worldMatrix);
         }
 
-        const renderDirty = this._consumeRenderDirty ? this._consumeRenderDirty() : false;
+        let dirty = worldMatrixChanged;
 
-        return worldMatrixChanged || renderDirty;
+        // One-shot re-copy requests (parameter or modifier changes, or an explicit update) and
+        // the continuous update mode come from the placement - or its parent for child placements
+        // (octree files, environment). The last-seen version is tracked here (per consumer), so a
+        // single request re-copies every consumer of a shared placement exactly once.
+        const source = this._getDirtySource();
+        if (this._lastDirtyVersion !== source.dirtyVersion) {
+            this._lastDirtyVersion = source.dirtyVersion;
+            dirty = true;
+        }
+        if (source.workBufferUpdate === WORKBUFFER_UPDATE_ALWAYS) {
+            dirty = true;
+        }
+
+        // Auto-detect resource format (extra streams) changes, also tracked per consumer.
+        const format = this.resource?.format;
+        if (format && this._lastFormatVersion !== format.extraStreamsVersion) {
+            this._lastFormatVersion = format.extraStreamsVersion;
+            dirty = true;
+        }
+
+        return dirty;
     }
 
     /**
