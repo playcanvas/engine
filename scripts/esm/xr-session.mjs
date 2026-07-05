@@ -180,7 +180,7 @@ class XrSession extends Script {
 
     startSession(type = 'immersive-vr', space = 'local-floor') {
         if (!this._cameraEntity?.camera) {
-            console.error('XrSession: No cameraEntity.camera found on the entity.');
+            console.error('XrSession: No camera component found on this entity or its descendants.');
             return;
         }
 
