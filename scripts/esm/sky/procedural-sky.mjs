@@ -879,8 +879,10 @@ class ProceduralSky extends Script {
             this._baseSunIntensity = light.intensity;
         }
 
-        // crossfade the key light from the sun (day) to the dim cold moon from above (night)
-        const nightFactor = Math.max(0, Math.min(1, (3 - this.elevation) / 6));
+        // crossfade the key light from the sun (day) to the dim cold moon from above (night).
+        // The crossfade only starts once the sun dips below the horizon, so while the sun is
+        // visible the light direction matches it exactly (specular reflections line up)
+        const nightFactor = Math.max(0, Math.min(1, -this.elevation / 6));
 
         // light source direction: towards the sun by day, towards the moon by night
         tmpMoon.copy(this.moonDirection).normalize();
