@@ -1,0 +1,9 @@
+Caustic Lighting
+================
+
+Title:   Caustic Lighting (Caustic_Free.jpg)
+Author:  Davis3D
+Source:  https://opengameart.org/content/caustic-lighting
+License: CC0 (Creative Commons Zero - public domain)
+
+Used as the animated underwater caustics pattern in the water example.
