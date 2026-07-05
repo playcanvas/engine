@@ -1,17 +1,14 @@
 // @config
 //
-// A configurable water surface rendered by the Water script - planar reflection and refraction
-// with optional oblique clipping, sky-dome reflection, depth based color absorption, soft
-// shorelines with foam, Gerstner geometry waves and lighting from a directional light.
+// A configurable water surface rendered by the Water script - reflection, refraction, waves,
+// foam, caustics and an underwater view.
 //
 // @credit
 // title: Tropical Island
 // author: Elin
 // source: https://sketchfab.com/3d-models/tropical-island-f91862f8c38b481aa19edccac851eefb
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
-// modifications: removed the skybox and animated water meshes, removed the unlit material flag,
-// removed baked shadows from the beach texture, halved texture resolutions and converted them
-// to WebP, applied Draco mesh compression
+// modifications: adapted for this example (see the credits file next to the asset)
 //
 // @credit
 // title: Caustic Lighting
