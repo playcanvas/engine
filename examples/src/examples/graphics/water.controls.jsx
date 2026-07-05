@@ -39,8 +39,12 @@ export function Controls({ observer }) {
      * @param {string} path - The observer path suffix.
      * @returns {ReactElement} The toggle.
      */
-    const toggle = path => (
-        <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer, path: `data.${path}` }} />
+    const toggle = (path) => (
+        <BooleanInput
+            type='toggle'
+            binding={new BindingTwoWay()}
+            link={{ observer, path: `data.${path}` }}
+        />
     );
 
     return (
@@ -48,7 +52,9 @@ export function Controls({ observer }) {
             <Panel headerText='Scene' collapsible>
                 <LabelGroup text='Time'>{slider('timeOfDay', 0, 24, 2)}</LabelGroup>
                 <LabelGroup text='Spec Power'>{slider('specularPower', 8, 2048, 0)}</LabelGroup>
-                <LabelGroup text='Spec Intensity'>{slider('specularIntensity', 0, 4, 2)}</LabelGroup>
+                <LabelGroup text='Spec Intensity'>
+                    {slider('specularIntensity', 0, 4, 2)}
+                </LabelGroup>
                 <LabelGroup text='Diffuse'>{slider('diffuseIntensity', 0, 1, 2)}</LabelGroup>
             </Panel>
             <Panel headerText='Reflection' collapsible>
@@ -126,7 +132,9 @@ export function Controls({ observer }) {
                 <LabelGroup text='Swell Amplitude'>{slider('swellAmplitude', 0, 2, 2)}</LabelGroup>
                 <LabelGroup text='Swell Length'>{slider('swellLength', 1, 200, 1)}</LabelGroup>
                 <LabelGroup text='Swell Speed'>{slider('swellSpeed', 0, 4, 2)}</LabelGroup>
-                <LabelGroup text='Swell Direction'>{slider('swellDirection', 0, 360, 0)}</LabelGroup>
+                <LabelGroup text='Swell Direction'>
+                    {slider('swellDirection', 0, 360, 0)}
+                </LabelGroup>
             </Panel>
         </>
     );

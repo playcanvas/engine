@@ -131,10 +131,12 @@ app.root.addChild(islandEntity);
 // break the surface. The instantiated root carries the model's own rotation, so transform a
 // wrapper entity instead.
 const islandEntity2 = new Entity('Island2');
-islandEntity2.addChild(assets.island.resource.instantiateRenderEntity({
-    castShadows: true,
-    receiveShadows: true
-}));
+islandEntity2.addChild(
+    assets.island.resource.instantiateRenderEntity({
+        castShadows: true,
+        receiveShadows: true
+    })
+);
 islandEntity2.setLocalPosition(15.5, -0.59, -10.9);
 islandEntity2.setLocalEulerAngles(0, 140, 0);
 app.root.addChild(islandEntity2);
@@ -144,7 +146,7 @@ app.root.addChild(islandEntity2);
 // Also enable the water's per-pixel underwater effects on them: height-gated fog and caustics
 const islandMaterials = new Set();
 islandEntity.findComponents('render').forEach((render) => {
-    render.meshInstances.forEach(mi => islandMaterials.add(mi.material));
+    render.meshInstances.forEach((mi) => islandMaterials.add(mi.material));
 });
 islandMaterials.forEach((material) => {
     material.diffuse.set(0.55, 0.55, 0.55);
@@ -256,12 +258,15 @@ const applyTimeOfDay = (hour) => {
 // the water surface - a tessellated circle mesh, so the geometry waves can displace it. The
 // ring exponent concentrates the tessellation near the center, where the camera is, with the
 // cheap outer rings carrying the surface to the horizon
-const waterMesh = Mesh.fromGeometry(device, new CircleGeometry({
-    radius: 1200,
-    sectors: 180,
-    rings: 150,
-    ringExponent: 2.6
-}));
+const waterMesh = Mesh.fromGeometry(
+    device,
+    new CircleGeometry({
+        radius: 1200,
+        sectors: 180,
+        rings: 150,
+        ringExponent: 2.6
+    })
+);
 const water = new Entity('Water');
 water.addComponent('render', {
     meshInstances: [new MeshInstance(waterMesh, new StandardMaterial())],
@@ -274,15 +279,17 @@ app.root.addChild(water);
 
 // add the water script to it
 water.addComponent('script');
-const waterScript = /** @type {Water} */ (water.script.create(Water, {
-    properties: {
-        cameraEntity: camera,
-        lightEntity: sun,
-        normalMap: assets.normal.resource,
-        causticsMap: assets.caustics.resource,
-        waves: true
-    }
-}));
+const waterScript = /** @type {Water} */ (
+    water.script.create(Water, {
+        properties: {
+            cameraEntity: camera,
+            lightEntity: sun,
+            normalMap: assets.normal.resource,
+            causticsMap: assets.caustics.resource,
+            waves: true
+        }
+    })
+);
 
 // water color presets
 const presets = {
