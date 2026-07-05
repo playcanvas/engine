@@ -65,7 +65,9 @@ const wrapPi = (angle) => {
  * - Scale: change the distance between the hands to scale the world - spreading them apart
  *   grows it. Horizontally the content follows the hands; vertically the scale pivots at the
  *   user's feet by default ({@link XrManipulation#scalePivot}), so the user stays standing on
- *   the world instead of the floor rising or sinking through them
+ *   the world instead of the floor rising or sinking through them. Separation changes within
+ *   {@link XrManipulation#scaleThreshold} of the grab distance are ignored, so the incidental
+ *   hand convergence that occurs while pushing or pulling the world does not zoom it
  *
  * The manipulation is applied to the {@link XrManipulation#target} entity, under which the scene
  * content to manipulate should be parented. The camera rig is never modified, so the XR rig
@@ -138,6 +140,19 @@ class XrManipulation extends Script {
      * @attribute
      */
     enableScale = true;
+
+    /**
+     * Dead zone for scale activation, as a fraction of the grab-start hand separation.
+     * Separation changes within this band do not scale the world - hands naturally drift
+     * together or apart while pushing or pulling the world, and without a dead zone that
+     * incidental drift reads as a pinch-zoom. Once the separation leaves the band, scaling
+     * engages continuously from the band's edge (no jump). Set to 0 to scale immediately.
+     * @attribute
+     * @range [0, 0.5]
+     * @precision 0.01
+     * @enabledif {enableScale}
+     */
+    scaleThreshold = 0.15;
 
     /**
      * The vertical pivot used while scaling. One of:
@@ -498,6 +513,23 @@ class XrManipulation extends Script {
     }
 
     /**
+     * Applies the scale activation dead zone to a raw separation ratio: ratios within
+     * {@link XrManipulation#scaleThreshold} of 1 map to exactly 1, and ratios beyond the band
+     * are remapped relative to the band's edge so scaling engages without a jump.
+     *
+     * @param {number} ratio - The raw current/grab-start separation ratio.
+     * @returns {number} The dead-zoned scale ratio.
+     * @private
+     */
+    _applyScaleDeadZone(ratio) {
+        const t = math.clamp(this.scaleThreshold, 0, 0.9);
+        if (t <= 0) return ratio;
+        if (ratio > 1 + t) return ratio / (1 + t);
+        if (ratio < 1 - t) return ratio / (1 - t);
+        return 1;
+    }
+
+    /**
      * Clamps the relative scale factor so the target's total scale stays within
      * {@link XrManipulation#minScale}/{@link XrManipulation#maxScale} of its baseline scale.
      *
@@ -612,10 +644,13 @@ class XrManipulation extends Script {
             let scaleClamped = false;
             if (this.enableScale) {
                 if (sep > EPS_SEPARATION && this._grabDist > EPS_SEPARATION) {
-                    // Spreading the hands grows the world (pinch-zoom semantics)
-                    const raw = sep / this._grabDist;
-                    scaleRel = this._clampScaleFactor(raw, this._targetScale0.x);
-                    scaleClamped = scaleRel !== raw;
+                    // Spreading the hands grows the world (pinch-zoom semantics). The dead
+                    // zone keeps incidental separation drift during push/pull from zooming;
+                    // in-band frames leave the grab reference untouched so a slow deliberate
+                    // pinch can still accumulate its way out of the band
+                    const effective = this._applyScaleDeadZone(sep / this._grabDist);
+                    scaleRel = this._clampScaleFactor(effective, this._targetScale0.x);
+                    scaleClamped = scaleRel !== effective;
                 } else {
                     scaleHeld = true;
                 }
@@ -663,7 +698,6 @@ class XrManipulation extends Script {
             // fixed anchor - apply each frame's delta rotation/scale about the current world
             // hand midpoint, so zoom and rotation pivot on the hands without dragging
             tmpPrevDelta.sub2(this._prevRight, this._prevLeft);
-            const sepPrev = tmpPrevDelta.length();
             const sepPrevXz = Math.sqrt(tmpPrevDelta.x * tmpPrevDelta.x + tmpPrevDelta.z * tmpPrevDelta.z);
 
             let deltaYaw = 0;
@@ -671,9 +705,13 @@ class XrManipulation extends Script {
                 deltaYaw = wrapPi(Math.atan2(tmpHandDelta.x, tmpHandDelta.z) - Math.atan2(tmpPrevDelta.x, tmpPrevDelta.z));
             }
 
+            // Scale is solved absolutely against the grab-start separation (so the dead zone
+            // has a stable reference), then converted to a per-frame ratio for the pivot math
             let scaleRatio = 1;
-            if (this.enableScale && sep > EPS_SEPARATION && sepPrev > EPS_SEPARATION) {
-                scaleRatio = this._clampScaleFactor(sep / sepPrev, curScale.x);
+            if (this.enableScale && sep > EPS_SEPARATION && this._grabDist > EPS_SEPARATION && curScale.x > 0) {
+                const effective = this._applyScaleDeadZone(sep / this._grabDist);
+                const desired = this._clampScaleFactor(effective, this._targetScale0.x) * this._targetScale0.x;
+                scaleRatio = desired / curScale.x;
             }
 
             // Pivot: the current hand midpoint in world space through the grab frame. With
