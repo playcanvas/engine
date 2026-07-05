@@ -340,7 +340,9 @@ if (app.xr.supported) {
         button.addEventListener('click', onXrButtonClick);
     });
 
-    message('In XR, open your left palm toward your face to show the menu. Squeeze both grips to drag, rotate and scale the world');
+    message(
+        'In XR, open your left palm toward your face to show the menu. Squeeze both grips to drag, rotate and scale the world'
+    );
 } else {
     message('WebXR is not supported');
 }

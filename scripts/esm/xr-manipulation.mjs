@@ -415,7 +415,12 @@ class XrManipulation extends Script {
         if (!rig) return false;
         const forward = rig.forward;
         const yaw = Math.atan2(-forward.x, -forward.z);
-        return rig.getPosition().distance(this._framePos) > 1e-6 || Math.abs(wrapPi(yaw - this._frameYaw)) > 1e-6;
+        // squared distance avoids a per-frame sqrt (1e-12 is the squared 1e-6 threshold)
+        const rigPos = rig.getPosition();
+        const dx = rigPos.x - this._framePos.x;
+        const dy = rigPos.y - this._framePos.y;
+        const dz = rigPos.z - this._framePos.z;
+        return dx * dx + dy * dy + dz * dz > 1e-12 || Math.abs(wrapPi(yaw - this._frameYaw)) > 1e-6;
     }
 
     /**
