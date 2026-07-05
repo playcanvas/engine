@@ -695,16 +695,20 @@ class XrNavigation extends Script {
 
         const target = this.tmpVec3A.copy(rec.point);
 
-        // Adjust for camera's local XZ offset so the user's head ends up at the target
+        const rigPos = this.entity.getPosition();
+
+        // Adjust for the camera's world-space XZ offset from the rig origin so the user's
+        // head (not the rig origin) ends up at the target - correct under rig yaw, unlike
+        // the raw local offset, which would misplace teleports after any snap/smooth turn
         if (this.cameraEntity) {
-            const cameraLocalPos = this.cameraEntity.getLocalPosition();
-            target.x -= cameraLocalPos.x;
-            target.z -= cameraLocalPos.z;
+            const cameraPos = this.cameraEntity.getPosition();
+            target.x -= cameraPos.x - rigPos.x;
+            target.z -= cameraPos.z - rigPos.z;
         }
 
         // Preserve the rig's height offset above the ground it currently stands on, so castRay
         // hits on elevated surfaces step the rig up/down while snap vertical offsets carry over
-        target.y = this.entity.getPosition().y + (rec.point.y - this._currentGroundY);
+        target.y = rigPos.y + (rec.point.y - this._currentGroundY);
         this._currentGroundY = rec.point.y;
         this.entity.setPosition(target);
     }
