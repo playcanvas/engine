@@ -20,6 +20,9 @@ import {
 // Gravitational acceleration (m/s^2) used for the ballistic teleport arc
 const ARC_GRAVITY = 9.81;
 
+const tmpVec2A = new Vec2();
+const tmpVec2B = new Vec2();
+const tmpVec3A = new Vec3();
 const tmpSegDir = new Vec3();
 const tmpToCam = new Vec3();
 const tmpSide = new Vec3();
@@ -346,35 +349,23 @@ class XrNavigation extends Script {
     castRay = null;
 
     /** @type {Set<XrInputSource>} */
-    inputSources = new Set();
+    _inputSources = new Set();
 
     /** @type {Map<XrInputSource, boolean>} */
-    activePointers = new Map();
+    _activePointers = new Map();
 
     /** @type {Map<XrInputSource, { handleSelectStart: Function, handleSelectEnd: Function }>} */
-    inputHandlers = new Map();
+    _inputHandlers = new Map();
 
-    // Rotation state for snap turning
-    lastRotateValue = 0;
+    // Hysteresis state for snap turning
+    _rotateSnap = { last: 0 };
 
-    // Vertical state for snap vertical movement
-    lastVerticalValue = 0;
-
-    // Pre-allocated objects for performance (object pooling)
-    tmpVec2A = new Vec2();
-
-    tmpVec2B = new Vec2();
-
-    tmpVec3A = new Vec3();
-
-    // Color objects
-    validColor = new Color();
-
-    invalidColor = new Color();
+    // Hysteresis state for snap vertical movement
+    _verticalSnap = { last: 0 };
 
     // Camera reference for movement calculations
     /** @type {import('playcanvas').Entity | null} */
-    cameraEntity = null;
+    _cameraEntity = null;
 
     // Arc visualization state (created in initialize/lazily per input source)
 
@@ -405,20 +396,9 @@ class XrNavigation extends Script {
             return;
         }
 
-        // Log enabled navigation methods
-        const methods = [];
-        if (this.enableTeleport) methods.push('teleportation');
-        if (this.enableMove) methods.push('smooth movement');
-        if (this.enableSnapVertical) methods.push('snap vertical');
-        console.log(`XrNavigation: Enabled methods - ${methods.join(', ')}`);
-
         if (!this.enableTeleport && !this.enableMove && !this.enableSnapVertical) {
             console.warn('XrNavigation: All navigation methods are disabled. Navigation will not work.');
         }
-
-        // Initialize color objects from Color attributes
-        this.validColor.copy(this.validTeleportColor);
-        this.invalidColor.copy(this.invalidTeleportColor);
 
         // Pre-allocate arc sample points (arcSegments is read once at initialization)
         for (let i = 0; i <= this.arcSegments; i++) {
@@ -471,36 +451,15 @@ class XrNavigation extends Script {
         };
         this.app.xr.on('end', onXrEnd);
 
-        // Find camera entity - should be a child of this entity
-        const cameraComponent = this.entity.findComponent('camera');
-        this.cameraEntity = cameraComponent ? cameraComponent.entity : null;
-
-        if (!this.cameraEntity) {
-            console.warn('XrNavigation: Camera entity not found. Looking for camera in children...');
-
-            // First try to find by name - cast to Entity since we know it should be one
-            const foundByName = this.entity.findByName('camera');
-            this.cameraEntity = /** @type {import('playcanvas').Entity | null} */ (foundByName);
-
-            // If not found, search children for entity with camera component
-            if (!this.cameraEntity) {
-                for (const child of this.entity.children) {
-                    const childEntity = /** @type {import('playcanvas').Entity} */ (child);
-                    if (childEntity.camera) {
-                        this.cameraEntity = childEntity;
-                        break;
-                    }
-                }
-            }
-
-            if (!this.cameraEntity) {
-                console.error('XrNavigation: No camera entity found. Movement calculations may not work correctly.');
-            }
+        // Find camera entity - should be a descendant of this entity
+        this._cameraEntity = this.entity.findComponent('camera')?.entity ?? null;
+        if (!this._cameraEntity) {
+            console.error('XrNavigation: No camera entity found. Movement calculations may not work correctly.');
         }
 
         const onInputAdd = (inputSource) => {
             const handleSelectStart = () => {
-                this.activePointers.set(inputSource, true);
+                this._activePointers.set(inputSource, true);
                 // Invalidate any hit cached from a previous aim session, so a select that
                 // starts and ends before the next update cannot teleport to a stale target.
                 // tryTeleport recomputes when no cached hit exists; otherwise it commits the
@@ -509,7 +468,7 @@ class XrNavigation extends Script {
             };
 
             const handleSelectEnd = () => {
-                this.activePointers.set(inputSource, false);
+                this._activePointers.set(inputSource, false);
                 // Only teleport when teleportation is enabled. Otherwise a select/pinch gesture
                 // (e.g. used to click a UI element) would still snap the rig to the floor point
                 // under the ray.
@@ -523,20 +482,20 @@ class XrNavigation extends Script {
             inputSource.on('selectend', handleSelectEnd);
 
             // Store the handlers in the map
-            this.inputHandlers.set(inputSource, { handleSelectStart, handleSelectEnd });
-            this.inputSources.add(inputSource);
+            this._inputHandlers.set(inputSource, { handleSelectStart, handleSelectEnd });
+            this._inputSources.add(inputSource);
         };
         this.app.xr.input.on('add', onInputAdd);
 
         const onInputRemove = (inputSource) => {
-            const handlers = this.inputHandlers.get(inputSource);
+            const handlers = this._inputHandlers.get(inputSource);
             if (handlers) {
                 inputSource.off('selectstart', handlers.handleSelectStart);
                 inputSource.off('selectend', handlers.handleSelectEnd);
-                this.inputHandlers.delete(inputSource);
+                this._inputHandlers.delete(inputSource);
             }
-            this.activePointers.delete(inputSource);
-            this.inputSources.delete(inputSource);
+            this._activePointers.delete(inputSource);
+            this._inputSources.delete(inputSource);
             this._destroyArcVisual(inputSource);
         };
         this.app.xr.input.on('remove', onInputRemove);
@@ -547,13 +506,13 @@ class XrNavigation extends Script {
             this.app.xr.input.off('remove', onInputRemove);
 
             // Detach per-source select handlers
-            for (const [inputSource, handlers] of this.inputHandlers) {
+            for (const [inputSource, handlers] of this._inputHandlers) {
                 inputSource.off('selectstart', handlers.handleSelectStart);
                 inputSource.off('selectend', handlers.handleSelectEnd);
             }
-            this.inputHandlers.clear();
-            this.activePointers.clear();
-            this.inputSources.clear();
+            this._inputHandlers.clear();
+            this._activePointers.clear();
+            this._inputSources.clear();
 
             this._destroyAllArcVisuals();
             if (this._arcMaterial) {
@@ -683,25 +642,40 @@ class XrNavigation extends Script {
         }
     }
 
-    tryTeleport(inputSource) {
+    /**
+     * Returns the cached arc-hit record for an input source, creating it on first use.
+     *
+     * @param {XrInputSource} inputSource - The aiming input source.
+     * @returns {{ point: Vec3, valid: boolean }} The hit record.
+     * @private
+     */
+    _getOrCreateHit(inputSource) {
         let rec = this._arcHits.get(inputSource);
         if (!rec) {
             rec = { point: new Vec3(), valid: false };
             this._arcHits.set(inputSource, rec);
+        }
+        return rec;
+    }
+
+    tryTeleport(inputSource) {
+        let rec = this._arcHits.get(inputSource);
+        if (!rec) {
+            rec = this._getOrCreateHit(inputSource);
             this._getAimRay(inputSource);
             this._computeArcHit(tmpAimOrigin, tmpAimDir, rec);
         }
         if (!rec.valid) return;
 
-        const target = this.tmpVec3A.copy(rec.point);
+        const target = tmpVec3A.copy(rec.point);
 
         const rigPos = this.entity.getPosition();
 
         // Adjust for the camera's world-space XZ offset from the rig origin so the user's
         // head (not the rig origin) ends up at the target - correct under rig yaw, unlike
         // the raw local offset, which would misplace teleports after any snap/smooth turn
-        if (this.cameraEntity) {
-            const cameraPos = this.cameraEntity.getPosition();
+        if (this._cameraEntity) {
+            const cameraPos = this._cameraEntity.getPosition();
             target.x -= cameraPos.x - rigPos.x;
             target.z -= cameraPos.z - rigPos.z;
         }
@@ -714,166 +688,181 @@ class XrNavigation extends Script {
     }
 
     update(dt) {
-        // Handle smooth locomotion and snap turning
-        if (this.enableMove) {
-            this.handleSmoothLocomotion(dt);
-        }
+        // Left thumbstick drives movement; right drives turning and vertical snaps
+        for (const inputSource of this._inputSources) {
+            if (!this._hasThumbsticks(inputSource)) continue;
 
-        // Handle snap vertical movement (controllers only)
-        if (this.enableSnapVertical) {
-            this.handleSnapVertical();
+            if (inputSource.handedness === 'left') {
+                if (this.enableMove && this._cameraEntity) {
+                    this._handleMovement(inputSource, dt);
+                }
+            } else if (inputSource.handedness === 'right') {
+                if (this.enableMove && this._cameraEntity) {
+                    if (this.turnMode === 'smooth') {
+                        this._handleSmoothTurning(inputSource, dt);
+                    } else if (this.turnMode === 'snap') {
+                        this._handleSnapTurning(inputSource);
+                    }
+                    // 'none' → thumbstick X is ignored
+                }
+                if (this.enableSnapVertical) {
+                    this._handleSnapVertical(inputSource);
+                }
+            }
         }
 
         // Handle teleportation
         if (this.enableTeleport) {
-            this.handleTeleportation();
+            this._handleTeleportation();
         }
     }
 
-    handleSmoothLocomotion(dt) {
-        if (!this.cameraEntity) return;
-
-        for (const inputSource of this.inputSources) {
-            // Require a gamepad with thumbstick axes (axes[2]/[3]). Hand-tracking sources
-            // (e.g. Apple Vision Pro) report a gamepad with no axes, which would read as NaN.
-            if (!inputSource.gamepad || inputSource.gamepad.axes.length < 4) continue;
-
-            // Left controller - movement
-            if (inputSource.handedness === 'left') {
-                // Get thumbstick input (axes[2] = X, axes[3] = Y)
-                this.tmpVec2A.set(inputSource.gamepad.axes[2], inputSource.gamepad.axes[3]);
-
-                // Check if input exceeds deadzone
-                if (this.tmpVec2A.length() > this.movementThreshold) {
-                    this.tmpVec2A.normalize();
-
-                    // Calculate camera-relative movement direction
-                    const forward = this.cameraEntity.forward;
-                    this.tmpVec2B.x = forward.x;
-                    this.tmpVec2B.y = forward.z;
-                    this.tmpVec2B.normalize();
-
-                    // Calculate rotation angle based on camera yaw
-                    const rad = Math.atan2(this.tmpVec2B.x, this.tmpVec2B.y) - Math.PI / 2;
-
-                    // Apply rotation to movement vector
-                    const t = this.tmpVec2A.x * Math.sin(rad) - this.tmpVec2A.y * Math.cos(rad);
-                    this.tmpVec2A.y = this.tmpVec2A.y * Math.sin(rad) + this.tmpVec2A.x * Math.cos(rad);
-                    this.tmpVec2A.x = t;
-
-                    // Scale by movement speed and delta time
-                    this.tmpVec2A.mulScalar(this.movementSpeed * dt);
-
-                    // Apply movement to camera parent (this entity)
-                    this.entity.translate(this.tmpVec2A.x, 0, this.tmpVec2A.y);
-                }
-            } else if (inputSource.handedness === 'right') { // Right controller - turning
-                if (this.turnMode === 'smooth') {
-                    this.handleSmoothTurning(inputSource, dt);
-                } else if (this.turnMode === 'snap') {
-                    this.handleSnapTurning(inputSource);
-                }
-                // 'none' → thumbstick X is ignored
-            }
-        }
+    /**
+     * Whether an input source has a gamepad with thumbstick axes (axes[2]/[3]). Hand-tracking
+     * sources (e.g. Apple Vision Pro) report a gamepad with no axes, which would read as NaN.
+     *
+     * @param {XrInputSource} inputSource - The input source to check.
+     * @returns {boolean} True when thumbstick axes can be read.
+     * @private
+     */
+    _hasThumbsticks(inputSource) {
+        return !!inputSource.gamepad && inputSource.gamepad.axes.length >= 4;
     }
 
-    handleSnapTurning(inputSource) {
+    /**
+     * Edge-detects a snap gesture on a thumbstick axis with hysteresis, so one deflection
+     * fires exactly once: fires when the axis crosses `threshold` from neutral, and re-arms
+     * only once it returns within `resetThreshold`.
+     *
+     * @param {{ last: number }} state - Persistent hysteresis state for this axis.
+     * @param {number} value - Current axis value.
+     * @param {number} threshold - Deflection magnitude that fires the snap.
+     * @param {number} resetThreshold - Magnitude the axis must return within to re-arm.
+     * @returns {number} The snap direction (-1 or 1), or 0 when nothing fired.
+     * @private
+     */
+    _snapTrigger(state, value, threshold, resetThreshold) {
+        if (state.last > 0 && value < resetThreshold) {
+            state.last = 0;
+        } else if (state.last < 0 && value > -resetThreshold) {
+            state.last = 0;
+        }
+
+        if (state.last === 0 && Math.abs(value) > threshold) {
+            state.last = Math.sign(value);
+            return state.last;
+        }
+        return 0;
+    }
+
+    /**
+     * Yaw-rotates the rig around the camera's local position, so the view pivots in place
+     * rather than orbiting the rig origin.
+     *
+     * @param {number} degrees - The rotation angle in degrees.
+     * @private
+     */
+    _rotateRigAroundCamera(degrees) {
+        tmpVec3A.copy(this._cameraEntity.getLocalPosition());
+        this.entity.translateLocal(tmpVec3A);
+        this.entity.rotateLocal(0, degrees, 0);
+        this.entity.translateLocal(tmpVec3A.mulScalar(-1));
+    }
+
+    /**
+     * Smooth locomotion: translates the rig in the camera-relative direction of the left
+     * thumbstick at {@link XrNavigation#movementSpeed}.
+     *
+     * @param {XrInputSource} inputSource - The left-hand input source.
+     * @param {number} dt - Frame delta time in seconds.
+     * @private
+     */
+    _handleMovement(inputSource, dt) {
+        // Get thumbstick input (axes[2] = X, axes[3] = Y)
+        tmpVec2A.set(inputSource.gamepad.axes[2], inputSource.gamepad.axes[3]);
+
+        // Check if input exceeds deadzone
+        if (tmpVec2A.length() <= this.movementThreshold) return;
+
+        tmpVec2A.normalize();
+
+        // Calculate camera-relative movement direction
+        const forward = this._cameraEntity.forward;
+        tmpVec2B.x = forward.x;
+        tmpVec2B.y = forward.z;
+        tmpVec2B.normalize();
+
+        // Calculate rotation angle based on camera yaw
+        const rad = Math.atan2(tmpVec2B.x, tmpVec2B.y) - Math.PI / 2;
+
+        // Apply rotation to movement vector
+        const t = tmpVec2A.x * Math.sin(rad) - tmpVec2A.y * Math.cos(rad);
+        tmpVec2A.y = tmpVec2A.y * Math.sin(rad) + tmpVec2A.x * Math.cos(rad);
+        tmpVec2A.x = t;
+
+        // Scale by movement speed and delta time
+        tmpVec2A.mulScalar(this.movementSpeed * dt);
+
+        // Apply movement to camera parent (this entity)
+        this.entity.translate(tmpVec2A.x, 0, tmpVec2A.y);
+    }
+
+    /**
+     * Discrete turn of {@link XrNavigation#rotateSpeed} degrees per right-thumbstick gesture,
+     * with hysteresis so one deflection fires exactly once.
+     *
+     * @param {XrInputSource} inputSource - The right-hand input source.
+     * @private
+     */
+    _handleSnapTurning(inputSource) {
         // Get rotation input from right thumbstick X-axis
         const rotate = -inputSource.gamepad.axes[2];
 
-        // Hysteresis system to prevent multiple rotations from single gesture
-        if (this.lastRotateValue > 0 && rotate < this.rotateResetThreshold) {
-            this.lastRotateValue = 0;
-        } else if (this.lastRotateValue < 0 && rotate > -this.rotateResetThreshold) {
-            this.lastRotateValue = 0;
-        }
-
-        // Only rotate when thumbstick crosses threshold from neutral position
-        if (this.lastRotateValue === 0 && Math.abs(rotate) > this.rotateThreshold) {
-            this.lastRotateValue = Math.sign(rotate);
-
-            if (this.cameraEntity) {
-                // Rotate around camera position, not entity origin
-                this.tmpVec3A.copy(this.cameraEntity.getLocalPosition());
-                this.entity.translateLocal(this.tmpVec3A);
-                this.entity.rotateLocal(0, Math.sign(rotate) * this.rotateSpeed, 0);
-                this.entity.translateLocal(this.tmpVec3A.mulScalar(-1));
-            }
+        const dir = this._snapTrigger(this._rotateSnap, rotate, this.rotateThreshold, this.rotateResetThreshold);
+        if (dir) {
+            this._rotateRigAroundCamera(dir * this.rotateSpeed);
         }
     }
 
     /**
      * Continuous turn at {@link XrNavigation#smoothTurnSpeed} degrees per second while the
-     * right thumbstick X-axis is held past {@link XrNavigation#smoothTurnThreshold}. Rotates
-     * around the camera's local position so the view pivots in place rather than orbiting
-     * the rig origin.
+     * right thumbstick X-axis is held past {@link XrNavigation#smoothTurnThreshold}.
      *
      * @param {XrInputSource} inputSource - The right-hand input source.
      * @param {number} dt - Frame delta time in seconds.
+     * @private
      */
-    handleSmoothTurning(inputSource, dt) {
+    _handleSmoothTurning(inputSource, dt) {
         const turn = -inputSource.gamepad.axes[2];
         if (Math.abs(turn) <= this.smoothTurnThreshold) return;
-        if (!this.cameraEntity) return;
 
-        this.tmpVec3A.copy(this.cameraEntity.getLocalPosition());
-        this.entity.translateLocal(this.tmpVec3A);
-        this.entity.rotateLocal(0, turn * this.smoothTurnSpeed * dt, 0);
-        this.entity.translateLocal(this.tmpVec3A.mulScalar(-1));
+        this._rotateRigAroundCamera(turn * this.smoothTurnSpeed * dt);
     }
 
     /**
-     * Handles snap vertical movement using right thumbstick Y.
-     * Uses hysteresis to prevent multiple snaps from a single gesture.
-     * Hold right grip for larger snap height (boost).
+     * Snap vertical movement on right thumbstick Y, with hysteresis so one deflection fires
+     * exactly once. Hold right grip for the larger {@link XrNavigation#snapVerticalBoostHeight}.
      *
+     * @param {XrInputSource} inputSource - The right-hand input source.
      * @private
      */
-    handleSnapVertical() {
-        // Find right controller
-        let rightController = null;
-
-        for (const inputSource of this.inputSources) {
-            // Require a gamepad with thumbstick axes — see handleSmoothLocomotion.
-            if (!inputSource.gamepad || inputSource.gamepad.axes.length < 4) continue;
-            if (inputSource.handedness === 'right') {
-                rightController = inputSource;
-                break;
-            }
-        }
-
-        if (!rightController || !rightController.gamepad) return;
-
+    _handleSnapVertical(inputSource) {
         // Get vertical input from right thumbstick Y axis (negative = up on stick)
-        const vertical = -rightController.gamepad.axes[3];
+        const vertical = -inputSource.gamepad.axes[3];
 
-        // Hysteresis system to prevent multiple snaps from single gesture
-        if (this.lastVerticalValue > 0 && vertical < this.snapVerticalResetThreshold) {
-            this.lastVerticalValue = 0;
-        } else if (this.lastVerticalValue < 0 && vertical > -this.snapVerticalResetThreshold) {
-            this.lastVerticalValue = 0;
-        }
-
-        // Only snap when thumbstick crosses threshold from neutral position
-        if (this.lastVerticalValue === 0 && Math.abs(vertical) > this.snapVerticalThreshold) {
-            this.lastVerticalValue = Math.sign(vertical);
-
-            // Check if right grip is held for boost
-            const rightGripPressed = rightController.gamepad.buttons[1]?.pressed;
-            const snapHeight = rightGripPressed ?
-                this.snapVerticalBoostHeight :
-                this.snapVerticalHeight;
-
-            // Apply vertical snap (positive = up, negative = down)
-            this.entity.translate(0, Math.sign(vertical) * snapHeight, 0);
+        const dir = this._snapTrigger(this._verticalSnap, vertical, this.snapVerticalThreshold, this.snapVerticalResetThreshold);
+        if (dir) {
+            // Check if right grip is held for boost (positive = up, negative = down)
+            const boost = inputSource.gamepad.buttons[1]?.pressed;
+            this.entity.translate(0, dir * (boost ? this.snapVerticalBoostHeight : this.snapVerticalHeight), 0);
         }
     }
 
-    handleTeleportation() {
-        for (const inputSource of this.inputSources) {
+    /** @private */
+    _handleTeleportation() {
+        for (const inputSource of this._inputSources) {
             // Only show the teleport arc while trigger/select is pressed
-            if (!this.activePointers.get(inputSource)) {
+            if (!this._activePointers.get(inputSource)) {
                 const visual = this._arcVisuals.get(inputSource);
                 if (visual) {
                     visual.entity.enabled = false;
@@ -882,11 +871,7 @@ class XrNavigation extends Script {
                 continue;
             }
 
-            let rec = this._arcHits.get(inputSource);
-            if (!rec) {
-                rec = { point: new Vec3(), valid: false };
-                this._arcHits.set(inputSource, rec);
-            }
+            const rec = this._getOrCreateHit(inputSource);
             this._getAimRay(inputSource);
             this._computeArcHit(tmpAimOrigin, tmpAimDir, rec);
 
@@ -988,7 +973,7 @@ class XrNavigation extends Script {
         const points = this._arcPoints;
         const segments = points.length - 1;
         const positions = visual.positions;
-        const camPos = this.cameraEntity ? this.cameraEntity.getPosition() : this.entity.getPosition();
+        const camPos = this._cameraEntity ? this._cameraEntity.getPosition() : this.entity.getPosition();
         const halfWidth = this.arcWidth * 0.5;
 
         for (let i = 0; i <= segments; i++) {
@@ -1023,7 +1008,8 @@ class XrNavigation extends Script {
         visual.mesh.setPositions(positions);
         visual.mesh.update(PRIMITIVE_TRIANGLES);
 
-        const color = valid ? this.validColor : this.invalidColor;
+        // Read the color attributes directly so runtime changes take effect
+        const color = valid ? this.validTeleportColor : this.invalidTeleportColor;
         visual.colorParam[0] = color.r;
         visual.colorParam[1] = color.g;
         visual.colorParam[2] = color.b;

@@ -623,124 +623,149 @@ class XrManipulation extends Script {
             this._prevTranslateEnabled = this.enableTranslate;
         }
 
-        const curScale = this._grabTarget.getLocalScale();
-
         if (this.enableTranslate) {
-            // Anchor solve: apply the world-space similarity that maps the grab-start hand
-            // pair onto the current hand pair to the target's grab-start transform. Drift-free
-            // - the grabbed content sticks to the hands exactly while unconstrained
-            let deltaYaw = 0;
-            let yawHeld = false;
-            if (this.enableRotate) {
-                if (heading !== null && this._grabHeading !== null) {
-                    deltaYaw = wrapPi(heading - this._grabHeading);
-                } else {
-                    yawHeld = true;
-                }
-            }
-
-            let scaleRel = 1;
-            let scaleHeld = false;
-            let scaleClamped = false;
-            if (this.enableScale) {
-                if (sep > EPS_SEPARATION && this._grabDist > EPS_SEPARATION) {
-                    // Spreading the hands grows the world (pinch-zoom semantics). The dead
-                    // zone keeps incidental separation drift during push/pull from zooming;
-                    // in-band frames leave the grab reference untouched so a slow deliberate
-                    // pinch can still accumulate its way out of the band
-                    const effective = this._applyScaleDeadZone(sep / this._grabDist);
-                    scaleRel = this._clampScaleFactor(effective, this._targetScale0.x);
-                    scaleClamped = scaleRel !== effective;
-                } else {
-                    scaleHeld = true;
-                }
-            }
-
-            // World-space grab points through the (frozen) grab frame
-            tmpMidWorld.copy(this._midPose0);
-            this._frameToWorld(tmpMidWorld);
-            tmpScratch.copy(tmpHandMid);
-            this._frameToWorld(tmpScratch);
-
-            // newPos = curMid + scaleRel * R(deltaYaw) * (targetPos0 - grabMid)
-            tmpSolvedPos.sub2(this._targetPos0, tmpMidWorld);
-            rotateY(tmpSolvedPos, deltaYaw);
-            tmpSolvedPos.mulScalar(scaleRel).add(tmpScratch);
-
-            // Feet pivot: pin the scale's vertical pivot to the user's floor level (the rig
-            // origin Y, i.e. the physical floor in local-floor space) so whatever is at the
-            // feet stays there while scaling. Vertical drag still passes through, and with
-            // scaleRel = 1 this is identical to the hands pivot
-            if (this.scalePivot !== 'hands') {
-                const feetY = this._framePos.y;
-                tmpSolvedPos.y = feetY + scaleRel * (this._targetPos0.y - feetY) + (tmpScratch.y - tmpMidWorld.y);
-            }
-
-            tmpQuat.setFromEulerAngles(0, deltaYaw * math.RAD_TO_DEG, 0);
-            tmpQuatB.mul2(tmpQuat, this._targetRot0);
-
-            this._grabTarget.setPosition(tmpSolvedPos);
-            this._grabTarget.setRotation(tmpQuatB);
-            this._grabTarget.setLocalScale(
-                this._targetScale0.x * scaleRel,
-                this._targetScale0.y * scaleRel,
-                this._targetScale0.z * scaleRel
-            );
-
-            // Whenever the applied transform deviated from the raw solve, rebase the grab
-            // reference on it: releasing a clamp responds immediately and degenerate headings
-            // self-heal once the hands regain XZ separation
-            if (yawHeld || scaleHeld || scaleClamped) {
-                this._captureGrabState(tmpHandLeft, tmpHandRight);
-            }
+            this._solveAnchored(sep, heading);
         } else {
-            // Incremental pivot solve: without the translation degree of freedom there is no
-            // fixed anchor - apply each frame's delta rotation/scale about the current world
-            // hand midpoint, so zoom and rotation pivot on the hands without dragging
-            tmpPrevDelta.sub2(this._prevRight, this._prevLeft);
-            const sepPrevXz = Math.sqrt(tmpPrevDelta.x * tmpPrevDelta.x + tmpPrevDelta.z * tmpPrevDelta.z);
-
-            let deltaYaw = 0;
-            if (this.enableRotate && sepXz > EPS_XZ && sepPrevXz > EPS_XZ) {
-                deltaYaw = wrapPi(Math.atan2(tmpHandDelta.x, tmpHandDelta.z) - Math.atan2(tmpPrevDelta.x, tmpPrevDelta.z));
-            }
-
-            // Scale is solved absolutely against the grab-start separation (so the dead zone
-            // has a stable reference), then converted to a per-frame ratio for the pivot math
-            let scaleRatio = 1;
-            if (this.enableScale && sep > EPS_SEPARATION && this._grabDist > EPS_SEPARATION && curScale.x > 0) {
-                const effective = this._applyScaleDeadZone(sep / this._grabDist);
-                const desired = this._clampScaleFactor(effective, this._targetScale0.x) * this._targetScale0.x;
-                scaleRatio = desired / curScale.x;
-            }
-
-            // Pivot: the current hand midpoint in world space through the grab frame. With
-            // the feet pivot, the vertical component moves to the user's floor level so
-            // scaling never lifts or sinks the floor underfoot
-            tmpMidWorld.copy(tmpHandMid);
-            this._frameToWorld(tmpMidWorld);
-            if (this.scalePivot !== 'hands') {
-                tmpMidWorld.y = this._framePos.y;
-            }
-
-            tmpSolvedPos.sub2(this._grabTarget.getPosition(), tmpMidWorld);
-            rotateY(tmpSolvedPos, deltaYaw);
-            tmpSolvedPos.mulScalar(scaleRatio).add(tmpMidWorld);
-
-            tmpQuat.setFromEulerAngles(0, deltaYaw * math.RAD_TO_DEG, 0);
-            tmpQuatB.mul2(tmpQuat, this._grabTarget.getRotation());
-
-            this._grabTarget.setPosition(tmpSolvedPos);
-            this._grabTarget.setRotation(tmpQuatB);
-            this._grabTarget.setLocalScale(
-                curScale.x * scaleRatio,
-                curScale.y * scaleRatio,
-                curScale.z * scaleRatio
-            );
+            this._solveIncremental(sep, sepXz);
         }
 
         this._prevLeft.copy(tmpHandLeft);
         this._prevRight.copy(tmpHandRight);
+    }
+
+    /**
+     * Anchor solve: applies the world-space similarity that maps the grab-start hand pair
+     * onto the current hand pair to the target's grab-start transform. Drift-free - the
+     * grabbed content sticks to the hands exactly while unconstrained. Used while
+     * {@link XrManipulation#enableTranslate} is on. Reads the current hand poses from the
+     * module-scope temporaries filled by {@link XrManipulation#update}.
+     *
+     * @param {number} sep - Current 3D hand separation in rig space (meters).
+     * @param {number | null} heading - Current XZ heading of the hand pair, or null when
+     * degenerate (hands stacked vertically).
+     * @private
+     */
+    _solveAnchored(sep, heading) {
+        let deltaYaw = 0;
+        let yawHeld = false;
+        if (this.enableRotate) {
+            if (heading !== null && this._grabHeading !== null) {
+                deltaYaw = wrapPi(heading - this._grabHeading);
+            } else {
+                yawHeld = true;
+            }
+        }
+
+        let scaleRel = 1;
+        let scaleHeld = false;
+        let scaleClamped = false;
+        if (this.enableScale) {
+            if (sep > EPS_SEPARATION && this._grabDist > EPS_SEPARATION) {
+                // Spreading the hands grows the world (pinch-zoom semantics). The dead
+                // zone keeps incidental separation drift during push/pull from zooming;
+                // in-band frames leave the grab reference untouched so a slow deliberate
+                // pinch can still accumulate its way out of the band
+                const effective = this._applyScaleDeadZone(sep / this._grabDist);
+                scaleRel = this._clampScaleFactor(effective, this._targetScale0.x);
+                scaleClamped = scaleRel !== effective;
+            } else {
+                scaleHeld = true;
+            }
+        }
+
+        // World-space grab points through the (frozen) grab frame
+        tmpMidWorld.copy(this._midPose0);
+        this._frameToWorld(tmpMidWorld);
+        tmpScratch.copy(tmpHandMid);
+        this._frameToWorld(tmpScratch);
+
+        // newPos = curMid + scaleRel * R(deltaYaw) * (targetPos0 - grabMid)
+        tmpSolvedPos.sub2(this._targetPos0, tmpMidWorld);
+        rotateY(tmpSolvedPos, deltaYaw);
+        tmpSolvedPos.mulScalar(scaleRel).add(tmpScratch);
+
+        // Feet pivot: pin the scale's vertical pivot to the user's floor level (the rig
+        // origin Y, i.e. the physical floor in local-floor space) so whatever is at the
+        // feet stays there while scaling. Vertical drag still passes through, and with
+        // scaleRel = 1 this is identical to the hands pivot
+        if (this.scalePivot !== 'hands') {
+            const feetY = this._framePos.y;
+            tmpSolvedPos.y = feetY + scaleRel * (this._targetPos0.y - feetY) + (tmpScratch.y - tmpMidWorld.y);
+        }
+
+        tmpQuat.setFromEulerAngles(0, deltaYaw * math.RAD_TO_DEG, 0);
+        tmpQuatB.mul2(tmpQuat, this._targetRot0);
+
+        this._grabTarget.setPosition(tmpSolvedPos);
+        this._grabTarget.setRotation(tmpQuatB);
+        this._grabTarget.setLocalScale(
+            this._targetScale0.x * scaleRel,
+            this._targetScale0.y * scaleRel,
+            this._targetScale0.z * scaleRel
+        );
+
+        // Whenever the applied transform deviated from the raw solve, rebase the grab
+        // reference on it: releasing a clamp responds immediately and degenerate headings
+        // self-heal once the hands regain XZ separation
+        if (yawHeld || scaleHeld || scaleClamped) {
+            this._captureGrabState(tmpHandLeft, tmpHandRight);
+        }
+    }
+
+    /**
+     * Incremental pivot solve: without the translation degree of freedom there is no fixed
+     * anchor - applies each frame's delta rotation/scale about the current world hand
+     * midpoint, so zoom and rotation pivot on the hands without dragging. Used while
+     * {@link XrManipulation#enableTranslate} is off. Reads the current hand poses from the
+     * module-scope temporaries filled by {@link XrManipulation#update}.
+     *
+     * @param {number} sep - Current 3D hand separation in rig space (meters).
+     * @param {number} sepXz - XZ-plane projection of the hand separation (meters).
+     * @private
+     */
+    _solveIncremental(sep, sepXz) {
+        const curScale = this._grabTarget.getLocalScale();
+
+        tmpPrevDelta.sub2(this._prevRight, this._prevLeft);
+        const sepPrevXz = Math.sqrt(tmpPrevDelta.x * tmpPrevDelta.x + tmpPrevDelta.z * tmpPrevDelta.z);
+
+        let deltaYaw = 0;
+        if (this.enableRotate && sepXz > EPS_XZ && sepPrevXz > EPS_XZ) {
+            deltaYaw = wrapPi(Math.atan2(tmpHandDelta.x, tmpHandDelta.z) - Math.atan2(tmpPrevDelta.x, tmpPrevDelta.z));
+        }
+
+        // Scale is solved absolutely against the grab-start separation (so the dead zone
+        // has a stable reference), then converted to a per-frame ratio for the pivot math
+        let scaleRatio = 1;
+        if (this.enableScale && sep > EPS_SEPARATION && this._grabDist > EPS_SEPARATION && curScale.x > 0) {
+            const effective = this._applyScaleDeadZone(sep / this._grabDist);
+            const desired = this._clampScaleFactor(effective, this._targetScale0.x) * this._targetScale0.x;
+            scaleRatio = desired / curScale.x;
+        }
+
+        // Pivot: the current hand midpoint in world space through the grab frame. With
+        // the feet pivot, the vertical component moves to the user's floor level so
+        // scaling never lifts or sinks the floor underfoot
+        tmpMidWorld.copy(tmpHandMid);
+        this._frameToWorld(tmpMidWorld);
+        if (this.scalePivot !== 'hands') {
+            tmpMidWorld.y = this._framePos.y;
+        }
+
+        tmpSolvedPos.sub2(this._grabTarget.getPosition(), tmpMidWorld);
+        rotateY(tmpSolvedPos, deltaYaw);
+        tmpSolvedPos.mulScalar(scaleRatio).add(tmpMidWorld);
+
+        tmpQuat.setFromEulerAngles(0, deltaYaw * math.RAD_TO_DEG, 0);
+        tmpQuatB.mul2(tmpQuat, this._grabTarget.getRotation());
+
+        this._grabTarget.setPosition(tmpSolvedPos);
+        this._grabTarget.setRotation(tmpQuatB);
+        this._grabTarget.setLocalScale(
+            curScale.x * scaleRatio,
+            curScale.y * scaleRatio,
+            curScale.z * scaleRatio
+        );
     }
 }
 

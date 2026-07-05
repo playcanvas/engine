@@ -711,7 +711,7 @@ class XrMenu extends Script {
         // (the only auto-color mode the engine ships) but set all three tints equal to the
         // button's base color, so the component's auto-tint is effectively a no-op — including
         // when ElementInput's XR ray hover (selectenter/selectleave) drives it. Visuals are
-        // driven manually by _setButtonHover / _setButtonPress, which works reliably for both
+        // driven manually by _setHovered / _setButtonPress, which works reliably for both
         // XR ray picking and finger touch even when ElementInput's XR hover events don't fire.
         if (!isLabel) {
             button.addComponent('button', {
@@ -846,6 +846,16 @@ class XrMenu extends Script {
     }
 
     /**
+     * Whether the press debounce cooldown has elapsed since the last accepted press.
+     *
+     * @returns {boolean} True when a new press may be accepted.
+     * @private
+     */
+    _cooldownElapsed() {
+        return Date.now() / 1000 - this._lastPressTime >= this.pressCooldown;
+    }
+
+    /**
      * Handles button click with visual feedback.
      *
      * @param {Entity} button - The clicked button.
@@ -858,9 +868,8 @@ class XrMenu extends Script {
 
         // Debounce: avoid double-firing if multiple input paths (ray picking + ElementInput
         // click + finger touch) all detect the same press within pressCooldown.
-        const now = Date.now() / 1000;
-        if (now - this._lastPressTime < this.pressCooldown) return;
-        this._lastPressTime = now;
+        if (!this._cooldownElapsed()) return;
+        this._lastPressTime = Date.now() / 1000;
 
         // Play click sound
         if (this.entity.sound) {
@@ -882,50 +891,21 @@ class XrMenu extends Script {
     }
 
     /**
-     * Sets press visual state on a button.
+     * Applies the visual (color + scale) matching a button's current press/hover state.
+     * Single source of truth for button styling - press and hover transitions both funnel
+     * through here.
      *
-     * @param {Entity} button - The button.
-     * @param {boolean} pressed - Whether the button is pressed.
+     * @param {Entity} button - The button to restyle.
      * @private
      */
-    _setButtonPress(button, pressed) {
+    _applyButtonVisual(button) {
         if (!button.element) return;
 
-        // @ts-ignore
-        button._isPressed = pressed;
-
-        if (pressed) {
+        // @ts-ignore - _isPressed is a custom property attached in _setButtonPress
+        if (button._isPressed) {
             button.element.color = this.pressColor;
             button.setLocalScale(0.95, 0.95, 1);
-        } else {
-            // Restore based on current hover state
-            const isHovered = this._hoveredButton === button;
-            if (isHovered) {
-                button.element.color = this.hoverColor;
-                button.setLocalScale(1.05, 1.05, 1);
-            } else {
-                // @ts-ignore - menuData is a custom property attached in _createButton
-                button.element.color = button.menuData?.baseColor ?? this.buttonColor;
-                button.setLocalScale(1, 1, 1);
-            }
-        }
-    }
-
-    /**
-     * Sets hover visual state on a button.
-     *
-     * @param {Entity} button - The button to set hover state on.
-     * @param {boolean} hovered - Whether the button is hovered.
-     * @private
-     */
-    _setButtonHover(button, hovered) {
-        if (!button.element) return;
-
-        // Don't change visuals if button is currently pressed
-        // @ts-ignore
-        if (button._isPressed) return;
-
-        if (hovered) {
+        } else if (this._hoveredButton === button) {
             button.element.color = this.hoverColor;
             button.setLocalScale(1.05, 1.05, 1);
         } else {
@@ -933,6 +913,35 @@ class XrMenu extends Script {
             button.element.color = button.menuData?.baseColor ?? this.buttonColor;
             button.setLocalScale(1, 1, 1);
         }
+    }
+
+    /**
+     * Sets press state on a button and refreshes its visual.
+     *
+     * @param {Entity} button - The button.
+     * @param {boolean} pressed - Whether the button is pressed.
+     * @private
+     */
+    _setButtonPress(button, pressed) {
+        // @ts-ignore - Adding custom property
+        button._isPressed = pressed;
+        this._applyButtonVisual(button);
+    }
+
+    /**
+     * Transitions hover to a new button (or null). Single owner of {@link XrMenu#_hoveredButton}:
+     * updates the state, then refreshes the visuals of the buttons that changed.
+     *
+     * @param {Entity|null} button - The newly hovered button, or null to clear hover.
+     * @private
+     */
+    _setHovered(button) {
+        const prev = this._hoveredButton;
+        if (prev === button) return;
+
+        this._hoveredButton = button;
+        if (prev) this._applyButtonVisual(prev);
+        if (button) this._applyButtonVisual(button);
     }
 
     /**
@@ -979,9 +988,7 @@ class XrMenu extends Script {
 
             // Snap to current anchor position immediately (don't lerp from old position)
             if (this._activeInputSource) {
-                const anchor = this._activeInputSource.hand ?
-                    this._getPalmAnchor(this._activeInputSource) :
-                    this._getControllerAnchor(this._activeInputSource);
+                const anchor = this._getAnchor(this._activeInputSource);
                 if (anchor) {
                     this._menuContainer.setPosition(anchor.position);
                     this._menuContainer.setRotation(anchor.rotation);
@@ -994,10 +1001,7 @@ class XrMenu extends Script {
 
         // Reset hover state when hiding
         if (!visible) {
-            if (this._hoveredButton) {
-                this._setButtonHover(this._hoveredButton, false);
-            }
-            this._hoveredButton = null;
+            this._setHovered(null);
             this._pressedButton = null;
         }
     }
@@ -1015,22 +1019,12 @@ class XrMenu extends Script {
             }
             // Also update text opacity. Label-only items get a dim multiplier so the eye is drawn
             // to interactive buttons.
-            const textChild = /** @type {Entity|undefined} */ (button.children[0]);
-            if (textChild?.element) {
-                // @ts-ignore - menuData is a custom property attached in _createButton
-                const isLabel = button.menuData?.isLabel === true;
-                textChild.element.opacity = opacity * (isLabel ? this.labelTextOpacity : 1);
+            // @ts-ignore - menuData is a custom property attached in _createButton
+            const menuData = button.menuData;
+            if (menuData?.textElement) {
+                menuData.textElement.opacity = opacity * (menuData.isLabel ? this.labelTextOpacity : 1);
             }
         }
-    }
-
-    /**
-     * Toggles menu visibility.
-     *
-     * @private
-     */
-    _toggleMenuVisibility() {
-        this._setMenuVisible(!this._menuVisible);
     }
 
     /**
@@ -1250,6 +1244,60 @@ class XrMenu extends Script {
     }
 
     /**
+     * Gets the menu anchor transform for an input source - the palm for tracked hands, the
+     * controller grip otherwise.
+     *
+     * Note: Returns references to reused internal Vec3/Quat objects for performance.
+     * Callers must use the values immediately or copy them - do not store the references.
+     *
+     * @param {XrInputSource} inputSource - The input source.
+     * @returns {{position: Vec3, rotation: Quat}|null} Anchor transform or null.
+     * @private
+     */
+    _getAnchor(inputSource) {
+        return inputSource.hand ?
+            this._getPalmAnchor(inputSource) :
+            this._getControllerAnchor(inputSource);
+    }
+
+    /**
+     * Smoothly moves the menu container toward a target transform at
+     * {@link XrMenu#followSpeed}.
+     *
+     * @param {Vec3} position - Target world position.
+     * @param {Quat} rotation - Target world rotation.
+     * @param {number} dt - Delta time.
+     * @private
+     */
+    _smoothFollow(position, rotation, dt) {
+        const container = this._menuContainer;
+        const t = Math.min(1, this.followSpeed * dt);
+
+        tmpVec3B.lerp(container.getPosition(), position, t);
+        container.setPosition(tmpVec3B);
+
+        tmpQuat.slerp(container.getRotation(), rotation, t);
+        container.setRotation(tmpQuat);
+    }
+
+    /**
+     * While the menu is visible (or still fading out), smoothly follows the anchor transform
+     * of the given input source.
+     *
+     * @param {XrInputSource} inputSource - The input source anchoring the menu.
+     * @param {number} dt - Delta time.
+     * @private
+     */
+    _followAnchor(inputSource, dt) {
+        if ((!this._menuVisible && this._currentOpacity <= 0) || !this._menuContainer) return;
+
+        const anchor = this._getAnchor(inputSource);
+        if (anchor) {
+            this._smoothFollow(anchor.position, anchor.rotation, dt);
+        }
+    }
+
+    /**
      * Checks for finger touch interaction with buttons.
      *
      * @param {XrInputSource} inputSource - The hand input source.
@@ -1291,26 +1339,15 @@ class XrMenu extends Script {
             }
         }
 
-        const now = Date.now() / 1000; // Current time in seconds
         const pressDist = this.touchDistance * 0.6; // Press threshold
 
         if (closestButton) {
-            // Set hover state if this is a new hover
-            if (this._hoveredButton !== closestButton) {
-                // Clear previous hover
-                if (this._hoveredButton) {
-                    this._setButtonHover(this._hoveredButton, false);
-                }
-                this._hoveredButton = closestButton;
-                this._setButtonHover(closestButton, true);
-            }
+            this._setHovered(closestButton);
 
             // Check for press (finger moving into button)
             // Only allow press if: within press distance, not already pressed, and cooldown elapsed
             if (closestDist < pressDist) {
-                const cooldownElapsed = (now - this._lastPressTime) > this.pressCooldown;
-
-                if (!this._pressedButton && cooldownElapsed) {
+                if (!this._pressedButton && this._cooldownElapsed()) {
                     this._pressedButton = closestButton;
                     // Note: _lastPressTime is owned by _onButtonClick — setting it here would
                     // trip _onButtonClick's own debounce guard and swallow the click entirely.
@@ -1322,10 +1359,7 @@ class XrMenu extends Script {
             }
         } else {
             // Finger fully exited hover zone - clear states and allow re-press
-            if (this._hoveredButton) {
-                this._setButtonHover(this._hoveredButton, false);
-            }
-            this._hoveredButton = null;
+            this._setHovered(null);
             this._pressedButton = null;
         }
     }
@@ -1338,42 +1372,16 @@ class XrMenu extends Script {
      * @private
      */
     _updateHandMode(inputSource, dt) {
-        // Check for palm-up gesture
+        // Palm-up gesture shows the menu; dropping the gesture hides it
         const palmFacing = this._isPalmFacingCamera(inputSource);
+        this._setMenuVisible(palmFacing);
 
+        // Check for finger touch interaction
         if (palmFacing) {
-            if (!this._menuVisible) {
-                this._setMenuVisible(true);
-            }
-
-            // Check for finger touch interaction
             this._checkFingerTouch(inputSource);
-        } else {
-            if (this._menuVisible) {
-                this._setMenuVisible(false);
-            }
         }
 
-        // Update anchor position while menu is visible OR still fading out
-        if ((this._menuVisible || this._currentOpacity > 0) && this._menuContainer) {
-            const anchor = this._getPalmAnchor(inputSource);
-            if (anchor) {
-                // Smooth interpolation
-                tmpVec3A.lerp(
-                    this._menuContainer.getPosition(),
-                    anchor.position,
-                    Math.min(1, this.followSpeed * dt)
-                );
-                this._menuContainer.setPosition(tmpVec3A);
-
-                tmpQuat.slerp(
-                    this._menuContainer.getRotation(),
-                    anchor.rotation,
-                    Math.min(1, this.followSpeed * dt)
-                );
-                this._menuContainer.setRotation(tmpQuat);
-            }
-        }
+        this._followAnchor(inputSource, dt);
     }
 
     /**
@@ -1384,13 +1392,13 @@ class XrMenu extends Script {
      * @private
      */
     _updateControllerMode(inputSource, dt) {
-        // Check for menu toggle button
+        // Edge-detect the menu toggle button
         const gamepad = inputSource.gamepad;
         if (gamepad?.buttons?.[this.toggleButtonIndex]) {
             const pressed = gamepad.buttons[this.toggleButtonIndex].pressed;
 
             if (pressed && !this._toggleButtonWasPressed) {
-                this._toggleMenuVisibility();
+                this._setMenuVisible(!this._menuVisible);
             }
             this._toggleButtonWasPressed = pressed;
         } else {
@@ -1398,26 +1406,7 @@ class XrMenu extends Script {
             this._toggleButtonWasPressed = false;
         }
 
-        // Update menu position while visible OR still fading out
-        if ((this._menuVisible || this._currentOpacity > 0) && this._menuContainer) {
-            const anchor = this._getControllerAnchor(inputSource);
-            if (anchor) {
-                // Smooth interpolation
-                tmpVec3A.lerp(
-                    this._menuContainer.getPosition(),
-                    anchor.position,
-                    Math.min(1, this.followSpeed * dt)
-                );
-                this._menuContainer.setPosition(tmpVec3A);
-
-                tmpQuat.slerp(
-                    this._menuContainer.getRotation(),
-                    anchor.rotation,
-                    Math.min(1, this.followSpeed * dt)
-                );
-                this._menuContainer.setRotation(tmpQuat);
-            }
-        }
+        this._followAnchor(inputSource, dt);
     }
 
     update(dt) {
@@ -1518,17 +1507,12 @@ class XrMenu extends Script {
             return;
         }
 
-        const t = Math.min(1, this.followSpeed * dt);
-        tmpVec3B.lerp(container.getPosition(), tmpVec3A, t);
-        container.setPosition(tmpVec3B);
-
-        tmpQuat.slerp(container.getRotation(), camRot, t);
-        container.setRotation(tmpQuat);
+        this._smoothFollow(tmpVec3A, camRot, dt);
     }
 
     /**
      * Picks interactive buttons by raycasting each tracked-pointer XR input source against the
-     * menu's plane and bounds. Drives hover visuals via {@link _setButtonHover}, and edge-detects
+     * menu's plane and bounds. Drives hover visuals via {@link XrMenu#_setHovered}, and edge-detects
      * the gamepad trigger (button 0) to fire {@link _onButtonClick}. Self-contained — does not
      * depend on ElementInput's XR support.
      *
@@ -1592,12 +1576,8 @@ class XrMenu extends Script {
             }
         }
 
-        // Hover transition — single owner of _hoveredButton.
-        if (this._hoveredButton !== bestButton) {
-            if (this._hoveredButton) this._setButtonHover(this._hoveredButton, false);
-            if (bestButton) this._setButtonHover(bestButton, true);
-            this._hoveredButton = bestButton;
-        }
+        // Hover transition
+        this._setHovered(bestButton);
 
         // Edge-detect trigger pull per source; fire click only for the source currently pointing.
         for (const source of this._inputSources) {
