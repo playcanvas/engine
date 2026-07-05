@@ -196,6 +196,7 @@ export { StandardMaterialOptions } from './scene/materials/standard-material-opt
 // SCENE / PROCEDURAL
 export { calculateNormals, calculateTangents } from './scene/geometry/geometry-utils.js';
 export { CapsuleGeometry } from './scene/geometry/capsule-geometry.js';
+export { CircleGeometry } from './scene/geometry/circle-geometry.js';
 export { ConeGeometry } from './scene/geometry/cone-geometry.js';
 export { CylinderGeometry } from './scene/geometry/cylinder-geometry.js';
 export { DomeGeometry } from './scene/geometry/dome-geometry.js';
