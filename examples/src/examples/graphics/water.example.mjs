@@ -8,7 +8,6 @@
 // author: Elin
 // source: https://sketchfab.com/3d-models/tropical-island-f91862f8c38b481aa19edccac851eefb
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
-// modifications: adapted for this example (see the credits file next to the asset)
 //
 // @credit
 // title: Caustic Lighting
