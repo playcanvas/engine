@@ -69,12 +69,6 @@ const engineSymbols = {
     // Class.member references, mapped to lowercased anchors on the class page
     members: [
         'EventHandle.off'
-    ],
-    // Symbols that are @ignore'd in the engine docs, so there is no page to link to. Mapping
-    // them to '#' acknowledges them (keeping the build warning-free) and renders an inert link.
-    hidden: [
-        'GSplatResourceBase',
-        'GSplatResourceBase.centers'
     ]
 };
 
@@ -94,9 +88,6 @@ for (const ref of engineSymbols.members) {
     const [cls, member] = ref.split('.');
     playcanvasLinks[ref] = `${ENGINE_DOCS}/classes/${cls}.html#${member.toLowerCase()}`;
 }
-for (const ref of engineSymbols.hidden) {
-    playcanvasLinks[ref] = '#';
-}
 
 export default {
     blockTags: [...OptionDefaults.blockTags, ...ATTRIBUTE_TAGS],
@@ -107,7 +98,6 @@ export default {
         'Gaussian Splatting',
         'XR',
         'Annotations',
-        'Parsers',
         'Supporting Types'
     ],
     // @category is not supported on @typedef comments, so the state/resources typedefs (and
@@ -123,7 +113,9 @@ export default {
     ],
     entryPointStrategy: 'expand',
     exclude: [
-        '**/node_modules/**'
+        '**/node_modules/**',
+        // resource-handler parsers, not scripts
+        '**/scripts/esm/parsers/**'
     ],
     excludeNotDocumented: true,
     externalSymbolLinkMappings: {

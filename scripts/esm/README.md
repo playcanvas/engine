@@ -1,6 +1,6 @@
 # PlayCanvas Engine Scripts
 
-A collection of ready-to-use scripts for the PlayCanvas Engine, maintained and versioned alongside it. Most are [`Script`](https://api.playcanvas.com/engine/classes/Script.html) classes that attach to entities via the script component; the `parsers` folder contains parsers that register with resource handlers instead.
+A collection of ready-to-use [`Script`](https://api.playcanvas.com/engine/classes/Script.html) classes for the PlayCanvas Engine, maintained and versioned alongside it, that attach to entities via the script component.
 
 These scripts ship inside the `playcanvas` npm package but are **not** part of the core engine bundle — each one is imported directly from its module:
 
@@ -24,7 +24,6 @@ Script attributes (documented on each class) can be passed via `properties` as a
 - **Gaussian splatting** — streamed splat loading with LOD presets, reveal animations, shader effects, weather, text and image splats.
 - **XR** — session lifecycle, controllers, teleport navigation, object manipulation and 3D menus.
 - **Annotations** — 3D hotspots with DOM labels.
-- **Parsers** — OBJ model parser and SPZ gaussian splat parser for the resource loader.
 
 ## Resources
 

@@ -1,27 +1,29 @@
 import { Geometry, GraphNode, Http, Mesh, MeshInstance, Model, StandardMaterial } from 'playcanvas';
 
-/**
- * A basic OBJ model parser for the `model` resource handler. It is not built into the engine
- * library by default and probably doesn't handle a lot of the OBJ spec.
- *
- * Known issues:
- *
- * - Can't handle meshes larger than 65535 vertices.
- * - Assigns a default material to all meshes.
- * - Doesn't create indexed geometry.
- *
- * @example
- * import { ObjModelParser } from 'playcanvas/scripts/esm/parsers/obj-model.mjs';
- *
- * // add the parser to the model resource handler
- * app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
- *
- * // then load .obj files as model assets
- * const asset = new pc.Asset('MyObj', 'model', { url: 'model.obj' });
- * app.assets.add(asset);
- * app.assets.load(asset);
- * @category Parsers
- */
+// Sample Obj model parser. This is not built into the engine library by default.
+//
+// To use, first register the parser:
+//
+// import { ObjModelParser } from 'playcanvas/scripts/esm/parsers/obj-model.mjs';
+//
+// // add parser to model resource handler
+// const objParser = new ObjModelParser(this.app.graphicsDevice);
+// this.app.loader.getHandler("model").addParser(objParser);
+//
+// Then load obj as a model asset:
+//
+// const asset = new pc.Asset("MyObj", "model", {
+//    url: "model.obj"
+// });
+// this.app.assets.add(asset);
+// this.app.assets.load(asset);
+
+// First draft obj parser
+// probably doesn't handle a lot of the obj spec
+// Known issues:
+// - can't handle meshes larger than 65535 verts
+// - assigns default material to all meshes
+// - doesn't created indexed geometry
 class ObjModelParser {
     constructor(device) {
         this._device = device;
