@@ -164,7 +164,8 @@ createText(columnX, -100, {
 
 // mixed tags in one string
 createText(0, -220, {
-    text: 'Mixed: [color="#803333"]red[/color] plain [color="#204080"]blue[/color] ' +
+    text:
+        'Mixed: [color="#803333"]red[/color] plain [color="#204080"]blue[/color] ' +
         '[outline color="#663311" thickness="0.5"]outlined[/outline] ' +
         '[shadow color="#803333" offsetX="0.2" offsetY="-0.2"]shadowed[/shadow]',
     color: new Color().fromString('#454A53'),
