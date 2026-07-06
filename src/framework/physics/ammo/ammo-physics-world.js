@@ -1,9 +1,11 @@
 import { Debug } from '../../../core/debug.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION,
     BODYTYPE_KINEMATIC
 } from '../../components/rigid-body/constants.js';
+import { RaycastResult } from '../../components/rigid-body/raycast-result.js';
 import { PhysicsWorld } from '../physics-world.js';
 import { AmmoPhysicsBody } from './ammo-physics-body.js';
 import {
@@ -11,9 +13,55 @@ import {
 } from './ammo-physics-shape.js';
 
 /**
- * @import { Vec3 } from '../../../core/math/vec3.js'
+ * @import { ContactPoint } from '../../components/rigid-body/contact-point.js'
  * @import { PhysicsBodyDesc, PhysicsShapeDesc } from '../physics-world.js'
  */
+
+/**
+ * The reused contact pair reported to the contact listener. Reads contact point data straight
+ * from the current native manifold - nothing is allocated.
+ *
+ * @ignore
+ */
+class AmmoContactPair {
+    entityA = null;
+
+    entityB = null;
+
+    triggerA = false;
+
+    triggerB = false;
+
+    contactCount = 0;
+
+    /**
+     * The native btPersistentManifold currently being reported.
+     *
+     * @private
+     */
+    _manifold = null;
+
+    /**
+     * @param {number} index - The contact point index.
+     * @param {ContactPoint} out - The contact point to fill, from body A's perspective.
+     */
+    readContact(index, out) {
+        const contactPoint = this._manifold.getContactPoint(index);
+
+        const localPointA = contactPoint.get_m_localPointA();
+        const localPointB = contactPoint.get_m_localPointB();
+        const positionWorldOnA = contactPoint.getPositionWorldOnA();
+        const positionWorldOnB = contactPoint.getPositionWorldOnB();
+        const normalWorldOnB = contactPoint.get_m_normalWorldOnB();
+
+        out.localPoint.set(localPointA.x(), localPointA.y(), localPointA.z());
+        out.localPointOther.set(localPointB.x(), localPointB.y(), localPointB.z());
+        out.point.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
+        out.pointOther.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
+        out.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
+        out.impulse = contactPoint.getAppliedImpulse();
+    }
+}
 
 /**
  * The Ammo.js (Bullet) physics backend. Expects the `Ammo` global to be available when
@@ -38,10 +86,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     /**
      * Create a new AmmoPhysicsWorld instance.
      *
-     * @param {object} [options] - The world options.
-     * @param {Function} [options.onTick] - Raw simulation tick callback, invoked per fixed
-     * substep with (worldPointer, timeStep) on ammo builds that support internal tick
-     * callbacks.
+     * @param {object} [options] - The world options. See {@link PhysicsWorld}.
      */
     constructor(options = {}) {
         super(options);
@@ -52,18 +97,25 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this.solver = new Ammo.btSequentialImpulseConstraintSolver();
         this.nativeWorld = new Ammo.btDiscreteDynamicsWorld(this.dispatcher, this.overlappingPairCache, this.solver, this.collisionConfiguration);
 
-        if (this.nativeWorld.setInternalTickCallback) {
-            const checkForCollisionsPointer = Ammo.addFunction(options.onTick, 'vif');
+        // report contacts per fixed substep from inside stepSimulation where supported,
+        // otherwise defer to flushContacts()
+        this._useTickCallback = !!this.nativeWorld.setInternalTickCallback;
+        if (this._useTickCallback) {
+            const checkForCollisionsPointer = Ammo.addFunction(() => this._walkContacts(), 'vif');
             this.nativeWorld.setInternalTickCallback(checkForCollisionsPointer);
         } else {
             Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
         }
+
+        this._contactPair = new AmmoContactPair();
 
         // cached math temporaries, shared by this world's bodies
         this._btVec1 = new Ammo.btVector3();
         this._btVec2 = new Ammo.btVector3();
         this._btQuat = new Ammo.btQuaternion();
         this._btTransform = new Ammo.btTransform();
+        this._btRayStart = new Ammo.btVector3();
+        this._btRayEnd = new Ammo.btVector3();
     }
 
     destroy() {
@@ -74,10 +126,14 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         Ammo.destroy(this._btVec2);
         Ammo.destroy(this._btQuat);
         Ammo.destroy(this._btTransform);
+        Ammo.destroy(this._btRayStart);
+        Ammo.destroy(this._btRayEnd);
         this._btVec1 = null;
         this._btVec2 = null;
         this._btQuat = null;
         this._btTransform = null;
+        this._btRayStart = null;
+        this._btRayEnd = null;
 
         Ammo.destroy(this.nativeWorld);
         Ammo.destroy(this.solver);
@@ -215,6 +271,156 @@ class AmmoPhysicsWorld extends PhysicsWorld {
 
     step(dt, maxSubSteps, fixedTimeStep) {
         this.nativeWorld.stepSimulation(dt, maxSubSteps, fixedTimeStep);
+    }
+
+    flushContacts() {
+        // ammo builds without internal tick callbacks get one contact pass per frame instead,
+        // deliberately after the caller's dynamic transform sync
+        if (!this._useTickCallback) {
+            this._walkContacts();
+        }
+    }
+
+    /**
+     * Walks the dispatcher's contact manifolds and reports each contacting pair with entities
+     * on both bodies to the contact listener.
+     *
+     * @private
+     */
+    _walkContacts() {
+        const listener = this.contactListener;
+        if (!listener) {
+            return;
+        }
+
+        listener.onContactsBegin();
+
+        const dispatcher = this.dispatcher;
+        const numManifolds = dispatcher.getNumManifolds();
+        const pair = this._contactPair;
+
+        for (let i = 0; i < numManifolds; i++) {
+            const manifold = dispatcher.getManifoldByIndexInternal(i);
+
+            const wb0 = Ammo.castObject(manifold.getBody0(), Ammo.btRigidBody);
+            const wb1 = Ammo.castObject(manifold.getBody1(), Ammo.btRigidBody);
+
+            const e0 = wb0.entity;
+            const e1 = wb1.entity;
+
+            // check if entity is null - TODO: investigate when this happens
+            if (!e0 || !e1) {
+                continue;
+            }
+
+            const numContacts = manifold.getNumContacts();
+            if (numContacts > 0) {
+                pair.entityA = e0;
+                pair.entityB = e1;
+                pair.triggerA = (wb0.getCollisionFlags() & BODYFLAG_NORESPONSE_OBJECT) !== 0;
+                pair.triggerB = (wb1.getCollisionFlags() & BODYFLAG_NORESPONSE_OBJECT) !== 0;
+                pair.contactCount = numContacts;
+                pair._manifold = manifold;
+
+                listener.onContactPair(pair);
+            }
+        }
+
+        pair.entityA = null;
+        pair.entityB = null;
+        pair._manifold = null;
+
+        listener.onContactsEnd();
+    }
+
+    raycastFirst(start, end, options = {}) {
+        let result = null;
+
+        this._btRayStart.setValue(start.x, start.y, start.z);
+        this._btRayEnd.setValue(end.x, end.y, end.z);
+        const rayCallback = new Ammo.ClosestRayResultCallback(this._btRayStart, this._btRayEnd);
+
+        if (typeof options.filterCollisionGroup === 'number') {
+            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+        }
+
+        if (typeof options.filterCollisionMask === 'number') {
+            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
+        }
+
+        this.nativeWorld.rayTest(this._btRayStart, this._btRayEnd, rayCallback);
+        if (rayCallback.hasHit()) {
+            const collisionObj = rayCallback.get_m_collisionObject();
+            const body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
+
+            if (body) {
+                const point = rayCallback.get_m_hitPointWorld();
+                const normal = rayCallback.get_m_hitNormalWorld();
+
+                result = new RaycastResult(
+                    body.entity,
+                    new Vec3(point.x(), point.y(), point.z()),
+                    new Vec3(normal.x(), normal.y(), normal.z()),
+                    rayCallback.get_m_closestHitFraction()
+                );
+            }
+        }
+
+        Ammo.destroy(rayCallback);
+
+        return result;
+    }
+
+    raycastAll(start, end, options = {}) {
+        Debug.assert(Ammo.AllHitsRayResultCallback, 'AmmoPhysicsWorld#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
+
+        const results = [];
+
+        this._btRayStart.setValue(start.x, start.y, start.z);
+        this._btRayEnd.setValue(end.x, end.y, end.z);
+        const rayCallback = new Ammo.AllHitsRayResultCallback(this._btRayStart, this._btRayEnd);
+
+        if (typeof options.filterCollisionGroup === 'number') {
+            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+        }
+
+        if (typeof options.filterCollisionMask === 'number') {
+            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
+        }
+
+        this.nativeWorld.rayTest(this._btRayStart, this._btRayEnd, rayCallback);
+        if (rayCallback.hasHit()) {
+            const collisionObjs = rayCallback.get_m_collisionObjects();
+            const points = rayCallback.get_m_hitPointWorld();
+            const normals = rayCallback.get_m_hitNormalWorld();
+            const hitFractions = rayCallback.get_m_hitFractions();
+
+            const numHits = collisionObjs.size();
+            for (let i = 0; i < numHits; i++) {
+                const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
+
+                if (body && body.entity) {
+                    if (options.filterTags && !body.entity.tags.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body.entity)) {
+                        continue;
+                    }
+
+                    const point = points.at(i);
+                    const normal = normals.at(i);
+                    const result = new RaycastResult(
+                        body.entity,
+                        new Vec3(point.x(), point.y(), point.z()),
+                        new Vec3(normal.x(), normal.y(), normal.z()),
+                        hitFractions.at(i)
+                    );
+
+                    results.push(result);
+                }
+            }
+        }
+
+        Ammo.destroy(rayCallback);
+
+        return results;
     }
 }
 
