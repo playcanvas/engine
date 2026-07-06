@@ -261,8 +261,9 @@ class SogBundleParser {
             let ownedByResource = false;
 
             // When the parent gsplat asset unloads, remove child texture assets from the
-            // registry. Destroy their texture resources only while the load is still in flight
-            // (cancellation); once owned by the resource, destruction is left to it.
+            // registry. Destroy their texture resources only until GSplatSogResource ownership
+            // has been transferred (cancellation before ownership transfer); once owned by the
+            // resource, destruction is left to it.
             asset.once('unload', () => {
                 Object.values(textures).forEach((t) => {
                     // remove from registry
