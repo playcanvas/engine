@@ -183,6 +183,12 @@ class SogParser {
                 if (!ownedByResource) {
                     // destroys resource
                     t.unload();
+                } else {
+                    // The resource destroys the textures (possibly deferred), but they stay in
+                    // the loader cache as t.unload() is not called. Clear the cache entries so
+                    // a later load of the same urls recreates the textures instead of reusing
+                    // the cached, destroyed ones.
+                    assets._loader.clearCache(t.getFileUrl(), t.type);
                 }
             });
         });
