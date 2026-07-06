@@ -255,13 +255,23 @@ class SogBundleParser {
 
             const { assets } = this.app;
 
+            // Set once the GSplatSogResource takes ownership of the textures: from then on they
+            // may only be destroyed through the resource's (ref-count deferred) destroy, as the
+            // unified world may still be rendering from them when the asset unloads.
+            let ownedByResource = false;
+
+            // When the parent gsplat asset unloads, remove child texture assets from the
+            // registry. Destroy their texture resources only while the load is still in flight
+            // (cancellation); once owned by the resource, destruction is left to it.
             asset.once('unload', () => {
                 Object.values(textures).forEach((t) => {
                     // remove from registry
                     assets.remove(t);
 
-                    // destroy texture resource
-                    t.unload();
+                    if (!ownedByResource) {
+                        // destroy texture resource
+                        t.unload();
+                    }
                 });
             });
 
@@ -293,6 +303,10 @@ class SogBundleParser {
             const resource = decompress ?
                 new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
                 new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
+
+            // the sog resource now owns the textures in `data` (when decompressing, the
+            // decompressed data was copied out instead and the textures stay with the assets)
+            ownedByResource = !decompress;
 
             callback(null, resource);
         } catch (err) {
