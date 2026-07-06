@@ -1,7 +1,7 @@
 import { Script, Asset } from 'playcanvas';
 
 /**
- * Reference-counted asset cache shared across all GsplatFlipbook instances.
+ * Reference-counted asset cache shared across all GSplatFlipbook instances.
  * Ensures assets are only loaded once and properly cleaned up when no longer needed.
  */
 class AssetCache {
@@ -102,7 +102,7 @@ const PlayMode = {
  *
  * // Add script component and create flipbook script
  * entity.addComponent('script');
- * const flipbook = entity.script.create(GsplatFlipbook);
+ * const flipbook = entity.script.create(GSplatFlipbook);
  *
  * // Configure attributes
  * flipbook.fps = 30;
@@ -135,7 +135,7 @@ const PlayMode = {
  * flipbook.preloadCount = 20; // Larger buffer for slower connections
  * flipbook.preloadCount = 5;  // Smaller buffer to save memory
  */
-class GsplatFlipbook extends Script {
+class GSplatFlipbook extends Script {
     static scriptName = 'gsplatFlipbook';
 
     /**
@@ -209,7 +209,7 @@ class GsplatFlipbook extends Script {
 
         // Verify gsplat component exists (should be added before this script)
         if (!this.entity.gsplat) {
-            console.error('GsplatFlipbook: Entity must have a gsplat component with unified=true');
+            console.error('GSplatFlipbook: Entity must have a gsplat component with unified=true');
             return;
         }
 
@@ -486,4 +486,4 @@ class GsplatFlipbook extends Script {
     }
 }
 
-export { GsplatFlipbook };
+export { GSplatFlipbook };

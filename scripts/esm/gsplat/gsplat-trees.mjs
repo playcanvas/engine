@@ -218,10 +218,10 @@ const renderWGSL = /* wgsl */ `
  * resize as needed. Attach the script to the entity holding the (unified) gsplat component.
  *
  * @example
- * const trees = entity.script.create(GsplatTrees);
+ * const trees = entity.script.create(GSplatTrees);
  * trees.setSpheres([{ center: new pc.Vec3(0, 3, 0), radius: 3 }]);
  */
-class GsplatTrees extends Script {
+class GSplatTrees extends Script {
     static scriptName = 'gsplatTrees';
 
     /** @attribute @type {number} */
@@ -479,4 +479,4 @@ class GsplatTrees extends Script {
     }
 }
 
-export { GsplatTrees };
+export { GSplatTrees };

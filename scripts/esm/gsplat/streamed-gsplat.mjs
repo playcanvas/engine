@@ -1,6 +1,6 @@
 import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } from 'playcanvas';
 
-class StreamedGsplat extends Script {
+class StreamedGSplat extends Script {
     static scriptName = 'streamedGsplat';
 
     /**
@@ -121,9 +121,9 @@ class StreamedGsplat extends Script {
 
         // Load main splat - attach to entity directly
         if (!this.splatUrl) {
-            console.warn('[StreamedGsplat] No splatUrl provided.');
+            console.warn('[StreamedGSplat] No splatUrl provided.');
         } else {
-            const mainAsset = new Asset('MainGsplat_asset', 'gsplat', { url: this.splatUrl });
+            const mainAsset = new Asset('MainGSplat_asset', 'gsplat', { url: this.splatUrl });
             app.assets.add(mainAsset);
             app.assets.load(mainAsset);
             this._assets.push(mainAsset);
@@ -151,16 +151,16 @@ class StreamedGsplat extends Script {
 
         // Load environment splat - attach to child entity
         if (!this.environmentUrl) {
-            console.warn('[StreamedGsplat] No environmentUrl provided (skipping env child).');
+            console.warn('[StreamedGSplat] No environmentUrl provided (skipping env child).');
         } else {
-            const envAsset = new Asset('EnvironmentGsplat_asset', 'gsplat', { url: this.environmentUrl });
+            const envAsset = new Asset('EnvironmentGSplat_asset', 'gsplat', { url: this.environmentUrl });
             app.assets.add(envAsset);
             app.assets.load(envAsset);
             this._assets.push(envAsset);
 
             envAsset.ready((a) => {
                 // Create child entity disabled to allow unified property to be set
-                const child = new Entity('EnvironmentGsplat');
+                const child = new Entity('EnvironmentGSplat');
                 child.enabled = false;
 
                 // Attach to the scene graph
@@ -311,4 +311,4 @@ class StreamedGsplat extends Script {
     }
 }
 
-export { StreamedGsplat };
+export { StreamedGSplat };

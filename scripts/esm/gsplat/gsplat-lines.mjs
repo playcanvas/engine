@@ -25,7 +25,7 @@ function calculateSplatCount(start, end, thickness) {
  * @example
  * // Add the script to an entity
  * entity.addComponent('script');
- * const lines = entity.script.create(GsplatLines);
+ * const lines = entity.script.create(GSplatLines);
  *
  * // Add primitives
  * const lineHandle = lines.addLine(
@@ -39,7 +39,7 @@ function calculateSplatCount(start, end, thickness) {
  * // Remove a primitive
  * lines.removePrimitive(lineHandle);
  */
-class GsplatLines extends Script {
+class GSplatLines extends Script {
     static scriptName = 'gsplatLines';
 
     /**
@@ -466,4 +466,4 @@ class GsplatLines extends Script {
     }
 }
 
-export { GsplatLines };
+export { GSplatLines };

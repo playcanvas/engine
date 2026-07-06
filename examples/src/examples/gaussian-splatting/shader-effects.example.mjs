@@ -26,7 +26,7 @@ import {
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
-import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
+import { GSplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -210,7 +210,7 @@ hotel.addComponent('script');
 
 // Helper function to create box script with configured attributes
 const createBoxScript = () => {
-    const script = hotel.script?.create(GsplatBoxShaderEffect);
+    const script = hotel.script?.create(GSplatBoxShaderEffect);
     return script;
 };
 

@@ -40,7 +40,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatWeather } from 'playcanvas/scripts/esm/gsplat/gsplat-weather.mjs';
+import { GSplatWeather } from 'playcanvas/scripts/esm/gsplat/gsplat-weather.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -138,8 +138,8 @@ gsplatEntity.gsplat.lodMultiplier = 4;
 // Procedural weather
 const weatherEntity = new Entity('Weather');
 weatherEntity.addComponent('script');
-const weather = /** @type {GsplatWeather} */ (
-    weatherEntity.script.create(GsplatWeather, {
+const weather = /** @type {GSplatWeather} */ (
+    weatherEntity.script.create(GSplatWeather, {
         properties: {
             followEntity: camera,
             speed: 1.0,

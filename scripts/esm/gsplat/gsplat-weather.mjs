@@ -16,13 +16,13 @@ import { Script, Vec3, BoundingBox, GSplatFormat, GSplatContainer, PIXELFORMAT_R
  * @example
  * const weatherEntity = new pc.Entity('Weather');
  * weatherEntity.addComponent('script');
- * const weather = weatherEntity.script.create(GsplatWeather);
+ * const weather = weatherEntity.script.create(GSplatWeather);
  * weather.followEntity = cameraEntity;
  * weather.speed = 1.2;
  * weather.drift = 0.15;
  * app.root.addChild(weatherEntity);
  */
-class GsplatWeather extends Script {
+class GSplatWeather extends Script {
     static scriptName = 'gsplatWeather';
 
     // --- Grid configuration (read at initialize; call rebuild() after changing) ---
@@ -450,4 +450,4 @@ class GsplatWeather extends Script {
     }
 }
 
-export { GsplatWeather };
+export { GSplatWeather };

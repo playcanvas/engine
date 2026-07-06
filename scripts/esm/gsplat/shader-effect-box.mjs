@@ -1,5 +1,5 @@
 import { Vec3, Color, FloatPacking, Texture, PIXELFORMAT_RGBA16U } from 'playcanvas';
-import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
+import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform highp usampler2D uLUT;
@@ -148,11 +148,11 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * @example
  * // Add the script to a gsplat entity
  * entity.addComponent('script');
- * const boxScript = entity.script.create(GsplatBoxShaderEffect);
+ * const boxScript = entity.script.create(GSplatBoxShaderEffect);
  * boxScript.aabbMin.set(-1, -1, -1);
  * boxScript.aabbMax.set(1, 1, 1);
  */
-class GsplatBoxShaderEffect extends GsplatShaderEffect {
+class GSplatBoxShaderEffect extends GSplatShaderEffect {
     static scriptName = 'gsplatBoxShaderEffect';
 
     /**
@@ -258,7 +258,7 @@ class GsplatBoxShaderEffect extends GsplatShaderEffect {
 
         // Create LUT texture (256x1 RGBA16U - non-filterable, use textureLoad/texelFetch)
         this._lutTexture = new Texture(this.app.graphicsDevice, {
-            name: 'GsplatEffectLUT',
+            name: 'GSplatEffectLUT',
             width: 256,
             height: 1,
             format: PIXELFORMAT_RGBA16U,
@@ -453,4 +453,4 @@ class GsplatBoxShaderEffect extends GsplatShaderEffect {
     }
 }
 
-export { GsplatBoxShaderEffect };
+export { GSplatBoxShaderEffect };

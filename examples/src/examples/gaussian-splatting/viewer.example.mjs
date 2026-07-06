@@ -324,10 +324,10 @@ canvas.addEventListener('drop', async (e) => {
     const file = files[0];
     const fileName = file.name.toLowerCase();
     const isSpz = !isUnpackedSog && fileName.endsWith('.spz');
-    const isGsplat = !isUnpackedSog && (fileName.endsWith('.ply') || fileName.endsWith('.sog') || isSpz);
+    const isGSplat = !isUnpackedSog && (fileName.endsWith('.ply') || fileName.endsWith('.sog') || isSpz);
     const isGlb = !isUnpackedSog && fileName.endsWith('.glb');
 
-    if (!isUnpackedSog && !isGsplat && !isGlb) {
+    if (!isUnpackedSog && !isGSplat && !isGlb) {
         console.warn('Please drop a .ply, .sog, .spz, .glb, or an unpacked SOG (meta.json + .webp files)');
         return;
     }
@@ -391,7 +391,7 @@ canvas.addEventListener('drop', async (e) => {
             console.warn('customAabb not available');
             return;
         }
-    } else if (isGsplat) {
+    } else if (isGSplat) {
         // Create blob URL and load asset using loadFromUrlAndFilename
         // This method is specifically for blob assets where the URL doesn't identify the format
         const blobUrl = URL.createObjectURL(file);
