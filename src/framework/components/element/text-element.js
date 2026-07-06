@@ -405,23 +405,28 @@ class TextElement {
             const shadowPaletteMap = { };
 
             // store fallback color in the palette
+            // palette colors are stored in linear space, to match the color uniforms used when
+            // no per-vertex coloring is present
+            _tempColor.linear(this._color);
             this._colorPalette = [
-                Math.round(this._color.r * 255),
-                Math.round(this._color.g * 255),
-                Math.round(this._color.b * 255)
+                Math.round(_tempColor.r * 255),
+                Math.round(_tempColor.g * 255),
+                Math.round(_tempColor.b * 255)
             ];
+            _tempColor.linear(this._outlineColor);
             this._outlinePalette = [
-                Math.round(this._outlineColor.r * 255),
-                Math.round(this._outlineColor.g * 255),
-                Math.round(this._outlineColor.b * 255),
-                Math.round(this._outlineColor.a * 255),
+                Math.round(_tempColor.r * 255),
+                Math.round(_tempColor.g * 255),
+                Math.round(_tempColor.b * 255),
+                Math.round(_tempColor.a * 255),
                 Math.round(this._outlineThickness * 255)
             ];
+            _tempColor.linear(this._shadowColor);
             this._shadowPalette = [
-                Math.round(this._shadowColor.r * 255),
-                Math.round(this._shadowColor.g * 255),
-                Math.round(this._shadowColor.b * 255),
-                Math.round(this._shadowColor.a * 255),
+                Math.round(_tempColor.r * 255),
+                Math.round(_tempColor.g * 255),
+                Math.round(_tempColor.b * 255),
+                Math.round(_tempColor.a * 255),
                 Math.round(this._shadowOffset.x * 127),
                 Math.round(this._shadowOffset.y * 127)
             ];
@@ -464,9 +469,11 @@ class TextElement {
                                 // new color
                                 color = this._colorPalette.length / 3;
                                 paletteMap[hex] = color;
-                                this._colorPalette.push(parseInt(hex.substring(0, 2), 16));
-                                this._colorPalette.push(parseInt(hex.substring(2, 4), 16));
-                                this._colorPalette.push(parseInt(hex.substring(4, 6), 16));
+                                colorTmp.fromString(`#${hex}`);
+                                _tempColor.linear(colorTmp);
+                                this._colorPalette.push(Math.round(_tempColor.r * 255));
+                                this._colorPalette.push(Math.round(_tempColor.g * 255));
+                                this._colorPalette.push(Math.round(_tempColor.b * 255));
                             }
                         }
                     }
@@ -510,11 +517,12 @@ class TextElement {
                         outline = this._outlinePalette.length / 5;
                         outlinePaletteMap[outlineHash] = outline;
 
+                        _tempColor.linear(color);
                         this._outlinePalette.push(
-                            Math.round(color.r * 255),
-                            Math.round(color.g * 255),
-                            Math.round(color.b * 255),
-                            Math.round(color.a * 255),
+                            Math.round(_tempColor.r * 255),
+                            Math.round(_tempColor.g * 255),
+                            Math.round(_tempColor.b * 255),
+                            Math.round(_tempColor.a * 255),
                             Math.round(thickness * 255)
                         );
                     }
@@ -571,11 +579,12 @@ class TextElement {
                         shadow = this._shadowPalette.length / 6;
                         shadowPaletteMap[shadowHash] = shadow;
 
+                        _tempColor.linear(color);
                         this._shadowPalette.push(
-                            Math.round(color.r * 255),
-                            Math.round(color.g * 255),
-                            Math.round(color.b * 255),
-                            Math.round(color.a * 255),
+                            Math.round(_tempColor.r * 255),
+                            Math.round(_tempColor.g * 255),
+                            Math.round(_tempColor.b * 255),
+                            Math.round(_tempColor.a * 255),
                             Math.round(offset.x * 127),
                             Math.round(offset.y * 127)
                         );
@@ -684,6 +693,7 @@ class TextElement {
                 mi.setParameter('material_emissive', this._colorUniform);
                 mi.setParameter('material_opacity', this._color.a);
                 mi.setParameter('font_sdfIntensity', this._font.intensity);
+                mi.setParameter('font_pxrange', this._getPxRange(this._font));
 
                 mi.setParameter('outline_color', this._outlineColorUniform);
                 mi.setParameter('outline_thickness', this._outlineThicknessScale * this._outlineThickness);
@@ -1412,6 +1422,7 @@ class TextElement {
                 const mi = this._meshInfo[i].meshInstance;
                 if (mi) {
                     mi.setParameter('font_sdfIntensity', this._font.intensity);
+                    mi.setParameter('font_pxrange', this._getPxRange(this._font));
                 }
             }
         }
@@ -1433,6 +1444,18 @@ class TextElement {
                 mi.setParameter('texture_opacityMap', texture);
             }
         }
+    }
+
+    _getPxRange(font) {
+        // calculate pxrange from range and scale properties on a character
+        const keys = Object.keys(this._font.data.chars);
+        for (let i = 0; i < keys.length; i++) {
+            const char = this._font.data.chars[keys[i]];
+            if (char.range) {
+                return (char.scale || 1) * char.range;
+            }
+        }
+        return 2; // default
     }
 
     _getUv(char) {
@@ -1782,6 +1805,7 @@ class TextElement {
                 const mi = this._meshInfo[i].meshInstance;
                 if (mi) {
                     mi.setParameter('font_sdfIntensity', this._font.intensity);
+                    mi.setParameter('font_pxrange', this._getPxRange(this._font));
                     this._setTextureParams(mi, this._font.textures[i]);
                 }
             }

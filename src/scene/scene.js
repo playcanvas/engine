@@ -750,9 +750,9 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Gets the rotation of the skybox to be displayed.
+     * Gets the rotation of the skybox to be displayed. Use the setter to update skybox state.
      *
-     * @type {Quat}
+     * @type {Readonly<Quat>}
      */
     get skyboxRotation() {
         return this._skyboxRotation;

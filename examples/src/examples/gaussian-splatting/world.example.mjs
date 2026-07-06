@@ -144,7 +144,9 @@ assetListLoader.load(() => {
     // Create skatepark entity
     const skatepark = new pc.Entity('Skatepark');
     skatepark.addComponent('gsplat', {
-        asset: assets.skatepark
+        asset: assets.skatepark,
+        lodRangeMin: presetData.range[0],
+        lodRangeMax: presetData.range[1]
     });
     skatepark.setLocalPosition(0, 0, 0);
     const [rotX, rotY, rotZ] = /** @type {[number, number, number]} */ (config.eulerAngles);
@@ -154,8 +156,6 @@ assetListLoader.load(() => {
 
     // Apply LOD distances to skatepark
     const gs = /** @type {any} */ (skatepark.gsplat);
-    gs.lodRangeMin = presetData.range[0];
-    gs.lodRangeMax = presetData.range[1];
     gs.lodBaseDistance = presetData.lodBaseDistance;
     gs.lodMultiplier = 4;
 

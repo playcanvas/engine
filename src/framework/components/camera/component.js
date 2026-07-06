@@ -740,7 +740,7 @@ class CameraComponent extends Component {
     /**
      * Gets the array of layer IDs ({@link Layer#id}) to which this camera belongs.
      *
-     * @type {number[]}
+     * @type {ReadonlyArray<number>}
      */
     get layers() {
         return this._camera.layers;
@@ -890,7 +890,7 @@ class CameraComponent extends Component {
     /**
      * Gets the rendering rectangle for the camera.
      *
-     * @type {Vec4}
+     * @type {Readonly<Vec4>}
      */
     get rect() {
         return this._camera.rect;

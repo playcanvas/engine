@@ -434,9 +434,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the anchor for this element component.
+     * Gets the anchor for this element component. Use the setter to update the anchor.
      *
-     * @type {Vec4 | number[]}
+     * @type {Readonly<Vec4>}
      */
     get anchor() {
         return this._anchor;
@@ -673,7 +673,7 @@ class ElementComponent extends Component {
     /**
      * Gets the array of layer IDs ({@link Layer#id}) to which this element belongs.
      *
-     * @type {number[]}
+     * @type {ReadonlyArray<number>}
      */
     get layers() {
         return this._layers;
@@ -719,9 +719,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the distance from the left, bottom, right and top edges of the anchor.
+     * Gets the distance from the left, bottom, right and top edges of the anchor. Use the setter to
+     * update the margin.
      *
-     * @type {Vec4}
+     * @type {Readonly<Vec4>}
      */
     get margin() {
         return this._margin;
@@ -783,9 +784,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the position of the pivot of the component relative to its anchor.
+     * Gets the position of the pivot of the component relative to its anchor. Use the setter to
+     * update the pivot.
      *
-     * @type {Vec2 | number[]}
+     * @type {Readonly<Vec2>}
      */
     get pivot() {
         return this._pivot;
@@ -1272,9 +1274,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the color of the element.
+     * Gets the color of the element. Use the setter to update the color.
      *
-     * @type {Color}
+     * @type {Readonly<Color>}
      */
     get color() {
         if (this._text) {
@@ -1820,9 +1822,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the region of the texture to use in order to render an image.
+     * Gets the region of the texture to use in order to render an image. Use the setter to update
+     * the region.
      *
-     * @type {Vec4}
+     * @type {Readonly<Vec4>|null}
      */
     get rect() {
         if (this._image) {

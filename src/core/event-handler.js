@@ -96,13 +96,16 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandle} Can be used for removing event in the future.
+     * @returns {EventHandle} An event handle. For later removal, prefer retaining this handle and
+     * calling its {@link EventHandle#off} over {@link EventHandler#off} with a name/callback: it
+     * removes exactly this subscription and is faster (no scan of the callback list).
      * @example
      * obj.on('test', (a, b) => {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
      * @example
+     * // preferred removal: retain the handle and call off() on it
      * const evt = obj.on('test', (a, b) => {
      *     console.log(a + b);
      * });
@@ -121,7 +124,10 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandle} Can be used for removing event in the future.
+     * @returns {EventHandle} An event handle. For removal before it fires, prefer retaining this
+     * handle and calling its {@link EventHandle#off} over {@link EventHandler#off} with a
+     * name/callback: it removes exactly this subscription and is faster (no scan of the callback
+     * list).
      * @example
      * obj.once('test', (a, b) => {
      *     console.log(a + b);
@@ -137,6 +143,11 @@ class EventHandler {
      * Detach an event handler from an event. If callback is not provided then all callbacks are
      * unbound from the event, if scope is not provided then all events with the callback will be
      * unbound.
+     *
+     * Use this form to remove all listeners matching a name (and optionally callback/scope). To
+     * remove a single known subscription, prefer retaining the {@link EventHandle} returned by
+     * {@link EventHandler#on} / {@link EventHandler#once} and calling its {@link EventHandle#off}:
+     * it removes exactly that subscription and is faster (no scan of the callback list).
      *
      * @param {string} [name] - Name of the event to unbind.
      * @param {HandleEventCallback} [callback] - Function to be unbound.

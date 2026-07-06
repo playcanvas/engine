@@ -357,9 +357,10 @@ class RenderComponent extends Component {
     }
 
     /**
-     * Gets the array of meshInstances contained in the component.
+     * Gets the array of meshInstances contained in the component. Use the setter to replace the
+     * array; do not mutate the returned array.
      *
-     * @type {MeshInstance[]}
+     * @type {ReadonlyArray<MeshInstance>}
      */
     get meshInstances() {
         return this._meshInstances;
@@ -547,7 +548,7 @@ class RenderComponent extends Component {
     /**
      * Gets the array of layer IDs ({@link Layer#id}) to which the mesh instances belong.
      *
-     * @type {number[]}
+     * @type {ReadonlyArray<number>}
      */
     get layers() {
         return this._layers;

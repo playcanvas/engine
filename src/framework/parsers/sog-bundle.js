@@ -157,6 +157,20 @@ class SogBundleParser {
     }
 
     /**
+     * Checks if loading should be aborted due to asset unload or invalid device.
+     *
+     * @param {Asset} asset - The asset being loaded.
+     * @param {boolean} unloaded - Whether the asset was unloaded during async loading.
+     * @returns {boolean} True if loading should be aborted.
+     * @private
+     */
+    _shouldAbort(asset, unloaded) {
+        if (unloaded || !this.app.assets.get(asset.id)) return true;
+        if (!this.app?.graphicsDevice || this.app.graphicsDevice._destroyed) return true;
+        return false;
+    }
+
+    /**
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
@@ -168,7 +182,49 @@ class SogBundleParser {
         const gsplatCentersEnabledAtLoad = this.app.scene?.gsplatCentersEnabled !== false;
 
         try {
+            const { assets } = this.app;
+
+            // Track if asset was unloaded during async loading
+            let unloaded = false;
+
+            // Set once the GSplatSogResource takes ownership of the textures: from then on they
+            // may only be destroyed through the resource's (ref-count deferred) destroy, as the
+            // unified world may still be rendering from them when the asset unloads.
+            let ownedByResource = false;
+
+            // load referenced textures
+            const textures = {};
+
+            // When the parent gsplat asset unloads, remove child texture assets from the
+            // registry. Destroy their texture resources only while the load is still in flight
+            // (cancellation); once owned by the resource, destruction is left to it. Registered
+            // before any await so an unload during the download or texture loading is caught.
+            asset.once('unload', () => {
+                unloaded = true;
+
+                Object.values(textures).forEach((t) => {
+                    // remove from registry
+                    assets.remove(t);
+
+                    if (!ownedByResource) {
+                        // destroy texture resource
+                        t.unload();
+                    } else {
+                        // The resource destroys the textures (possibly deferred), but they stay
+                        // in the loader cache as t.unload() is not called. Clear the cache
+                        // entries so a later load of the same urls recreates the textures
+                        // instead of reusing the cached, destroyed ones.
+                        assets._loader.clearCache(t.getFileUrl(), t.type);
+                    }
+                });
+            });
+
             const arrayBuffer = await downloadArrayBuffer(url, asset);
+
+            if (this._shouldAbort(asset, unloaded)) {
+                callback(null, null);
+                return;
+            }
 
             const files = parseZipArchive(arrayBuffer);
 
@@ -198,8 +254,6 @@ class SogBundleParser {
             // extract filenames from meta.json
             const filenames = ['means', 'scales', 'quats', 'sh0', 'shN'].map(key => meta[key]?.files ?? []).flat();
 
-            // load referenced textures
-            const textures = {};
             const promises = [];
             for (const filename of filenames) {
                 const file = files.find(f => f.filename === filename);
@@ -242,16 +296,25 @@ class SogBundleParser {
 
             await Promise.allSettled(promises);
 
-            const { assets } = this.app;
-
-            asset.once('unload', () => {
+            if (this._shouldAbort(asset, unloaded)) {
+                // Clean up texture assets that were created during the async load
                 Object.values(textures).forEach((t) => {
-                    // remove from registry
                     assets.remove(t);
-
-                    // destroy texture resource
                     t.unload();
                 });
+                callback(null, null);
+                return;
+            }
+
+            // Release the encoded source bytes held by the embedded texture assets. These are
+            // views into the downloaded zip arrayBuffer; once the textures have been decoded and
+            // uploaded, dropping them lets the whole archive buffer be garbage collected. The
+            // decoded ImageBitmap retained by each texture (for re-upload on device context loss)
+            // is unaffected.
+            Object.values(textures).forEach((t) => {
+                if (t.file) {
+                    t.file.contents = null;
+                }
             });
 
             // construct the gsplat resource
@@ -271,6 +334,12 @@ class SogBundleParser {
             data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
             if (!decompress) {
+                if (this._shouldAbort(asset, unloaded)) {
+                    data.destroy();
+                    callback(null, null);
+                    return;
+                }
+
                 // no need to prepare gpu data if decompressing
                 data.prepareCodebook();
                 if (gsplatCentersEnabledAtLoad) {
@@ -278,10 +347,26 @@ class SogBundleParser {
                 }
             }
 
+            if (this._shouldAbort(asset, unloaded)) {
+                data.destroy();
+                callback(null, null);
+                return;
+            }
+
             const prepareCenters = gsplatCentersEnabledAtLoad;
             const resource = decompress ?
                 new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
                 new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
+
+            // the sog resource now owns the textures in `data` (when decompressing, the
+            // decompressed data was copied out instead and the textures stay with the assets)
+            ownedByResource = !decompress;
+
+            if (this._shouldAbort(asset, unloaded)) {
+                resource.destroy();
+                callback(null, null);
+                return;
+            }
 
             callback(null, resource);
         } catch (err) {

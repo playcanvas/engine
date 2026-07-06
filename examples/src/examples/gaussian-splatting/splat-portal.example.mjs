@@ -346,7 +346,12 @@ assetListLoader.load(() => {
         const entity = new pc.Entity(`${config.name}Splat`);
         entity.addComponent('gsplat', {
             asset: config.asset,
-            layers: [config.layer.id]
+            layers: [config.layer.id],
+            lodBaseDistance: config.lodBaseDistance,
+            lodMultiplier: config.lodMultiplier,
+            // start with the lowest LOD until the first frame settles, then unlock the full range
+            lodRangeMin: 4,
+            lodRangeMax: 5
         });
 
         // "from" pose - the portal-aligned natural transform (used while you live in this scene)
@@ -365,13 +370,6 @@ assetListLoader.load(() => {
         const startMat = config.layer === insideLayer ? throughTransform : fromTransform;
         applyMatToEntity(entity, startMat);
         app.root.addChild(entity);
-
-        const gs = /** @type {any} */ (entity.gsplat);
-        gs.lodBaseDistance = config.lodBaseDistance;
-        gs.lodMultiplier = config.lodMultiplier;
-        // start with the lowest LOD until the first frame settles, then unlock the full range
-        gs.lodRangeMin = 4;
-        gs.lodRangeMax = 5;
 
         sceneStates.set(config.layer, { entity, fromTransform, throughTransform });
     });

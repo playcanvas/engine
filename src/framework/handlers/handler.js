@@ -25,6 +25,7 @@ class ResourceHandler {
      * The running app instance.
      *
      * @type {AppBase}
+     * @protected
      */
     _app;
 
@@ -38,6 +39,15 @@ class ResourceHandler {
     constructor(app, handlerType) {
         this._app = app;
         this.handlerType = handlerType;
+    }
+
+    /**
+     * Gets the running {@link AppBase} instance.
+     *
+     * @type {AppBase}
+     */
+    get app() {
+        return this._app;
     }
 
     /**

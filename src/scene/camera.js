@@ -404,6 +404,12 @@ class Camera {
         this._layersSet = new Set(this._layers);
     }
 
+    /**
+     * Gets the layer IDs this camera renders. Use the setter to replace the array; do not mutate
+     * the returned array.
+     *
+     * @type {ReadonlyArray<number>}
+     */
     get layers() {
         return this._layers;
     }
