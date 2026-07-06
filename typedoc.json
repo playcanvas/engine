@@ -24,8 +24,7 @@
     },
     "placeInternalsInOwningModule": true,
     "sidebarLinks": {
-        "Home": "/",
-        "Engine Scripts": "/scripts/"
+        "Home": "/"
     },
     "plugin": [
         "./utils/typedoc/typedoc-plugin.mjs",
