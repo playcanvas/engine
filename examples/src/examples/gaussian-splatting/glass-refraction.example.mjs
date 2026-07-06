@@ -1,11 +1,7 @@
 // @config
 //
-// A gaussian splat encased in a solid glass shape with simulated refraction. The splat renders
-// into a custom layer placed before the camera frame's scene color grab pass, so the refractive
-// glass material bends the view of the splat (and the skybox behind it) at the shape's surface,
-// including chromatic dispersion. The splat is cropped to the inside of the shape by scaling
-// splats outside its faces to zero, with splats near the surface shrunk so they don't poke
-// through the glass.
+// A gaussian splat encased in a solid glass shape, cropped to the shape and refracted (with
+// chromatic dispersion) through its surface.
 //
 // @credit
 // title: Knock Community Hall
@@ -503,7 +499,6 @@ app.root.addChild(camera);
 // Camera frame with the scene color map enabled for dynamic refraction. The grab boundary is
 // moved past the splat layer, so the grabbed scene color includes the splat.
 const cameraFrame = new CameraFrame(app, camera.camera);
-cameraFrame.rendering.samples = 4;
 cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.rendering.sceneColorMap = true;
 cameraFrame.bloom.intensity = 0.02;
