@@ -1,0 +1,20 @@
+Tropical Island
+===============
+
+Title:   Tropical Island
+Author:  Elin (https://sketchfab.com/ElinHohler)
+Source:  https://sketchfab.com/3d-models/tropical-island-f91862f8c38b481aa19edccac851eefb
+License: CC Attribution 4.0 International (CC BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/
+
+Modifications (made for use in the PlayCanvas examples):
+- Removed the skybox mesh and the bone-animated water plane mesh (including its
+  armature, skin, animation, material and textures) - the PlayCanvas Water script
+  renders the water instead.
+- Removed the KHR_materials_unlit flag from all materials, so the island is lit
+  dynamically by the scene lighting.
+- Removed the baked shadows from the beach texture.
+- Extended the beach mesh with a generated skirt - its open boundary extruded outwards,
+  sloping down into the distance, so the terrain continues under water.
+- Resized all textures to half their original resolution and converted them to WebP.
+- Applied Draco mesh compression.
