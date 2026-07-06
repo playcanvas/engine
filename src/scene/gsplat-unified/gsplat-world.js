@@ -447,12 +447,13 @@ class GSplatWorld {
         result.overdrawDirty = false;
         result.sortNeeded = false;
 
-        // Drop instances whose octree was destroyed (e.g. the asset was unloaded) before the
-        // layer placement change reaches reconcile - they can no longer stream and their
-        // resources are gone, so letting them run this update would assert and crash the
+        // Drop instances whose octree was destroyed (the asset was unloaded) or whose placement
+        // was destroyed (the component detached the asset, which nulls placement.resource)
+        // before the layer placement change reaches reconcile - they can no longer stream and
+        // their resources are gone, so letting them run this update would assert and crash the
         // budget pass. Mirrors the removal branch in reconcile.
         for (const [placement, inst] of this._octreeInstances) {
-            if (inst.octree.destroyed) {
+            if (inst.octree.destroyed || !placement.resource) {
                 this._octreeInstances.delete(placement);
                 this._layerPlacementsDirty = true;
                 this._placementSetChanged = true;
