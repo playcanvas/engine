@@ -383,14 +383,14 @@ const initialData = {
     foam: true,
     foamDepth: 0.5,
     caustics: true,
-    causticsStrength: 1.5,
-    causticsTiling: 0.09,
+    causticsStrength: 4,
+    causticsTiling: 0.1,
     causticsSpeed: 0.04,
-    causticsDepth: 3,
+    causticsDepth: 4.9,
     snellWindow: 0.6,
-    fogDensity: 0.15,
+    fogDensity: 0.068,
     fogBrightness: 0.35,
-    fogColor: [0.23, 0.42, 0.45],
+    fogColor: [0.165, 0.549, 0.596],
     waves: true,
     waveAmplitude: 0.12,
     waveLength: 12,
@@ -404,3 +404,7 @@ const initialData = {
 };
 data.set('data', initialData);
 Object.entries(initialData).forEach(([prop, value]) => applyProp(prop, value));
+
+// applying the preset above pushed its derived fog values - restore the tuned defaults
+data.set('data.fogDensity', initialData.fogDensity);
+data.set('data.fogColor', initialData.fogColor);
