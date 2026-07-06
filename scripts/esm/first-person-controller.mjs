@@ -62,6 +62,24 @@ const applyDeadZone = (stick, low, high) => {
     stick[1] *= scale / mag;
 };
 
+/**
+ * A physics-based first-person character controller, driven by keyboard and mouse (with pointer
+ * lock), dual-gesture touch input or a gamepad. Movement applies forces to a dynamic rigid body:
+ * damped ground and air movement, sprinting and jumping. Capsule collision and rigid body
+ * components are created on the entity if not already present.
+ *
+ * The {@link FirstPersonController#camera} attribute must be set to a child camera entity, which
+ * receives the look rotation. A physics library such as Ammo must be loaded.
+ *
+ * @example
+ * playerEntity.addComponent('script');
+ * playerEntity.script.create(FirstPersonController, {
+ *     properties: {
+ *         camera: cameraEntity,
+ *         jumpForce: 850
+ *     }
+ * });
+ */
 class FirstPersonController extends Script {
     static scriptName = 'firstPersonController';
 

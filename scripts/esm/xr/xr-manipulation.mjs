@@ -1,6 +1,7 @@
 import { math, Quat, Script, Vec3 } from 'playcanvas';
 
 /** @import { Entity, XrInputSource } from 'playcanvas' */
+/** @import { XrNavigation } from './xr-navigation.mjs' */
 
 // Minimum 3D hand separation (meters) below which the scale solve is held, avoiding division
 // blow-up when the two grip poses (near-)coincide

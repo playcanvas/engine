@@ -24,8 +24,8 @@ class ScriptType extends Script {
      * Create a new ScriptType instance.
      *
      * @param {object} args - The input arguments object.
-     * @param {AppBase} args.app - The {@link AppBase} that is running the script.
-     * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
+     * @param {AppBase} args.app - The AppBase that is running the script.
+     * @param {Entity} args.entity - The Entity that the script is attached to.
      */
     constructor(args) {
         super(args);

@@ -436,6 +436,23 @@ class Dof {
     blurRingPoints = 5;
 }
 
+/**
+ * Enables the engine's {@link EngineCameraFrame | CameraFrame} render pipeline on a camera
+ * entity, exposing its settings as grouped script attributes: rendering (render format, tone
+ * mapping, sharpness, TAA), SSAO, bloom, color grading, color LUT, vignette, fringing and depth
+ * of field.
+ *
+ * Attach the script to an entity with a camera component and adjust the attribute groups to
+ * configure the post-processing stack.
+ *
+ * @example
+ * cameraEntity.addComponent('script');
+ * cameraEntity.script.create(CameraFrame, {
+ *     properties: {
+ *         bloom: { intensity: 0.02 }
+ *     }
+ * });
+ */
 class CameraFrame extends Script {
     static scriptName = 'cameraFrame';
 
@@ -637,4 +654,4 @@ class CameraFrame extends Script {
     }
 }
 
-export { CameraFrame };
+export { CameraFrame, Rendering, Ssao, Bloom, Grading, ColorLUT, Vignette, Fringing, ColorEnhance, Taa, Dof };

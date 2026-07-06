@@ -1,5 +1,23 @@
 import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } from 'playcanvas';
 
+/**
+ * Loads and displays a streamed gaussian splat scene ({@link StreamedGSplat#splatUrl}), plus an
+ * optional environment splat ({@link StreamedGSplat#environmentUrl}) on a child entity, using
+ * unified gsplat components. Rendering quality is controlled by one of four LOD presets — ultra,
+ * high, medium or low — each with a configurable LOD base distance, multiplier and range. The
+ * initial preset is low on mobile and medium on desktop, and can be switched at runtime by
+ * firing the `preset:ultra`, `preset:high`, `preset:medium` or `preset:low` app events. Firing
+ * `colorize:toggle` toggles the LOD debug visualization.
+ *
+ * @example
+ * splatEntity.addComponent('script');
+ * splatEntity.script.create(StreamedGSplat, {
+ *     properties: {
+ *         splatUrl: 'scene.sog',
+ *         environmentUrl: 'environment.sog'
+ *     }
+ * });
+ */
 class StreamedGSplat extends Script {
     static scriptName = 'streamedGsplat';
 

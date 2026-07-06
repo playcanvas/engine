@@ -8,6 +8,7 @@ build
 tree*.*.html
 coverage
 docs
+docs-scripts
 examples/.cert
 examples/dist
 examples/node_modules

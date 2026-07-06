@@ -4,39 +4,6 @@ import { GSplatFormat, GSplatResourceBase, Http, PIXELFORMAT_RGBA8, PIXELFORMAT_
  * @import { AppBase, BoundingBox, GraphicsDevice } from 'playcanvas'
  */
 
-/**
- * A parser for the SPZ gaussian splat format (https://github.com/nianticlabs/spz), version 4.
- *
- * The splat data stays in its quantized form on the GPU (roughly 20 bytes per splat plus
- * spherical harmonics), and is dequantized in the shader, similar to how the compressed PLY and
- * SOG formats are handled by the engine.
- *
- * SPZ v4 attribute streams are ZSTD compressed. The parser uses a ZSTD wasm module which the
- * application needs to register before loading spz assets, in the same way the Draco module is
- * registered:
- *
- * ```javascript
- * pc.WasmModule.setConfig('ZstdDecoderModule', {
- *     glueUrl: 'zstd.wasm.js',
- *     wasmUrl: 'zstd.wasm.wasm'
- * });
- * ```
- *
- * To use, register the parser with the gsplat resource handler:
- *
- * ```javascript
- * app.loader.getHandler('gsplat').addParser(new SpzParser(app));
- * ```
- *
- * and then load spz files as gsplat assets:
- *
- * ```javascript
- * const asset = new pc.Asset('gsplat', 'gsplat', { url: 'scene.spz' });
- * app.assets.add(asset);
- * app.assets.load(asset);
- * ```
- */
-
 // SPZ v4 file header constants
 const NGSP_MAGIC = 0x5053474e;
 const FLAG_ANTIALIASED = 0x1;
@@ -321,6 +288,7 @@ class GSplatSpzResource extends GSplatResourceBase {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {SpzGSplatData} gsplatData - The parsed spz data.
      * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
+     * @ignore
      */
     constructor(device, gsplatData, options = {}) {
         super(device, gsplatData, options);
@@ -497,6 +465,38 @@ const parseSpz = (arrayBuffer, decoder) => {
     return new SpzGSplatData(header, streams);
 };
 
+/**
+ * A parser for the SPZ gaussian splat format (https://github.com/nianticlabs/spz), version 4.
+ *
+ * The splat data stays in its quantized form on the GPU (roughly 20 bytes per splat plus
+ * spherical harmonics), and is dequantized in the shader, similar to how the compressed PLY and
+ * SOG formats are handled by the engine.
+ *
+ * SPZ v4 attribute streams are ZSTD compressed. The parser uses a ZSTD wasm module which the
+ * application needs to register before loading spz assets, in the same way the Draco module is
+ * registered:
+ *
+ * ```javascript
+ * pc.WasmModule.setConfig('ZstdDecoderModule', {
+ *     glueUrl: 'zstd.wasm.js',
+ *     wasmUrl: 'zstd.wasm.wasm'
+ * });
+ * ```
+ *
+ * To use, register the parser with the gsplat resource handler:
+ *
+ * ```javascript
+ * app.loader.getHandler('gsplat').addParser(new SpzParser(app));
+ * ```
+ *
+ * and then load spz files as gsplat assets:
+ *
+ * ```javascript
+ * const asset = new pc.Asset('gsplat', 'gsplat', { url: 'scene.spz' });
+ * app.assets.add(asset);
+ * app.assets.load(asset);
+ * ```
+ */
 class SpzParser {
     /** @type {AppBase} */
     app;

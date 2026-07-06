@@ -125,6 +125,25 @@ const MobileInputLayout = {
     TOUCH_TOUCH: 'touch-touch'
 };
 
+/**
+ * Provides orbit, fly and pan camera controls, driven by mouse, touch and gamepad input. Movement
+ * and rotation are smoothed with configurable damping, and pitch, yaw and zoom distance can be
+ * constrained to ranges. Orbit and fly modes can be toggled individually with
+ * {@link CameraControls#enableOrbit} and {@link CameraControls#enableFly}. Use
+ * {@link CameraControls#focus}, {@link CameraControls#look} and {@link CameraControls#reset} to
+ * frame a point of interest programmatically.
+ *
+ * Attach the script to an entity with a {@link CameraComponent}.
+ *
+ * @example
+ * cameraEntity.addComponent('script');
+ * cameraEntity.script.create(CameraControls, {
+ *     properties: {
+ *         focusPoint: new Vec3(0, 1, 0),
+ *         enableFly: false
+ *     }
+ * });
+ */
 class CameraControls extends Script {
     static scriptName = 'cameraControls';
 
