@@ -2,6 +2,7 @@ import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
+import { AmmoPhysicsWorld } from '../../physics/ammo/ammo-physics-world.js';
 import { ComponentSystem } from '../system.js';
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
@@ -14,6 +15,7 @@ import { SingleContactResult } from './single-contact-result.js';
  * @import { AppBase } from '../../app-base.js'
  * @import { CollisionComponent } from '../collision/component.js'
  * @import { Entity } from '../../entity.js'
+ * @import { PhysicsWorld } from '../../physics/physics-world.js'
  * @import { Trigger } from '../collision/trigger.js'
  */
 
@@ -79,10 +81,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     gravity = new Vec3(0, -9.81, 0);
 
     /**
-     * @type {Float32Array}
+     * @type {PhysicsWorld|null}
      * @private
      */
-    _gravityFloat32 = new Float32Array(3);
+    _world = null;
 
     /**
      * @type {RigidBodyComponent[]}
@@ -138,35 +140,76 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @ignore
      */
     onLibraryLoaded() {
-        // Create the Ammo physics world
-        if (typeof Ammo !== 'undefined') {
-            this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-            this.dispatcher = new Ammo.btCollisionDispatcher(this.collisionConfiguration);
-            this.overlappingPairCache = new Ammo.btDbvtBroadphase();
-            this.solver = new Ammo.btSequentialImpulseConstraintSolver();
-            this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(this.dispatcher, this.overlappingPairCache, this.solver, this.collisionConfiguration);
-
-            if (this.dynamicsWorld.setInternalTickCallback) {
-                const checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
-                this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
-            } else {
-                Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
-            }
-
+        if (!this._world && typeof Ammo !== 'undefined') {
             // Lazily create temp vars
             ammoRayStart = new Ammo.btVector3();
             ammoRayEnd = new Ammo.btVector3();
             RigidBodyComponent.onLibraryLoaded();
 
-            this.contactPointPool = new ObjectPool(ContactPoint, 1);
-            this.contactResultPool = new ObjectPool(ContactResult, 1);
-            this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
-
-            this.app.systems.on('update', this.onUpdate, this);
-        } else {
+            this.setPhysicsWorld(new AmmoPhysicsWorld({ onTick: this._checkForCollisions.bind(this) }));
+        } else if (!this._world) {
             // Unbind the update function if we haven't loaded Ammo by now
             this.app.systems.off('update', this.onUpdate, this);
         }
+    }
+
+    /**
+     * Installs a physics backend. Used internally for Ammo auto-detection and by tests to
+     * inject a NullPhysicsWorld. A backend can be installed at most once.
+     *
+     * @param {PhysicsWorld} world - The physics backend.
+     * @ignore
+     */
+    setPhysicsWorld(world) {
+        Debug.assert(!this._world, 'RigidBodyComponentSystem#setPhysicsWorld: a physics world is already installed.');
+        this._world = world;
+
+        this.contactPointPool = new ObjectPool(ContactPoint, 1);
+        this.contactResultPool = new ObjectPool(ContactResult, 1);
+        this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
+
+        this.app.systems.on('update', this.onUpdate, this);
+    }
+
+    /**
+     * The installed physics backend, or null when no physics library has loaded.
+     *
+     * @type {PhysicsWorld|null}
+     * @ignore
+     */
+    get physicsWorld() {
+        return this._world;
+    }
+
+    /**
+     * The native physics world - btDiscreteDynamicsWorld when the Ammo backend is active,
+     * null otherwise.
+     *
+     * @type {object|null}
+     * @ignore
+     */
+    get dynamicsWorld() {
+        return this._world?.nativeWorld ?? null;
+    }
+
+    /** @ignore */
+    get collisionConfiguration() {
+        return this._world?.collisionConfiguration ?? null;
+    }
+
+    /** @ignore */
+    get dispatcher() {
+        return this._world?.dispatcher ?? null;
+    }
+
+    /** @ignore */
+    get overlappingPairCache() {
+        return this._world?.overlappingPairCache ?? null;
+    }
+
+    /** @ignore */
+    get solver() {
+        return this._world?.solver ?? null;
     }
 
     initializeComponentData(component, data) {
@@ -738,20 +781,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this._stats.physicsStart = now();
 
-        // downcast gravity to float32 so we can accurately compare with existing
-        // gravity set in ammo.
-        this._gravityFloat32[0] = this.gravity.x;
-        this._gravityFloat32[1] = this.gravity.y;
-        this._gravityFloat32[2] = this.gravity.z;
-
-        // Check to see whether we need to update gravity on the dynamics world
-        const gravity = this.dynamicsWorld.getGravity();
-        if (gravity.x() !== this._gravityFloat32[0] ||
-            gravity.y() !== this._gravityFloat32[1] ||
-            gravity.z() !== this._gravityFloat32[2]) {
-            gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
-            this.dynamicsWorld.setGravity(gravity);
-        }
+        // Check to see whether we need to update gravity on the physics world
+        this._world.setGravity(this.gravity);
 
         const triggers = this._triggers;
         for (i = 0, len = triggers.length; i < len; i++) {
@@ -770,7 +801,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // Step the physics simulation
-        this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+        this._world.step(dt, this.maxSubSteps, this.fixedTimeStep);
 
         // Update the transforms of all entities referencing a dynamic body
         const dynamic = this._dynamic;
@@ -790,19 +821,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this.app.systems.off('update', this.onUpdate, this);
 
-        if (typeof Ammo !== 'undefined') {
-            Ammo.destroy(this.dynamicsWorld);
-            Ammo.destroy(this.solver);
-            Ammo.destroy(this.overlappingPairCache);
-            Ammo.destroy(this.dispatcher);
-            Ammo.destroy(this.collisionConfiguration);
+        if (this._world) {
+            this._world.destroy();
+            this._world = null;
+        }
+
+        if (typeof Ammo !== 'undefined' && ammoRayStart) {
             Ammo.destroy(ammoRayStart);
             Ammo.destroy(ammoRayEnd);
-            this.dynamicsWorld = null;
-            this.solver = null;
-            this.overlappingPairCache = null;
-            this.dispatcher = null;
-            this.collisionConfiguration = null;
             ammoRayStart = null;
             ammoRayEnd = null;
             RigidBodyComponent.onAppDestroy();
