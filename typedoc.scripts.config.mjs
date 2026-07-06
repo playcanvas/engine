@@ -91,15 +91,8 @@ for (const ref of engineSymbols.members) {
 
 export default {
     blockTags: [...OptionDefaults.blockTags, ...ATTRIBUTE_TAGS],
-    categoryOrder: [
-        'Controllers',
-        'Rendering',
-        'Post-Processing',
-        'Gaussian Splatting',
-        'XR',
-        'Annotations',
-        'Supporting Types'
-    ],
+    // Categories sort alphabetically, with the catch-all pinned last
+    categoryOrder: ['*', 'Supporting Types'],
     // @category is not supported on @typedef comments, so the state/resources typedefs (and
     // anything untagged) fall back to this category
     defaultCategory: 'Supporting Types',
