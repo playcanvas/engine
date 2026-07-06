@@ -6,10 +6,13 @@ import {
 } from '../../components/rigid-body/constants.js';
 import { PhysicsWorld } from '../physics-world.js';
 import { AmmoPhysicsBody } from './ammo-physics-body.js';
+import {
+    createShape, destroyShape, addCompoundChild, updateCompoundChild, removeCompoundChild
+} from './ammo-physics-shape.js';
 
 /**
  * @import { Vec3 } from '../../../core/math/vec3.js'
- * @import { PhysicsBodyDesc } from '../physics-world.js'
+ * @import { PhysicsBodyDesc, PhysicsShapeDesc } from '../physics-world.js'
  */
 
 /**
@@ -22,6 +25,15 @@ import { AmmoPhysicsBody } from './ammo-physics-body.js';
 class AmmoPhysicsWorld extends PhysicsWorld {
     /** @private */
     _gravityFloat32 = new Float32Array(3);
+
+    /**
+     * Built triangle data cached per geometry source id, shared by all mesh shapes created
+     * from the same geometry. Entries live until the world is destroyed.
+     *
+     * @type {Map<number, object>}
+     * @ignore
+     */
+    _triMeshCache = new Map();
 
     /**
      * Create a new AmmoPhysicsWorld instance.
@@ -55,6 +67,9 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     }
 
     destroy() {
+        this._triMeshCache.forEach(triMesh => Ammo.destroy(triMesh));
+        this._triMeshCache.clear();
+
         Ammo.destroy(this._btVec1);
         Ammo.destroy(this._btVec2);
         Ammo.destroy(this._btQuat);
@@ -147,6 +162,34 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         // set activation state to disable simulation so isActive() does not return true even
         // though the body is no longer in the world
         nativeBody.forceActivationState(BODYSTATE_DISABLE_SIMULATION);
+    }
+
+    /**
+     * @param {PhysicsShapeDesc} desc - The shape descriptor.
+     * @returns {object} The opaque shape handle (the native btCollisionShape).
+     */
+    createShape(desc) {
+        return createShape(this, desc);
+    }
+
+    destroyShape(shape) {
+        destroyShape(shape);
+    }
+
+    addCompoundChild(compound, child, position, rotation) {
+        addCompoundChild(this, compound, child, position, rotation);
+    }
+
+    updateCompoundChild(compound, child, position, rotation) {
+        updateCompoundChild(this, compound, child, position, rotation);
+    }
+
+    removeCompoundChild(compound, child) {
+        removeCompoundChild(compound, child);
+    }
+
+    getCompoundChildCount(compound) {
+        return compound.getNumChildShapes();
     }
 
     /**
