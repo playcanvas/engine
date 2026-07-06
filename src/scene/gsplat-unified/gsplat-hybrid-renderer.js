@@ -473,6 +473,20 @@ class GSplatHybridRenderer extends GSplatRenderer {
             sortIndirectInfo
         );
 
+        // Workaround for a device hang on Windows/NVIDIA (Dawn/D3D12): in the picking path, the
+        // sort's indirect dispatch args written above (by the interval compaction and projector
+        // writeIndirectArgs compute passes) are intermittently not visible to the
+        // dispatchWorkgroupsIndirect calls recorded in the same command buffer — the sort then
+        // runs with the previous frame's (larger) workgroup counts, and OneSweep's chained
+        // lookback spins forever on partitions that never publish, hanging the device
+        // (DXGI_ERROR_DEVICE_HUNG). Submitting pending work here places the args writes and the
+        // sort dispatches in separate submissions, which reliably avoids the stale read. Scoped
+        // to picking: the per-frame forward path has never exhibited the issue, and this keeps
+        // its work in a single submission.
+        if (pickMode) {
+            this.device.submit();
+        }
+
         return gpuSorter.sortIndirect(
             /** @type {StorageBuffer} */ (projector.sortKeys),
             elementCount,
