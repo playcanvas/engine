@@ -14,7 +14,6 @@ import {
     Asset,
     AssetListLoader,
     CameraComponentSystem,
-    CameraFrame,
     Color,
     ContainerHandler,
     Entity,
@@ -224,12 +223,6 @@ Object.assign(cameraControls, {
     enablePan: false,
     focusPoint: new Vec3(18, -1.3, 13.5)
 });
-
-const cameraFrame = new CameraFrame(app, camera.camera);
-cameraFrame.rendering.samples = 4;
-cameraFrame.rendering.toneMapping = TONEMAP_ACES;
-cameraFrame.bloom.intensity = 0.02;
-cameraFrame.update();
 
 // ---------- Edit mode: gizmos + tree list ----------
 const gizmoLayer = Gizmo.createLayer(app);
