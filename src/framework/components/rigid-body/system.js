@@ -177,7 +177,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * The native physics world - btDiscreteDynamicsWorld when the Ammo backend is active,
      * null otherwise.
      *
-     * @type {object|null}
+     * @type {*}
      * @ignore
      */
     get dynamicsWorld() {
