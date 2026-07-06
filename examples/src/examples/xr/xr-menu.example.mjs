@@ -46,10 +46,11 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { XrControllers } from 'playcanvas/scripts/esm/xr-controllers.mjs';
-import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
-import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
-import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
+import { XrControllers } from 'playcanvas/scripts/esm/xr/xr-controllers.mjs';
+import { XrManipulation } from 'playcanvas/scripts/esm/xr/xr-manipulation.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr/xr-menu.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr/xr-session.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -229,7 +230,18 @@ galleryEntity.findComponents('render').forEach((/** @type {RenderComponent} */ r
         renderAsset: render.asset
     });
 });
-app.root.addChild(galleryEntity);
+// World root - the entity XrManipulation drags, rotates and scales. Scene content to manipulate
+// (the gallery) is parented under it; the camera rig is never modified
+const worldRoot = new Entity('WorldRoot');
+app.root.addChild(worldRoot);
+worldRoot.addChild(galleryEntity);
+
+// Add XrManipulation script - squeeze both grips (or make two fists) to drag/rotate/scale the world
+cameraParent.script.create(XrManipulation, {
+    properties: {
+        target: worldRoot
+    }
+});
 
 // Array to track spawned objects for reset
 /** @type {Entity[]} */
@@ -272,6 +284,7 @@ menuEntity.script.create(XrMenu, {
         menuItems: [
             { label: 'SPAWN CUBE', eventName: 'menu:spawnCube' },
             { label: 'RESET', eventName: 'menu:reset' },
+            { label: 'RESET VIEW', eventName: 'xr:manipulation:reset' },
             { label: 'EXIT XR', eventName: 'xr:end' }
         ],
         clickSound: assets.click,
@@ -327,7 +340,9 @@ if (app.xr.supported) {
         button.addEventListener('click', onXrButtonClick);
     });
 
-    message('In XR, open your left palm toward your face to show the menu');
+    message(
+        'In XR, open your left palm toward your face to show the menu. Squeeze both grips to drag, rotate and scale the world'
+    );
 } else {
     message('WebXR is not supported');
 }
