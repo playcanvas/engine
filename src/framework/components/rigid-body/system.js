@@ -144,7 +144,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
             // Lazily create temp vars
             ammoRayStart = new Ammo.btVector3();
             ammoRayEnd = new Ammo.btVector3();
-            RigidBodyComponent.onLibraryLoaded();
 
             this.setPhysicsWorld(new AmmoPhysicsWorld({ onTick: this._checkForCollisions.bind(this) }));
         } else if (!this._world) {
@@ -246,46 +245,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
             component.enabled = false;
         }
 
-        if (component.body) {
-            this.destroyBody(component.body);
+        if (component._body) {
+            this._world.destroyBody(component._body);
             component.body = null;
         }
     }
 
     addBody(body, group, mask) {
-        if (group !== undefined && mask !== undefined) {
-            this.dynamicsWorld.addRigidBody(body, group, mask);
-        } else {
-            this.dynamicsWorld.addRigidBody(body);
-        }
+        this._world.addBody(body, group, mask);
     }
 
     removeBody(body) {
-        this.dynamicsWorld.removeRigidBody(body);
-    }
-
-    createBody(mass, shape, transform) {
-        const localInertia = new Ammo.btVector3(0, 0, 0);
-        if (mass !== 0) {
-            shape.calculateLocalInertia(mass, localInertia);
-        }
-
-        const motionState = new Ammo.btDefaultMotionState(transform);
-        const bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
-        const body = new Ammo.btRigidBody(bodyInfo);
-        Ammo.destroy(bodyInfo);
-        Ammo.destroy(localInertia);
-
-        return body;
-    }
-
-    destroyBody(body) {
-        // The motion state needs to be destroyed explicitly (if present)
-        const motionState = body.getMotionState();
-        if (motionState) {
-            Ammo.destroy(motionState);
-        }
-        Ammo.destroy(body);
+        this._world.removeBody(body);
     }
 
     /**
@@ -831,7 +802,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
             Ammo.destroy(ammoRayEnd);
             ammoRayStart = null;
             ammoRayEnd = null;
-            RigidBodyComponent.onAppDestroy();
         }
     }
 }

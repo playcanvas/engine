@@ -1,8 +1,15 @@
 import { Debug } from '../../../core/debug.js';
+import {
+    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT,
+    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION,
+    BODYTYPE_KINEMATIC
+} from '../../components/rigid-body/constants.js';
 import { PhysicsWorld } from '../physics-world.js';
+import { AmmoPhysicsBody } from './ammo-physics-body.js';
 
 /**
  * @import { Vec3 } from '../../../core/math/vec3.js'
+ * @import { PhysicsBodyDesc } from '../physics-world.js'
  */
 
 /**
@@ -39,9 +46,24 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         } else {
             Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
         }
+
+        // cached math temporaries, shared by this world's bodies
+        this._btVec1 = new Ammo.btVector3();
+        this._btVec2 = new Ammo.btVector3();
+        this._btQuat = new Ammo.btQuaternion();
+        this._btTransform = new Ammo.btTransform();
     }
 
     destroy() {
+        Ammo.destroy(this._btVec1);
+        Ammo.destroy(this._btVec2);
+        Ammo.destroy(this._btQuat);
+        Ammo.destroy(this._btTransform);
+        this._btVec1 = null;
+        this._btVec2 = null;
+        this._btQuat = null;
+        this._btTransform = null;
+
         Ammo.destroy(this.nativeWorld);
         Ammo.destroy(this.solver);
         Ammo.destroy(this.overlappingPairCache);
@@ -52,6 +74,79 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this.overlappingPairCache = null;
         this.dispatcher = null;
         this.collisionConfiguration = null;
+    }
+
+    /**
+     * @param {PhysicsBodyDesc} desc - The body descriptor.
+     * @returns {AmmoPhysicsBody} The new body.
+     */
+    createBody(desc) {
+        const { type, mass, shape, position, rotation, entity } = desc;
+        const noContactResponse = !!desc.noContactResponse;
+
+        this._btVec1.setValue(position.x, position.y, position.z);
+        this._btQuat.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
+        this._btTransform.setOrigin(this._btVec1);
+        this._btTransform.setRotation(this._btQuat);
+
+        const localInertia = new Ammo.btVector3(0, 0, 0);
+        if (mass !== 0) {
+            shape.calculateLocalInertia(mass, localInertia);
+        }
+
+        const motionState = new Ammo.btDefaultMotionState(this._btTransform);
+        const bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
+        const nativeBody = new Ammo.btRigidBody(bodyInfo);
+        Ammo.destroy(bodyInfo);
+        Ammo.destroy(localInertia);
+
+        if (type === BODYTYPE_KINEMATIC) {
+            nativeBody.setCollisionFlags(nativeBody.getCollisionFlags() | BODYFLAG_KINEMATIC_OBJECT);
+            nativeBody.setActivationState(BODYSTATE_DISABLE_DEACTIVATION);
+        }
+        if (noContactResponse) {
+            nativeBody.setCollisionFlags(nativeBody.getCollisionFlags() | BODYFLAG_NORESPONSE_OBJECT);
+        }
+
+        // entity back-reference on the native body: read by the raycast and manifold walks,
+        // and by user code holding the native escape hatch
+        nativeBody.entity = entity;
+
+        const body = new AmmoPhysicsBody(this, nativeBody, type, noContactResponse);
+        body.entity = entity;
+        return body;
+    }
+
+    destroyBody(body) {
+        const nativeBody = body.nativeBody;
+        // The motion state needs to be destroyed explicitly (if present)
+        const motionState = nativeBody.getMotionState();
+        if (motionState) {
+            Ammo.destroy(motionState);
+        }
+        Ammo.destroy(nativeBody);
+        body.nativeBody = null;
+    }
+
+    addBody(body, group, mask) {
+        const nativeBody = body.nativeBody;
+        if (group !== undefined && mask !== undefined) {
+            this.nativeWorld.addRigidBody(nativeBody, group, mask);
+        } else {
+            this.nativeWorld.addRigidBody(nativeBody);
+        }
+
+        // kinematic bodies must never deactivate, everything else enters the active state
+        nativeBody.forceActivationState(body._type === BODYTYPE_KINEMATIC ? BODYSTATE_DISABLE_DEACTIVATION : BODYSTATE_ACTIVE_TAG);
+    }
+
+    removeBody(body) {
+        const nativeBody = body.nativeBody;
+        this.nativeWorld.removeRigidBody(nativeBody);
+
+        // set activation state to disable simulation so isActive() does not return true even
+        // though the body is no longer in the world
+        nativeBody.forceActivationState(BODYSTATE_DISABLE_SIMULATION);
     }
 
     /**
