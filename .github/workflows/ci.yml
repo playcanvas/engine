@@ -61,6 +61,9 @@ jobs:
       - name: Build API reference manual
         run: npm run docs
 
+      - name: Build Scripts API reference manual
+        run: npm run docs:scripts
+
   lint:
     name: Lint
     runs-on: ubuntu-latest

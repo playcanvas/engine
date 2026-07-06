@@ -955,6 +955,7 @@ const fragmentWGSL = /* wgsl */`
  *     }
  * });
  * app.root.addChild(water);
+ * @category Rendering
  */
 class Water extends Script {
     static scriptName = 'water';

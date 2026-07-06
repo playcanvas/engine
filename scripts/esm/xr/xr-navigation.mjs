@@ -138,6 +138,7 @@ const ringFragmentWGSL = /* wgsl */ `
  * This script should be attached to a parent entity of the camera entity used for the XR
  * session. The entity hierarchy should be: XrNavigationEntity > CameraEntity for proper
  * locomotion handling. Use it in conjunction with the `XrControllers` script.
+ * @category XR
  */
 class XrNavigation extends Script {
     static scriptName = 'xrNavigation';

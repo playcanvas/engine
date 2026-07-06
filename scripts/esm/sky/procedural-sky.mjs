@@ -478,6 +478,7 @@ const sunRotQuat = new Quat();
  *
  * An optional directional light is kept in sync with the sun, so direct lighting and shadows match
  * the visible sky and its image-based lighting.
+ * @category Rendering
  */
 class ProceduralSky extends Script {
     static scriptName = 'proceduralSky';

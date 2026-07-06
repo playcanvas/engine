@@ -251,6 +251,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * const dissolveScript = entity.script.create(GSplatDissolveShaderEffect);
  * dissolveScript.duration = 2.5;
  * dissolveScript.edgeColor.set(6, 1.5, 0.2);
+ * @category Gaussian Splatting
  */
 class GSplatDissolveShaderEffect extends GSplatShaderEffect {
     static scriptName = 'gsplatDissolveShaderEffect';

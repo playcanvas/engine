@@ -75,6 +75,7 @@ fn modifySplatColor(gaussianUV: vec2f, color: ptr<function, vec4f>) {
  * Note: only gsplat components in unified mode are supported - the splat customization is
  * applied to `app.scene.gsplat.material`, and only by the raster gsplat renderers (CPU and GPU
  * sort), as the fragment chunk is not used by the compute renderer.
+ * @category Gaussian Splatting
  */
 class GSplatRelighting extends Script {
     static scriptName = 'gsplatRelighting';

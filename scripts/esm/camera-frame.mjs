@@ -42,7 +42,10 @@ const DebugType = {
     DOFBLUR: 'dofblur'
 };
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Rendering {
     /**
      * @attribute
@@ -104,7 +107,10 @@ class Rendering {
     debug = DebugType.NONE;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Ssao {
     /**
      * @attribute
@@ -166,7 +172,10 @@ class Ssao {
     scale = 1;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Bloom {
     enabled = false;
 
@@ -188,7 +197,10 @@ class Bloom {
     blurLevel = 16;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Grading {
     enabled = false;
 
@@ -223,7 +235,10 @@ class Grading {
     tint = new Color(1, 1, 1, 1);
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class ColorLUT {
     /**
      * @attribute
@@ -270,7 +285,10 @@ class ColorLUT {
     blend = 0;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Vignette {
     enabled = false;
 
@@ -313,7 +331,10 @@ class Vignette {
     color = new Color(0, 0, 0, 1);
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Fringing {
     enabled = false;
 
@@ -326,7 +347,10 @@ class Fringing {
     intensity = 50;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class ColorEnhance {
     enabled = false;
 
@@ -371,7 +395,10 @@ class ColorEnhance {
     dehaze = 0;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Taa {
     enabled = false;
 
@@ -384,7 +411,10 @@ class Taa {
     jitter = 1;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Dof {
     enabled = false;
 
@@ -436,6 +466,24 @@ class Dof {
     blurRingPoints = 5;
 }
 
+/**
+ * Enables the engine's {@link EngineCameraFrame | CameraFrame} render pipeline on a camera
+ * entity, exposing its settings as grouped script attributes: rendering (render format, tone
+ * mapping, sharpness, TAA), SSAO, bloom, color grading, color LUT, vignette, fringing and depth
+ * of field.
+ *
+ * Attach the script to an entity with a camera component and adjust the attribute groups to
+ * configure the post-processing stack.
+ *
+ * @example
+ * cameraEntity.addComponent('script');
+ * cameraEntity.script.create(CameraFrame, {
+ *     properties: {
+ *         bloom: { intensity: 0.02 }
+ *     }
+ * });
+ * @category Post-Processing
+ */
 class CameraFrame extends Script {
     static scriptName = 'cameraFrame';
 
@@ -637,4 +685,4 @@ class CameraFrame extends Script {
     }
 }
 
-export { CameraFrame };
+export { CameraFrame, Rendering, Ssao, Bloom, Grading, ColorLUT, Vignette, Fringing, ColorEnhance, Taa, Dof };

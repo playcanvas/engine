@@ -339,6 +339,7 @@ const _tempVec3b = new Vec3();
  *     }
  * });
  * app.root.addChild(reflector);
+ * @category Rendering
  */
 class BlurredPlanarReflection extends Script {
     static scriptName = 'blurredPlanarReflection';

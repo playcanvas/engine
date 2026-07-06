@@ -21,6 +21,7 @@ import { Script, Vec3, BoundingBox, GSplatFormat, GSplatContainer, PIXELFORMAT_R
  * weather.speed = 1.2;
  * weather.drift = 0.15;
  * app.root.addChild(weatherEntity);
+ * @category Gaussian Splatting
  */
 class GSplatWeather extends Script {
     static scriptName = 'gsplatWeather';

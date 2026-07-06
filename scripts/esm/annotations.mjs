@@ -68,6 +68,7 @@ const vec = new Vec3();
  * - Per-annotation rendering resources (entities, materials, DOM elements)
  * - Tooltip DOM elements
  * - Hover and click interactions
+ * @category Annotations
  */
 export class AnnotationManager extends Script {
     static scriptName = 'annotationManager';
@@ -974,6 +975,7 @@ export class AnnotationManager extends Script {
  * - `hover` - when hover state changes
  * - `show` - when tooltip is shown
  * - `hide` - when tooltip is hidden
+ * @category Annotations
  */
 export class Annotation extends Script {
     static scriptName = 'annotation';

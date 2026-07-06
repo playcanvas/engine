@@ -48,6 +48,9 @@ jobs:
       - name: Build PlayCanvas
         run: npm run build
 
+      - name: Build Scripts API reference manual
+        run: npm run docs:scripts
+
       - name: Run Post-build tests
         run: npm run test:build
 

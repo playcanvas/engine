@@ -266,6 +266,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * const gridScript = entity.script.create(GSplatRevealGridEruption);
  * gridScript.center.set(0, 0, 0);
  * gridScript.blockCount = 10;
+ * @category Gaussian Splatting
  */
 class GSplatRevealGridEruption extends GSplatShaderEffect {
     static scriptName = 'gsplatRevealGridEruption';

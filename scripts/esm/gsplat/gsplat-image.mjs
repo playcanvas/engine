@@ -17,6 +17,7 @@ import { Script, BoundingBox, GSplatFormat, GSplatContainer, FloatPacking } from
  *         imageAsset: myTextureAsset
  *     }
  * });
+ * @category Gaussian Splatting
  */
 class GSplatImage extends Script {
     static scriptName = 'gsplatImage';

@@ -115,6 +115,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * // Enable precise cropping
  * material.setDefine('GSPLAT_PRECISE_CROP', '');
  * material.update();
+ * @category Gaussian Splatting
  */
 class GSplatCropShaderEffect extends GSplatShaderEffect {
     static scriptName = 'gsplatCropShaderEffect';

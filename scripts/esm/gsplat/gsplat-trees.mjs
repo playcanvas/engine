@@ -220,6 +220,7 @@ const renderWGSL = /* wgsl */ `
  * @example
  * const trees = entity.script.create(GSplatTrees);
  * trees.setSpheres([{ center: new pc.Vec3(0, 3, 0), radius: 3 }]);
+ * @category Gaussian Splatting
  */
 class GSplatTrees extends Script {
     static scriptName = 'gsplatTrees';

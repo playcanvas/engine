@@ -28,6 +28,7 @@ import {
  *     }
  * });
  * app.root.addChild(shadowCatcher);
+ * @category Rendering
  */
 class ShadowCatcher extends Script {
     static scriptName = 'shadowCatcher';
