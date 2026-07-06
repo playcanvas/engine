@@ -55,6 +55,7 @@ const _clipNormal = new Vec3();
  *
  * // each frame, after the main camera was updated
  * const texture = planarRenderer.frameUpdate();
+ * @category Rendering
  */
 class PlanarRenderer extends Script {
     static scriptName = 'planarRenderer';
