@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { GSplatStreams } from '../gsplat/gsplat-streams.js';
-import { WORKBUFFER_UPDATE_AUTO, WORKBUFFER_UPDATE_ALWAYS, WORKBUFFER_UPDATE_ONCE } from '../constants.js';
+import { WORKBUFFER_UPDATE_AUTO, WORKBUFFER_UPDATE_ONCE } from '../constants.js';
 import { GsplatAllocId } from './gsplat-alloc-id.js';
 
 /**
@@ -175,23 +175,25 @@ class GSplatPlacement {
     lodDirty = false;
 
     /**
-     * Flag indicating the splat needs to be re-rendered to work buffer.
-     */
-    renderDirty = false;
-
-    /**
-     * Work buffer update mode.
+     * Monotonically increasing counter, bumped whenever this placement's splats need to be
+     * re-copied to the work buffer (parameter or modifier changes, or an explicit one-shot update
+     * request). Each consumer (a per-camera {@link GSplatInfo}) remembers the value it last
+     * copied at, so a single request re-copies every consumer of a shared placement exactly once,
+     * and child placements (octree files, environment) fan out from their parent's counter.
      *
      * @type {number}
+     * @ignore
      */
-    workBufferUpdate = WORKBUFFER_UPDATE_AUTO;
+    dirtyVersion = 0;
 
     /**
-     * Last seen format version for auto-detecting format changes.
+     * Work buffer update mode (see WORKBUFFER_UPDATE_*). WORKBUFFER_UPDATE_ONCE is not stored as a
+     * mode - it is converted into a single {@link dirtyVersion} bump.
      *
+     * @type {number}
      * @private
      */
-    _lastFormatVersion = -1;
+    _workBufferUpdate = WORKBUFFER_UPDATE_AUTO;
 
     /**
      * Custom work buffer modifier code for this placement (object with code and pre-computed hash).
@@ -247,7 +249,7 @@ class GSplatPlacement {
      */
     set workBufferModifier(value) {
         this._workBufferModifier = value;
-        this.renderDirty = true;
+        this.dirtyVersion++;
     }
 
     /**
@@ -261,31 +263,35 @@ class GSplatPlacement {
     }
 
     /**
-     * Returns and clears the render dirty flag. Also checks for format version changes
-     * and handles render mode.
+     * Sets the work buffer update mode (see WORKBUFFER_UPDATE_*). WORKBUFFER_UPDATE_ONCE is turned
+     * into a single {@link dirtyVersion} bump so every consumer re-copies once, rather than being
+     * stored as a persistent mode.
      *
-     * @returns {boolean} True if the splat needed re-rendering.
+     * @type {number}
      */
-    consumeRenderDirty() {
-        // Auto-detect format version changes
-        // Cast to access format property (GSplatOctreeResource doesn't have format)
-        const format = /** @type {GSplatResourceBase} */ (this.resource)?.format;
-        if (format && this._lastFormatVersion !== format.extraStreamsVersion) {
-            this._lastFormatVersion = format.extraStreamsVersion;
-            this.renderDirty = true;
+    set workBufferUpdate(value) {
+        if (value === WORKBUFFER_UPDATE_ONCE) {
+            this.dirtyVersion++;
+        } else {
+            this._workBufferUpdate = value;
         }
+    }
 
-        // Handle work buffer update mode
-        if (this.workBufferUpdate === WORKBUFFER_UPDATE_ALWAYS) {
-            this.renderDirty = true;
-        } else if (this.workBufferUpdate === WORKBUFFER_UPDATE_ONCE) {
-            this.renderDirty = true;
-            this.workBufferUpdate = WORKBUFFER_UPDATE_AUTO;  // Auto-reset
-        }
+    /**
+     * Gets the work buffer update mode.
+     *
+     * @type {number}
+     */
+    get workBufferUpdate() {
+        return this._workBufferUpdate;
+    }
 
-        const dirty = this.renderDirty;
-        this.renderDirty = false;
-        return dirty;
+    /**
+     * Marks the placement as needing a one-time re-copy to the work buffer by all of its
+     * consumers.
+     */
+    markDirty() {
+        this.dirtyVersion++;
     }
 
     /**

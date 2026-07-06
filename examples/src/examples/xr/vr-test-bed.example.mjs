@@ -40,7 +40,7 @@ import {
     createGraphicsDevice,
     math
 } from 'playcanvas';
-import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr/xr-menu.mjs';
 
 import { deviceType } from 'examples/context';
 

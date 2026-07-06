@@ -69,15 +69,7 @@ class XrSession extends Script {
      * @type {Entity|null}
      * @private
      */
-    cameraEntity = null;
-
-    /**
-     * Reference to the camera root entity (this entity).
-     *
-     * @type {Entity|null}
-     * @private
-     */
-    cameraRootEntity = null;
+    _cameraEntity = null;
 
     /**
      * Cached clear color for restoration after AR session.
@@ -85,7 +77,7 @@ class XrSession extends Script {
      * @type {Color}
      * @private
      */
-    clearColor = new Color();
+    _clearColor = new Color();
 
     /**
      * Cached root entity position for restoration after XR session.
@@ -93,7 +85,7 @@ class XrSession extends Script {
      * @type {Vec3}
      * @private
      */
-    positionRoot = new Vec3();
+    _positionRoot = new Vec3();
 
     /**
      * Cached root entity rotation for restoration after XR session.
@@ -101,7 +93,7 @@ class XrSession extends Script {
      * @type {Quat}
      * @private
      */
-    rotationRoot = new Quat();
+    _rotationRoot = new Quat();
 
     /**
      * Cached camera entity position for restoration after XR session.
@@ -109,7 +101,7 @@ class XrSession extends Script {
      * @type {Vec3}
      * @private
      */
-    positionCamera = new Vec3();
+    _positionCamera = new Vec3();
 
     /**
      * Cached camera entity rotation for restoration after XR session.
@@ -117,7 +109,7 @@ class XrSession extends Script {
      * @type {Quat}
      * @private
      */
-    rotationCamera = new Quat();
+    _rotationCamera = new Quat();
 
     /**
      * Bound keydown event handler for ESC key detection.
@@ -125,7 +117,7 @@ class XrSession extends Script {
      * @type {((event: KeyboardEvent) => void)|null}
      * @private
      */
-    onKeyDownHandler = null;
+    _onKeyDownHandler = null;
 
     /**
      * Cached sky layer enabled state for restoration after AR session.
@@ -136,8 +128,7 @@ class XrSession extends Script {
     _skyEnabled = true;
 
     initialize() {
-        this.cameraEntity = this.entity.findComponent('camera')?.entity || null;
-        this.cameraRootEntity = this.entity || null;
+        this._cameraEntity = this.entity.findComponent('camera')?.entity ?? null;
 
         // Listen to global XR lifecycle to mirror example.mjs behavior
         this.app.xr?.on('start', this.onXrStart, this);
@@ -149,12 +140,12 @@ class XrSession extends Script {
         this.app.on(this.endEvent, this.onEndEvent, this);
 
         // ESC to exit
-        this.onKeyDownHandler = (event) => {
+        this._onKeyDownHandler = (event) => {
             if (event.key === 'Escape' && this.app.xr?.active) {
                 this.endSession();
             }
         };
-        window.addEventListener('keydown', this.onKeyDownHandler);
+        window.addEventListener('keydown', this._onKeyDownHandler);
 
         this.on('destroy', () => {
             this.onDestroy();
@@ -169,9 +160,9 @@ class XrSession extends Script {
         this.app.off(this.startArEvent, this.onStartArEvent, this);
         this.app.off(this.endEvent, this.onEndEvent, this);
 
-        if (this.onKeyDownHandler) {
-            window.removeEventListener('keydown', this.onKeyDownHandler);
-            this.onKeyDownHandler = null;
+        if (this._onKeyDownHandler) {
+            window.removeEventListener('keydown', this._onKeyDownHandler);
+            this._onKeyDownHandler = null;
         }
     }
 
@@ -188,13 +179,13 @@ class XrSession extends Script {
     }
 
     startSession(type = 'immersive-vr', space = 'local-floor') {
-        if (!this.cameraEntity.camera) {
-            console.error('XrSession: No cameraEntity.camera found on the entity.');
+        if (!this._cameraEntity?.camera) {
+            console.error('XrSession: No camera component found on this entity or its descendants.');
             return;
         }
 
         // Start XR on the camera component
-        this.cameraEntity.camera.startXr(type, space, {
+        this._cameraEntity.camera.startXr(type, space, {
             callback: (err) => {
                 if (err) console.error(`WebXR ${type} failed to start: ${err.message}`);
             }
@@ -202,45 +193,45 @@ class XrSession extends Script {
     }
 
     endSession() {
-        if (!this.cameraEntity.camera) return;
-        this.cameraEntity.camera.endXr();
+        if (!this._cameraEntity?.camera) return;
+        this._cameraEntity.camera.endXr();
     }
 
     onXrStart() {
-        if (!this.cameraEntity || !this.cameraRootEntity) return;
+        if (!this._cameraEntity) return;
 
         // Cache original camera rig transforms
-        this.positionRoot.copy(this.cameraRootEntity.getPosition());
-        this.rotationRoot.copy(this.cameraRootEntity.getRotation());
-        this.positionCamera.copy(this.cameraEntity.getPosition());
-        this.rotationCamera.copy(this.cameraEntity.getRotation());
+        this._positionRoot.copy(this.entity.getPosition());
+        this._rotationRoot.copy(this.entity.getRotation());
+        this._positionCamera.copy(this._cameraEntity.getPosition());
+        this._rotationCamera.copy(this._cameraEntity.getRotation());
 
         // Place root at camera position, but reset orientation to horizontal
-        this.cameraRootEntity.setPosition(this.positionCamera.x, 0, this.positionCamera.z);
+        this.entity.setPosition(this._positionCamera.x, 0, this._positionCamera.z);
 
         // Only preserve Y-axis rotation (yaw), reset pitch and roll for VR
-        const eulerAngles = this.rotationCamera.getEulerAngles();
-        this.cameraRootEntity.setEulerAngles(0, eulerAngles.y, 0);
+        const eulerAngles = this._rotationCamera.getEulerAngles();
+        this.entity.setEulerAngles(0, eulerAngles.y, 0);
 
         if (this.app.xr.type === 'immersive-ar') {
             // Make camera background transparent and hide the sky
-            this.clearColor.copy(this.cameraEntity.camera.clearColor);
-            this.cameraEntity.camera.clearColor = new Color(0, 0, 0, 0);
+            this._clearColor.copy(this._cameraEntity.camera.clearColor);
+            this._cameraEntity.camera.clearColor = new Color(0, 0, 0, 0);
             this.disableSky();
         }
     }
 
     onXrEnd() {
-        if (!this.cameraEntity || !this.cameraRootEntity) return;
+        if (!this._cameraEntity) return;
 
         // Restore original transforms
-        this.cameraRootEntity.setPosition(this.positionRoot);
-        this.cameraRootEntity.setRotation(this.rotationRoot);
-        this.cameraEntity.setPosition(this.positionCamera);
-        this.cameraEntity.setRotation(this.rotationCamera);
+        this.entity.setPosition(this._positionRoot);
+        this.entity.setRotation(this._rotationRoot);
+        this._cameraEntity.setPosition(this._positionCamera);
+        this._cameraEntity.setRotation(this._rotationCamera);
 
         if (this.app.xr.type === 'immersive-ar') {
-            this.cameraEntity.camera.clearColor = this.clearColor;
+            this._cameraEntity.camera.clearColor = this._clearColor;
             this.restoreSky();
         }
     }

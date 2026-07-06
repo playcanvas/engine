@@ -607,8 +607,8 @@ class Mesh extends RefCountedObject {
         this._geometryData.recreate = true;
         this._geometryData.maxVertices = maxVertices;
         this._geometryData.maxIndices = maxIndices;
-        this._geometryData.verticesUsage = verticesDynamic ? BUFFER_STATIC : BUFFER_DYNAMIC;
-        this._geometryData.indicesUsage = indicesDynamic ? BUFFER_STATIC : BUFFER_DYNAMIC;
+        this._geometryData.verticesUsage = verticesDynamic ? BUFFER_DYNAMIC : BUFFER_STATIC;
+        this._geometryData.indicesUsage = indicesDynamic ? BUFFER_DYNAMIC : BUFFER_STATIC;
     }
 
     /**

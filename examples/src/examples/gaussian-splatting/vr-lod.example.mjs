@@ -67,9 +67,9 @@ import {
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
-import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
-import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
-import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr/xr-menu.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr/xr-session.mjs';
 
 import { data, deviceType } from 'examples/context';
 

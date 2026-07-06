@@ -447,12 +447,13 @@ class GSplatWorld {
         result.overdrawDirty = false;
         result.sortNeeded = false;
 
-        // Drop instances whose octree was destroyed (e.g. the asset was unloaded) before the
-        // layer placement change reaches reconcile - they can no longer stream and their
-        // resources are gone, so letting them run this update would assert and crash the
+        // Drop instances whose octree was destroyed (the asset was unloaded) or whose placement
+        // was destroyed (the component detached the asset, which nulls placement.resource)
+        // before the layer placement change reaches reconcile - they can no longer stream and
+        // their resources are gone, so letting them run this update would assert and crash the
         // budget pass. Mirrors the removal branch in reconcile.
         for (const [placement, inst] of this._octreeInstances) {
-            if (inst.octree.destroyed) {
+            if (inst.octree.destroyed || !placement.resource) {
                 this._octreeInstances.delete(placement);
                 this._layerPlacementsDirty = true;
                 this._placementSetChanged = true;
@@ -613,7 +614,7 @@ class GSplatWorld {
                 continue;
             }
             p.ensureInstanceStreams(this._device);
-            const splatInfo = new GSplatInfo(this._device, p.resource, p, p.consumeRenderDirty.bind(p));
+            const splatInfo = new GSplatInfo(this._device, p.resource, p);
             splats.push(splatInfo);
         }
 
@@ -629,7 +630,7 @@ class GSplatWorld {
                     p.ensureInstanceStreams(this._device);
                     const octreeNodes = p.intervals.size > 0 ? inst.octree.nodes : null;
                     const nodeInfos = octreeNodes ? inst.nodeInfos : null;
-                    const splatInfo = new GSplatInfo(this._device, p.resource, p, p.consumeRenderDirty.bind(p), octreeNodes, nodeInfos);
+                    const splatInfo = new GSplatInfo(this._device, p.resource, p, octreeNodes, nodeInfos);
                     splats.push(splatInfo);
                 }
             });
