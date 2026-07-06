@@ -154,8 +154,7 @@ export default {
     ],
     readme: 'scripts/esm/README.md',
     sidebarLinks: {
-        'Home': '/',
-        'Engine API': '/engine/'
+        'Home': '/'
     },
     searchGroupBoosts: {
         'Classes': 2
