@@ -1479,7 +1479,8 @@ class AppBase extends EventHandler {
     applySceneSettings(settings) {
         let asset;
 
-        if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
+        // gravity is engine state - the physics backend applies it when present
+        if (this.systems.rigidbody) {
             const [x, y, z] = settings.physics.gravity;
             this.systems.rigidbody.gravity.set(x, y, z);
         }
