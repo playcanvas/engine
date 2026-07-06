@@ -75,6 +75,16 @@ describe('RigidBodyComponent', function () {
             expect(rigidbody._body).to.equal(null);
         });
 
+        it('disables the simulation when the collision component is removed', function () {
+            const e = addPhysicsEntity();
+            expect(e.rigidbody._simulationEnabled).to.equal(true);
+
+            // the gate must use the backend body, which exists even when the public
+            // native-body getter returns null (as it does under an inert backend)
+            e.removeComponent('collision');
+            expect(e.rigidbody._simulationEnabled).to.equal(false);
+        });
+
         it('rebuilds the body when the type changes and resets group and mask', function () {
             const e = addPhysicsEntity('dynamic');
             e.rigidbody.type = 'kinematic';

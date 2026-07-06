@@ -628,7 +628,9 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     onRemove(entity) {
-        if (entity.rigidbody && entity.rigidbody.body) {
+        // gate on the backend body, not the public getter - the getter surfaces the NATIVE
+        // body, which backends without native handles keep null
+        if (entity.rigidbody && entity.rigidbody._body) {
             entity.rigidbody.disableSimulation();
         }
 

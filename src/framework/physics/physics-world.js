@@ -25,6 +25,7 @@ import { PhysicsJoint } from './physics-joint.js';
  * contact results.
  * @property {boolean} [noContactResponse] - When true, the body collides and reports contacts
  * but does not respond to them (used for triggers). Defaults to false.
+ * @ignore
  */
 
 /**
@@ -41,10 +42,12 @@ import { PhysicsJoint } from './physics-joint.js';
  * convexHull is true - hulls consume every position.
  * @property {boolean} convexHull - Build a convex hull instead of a triangle mesh.
  * @property {boolean} checkDuplicates - Weld duplicate vertices while building triangle data.
+ * @property {Vec3|null} bakeScale - Scaling to bake into the positions while building, or null.
  * @property {Vec3|null} shapeScale - Scaling to apply to the built sub-shape, or null.
  * @property {Vec3} position - The sub-shape position within the mesh shape. Collision component
  * offsets are already applied by the caller.
  * @property {Quat} rotation - The sub-shape rotation within the mesh shape.
+ * @ignore
  */
 
 /**
@@ -59,6 +62,7 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {PhysicsMeshSource[]} [sources] - The geometry sources of a 'mesh' shape. Mesh
  * shapes are created in one atomic call so backends may build immutable composites.
  * @property {Vec3|null} [scale] - Whole-shape scaling of a 'mesh' shape, or null.
+ * @ignore
  */
 
 /**
@@ -91,6 +95,7 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {Vec3} angularStiffness - The 6dof angular spring stiffness per axis.
  * @property {Vec3} angularDamping - The 6dof angular spring damping per axis.
  * @property {Vec3} angularEquilibrium - The 6dof angular spring equilibrium per axis in degrees.
+ * @ignore
  */
 
 /**
@@ -108,6 +113,7 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {boolean} enableCollision - Whether the two bodies keep colliding with each other.
  * Creation-time only - changing it recreates the joint.
  * @property {PhysicsJointSettings} settings - The full parameter bag, applied at creation.
+ * @ignore
  */
 
 /**
@@ -122,6 +128,7 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {number} contactCount - The number of contact points (always >= 1).
  * @property {(index: number, out: ContactPoint) => void} readContact - Fills out with contact
  * point index from A's perspective, allocation free.
+ * @ignore
  */
 
 /**
@@ -134,6 +141,7 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {(pair: PhysicsContactPair) => void} onContactPair - Called for each contacting
  * pair. Pairs with no contact points or without entities on both bodies are not reported.
  * @property {() => void} onContactsEnd - Called when a contact pass ends.
+ * @ignore
  */
 
 /**
