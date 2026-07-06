@@ -46,11 +46,11 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { XrControllers } from 'playcanvas/scripts/esm/xr-controllers.mjs';
-import { XrManipulation } from 'playcanvas/scripts/esm/xr-manipulation.mjs';
-import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
-import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
-import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
+import { XrControllers } from 'playcanvas/scripts/esm/xr/xr-controllers.mjs';
+import { XrManipulation } from 'playcanvas/scripts/esm/xr/xr-manipulation.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr/xr-menu.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr/xr-session.mjs';
 
 import { deviceType } from 'examples/context';
 
