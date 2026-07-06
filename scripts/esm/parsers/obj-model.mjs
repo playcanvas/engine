@@ -20,6 +20,7 @@ import { Geometry, GraphNode, Http, Mesh, MeshInstance, Model, StandardMaterial 
  * const asset = new pc.Asset('MyObj', 'model', { url: 'model.obj' });
  * app.assets.add(asset);
  * app.assets.load(asset);
+ * @category Parsers
  */
 class ObjModelParser {
     constructor(device) {

@@ -282,6 +282,7 @@ class SpzGSplatData {
 /**
  * A gsplat resource which keeps the SPZ data in its quantized form in GPU textures, and
  * dequantizes it in the shader.
+ * @category Parsers
  */
 class GSplatSpzResource extends GSplatResourceBase {
     /**
@@ -496,6 +497,7 @@ const parseSpz = (arrayBuffer, decoder) => {
  * app.assets.add(asset);
  * app.assets.load(asset);
  * ```
+ * @category Parsers
  */
 class SpzParser {
     /** @type {AppBase} */

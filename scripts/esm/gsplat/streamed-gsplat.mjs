@@ -17,6 +17,7 @@ import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } 
  *         environmentUrl: 'environment.sog'
  *     }
  * });
+ * @category Gaussian Splatting
  */
 class StreamedGSplat extends Script {
     static scriptName = 'streamedGsplat';

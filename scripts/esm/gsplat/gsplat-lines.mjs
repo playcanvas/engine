@@ -38,6 +38,7 @@ function calculateSplatCount(start, end, thickness) {
  *
  * // Remove a primitive
  * lines.removePrimitive(lineHandle);
+ * @category Gaussian Splatting
  */
 class GSplatLines extends Script {
     static scriptName = 'gsplatLines';

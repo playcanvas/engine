@@ -248,6 +248,7 @@ const fragmentWGSL = /* wgsl */ `
  *         resolution: Grid.RESOLUTION_HIGH
  *     }
  * });
+ * @category Rendering
  */
 class Grid extends Script {
     static scriptName = 'grid';

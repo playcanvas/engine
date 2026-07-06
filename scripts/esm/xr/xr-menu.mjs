@@ -83,6 +83,7 @@ const FINGER_JOINTS = [
  *         followOffset: new pc.Vec2(0.25, -0.15)
  *     }
  * });
+ * @category XR
  */
 class XrMenu extends Script {
     static scriptName = 'xrMenu';

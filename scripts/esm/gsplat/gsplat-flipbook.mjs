@@ -134,6 +134,7 @@ const PlayMode = {
  * // Adjust preload buffer for different scenarios
  * flipbook.preloadCount = 20; // Larger buffer for slower connections
  * flipbook.preloadCount = 5;  // Smaller buffer to save memory
+ * @category Gaussian Splatting
  */
 class GSplatFlipbook extends Script {
     static scriptName = 'gsplatFlipbook';

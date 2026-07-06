@@ -112,6 +112,7 @@ const wrapPi = (angle) => {
  *         maxScale: 4
  *     }
  * });
+ * @category XR
  */
 class XrManipulation extends Script {
     static scriptName = 'xrManipulation';

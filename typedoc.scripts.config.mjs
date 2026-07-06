@@ -100,6 +100,19 @@ for (const ref of engineSymbols.hidden) {
 
 export default {
     blockTags: [...OptionDefaults.blockTags, ...ATTRIBUTE_TAGS],
+    categoryOrder: [
+        'Controllers',
+        'Rendering',
+        'Post-Processing',
+        'Gaussian Splatting',
+        'XR',
+        'Annotations',
+        'Parsers',
+        'Supporting Types'
+    ],
+    // @category is not supported on @typedef comments, so the state/resources typedefs (and
+    // anything untagged) fall back to this category
+    defaultCategory: 'Supporting Types',
     compilerOptions: {
         allowSyntheticDefaultImports: true,
         checkJs: false
@@ -123,6 +136,10 @@ export default {
     // project (classes listed directly, like the engine reference)
     mergeModulesMergeMode: 'project',
     name: 'Engine Scripts API Reference',
+    // Group the sidebar by the @category tags on the script classes
+    navigation: {
+        includeCategories: true
+    },
     navigationLinks: {
         'Developer Site': 'https://developer.playcanvas.com/',
         'Blog': 'https://blog.playcanvas.com/',

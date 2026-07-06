@@ -80,6 +80,7 @@ const applyDeadZone = (stick, low, high) => {
  *         jumpForce: 850
  *     }
  * });
+ * @category Controllers
  */
 class FirstPersonController extends Script {
     static scriptName = 'firstPersonController';

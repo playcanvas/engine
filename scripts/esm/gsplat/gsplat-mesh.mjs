@@ -229,6 +229,7 @@ function collectRenderComponents(entity, recursive, results) {
  *     splatSize: 0.02,
  *     recursive: true
  * });
+ * @category Gaussian Splatting
  */
 class GSplatMesh extends Script {
     static scriptName = 'gsplatMesh';

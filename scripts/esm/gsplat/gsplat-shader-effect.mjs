@@ -27,6 +27,7 @@ import { Script } from 'playcanvas';
  * - updateEffect(effectTime, dt): Update effect each frame
  *
  * @abstract
+ * @category Gaussian Splatting
  */
 class GSplatShaderEffect extends Script {
     static scriptName = 'gsplatShaderEffect';

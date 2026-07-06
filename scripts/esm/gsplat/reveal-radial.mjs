@@ -280,6 +280,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  *         oscillationIntensity: 0.2
  *     }
  * });
+ * @category Gaussian Splatting
  */
 class GSplatRevealRadial extends GSplatShaderEffect {
     static scriptName = 'gsplatRevealRadial';

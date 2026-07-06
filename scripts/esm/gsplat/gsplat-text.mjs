@@ -12,6 +12,7 @@ import { Script, BoundingBox, GSplatFormat, GSplatContainer, FloatPacking } from
  * textSplat.text = 'Hello World';
  * textSplat.fontSize = 64;
  * textSplat.fillStyle = '#ffffff';
+ * @category Gaussian Splatting
  */
 class GSplatText extends Script {
     static scriptName = 'gsplatText';

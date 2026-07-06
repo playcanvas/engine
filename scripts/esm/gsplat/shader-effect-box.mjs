@@ -151,6 +151,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * const boxScript = entity.script.create(GSplatBoxShaderEffect);
  * boxScript.aabbMin.set(-1, -1, -1);
  * boxScript.aabbMax.set(1, 1, 1);
+ * @category Gaussian Splatting
  */
 class GSplatBoxShaderEffect extends GSplatShaderEffect {
     static scriptName = 'gsplatBoxShaderEffect';

@@ -305,6 +305,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * rainScript.center.set(0, 0, 0);
  * rainScript.distance = 5;
  * rainScript.speed = 3;
+ * @category Gaussian Splatting
  */
 class GSplatRevealRain extends GSplatShaderEffect {
     static scriptName = 'gsplatRevealRain';

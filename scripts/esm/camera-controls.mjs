@@ -144,6 +144,7 @@ const MobileInputLayout = {
  *         enableFly: false
  *     }
  * });
+ * @category Controllers
  */
 class CameraControls extends Script {
     static scriptName = 'cameraControls';
