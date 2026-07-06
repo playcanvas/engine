@@ -119,6 +119,9 @@ export default {
     favicon: 'utils/typedoc/favicon.ico',
     hostedBaseUrl: 'https://api.playcanvas.com/scripts/',
     includeVersion: true,
+    // Most scripts export a single class, so collapse the per-file modules into one flat
+    // project (classes listed directly, like the engine reference)
+    mergeModulesMergeMode: 'project',
     name: 'Engine Scripts API Reference',
     navigationLinks: {
         'Developer Site': 'https://developer.playcanvas.com/',
@@ -129,7 +132,8 @@ export default {
     },
     out: 'docs-scripts',
     plugin: [
-        'typedoc-plugin-mdn-links'
+        'typedoc-plugin-mdn-links',
+        'typedoc-plugin-merge-modules'
     ],
     readme: 'scripts/esm/README.md',
     sidebarLinks: {

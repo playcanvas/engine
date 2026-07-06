@@ -45,6 +45,7 @@ const frame = new InputFrame({
  * @param {number} damping - The damping factor (smaller = snappier).
  * @param {number} dt - The delta time.
  * @returns {number} - The lerp factor in 0..1.
+ * @ignore
  */
 export const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
