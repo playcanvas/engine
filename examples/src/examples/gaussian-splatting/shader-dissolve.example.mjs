@@ -28,7 +28,7 @@ import {
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
-import { GsplatDissolveShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-dissolve.mjs';
+import { GSplatDissolveShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-dissolve.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -163,7 +163,7 @@ app.root.addChild(hotel);
 hotel.addComponent('script');
 
 // Create the dissolve effect script
-const dissolveScript = hotel.script?.create(GsplatDissolveShaderEffect);
+const dissolveScript = hotel.script?.create(GSplatDissolveShaderEffect);
 
 // Wire up parameter sliders - each updates the script live
 /** @type {Record<string, (value: any) => void>} */

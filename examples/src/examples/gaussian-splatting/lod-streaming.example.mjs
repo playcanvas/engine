@@ -50,7 +50,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
 import { data, deviceType, win } from 'examples/context';
 
@@ -433,7 +433,7 @@ data.on('environment:set', () => {
     });
 });
 
-// Gsplat loading state
+// GSplat loading state
 /** @type {Entity|null} */
 let gsplatEntity = null;
 /** @type {any} */
@@ -454,7 +454,7 @@ const applyPreset = () => {
     data.set('lodMultiplier', presetData.lodMultiplier);
 };
 
-const loadGsplat = async (/** @type {string|null} */ url) => {
+const loadGSplat = async (/** @type {string|null} */ url) => {
     if (gsplatEntity) {
         gsplatEntity.destroy();
         gsplatEntity = null;
@@ -522,7 +522,7 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
 
     // Radial reveal effect
     gsplatEntity.addComponent('script');
-    const revealScript = gsplatEntity.script?.create(GsplatRevealRadial);
+    const revealScript = gsplatEntity.script?.create(GSplatRevealRadial);
     if (revealScript) {
         revealScript.center.set(focusX, focusY, focusZ);
         revealScript.speed = 5;
@@ -535,7 +535,7 @@ const loadGsplat = async (/** @type {string|null} */ url) => {
 
 // Initial load — use the observer's current url, which is paramUrl from the
 // hash query if set, or the share-URL state value applied during app.start().
-await loadGsplat(data.get('url') || null);
+await loadGSplat(data.get('url') || null);
 
 data.on('lodPreset:set', applyPreset);
 
@@ -562,9 +562,9 @@ data.on('orientation:set', () => {
 
 data.on('url:set', () => {
     const url = data.get('url');
-    loadGsplat(url || null).catch((err) => {
+    loadGSplat(url || null).catch((err) => {
         console.warn('Loading failed, reverting to default:', err);
-        loadGsplat(null);
+        loadGSplat(null);
     });
 });
 

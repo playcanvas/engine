@@ -1,5 +1,5 @@
 import { Vec3, Color } from 'playcanvas';
-import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
+import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform float uTime;
@@ -272,7 +272,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * @example
  * // Add the script to a gsplat entity
  * entity.addComponent('script');
- * entity.script.create(GsplatRevealRadial, {
+ * entity.script.create(GSplatRevealRadial, {
  *     attributes: {
  *         center: new pc.Vec3(0, 0, 0),
  *         speed: 2,
@@ -281,7 +281,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  *     }
  * });
  */
-class GsplatRevealRadial extends GsplatShaderEffect {
+class GSplatRevealRadial extends GSplatShaderEffect {
     static scriptName = 'gsplatRevealRadial';
 
     // Reusable arrays for uniform updates
@@ -429,4 +429,4 @@ class GsplatRevealRadial extends GsplatShaderEffect {
     }
 }
 
-export { GsplatRevealRadial };
+export { GSplatRevealRadial };

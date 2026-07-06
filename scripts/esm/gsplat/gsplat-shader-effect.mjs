@@ -28,7 +28,7 @@ import { Script } from 'playcanvas';
  *
  * @abstract
  */
-class GsplatShaderEffect extends Script {
+class GSplatShaderEffect extends Script {
     static scriptName = 'gsplatShaderEffect';
 
     /**
@@ -251,4 +251,4 @@ class GsplatShaderEffect extends Script {
     }
 }
 
-export { GsplatShaderEffect };
+export { GSplatShaderEffect };

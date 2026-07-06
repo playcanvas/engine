@@ -1,6 +1,6 @@
 // @config
 //
-// Wind swaying of trees in a streamed gaussian splat scene, using the reusable GsplatTrees script.
+// Wind swaying of trees in a streamed gaussian splat scene, using the reusable GSplatTrees script.
 // Trees are marked by spheres; toggle Edit mode to position them and drive the wind from the controls.
 //
 // @credit
@@ -38,7 +38,7 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatTrees } from 'playcanvas/scripts/esm/gsplat/gsplat-trees.mjs';
+import { GSplatTrees } from 'playcanvas/scripts/esm/gsplat/gsplat-trees.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -152,7 +152,7 @@ app.root.addChild(skatepark);
 
 // the reusable wind script
 skatepark.addComponent('script');
-const treesScript = /** @type {GsplatTrees} */ (skatepark.script.create(GsplatTrees));
+const treesScript = /** @type {GSplatTrees} */ (skatepark.script.create(GSplatTrees));
 
 // Each tree is a helper entity whose world position is the sphere center and whose uniform scale
 // is the sphere radius; the gizmos move/scale these. Use Edit mode to reposition them, add or

@@ -68,15 +68,15 @@ fn modifySplatColor(gaussianUV: vec2f, color: ptr<function, vec4f>) {
  * Attach this script to the entity holding the main camera that renders the gsplat scene. Under
  * the hood it creates a child entity with a camera matching the main camera, which renders a
  * dedicated layer into the texture before the main camera renders. Place the proxy mesh and the
- * lights that should light it on that layer ({@link GsplatRelighting#layer}), and apply
- * {@link GsplatRelighting#configureMaterial} to the proxy mesh material so it writes the
+ * lights that should light it on that layer ({@link GSplatRelighting#layer}), and apply
+ * {@link GSplatRelighting#configureMaterial} to the proxy mesh material so it writes the
  * coverage mask to alpha.
  *
  * Note: only gsplat components in unified mode are supported - the splat customization is
  * applied to `app.scene.gsplat.material`, and only by the raster gsplat renderers (CPU and GPU
  * sort), as the fragment chunk is not used by the compute renderer.
  */
-class GsplatRelighting extends Script {
+class GSplatRelighting extends Script {
     static scriptName = 'gsplatRelighting';
 
     /**
@@ -145,7 +145,7 @@ class GsplatRelighting extends Script {
     initialize() {
         const camera = this.entity.camera;
         if (!camera) {
-            console.error('GsplatRelighting requires a Camera component on the entity.');
+            console.error('GSplatRelighting requires a Camera component on the entity.');
             return;
         }
 
@@ -320,4 +320,4 @@ class GsplatRelighting extends Script {
     }
 }
 
-export { GsplatRelighting };
+export { GSplatRelighting };

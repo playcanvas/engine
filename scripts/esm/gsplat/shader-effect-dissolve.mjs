@@ -1,5 +1,5 @@
 import { Vec3, Color } from 'playcanvas';
-import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
+import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform vec3 uAabbMin;
@@ -248,11 +248,11 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * @example
  * // Add the script to a gsplat entity
  * entity.addComponent('script');
- * const dissolveScript = entity.script.create(GsplatDissolveShaderEffect);
+ * const dissolveScript = entity.script.create(GSplatDissolveShaderEffect);
  * dissolveScript.duration = 2.5;
  * dissolveScript.edgeColor.set(6, 1.5, 0.2);
  */
-class GsplatDissolveShaderEffect extends GsplatShaderEffect {
+class GSplatDissolveShaderEffect extends GSplatShaderEffect {
     static scriptName = 'gsplatDissolveShaderEffect';
 
     // Reusable arrays for uniform updates
@@ -419,4 +419,4 @@ class GsplatDissolveShaderEffect extends GsplatShaderEffect {
     }
 }
 
-export { GsplatDissolveShaderEffect };
+export { GSplatDissolveShaderEffect };

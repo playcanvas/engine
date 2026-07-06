@@ -1,5 +1,5 @@
 import { Vec3, Color } from 'playcanvas';
-import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
+import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform float uTime;
@@ -301,12 +301,12 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * @example
  * // Add the script to a gsplat entity
  * entity.addComponent('script');
- * const rainScript = entity.script.create(GsplatRevealRain);
+ * const rainScript = entity.script.create(GSplatRevealRain);
  * rainScript.center.set(0, 0, 0);
  * rainScript.distance = 5;
  * rainScript.speed = 3;
  */
-class GsplatRevealRain extends GsplatShaderEffect {
+class GSplatRevealRain extends GSplatShaderEffect {
     static scriptName = 'gsplatRevealRain';
 
     // Reusable arrays for uniform updates
@@ -464,4 +464,4 @@ class GsplatRevealRain extends GsplatShaderEffect {
     }
 }
 
-export { GsplatRevealRain };
+export { GSplatRevealRain };

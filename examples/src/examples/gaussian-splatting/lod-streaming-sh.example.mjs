@@ -38,7 +38,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
+import { GSplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -232,9 +232,9 @@ camera.setLocalPosition(camX, camY, camZ);
 
 app.root.addChild(camera);
 
-// Add the GsplatRevealGridEruption script to the gsplat entity
+// Add the GSplatRevealGridEruption script to the gsplat entity
 entity.addComponent('script');
-const revealScript = entity.script?.create(GsplatRevealGridEruption);
+const revealScript = entity.script?.create(GSplatRevealGridEruption);
 if (revealScript) {
     revealScript.center.set(focusX, focusY, focusZ);
     revealScript.blockCount = 6;

@@ -66,7 +66,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 import { XrMenu } from 'playcanvas/scripts/esm/xr/xr-menu.mjs';
 import { XrNavigation } from 'playcanvas/scripts/esm/xr/xr-navigation.mjs';
 import { XrSession } from 'playcanvas/scripts/esm/xr/xr-session.mjs';
@@ -474,7 +474,7 @@ const applyPreset = () => {
     }
 };
 
-const loadGsplat = (scene) => {
+const loadGSplat = (scene) => {
     if (gsplatEntity) {
         gsplatEntity.destroy();
         gsplatEntity = null;
@@ -519,7 +519,7 @@ const loadGsplat = (scene) => {
     gsplatSystem.on('frame:ready', onFrameReady);
 
     gsplatEntity.addComponent('script');
-    const revealScript = gsplatEntity.script?.create(GsplatRevealRadial);
+    const revealScript = gsplatEntity.script?.create(GSplatRevealRadial);
     if (revealScript) {
         revealScript.center.set(scene.focus[0], scene.focus[1], scene.focus[2]);
         revealScript.speed = 10;
@@ -595,11 +595,11 @@ const setScene = (index) => {
     }
 
     if (scene.asset.loaded) {
-        loadGsplat(scene);
+        loadGSplat(scene);
     } else {
         // Load on demand; guard against a newer selection completing first
         scene.asset.once('load', () => {
-            if (SCENES[sceneIndex] === scene) loadGsplat(scene);
+            if (SCENES[sceneIndex] === scene) loadGSplat(scene);
         });
         app.assets.load(scene.asset);
     }

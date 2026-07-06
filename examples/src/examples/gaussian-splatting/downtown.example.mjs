@@ -56,7 +56,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -225,7 +225,7 @@ const camStart = new Vec3(config.cameraPosition[0], config.cameraPosition[1], co
 const revealReach = camStart.distance(center) + radius; // furthest splat from the camera start
 const revealHost = /** @type {Entity} */ (root.children[0]);
 revealHost.addComponent('script');
-const reveal = /** @type {any} */ (/** @type {any} */ (revealHost.script).create(GsplatRevealRadial));
+const reveal = /** @type {any} */ (/** @type {any} */ (revealHost.script).create(GSplatRevealRadial));
 reveal.center.copy(camStart);
 reveal.endRadius = revealReach * 1.1; // reaches the whole scene from the camera start
 reveal.speed = (revealReach * 1.1) / 3; // sweep across in ~3s

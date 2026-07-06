@@ -34,8 +34,8 @@ import {
     TouchDevice,
     createGraphicsDevice
 } from 'playcanvas';
-import { GsplatMesh } from 'playcanvas/scripts/esm/gsplat/gsplat-mesh.mjs';
-import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
+import { GSplatMesh } from 'playcanvas/scripts/esm/gsplat/gsplat-mesh.mjs';
+import { GSplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -130,11 +130,11 @@ srcClouds.forEach((cloud) => {
 
 // Create gsplat entity for terrain (without clouds) - attach as child of terrain
 // so it inherits the terrain's transform (scale 30)
-const gsplatTerrain = new Entity('GsplatTerrain');
+const gsplatTerrain = new Entity('GSplatTerrain');
 gsplatTerrain.addComponent('script');
 terrain.addChild(gsplatTerrain);
 
-const gsplatMeshTerrain = gsplatTerrain.script.create(GsplatMesh);
+const gsplatMeshTerrain = gsplatTerrain.script.create(GSplatMesh);
 gsplatMeshTerrain.buildFromEntity(terrain, {
     splatSize: 0.03,
     margin: 0,
@@ -142,7 +142,7 @@ gsplatMeshTerrain.buildFromEntity(terrain, {
 });
 
 // Add reveal effect to terrain
-const revealScript = gsplatTerrain.script.create(GsplatBoxShaderEffect);
+const revealScript = gsplatTerrain.script.create(GSplatBoxShaderEffect);
 revealScript.aabbMin.set(-1000, -200, -1000);
 revealScript.aabbMax.set(1000, 250, 1000);
 revealScript.direction.set(0, 1, 0);
@@ -155,7 +155,7 @@ revealScript.edgeTint.set(5, 2, 0); // orange/gold edge
 revealScript.tint.set(1, 1, 1);
 
 // Now disable the original terrain render components (keep gsplat visible)
-const terrainRenders = terrain.find((node) => node.render && !node.name.includes('Gsplat'));
+const terrainRenders = terrain.find((node) => node.render && !node.name.includes('GSplat'));
 terrainRenders.forEach((node) => {
     node.render.enabled = false;
 });
@@ -183,12 +183,12 @@ srcClouds.forEach((srcCloud, srcIndex) => {
 
     // Create the first gsplat entity with script to build the gsplat
     // Position it same as the source cloud
-    const gsplatCloud = new Entity(`GsplatCloud-${srcIndex}-0`);
+    const gsplatCloud = new Entity(`GSplatCloud-${srcIndex}-0`);
     gsplatCloud.addComponent('script');
     cloudParent.addChild(gsplatCloud);
 
     // Build gsplat from the source cloud entity
-    const gsplatMeshCloud = gsplatCloud.script.create(GsplatMesh);
+    const gsplatMeshCloud = gsplatCloud.script.create(GSplatMesh);
     gsplatMeshCloud.buildFromEntity(srcCloud, {
         splatSize: 0.15, // Larger splats for fluffy cloud look
         margin: 0, // No margin - allow splats to extend to edges
@@ -205,7 +205,7 @@ srcClouds.forEach((srcCloud, srcIndex) => {
 
     // Create 3 more gsplat entities sharing the same container
     for (let i = 1; i < 4; i++) {
-        const cloneCloud = new Entity(`GsplatCloud-${srcIndex}-${i}`);
+        const cloneCloud = new Entity(`GSplatCloud-${srcIndex}-${i}`);
         cloneCloud.addComponent('gsplat', {
             resource: container
         });
