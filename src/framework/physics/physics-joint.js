@@ -22,24 +22,30 @@ class PhysicsJoint {
      * Applies the limit-related settings for the joint's type.
      *
      * @param {PhysicsJointSettings} settings - The joint parameter bag.
+     * @returns {boolean} True if the joint's type supports limits and they were applied.
      */
     updateLimits(settings) {
+        return false;
     }
 
     /**
      * Applies the motor-related settings for the joint's type.
      *
      * @param {PhysicsJointSettings} settings - The joint parameter bag.
+     * @returns {boolean} True if the joint's type supports a motor and it was applied.
      */
     updateMotor(settings) {
+        return false;
     }
 
     /**
      * Applies the spring-related settings for the joint's type.
      *
      * @param {PhysicsJointSettings} settings - The joint parameter bag.
+     * @returns {boolean} True if the joint's type supports springs and they were applied.
      */
     updateSpring(settings) {
+        return false;
     }
 
     /**

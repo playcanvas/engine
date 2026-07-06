@@ -8,13 +8,18 @@ import {
 import { RaycastResult } from '../../components/rigid-body/raycast-result.js';
 import { PhysicsWorld } from '../physics-world.js';
 import { AmmoPhysicsBody } from './ammo-physics-body.js';
+import { createJoint, destroyJoint, destroyFixedBody } from './ammo-physics-joint.js';
+
+/**
+ * @import { AmmoPhysicsJoint } from './ammo-physics-joint.js'
+ */
 import {
     createShape, destroyShape, addCompoundChild, updateCompoundChild, removeCompoundChild
 } from './ammo-physics-shape.js';
 
 /**
  * @import { ContactPoint } from '../../components/rigid-body/contact-point.js'
- * @import { PhysicsBodyDesc, PhysicsShapeDesc } from '../physics-world.js'
+ * @import { PhysicsBodyDesc, PhysicsJointDesc, PhysicsShapeDesc } from '../physics-world.js'
  */
 
 /**
@@ -84,6 +89,21 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     _triMeshCache = new Map();
 
     /**
+     * The shared static body world-pinned joints attach to, lazily created.
+     *
+     * @type {object|null}
+     * @ignore
+     */
+    _fixedBody = null;
+
+    /**
+     * The fixed timestep of the last simulation step, used by joint motor conversions.
+     *
+     * @ignore
+     */
+    _fixedTimeStep = 1 / 60;
+
+    /**
      * Create a new AmmoPhysicsWorld instance.
      *
      * @param {object} [options] - The world options. See {@link PhysicsWorld}.
@@ -121,6 +141,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     destroy() {
         this._triMeshCache.forEach(triMesh => Ammo.destroy(triMesh));
         this._triMeshCache.clear();
+
+        destroyFixedBody(this);
 
         Ammo.destroy(this._btVec1);
         Ammo.destroy(this._btVec2);
@@ -249,6 +271,18 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     }
 
     /**
+     * @param {PhysicsJointDesc} desc - The joint descriptor.
+     * @returns {AmmoPhysicsJoint} The new joint.
+     */
+    createJoint(desc) {
+        return createJoint(this, desc);
+    }
+
+    destroyJoint(joint) {
+        destroyJoint(this, joint);
+    }
+
+    /**
      * @param {Vec3} gravity - The world space gravity.
      */
     setGravity(gravity) {
@@ -270,6 +304,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     }
 
     step(dt, maxSubSteps, fixedTimeStep) {
+        this._fixedTimeStep = fixedTimeStep;
         this.nativeWorld.stepSimulation(dt, maxSubSteps, fixedTimeStep);
     }
 

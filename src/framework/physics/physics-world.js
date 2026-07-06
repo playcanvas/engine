@@ -3,6 +3,7 @@ import { PhysicsJoint } from './physics-joint.js';
 
 /**
  * @import { Entity } from '../entity.js'
+ * @import { Mat4 } from '../../core/math/mat4.js'
  * @import { Quat } from '../../core/math/quat.js'
  * @import { Vec2 } from '../../core/math/vec2.js'
  * @import { Vec3 } from '../../core/math/vec3.js'
@@ -93,22 +94,17 @@ import { PhysicsJoint } from './physics-joint.js';
  */
 
 /**
- * @typedef {object} PhysicsJointFrame
- * @property {Vec3} position - The joint frame position in body local space.
- * @property {Quat} rotation - The joint frame rotation in body local space. X is the primary
- * joint axis by engine convention - backends apply their own native axis corrections.
- */
-
-/**
  * @typedef {object} PhysicsJointDesc
  * @property {string} type - The joint type: JOINTTYPE_FIXED, JOINTTYPE_BALL, JOINTTYPE_HINGE,
  * JOINTTYPE_SLIDER or JOINTTYPE_6DOF.
  * @property {PhysicsBody} bodyA - The first constrained body.
  * @property {PhysicsBody|null} bodyB - The second constrained body, or null to anchor the joint
  * to the world (the backend supplies its own fixed anchor body).
- * @property {PhysicsJointFrame} frameA - The joint frame in body A's local space.
- * @property {PhysicsJointFrame} frameB - The joint frame in body B's local space (or world
- * space when bodyB is null).
+ * @property {Mat4} frameA - The joint frame in body A's local space, as a scale-free matrix
+ * with X as the primary joint axis by engine convention. Backends apply their own native axis
+ * corrections. Only valid during the call.
+ * @property {Mat4} frameB - The joint frame in body B's local space (or world space when bodyB
+ * is null).
  * @property {boolean} enableCollision - Whether the two bodies keep colliding with each other.
  * Creation-time only - changing it recreates the joint.
  * @property {PhysicsJointSettings} settings - The full parameter bag, applied at creation.
