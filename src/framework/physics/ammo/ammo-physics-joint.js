@@ -11,7 +11,7 @@ import { PhysicsJoint } from '../physics-joint.js';
 
 /**
  * @import { AmmoPhysicsWorld } from './ammo-physics-world.js'
- * @import { PhysicsJointDesc, PhysicsJointSettings } from '../physics-world.js'
+ * @import { PhysicsJointDesc } from '../physics-world.js'
  */
 
 const _frameMat = new Mat4();
