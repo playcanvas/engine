@@ -1,6 +1,6 @@
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-import { BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYTYPE_DYNAMIC } from '../rigid-body/constants.js';
+import { BODYTYPE_DYNAMIC } from '../rigid-body/constants.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -85,33 +85,16 @@ class Trigger {
     }
 
     enable() {
-        const body = this.body;
-        if (!body) return;
+        if (!this.body) return;
 
-        const system = this.app.systems.rigidbody;
-        const idx = system._triggers.indexOf(this);
-        if (idx < 0) {
-            // addBody also puts the body into the active state so that it is simulated
-            // properly again
-            system.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
-            system._triggers.push(this);
-        }
-
+        this.app.systems.rigidbody.addTrigger(this);
         this.updateTransform();
     }
 
     disable() {
-        const body = this.body;
-        if (!body) return;
+        if (!this.body) return;
 
-        const system = this.app.systems.rigidbody;
-        const idx = system._triggers.indexOf(this);
-        if (idx > -1) {
-            // removeBody also drops the body out of the active state so that it properly
-            // deactivates after we remove it from the physics world
-            system.removeBody(body);
-            system._triggers.splice(idx, 1);
-        }
+        this.app.systems.rigidbody.removeTrigger(this);
     }
 }
 
