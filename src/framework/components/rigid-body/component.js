@@ -8,6 +8,10 @@ import {
     BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC
 } from './constants.js';
 
+/**
+ * @import { PhysicsBody } from '../../physics/physics-body.js'
+ */
+
 // Shared math variables to avoid excessive allocation
 const _quat1 = new Quat();
 const _quat2 = new Quat();
@@ -134,7 +138,12 @@ class RigidBodyComponent extends Component {
     /** @private */
     _angularVelocity = new Vec3();
 
-    /** @private */
+    /**
+     * The physics backend body, when created.
+     *
+     * @type {PhysicsBody|null}
+     * @private
+     */
     _body = null;
 
     /** @private */
@@ -250,6 +259,10 @@ class RigidBodyComponent extends Component {
         return this._angularVelocity;
     }
 
+    /**
+     * @type {*}
+     * @ignore
+     */
     set body(body) {
         if (this._body !== body) {
             this._body = body;
@@ -260,6 +273,13 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * The native physics body - btRigidBody when the Ammo backend is active, null otherwise.
+     * The setter takes the backend {@link PhysicsBody} and is internal.
+     *
+     * @type {*}
+     * @ignore
+     */
     get body() {
         return this._body ? this._body.nativeBody : null;
     }
