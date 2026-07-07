@@ -507,7 +507,7 @@ class CollisionComponent extends Component {
         this._convexHull = arg;
 
         if (this._initialized && this._type === 'mesh') {
-            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+            this.system.doRecreatePhysicalShape(this);
         }
     }
 
@@ -540,7 +540,7 @@ class CollisionComponent extends Component {
             // recreate physical shapes skipping loading the model
             // from the 'asset' as the model passed in might
             // have been created procedurally
-            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+            this.system.doRecreatePhysicalShape(this);
         }
     }
 
@@ -559,7 +559,7 @@ class CollisionComponent extends Component {
         if (this._initialized && this._type === 'mesh') {
             // recreate physical shapes skipping loading the render asset
             // as the render passed in might have been created procedurally
-            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+            this.system.doRecreatePhysicalShape(this);
         }
     }
 
@@ -642,6 +642,22 @@ class CollisionComponent extends Component {
         }
     }
 
+    /**
+     * An {@link Entity#forEach} callback that refreshes the compound child transform of each
+     * descendant wired to the same compound root. Invoked with `this` set to the compound
+     * root's entity.
+     *
+     * @param {Entity} entity - The visited descendant entity.
+     * @private
+     */
+    _updateEachDescendantTransform(entity) {
+        if (!entity.collision || entity.collision._compoundParent !== this.collision._compoundParent) {
+            return;
+        }
+
+        this.collision.system.updateCompoundChildTransform(entity, false);
+    }
+
     /** @private */
     _updateCompound() {
         const entity = this.entity;
@@ -661,7 +677,7 @@ class CollisionComponent extends Component {
             }
 
             if (dirty) {
-                entity.forEach(this.system.implementations.compound._updateEachDescendantTransform, entity);
+                entity.forEach(this._updateEachDescendantTransform, entity);
 
                 const bodyComponent = this._compoundParent.entity.rigidbody;
                 if (bodyComponent) {
