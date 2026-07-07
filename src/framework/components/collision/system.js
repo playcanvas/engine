@@ -190,7 +190,7 @@ function recreateShapes(system, component) {
             destroyShape(system, component);
         }
 
-        component._shape = collisionImpls[component._type].createPhysicalShape(system, entity, component);
+        component._shape = getImpl(component._type).createPhysicalShape(system, entity, component);
 
         const firstCompoundChild = !component._compoundParent;
 
@@ -565,7 +565,7 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     onTransformChanged(component, position, rotation, scale) {
-        const impl = collisionImpls[component.type];
+        const impl = getImpl(component.type);
         (impl.updateTransform ?? updateShapeTransform)(this, component, position, rotation, scale);
     }
 
@@ -593,6 +593,7 @@ class CollisionComponentSystem extends ComponentSystem {
      * @ignore
      */
     doRecreatePhysicalShape(component) {
+        Debug.assert(component._type === 'mesh', 'CollisionComponentSystem#doRecreatePhysicalShape: called for a non-mesh collision component.');
         doRecreateMeshShape(this, component);
     }
 
