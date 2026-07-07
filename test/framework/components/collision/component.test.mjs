@@ -4,6 +4,7 @@ import { Quat } from '../../../../src/core/math/quat.js';
 import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { NullPhysicsWorld } from '../../../../src/framework/physics/null/null-physics-world.js';
 import { Model } from '../../../../src/scene/model.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
@@ -469,6 +470,116 @@ describe('CollisionComponent', function () {
 
             expect(() => e.destroy()).to.not.throw();
             expect(e.collision).to.not.exist;
+        });
+
+    });
+
+    describe('mesh world scale watch', function () {
+
+        beforeEach(function () {
+            app.systems.rigidbody.setPhysicsWorld(new NullPhysicsWorld());
+        });
+
+        // creates an initialized mesh collision entity - the null backend never reads the
+        // geometry, so a stub render source is enough
+        function createMeshEntity(parent = app.root) {
+            const e = new Entity();
+            e.addComponent('collision', { type: 'mesh' });
+            parent.addChild(e);
+            e.collision.render = { meshes: [{ id: 1, primitive: [{ base: 0, count: 3 }] }] };
+            return e;
+        }
+
+        it('rebuilds the shape when the entity world scale changes', function () {
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+            expect(shape).to.exist;
+
+            e.setLocalScale(2, 2, 2);
+            app.systems.rigidbody.onUpdate(1 / 60);
+
+            expect(e.collision.shape).to.exist;
+            expect(e.collision.shape).to.not.equal(shape);
+            expect(e.collision._builtWorldScale.equals(new Vec3(2, 2, 2))).to.equal(true);
+        });
+
+        it('rebuilds the shape when an ancestor scale changes', function () {
+            const parent = new Entity();
+            app.root.addChild(parent);
+            const e = createMeshEntity(parent);
+            const shape = e.collision.shape;
+
+            parent.setLocalScale(3, 3, 3);
+            app.systems.rigidbody.onUpdate(1 / 60);
+
+            expect(e.collision.shape).to.not.equal(shape);
+        });
+
+        it('does not rebuild without a scale change', function () {
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+
+            app.systems.rigidbody.onUpdate(1 / 60);
+            app.systems.rigidbody.onUpdate(1 / 60);
+
+            expect(e.collision.shape).to.equal(shape);
+        });
+
+        it('does not rebuild when the entity merely moves or rotates', function () {
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+
+            e.setLocalPosition(1, 2, 3);
+            e.setLocalEulerAngles(10, 20, 30);
+            app.systems.rigidbody.onUpdate(1 / 60);
+
+            expect(e.collision.shape).to.equal(shape);
+        });
+
+        it('defers the rebuild while the component is disabled', function () {
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+
+            e.collision.enabled = false;
+            e.setLocalScale(2, 2, 2);
+            app.systems.rigidbody.onUpdate(1 / 60);
+            expect(e.collision.shape).to.equal(shape);
+
+            e.collision.enabled = true;
+            app.systems.rigidbody.onUpdate(1 / 60);
+            expect(e.collision.shape).to.not.equal(shape);
+        });
+
+        it('leaves compound children alone when an ancestor is scaled', function () {
+            const parent = new Entity();
+            parent.addComponent('collision', { type: 'compound' });
+            app.root.addChild(parent);
+
+            const e = createMeshEntity(parent);
+            const shape = e.collision.shape;
+            expect(e.collision._compoundParent).to.equal(parent.collision);
+
+            parent.setLocalScale(2, 2, 2);
+            app.systems.rigidbody.onUpdate(1 / 60);
+
+            expect(e.collision.shape).to.equal(shape);
+        });
+
+        it('stops watching a component that changes type or is removed', function () {
+            const system = app.systems.collision;
+
+            const e = createMeshEntity();
+            expect(system._meshComponents).to.include(e.collision);
+
+            e.collision.type = 'box';
+            expect(system._meshComponents).to.have.lengthOf(0);
+
+            const e2 = createMeshEntity();
+            const component = e2.collision;
+            expect(system._meshComponents).to.include(component);
+
+            e2.destroy();
+            expect(system._meshComponents).to.have.lengthOf(0);
         });
 
     });

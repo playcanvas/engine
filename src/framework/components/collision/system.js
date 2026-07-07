@@ -20,6 +20,9 @@ const p2 = new Vec3();
 const p3 = new Vec3();
 const quat = new Quat();
 const quat2 = new Quat();
+const worldScale = new Vec3();
+
+const SCALE_CHANGE_TOLERANCE = 1e-5;
 
 // Note that `shape` is deliberately absent from this list - it is runtime
 // state created and owned by the type implementation, not component data
@@ -87,8 +90,7 @@ const collisionImpls = {
         // the model comes from assets - no placeholder is created
         beforeInitialize() {},
         createPhysicalShape: createMeshShape,
-        recreatePhysicalShapes: recreateMeshShapes,
-        updateTransform: updateMeshTransform
+        recreatePhysicalShapes: recreateMeshShapes
     },
 
     compound: {
@@ -150,6 +152,11 @@ function destroyShape(system, component) {
 }
 
 function beforeRemove(system, entity, component) {
+    const watchIndex = system._meshComponents.indexOf(component);
+    if (watchIndex !== -1) {
+        system._meshComponents.splice(watchIndex, 1);
+    }
+
     if (component._shape) {
         if (component._compoundParent && !component._compoundParent.entity._destroying) {
             system._removeCompoundChild(component._compoundParent, component._shape);
@@ -231,12 +238,6 @@ function recreateShapes(system, component) {
         } else if (!component._compoundParent) {
             recreateTrigger(system, entity, component);
         }
-    }
-}
-
-function updateShapeTransform(system, component, position, rotation, scale) {
-    if (component.entity.trigger) {
-        component.entity.trigger.updateTransform();
     }
 }
 
@@ -332,8 +333,12 @@ function createMeshShape(system, entity, component) {
             shapeScale = scale;
         }
 
-        // record the scale the shape was built with, for the rebuild-on-scale-change check
+        // record the scale the shape was built with and watch it for changes - a runtime
+        // rescale of the entity rebuilds the shape (see _updateMeshScales)
         component._builtWorldScale = scale;
+        if (!system._meshComponents.includes(component)) {
+            system._meshComponents.push(component);
+        }
 
         return world.createShape({
             type: 'mesh',
@@ -428,18 +433,14 @@ function recreateMeshShapes(system, component) {
     doRecreateMeshShape(system, component);
 }
 
-function updateMeshTransform(system, component, position, rotation, scale) {
-    if (component.shape && component._builtWorldScale) {
-        const entityTransform = component.entity.getWorldTransform();
-        const worldScale = entityTransform.getScale();
-
-        // if the scale changed then recreate the shape
-        if (!worldScale.equals(component._builtWorldScale)) {
-            doRecreateMeshShape(system, component);
-        }
-    }
-
-    updateShapeTransform(system, component, position, rotation, scale);
+// Returns whether a freshly extracted world scale differs from the scale a mesh shape was
+// built with. The scale is derived from the world matrix, so merely rotating an entity
+// perturbs the extracted values by float noise - compare with a relative tolerance so only
+// real scale changes trigger a rebuild
+function scaleChanged(scale, builtScale) {
+    return Math.abs(scale.x - builtScale.x) > SCALE_CHANGE_TOLERANCE * Math.max(1, Math.abs(builtScale.x)) ||
+           Math.abs(scale.y - builtScale.y) > SCALE_CHANGE_TOLERANCE * Math.max(1, Math.abs(builtScale.y)) ||
+           Math.abs(scale.z - builtScale.z) > SCALE_CHANGE_TOLERANCE * Math.max(1, Math.abs(builtScale.z));
 }
 
 /**
@@ -448,6 +449,15 @@ function updateMeshTransform(system, component, position, rotation, scale) {
  * @category Physics
  */
 class CollisionComponentSystem extends ComponentSystem {
+    /**
+     * Mesh components with a built shape, watched for entity world scale changes. Maintained
+     * by createMeshShape and beforeRemove.
+     *
+     * @type {CollisionComponent[]}
+     * @private
+     */
+    _meshComponents = [];
+
     /**
      * Creates a new CollisionComponentSystem instance.
      *
@@ -564,9 +574,37 @@ class CollisionComponentSystem extends ComponentSystem {
         this.physicsWorld.removeCompoundChild(collision.shape, shape);
     }
 
-    onTransformChanged(component, position, rotation, scale) {
-        const impl = getImpl(component.type);
-        (impl.updateTransform ?? updateShapeTransform)(this, component, position, rotation, scale);
+    /**
+     * Rebuilds mesh shapes whose entity world scale no longer matches the scale they were
+     * built with. Driven by the rigid body system at the start of each physics update.
+     *
+     * @ignore
+     */
+    _updateMeshScales() {
+        if (!this.physicsWorld) {
+            return;
+        }
+
+        const components = this._meshComponents;
+        // walk backwards - a rebuild that has lost its mesh sources removes the component
+        for (let i = components.length - 1; i >= 0; i--) {
+            const component = components[i];
+            if (!component._shape || !component.enabled || !component.entity.enabled) {
+                continue;
+            }
+
+            // skip compound children - the mesh rebuild path does not detach the old shape
+            // from the parent compound, so rebuilding one here would leave the parent
+            // referencing a destroyed shape
+            if (component._compoundParent) {
+                continue;
+            }
+
+            const scale = component.entity.getWorldTransform().getScale(worldScale);
+            if (scaleChanged(scale, component._builtWorldScale)) {
+                doRecreateMeshShape(this, component);
+            }
+        }
     }
 
     // Destroys the previous collision type and creates a new one based on the new type provided
