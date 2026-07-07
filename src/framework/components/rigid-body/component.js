@@ -1052,12 +1052,9 @@ class RigidBodyComponent extends Component {
                 const entityRot = _quat1.copy(_rotation).mul(invertedAo);
 
                 entityRot.transformVector(lo, _vec3);
-                entity.setPosition(_position.x - _vec3.x, _position.y - _vec3.y, _position.z - _vec3.z);
-                entity.setRotation(entityRot);
-
+                entity.setPositionAndRotation(_position.sub(_vec3), entityRot);
             } else {
-                entity.setPosition(_position);
-                entity.setRotation(_rotation);
+                entity.setPositionAndRotation(_position, _rotation);
             }
         }
     }
