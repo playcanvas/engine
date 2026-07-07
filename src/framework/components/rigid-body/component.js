@@ -659,39 +659,7 @@ class RigidBodyComponent extends Component {
      * @ignore
      */
     enableSimulation() {
-        const entity = this.entity;
-        if (entity.collision && entity.collision.enabled && !this._simulationEnabled) {
-            const body = this._body;
-            if (body) {
-                // addBody also applies the backend's per-type activation policy
-                this.system.addBody(body, this._group, this._mask);
-
-                switch (this._type) {
-                    case BODYTYPE_DYNAMIC:
-                        this.system._dynamic.push(this);
-                        this.syncEntityToBody();
-                        break;
-                    case BODYTYPE_KINEMATIC:
-                        this.system._kinematic.push(this);
-                        break;
-                    case BODYTYPE_STATIC:
-                        this.syncEntityToBody();
-                        break;
-                }
-
-                if (entity.collision.type === 'compound') {
-                    this.system._compounds.push(entity.collision);
-                }
-
-                body.activate();
-
-                this._simulationEnabled = true;
-
-                // internal event consumed by the joint system to (re)create constraints
-                // against bodies that are present in the dynamics world
-                this.fire('simulationenabled');
-            }
-        }
+        this.system.enableSimulation(this);
     }
 
     /**
@@ -700,37 +668,7 @@ class RigidBodyComponent extends Component {
      * @ignore
      */
     disableSimulation() {
-        const body = this._body;
-        if (body && this._simulationEnabled) {
-            const system = this.system;
-
-            let idx = system._compounds.indexOf(this.entity.collision);
-            if (idx > -1) {
-                system._compounds.splice(idx, 1);
-            }
-
-            idx = system._dynamic.indexOf(this);
-            if (idx > -1) {
-                system._dynamic.splice(idx, 1);
-            }
-
-            idx = system._kinematic.indexOf(this);
-            if (idx > -1) {
-                system._kinematic.splice(idx, 1);
-            }
-
-            // removeBody also drops the body out of the active state so isActive() does not
-            // return true even though it is no longer in the dynamics world
-            system.removeBody(body);
-
-            this._simulationEnabled = false;
-
-            // internal event consumed by the joint system to destroy constraints that reference
-            // this body. The body has just been removed from the dynamics world above and is now
-            // inert, but is still a valid object - tearing the constraints down here keeps them
-            // from referencing the body once it is later destroyed or rebuilt.
-            this.fire('simulationdisabled');
-        }
+        this.system.disableSimulation(this);
     }
 
     /**

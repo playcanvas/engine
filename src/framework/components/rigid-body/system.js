@@ -4,6 +4,10 @@ import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { AmmoPhysicsWorld } from '../../physics/ammo/ammo-physics-world.js';
 import { ComponentSystem } from '../system.js';
+import {
+    BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC,
+    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
+} from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { ContactPoint } from './contact-point.js';
 import { ContactResult } from './contact-result.js';
@@ -250,6 +254,123 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     removeBody(body) {
         this._world.removeBody(body);
+    }
+
+    /**
+     * Adds a component's body to the simulation and registers the component with the update
+     * lists for its body type. Fires 'simulationenabled' on the component. No-op unless the
+     * component has a body, an enabled collision component and is not already simulating.
+     *
+     * @param {RigidBodyComponent} component - The component to add to the simulation.
+     * @ignore
+     */
+    enableSimulation(component) {
+        const entity = component.entity;
+        if (entity.collision && entity.collision.enabled && !component._simulationEnabled) {
+            const body = component._body;
+            if (body) {
+                // addBody also applies the backend's per-type activation policy
+                this.addBody(body, component._group, component._mask);
+
+                switch (component._type) {
+                    case BODYTYPE_DYNAMIC:
+                        this._dynamic.push(component);
+                        component.syncEntityToBody();
+                        break;
+                    case BODYTYPE_KINEMATIC:
+                        this._kinematic.push(component);
+                        break;
+                    case BODYTYPE_STATIC:
+                        component.syncEntityToBody();
+                        break;
+                }
+
+                if (entity.collision.type === 'compound') {
+                    this._compounds.push(entity.collision);
+                }
+
+                body.activate();
+
+                component._simulationEnabled = true;
+
+                // internal event consumed by the joint system to (re)create constraints
+                // against bodies that are present in the dynamics world
+                component.fire('simulationenabled');
+            }
+        }
+    }
+
+    /**
+     * Removes a component's body from the simulation and unregisters the component from the
+     * update lists. Fires 'simulationdisabled' on the component. No-op unless the component
+     * has a body and is currently simulating.
+     *
+     * @param {RigidBodyComponent} component - The component to remove from the simulation.
+     * @ignore
+     */
+    disableSimulation(component) {
+        const body = component._body;
+        if (body && component._simulationEnabled) {
+            let idx = this._compounds.indexOf(component.entity.collision);
+            if (idx > -1) {
+                this._compounds.splice(idx, 1);
+            }
+
+            idx = this._dynamic.indexOf(component);
+            if (idx > -1) {
+                this._dynamic.splice(idx, 1);
+            }
+
+            idx = this._kinematic.indexOf(component);
+            if (idx > -1) {
+                this._kinematic.splice(idx, 1);
+            }
+
+            // removeBody also drops the body out of the active state so isActive() does not
+            // return true even though it is no longer in the dynamics world
+            this.removeBody(body);
+
+            component._simulationEnabled = false;
+
+            // internal event consumed by the joint system to destroy constraints that reference
+            // this body. The body has just been removed from the dynamics world above and is now
+            // inert, but is still a valid object - tearing the constraints down here keeps them
+            // from referencing the body once it is later destroyed or rebuilt.
+            component.fire('simulationdisabled');
+        }
+    }
+
+    /**
+     * Adds a trigger's body to the simulation and registers the trigger for per-frame
+     * transform updates. No-op if the trigger is already registered.
+     *
+     * @param {Trigger} trigger - The trigger to add to the simulation.
+     * @ignore
+     */
+    addTrigger(trigger) {
+        if (this._triggers.indexOf(trigger) < 0) {
+            // addBody also puts the body into the active state so that it is simulated
+            // properly again
+            this.addBody(trigger.body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
+            this._triggers.push(trigger);
+        }
+    }
+
+    /**
+     * Removes a trigger's body from the simulation and unregisters the trigger. No-op if the
+     * trigger is not registered.
+     *
+     * @param {Trigger} trigger - The trigger to remove from the simulation.
+     * @ignore
+     */
+    removeTrigger(trigger) {
+        const idx = this._triggers.indexOf(trigger);
+        if (idx > -1) {
+            // removeBody also drops the body out of the active state so that it properly
+            // deactivates after being removed from the physics world
+            this.removeBody(trigger.body);
+            this._triggers.splice(idx, 1);
+        }
     }
 
     /**
