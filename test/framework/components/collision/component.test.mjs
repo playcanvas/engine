@@ -131,7 +131,6 @@ describe('CollisionComponent', function () {
             e.addComponent('collision', { type: null });
 
             expect(e.collision.type).to.equal('box');
-            expect(app.systems.collision.implementations.box).to.exist;
         });
 
         it('copies Vec3 inputs so caller mutations do not leak into component state', function () {
@@ -237,14 +236,13 @@ describe('CollisionComponent', function () {
 
     describe('#type', function () {
 
-        it('changes type and creates the new implementation', function () {
+        it('changes type', function () {
             const e = new Entity();
             e.addComponent('collision');
 
             e.collision.type = 'sphere';
 
             expect(e.collision.type).to.equal('sphere');
-            expect(app.systems.collision.implementations.sphere).to.exist;
         });
 
         it('is a no-op when the type is unchanged', function () {
@@ -338,16 +336,16 @@ describe('CollisionComponent', function () {
             expect(counter.count()).to.equal(3);
         });
 
-        it('routes model, render and convexHull changes to the mesh implementation', function () {
+        it('routes model, render and convexHull changes to the mesh rebuild', function () {
             const box = new Entity();
             box.addComponent('collision');
 
             const mesh = new Entity();
             mesh.addComponent('collision', { type: 'mesh' });
 
-            const impl = app.systems.collision.implementations.mesh;
+            const system = app.systems.collision;
             let calls = 0;
-            impl.doRecreatePhysicalShape = function () {
+            system.doRecreatePhysicalShape = function () {
                 calls++;
             };
 
