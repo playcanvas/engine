@@ -199,7 +199,7 @@ function recreateShapes(system, component) {
 
             entity.forEach(system._addEachDescendant, component);
         } else if (component._type !== 'compound') {
-            if (!component.rigidbody) {
+            if (!entity.rigidbody) {
                 component._compoundParent = null;
                 let parent = entity.parent;
                 while (parent) {

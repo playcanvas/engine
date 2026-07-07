@@ -4,6 +4,7 @@ import { Quat } from '../../../../src/core/math/quat.js';
 import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { NullPhysicsWorld } from '../../../../src/framework/physics/null/null-physics-world.js';
 import { Model } from '../../../../src/scene/model.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
@@ -357,6 +358,42 @@ describe('CollisionComponent', function () {
             mesh.collision.model = new Model();
             mesh.collision.render = null;
             expect(calls).to.equal(3);
+        });
+
+    });
+
+    describe('compound children', function () {
+
+        beforeEach(function () {
+            // install the no-op physics backend so the shape lifecycle runs
+            app.systems.rigidbody.setPhysicsWorld(new NullPhysicsWorld());
+        });
+
+        it('wires a plain collision child to an ancestor compound', function () {
+            const parent = new Entity();
+            app.root.addChild(parent);
+            parent.addComponent('rigidbody');
+            parent.addComponent('collision', { type: 'compound' });
+
+            const child = new Entity();
+            parent.addChild(child);
+            child.addComponent('collision', { type: 'box' });
+
+            expect(child.collision._compoundParent).to.equal(parent.collision);
+        });
+
+        it('keeps a child with its own rigidbody independent of an ancestor compound', function () {
+            const parent = new Entity();
+            app.root.addChild(parent);
+            parent.addComponent('rigidbody');
+            parent.addComponent('collision', { type: 'compound' });
+
+            const child = new Entity();
+            parent.addChild(child);
+            child.addComponent('rigidbody');
+            child.addComponent('collision', { type: 'box' });
+
+            expect(child.collision._compoundParent).to.equal(null);
         });
 
     });
