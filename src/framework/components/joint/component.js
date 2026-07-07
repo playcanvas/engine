@@ -1,7 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { math } from '../../../core/math/math.js';
 import { Mat4 } from '../../../core/math/mat4.js';
-import { Quat } from '../../../core/math/quat.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { GraphNode } from '../../../scene/graph-node.js';
@@ -9,19 +7,24 @@ import { Component } from '../component.js';
 import { BODYTYPE_DYNAMIC } from '../rigid-body/constants.js';
 import {
     JOINTTYPE_6DOF, JOINTTYPE_BALL, JOINTTYPE_FIXED, JOINTTYPE_HINGE, JOINTTYPE_SLIDER,
-    MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED
+    MOTION_LOCKED
 } from './constants.js';
 
 /**
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
+ * @import { MOTION_FREE, MOTION_LIMITED } from './constants.js'
+ * @import { PhysicsJoint } from '../../physics/physics-joint.js'
  */
 
 const _mat = new Mat4();
 const _jointMat = new Mat4();
+const _frameMatA = new Mat4();
+const _frameMatB = new Mat4();
 const _vec3 = new Vec3();
 const _vec3b = new Vec3();
-const _quat = new Quat();
+
+const _jointTypes = new Set([JOINTTYPE_FIXED, JOINTTYPE_BALL, JOINTTYPE_HINGE, JOINTTYPE_SLIDER, JOINTTYPE_6DOF]);
 
 // anchor separation, in meters, beyond which a constraint that bullet has internally broken is
 // considered detectably broken - far above the violation a live constraint exhibits under load
@@ -49,208 +52,6 @@ function setVec3(target, value) {
     }
     return false;
 }
-
-// scratch for dofLimits
-const _dof = { lower: 0, upper: 0 };
-
-// computes the lower/upper pair encoding a 6dof degree of freedom: bullet treats
-// lower > upper as free and lower === upper as locked
-function dofLimits(motion, limits, scale) {
-    if (motion === MOTION_LIMITED) {
-        _dof.lower = limits.x * scale;
-        _dof.upper = limits.y * scale;
-    } else if (motion === MOTION_FREE) {
-        _dof.lower = 1;
-        _dof.upper = 0;
-    } else { // MOTION_LOCKED
-        _dof.lower = 0;
-        _dof.upper = 0;
-    }
-    return _dof;
-}
-
-// Per-type joint backends, mapping the component's properties onto the most appropriate bullet
-// constraint. Methods other than create are optional - a type without a motor simply omits
-// updateMotor. axisCorrection, where present, rotates both joint frames so that the constraint's
-// native axis lands on the joint entity's X axis.
-
-const fixedJoint = {
-    create(bodyA, bodyB, frameA, frameB) {
-        return new Ammo.btFixedConstraint(bodyA, bodyB, frameA, frameB);
-    }
-};
-
-const ballJoint = {
-    create(bodyA, bodyB, frameA, frameB) {
-        return new Ammo.btConeTwistConstraint(bodyA, bodyB, frameA, frameB);
-    },
-
-    updateLimits(joint) {
-        const constraint = joint._constraint;
-
-        // setLimit indices: 5 = swing span 1, limiting rotation about the constraint's Z axis
-        // (i.e. swing towards Y), 4 = swing span 2, limiting rotation about Y (swing towards Z),
-        // 3 = twist span about X
-        if (joint.enableLimits) {
-            constraint.setLimit(5, joint.swingLimitY * math.DEG_TO_RAD);
-            constraint.setLimit(4, joint.swingLimitZ * math.DEG_TO_RAD);
-            constraint.setLimit(3, joint.twistLimit * math.DEG_TO_RAD);
-        } else {
-            // bullet treats spans of this magnitude as unlimited
-            constraint.setLimit(5, 1e30);
-            constraint.setLimit(4, 1e30);
-            constraint.setLimit(3, 1e30);
-        }
-    }
-};
-
-const hingeJoint = {
-    // bullet hinges rotate about frame Z - map the joint's X axis onto it
-    axisCorrection: new Mat4().setFromAxisAngle(Vec3.UP, 90),
-
-    create(bodyA, bodyB, frameA, frameB) {
-        return new Ammo.btHingeConstraint(bodyA, bodyB, frameA, frameB, false);
-    },
-
-    updateLimits(joint) {
-        const constraint = joint._constraint;
-        if (joint.enableLimits) {
-            const limits = joint.limits;
-            // the remaining arguments are bullet's default softness, bias and relaxation factors
-            constraint.setLimit(limits.x * math.DEG_TO_RAD, limits.y * math.DEG_TO_RAD, 0.9, 0.3, 1);
-        } else {
-            // lower > upper leaves the rotation unconstrained
-            constraint.setLimit(1, -1, 0.9, 0.3, 1);
-        }
-    },
-
-    updateMotor(joint) {
-        // bullet's hinge motor clamp is an impulse per simulation step, so scale the torque by
-        // the fixed timestep
-        const maxImpulse = joint.maxMotorForce * joint.system.app.systems.rigidbody.fixedTimeStep;
-        joint._constraint.enableAngularMotor(joint.maxMotorForce > 0, joint.motorSpeed * math.DEG_TO_RAD, maxImpulse);
-    }
-};
-
-const sliderJoint = {
-    create(bodyA, bodyB, frameA, frameB) {
-        // the final argument is useLinearReferenceFrameA - travel is measured in frame A's space
-        return new Ammo.btSliderConstraint(bodyA, bodyB, frameA, frameB, true);
-    },
-
-    updateLimits(joint) {
-        const constraint = joint._constraint;
-        if (joint.enableLimits) {
-            const limits = joint.limits;
-            constraint.setLowerLinLimit(limits.x);
-            constraint.setUpperLinLimit(limits.y);
-        } else {
-            // lower > upper leaves the translation unconstrained
-            constraint.setLowerLinLimit(1);
-            constraint.setUpperLinLimit(-1);
-        }
-
-        // rotation about the slide axis is always locked
-        constraint.setLowerAngLimit(0);
-        constraint.setUpperAngLimit(0);
-    },
-
-    updateMotor(joint) {
-        const constraint = joint._constraint;
-        constraint.setPoweredLinMotor(joint.maxMotorForce > 0);
-        constraint.setTargetLinMotorVelocity(joint.motorSpeed);
-        constraint.setMaxLinMotorForce(joint.maxMotorForce);
-    }
-};
-
-const sixDofJoint = {
-    create(bodyA, bodyB, frameA, frameB) {
-        // the final argument is useLinearReferenceFrameA - linear limits are measured in frame
-        // A's space
-        return new Ammo.btGeneric6DofSpringConstraint(bodyA, bodyB, frameA, frameB, true);
-    },
-
-    updateLimits(joint) {
-        const constraint = joint._constraint;
-
-        let dof = dofLimits(joint.linearMotionX, joint.linearLimitsX, 1);
-        const lx = dof.lower, ux = dof.upper;
-        dof = dofLimits(joint.linearMotionY, joint.linearLimitsY, 1);
-        const ly = dof.lower, uy = dof.upper;
-        dof = dofLimits(joint.linearMotionZ, joint.linearLimitsZ, 1);
-        const lz = dof.lower, uz = dof.upper;
-
-        const limits = new Ammo.btVector3(lx, ly, lz);
-        constraint.setLinearLowerLimit(limits);
-        limits.setValue(ux, uy, uz);
-        constraint.setLinearUpperLimit(limits);
-
-        dof = dofLimits(joint.angularMotionX, joint.angularLimitsX, math.DEG_TO_RAD);
-        const alx = dof.lower, aux = dof.upper;
-        dof = dofLimits(joint.angularMotionY, joint.angularLimitsY, math.DEG_TO_RAD);
-        const aly = dof.lower, auy = dof.upper;
-        dof = dofLimits(joint.angularMotionZ, joint.angularLimitsZ, math.DEG_TO_RAD);
-        const alz = dof.lower, auz = dof.upper;
-
-        limits.setValue(alx, aly, alz);
-        constraint.setAngularLowerLimit(limits);
-        limits.setValue(aux, auy, auz);
-        constraint.setAngularUpperLimit(limits);
-        Ammo.destroy(limits);
-    },
-
-    updateSpring(joint) {
-        const constraint = joint._constraint;
-        const rad = math.DEG_TO_RAD;
-        const linStiffness = joint.linearStiffness;
-        const linDamping = joint.linearDamping;
-        const linEquilibrium = joint.linearEquilibrium;
-        const angStiffness = joint.angularStiffness;
-        const angDamping = joint.angularDamping;
-        const angEquilibrium = joint.angularEquilibrium;
-
-        // a spring acts on an axis when its stiffness component is greater than 0; axes 0-2 are
-        // linear X/Y/Z, axes 3-5 are angular X/Y/Z; angular equilibrium points are specified in
-        // degrees but applied in radians
-        constraint.enableSpring(0, linStiffness.x > 0);
-        constraint.setStiffness(0, linStiffness.x);
-        constraint.setDamping(0, linDamping.x);
-        constraint.setEquilibriumPoint(0, linEquilibrium.x);
-
-        constraint.enableSpring(1, linStiffness.y > 0);
-        constraint.setStiffness(1, linStiffness.y);
-        constraint.setDamping(1, linDamping.y);
-        constraint.setEquilibriumPoint(1, linEquilibrium.y);
-
-        constraint.enableSpring(2, linStiffness.z > 0);
-        constraint.setStiffness(2, linStiffness.z);
-        constraint.setDamping(2, linDamping.z);
-        constraint.setEquilibriumPoint(2, linEquilibrium.z);
-
-        constraint.enableSpring(3, angStiffness.x > 0);
-        constraint.setStiffness(3, angStiffness.x);
-        constraint.setDamping(3, angDamping.x);
-        constraint.setEquilibriumPoint(3, angEquilibrium.x * rad);
-
-        constraint.enableSpring(4, angStiffness.y > 0);
-        constraint.setStiffness(4, angStiffness.y);
-        constraint.setDamping(4, angDamping.y);
-        constraint.setEquilibriumPoint(4, angEquilibrium.y * rad);
-
-        constraint.enableSpring(5, angStiffness.z > 0);
-        constraint.setStiffness(5, angStiffness.z);
-        constraint.setDamping(5, angDamping.z);
-        constraint.setEquilibriumPoint(5, angEquilibrium.z * rad);
-    }
-};
-
-const jointImpls = {
-    [JOINTTYPE_FIXED]: fixedJoint,
-    [JOINTTYPE_BALL]: ballJoint,
-    [JOINTTYPE_HINGE]: hingeJoint,
-    [JOINTTYPE_SLIDER]: sliderJoint,
-    [JOINTTYPE_6DOF]: sixDofJoint
-};
 
 /**
  * The JointComponent constrains the relative motion of two rigid bodies. The entity holding the
@@ -315,12 +116,12 @@ class JointComponent extends Component {
     static EVENT_BREAK = 'break';
 
     /**
-     * The Ammo constraint, when created.
+     * The physics backend joint, when created.
      *
-     * @type {object|null}
+     * @type {PhysicsJoint|null}
      * @private
      */
-    _constraint = null;
+    _joint = null;
 
     /** @private */
     _type = JOINTTYPE_FIXED;
@@ -491,7 +292,7 @@ class JointComponent extends Component {
      */
     set type(type) {
         if (this._type !== type) {
-            if (!jointImpls[type]) {
+            if (!_jointTypes.has(type)) {
                 Debug.warn(`JointComponent: invalid joint type '${type}'`);
                 return;
             }
@@ -586,12 +387,10 @@ class JointComponent extends Component {
         if (this._breakImpulse !== impulse) {
             this._breakImpulse = impulse;
 
-            const constraint = this._constraint;
-            if (constraint) {
-                const breakable = Number.isFinite(impulse);
-                constraint.setBreakingImpulseThreshold(breakable ? impulse : Number.MAX_VALUE);
-                constraint.enableFeedback(breakable);
-                if (breakable) {
+            const joint = this._joint;
+            if (joint) {
+                joint.setBreakImpulse(impulse);
+                if (Number.isFinite(impulse)) {
                     this.system._breakable.add(this);
                 } else {
                     this.system._breakable.delete(this);
@@ -619,7 +418,7 @@ class JointComponent extends Component {
      * @ignore
      */
     get constraint() {
-        return this._constraint;
+        return this._joint ? this._joint.nativeJoint : null;
     }
 
     /**
@@ -1267,7 +1066,7 @@ class JointComponent extends Component {
      */
     _isBodyReady(entity) {
         const rigidbody = entity.rigidbody;
-        return !!(rigidbody && rigidbody.body && rigidbody._simulationEnabled);
+        return !!(rigidbody && rigidbody._body && rigidbody._simulationEnabled);
     }
 
     /** @private */
@@ -1312,7 +1111,7 @@ class JointComponent extends Component {
         const system = this.system;
 
         // check whether a constraint should currently exist at all
-        if (this._constraint || !this._initialized || !this.enabled || !this.entity.enabled ||
+        if (this._joint || !this._initialized || !this.enabled || !this.entity.enabled ||
             this._broken || !this._entityA || this._entityA === this._entityB) {
             system._pending.delete(this);
             this._clearBodyAvailableSubscriptions();
@@ -1333,23 +1132,20 @@ class JointComponent extends Component {
     }
 
     /**
-     * Computes the joint frame in the local space of the given body entity, as an Ammo transform
-     * owned by the caller. The frame's local origin and X axis are also written to anchor and
-     * axis, for use by break detection.
+     * Computes the joint frame in the local space of the given body entity, as a scale-free
+     * matrix with X as the primary joint axis. The frame's local origin and X axis are also
+     * written to anchor and axis, for use by break detection.
      *
      * @param {Entity|null} bodyEntity - The entity whose local space the frame is expressed in,
      * or null for the world-pinning fixed body, whose transform is identity.
-     * @param {Mat4} [axisCorrection] - Optional rotation mapping the joint's X axis onto the
-     * Bullet constraint's native axis.
      * @param {Vec3} anchor - Receives the frame origin in the body's local space.
      * @param {Vec3} axis - Receives the frame X axis in the body's local space.
-     * @returns {object} The frame as a new Ammo.btTransform.
+     * @param {Mat4} frame - Receives the joint frame.
      * @private
      */
-    _createFrame(bodyEntity, axisCorrection, anchor, axis) {
-        // bullet rigid bodies ignore entity scale - their transform is the entity's world
-        // position and rotation - so the joint frames are derived from the same unscaled
-        // transforms
+    _createFrame(bodyEntity, anchor, axis, frame) {
+        // rigid bodies ignore entity scale - their transform is the entity's world position and
+        // rotation - so the joint frames are derived from the same unscaled transforms
         _jointMat.setTRS(this.entity.getPosition(), this.entity.getRotation(), Vec3.ONE);
         if (bodyEntity) {
             _mat.setTRS(bodyEntity.getPosition(), bodyEntity.getRotation(), Vec3.ONE);
@@ -1358,24 +1154,12 @@ class JointComponent extends Component {
         } else {
             _mat.copy(_jointMat);
         }
-        if (axisCorrection) {
-            _mat.mul(axisCorrection);
-        }
 
         _mat.getTranslation(_vec3);
-        _quat.setFromMat4(_mat);
         anchor.copy(_vec3);
         _mat.getX(axis).normalize();
 
-        const frame = new Ammo.btTransform();
-        const origin = new Ammo.btVector3(_vec3.x, _vec3.y, _vec3.z);
-        const rotation = new Ammo.btQuaternion(_quat.x, _quat.y, _quat.z, _quat.w);
-        frame.setOrigin(origin);
-        frame.setRotation(rotation);
-        Ammo.destroy(origin);
-        Ammo.destroy(rotation);
-
-        return frame;
+        frame.copy(_mat);
     }
 
     /** @private */
@@ -1384,10 +1168,6 @@ class JointComponent extends Component {
         const entityB = this._entityB;
         const rigidbodyA = entityA.rigidbody;
         const rigidbodyB = entityB ? entityB.rigidbody : null;
-        const bodyA = rigidbodyA.body;
-
-        // world-pinned joints attach to a shared static body with an identity transform
-        const bodyB = rigidbodyB ? rigidbodyB.body : this.system.getFixedBody();
 
         Debug.call(() => {
             if (rigidbodyA.type !== BODYTYPE_DYNAMIC && (!rigidbodyB || rigidbodyB.type !== BODYTYPE_DYNAMIC)) {
@@ -1395,45 +1175,26 @@ class JointComponent extends Component {
             }
         });
 
-        const impl = jointImpls[this._type];
-        const axisCorrection = impl.axisCorrection;
+        this._createFrame(entityA, this._anchorA, this._axisA, _frameMatA);
+        this._createFrame(entityB, this._anchorB, _vec3b, _frameMatB);
 
-        const frameA = this._createFrame(entityA, axisCorrection, this._anchorA, this._axisA);
-        const frameB = this._createFrame(entityB, axisCorrection, this._anchorB, _vec3b);
-
-        const constraint = impl.create(bodyA, bodyB, frameA, frameB);
-
-        Ammo.destroy(frameA);
-        Ammo.destroy(frameB);
-
-        this._constraint = constraint;
-
-        impl.updateLimits?.(this);
-        impl.updateMotor?.(this);
-        impl.updateSpring?.(this);
+        const world = this.system.app.systems.rigidbody.physicsWorld;
+        this._joint = world.createJoint({
+            type: this._type,
+            bodyA: rigidbodyA._body,
+            bodyB: rigidbodyB ? rigidbodyB._body : null,
+            frameA: _frameMatA,
+            frameB: _frameMatB,
+            enableCollision: this._enableCollision,
+            settings: this
+        });
 
         if (Number.isFinite(this._breakImpulse)) {
-            constraint.setBreakingImpulseThreshold(this._breakImpulse);
-            constraint.enableFeedback(true);
             this.system._breakable.add(this);
-
-            Debug.call(() => {
-                if (this._type === JOINTTYPE_6DOF &&
-                    typeof constraint.isEnabled !== 'function' &&
-                    typeof constraint.getAppliedImpulse !== 'function') {
-                    Debug.warnOnce('JointComponent: this ammo build exposes no constraint state, so breakage of 6dof joints cannot be detected - the joint will still break but no break event will fire.');
-                }
-            });
         }
 
-        bodyA.activate();
-        bodyB?.activate();
-
-        const dynamicsWorld = this.system.app.systems.rigidbody.dynamicsWorld;
-        dynamicsWorld.addConstraint(constraint, !this._enableCollision);
-
         // tear the constraint down synchronously when either body leaves the simulation, before
-        // the underlying btRigidBody can be destroyed
+        // the underlying native body can be destroyed
         this._evtBodyTeardown.push(
             rigidbodyA.on('simulationdisabled', this._onBodyLost, this),
             rigidbodyA.on('beforeremove', this._onBodyLost, this)
@@ -1451,8 +1212,8 @@ class JointComponent extends Component {
         this.system._pending.delete(this);
         this._clearBodyAvailableSubscriptions();
 
-        const constraint = this._constraint;
-        if (constraint) {
+        const joint = this._joint;
+        if (joint) {
             this.system._breakable.delete(this);
 
             for (let i = 0; i < this._evtBodyTeardown.length; i++) {
@@ -1460,10 +1221,8 @@ class JointComponent extends Component {
             }
             this._evtBodyTeardown.length = 0;
 
-            const dynamicsWorld = this.system.app.systems.rigidbody.dynamicsWorld;
-            dynamicsWorld.removeConstraint(constraint);
-            Ammo.destroy(constraint);
-            this._constraint = null;
+            this.system.app.systems.rigidbody.physicsWorld.destroyJoint(joint);
+            this._joint = null;
         }
     }
 
@@ -1513,20 +1272,15 @@ class JointComponent extends Component {
      * @ignore
      */
     _checkBroken() {
-        const constraint = this._constraint;
-        if (!constraint) {
+        const joint = this._joint;
+        if (!joint) {
             return;
         }
 
-        // bullet disables a constraint when its breaking impulse threshold is exceeded but the
-        // stock ammo build exposes no way to query it - prefer isEnabled, then the applied
-        // impulse, then fall back to measuring anchor separation
-        let broken;
-        if (typeof constraint.isEnabled === 'function') {
-            broken = !constraint.isEnabled();
-        } else if (typeof constraint.getAppliedImpulse === 'function') {
-            broken = constraint.getAppliedImpulse() >= this._breakImpulse;
-        } else {
+        // the backend reports true/false when it can query the constraint state, or null when
+        // it cannot - fall back to measuring anchor separation
+        let broken = joint.isBroken();
+        if (broken === null) {
             broken = this._isAnchorSeparated();
         }
 
@@ -1550,27 +1304,21 @@ class JointComponent extends Component {
 
     /** @private */
     _updateLimits() {
-        const impl = jointImpls[this._type];
-        if (this._constraint && impl.updateLimits) {
-            impl.updateLimits(this);
+        if (this._joint && this._joint.updateLimits(this)) {
             this._activateBodies();
         }
     }
 
     /** @private */
     _updateMotor() {
-        const impl = jointImpls[this._type];
-        if (this._constraint && impl.updateMotor) {
-            impl.updateMotor(this);
+        if (this._joint && this._joint.updateMotor(this)) {
             this._activateBodies();
         }
     }
 
     /** @private */
     _updateSpring() {
-        const impl = jointImpls[this._type];
-        if (this._constraint && impl.updateSpring) {
-            impl.updateSpring(this);
+        if (this._joint && this._joint.updateSpring(this)) {
             this._activateBodies();
         }
     }

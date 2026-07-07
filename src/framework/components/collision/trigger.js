@@ -1,11 +1,14 @@
-import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYTYPE_DYNAMIC } from '../rigid-body/constants.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { CollisionComponent } from './component.js'
  */
 
-let _ammoVec1, _ammoQuat, _ammoTransform;
+const _position = new Vec3();
+const _rotation = new Quat();
 
 /**
  * Creates a trigger object used to create internal physics objects that interact with rigid bodies
@@ -23,39 +26,36 @@ class Trigger {
         this.component = component;
         this.app = app;
 
-        if (typeof Ammo !== 'undefined' && !_ammoVec1) {
-            _ammoVec1 = new Ammo.btVector3();
-            _ammoQuat = new Ammo.btQuaternion();
-            _ammoTransform = new Ammo.btTransform();
-        }
-
         this.initialize();
     }
 
     initialize() {
         const entity = this.entity;
         const shape = this.component.shape;
+        const world = this.app.systems.rigidbody.physicsWorld;
 
-        if (shape && typeof Ammo !== 'undefined') {
+        if (shape && world) {
             if (entity.trigger) {
                 entity.trigger.destroy();
             }
 
-            const mass = 1;
+            this._getEntityTransform(_position, _rotation);
 
-            this._getEntityTransform(_ammoTransform);
-
-            const body = this.app.systems.rigidbody.createBody(mass, shape, _ammoTransform);
+            const body = world.createBody({
+                type: BODYTYPE_DYNAMIC,
+                mass: 1,
+                shape: shape,
+                position: _position,
+                rotation: _rotation,
+                entity: entity,
+                noContactResponse: true
+            });
 
             body.setRestitution(0);
             body.setFriction(0);
             body.setDamping(0, 0);
-            _ammoVec1.setValue(0, 0, 0);
-            body.setLinearFactor(_ammoVec1);
-            body.setAngularFactor(_ammoVec1);
-
-            body.setCollisionFlags(body.getCollisionFlags() | BODYFLAG_NORESPONSE_OBJECT);
-            body.entity = entity;
+            body.setLinearFactor(Vec3.ZERO);
+            body.setAngularFactor(Vec3.ZERO);
 
             this.body = body;
 
@@ -70,26 +70,18 @@ class Trigger {
 
         this.disable();
 
-        this.app.systems.rigidbody.destroyBody(this.body);
+        this.app.systems.rigidbody.physicsWorld.destroyBody(this.body);
         this.body = null;
     }
 
-    _getEntityTransform(transform) {
-        const bodyPos = this.component.getShapePosition();
-        const bodyRot = this.component.getShapeRotation();
-        _ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
-        _ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
-
-        transform.setOrigin(_ammoVec1);
-        transform.setRotation(_ammoQuat);
+    _getEntityTransform(position, rotation) {
+        position.copy(this.component.getShapePosition());
+        rotation.copy(this.component.getShapeRotation());
     }
 
     updateTransform() {
-        this._getEntityTransform(_ammoTransform);
-
-        const body = this.body;
-        body.setWorldTransform(_ammoTransform);
-        body.activate();
+        this._getEntityTransform(_position, _rotation);
+        this.body.setTransform(_position, _rotation);
     }
 
     enable() {
@@ -99,13 +91,11 @@ class Trigger {
         const system = this.app.systems.rigidbody;
         const idx = system._triggers.indexOf(this);
         if (idx < 0) {
+            // addBody also puts the body into the active state so that it is simulated
+            // properly again
             system.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
             system._triggers.push(this);
         }
-
-        // set the body's activation state to active so that it is
-        // simulated properly again
-        body.forceActivationState(BODYSTATE_ACTIVE_TAG);
 
         this.updateTransform();
     }
@@ -117,13 +107,11 @@ class Trigger {
         const system = this.app.systems.rigidbody;
         const idx = system._triggers.indexOf(this);
         if (idx > -1) {
+            // removeBody also drops the body out of the active state so that it properly
+            // deactivates after we remove it from the physics world
             system.removeBody(body);
             system._triggers.splice(idx, 1);
         }
-
-        // set the body's activation state to disable simulation so
-        // that it properly deactivates after we remove it from the physics world
-        body.forceActivationState(BODYSTATE_DISABLE_SIMULATION);
     }
 }
 
