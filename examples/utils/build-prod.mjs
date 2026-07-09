@@ -210,7 +210,7 @@ const appConfig = () => ({
             fileName: () => 'index.js'
         },
         rollupOptions: {
-            treeshake: 'smallest',
+            treeshake: true,
             onwarn(warning, warn) {
                 if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.message.includes('"use client"')) {
                     return;

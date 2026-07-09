@@ -92,6 +92,7 @@
     "@types/node": "24.13.3",
     "acorn": "8.17.0",
     "c8": "11.0.0",
+    "canvas": "3.2.3",
     "chai": "6.2.2",
     "esbuild": "0.28.1",
     "esbuild-visualizer": "0.7.0",
@@ -113,9 +114,6 @@
     "typedoc-plugin-merge-modules": "7.0.0",
     "typedoc-plugin-missing-exports": "4.1.4",
     "typescript": "5.9.3"
-  },
-  "optionalDependencies": {
-    "canvas": "3.2.3"
   },
   "scripts": {
     "build": "turbo run build:all",
