@@ -26,7 +26,7 @@
   "devDependencies": {
     "@babel/standalone": "7.29.7",
     "@monaco-editor/react": "4.7.0",
-    "@playcanvas/eslint-config": "2.1.0",
+    "@playcanvas/eslint-config": "3.0.0-beta.8",
     "@playcanvas/observer": "1.7.1",
     "@playcanvas/pcui": "6.1.4",
     "@tweenjs/tween.js": "25.0.0",
