@@ -1,9 +1,9 @@
+import playcanvasPrettier from '@playcanvas/eslint-config/prettier';
+
+// inherit the shared house style; only override what examples add on top
 export default {
-    printWidth: 120,
-    tabWidth: 4,
-    singleQuote: true,
+    ...playcanvasPrettier,
     arrowParens: 'always',
-    trailingComma: 'none',
     overrides: [
         {
             files: '*.jsx',
