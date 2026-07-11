@@ -4,6 +4,10 @@ import { EventHandler } from '../../core/event-handler.js';
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
 /**
+ * @import { MouseButton } from './mouse-button.js';
+ */
+
+/**
  * @callback LockMouseCallback
  * Callback used by {@link Mouse#enablePointerLock} and {@link Mouse#disablePointerLock}.
  * @returns {void}
@@ -275,12 +279,7 @@ class Mouse extends EventHandler {
     /**
      * Returns true if the mouse button is currently pressed.
      *
-     * @param {number} button - The mouse button to test. Can be:
-     *
-     * - {@link MOUSEBUTTON_LEFT}
-     * - {@link MOUSEBUTTON_MIDDLE}
-     * - {@link MOUSEBUTTON_RIGHT}
-     *
+     * @param {MouseButton} button - The mouse button to test.
      * @returns {boolean} True if the mouse button is current pressed.
      */
     isPressed(button) {
@@ -290,12 +289,7 @@ class Mouse extends EventHandler {
     /**
      * Returns true if the mouse button was pressed this frame (since the last call to update).
      *
-     * @param {number} button - The mouse button to test. Can be:
-     *
-     * - {@link MOUSEBUTTON_LEFT}
-     * - {@link MOUSEBUTTON_MIDDLE}
-     * - {@link MOUSEBUTTON_RIGHT}
-     *
+     * @param {MouseButton} button - The mouse button to test.
      * @returns {boolean} True if the mouse button was pressed since the last update.
      */
     wasPressed(button) {
@@ -305,12 +299,7 @@ class Mouse extends EventHandler {
     /**
      * Returns true if the mouse button was released this frame (since the last call to update).
      *
-     * @param {number} button - The mouse button to test. Can be:
-     *
-     * - {@link MOUSEBUTTON_LEFT}
-     * - {@link MOUSEBUTTON_MIDDLE}
-     * - {@link MOUSEBUTTON_RIGHT}
-     *
+     * @param {MouseButton} button - The mouse button to test.
      * @returns {boolean} True if the mouse button was released since the last update.
      */
     wasReleased(button) {
