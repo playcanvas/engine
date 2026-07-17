@@ -1,9 +1,9 @@
-// Camera Frame v 1.1
+// Camera Frame v 1.2
 
 import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
 /**
- * @import { Asset } from 'playcanvas';
+ * @import { Asset, Entity } from 'playcanvas';
  */
 
 /** @enum {number} */
@@ -467,10 +467,110 @@ class Dof {
 }
 
 /**
+ * @interface
+ * @category Post-Processing
+ */
+class VolumetricFog {
+    enabled = false;
+
+    /**
+     * The entity with the directional light providing the scattered light. The volumetric fog
+     * is only rendered when a light is specified.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     * @type {Entity}
+     */
+    light = null;
+
+    /**
+     * @attribute
+     * @visibleif {enabled}
+     */
+    tint = new Color(1, 1, 1, 1);
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 0.2]
+     * @precision 4
+     * @step 0.001
+     */
+    density = 0.01;
+
+    /**
+     * @visibleif {enabled}
+     * @precision 2
+     * @step 1
+     */
+    heightBase = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 1]
+     * @precision 3
+     * @step 0.001
+     */
+    heightFalloff = 0.05;
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 0.95]
+     * @precision 3
+     * @step 0.001
+     */
+    anisotropy = 0.6;
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 10]
+     * @precision 3
+     * @step 0.01
+     */
+    intensity = 1;
+
+    /**
+     * @attribute
+     * @visibleif {enabled}
+     */
+    ambientColor = new Color(1, 1, 1, 1);
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 1]
+     * @precision 4
+     * @step 0.001
+     */
+    ambientIntensity = 0.02;
+
+    /**
+     * @visibleif {enabled}
+     * @precision 2
+     * @step 1
+     */
+    maxDistance = 300;
+
+    /**
+     * @visibleif {enabled}
+     * @range [4, 128]
+     * @precision 0
+     * @step 1
+     */
+    steps = 24;
+
+    /**
+     * @visibleif {enabled}
+     * @range [0.25, 1]
+     * @precision 2
+     * @step 0.05
+     */
+    scale = 0.5;
+}
+
+/**
  * Enables the engine's {@link EngineCameraFrame | CameraFrame} render pipeline on a camera
  * entity, exposing its settings as grouped script attributes: rendering (render format, tone
- * mapping, sharpness, TAA), SSAO, bloom, color grading, color LUT, vignette, fringing and depth
- * of field.
+ * mapping, sharpness, TAA), SSAO, bloom, color grading, color LUT, vignette, fringing, depth
+ * of field and volumetric fog.
  *
  * Attach the script to an entity with a camera component and adjust the attribute groups to
  * configure the post-processing stack.
@@ -547,6 +647,12 @@ class CameraFrame extends Script {
      */
     dof = new Dof();
 
+    /**
+     * @attribute
+     * @type {VolumetricFog}
+     */
+    volumetricFog = new VolumetricFog();
+
     engineCameraFrame;
 
     initialize() {
@@ -573,7 +679,7 @@ class CameraFrame extends Script {
     postUpdate(dt) {
 
         const cf = this.engineCameraFrame;
-        const { rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao, dof, colorLUT } = this;
+        const { rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao, dof, colorLUT, volumetricFog } = this;
 
         const dstRendering = cf.rendering;
         dstRendering.renderFormats.length = 0;
@@ -676,6 +782,24 @@ class CameraFrame extends Script {
             dstDof.blurRadius = dof.blurRadius;
             dstDof.blurRings = dof.blurRings;
             dstDof.blurRingPoints = dof.blurRingPoints;
+        }
+
+        // volumetricFog
+        const dstVolumetricFog = cf.volumetricFog;
+        dstVolumetricFog.enabled = volumetricFog.enabled;
+        if (volumetricFog.enabled) {
+            dstVolumetricFog.light = volumetricFog.light?.light ?? null;
+            dstVolumetricFog.tint.copy(volumetricFog.tint);
+            dstVolumetricFog.density = volumetricFog.density;
+            dstVolumetricFog.heightBase = volumetricFog.heightBase;
+            dstVolumetricFog.heightFalloff = volumetricFog.heightFalloff;
+            dstVolumetricFog.anisotropy = volumetricFog.anisotropy;
+            dstVolumetricFog.intensity = volumetricFog.intensity;
+            dstVolumetricFog.ambientColor.copy(volumetricFog.ambientColor);
+            dstVolumetricFog.ambientIntensity = volumetricFog.ambientIntensity;
+            dstVolumetricFog.maxDistance = volumetricFog.maxDistance;
+            dstVolumetricFog.steps = volumetricFog.steps;
+            dstVolumetricFog.scale = volumetricFog.scale;
         }
 
         // debugging

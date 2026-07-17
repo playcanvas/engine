@@ -8,6 +8,7 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { LightComponent } from '../../framework/components/light/component.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
@@ -210,6 +211,38 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  */
 
 /**
+ * @typedef {Object} VolumetricFog
+ * Properties related to volumetric fog, a raymarched height fog lit by a directional light. The
+ * fog samples the light's cascaded shadow map along each view ray, forming visible shafts of
+ * light. The raymarch runs at a reduced resolution and is blended into the scene before TAA, so
+ * when TAA is enabled, its noise is temporally resolved to a smooth result.
+ * @property {boolean} enabled - Whether the volumetric fog is enabled. Defaults to false.
+ * @property {LightComponent|null} light - The directional light providing the scattered light.
+ * The volumetric fog is only rendered when a light is specified - when null, the effect is
+ * disabled. Defaults to null.
+ * @property {Color} tint - The albedo of the fog. Defaults to white.
+ * @property {number} density - The fog density at the base height. Defaults to 0.01.
+ * @property {number} heightBase - The world space height at which the fog density starts to fall
+ * off. Below it the density is constant. Defaults to 0.
+ * @property {number} heightFalloff - The exponential falloff of the fog density with height above
+ * the base height. Value of 0 makes the fog uniform. Defaults to 0.05.
+ * @property {number} anisotropy - The anisotropy of the scattering, 0-0.95 range. Larger values
+ * scatter more light forward, making the fog brighter when looking towards the light. Defaults
+ * to 0.6.
+ * @property {number} intensity - The intensity of the light scattering. Defaults to 1.
+ * @property {Color} ambientColor - The color of the ambient in-scattered light, which keeps the
+ * fog in shadowed areas visible. Defaults to white.
+ * @property {number} ambientIntensity - The intensity of the ambient in-scattered light. Defaults
+ * to 0.02.
+ * @property {number} maxDistance - The maximum world space distance the fog is raymarched to.
+ * Defaults to 300.
+ * @property {number} steps - The number of raymarching steps, 4-128 range. Higher values improve
+ * the quality at a higher performance cost. Defaults to 24.
+ * @property {number} scale - The resolution scale of the fog texture relative to the scene
+ * render target, 0.25-1 range. Defaults to 0.5.
+ */
+
+/**
  * Implementation of a simple to use camera rendering pass, which supports SSAO, Bloom and
  * other rendering effects.
  *
@@ -371,6 +404,27 @@ class CameraFrame {
     };
 
     /**
+     * Volumetric fog settings.
+     *
+     * @type {VolumetricFog}
+     */
+    volumetricFog = {
+        enabled: false,
+        light: null,
+        tint: new Color(1, 1, 1),
+        density: 0.01,
+        heightBase: 0,
+        heightFalloff: 0.05,
+        anisotropy: 0.6,
+        intensity: 1,
+        ambientColor: new Color(1, 1, 1),
+        ambientIntensity: 0.02,
+        maxDistance: 300,
+        steps: 24,
+        scale: 0.5
+    };
+
+    /**
      * Debug rendering. Set to null to disable.
      *
      * @type {null|'scene'|'ssao'|'bloom'|'vignette'|'dofcoc'|'dofblur'}
@@ -485,6 +539,7 @@ class CameraFrame {
         options.dofEnabled = this.dof.enabled;
         options.dofNearBlur = this.dof.nearBlur;
         options.dofHighQuality = this.dof.highQuality;
+        options.volumetricFogEnabled = this.volumetricFog.enabled && !!this.volumetricFog.light;
     }
 
     /**
@@ -502,7 +557,7 @@ class CameraFrame {
         renderPassCamera.update(options);
 
         // update parameters of individual render passes
-        const { composePass, bloomPass, ssaoPass, dofPass } = renderPassCamera;
+        const { composePass, bloomPass, ssaoPass, dofPass, volumetricFogPass } = renderPassCamera;
 
         renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
         composePass.toneMapping = rendering.toneMapping;
@@ -519,6 +574,22 @@ class CameraFrame {
             dofPass.blurRadius = this.dof.blurRadius;
             dofPass.blurRings = this.dof.blurRings;
             dofPass.blurRingPoints = this.dof.blurRingPoints;
+        }
+
+        if (options.volumetricFogEnabled) {
+            const { volumetricFog } = this;
+            volumetricFogPass.light = volumetricFog.light.light;
+            volumetricFogPass.tint.copy(volumetricFog.tint);
+            volumetricFogPass.density = volumetricFog.density;
+            volumetricFogPass.heightBase = volumetricFog.heightBase;
+            volumetricFogPass.heightFalloff = volumetricFog.heightFalloff;
+            volumetricFogPass.anisotropy = math.clamp(volumetricFog.anisotropy, 0, 0.95);
+            volumetricFogPass.intensity = volumetricFog.intensity;
+            volumetricFogPass.ambientColor.copy(volumetricFog.ambientColor);
+            volumetricFogPass.ambientIntensity = volumetricFog.ambientIntensity;
+            volumetricFogPass.maxDistance = volumetricFog.maxDistance;
+            volumetricFogPass.steps = math.clamp(volumetricFog.steps, 4, 128);
+            volumetricFogPass.scale = math.clamp(volumetricFog.scale, 0.25, 1);
         }
 
         if (options.ssaoType !== SSAOTYPE_NONE) {
