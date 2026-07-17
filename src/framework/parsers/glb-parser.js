@@ -588,7 +588,10 @@ const createMaterial = (gltfMaterial, textures) => {
         material.aoMapChannel = 'r';
 
         extractTextureTransform(occlusionTexture, material, ['ao']);
-        // TODO: support 'strength'
+
+        if (occlusionTexture.hasOwnProperty('strength')) {
+            material.aoIntensity = occlusionTexture.strength;
+        }
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
