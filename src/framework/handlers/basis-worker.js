@@ -202,6 +202,9 @@ function BasisWorker() {
         const hasAlpha = !!basisFile.getHasAlpha();
         const isUASTC = basisFile.isUASTC && basisFile.isUASTC();
 
+        // a six-face file is a cubemap; faces are transcoded into per-mip arrays
+        const cubemap = !!options.isCubemap;
+
         if (!width || !height || !levels) {
             basisFile.close();
             basisFile.delete();
@@ -211,8 +214,8 @@ function BasisWorker() {
         // choose the target format
         const format = chooseTargetFormat(options.deviceDetails, hasAlpha, isUASTC);
 
-        // unswizzle gggr textures under pvr compression
-        const unswizzle = !!options.isGGGR && format === 'pvr';
+        // unswizzle gggr textures under pvr compression (never applies to cubemaps)
+        const unswizzle = !cubemap && !!options.isGGGR && format === 'pvr';
 
         // convert to basis format taking into consideration platform restrictions
         let basisFormat;
@@ -235,22 +238,34 @@ function BasisWorker() {
             throw new Error(`Failed to start transcoding url=${url}`);
         }
 
-        let i;
+        const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
 
-        const levelData = [];
-        for (let mip = 0; mip < levels; ++mip) {
-            const dstSize = basisFile.getImageTranscodedSizeInBytes(mip, 0, 0, basisFormat);
+        // transcode a single face of a single mip level into a typed array
+        const transcodeImage = (mip, face) => {
+            const dstSize = basisFile.getImageTranscodedSizeInBytes(mip, 0, face, basisFormat);
             const dst = new Uint8Array(dstSize);
 
-            if (!basisFile.transcodeImage(dst, mip, 0, 0, basisFormat, 0, -1, -1)) {
+            if (!basisFile.transcodeImage(dst, mip, 0, face, basisFormat, 0, -1, -1)) {
                 basisFile.close();
                 basisFile.delete();
                 throw new Error(`Failed to transcode image url=${url}`);
             }
 
-            const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
+            return is16BitFormat ? new Uint16Array(dst.buffer) : dst;
+        };
 
-            levelData.push(is16BitFormat ? new Uint16Array(dst.buffer) : dst);
+        const levelData = [];
+        for (let mip = 0; mip < levels; ++mip) {
+            if (cubemap) {
+                // one entry per mip, each holding the six cubemap faces
+                const faceData = [];
+                for (let face = 0; face < 6; ++face) {
+                    faceData.push(transcodeImage(mip, face));
+                }
+                levelData.push(faceData);
+            } else {
+                levelData.push(transcodeImage(mip, 0));
+            }
         }
 
         basisFile.close();
@@ -259,7 +274,7 @@ function BasisWorker() {
         // handle unswizzle option
         if (unswizzle) {
             basisFormat = BASIS_FORMAT.cTFRGB565;
-            for (i = 0; i < levelData.length; ++i) {
+            for (let i = 0; i < levelData.length; ++i) {
                 levelData[i] = pack565(unswizzleGGGR(levelData[i]));
             }
         }
@@ -269,7 +284,7 @@ function BasisWorker() {
             width: width,
             height: height,
             levels: levelData,
-            cubemap: false,
+            cubemap: cubemap,
             transcodeTime: performanceNow() - funcStart,
             url: url,
             unswizzledGGGR: unswizzle
@@ -380,8 +395,22 @@ function BasisWorker() {
     const workerTranscode = (url, data, options) => {
         try {
             const result = transcode(url, data, options);
-            result.levels = result.levels.map(v => v.buffer);
-            self.postMessage({ url: url, data: result }, result.levels);
+
+            // replace typed arrays with their backing buffers for transfer. cubemap levels
+            // are arrays of six faces, all other levels are a single image.
+            const transfer = [];
+            result.levels = result.levels.map((level) => {
+                if (Array.isArray(level)) {
+                    return level.map((face) => {
+                        transfer.push(face.buffer);
+                        return face.buffer;
+                    });
+                }
+                transfer.push(level.buffer);
+                return level.buffer;
+            });
+
+            self.postMessage({ url: url, data: result }, transfer);
         } catch (err) {
             self.postMessage({ url: url, err: err }, null);
         }

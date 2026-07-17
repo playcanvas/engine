@@ -130,7 +130,9 @@ class Ktx2Parser extends TextureParser {
                 callback,
                 {
                     isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0,
-                    isKTX2: true
+                    isKTX2: true,
+                    // a six-face ktx2 file is a cubemap
+                    isCubemap: header.faceCount === 6
                 }
             );
 
