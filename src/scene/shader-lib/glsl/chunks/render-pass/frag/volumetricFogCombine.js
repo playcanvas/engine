@@ -28,7 +28,7 @@ export default /* glsl */`
         float sumWeight = 0.0;
         for (int i = 0; i < 4; i++) {
             float sampleDepth = getLinearScreenDepth(uvs[i]);
-            float w = bilinear[i] / (1.0 + 16.0 * abs(sampleDepth - depth) / depth);
+            float w = bilinear[i] / (1.0 + 16.0 * abs(sampleDepth - depth) / max(depth, 0.001));
             sum += texture2D(uFogTexture, uvs[i]) * w;
             sumWeight += w;
         }

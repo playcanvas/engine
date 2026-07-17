@@ -74,7 +74,7 @@ export default /* wgsl */`
         let rayDir: vec3f = normalize((uniform.uFogInvView * vec4f(ndc * uniform.uFogProjScale, -1.0, 0.0)).xyz);
 
         // distance along the ray to the scene surface
-        let rayDot: f32 = dot(rayDir, uniform.uFogCameraFwd);
+        let rayDot: f32 = max(dot(rayDir, uniform.uFogCameraFwd), 0.001);
         let rayLength: f32 = min(getLinearScreenDepth(input.uv0) / rayDot, uniform.uFogParams.w);
 
         let stepCount: f32 = uniform.uFogScatterParams.y;

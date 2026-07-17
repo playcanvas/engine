@@ -32,7 +32,7 @@ export default /* wgsl */`
         var sumWeight: f32 = 0.0;
         for (var i: i32 = 0; i < 4; i += 1) {
             let sampleDepth: f32 = getLinearScreenDepth(uvs[i]);
-            let w: f32 = bilinear[i] / (1.0 + 16.0 * abs(sampleDepth - depth) / depth);
+            let w: f32 = bilinear[i] / (1.0 + 16.0 * abs(sampleDepth - depth) / max(depth, 0.001));
             sum += textureSampleLevel(uFogTexture, uFogTextureSampler, uvs[i], 0.0) * w;
             sumWeight += w;
         }

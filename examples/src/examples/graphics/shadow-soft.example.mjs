@@ -224,9 +224,9 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // Move the clouds around
     clouds.forEach((cloud, index) => {
-        const redialOffset = (index / clouds.length) * (6.24 / cloudSpeed);
-        const radius = 9 + 4 * Math.sin(redialOffset);
-        const cloudTime = time + redialOffset;
+        const radialOffset = (index / clouds.length) * (6.24 / cloudSpeed);
+        const radius = 9 + 4 * Math.sin(radialOffset);
+        const cloudTime = time + radialOffset;
         cloud.setLocalPosition(
             2 + radius * Math.sin(cloudTime * cloudSpeed),
             4,

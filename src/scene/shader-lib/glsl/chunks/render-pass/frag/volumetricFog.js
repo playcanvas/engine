@@ -71,7 +71,7 @@ export default /* glsl */`
         vec3 rayDir = normalize((uFogInvView * vec4(ndc * uFogProjScale, -1.0, 0.0)).xyz);
 
         // distance along the ray to the scene surface
-        float rayDot = dot(rayDir, uFogCameraFwd);
+        float rayDot = max(dot(rayDir, uFogCameraFwd), 0.001);
         float rayLength = min(getLinearScreenDepth(uv0) / rayDot, uFogParams.w);
 
         float stepCount = uFogScatterParams.y;

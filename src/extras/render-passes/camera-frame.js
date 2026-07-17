@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
+import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { SSAOTYPE_NONE } from './constants.js';
 import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-frame.js';
 
@@ -218,8 +219,8 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  * when TAA is enabled, its noise is temporally resolved to a smooth result.
  * @property {boolean} enabled - Whether the volumetric fog is enabled. Defaults to false.
  * @property {LightComponent|null} light - The directional light providing the scattered light.
- * The volumetric fog is only rendered when a light is specified - when null, the effect is
- * disabled. Defaults to null.
+ * The volumetric fog is only rendered when a directional light is specified - when null or when
+ * a different light type is assigned, the effect is disabled. Defaults to null.
  * @property {Color} tint - The albedo of the fog. Defaults to white.
  * @property {number} density - The fog density at the base height. Defaults to 0.01.
  * @property {number} heightBase - The world space height at which the fog density starts to fall
@@ -539,7 +540,30 @@ class CameraFrame {
         options.dofEnabled = this.dof.enabled;
         options.dofNearBlur = this.dof.nearBlur;
         options.dofHighQuality = this.dof.highQuality;
-        options.volumetricFogEnabled = this.volumetricFog.enabled && !!this.volumetricFog.light;
+        options.volumetricFogEnabled = this._volumetricFogSupported();
+    }
+
+    /**
+     * Returns true if the volumetric fog is enabled and its requirements are met - a directional
+     * light and a perspective camera.
+     *
+     * @returns {boolean} - True if the volumetric fog should render.
+     * @private
+     */
+    _volumetricFogSupported() {
+        const { volumetricFog, cameraComponent } = this;
+        if (!volumetricFog.enabled || !volumetricFog.light) {
+            return false;
+        }
+        if (volumetricFog.light.type !== 'directional') {
+            Debug.warnOnce('CameraFrame.volumetricFog requires a directional light, the effect is disabled.');
+            return false;
+        }
+        if (cameraComponent.projection !== PROJECTION_PERSPECTIVE) {
+            Debug.warnOnce('CameraFrame.volumetricFog is only supported on perspective cameras, the effect is disabled.');
+            return false;
+        }
+        return true;
     }
 
     /**
