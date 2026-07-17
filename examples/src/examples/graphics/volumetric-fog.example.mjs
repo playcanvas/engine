@@ -12,6 +12,7 @@ import {
     Asset,
     AssetListLoader,
     CameraComponentSystem,
+    CameraFrame,
     Color,
     ContainerHandler,
     Entity,
@@ -79,13 +80,24 @@ await new Promise((resolve) => {
 app.start();
 
 data.set('settings', {
+    fog: {
+        enabled: true,
+        tint: [0.96, 0.66, 0.18],
+        density: 0.01,
+        heightBase: -74,
+        heightFalloff: 0.01,
+        anisotropy: 0.62,
+        intensity: 0.74,
+        ambientColor: [0.94, 0.32, 0.14],
+        ambientIntensity: 0.1,
+        maxDistance: 568,
+        steps: 24,
+        scale: 0.5,
+        taa: false,
+        softShadows: true
+    },
     light: {
-        soft: true,
-        shadowResolution: 2048,
-        penumbraSize: 0.03,
-        penumbraFalloff: 4,
-        shadowSamples: 16,
-        shadowBlockerSamples: 16
+        rotation: [78, 120]
     }
 });
 
@@ -141,10 +153,10 @@ srcClouds.forEach((cloud) => {
 // Shuffle the array to give clouds random order
 clouds.sort(() => Math.random() - 0.5);
 
-// A large orange pillar
+// A large orange pillar, casting a long shaft through the fog
 const material = new StandardMaterial();
 material.diffuse = new Color(1, 0.5, 0);
-const pillar = new Entity('sphere');
+const pillar = new Entity('pillar');
 pillar.addComponent('render', {
     type: 'box',
     material: material
@@ -160,8 +172,7 @@ const tree = terrain.findOne('name', 'Arbol 2.002');
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.9, 0.9, 0.9),
-    farClip: 1000,
-    toneMapping: TONEMAP_ACES
+    farClip: 1000
 });
 
 // And position it in the world
@@ -180,35 +191,63 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// Create a directional light casting soft shadows
+// Create a directional light casting soft shadows, positioned low above the horizon so the
+// terrain, trees and clouds cast long shafts through the fog
 const dirLight = new Entity('MainLight');
 dirLight.addComponent('light', {
-    ...{
-        type: 'directional',
-        color: Color.WHITE,
-        shadowBias: 0.3,
-        normalOffsetBias: 0.2,
-        intensity: 1.0,
+    type: 'directional',
+    color: new Color(1, 0.95, 0.85),
+    shadowBias: 0.3,
+    normalOffsetBias: 0.2,
+    intensity: 1.5,
 
-        // Enable shadow casting
-        castShadows: true,
-        shadowType: data.get('settings.light.soft') ? SHADOW_PCSS_32F : SHADOW_PCF3_32F,
-        shadowDistance: 1000
-    },
-    ...data.get('settings.light')
+    // Enable shadow casting
+    castShadows: true,
+    shadowType: SHADOW_PCSS_32F,
+    shadowResolution: 2048,
+    shadowDistance: 1000,
+    penumbraSize: 0.03,
+    penumbraFalloff: 4,
+    shadowSamples: 16,
+    shadowBlockerSamples: 16
 });
 app.root.addChild(dirLight);
-dirLight.setLocalEulerAngles(75, 120, 20);
 
-// Handle HUD changes - update properties on the light
-data.on('*:set', (/** @type {string} */ path, value) => {
-    const pathArray = path.split('.');
-    if (pathArray[2] === 'soft') {
-        dirLight.light.shadowType = value ? SHADOW_PCSS_32F : SHADOW_PCF3_32F;
-    } else {
-        dirLight.light[pathArray[2]] = value;
-    }
-});
+// Set up the camera frame rendering with TAA, a subtle bloom and the volumetric fog
+const cameraFrame = new CameraFrame(app, camera.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
+cameraFrame.rendering.sharpness = 0.5;
+cameraFrame.bloom.intensity = 0.01;
+cameraFrame.volumetricFog.light = dirLight.light;
+
+const applySettings = () => {
+    const fog = data.get('settings.fog');
+
+    // light rotation - the roll around the light's forward axis is not needed
+    const rotation = data.get('settings.light.rotation');
+    dirLight.setLocalEulerAngles(rotation[0], rotation[1], 0);
+
+    cameraFrame.taa.enabled = fog.taa;
+    cameraFrame.volumetricFog.enabled = fog.enabled;
+    cameraFrame.volumetricFog.tint.set(fog.tint[0], fog.tint[1], fog.tint[2]);
+    cameraFrame.volumetricFog.density = fog.density;
+    cameraFrame.volumetricFog.heightBase = fog.heightBase;
+    cameraFrame.volumetricFog.heightFalloff = fog.heightFalloff;
+    cameraFrame.volumetricFog.anisotropy = fog.anisotropy;
+    cameraFrame.volumetricFog.intensity = fog.intensity;
+    cameraFrame.volumetricFog.ambientColor.set(fog.ambientColor[0], fog.ambientColor[1], fog.ambientColor[2]);
+    cameraFrame.volumetricFog.ambientIntensity = fog.ambientIntensity;
+    cameraFrame.volumetricFog.maxDistance = fog.maxDistance;
+    cameraFrame.volumetricFog.steps = fog.steps;
+    cameraFrame.volumetricFog.scale = fog.scale;
+    cameraFrame.update();
+
+    dirLight.light.shadowType = fog.softShadows ? SHADOW_PCSS_32F : SHADOW_PCF3_32F;
+};
+applySettings();
+
+// Handle HUD changes
+data.on('*:set', () => applySettings());
 
 const cloudSpeed = 0.2;
 let frameNumber = 0;
@@ -216,10 +255,15 @@ let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
 
-    // On the first frame, when camera is updated, move it further away from the focus tree
+    // On the first frame, when camera is updated, frame the view looking towards the low sun,
+    // where the light shafts through the fog are the most visible
     if (frameNumber === 0) {
         // @ts-ignore engine-tsd
-        camera.script.orbitCamera.distance = 470;
+        camera.script.orbitCamera.distance = 420;
+        // @ts-ignore engine-tsd
+        camera.script.orbitCamera.yaw = 304;
+        // @ts-ignore engine-tsd
+        camera.script.orbitCamera.pitch = -5;
     }
 
     // Move the clouds around

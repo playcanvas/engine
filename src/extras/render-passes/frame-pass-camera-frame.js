@@ -10,6 +10,7 @@ import { FramePassBloom } from './frame-pass-bloom.js';
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { FramePassDof } from './frame-pass-dof.js';
+import { FramePassVolumetricFog } from './frame-pass-volumetric-fog.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
 import { SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
@@ -65,6 +66,9 @@ class CameraFrameOptions {
     dofNearBlur = false;
 
     dofHighQuality = true;
+
+    // Volumetric fog
+    volumetricFogEnabled = false;
 }
 
 const _defaultOptions = new CameraFrameOptions();
@@ -94,6 +98,8 @@ class FramePassCameraFrame extends FramePass {
     scenePassHalf;
 
     dofPass;
+
+    volumetricFogPass;
 
     _renderTargetScale = 1;
 
@@ -164,13 +170,14 @@ class FramePassCameraFrame extends FramePass {
         this.afterPass = null;
         this.scenePassHalf = null;
         this.dofPass = null;
+        this.volumetricFogPass = null;
     }
 
     sanitizeOptions(options) {
         options = Object.assign({}, _defaultOptions, options);
 
         // automatically enable prepass when required internally
-        if (options.taaEnabled || options.ssaoType !== SSAOTYPE_NONE || options.dofEnabled) {
+        if (options.taaEnabled || options.ssaoType !== SSAOTYPE_NONE || options.dofEnabled || options.volumetricFogEnabled) {
             options.prepassEnabled = true;
         }
 
@@ -209,6 +216,7 @@ class FramePassCameraFrame extends FramePass {
             options.dofEnabled !== currentOptions.dofEnabled ||
             options.dofNearBlur !== currentOptions.dofNearBlur ||
             options.dofHighQuality !== currentOptions.dofHighQuality ||
+            options.volumetricFogEnabled !== currentOptions.volumetricFogEnabled ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
@@ -337,7 +345,7 @@ class FramePassCameraFrame extends FramePass {
     collectPasses() {
 
         // use these prepared render passes in the order they should be executed
-        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.scenePassHalf, this.bloomPass, this.dofPass, this.composePass, this.afterPass];
+        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.volumetricFogPass, this.taaPass, this.scenePassHalf, this.bloomPass, this.dofPass, this.composePass, this.afterPass];
     }
 
     createPasses(options) {
@@ -350,6 +358,9 @@ class FramePassCameraFrame extends FramePass {
 
         // scene including color grab pass
         const scenePassesInfo = this.setupScenePass(options);
+
+        // volumetric fog, blended into the scene render target before TAA
+        this.setupVolumetricFogPass(options);
 
         // TAA
         const sceneTextureWithTaa = this.setupTaaPass(options);
@@ -518,6 +529,15 @@ class FramePassCameraFrame extends FramePass {
     setupDofPass(options, inputTexture, inputTextureHalf) {
         if (options.dofEnabled)  {
             this.dofPass = new FramePassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality, options.dofNearBlur);
+        }
+    }
+
+    setupVolumetricFogPass(options) {
+        if (options.volumetricFogEnabled) {
+            this.volumetricFogPass = new FramePassVolumetricFog(this.device, this.cameraComponent, this.sceneTexture, this.rt);
+
+            // when TAA is used, the fog noise pattern changes each frame and TAA resolves it
+            this.volumetricFogPass.temporalDither = options.taaEnabled;
         }
     }
 
