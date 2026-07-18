@@ -376,7 +376,7 @@ class MeshInstance {
     meshMetaData = null;
 
     /**
-     * @type {Record<string, {scopeId: ScopeId|null, data: any, passFlags: number}>}
+     * @type {Record<string, {scopeId: ScopeId|null, data: any}>}
      * @ignore
      */
     parameters = {};
@@ -1327,20 +1327,22 @@ class MeshInstance {
      *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
-     * @param {number} [passFlags] - Mask describing which passes the material should be included
-     * in. Defaults to 0xFFFFFFFF (all passes).
      */
-    setParameter(name, data, passFlags = 0xFFFFFFFF) {
+    setParameter(name, data) {
+
+        Debug.call(() => {
+            if (arguments[2] !== undefined) {
+                Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');
+            }
+        });
 
         const param = this.parameters[name];
         if (param) {
             param.data = data;
-            param.passFlags = passFlags;
         } else {
             this.parameters[name] = {
                 scopeId: null,
-                data: data,
-                passFlags: passFlags
+                data: data
             };
         }
     }
@@ -1390,19 +1392,16 @@ class MeshInstance {
      * by forward-renderer.
      *
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {number} passFlag - The pass flag for the current render pass.
      * @ignore
      */
-    setParameters(device, passFlag) {
+    setParameters(device) {
         const parameters = this.parameters;
         for (const paramName in parameters) {
             const parameter = parameters[paramName];
-            if (parameter.passFlags & passFlag) {
-                if (!parameter.scopeId) {
-                    parameter.scopeId = device.scope.resolve(paramName);
-                }
-                parameter.scopeId.setValue(parameter.data);
+            if (!parameter.scopeId) {
+                parameter.scopeId = device.scope.resolve(paramName);
             }
+            parameter.scopeId.setValue(parameter.data);
         }
     }
 
