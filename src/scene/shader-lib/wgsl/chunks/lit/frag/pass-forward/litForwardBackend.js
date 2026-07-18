@@ -244,6 +244,8 @@ fn evaluateBackend() -> FragmentOutput {
         output.color = vec4f(vec3f(dShadowCatcher), output.color.a);
     #endif
 
+    #include "outlineOutputPS"
+
     return output;
 }
 `;

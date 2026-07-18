@@ -89,6 +89,8 @@ import normalCoreVS from '../chunks/common/vert/normalCore.js';
 import normalMapPS from '../chunks/standard/frag/normalMap.js';
 import opacityPS from '../chunks/standard/frag/opacity.js';
 import opacityDitherPS from '../chunks/standard/frag/opacity-dither.js';
+import outlineDeclarationPS from '../chunks/lit/frag/outline-declaration.js';
+import outlineOutputPS from '../chunks/lit/frag/outline-output.js';
 import outputPS from '../chunks/lit/frag/output.js';
 import outputAlphaPS from '../chunks/lit/frag/outputAlpha.js';
 import outputTex2DPS from '../chunks/common/frag/outputTex2D.js';
@@ -260,6 +262,8 @@ const shaderChunksGLSL = {
     normalMapPS,
     opacityPS,
     opacityDitherPS,
+    outlineDeclarationPS,
+    outlineOutputPS,
     outputPS,
     outputAlphaPS,
     outputTex2DPS,
