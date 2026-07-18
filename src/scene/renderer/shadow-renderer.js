@@ -15,7 +15,6 @@ import {
     EVENT_POSTCULL,
     EVENT_PRECULL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
-    SHADER_SHADOW,
     SHADOWCAMERA_NAME,
     SHADOWUPDATE_NONE,
     shadowTypeInfo
@@ -296,7 +295,6 @@ class ShadowRenderer {
         const device = this.device;
         const renderer = this.renderer;
         const scene = renderer.scene;
-        const passFlags = 1 << SHADER_SHADOW;
         const shadowPass = this.getShadowPass(light);
         const cameraShaderParams = camera.shaderParams;
 
@@ -335,7 +333,7 @@ class ShadowRenderer {
             material.setParameters(device);
 
             // Uniforms II (shadow): meshInstance overrides
-            meshInstance.setParameters(device, passFlags);
+            meshInstance.setParameters(device);
 
             const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat);
             const shadowShader = shaderInstance.shader;
