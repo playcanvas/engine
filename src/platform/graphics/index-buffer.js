@@ -48,10 +48,10 @@ class IndexBuffer {
      * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
      * // static, hinting that the buffer will never be modified.
      * const indices = new Uint16Array([0, 1, 2]);
-     * const indexBuffer = new pc.IndexBuffer(graphicsDevice,
-     *                                        pc.INDEXFORMAT_UINT16,
+     * const indexBuffer = new IndexBuffer(graphicsDevice,
+     *                                        INDEXFORMAT_UINT16,
      *                                        3,
-     *                                        pc.BUFFER_STATIC,
+     *                                        BUFFER_STATIC,
      *                                        indices);
      */
     constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData, options) {

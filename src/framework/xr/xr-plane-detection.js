@@ -12,7 +12,7 @@ import { XrPlane } from './xr-plane.js';
  *
  * ```javascript
  * // start session with plane detection enabled
- * app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR, {
+ * app.xr.start(camera, XRTYPE_VR, XRSPACE_LOCALFLOOR, {
  *     planeDetection: true
  * });
  * ```

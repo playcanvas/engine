@@ -1163,7 +1163,7 @@ class GraphicsDevice extends EventHandler {
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
-     *     type: pc.PRIMITIVE_TRIANGLES,
+     *     type: PRIMITIVE_TRIANGLES,
      *     base: 0,
      *     count: 3,
      *     indexed: false

@@ -47,7 +47,7 @@ class Model {
      *
      * @example
      * // Create a new model
-     * const model = new pc.Model();
+     * const model = new Model();
      */
     constructor() {
         this.cameras = [];
@@ -203,7 +203,7 @@ class Model {
      * @example
      * model.generateWireframe();
      * for (let i = 0; i < model.meshInstances.length; i++) {
-     *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
+     *     model.meshInstances[i].renderStyle = RENDERSTYLE_WIREFRAME;
      * }
      */
     generateWireframe() {

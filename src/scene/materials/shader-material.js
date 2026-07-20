@@ -33,9 +33,9 @@ import { Material } from './material.js';
  * GLSL format:
  *
  * ```javascript
- * const material = new pc.ShaderMaterial({
+ * const material = new ShaderMaterial({
  *     uniqueName: 'MyShader',
- *     attributes: { aPosition: pc.SEMANTIC_POSITION },
+ *     attributes: { aPosition: SEMANTIC_POSITION },
  *     vertexGLSL: `
  *         attribute vec3 aPosition;
  *         uniform mat4 matrix_viewProjection;

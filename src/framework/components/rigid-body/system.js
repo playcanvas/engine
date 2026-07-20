@@ -77,7 +77,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @example
      * // Set the gravity in the physics world to simulate a planet with low gravity
-     * app.systems.rigidbody.gravity = new pc.Vec3(0, -3.7, 0);
+     * app.systems.rigidbody.gravity = new Vec3(0, -3.7, 0);
      */
     gravity = new Vec3(0, -9.81, 0);
 

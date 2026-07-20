@@ -60,7 +60,7 @@ class ContainerResource {
      *     const renders = entity.findComponents("render");
      *     renders.forEach((render) => {
      *         render.meshInstances.forEach((meshInstance) => {
-     *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
+     *             meshInstance.material.blendType = BLEND_MULTIPLICATIVE;
      *             meshInstance.material.update();
      *         });
      *     });
@@ -157,7 +157,7 @@ class ContainerResource {
  * For example, to receive a texture preprocess callback:
  *
  * ```javascript
- * const containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ * const containerAsset = new Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
  *         preprocess: (gltfTexture) => {
  *             console.log("texture preprocess");

@@ -77,10 +77,10 @@ const _properties = [
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('light', {
  *     type: 'omni',
- *     color: new pc.Color(1, 0, 0),
+ *     color: new Color(1, 0, 0),
  *     intensity: 2
  * });
  * ```

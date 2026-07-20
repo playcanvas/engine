@@ -66,9 +66,9 @@ class AssetListLoader extends EventHandler {
      * of Asset IDs to load.
      * @param {AssetRegistry} assetRegistry - The application's asset registry.
      * @example
-     * const assetListLoader = new pc.AssetListLoader([
-     *     new pc.Asset("texture1", "texture", { url: 'http://example.com/my/assets/here/texture1.png' }),
-     *     new pc.Asset("texture2", "texture", { url: 'http://example.com/my/assets/here/texture2.png' })
+     * const assetListLoader = new AssetListLoader([
+     *     new Asset("texture1", "texture", { url: 'http://example.com/my/assets/here/texture1.png' }),
+     *     new Asset("texture2", "texture", { url: 'http://example.com/my/assets/here/texture2.png' })
      * ], app.assets);
      */
     constructor(assetList, assetRegistry) {

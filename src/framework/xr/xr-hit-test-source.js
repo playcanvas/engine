@@ -24,7 +24,7 @@ const poolQuat = [];
  * ```javascript
  * // start a hit test from a viewer origin forward
  * app.xr.hitTest.start({
- *     spaceType: pc.XRSPACE_VIEWER,
+ *     spaceType: XRSPACE_VIEWER,
  *     callback: (err, hitTestSource) => {
  *         if (err) return;
  *         // subscribe to hit test results

@@ -894,7 +894,7 @@ class GSplatParams {
      * // Add a custom stream to store per-splat component IDs
      * app.scene.gsplat.format.addExtraStreams([{
      *     name: 'splatId',
-     *     format: pc.PIXELFORMAT_R32U
+     *     format: PIXELFORMAT_R32U
      * }]);
      */
     get format() {
@@ -926,7 +926,7 @@ class GSplatParams {
      * // and read per fragment in gsplatModifyPS using getFlag()
      * app.scene.gsplat.varyings.add([{
      *     name: 'flag',
-     *     type: pc.TYPE_UINT32,
+     *     type: TYPE_UINT32,
      *     components: 1
      * }]);
      */

@@ -34,7 +34,7 @@ import { Component } from '../component.js';
  * to an Entity, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     type: 'box'
  * });

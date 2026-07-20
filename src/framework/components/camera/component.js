@@ -43,7 +43,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('camera', {
  *     nearClip: 1,
  *     farClip: 100,
@@ -1309,7 +1309,7 @@ class CameraComponent extends Component {
      * depth sensing system.
      * @example
      * // On an entity with a camera component
-     * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
+     * this.entity.camera.startXr(XRTYPE_VR, XRSPACE_LOCAL, {
      *     callback: (err) => {
      *         if (err) {
      *             // failed to start XR session

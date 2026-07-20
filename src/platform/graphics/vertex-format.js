@@ -124,15 +124,15 @@ class VertexFormat {
      * vertex format will be interleaved. (example: PNCPNCPNCPNC).
      * @example
      * // Specify 3-component positions (x, y, z)
-     * const vertexFormat = new pc.VertexFormat(graphicsDevice, [
-     *     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
+     * const vertexFormat = new VertexFormat(graphicsDevice, [
+     *     { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }
      * ]);
      * @example
      * // Specify 2-component positions (x, y), a texture coordinate (u, v) and a vertex color (r, g, b, a)
-     * const vertexFormat = new pc.VertexFormat(graphicsDevice, [
-     *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.TYPE_FLOAT32 },
-     *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 },
-     *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
+     * const vertexFormat = new VertexFormat(graphicsDevice, [
+     *     { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 },
+     *     { semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 },
+     *     { semantic: SEMANTIC_COLOR, components: 4, type: TYPE_UINT8, normalize: true }
      * ]);
      */
     constructor(graphicsDevice, description, vertexCount) {

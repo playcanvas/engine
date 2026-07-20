@@ -32,7 +32,7 @@ class CurveSet {
      * - Multiple arguments: Each argument becomes a separate curve.
      * @example
      * // Create from an array of arrays of keys
-     * const curveSet = new pc.CurveSet([
+     * const curveSet = new CurveSet([
      *     [
      *         0, 0,        // At 0 time, value of 0
      *         0.33, 2,     // At 0.33 time, value of 2
@@ -116,7 +116,7 @@ class CurveSet {
      * @param {number} index - The index of the curve to return.
      * @returns {Curve} The curve at the specified index.
      * @example
-     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
      * const curve = curveSet.get(0); // returns the first curve
      */
     get(index) {
@@ -132,7 +132,7 @@ class CurveSet {
      * second) for the new curve.
      * @returns {Curve} The newly created curve.
      * @example
-     * const curveSet = new pc.CurveSet([[0, 0, 1, 1]]);
+     * const curveSet = new CurveSet([[0, 0, 1, 1]]);
      * const curve = curveSet.add([0, 0, 1, 0.5]); // append a second curve
      */
     add(data) {
@@ -149,7 +149,7 @@ class CurveSet {
      * itself.
      * @returns {Curve|null} The removed curve, or null if it was not found.
      * @example
-     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
      * curveSet.remove(0);             // remove by index
      * curveSet.remove(curveSet.get(0)); // or remove by reference
      */
@@ -170,7 +170,7 @@ class CurveSet {
      *
      * @returns {this} The curve set instance.
      * @example
-     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
      * curveSet.clearKeys(); // both curves are now empty, but the set still has 2 curves
      */
     clearKeys() {
@@ -185,7 +185,7 @@ class CurveSet {
      *
      * @returns {this} The curve set instance.
      * @example
-     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
      * curveSet.clear(); // the set now has no curves
      */
     clear() {
@@ -202,7 +202,7 @@ class CurveSet {
      * result.
      * @returns {number[]} The interpolated curve values at the specified time.
      * @example
-     * const curveSet = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+     * const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
      * const values = curveSet.value(0.5); // returns interpolated values for all curves at time 0.5
      */
     value(time, result = []) {
@@ -221,7 +221,7 @@ class CurveSet {
      *
      * @returns {this} A clone of the specified curve set.
      * @example
-     * const curveSet = new pc.CurveSet([[0, 0, 1, 1]]);
+     * const curveSet = new CurveSet([[0, 0, 1, 1]]);
      * const clonedCurveSet = curveSet.clone();
      */
     clone() {

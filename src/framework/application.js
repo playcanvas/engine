@@ -114,7 +114,7 @@ class Application extends AppBase {
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
      * @example
      * // Engine-only example: create the application manually
-     * const app = new pc.Application(canvas, options);
+     * const app = new Application(canvas, options);
      *
      * // Start the application's main loop
      * app.start();
