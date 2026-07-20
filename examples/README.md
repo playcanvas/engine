@@ -167,12 +167,12 @@ Each example consists of two modules to define its behavior:
 ### `<exampleName>.example.mjs`
 
 ```js
-import * as pc from 'playcanvas';
+import { Application } from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const app = new pc.Application(canvas, {});
+const app = new Application(canvas, {});
 ```
 
 This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
@@ -201,7 +201,7 @@ Examples can also contain comments which allow you to define the default configu
 // @flag WEBGPU_DISABLED
 // @flag WEBGL_DISABLED
 // @flag PREFERRED_DEVICE webgpu
-import * as pc from 'playcanvas';
+import { Application } from 'playcanvas';
 ...
 ```
 
@@ -256,13 +256,15 @@ console.log(data.get('flash'));
 Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be imported from the example using their relative file name:
 
 ```js
+import { Asset } from 'playcanvas';
+
 import shaderVert from './shader.vert';
 import shaderFrag from './shader.frag';
 import data from './data.json';
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 ```
 
