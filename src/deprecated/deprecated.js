@@ -720,8 +720,8 @@ _defineAlias('glossVertexColor', 'glossMapVertexColor');
 _defineAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineAlias('lightVertexColor', 'lightMapVertexColor');
 
-_defineAlias('sheenGloss', 'sheenGlossiess');
-_defineAlias('clearCoatGloss', 'clearCostGlossiness');
+_defineAlias('sheenGloss', 'sheenGlossiness');
+_defineAlias('clearCoatGloss', 'clearCoatGlossiness');
 
 function _defineOption(name, newName) {
     if (name !== 'pass') {
