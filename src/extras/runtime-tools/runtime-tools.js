@@ -15,19 +15,29 @@ buildVariant = 'debug';
 
 const PROTOCOL = 'playcanvas.runtime-tools';
 const PROTOCOL_VERSION = 1;
-const CAPABILITIES = ['help', 'apps', 'query', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input'];
+const CAPABILITIES = ['help', 'apps', 'query', 'diagnostics', 'waitForFrame', 'waitForSettled', 'waitFor', 'record', 'input'];
 const MAX_DIAGNOSTICS = 100;
 const MAX_INPUT = 100;
+const MAX_FRAME_TIMES = 60;
+const MAX_ERROR_MESSAGE = 500;
+const ERROR_STACK_LINES = 3;
+const RECORD_MAX = 600;
 const WAIT_FRAME_CANCELLED = 'app detached or destroyed while waiting for frame';
 const WAIT_SETTLED_CANCELLED = 'app detached or destroyed while waiting to settle';
+const WAIT_FOR_CANCELLED = 'app detached or destroyed while waiting for condition';
+const RECORD_CANCELLED = 'app detached or destroyed while recording';
 const INJECTED = '__playcanvasRuntimeToolsInjected';
 const INPUT_EVENTS = ['keydown', 'keyup', 'mousedown', 'mouseup', 'mousemove', 'wheel', 'touchstart', 'touchmove', 'touchend', 'touchcancel'];
 const GLOBAL = '__PLAYCANVAS_TOOLS__';
 const ALIAS = 'playcanvasTools';
-const HINT = 'PlayCanvas debug tools: window.playcanvasTools.help() or window.playcanvasTools.query(app => app.root.name)';
+const HINT = 'PlayCanvas debug tools (query app state, inject input / mouse-look without pointer lock, await asset load, read runtime errors): window.playcanvasTools.help()';
+const POINTERLOCK_HINT = 'PlayCanvas: pointer lock unavailable (common under automation) — window.playcanvasTools.input({ kind: "mouse", action: "mousemove", dx, dy }) injects look input without lock, or input({ kind: "pointerlock", action: "enter" }) shims lock';
+const ERROR_HINT = 'PlayCanvas: runtime errors recorded — window.playcanvasTools.diagnostics()';
 
 let idCounter = 0;
 let hintLogged = false;
+let pointerLockHinted = false;
+let pcSetByUs = null;
 const registry = new Map();
 
 const resolve = (appId) => {
@@ -69,6 +79,24 @@ const recordInput = (entry, source, e) => {
     entry.input.push(item);
 };
 
+const capMessage = (m) => {
+    const s = String(m ?? '');
+    return s.length > MAX_ERROR_MESSAGE ? `${s.slice(0, MAX_ERROR_MESSAGE)}…` : s;
+};
+
+const capStack = s => (s ? String(s).split('\n').slice(0, ERROR_STACK_LINES).join('\n') : null);
+
+// single funnel for every error kind so the first one per app can nudge agents to diagnostics()
+const pushError = (entry, item) => {
+    entry.errors.push(item);
+    // #if _DEBUG
+    if (!entry.errorHinted) {
+        entry.errorHinted = true;
+        console.warn(ERROR_HINT);
+    }
+    // #endif
+};
+
 const createGlobal = () => {
     /** @type {RuntimeToolsGlobal} */
     const tools = {
@@ -80,6 +108,23 @@ const createGlobal = () => {
             return {
                 global: `window.${ALIAS}`,
                 protocolGlobal: `window.${GLOBAL}`,
+                methods: {
+                    query: { sig: 'query(fn, appId?, opts?)', use: 'run fn(app) against the live app; returns bounded JSON. opts {depth, maxKeys, maxItems, maxString} raise limits — "…" / "+N more" truncation markers mean re-query with bigger opts' },
+                    input: { sig: 'input(msg, appId?)', use: 'inject a synthetic input event, returns { frame } after dispatch. msg shapes in inputSchema below' },
+                    diagnostics: { sig: 'diagnostics(appId?)', use: 'recent errors (asset/exception/rejection), missing assets, recent input, plus { fps, frame }' },
+                    waitForFrame: { sig: 'waitForFrame(appId?)', use: 'resolve { frame } after the next rendered frame' },
+                    waitForSettled: { sig: 'waitForSettled(appId?, { frames = 3, timeout = 30000 })', use: 'resolve once started and asset loading settles — use instead of sleeps' },
+                    waitFor: { sig: 'waitFor(fn, appId?, { timeout = 30000 })', use: 'resolve { frame, value } when fn(app) is truthy; a throwing predicate counts as not-yet and keeps waiting' },
+                    record: { sig: 'record(fn, appId?, { frames = 60 })', use: 'sample fn(app) each frame for N frames (1..600); resolves [{ frame, value | error }]' },
+                    apps: { sig: 'apps()', use: 'list attached apps: { id, frame, running }' },
+                    pc: { sig: 'pc', use: 'the PlayCanvas module namespace (also globalThis.pc in debug builds), e.g. new pc.Vec3(0, 1, 0)' }
+                },
+                inputSchema: {
+                    key: '{ kind: "key", action: "keydown" | "keyup", code: "KeyW" | "Space" | … }',
+                    mouse: '{ kind: "mouse", action: "mousedown" | "mouseup" | "mousemove" | "wheel", x, y, dx, dy, button }',
+                    touch: '{ kind: "touch", action: "touchstart" | "touchmove" | "touchend" | "touchcancel", touches: [{ id, x, y }] }',
+                    pointerlock: '{ kind: "pointerlock", action: "enter" | "exit" }'
+                },
                 examples: [
                     'window.playcanvasTools.query(app => app.root.findByName("player")?.forward)',
                     'window.playcanvasTools.query(app => app.stats.drawCalls.total)',
@@ -107,16 +152,21 @@ const createGlobal = () => {
         diagnostics(appId) {
             const entry = resolve(appId);
             const errors = entry.errors.toArray();
+            const times = entry.frameTimes.toArray();
+            const fps = times.length ? Math.round((1000 / (times.reduce((a, b) => a + b, 0) / times.length)) * 10) / 10 : null;
             return {
                 errors,
                 missingAssets: errors.filter(e => e.kind === 'asset' && e.url).map(e => e.url),
-                recentInput: entry.input.toArray().slice(-50)
+                recentInput: entry.input.toArray().slice(-50),
+                fps,
+                frame: entry.app.frame
             };
         },
         // drive a synthetic input event into the app through a browser eval bridge.
         input(msg, appId) {
             const entry = resolve(appId);
             injectInput(entry.app.graphicsDevice.canvas, msg, m => entry.recordInput('injected', m));
+            return { frame: entry.app.frame };
         },
         waitForFrame(appId) {
             const entry = resolve(appId);
@@ -163,6 +213,66 @@ const createGlobal = () => {
                 frameend.handle = entry.app.on('frameend', onFrame);
                 entry.waits.add(cancel);
             });
+        },
+        waitFor(fn, appId, { timeout = 30000 } = {}) {
+            if (typeof fn !== 'function') {
+                throw new Error('waitFor(fn) needs a predicate function, e.g. window.playcanvasTools.waitFor(app => app.root.findByName("enemy"))');
+            }
+            const entry = resolve(appId);
+            return new Promise((res, rej) => {
+                let lastErr = null;
+                const timer = { id: null };
+                const frameend = { handle: null };
+                const done = (settle, value, cancel) => {
+                    entry.waits.delete(cancel);
+                    clearTimeout(timer.id);
+                    frameend.handle.off();
+                    settle(value);
+                };
+                const cancel = () => done(rej, new Error(WAIT_FOR_CANCELLED), cancel);
+                const onFrame = () => {
+                    // a predicate that throws (e.g. reads a not-yet-spawned entity) counts as falsy
+                    const [err, val] = tryCatch(() => fn(entry.app));
+                    if (err) {
+                        lastErr = err;
+                    } else if (val) {
+                        done(res, { frame: entry.app.frame, value: serialize(val) }, cancel);
+                    }
+                };
+                timer.id = setTimeout(() => {
+                    const detail = lastErr ? `; last predicate error: ${lastErr.message}` : '';
+                    done(rej, new Error(`waitFor timed out after ${timeout}ms${detail}`), cancel);
+                }, timeout);
+                frameend.handle = entry.app.on('frameend', onFrame);
+                entry.waits.add(cancel);
+            });
+        },
+        record(fn, appId, { frames = 60 } = {}) {
+            if (typeof fn !== 'function') {
+                throw new Error('record(fn) needs a function, e.g. window.playcanvasTools.record(app => app.root.findByName("player").getPosition())');
+            }
+            const entry = resolve(appId);
+            const n = Math.max(1, Math.min(RECORD_MAX, Math.floor(frames)));
+            return new Promise((res, rej) => {
+                const samples = [];
+                const frameend = { handle: null };
+                const done = (settle, value, cancel) => {
+                    entry.waits.delete(cancel);
+                    frameend.handle.off();
+                    settle(value);
+                };
+                const cancel = () => done(rej, new Error(RECORD_CANCELLED), cancel);
+                const onFrame = () => {
+                    const frame = entry.app.frame;
+                    const [err, val] = tryCatch(() => fn(entry.app));
+                    samples.push(err ? { frame, error: err.message } : { frame, value: serialize(val) });
+                    if (samples.length >= n) {
+                        done(res, samples, cancel);
+                    }
+                };
+                frameend.handle = entry.app.on('frameend', onFrame);
+                entry.waits.add(cancel);
+            });
         }
     };
 
@@ -187,6 +297,9 @@ const createGlobal = () => {
  * are JSON-serializable; no live engine objects escape.
  *
  * @param {import('../../framework/app-base.js').AppBase} app - The application to expose.
+ * @param {object} [namespace] - The PlayCanvas module namespace. When passed (as the debug
+ * entrypoint does), it is published as `tools.pc` and, if `globalThis.pc` is unset, as
+ * `globalThis.pc` — cleaned up on detach of the last app only if we set it.
  * @returns {() => void} A function that detaches the app again. Detaching the last app
  * removes the global. Apps also detach automatically on destroy.
  * @example
@@ -195,7 +308,7 @@ const createGlobal = () => {
  * const app = new Application(canvas);
  * attachRuntimeTools(app);
  */
-const attachRuntimeTools = (app) => {
+const attachRuntimeTools = (app, namespace) => {
     for (const e of registry.values()) {
         if (e.app === app) {
             return e.detach;
@@ -214,17 +327,18 @@ const attachRuntimeTools = (app) => {
         started: app.frame > 0,
         destroyed: false,
         detached: false,
-        timeMs: 0,
+        errorHinted: false,
         waits: new Set(),
         errors: new RingBuffer(MAX_DIAGNOSTICS),
-        input: new RingBuffer(MAX_INPUT)
+        input: new RingBuffer(MAX_INPUT),
+        frameTimes: new RingBuffer(MAX_FRAME_TIMES)
     };
     entry.recordInput = (source, e) => recordInput(entry, source, e);
     const destroy = { handle: null };
-    const inputTargets = [
-        app.graphicsDevice.canvas,
-        app.graphicsDevice.canvas.ownerDocument?.defaultView ?? globalThis
-    ].filter((t, i, all) => t && all.indexOf(t) === i);
+    const canvas = app.graphicsDevice.canvas;
+    const doc = canvas.ownerDocument;
+    const win = doc?.defaultView ?? globalThis;
+    const inputTargets = [canvas, win].filter((t, i, all) => t && all.indexOf(t) === i);
     const seenInput = new WeakSet();
 
     const onStart = () => {
@@ -232,12 +346,12 @@ const attachRuntimeTools = (app) => {
     };
     const onFrameUpdate = (ms) => {
         entry.started = true;
-        entry.timeMs += ms;
+        entry.frameTimes.push(ms);
     };
     const onAssetError = (err, asset) => {
         // some handlers (e.g. cubemap) fire 'error' with only the asset
         const a = asset ?? ((err && typeof err === 'object' && 'id' in err) ? err : null);
-        entry.errors.push({
+        pushError(entry, {
             kind: 'asset',
             message: a === err ? 'asset load error' : String(err),
             assetId: a?.id ?? null,
@@ -246,10 +360,38 @@ const attachRuntimeTools = (app) => {
             frame: app.frame
         });
     };
+    const onError = (e) => {
+        pushError(entry, {
+            kind: 'exception',
+            message: capMessage(e?.message ?? e?.error?.message ?? e?.error),
+            stack: capStack(e?.error?.stack),
+            frame: app.frame
+        });
+    };
+    const onRejection = (e) => {
+        const reason = e?.reason;
+        pushError(entry, {
+            kind: 'rejection',
+            message: capMessage(reason?.message ?? reason),
+            stack: capStack(reason?.stack),
+            frame: app.frame
+        });
+    };
+    const onPointerLockError = () => {
+        // #if _DEBUG
+        if (!pointerLockHinted) {
+            pointerLockHinted = true;
+            console.warn(POINTERLOCK_HINT);
+        }
+        // #endif
+    };
 
     app.on('start', onStart);
     app.on('frameupdate', onFrameUpdate);
     app.assets.on('error', onAssetError);
+    win.addEventListener?.('error', onError);
+    win.addEventListener?.('unhandledrejection', onRejection);
+    doc?.addEventListener?.('pointerlockerror', onPointerLockError);
     const onInput = (e) => {
         if (!e[INJECTED] && !seenInput.has(e)) {
             seenInput.add(e);
@@ -266,6 +408,9 @@ const attachRuntimeTools = (app) => {
         app.off('start', onStart);
         app.off('frameupdate', onFrameUpdate);
         app.assets?.off('error', onAssetError);
+        win.removeEventListener?.('error', onError);
+        win.removeEventListener?.('unhandledrejection', onRejection);
+        doc?.removeEventListener?.('pointerlockerror', onPointerLockError);
         inputTargets.forEach(target => INPUT_EVENTS.forEach(t => target.removeEventListener?.(t, onInput, true)));
         destroy.handle.off();
         for (const cancel of [...entry.waits]) {
@@ -280,6 +425,11 @@ const attachRuntimeTools = (app) => {
             if (globalThis[ALIAS] === tools) {
                 delete globalThis[ALIAS];
             }
+            // only remove the pc alias if we set it and nothing else has since replaced it
+            if (pcSetByUs !== null && globalThis.pc === pcSetByUs) {
+                delete globalThis.pc;
+            }
+            pcSetByUs = null;
             delete globalThis[GLOBAL];
         }
     };
@@ -294,6 +444,18 @@ const attachRuntimeTools = (app) => {
 
     if (!globalThis[GLOBAL]) {
         createGlobal();
+    }
+
+    if (namespace) {
+        const tools = globalThis[GLOBAL];
+        if (tools.pc === undefined) {
+            tools.pc = namespace;
+        }
+        // ESM builds have no `pc` global; publish one so agents' `pc.*` guesses work
+        if (globalThis.pc === undefined) {
+            globalThis.pc = namespace;
+            pcSetByUs = namespace;
+        }
     }
 
     if (typeof globalThis.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
@@ -313,11 +475,14 @@ export { attachRuntimeTools };
  * @property {number} version - Protocol version.
  * @property {string[]} capabilities - Supported tool methods.
  * @property {{ version: string, revision: string, buildVariant: string }} engine - Engine identity and build variant.
- * @property {() => object} help - Returns method names and copyable examples.
+ * @property {object} [pc] - The PlayCanvas module namespace in debug builds, for constructing engine types.
+ * @property {() => object} help - Returns per-method signatures, the input() message schema, and copyable examples.
  * @property {() => object[]} apps - Lists attached apps.
  * @property {(fn: (app: import('../../framework/app-base.js').AppBase) => any, appId?: string, opts?: object) => object} query - Runs fn against the live app and returns bounded, cycle-safe JSON.
- * @property {(appId?: string) => { errors: object[], missingAssets: string[], recentInput: object[] }} diagnostics - Returns recent runtime diagnostics.
- * @property {(msg: object, appId?: string) => void} input - Injects a synthetic DOM input event.
+ * @property {(appId?: string) => { errors: object[], missingAssets: string[], recentInput: object[], fps: number|null, frame: number }} diagnostics - Returns recent runtime diagnostics.
+ * @property {(msg: object, appId?: string) => { frame: number }} input - Injects a synthetic DOM input event and returns the frame it was dispatched on.
  * @property {(appId?: string) => Promise<{ frame: number }>} waitForFrame - Resolves after the next frame.
  * @property {(appId?: string, options?: { frames?: number, timeout?: number }) => Promise<{ frame: number, settledFrames: number }>} waitForSettled - Resolves after the app has started and asset loading settles.
+ * @property {(fn: (app: import('../../framework/app-base.js').AppBase) => any, appId?: string, options?: { timeout?: number }) => Promise<{ frame: number, value: any }>} waitFor - Resolves when fn(app) is truthy; a throwing predicate counts as falsy and keeps waiting.
+ * @property {(fn: (app: import('../../framework/app-base.js').AppBase) => any, appId?: string, options?: { frames?: number }) => Promise<Array<{ frame: number, value?: any, error?: string }>>} record - Samples fn(app) each frame for N frames.
  */

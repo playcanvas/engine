@@ -31,7 +31,7 @@ describe('attachRuntimeTools', function () {
         expect(tools.protocol).to.equal('playcanvas.runtime-tools');
         expect(tools.version).to.equal(1);
         expect(tools.capabilities).to.deep.equal(
-            ['help', 'apps', 'query', 'diagnostics', 'waitForFrame', 'waitForSettled', 'input']);
+            ['help', 'apps', 'query', 'diagnostics', 'waitForFrame', 'waitForSettled', 'waitFor', 'record', 'input']);
         expect(tools.engine).to.have.keys('version', 'revision', 'buildVariant');
     });
 
@@ -236,6 +236,185 @@ describe('attachRuntimeTools', function () {
                 () => expect.fail('expected rejection'),
                 err => expect(err.message).to.match(/destroyed/)
             );
+        });
+
+        it('waitFor resolves { frame, value } when the predicate turns truthy', async function () {
+            attachRuntimeTools(app);
+            let ready = false;
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitFor(() => ready && 'go', undefined, { timeout: 1000 });
+            app.fire('frameend'); // predicate falsy
+            ready = true;
+            app.fire('frameend'); // predicate truthy
+            const result = await p;
+            expect(result.frame).to.equal(0);
+            expect(result.value).to.equal('go');
+        });
+
+        it('waitFor treats a throwing predicate as not-yet and reports the last error on timeout', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitFor(() => {
+                throw new Error('not spawned yet');
+            }, undefined, { timeout: 30 });
+            app.fire('frameend');
+            await p.then(
+                () => expect.fail('expected rejection'),
+                err => expect(err.message).to.match(/timed out after 30ms.*last predicate error: not spawned yet/)
+            );
+        });
+
+        it('waitFor rejects when the app is destroyed', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.waitFor(() => false, undefined, { timeout: 5000 });
+            app.destroy();
+            app = null;
+            await p.then(
+                () => expect.fail('expected rejection'),
+                err => expect(err.message).to.match(/destroyed/)
+            );
+        });
+
+        it('record samples the predicate for N frames', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.record(a => a.frame, undefined, { frames: 3 });
+            app.fire('frameend');
+            app.fire('frameend');
+            app.fire('frameend');
+            const samples = await p;
+            expect(samples).to.have.length(3);
+            expect(samples.every(s => 'value' in s)).to.be.true;
+        });
+
+        it('record captures throwing samples as { frame, error } and keeps going', async function () {
+            attachRuntimeTools(app);
+            let n = 0;
+            const p = globalThis.__PLAYCANVAS_TOOLS__.record(() => {
+                n++;
+                if (n === 2) {
+                    throw new Error('bad frame');
+                }
+                return n;
+            }, undefined, { frames: 3 });
+            app.fire('frameend');
+            app.fire('frameend');
+            app.fire('frameend');
+            const samples = await p;
+            expect(samples).to.have.length(3);
+            expect(samples[0].value).to.equal(1);
+            expect(samples[1].error).to.equal('bad frame');
+            expect(samples[2].value).to.equal(3);
+        });
+
+        it('record clamps a frame count below 1 up to 1', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.record(a => a.frame, undefined, { frames: 0 });
+            app.fire('frameend');
+            const samples = await p;
+            expect(samples).to.have.length(1);
+        });
+
+        it('record rejects when the app is destroyed', async function () {
+            attachRuntimeTools(app);
+            const p = globalThis.__PLAYCANVAS_TOOLS__.record(a => a.frame, undefined, { frames: 10 });
+            app.destroy();
+            app = null;
+            await p.then(
+                () => expect.fail('expected rejection'),
+                err => expect(err.message).to.match(/destroyed/)
+            );
+        });
+
+        it('waitFor and record require a function', function () {
+            attachRuntimeTools(app);
+            expect(() => globalThis.__PLAYCANVAS_TOOLS__.waitFor('nope')).to.throw(/needs a predicate function/);
+            expect(() => globalThis.__PLAYCANVAS_TOOLS__.record(42)).to.throw(/needs a function/);
+        });
+    });
+
+    describe('agent ergonomics', function () {
+
+        it('publishes the pc namespace on the tools global and globalThis, cleaned up on detach', function () {
+            const ns = { Vec3: class {} };
+            const detach = attachRuntimeTools(app, ns);
+            expect(globalThis.__PLAYCANVAS_TOOLS__.pc).to.equal(ns);
+            expect(globalThis.pc).to.equal(ns);
+            detach();
+            expect(globalThis.pc).to.be.undefined;
+        });
+
+        it('does not overwrite or delete a pre-existing globalThis.pc', function () {
+            const existing = { sentinel: true };
+            globalThis.pc = existing;
+            const detach = attachRuntimeTools(app, { Vec3: class {} });
+            expect(globalThis.pc).to.equal(existing);
+            detach();
+            expect(globalThis.pc).to.equal(existing);
+            delete globalThis.pc;
+        });
+
+        it('input() returns the frame it dispatched on', function () {
+            attachRuntimeTools(app);
+            const r = globalThis.__PLAYCANVAS_TOOLS__.input({ kind: 'key', action: 'keydown', code: 'KeyD' });
+            expect(r).to.deep.equal({ frame: 0 });
+        });
+
+        it('diagnostics reports fps from buffered frame times, null when empty', function () {
+            attachRuntimeTools(app);
+            expect(globalThis.__PLAYCANVAS_TOOLS__.diagnostics().fps).to.equal(null);
+            app.fire('frameupdate', 16);
+            app.fire('frameupdate', 16);
+            const diag = globalThis.__PLAYCANVAS_TOOLS__.diagnostics();
+            expect(diag.fps).to.equal(62.5);
+            expect(diag.frame).to.equal(0);
+        });
+
+        it('captures window error and unhandledrejection events into diagnostics', function () {
+            attachRuntimeTools(app);
+            const errEvent = new window.Event('error');
+            errEvent.message = 'sync boom';
+            errEvent.error = new Error('sync boom');
+            window.dispatchEvent(errEvent);
+            const rejEvent = new window.Event('unhandledrejection');
+            rejEvent.reason = new Error('async boom');
+            window.dispatchEvent(rejEvent);
+            const errors = globalThis.__PLAYCANVAS_TOOLS__.diagnostics().errors;
+            const exception = errors.find(e => e.kind === 'exception');
+            const rejection = errors.find(e => e.kind === 'rejection');
+            expect(exception.message).to.equal('sync boom');
+            expect(rejection.message).to.equal('async boom');
+        });
+
+        it('help() documents every method, the input schema, and keeps the examples', function () {
+            attachRuntimeTools(app);
+            const help = globalThis.__PLAYCANVAS_TOOLS__.help();
+            expect(help.methods).to.include.keys(
+                'query', 'input', 'diagnostics', 'waitForFrame', 'waitForSettled', 'waitFor', 'record', 'apps', 'pc');
+            expect(help.methods.query).to.include.keys('sig', 'use');
+            expect(help.inputSchema).to.include.keys('key', 'mouse', 'touch', 'pointerlock');
+            expect(help.examples).to.include('window.playcanvasTools.diagnostics()');
+        });
+
+        it('warns once on the first recorded error, pointing at diagnostics()', function () {
+            attachRuntimeTools(app);
+            const warnings = [];
+            const orig = console.warn;
+            console.warn = m => warnings.push(m);
+            const asset = new Asset('a.png', 'texture', { url: 'a.png' });
+            app.assets.add(asset);
+            app.assets.fire('error', 'Error: 404', asset);
+            app.assets.fire('error', 'Error: 404', asset); // second error must not warn again
+            console.warn = orig;
+            expect(warnings.filter(w => /runtime errors recorded/.test(w))).to.have.length(1);
+        });
+
+        it('warns once on pointerlockerror, pointing at the input shim', function () {
+            attachRuntimeTools(app);
+            const warnings = [];
+            const orig = console.warn;
+            console.warn = m => warnings.push(m);
+            document.dispatchEvent(new window.Event('pointerlockerror'));
+            document.dispatchEvent(new window.Event('pointerlockerror'));
+            console.warn = orig;
+            expect(warnings.filter(w => /pointer lock unavailable/.test(w))).to.have.length(1);
         });
     });
 });
