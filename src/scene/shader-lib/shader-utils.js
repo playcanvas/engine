@@ -205,12 +205,12 @@ class ShaderUtils {
 }
 
 function createShader(device, vsName, fsName, useTransformFeedback = false, shaderDefinitionOptions = {}) {
-    Debug.removed('pc.createShader has been removed deprecated. Use ShaderUtils.createShader instead.');
+    Debug.removed('createShader has been removed deprecated. Use ShaderUtils.createShader instead.');
 }
 
 function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false, shaderDefinitionOptions = {}) {
 
-    Debug.deprecated('pc.createShaderFromCode has been deprecated. Use ShaderUtils.createShader instead.');
+    Debug.deprecated('createShaderFromCode has been deprecated. Use ShaderUtils.createShader instead.');
 
     // the function signature has changed, fail if called incorrectly
     Debug.assert(typeof attributes !== 'boolean');

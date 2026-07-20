@@ -187,7 +187,7 @@ class RenderTarget {
      * camera.renderTarget = null;
      */
     constructor(options = {}) {
-        Debug.assert(!(options instanceof GraphicsDevice), 'pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
+        Debug.assert(!(options instanceof GraphicsDevice), 'RenderTarget constructor no longer accepts GraphicsDevice parameter.');
         this.id = id++;
 
         // device, from one of the buffers
@@ -227,7 +227,7 @@ class RenderTarget {
                 this._depth = true;
                 this._stencil = false;
             } else {
-                Debug.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
+                Debug.warn('Incorrect depthBuffer format. Must be PIXELFORMAT_DEPTH or PIXELFORMAT_DEPTHSTENCIL');
                 this._depth = false;
                 this._stencil = false;
             }

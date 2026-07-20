@@ -827,7 +827,7 @@ class GraphicsDevice extends EventHandler {
      */
     loseContext() {
 
-        Debug.log('pc.GraphicsDevice: Graphics context lost.');
+        Debug.log('GraphicsDevice: Graphics context lost.');
 
         this.contextLost = true;
 
@@ -861,7 +861,7 @@ class GraphicsDevice extends EventHandler {
      */
     restoreContext() {
 
-        Debug.log('pc.GraphicsDevice: Graphics context restored.');
+        Debug.log('GraphicsDevice: Graphics context restored.');
 
         this.contextLost = false;
 

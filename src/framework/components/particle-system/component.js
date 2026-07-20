@@ -1991,7 +1991,7 @@ class ParticleSystemComponent extends Component {
 
     _onMeshChanged(mesh) {
         if (mesh && !(mesh instanceof Mesh)) {
-            // if mesh is a pc.Model, use the first meshInstance
+            // if mesh is a Model, use the first meshInstance
             if (mesh.meshInstances[0]) {
                 mesh = mesh.meshInstances[0].mesh;
             } else {

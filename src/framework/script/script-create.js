@@ -116,7 +116,7 @@ function registerScript(script, name, app) {
     }
 
     if (!(script.prototype instanceof Script)) {
-        throw new Error(`script class: '${ScriptType.__getScriptName(script)}' does not extend pc.Script.`);
+        throw new Error(`script class: '${ScriptType.__getScriptName(script)}' does not extend Script.`);
     }
 
     // Resolve the name: an explicit `name` argument wins, otherwise the name is derived from the

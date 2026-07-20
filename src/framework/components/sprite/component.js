@@ -393,7 +393,7 @@ class SpriteComponent extends Component {
         return this._currentClip.sprite;
     }
 
-    // (private) {pc.Material} material The material used to render a sprite.
+    // (private) {Material} material The material used to render a sprite.
     set material(value) {
         this._material = value;
         if (this._meshInstance) {

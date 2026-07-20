@@ -498,7 +498,7 @@ class Renderer {
     }
 
     setupCullMode(cullFaces, flipFactor, drawCall) {
-        Debug.deprecated('pc.Renderer.setupCullMode is deprecated. Use \'pc.Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
+        Debug.deprecated('Renderer.setupCullMode is deprecated. Use \'Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
         this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 

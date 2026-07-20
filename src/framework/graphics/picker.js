@@ -202,7 +202,7 @@ class Picker {
     getSelection(x, y, width = 1, height = 1) {
         const device = this.device;
         if (device.isWebGPU) {
-            Debug.errorOnce('pc.Picker#getSelection is not supported on WebGPU, use pc.Picker#getSelectionAsync instead.');
+            Debug.errorOnce('Picker#getSelection is not supported on WebGPU, use Picker#getSelectionAsync instead.');
             return [];
         }
 
