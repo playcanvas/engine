@@ -46,7 +46,7 @@ const JSON_VERTEX_ELEMENT_TYPE = {
     'float32': TYPE_FLOAT32
 };
 
-// Take PlayCanvas JSON model data and create pc.Model
+// Take PlayCanvas JSON model data and create Model
 class JsonModelParser {
     constructor(modelHandler) {
         this._device = modelHandler.device;

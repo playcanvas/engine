@@ -42,7 +42,7 @@ class MeshInfo {
         this.outlines = [];
         // float array for shadows
         this.shadows = [];
-        // pc.MeshInstance created from this MeshInfo
+        // MeshInstance created from this MeshInfo
         this.meshInstance = null;
     }
 }

@@ -232,7 +232,7 @@ class ComponentSystemRegistry extends EventHandler {
     constructor() {
         super();
 
-        // An array of pc.ComponentSystem objects
+        // An array of ComponentSystem objects
         this.list = [];
     }
 

@@ -669,7 +669,7 @@ class Texture {
      */
     set addressW(addressW) {
         if (!this._volume) {
-            Debug.warn('pc.Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
+            Debug.warn('Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
             return;
         }
         if (addressW !== this._addressW) {
@@ -1267,7 +1267,7 @@ class Texture {
      */
     unlock() {
         if (this._lockedMode === TEXTURELOCK_NONE) {
-            Debug.warn('pc.Texture#unlock: Attempting to unlock a texture that is not locked.', this);
+            Debug.warn('Texture#unlock: Attempting to unlock a texture that is not locked.', this);
         }
 
         // Upload the new pixel data if locked in write mode (default)

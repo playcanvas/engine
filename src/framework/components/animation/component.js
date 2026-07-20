@@ -652,7 +652,7 @@ class AnimationComponent extends Component {
     onBeforeRemove() {
         for (let i = 0; i < this.assets.length; i++) {
 
-            // this.assets can be an array of pc.Assets or an array of numbers (assetIds)
+            // this.assets can be an array of Asset objects or an array of numbers (assetIds)
             let asset = this.assets[i];
             if (typeof asset ===  'number') {
                 asset = this.system.app.assets.get(asset);
