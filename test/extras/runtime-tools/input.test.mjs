@@ -78,4 +78,31 @@ describe('runtime-tools input injection', function () {
         expect(ev.changedTouches.length).to.equal(1);
         expect(ev.changedTouches[0].clientX).to.equal(5);
     });
+
+    it('pointerlock enter shims document.pointerLockElement and fires pointerlockchange', function () {
+        let changed = 0;
+        canvas.ownerDocument.addEventListener('pointerlockchange', () => {
+            changed++;
+        });
+        injectInput(canvas, { kind: 'pointerlock', action: 'enter' });
+        expect(canvas.ownerDocument.pointerLockElement).to.equal(canvas);
+        expect(changed).to.equal(1);
+        // enter twice is idempotent
+        injectInput(canvas, { kind: 'pointerlock', action: 'enter' });
+        expect(canvas.ownerDocument.pointerLockElement).to.equal(canvas);
+        expect(changed).to.equal(2);
+    });
+
+    it('pointerlock exit clears the shim, fires pointerlockchange, and no-ops without a prior enter', function () {
+        injectInput(canvas, { kind: 'pointerlock', action: 'enter' });
+        let changed = 0;
+        canvas.ownerDocument.addEventListener('pointerlockchange', () => {
+            changed++;
+        });
+        injectInput(canvas, { kind: 'pointerlock', action: 'exit' });
+        expect(canvas.ownerDocument.pointerLockElement).to.not.equal(canvas);
+        expect(changed).to.equal(1);
+        // exit without a prior enter must not throw
+        expect(() => injectInput(canvas, { kind: 'pointerlock', action: 'exit' })).to.not.throw();
+    });
 });

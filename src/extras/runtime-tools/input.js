@@ -84,6 +84,20 @@ const injectInput = (canvas, msg, record) => {
     } else if (msg.kind === 'touch') {
         const pts = msg.touches ?? [{ id: msg.id ?? 0, x: msg.x ?? 0, y: msg.y ?? 0 }];
         dispatch(canvas, makeTouchEvent(canvas, msg.action, pts), msg, record);
+    } else if (msg.kind === 'pointerlock') {
+        // game code gates mouse-look on document.pointerLockElement, which stays null under
+        // automation (no user gesture). shim it so injected mousemove drives the camera.
+        const doc = canvas.ownerDocument;
+        if (msg.action === 'enter') {
+            Object.defineProperty(doc, 'pointerLockElement', { get: () => canvas, configurable: true });
+        } else if (msg.action === 'exit' && Object.prototype.hasOwnProperty.call(doc, 'pointerLockElement')) {
+            delete doc.pointerLockElement; // drop the own prop, restoring the prototype's behavior
+        }
+        record?.(msg);
+        // build in the doc's realm — a bare `new Event` resolves to node's global Event, which jsdom rejects
+        const ev = doc.createEvent('Event');
+        ev.initEvent('pointerlockchange', true, false);
+        doc.dispatchEvent(ev);
     }
 };
 

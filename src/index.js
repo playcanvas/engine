@@ -47,8 +47,9 @@
 // #if _DEBUG
 import { attachRuntimeTools } from './extras/runtime-tools/runtime-tools.js';
 import { AppBase } from './framework/app-base.js';
+import * as pc from './index.js'; // self-reference; only dereferenced later, inside the callback
 
-AppBase._debugAppCreated = app => attachRuntimeTools(app);
+AppBase._debugAppCreated = app => attachRuntimeTools(app, pc);
 // #endif
 
 // CORE
