@@ -95,7 +95,7 @@ const PlayMode = {
  *
  * @example
  * // Create entity and add gsplat component first
- * const entity = new pc.Entity('Flipbook');
+ * const entity = new Entity('Flipbook');
  * entity.addComponent('gsplat', {
  *     unified: true
  * });

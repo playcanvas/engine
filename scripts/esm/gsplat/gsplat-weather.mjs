@@ -14,7 +14,7 @@ import { Script, Vec3, BoundingBox, GSplatFormat, GSplatContainer, PIXELFORMAT_R
  * giving correct depth ordering with both CPU and GPU sorting.
  *
  * @example
- * const weatherEntity = new pc.Entity('Weather');
+ * const weatherEntity = new Entity('Weather');
  * weatherEntity.addComponent('script');
  * const weather = weatherEntity.script.create(GSplatWeather);
  * weather.followEntity = cameraEntity;
