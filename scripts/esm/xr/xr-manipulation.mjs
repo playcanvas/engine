@@ -100,7 +100,7 @@ const wrapPi = (angle) => {
  *
  * @example
  * // Parent the scene content under a world root and grab-manipulate it
- * const worldRoot = new pc.Entity('WorldRoot');
+ * const worldRoot = new Entity('WorldRoot');
  * app.root.addChild(worldRoot);
  * worldRoot.addChild(galleryEntity);
  *
