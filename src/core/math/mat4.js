@@ -537,7 +537,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
-     * const f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
+     * const f = new pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
      * @ignore
      */
     setFrustum(left, right, bottom, top, znear, zfar) {
