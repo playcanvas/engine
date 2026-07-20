@@ -180,14 +180,14 @@ Object.defineProperties(RenderTarget.prototype, {
             return this.impl._glFrameBuffer;
         },
         set: function (rgbm) {
-            Debug.deprecated('RenderTarget#_glFrameBuffer is deprecated. Use RenderTarget.impl#_glFrameBuffer instead.');
+            Debug.removed('RenderTarget#_glFrameBuffer setter was removed. Use RenderTarget.impl#_glFrameBuffer instead.');
         }
     }
 });
 
 Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
     get: function () {
-        Debug.deprecated('VertexFormat.defaultInstancingFormat is deprecated. Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
+        Debug.removed('VertexFormat.defaultInstancingFormat was removed. Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
         return null;
     }
 });
@@ -502,14 +502,14 @@ Object.defineProperty(Scene.prototype, 'rendering', {
 
 Object.defineProperty(LayerComposition.prototype, '_meshInstances', {
     get: function () {
-        Debug.deprecated('LayerComposition#_meshInstances is deprecated.');
+        Debug.removed('LayerComposition#_meshInstances was removed.');
         return null;
     }
 });
 
 Object.defineProperty(Scene.prototype, 'drawCalls', {
     get: function () {
-        Debug.deprecated('Scene#drawCalls is deprecated and no longer provides mesh instances.');
+        Debug.removed('Scene#drawCalls was removed and no longer provides mesh instances.');
         return null;
     }
 });
@@ -538,14 +538,14 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
-// A helper function to add deprecated set and get property on a class
+// A helper function to add a removed set and get property on a class
 function _removedClassProperty(targetClass, name, comment = '') {
     Object.defineProperty(targetClass.prototype, name, {
         set: function (value) {
-            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
+            Debug.removed(`${targetClass.name}#${name} was removed. ${comment}`);
         },
         get: function () {
-            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
+            Debug.removed(`${targetClass.name}#${name} was removed. ${comment}`);
             return undefined;
         }
     });
@@ -576,7 +576,7 @@ ForwardRenderer.prototype.renderComposition = function (comp) {
 };
 
 MeshInstance.prototype.syncAabb = function () {
-    Debug.deprecated('MeshInstance#syncAabb is deprecated.');
+    Debug.removed('MeshInstance#syncAabb was removed.');
 };
 
 Morph.prototype.getTarget = function (index) {
@@ -623,10 +623,10 @@ GraphNode.prototype.setName = function (name) {
 
 Object.defineProperty(Material.prototype, 'shader', {
     set: function (value) {
-        Debug.deprecated('Material#shader is deprecated, use ShaderMaterial instead.');
+        Debug.removed('Material#shader was removed. Use ShaderMaterial instead.');
     },
     get: function () {
-        Debug.deprecated('Material#shader is deprecated, use ShaderMaterial instead.');
+        Debug.removed('Material#shader was removed. Use ShaderMaterial instead.');
         return null;
     }
 });
@@ -693,22 +693,22 @@ function _defineAlias(newName, oldName) {
     });
 }
 
-function _deprecateTint(name) {
+function _removeTint(name) {
     Object.defineProperty(StandardMaterial.prototype, name, {
         get: function () {
-            Debug.deprecated(`StandardMaterial#${name} is deprecated, and the behaviour is as if ${name} was always true`);
+            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
             return true;
         },
         set: function (value) {
-            Debug.deprecated(`StandardMaterial#${name} is deprecated, and the behaviour is as if ${name} was always true`);
+            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
         }
     });
 }
 
-_deprecateTint('sheenTint');
-_deprecateTint('diffuseTint');
-_deprecateTint('emissiveTint');
-_deprecateTint('ambientTint');
+_removeTint('sheenTint');
+_removeTint('diffuseTint');
+_removeTint('emissiveTint');
+_removeTint('ambientTint');
 
 _defineAlias('specularTint', 'specularMapTint');
 _defineAlias('aoVertexColor', 'aoMapVertexColor');
