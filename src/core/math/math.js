@@ -130,9 +130,7 @@ const math = {
      *
      * @param {number} a - Number to linearly interpolate from.
      * @param {number} b - Number to linearly interpolate to.
-     * @param {number} alpha - The value controlling the result of interpolation. When alpha is 0,
-     * a is returned. When alpha is 1, b is returned. Between 0 and 1, a linear interpolation
-     * between a and b is returned. alpha is clamped between 0 and 1.
+     * @param {number} alpha - The interpolation factor, clamped to the range 0 to 1.
      * @returns {number} The linear interpolation of two numbers.
      * @example
      * math.lerp(0, 10, 0);   // returns 0
@@ -141,6 +139,23 @@ const math = {
      */
     lerp(a, b, alpha) {
         return a + (b - a) * math.clamp(alpha, 0, 1);
+    },
+
+    /**
+     * Calculates the unclamped linear interpolation of two numbers.
+     *
+     * @param {number} a - Number to linearly interpolate from.
+     * @param {number} b - Number to linearly interpolate to.
+     * @param {number} alpha - The interpolation factor. Values outside the range 0 to 1 extrapolate
+     * beyond a or b.
+     * @returns {number} The linear interpolation of two numbers.
+     * @example
+     * math.lerpUnclamped(0, 10, -0.5); // returns -5
+     * math.lerpUnclamped(0, 10, 0.5);  // returns 5
+     * math.lerpUnclamped(0, 10, 1.5);  // returns 15
+     */
+    lerpUnclamped(a, b, alpha) {
+        return a + (b - a) * alpha;
     },
 
     /**
