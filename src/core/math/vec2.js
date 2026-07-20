@@ -1,3 +1,4 @@
+import { Debug } from '../debug.js';
 import { math } from './math.js';
 
 /**
@@ -435,6 +436,11 @@ class Vec2 {
         this.y *= scalar;
 
         return this;
+    }
+
+    scale(scalar) {
+        Debug.deprecated('Vec2#scale is deprecated. Use Vec2#mulScalar instead.');
+        return this.mulScalar(scalar);
     }
 
     /**

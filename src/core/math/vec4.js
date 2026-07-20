@@ -1,3 +1,5 @@
+import { Debug } from '../debug.js';
+
 /**
  * A 4-dimensional vector. Vec4 is commonly used to represent homogeneous coordinates or shader
  * uniforms requiring four components.
@@ -446,6 +448,11 @@ class Vec4 {
         this.w *= scalar;
 
         return this;
+    }
+
+    scale(scalar) {
+        Debug.deprecated('Vec4#scale is deprecated. Use Vec4#mulScalar instead.');
+        return this.mulScalar(scalar);
     }
 
     /**

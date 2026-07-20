@@ -1,7 +1,5 @@
 import { Debug } from '../core/debug.js';
 
-import { Vec2 } from '../core/math/vec2.js';
-import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 
@@ -9,15 +7,11 @@ import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
     PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     SHADERLANGUAGE_GLSL
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
-import { RenderTarget } from '../platform/graphics/render-target.js';
-import { Texture } from '../platform/graphics/texture.js';
-import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
@@ -62,14 +56,6 @@ import { RigidBodyComponent } from '../framework/components/rigid-body/component
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
-
-// MATH
-
-Vec2.prototype.scale = Vec2.prototype.mulScalar;
-
-Vec3.prototype.scale = Vec3.prototype.mulScalar;
-
-Vec4.prototype.scale = Vec4.prototype.mulScalar;
 
 // GRAPHICS
 
@@ -172,57 +158,6 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
     drawQuadWithShader(device, target, shader, viewport);
 }
 
-// Note: This was never public interface, but has been used in external scripts
-Object.defineProperties(RenderTarget.prototype, {
-    _glFrameBuffer: {
-        get: function () {
-            Debug.deprecated('RenderTarget#_glFrameBuffer is deprecated. Use RenderTarget.impl#_glFrameBuffer instead.');
-            return this.impl._glFrameBuffer;
-        },
-        set: function (rgbm) {
-            Debug.removed('RenderTarget#_glFrameBuffer setter was removed. Use RenderTarget.impl#_glFrameBuffer instead.');
-        }
-    }
-});
-
-Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
-    get: function () {
-        Debug.removed('VertexFormat.defaultInstancingFormat was removed. Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
-        return null;
-    }
-});
-
-Object.defineProperties(Texture.prototype, {
-    rgbm: {
-        get: function () {
-            Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
-            return this.type === TEXTURETYPE_RGBM;
-        },
-        set: function (rgbm) {
-            Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
-            this.type = rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
-        }
-    },
-
-    swizzleGGGR: {
-        get: function () {
-            Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
-            return this.type === TEXTURETYPE_SWIZZLEGGGR;
-        },
-        set: function (swizzleGGGR) {
-            Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
-            this.type = swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
-        }
-    },
-
-    _glTexture: {
-        get: function () {
-            Debug.deprecated('Texture#_glTexture is no longer available. Use Texture.impl._glTexture instead.');
-            return this.impl._glTexture;
-        }
-    }
-});
-
 Object.defineProperty(GraphicsDevice.prototype, 'boneLimit', {
     get: function () {
         Debug.deprecated('GraphicsDevice#boneLimit is deprecated and the limit has been removed.');
@@ -313,8 +248,6 @@ Object.defineProperty(GraphicsDevice.prototype, 'extStandardDerivatives', {
         return true;
     }
 });
-
-BlendState.DEFAULT = Object.freeze(new BlendState());
 
 const _tempBlendState = new BlendState();
 const _tempDepthState = new DepthState();

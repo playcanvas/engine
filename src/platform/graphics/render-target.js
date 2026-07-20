@@ -644,6 +644,15 @@ class RenderTarget {
         return this._height ?? this._device.height;
     }
 
+    set _glFrameBuffer(value) {
+        Debug.removed('RenderTarget#_glFrameBuffer setter was removed. Use RenderTarget.impl#_glFrameBuffer instead.');
+    }
+
+    get _glFrameBuffer() {
+        Debug.deprecated('RenderTarget#_glFrameBuffer is deprecated. Use RenderTarget.impl#_glFrameBuffer instead.');
+        return this.impl._glFrameBuffer;
+    }
+
     /**
      * Gets whether the format of the specified color buffer is sRGB.
      *
