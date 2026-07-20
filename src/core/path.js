@@ -17,11 +17,11 @@ const path = {
      * @param {...string} sections - Sections of the path to join.
      * @returns {string} The joined file path.
      * @example
-     * const path = path.join('foo', 'bar');
-     * console.log(path); // Prints 'foo/bar'
+     * const joinedPath = path.join('foo', 'bar');
+     * console.log(joinedPath); // Prints 'foo/bar'
      * @example
-     * const path = path.join('alpha', 'beta', 'gamma');
-     * console.log(path); // Prints 'alpha/beta/gamma'
+     * const joinedPath = path.join('alpha', 'beta', 'gamma');
+     * console.log(joinedPath); // Prints 'alpha/beta/gamma'
      */
     join(...sections) {
         let result = sections[0];
