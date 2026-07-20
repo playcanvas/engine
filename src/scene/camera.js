@@ -121,6 +121,15 @@ class Camera {
      */
     framePasses = [];
 
+    /**
+     * Frame passes that execute before this camera's main scene rendering, after the camera's
+     * directional shadow passes. Entries are picked up by the RenderPassForward that renders
+     * this camera's layers.
+     *
+     * @type {FramePass[]}
+     */
+    beforePasses = [];
+
     /** @type {number} */
     jitter = 0;
 
@@ -217,6 +226,7 @@ class Camera {
         this.renderPassDepthGrab = null;
 
         this.framePasses.length = 0;
+        this.beforePasses.length = 0;
     }
 
     /**
