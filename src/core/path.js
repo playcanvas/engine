@@ -17,10 +17,10 @@ const path = {
      * @param {...string} sections - Sections of the path to join.
      * @returns {string} The joined file path.
      * @example
-     * const path = pc.path.join('foo', 'bar');
+     * const path = path.join('foo', 'bar');
      * console.log(path); // Prints 'foo/bar'
      * @example
-     * const path = pc.path.join('alpha', 'beta', 'gamma');
+     * const path = path.join('alpha', 'beta', 'gamma');
      * console.log(path); // Prints 'alpha/beta/gamma'
      */
     join(...sections) {
@@ -110,8 +110,8 @@ const path = {
      * @param {string} pathname - The path to process.
      * @returns {string} The basename.
      * @example
-     * pc.path.getBasename("/path/to/file.txt"); // returns "file.txt"
-     * pc.path.getBasename("/path/to/dir"); // returns "dir"
+     * path.getBasename("/path/to/file.txt"); // returns "file.txt"
+     * path.getBasename("/path/to/dir"); // returns "dir"
      */
     getBasename(pathname) {
         return path.split(pathname)[1];
@@ -135,9 +135,9 @@ const path = {
      * @param {string} pathname - The path to process.
      * @returns {string} The extension.
      * @example
-     * pc.path.getExtension("/path/to/file.txt"); // returns ".txt"
-     * pc.path.getExtension("/path/to/file.jpg"); // returns ".jpg"
-     * pc.path.getExtension("/path/to/file.txt?function=getExtension"); // returns ".txt"
+     * path.getExtension("/path/to/file.txt"); // returns ".txt"
+     * path.getExtension("/path/to/file.jpg"); // returns ".jpg"
+     * path.getExtension("/path/to/file.txt?function=getExtension"); // returns ".txt"
      */
     getExtension(pathname) {
         const ext = pathname.split('?')[0].split('.').pop();
@@ -155,12 +155,12 @@ const path = {
      * slash.
      *
      * @example
-     * pc.path.isRelativePath("file.txt"); // returns true
-     * pc.path.isRelativePath("path/to/file.txt"); // returns true
-     * pc.path.isRelativePath("./path/to/file.txt"); // returns true
-     * pc.path.isRelativePath("../path/to/file.jpg"); // returns true
-     * pc.path.isRelativePath("/path/to/file.jpg"); // returns false
-     * pc.path.isRelativePath("http://path/to/file.jpg"); // returns false
+     * path.isRelativePath("file.txt"); // returns true
+     * path.isRelativePath("path/to/file.txt"); // returns true
+     * path.isRelativePath("./path/to/file.txt"); // returns true
+     * path.isRelativePath("../path/to/file.jpg"); // returns true
+     * path.isRelativePath("/path/to/file.jpg"); // returns false
+     * path.isRelativePath("http://path/to/file.jpg"); // returns false
      */
     isRelativePath(pathname) {
         return pathname.charAt(0) !== '/' && pathname.match(/:\/\//) === null;
@@ -172,10 +172,10 @@ const path = {
      * @param {string} pathname - The full path to process.
      * @returns {string} The path without a last element from list split by slash.
      * @example
-     * pc.path.extractPath("path/to/file.txt");    // returns "./path/to"
-     * pc.path.extractPath("./path/to/file.txt");  // returns "./path/to"
-     * pc.path.extractPath("../path/to/file.txt"); // returns "../path/to"
-     * pc.path.extractPath("/path/to/file.txt");   // returns "/path/to"
+     * path.extractPath("path/to/file.txt");    // returns "./path/to"
+     * path.extractPath("./path/to/file.txt");  // returns "./path/to"
+     * path.extractPath("../path/to/file.txt"); // returns "../path/to"
+     * path.extractPath("/path/to/file.txt");   // returns "/path/to"
      */
     extractPath(pathname) {
         let result = '';

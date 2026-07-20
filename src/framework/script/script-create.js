@@ -30,7 +30,7 @@ function getReservedScriptNames() {
  * which the developer is meant to further extend by adding attributes and prototype methods.
  * Returns null if there was an error.
  * @example
- * var Turning = pc.createScript('turn');
+ * var Turning = createScript('turn');
  *
  * // define 'speed' attribute that is available in Editor UI
  * Turning.attributes.add('speed', {
@@ -92,7 +92,7 @@ createScript.reservedAttributes = reservedAttributes;
  * the current {@link AppBase}.
  * @example
  * // define an ES6 script class
- * class PlayerController extends pc.ScriptType {
+ * class PlayerController extends ScriptType {
  *
  *     initialize() {
  *         // called once on initialize
@@ -104,9 +104,9 @@ createScript.reservedAttributes = reservedAttributes;
  * }
  *
  * // register the class as a script
- * pc.registerScript(PlayerController);
+ * registerScript(PlayerController);
  *
- * // declare script attributes (Must be after pc.registerScript())
+ * // declare script attributes (Must be after registerScript())
  * PlayerController.attributes.add('attribute1', {type: 'number'});
  * @category Script
  */

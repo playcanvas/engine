@@ -32,7 +32,7 @@ const _vecB = new Vec3();
  *
  * ```javascript
  * // Create a static 1x1x1 box-shaped rigid body
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('collision'); // Without options, this defaults to a 1x1x1 box shape
  * entity.addComponent('rigidbody'); // Without options, this defaults to a 'static' body
  * ```
@@ -40,7 +40,7 @@ const _vecB = new Vec3();
  * To create a dynamic sphere with mass of 10, do:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('collision', {
  *     type: 'sphere'
  * });
@@ -716,7 +716,7 @@ class RigidBodyComponent extends Component {
      * const force = this.entity.forward.clone().mulScalar(100);
      *
      * // Calculate the world space relative offset
-     * const relativePoint = new pc.Vec3();
+     * const relativePoint = new Vec3();
      * const childEntity = this.entity.findByName('Engine');
      * relativePoint.sub2(childEntity.getPosition(), this.entity.getPosition());
      *
@@ -777,7 +777,7 @@ class RigidBodyComponent extends Component {
      * @param {Vec3} torque - Vector representing the torque force in world space.
      * @returns {void}
      * @example
-     * const torque = new pc.Vec3(0, 10, 0);
+     * const torque = new Vec3(0, 10, 0);
      * entity.rigidbody.applyTorque(torque);
      */
     /**
@@ -832,13 +832,13 @@ class RigidBodyComponent extends Component {
      * @returns {void}
      * @example
      * // Apply an impulse along the world space positive y-axis at the entity's position.
-     * const impulse = new pc.Vec3(0, 10, 0);
+     * const impulse = new Vec3(0, 10, 0);
      * entity.rigidbody.applyImpulse(impulse);
      * @example
      * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
      * // z-axis of the entity's local space.
-     * const impulse = new pc.Vec3(0, 10, 0);
-     * const relativePoint = new pc.Vec3(0, 0, 1);
+     * const impulse = new Vec3(0, 10, 0);
+     * const relativePoint = new Vec3(0, 0, 1);
      * entity.rigidbody.applyImpulse(impulse, relativePoint);
      */
     /**
@@ -895,7 +895,7 @@ class RigidBodyComponent extends Component {
      * @param {Vec3} torque - Vector representing the torque impulse in world space.
      * @returns {void}
      * @example
-     * const torque = new pc.Vec3(0, 10, 0);
+     * const torque = new Vec3(0, 10, 0);
      * entity.rigidbody.applyTorqueImpulse(torque);
      */
     /**
@@ -1056,11 +1056,11 @@ class RigidBodyComponent extends Component {
      * @returns {void}
      * @example
      * // Teleport the entity to the origin
-     * entity.rigidbody.teleport(pc.Vec3.ZERO);
+     * entity.rigidbody.teleport(Vec3.ZERO);
      * @example
      * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
-     * const position = new pc.Vec3(1, 2, 3);
-     * entity.rigidbody.teleport(position, pc.Vec3.ZERO);
+     * const position = new Vec3(1, 2, 3);
+     * entity.rigidbody.teleport(position, Vec3.ZERO);
      */
     /**
      * Teleport an entity to a new world space position, optionally setting orientation. This
@@ -1072,11 +1072,11 @@ class RigidBodyComponent extends Component {
      * @returns {void}
      * @example
      * // Teleport the entity to the origin
-     * entity.rigidbody.teleport(pc.Vec3.ZERO);
+     * entity.rigidbody.teleport(Vec3.ZERO);
      * @example
      * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
-     * const position = new pc.Vec3(1, 2, 3);
-     * entity.rigidbody.teleport(position, pc.Quat.IDENTITY);
+     * const position = new Vec3(1, 2, 3);
+     * entity.rigidbody.teleport(position, Quat.IDENTITY);
      */
     /**
      * @param {number|Vec3} x - X-coordinate of the new world space position or a vector holding

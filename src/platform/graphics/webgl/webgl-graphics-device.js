@@ -2130,14 +2130,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * // Clear just the color buffer to red
      * device.clear({
      *     color: [1, 0, 0, 1],
-     *     flags: pc.CLEARFLAG_COLOR
+     *     flags: CLEARFLAG_COLOR
      * });
      *
      * // Clear color buffer to yellow and depth to 1.0
      * device.clear({
      *     color: [1, 1, 0, 1],
      *     depth: 1,
-     *     flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+     *     flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
      * });
      */
     clear(options) {

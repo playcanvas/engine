@@ -33,7 +33,7 @@ import { EventHandler } from '../../core/event-handler.js';
  *
  * ```javascript
  * // Set the gravity to zero
- * app.systems.rigidbody.gravity = new pc.Vec3(0, 0, 0);
+ * app.systems.rigidbody.gravity = new Vec3(0, 0, 0);
  *
  * // Set the volume to 50%
  * app.systems.sound.volume = 0.5;

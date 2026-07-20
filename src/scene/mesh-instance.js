@@ -298,10 +298,10 @@ class MeshInstance {
      * @example
      * // clear the forward (color) pass bit, leaving all other pass bits set: the mesh is no longer
      * // drawn in the color image, but still takes part in the other passes (such as the prepass)
-     * meshInstance.shaderPassMask &= ~(1 << pc.SHADER_FORWARD);
+     * meshInstance.shaderPassMask &= ~(1 << SHADER_FORWARD);
      * @example
      * // set the forward (color) pass bit, leaving all other pass bits unchanged
-     * meshInstance.shaderPassMask |= (1 << pc.SHADER_FORWARD);
+     * meshInstance.shaderPassMask |= (1 << SHADER_FORWARD);
      * @example
      * // exclude the mesh from a custom shader pass set up on the camera (see
      * // CameraComponent#setShaderPass), leaving all other pass bits set
@@ -309,7 +309,7 @@ class MeshInstance {
      * meshInstance.shaderPassMask &= ~(1 << customPass);
      * @example
      * // test whether the forward (color) pass bit is set
-     * const forwardBitSet = (meshInstance.shaderPassMask & (1 << pc.SHADER_FORWARD)) !== 0;
+     * const forwardBitSet = (meshInstance.shaderPassMask & (1 << SHADER_FORWARD)) !== 0;
      * @example
      * // set every pass bit (the default value)
      * meshInstance.shaderPassMask = 0xFFFFFFFF;
@@ -495,7 +495,7 @@ class MeshInstance {
     _shaderCache = new Map();
 
     /**
-     * 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
+     * 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = MASK_AFFECT_DYNAMIC
      *
      * @private
      */
@@ -517,12 +517,12 @@ class MeshInstance {
      * component is attached to.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.BoxGeometry());
-     * const material = new pc.StandardMaterial();
+     * const mesh = Mesh.fromGeometry(app.graphicsDevice, new BoxGeometry());
+     * const material = new StandardMaterial();
      *
-     * const meshInstance = new pc.MeshInstance(mesh, material);
+     * const meshInstance = new MeshInstance(mesh, material);
      *
-     * const entity = new pc.Entity();
+     * const entity = new Entity();
      * entity.addComponent('render', {
      *     meshInstances: [meshInstance]
      * });

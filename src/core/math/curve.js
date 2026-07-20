@@ -49,7 +49,7 @@ class Curve {
      * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and value
      * second).
      * @example
-     * const curve = new pc.Curve([
+     * const curve = new Curve([
      *     0, 0,        // At 0 time, value of 0
      *     0.33, 2,     // At 0.33 time, value of 2
      *     0.66, 2.6,   // At 0.66 time, value of 2.6
@@ -82,7 +82,7 @@ class Curve {
      * @param {number} value - Value of new key.
      * @returns {number[]} The newly created `[time, value]` pair.
      * @example
-     * const curve = new pc.Curve();
+     * const curve = new Curve();
      * curve.add(0, 1);   // add key at time 0 with value 1
      * curve.add(1, 2);   // add key at time 1 with value 2
      */
@@ -109,7 +109,7 @@ class Curve {
      * @returns {number[]|null} The removed `[time, value]` pair, or null if the index is out of
      * range.
      * @example
-     * const curve = new pc.Curve([0, 1, 1, 2]);
+     * const curve = new Curve([0, 1, 1, 2]);
      * curve.remove(0); // removes the key at time 0
      */
     remove(index) {
@@ -125,7 +125,7 @@ class Curve {
      *
      * @returns {this} The curve instance.
      * @example
-     * const curve = new pc.Curve([0, 1, 1, 2]);
+     * const curve = new Curve([0, 1, 1, 2]);
      * curve.clear(); // curve now has no keys
      */
     clear() {
@@ -139,7 +139,7 @@ class Curve {
      * @param {number} index - The index of key to return.
      * @returns {number[]} The `[time, value]` pair at the specified index.
      * @example
-     * const curve = new pc.Curve([0, 1, 1, 2]);
+     * const curve = new Curve([0, 1, 1, 2]);
      * const key = curve.get(0); // returns [0, 1]
      */
     get(index) {
@@ -159,7 +159,7 @@ class Curve {
      * @param {number} time - The time at which to calculate the value.
      * @returns {number} The interpolated value.
      * @example
-     * const curve = new pc.Curve([0, 0, 1, 10]);
+     * const curve = new Curve([0, 0, 1, 10]);
      * const value = curve.value(0.5); // returns interpolated value at time 0.5
      */
     value(time) {
@@ -175,7 +175,7 @@ class Curve {
      * @returns {number[]|null} The `[time, value]` pair closest to the specified time, or null if
      * no keys exist.
      * @example
-     * const curve = new pc.Curve([0, 1, 0.5, 2, 1, 3]);
+     * const curve = new Curve([0, 1, 0.5, 2, 1, 3]);
      * const key = curve.closest(0.6); // returns [0.5, 2]
      */
     closest(time) {
@@ -202,7 +202,7 @@ class Curve {
      *
      * @returns {this} A clone of the specified curve.
      * @example
-     * const curve = new pc.Curve([0, 0, 1, 10]);
+     * const curve = new Curve([0, 0, 1, 10]);
      * const clonedCurve = curve.clone();
      */
     clone() {

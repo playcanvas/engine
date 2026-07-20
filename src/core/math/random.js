@@ -19,8 +19,8 @@ const random = {
      *
      * @param {Vec2} point - The returned generated point.
      * @example
-     * const point = new pc.Vec2();
-     * pc.random.circlePoint(point);
+     * const point = new Vec2();
+     * random.circlePoint(point);
      * // point now contains a random position inside a unit circle
      */
     circlePoint(point) {
@@ -38,9 +38,9 @@ const random = {
      * @param {number} index - Index of the point to generate, in the range from 0 to numPoints - 1.
      * @param {number} numPoints - The total number of points of the set.
      * @example
-     * const point = new pc.Vec2();
+     * const point = new Vec2();
      * for (let i = 0; i < 100; i++) {
-     *     pc.random.circlePointDeterministic(point, i, 100);
+     *     random.circlePointDeterministic(point, i, 100);
      *     // point contains the i-th evenly distributed point in the circle
      * }
      */
@@ -67,9 +67,9 @@ const random = {
      * @param {number} [end] - Part on the sphere along y axis to stop the points, in the range of
      * 0 and 1. Defaults to 1.
      * @example
-     * const point = new pc.Vec3();
+     * const point = new Vec3();
      * for (let i = 0; i < 100; i++) {
-     *     pc.random.spherePointDeterministic(point, i, 100);
+     *     random.spherePointDeterministic(point, i, 100);
      *     // point contains the i-th evenly distributed point on the sphere
      * }
      */
@@ -100,10 +100,10 @@ const random = {
      * @returns {number} The pseudo-random value.
      * @example
      * // Generate first 4 values of the sequence
-     * pc.random.radicalInverse(0); // returns 0
-     * pc.random.radicalInverse(1); // returns 0.5
-     * pc.random.radicalInverse(2); // returns 0.25
-     * pc.random.radicalInverse(3); // returns 0.75
+     * random.radicalInverse(0); // returns 0
+     * random.radicalInverse(1); // returns 0.5
+     * random.radicalInverse(2); // returns 0.25
+     * random.radicalInverse(3); // returns 0.75
      */
     radicalInverse(i) {
         let bits = ((i << 16) | (i >>> 16)) >>> 0;

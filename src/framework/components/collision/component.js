@@ -25,14 +25,14 @@ const _quat = new Quat();
  * CollisionComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('collision'); // This defaults to 1x1x1 box-shaped trigger volume
  * ```
  *
  * To create a 0.5 radius dynamic rigid body sphere:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('collision', {
  *     type: 'sphere'
  * });

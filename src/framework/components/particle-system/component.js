@@ -103,7 +103,7 @@ let depthLayer;
  * ParticleSystemComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('particlesystem', {
  *     numParticles: 100,
  *     lifetime: 2,

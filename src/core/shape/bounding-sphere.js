@@ -37,7 +37,7 @@ class BoundingSphere {
      * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
      * @example
      * // Create a new bounding sphere centered on the origin with a radius of 0.5
-     * const sphere = new pc.BoundingSphere();
+     * const sphere = new BoundingSphere();
      */
     constructor(center = new Vec3(), radius = 0.5) {
         Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingSphere\' does not accept a constant (frozen) object as a \'center\' parameter');
@@ -52,8 +52,8 @@ class BoundingSphere {
      * @param {Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the sphere and false otherwise.
      * @example
-     * const sphere = new pc.BoundingSphere(new pc.Vec3(0, 0, 0), 1);
-     * const point = new pc.Vec3(0.5, 0, 0);
+     * const sphere = new BoundingSphere(new Vec3(0, 0, 0), 1);
+     * const point = new Vec3(0.5, 0, 0);
      * const isInside = sphere.containsPoint(point); // true
      */
     containsPoint(point) {

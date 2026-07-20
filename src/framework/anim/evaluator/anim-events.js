@@ -10,7 +10,7 @@ class AnimEvents {
      *
      * @param {object[]} events - An array of animation events.
      * @example
-     * const events = new pc.AnimEvents([
+     * const events = new AnimEvents([
      *     {
      *         name: 'my_event',
      *         time: 1.3, // given in seconds

@@ -14,13 +14,13 @@ import { Geometry } from './geometry.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.CircleGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new CircleGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -51,7 +51,7 @@ class CircleGeometry extends Geometry {
      * tessellation detail) towards the center of the circle. Defaults to 1.
      * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
      * @example
-     * const geometry = new pc.CircleGeometry({
+     * const geometry = new CircleGeometry({
      *     radius: 100,
      *     sectors: 128,
      *     rings: 64,

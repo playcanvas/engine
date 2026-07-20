@@ -19,8 +19,8 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  *
  * @example
  * // Example 1: Using the default format (easy CPU population)
- * const format = pc.GSplatFormat.createDefaultFormat(device);
- * const container = new pc.GSplatContainer(device, 100, format);
+ * const format = GSplatFormat.createDefaultFormat(device);
+ * const container = new GSplatContainer(device, 100, format);
  *
  * // Float format textures are straightforward to fill
  * const centerTex = container.getTexture('dataCenter');
@@ -29,7 +29,7 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  * centerTex.unlock();
  *
  * // Set bounding box
- * container.aabb = new pc.BoundingBox();
+ * container.aabb = new BoundingBox();
  *
  * // fill centers only if you need CPU sorting
  * container.centers.set([x0, y0, z0, x1, y1, z1, ...]);  // xyz per splat
@@ -39,8 +39,8 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  *
  * @example
  * // Example 2: Using a custom format
- * const format = new pc.GSplatFormat(device, [
- *     { name: 'data', format: pc.PIXELFORMAT_RGBA32F }
+ * const format = new GSplatFormat(device, [
+ *     { name: 'data', format: PIXELFORMAT_RGBA32F }
  * ], {
  *     // Shader code to read splat attributes from the texture
  *     readGLSL: `
@@ -59,7 +59,7 @@ import { GSplatResourceBase } from './gsplat-resource-base.js';
  *     `
  * });
  *
- * const container = new pc.GSplatContainer(device, 100, format);
+ * const container = new GSplatContainer(device, 100, format);
  *
  * @category Graphics
  */

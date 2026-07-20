@@ -257,10 +257,10 @@ class Texture {
      * a compute shader. Defaults to false.
      * @example
      * // Create a 8x8x24-bit texture
-     * const texture = new pc.Texture(graphicsDevice, {
+     * const texture = new Texture(graphicsDevice, {
      *     width: 8,
      *     height: 8,
-     *     format: pc.PIXELFORMAT_RGB8
+     *     format: PIXELFORMAT_RGB8
      * });
      *
      * // Fill the texture with a gradient

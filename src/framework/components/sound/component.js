@@ -22,7 +22,7 @@ import { SoundSlot } from './slot.js';
  * to an Entity, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('sound', {
  *     volume: 0.8,
  *     positional: true

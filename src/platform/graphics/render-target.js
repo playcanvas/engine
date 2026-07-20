@@ -167,12 +167,12 @@ class RenderTarget {
      * depth resolve, as the depth cannot be sampled or copied out. Defaults to false.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
-     * const colorBuffer = new pc.Texture(graphicsDevice, {
+     * const colorBuffer = new Texture(graphicsDevice, {
      *     width: 512,
      *     height: 512,
-     *     format: pc.PIXELFORMAT_RGB8
+     *     format: PIXELFORMAT_RGB8
      * });
-     * const renderTarget = new pc.RenderTarget({
+     * const renderTarget = new RenderTarget({
      *     colorBuffer: colorBuffer,
      *     depth: true
      * });

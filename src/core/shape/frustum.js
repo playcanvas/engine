@@ -57,7 +57,7 @@ class Frustum {
      * Create a new Frustum instance.
      *
      * @example
-     * const frustum = new pc.Frustum();
+     * const frustum = new Frustum();
      */
     constructor() {
         for (let i = 0; i < 6; i++) {
@@ -70,7 +70,7 @@ class Frustum {
      *
      * @returns {Frustum} A duplicate frustum.
      * @example
-     * const frustum = new pc.Frustum();
+     * const frustum = new Frustum();
      * const clone = frustum.clone();
      */
     clone() {
@@ -86,7 +86,7 @@ class Frustum {
      * @returns {Frustum} Self for chaining.
      * @example
      * const src = entity.camera.frustum;
-     * const dst = new pc.Frustum();
+     * const dst = new Frustum();
      * dst.copy(src);
      */
     copy(src) {
@@ -102,11 +102,11 @@ class Frustum {
      * @param {Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
      * // Create a perspective projection matrix
-     * const projection = new pc.Mat4();
+     * const projection = new Mat4();
      * projection.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
-     * const frustum = new pc.Frustum();
+     * const frustum = new Frustum();
      * frustum.setFromMat4(projection);
      */
     setFromMat4(matrix) {

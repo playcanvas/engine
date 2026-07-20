@@ -261,15 +261,15 @@ class VertexIterator {
      *
      * @param {number} [count] - Number of steps to move on when calling next. Defaults to 1.
      * @example
-     * const iterator = new pc.VertexIterator(vertexBuffer);
-     * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
-     * iterator.element[pc.SEMANTIC_COLOR].set(255, 0, 0, 255);
+     * const iterator = new VertexIterator(vertexBuffer);
+     * iterator.element[SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
+     * iterator.element[SEMANTIC_COLOR].set(255, 0, 0, 255);
      * iterator.next();
-     * iterator.element[pc.SEMANTIC_POSITION].set(0.9, -0.9, 0.0);
-     * iterator.element[pc.SEMANTIC_COLOR].set(0, 255, 0, 255);
+     * iterator.element[SEMANTIC_POSITION].set(0.9, -0.9, 0.0);
+     * iterator.element[SEMANTIC_COLOR].set(0, 255, 0, 255);
      * iterator.next();
-     * iterator.element[pc.SEMANTIC_POSITION].set(0.0, 0.9, 0.0);
-     * iterator.element[pc.SEMANTIC_COLOR].set(0, 0, 255, 255);
+     * iterator.element[SEMANTIC_POSITION].set(0.0, 0.9, 0.0);
+     * iterator.element[SEMANTIC_COLOR].set(0, 0, 255, 255);
      * iterator.end();
      */
     next(count = 1) {
@@ -287,15 +287,15 @@ class VertexIterator {
      * buffer is unlocked and vertex data is uploaded to video memory.
      *
      * @example
-     * const iterator = new pc.VertexIterator(vertexBuffer);
-     * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
-     * iterator.element[pc.SEMANTIC_COLOR].set(255, 0, 0, 255);
+     * const iterator = new VertexIterator(vertexBuffer);
+     * iterator.element[SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
+     * iterator.element[SEMANTIC_COLOR].set(255, 0, 0, 255);
      * iterator.next();
-     * iterator.element[pc.SEMANTIC_POSITION].set(0.9, -0.9, 0.0);
-     * iterator.element[pc.SEMANTIC_COLOR].set(0, 255, 0, 255);
+     * iterator.element[SEMANTIC_POSITION].set(0.9, -0.9, 0.0);
+     * iterator.element[SEMANTIC_COLOR].set(0, 255, 0, 255);
      * iterator.next();
-     * iterator.element[pc.SEMANTIC_POSITION].set(0.0, 0.9, 0.0);
-     * iterator.element[pc.SEMANTIC_COLOR].set(0, 0, 255, 255);
+     * iterator.element[SEMANTIC_POSITION].set(0.0, 0.9, 0.0);
+     * iterator.element[SEMANTIC_COLOR].set(0, 0, 255, 255);
      * iterator.end();
      */
     end() {

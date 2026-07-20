@@ -5,7 +5,7 @@
  * Scripts can retrieve an AnimStateGraph instance from assets of type 'animstategraph'. An AnimStateGraph can then be loaded into an anim component as follows:
  * ```javascript
  * const animStateGraph = app.assets.get(ASSET_ID).resource;
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('anim');
  * entity.anim.loadStateGraph(animStateGraph);
  * ```

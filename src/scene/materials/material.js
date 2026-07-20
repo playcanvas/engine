@@ -258,13 +258,13 @@ class Material {
      * WGSL to simply return a red color:
      *
      * ```javascript
-     * material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('emissivePS', `
+     * material.getShaderChunks(SHADERLANGUAGE_GLSL).set('emissivePS', `
      *     void getEmission() {
      *         dEmission = vec3(1.0, 0.0, 1.0);
      *     }
      * `);
      *
-     * material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('emissivePS', `
+     * material.getShaderChunks(SHADERLANGUAGE_WGSL).set('emissivePS', `
      *     fn getEmission() {
      *         dEmission = vec3f(1.0, 0.0, 1.0);
      *     }
