@@ -146,6 +146,28 @@ class RenderPassForward extends RenderPass {
         }
     }
 
+    // Collect before-passes from cameras whose first render step lives in this
+    // RenderPassForward. Uses the existing firstCameraUse flag (set by LayerComposition)
+    // to guarantee each camera's before-passes are scheduled exactly once, even when
+    // multiple RenderPassForward instances reference the same camera (e.g. CameraFrame's
+    // scenePass vs afterPass). Called after updateDirectionalShadows, so camera
+    // before-passes execute after the directional shadow passes and can render into the
+    // freshly updated shadow maps.
+    updateCameraBeforePasses() {
+        for (let i = 0; i < this.layerRenderSteps.length; i++) {
+            const step = this.layerRenderSteps[i];
+            if (step.firstCameraUse) {
+                const camera = step.cameraComponent?.camera;
+                if (camera) {
+                    const { beforePasses } = camera;
+                    for (let j = 0; j < beforePasses.length; j++) {
+                        this.beforePasses.push(beforePasses[j]);
+                    }
+                }
+            }
+        }
+    }
+
     updateClears() {
 
         // based on the first render action
@@ -166,6 +188,7 @@ class RenderPassForward extends RenderPass {
     frameUpdate() {
         super.frameUpdate();
         this.updateDirectionalShadows();
+        this.updateCameraBeforePasses();
         this.updateClears();
 
         // request mesh-instance culling for the (camera, layer) pairs this pass will render, so
