@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { BitPacking } from '../../core/math/bit-packing.js';
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA } from '../../platform/graphics/constants.js';
 
@@ -21,6 +22,7 @@ const blendShift = 26;              // 26 (1 bit)
 // combined values access
 const allWriteMasks = 0b1111;
 const allWriteShift = redWriteShift;
+
 /**
  * BlendState is a descriptor that defines how output of fragment shader is written and blended
  * into render target. A blend state can be set on a material using {@link Material#blendState},
@@ -237,6 +239,11 @@ class BlendState {
      * @readonly
      */
     static NOBLEND = Object.freeze(new BlendState());
+
+    static get DEFAULT() {
+        Debug.deprecated('BlendState.DEFAULT is deprecated. Use BlendState.NOBLEND instead.');
+        return BlendState.NOBLEND;
+    }
 
     /**
      * A blend state that does not write to color channels.

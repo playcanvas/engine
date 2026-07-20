@@ -11,7 +11,7 @@ import {
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
@@ -951,6 +951,31 @@ class Texture {
      */
     get type() {
         return this._type;
+    }
+
+    set rgbm(value) {
+        Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
+        this.type = value ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+    }
+
+    get rgbm() {
+        Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
+        return this.type === TEXTURETYPE_RGBM;
+    }
+
+    set swizzleGGGR(value) {
+        Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
+        this.type = value ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
+    }
+
+    get swizzleGGGR() {
+        Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
+        return this.type === TEXTURETYPE_SWIZZLEGGGR;
+    }
+
+    get _glTexture() {
+        Debug.deprecated('Texture#_glTexture is no longer available. Use Texture.impl._glTexture instead.');
+        return this.impl._glTexture;
     }
 
     /**

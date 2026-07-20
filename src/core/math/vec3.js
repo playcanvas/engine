@@ -1,3 +1,5 @@
+import { Debug } from '../debug.js';
+
 /**
  * A 3-dimensional vector. Vec3 is commonly used to represent 3D positions, directions, Euler
  * angles or scales.
@@ -469,6 +471,11 @@ class Vec3 {
         this.z *= scalar;
 
         return this;
+    }
+
+    scale(scalar) {
+        Debug.deprecated('Vec3#scale is deprecated. Use Vec3#mulScalar instead.');
+        return this.mulScalar(scalar);
     }
 
     /**

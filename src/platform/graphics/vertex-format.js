@@ -236,6 +236,11 @@ class VertexFormat {
         });
     }
 
+    static get defaultInstancingFormat() {
+        Debug.removed('VertexFormat.defaultInstancingFormat was removed. Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
+        return null;
+    }
+
     static isElementValid(graphicsDevice, elementDesc) {
         const elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
         if (graphicsDevice.isWebGPU && !webgpuValidElementSizes.includes(elementSize)) {
