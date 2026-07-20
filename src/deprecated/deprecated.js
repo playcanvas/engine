@@ -10,7 +10,6 @@ import {
     SHADERLANGUAGE_GLSL
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
-import { LayerComposition } from '../scene/composition/layer-composition.js';
 
 import { AnimationKey, AnimationNode } from '../scene/animation/animation.js';
 import { Geometry } from '../scene/geometry/geometry.js';
@@ -22,17 +21,11 @@ import { PlaneGeometry } from '../scene/geometry/plane-geometry.js';
 import { SphereGeometry } from '../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../scene/geometry/torus-geometry.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
-import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
 import { Mesh } from '../scene/mesh.js';
-import { Morph } from '../scene/morph.js';
-import { MeshInstance } from '../scene/mesh-instance.js';
-import { Scene } from '../scene/scene.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
 import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
-import { Layer } from '../scene/layer.js';
 
 import { AssetRegistry } from '../framework/asset/asset-registry.js';
 
@@ -51,7 +44,6 @@ import {
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
-import { CameraComponent } from '../framework/components/camera/component.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 // GRAPHICS
@@ -175,206 +167,9 @@ export const shaderChunks = new Proxy({}, {
     }
 });
 
-Object.defineProperty(Scene.prototype, 'defaultMaterial', {
-    get: function () {
-        Debug.deprecated('Scene#defaultMaterial is deprecated.');
-        return getDefaultMaterial(getApplication().graphicsDevice);
-    }
-});
-
-Object.defineProperty(Scene.prototype, 'fogColor', {
-    set: function (value) {
-        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
-        this.fog.color = value;
-    },
-    get: function () {
-        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
-        return this.fog.color;
-    }
-});
-
-Object.defineProperty(Scene.prototype, 'fogEnd', {
-    set: function (value) {
-        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
-        this.fog.end = value;
-    },
-    get: function () {
-        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
-        return this.fog.end;
-    }
-});
-
-Object.defineProperty(Scene.prototype, 'fogStart', {
-    set: function (value) {
-        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
-        this.fog.start = value;
-    },
-    get: function () {
-        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
-        return this.fog.start;
-    }
-});
-
-Object.defineProperty(Scene.prototype, 'fogDensity', {
-    set: function (value) {
-        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
-        this.fog.density = value;
-    },
-    get: function () {
-        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
-        return this.fog.density;
-    }
-});
-
-Object.defineProperty(Scene.prototype, 'toneMapping', {
-    set: function (value) {
-        Debug.removed('Scene#toneMapping is removed. Use CameraComponent#toneMapping instead.');
-    },
-    get: function () {
-        Debug.removed('Scene#toneMapping is removed. Use CameraComponent#toneMapping instead.');
-        return undefined;
-    }
-});
-
-Object.defineProperty(Scene.prototype, 'gammaCorrection', {
-    set: function (value) {
-        Debug.removed('Scene#gammaCorrection is removed. Use CameraComponent#gammaCorrection instead.');
-    },
-    get: function () {
-        Debug.removed('Scene#gammaCorrection is removed. Use CameraComponent#gammaCorrection instead.');
-        return undefined;
-    }
-});
-
-Object.defineProperty(Scene.prototype, 'rendering', {
-    set: function (value) {
-        Debug.removed('Scene#rendering is removed. Use Scene#fog or CameraComponent#gammaCorrection or CameraComponent#toneMapping instead.');
-    },
-    get: function () {
-        Debug.removed('Scene#rendering is removed. Use Scene#fog or CameraComponent#gammaCorrection or CameraComponent#toneMapping instead.');
-        return undefined;
-    }
-});
-
-Object.defineProperty(LayerComposition.prototype, '_meshInstances', {
-    get: function () {
-        Debug.removed('LayerComposition#_meshInstances was removed.');
-        return null;
-    }
-});
-
-Object.defineProperty(Scene.prototype, 'drawCalls', {
-    get: function () {
-        Debug.removed('Scene#drawCalls was removed and no longer provides mesh instances.');
-        return null;
-    }
-});
-
-// scene.skyboxPrefiltered**** are deprecated
-['128', '64', '32', '16', '8', '4'].forEach((size, index) => {
-    Object.defineProperty(Scene.prototype, `skyboxPrefiltered${size}`, {
-        get: function () {
-            Debug.deprecated(`Scene#skyboxPrefiltered${size} is deprecated. Use Scene#prefilteredCubemaps instead.`);
-            return this._prefilteredCubemaps[index];
-        },
-        set: function (value) {
-            Debug.deprecated(`Scene#skyboxPrefiltered${size} is deprecated. Use Scene#prefilteredCubemaps instead.`);
-            this._prefilteredCubemaps[index] = value;
-            this.updateShaders = true;
-        }
-    });
-});
-
-Object.defineProperty(Scene.prototype, 'models', {
-    get: function () {
-        if (!this._models) {
-            this._models = [];
-        }
-        return this._models;
-    }
-});
-
-// A helper function to add a removed set and get property on a class
-function _removedClassProperty(targetClass, name, comment = '') {
-    Object.defineProperty(targetClass.prototype, name, {
-        set: function (value) {
-            Debug.removed(`${targetClass.name}#${name} was removed. ${comment}`);
-        },
-        get: function () {
-            Debug.removed(`${targetClass.name}#${name} was removed. ${comment}`);
-            return undefined;
-        }
-    });
-}
-
-_removedClassProperty(Layer, 'renderTarget');
-_removedClassProperty(Layer, 'onPreCull');
-_removedClassProperty(Layer, 'onPreRender');
-_removedClassProperty(Layer, 'onPreRenderOpaque');
-_removedClassProperty(Layer, 'onPreRenderTransparent');
-_removedClassProperty(Layer, 'onPostCull');
-_removedClassProperty(Layer, 'onPostRender');
-_removedClassProperty(Layer, 'onPostRenderOpaque');
-_removedClassProperty(Layer, 'onPostRenderTransparent');
-_removedClassProperty(Layer, 'onDrawCall');
-_removedClassProperty(Layer, 'layerReference');
-
-_removedClassProperty(CameraComponent, 'onPreCull', 'Use Scene#EVENT_PRECULL event instead.');
-_removedClassProperty(CameraComponent, 'onPostCull', 'Use Scene#EVENT_POSTCULL event instead.');
-_removedClassProperty(CameraComponent, 'onPreRender', 'Use Scene#EVENT_PRERENDER event instead.');
-_removedClassProperty(CameraComponent, 'onPostRender', 'Use Scene#EVENT_POSTRENDER event instead.');
-_removedClassProperty(CameraComponent, 'onPreRenderLayer', 'Use Scene#EVENT_PRERENDER_LAYER event instead.');
-_removedClassProperty(CameraComponent, 'onPostRenderLayer', 'Use Scene#EVENT_POSTRENDER_LAYER event instead.');
-
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('ForwardRenderer#renderComposition is deprecated. Use AppBase.renderComposition instead.');
     getApplication().renderComposition(comp);
-};
-
-MeshInstance.prototype.syncAabb = function () {
-    Debug.removed('MeshInstance#syncAabb was removed.');
-};
-
-Morph.prototype.getTarget = function (index) {
-    Debug.deprecated('Morph#getTarget is deprecated. Use Morph#targets instead.');
-
-    return this.targets[index];
-};
-
-GraphNode.prototype.getChildren = function () {
-    Debug.deprecated('GraphNode#getChildren is deprecated. Use GraphNode#children instead.');
-
-    return this.children;
-};
-
-GraphNode.prototype.getName = function () {
-    Debug.deprecated('GraphNode#getName is deprecated. Use GraphNode#name instead.');
-
-    return this.name;
-};
-
-GraphNode.prototype.getPath = function () {
-    Debug.deprecated('GraphNode#getPath is deprecated. Use GraphNode#path instead.');
-
-    return this.path;
-};
-
-GraphNode.prototype.getRoot = function () {
-    Debug.deprecated('GraphNode#getRoot is deprecated. Use GraphNode#root instead.');
-
-    return this.root;
-};
-
-GraphNode.prototype.getParent = function () {
-    Debug.deprecated('GraphNode#getParent is deprecated. Use GraphNode#parent instead.');
-
-    return this.parent;
-};
-
-GraphNode.prototype.setName = function (name) {
-    Debug.deprecated('GraphNode#setName is deprecated. Use GraphNode#name instead.');
-
-    this.name = name;
 };
 
 Object.defineProperty(Material.prototype, 'shader', {

@@ -396,6 +396,40 @@ class GraphNode extends EventHandler {
         return this._children;
     }
 
+    // ---- deprecated block start ----
+
+    getChildren() {
+        Debug.deprecated('GraphNode#getChildren is deprecated. Use GraphNode#children instead.');
+        return this.children;
+    }
+
+    getName() {
+        Debug.deprecated('GraphNode#getName is deprecated. Use GraphNode#name instead.');
+        return this.name;
+    }
+
+    getPath() {
+        Debug.deprecated('GraphNode#getPath is deprecated. Use GraphNode#path instead.');
+        return this.path;
+    }
+
+    getRoot() {
+        Debug.deprecated('GraphNode#getRoot is deprecated. Use GraphNode#root instead.');
+        return this.root;
+    }
+
+    getParent() {
+        Debug.deprecated('GraphNode#getParent is deprecated. Use GraphNode#parent instead.');
+        return this.parent;
+    }
+
+    setName(name) {
+        Debug.deprecated('GraphNode#setName is deprecated. Use GraphNode#name instead.');
+        this.name = name;
+    }
+
+    // ---- deprecated block end ----
+
     /**
      * Gets the depth of this child within the graph. Note that for performance reasons this is
      * only recalculated when a node is added to a new parent. In other words, it is not

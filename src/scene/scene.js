@@ -14,6 +14,7 @@ import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
 import { FogParams } from './fog-params.js';
+import { getDefaultMaterial } from './materials/default-material.js';
 
 /**
  * @import { Entity } from '../framework/entity.js'
@@ -904,6 +905,126 @@ class Scene extends EventHandler {
     get lightmapPixelFormat() {
         return this.lightmapHDR && this.device.getRenderableHdrFormat() || PIXELFORMAT_RGBA8;
     }
+
+    // ---- deprecated block start ----
+
+    get defaultMaterial() {
+        Debug.deprecated('Scene#defaultMaterial is deprecated.');
+        return getDefaultMaterial(this.device);
+    }
+
+    set fogColor(value) {
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
+        this.fog.color = value;
+    }
+
+    get fogColor() {
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
+        return this.fog.color;
+    }
+
+    set fogEnd(value) {
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
+        this.fog.end = value;
+    }
+
+    get fogEnd() {
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
+        return this.fog.end;
+    }
+
+    set fogStart(value) {
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
+        this.fog.start = value;
+    }
+
+    get fogStart() {
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
+        return this.fog.start;
+    }
+
+    set fogDensity(value) {
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
+        this.fog.density = value;
+    }
+
+    get fogDensity() {
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
+        return this.fog.density;
+    }
+
+    set skyboxPrefiltered128(value) {
+        Debug.deprecated('Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        this._prefilteredCubemaps[0] = value;
+        this.updateShaders = true;
+    }
+
+    get skyboxPrefiltered128() {
+        Debug.deprecated('Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        return this._prefilteredCubemaps[0];
+    }
+
+    set skyboxPrefiltered64(value) {
+        Debug.deprecated('Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        this._prefilteredCubemaps[1] = value;
+        this.updateShaders = true;
+    }
+
+    get skyboxPrefiltered64() {
+        Debug.deprecated('Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        return this._prefilteredCubemaps[1];
+    }
+
+    set skyboxPrefiltered32(value) {
+        Debug.deprecated('Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        this._prefilteredCubemaps[2] = value;
+        this.updateShaders = true;
+    }
+
+    get skyboxPrefiltered32() {
+        Debug.deprecated('Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        return this._prefilteredCubemaps[2];
+    }
+
+    set skyboxPrefiltered16(value) {
+        Debug.deprecated('Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        this._prefilteredCubemaps[3] = value;
+        this.updateShaders = true;
+    }
+
+    get skyboxPrefiltered16() {
+        Debug.deprecated('Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        return this._prefilteredCubemaps[3];
+    }
+
+    set skyboxPrefiltered8(value) {
+        Debug.deprecated('Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        this._prefilteredCubemaps[4] = value;
+        this.updateShaders = true;
+    }
+
+    get skyboxPrefiltered8() {
+        Debug.deprecated('Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        return this._prefilteredCubemaps[4];
+    }
+
+    set skyboxPrefiltered4(value) {
+        Debug.deprecated('Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        this._prefilteredCubemaps[5] = value;
+        this.updateShaders = true;
+    }
+
+    get skyboxPrefiltered4() {
+        Debug.deprecated('Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead.');
+        return this._prefilteredCubemaps[5];
+    }
+
+    get models() {
+        this._models ??= [];
+        return this._models;
+    }
+
+    // ---- deprecated block end ----
 }
 
 export { Scene };
