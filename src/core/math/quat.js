@@ -322,9 +322,8 @@ class Quat {
      *
      * @param {Quat} lhs - The quaternion to interpolate from.
      * @param {Quat} rhs - The quaternion to interpolate to.
-     * @param {number} alpha - The value controlling the interpolation in relation to the two input
-     * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
-     * in between generating a linear interpolation between the two.
+     * @param {number} alpha - The unclamped interpolation factor. Values between 0 and 1 interpolate
+     * between lhs and rhs; values outside this range extrapolate beyond them.
      * @returns {Quat} Self for chaining.
      * @example
      * const q1 = new Quat(-0.11, -0.15, -0.46, 0.87);
@@ -689,9 +688,8 @@ class Quat {
      *
      * @param {Quat} lhs - The quaternion to interpolate from.
      * @param {Quat} rhs - The quaternion to interpolate to.
-     * @param {number} alpha - The value controlling the interpolation in relation to the two input
-     * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
-     * in between generating a spherical interpolation between the two.
+     * @param {number} alpha - The unclamped interpolation factor. Values between 0 and 1 interpolate
+     * between lhs and rhs; values outside this range extrapolate beyond them.
      * @returns {Quat} Self for chaining.
      * @example
      * const q1 = new Quat(-0.11, -0.15, -0.46, 0.87);
