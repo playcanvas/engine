@@ -29,9 +29,7 @@ export function Controls({ observer }) {
             precision={precision}
         />
     );
-    const toggle = (path) => (
-        <BooleanInput type='toggle' binding={binding()} link={link(path)} />
-    );
+    const toggle = (path) => <BooleanInput type='toggle' binding={binding()} link={link(path)} />;
 
     return (
         <>
