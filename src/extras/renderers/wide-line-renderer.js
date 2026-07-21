@@ -548,10 +548,10 @@ const createTemplateMesh = (device) => {
  * @category Graphics
  */
 class WideLineRenderer {
-    /** @type {WideLine[]} */
+    /** @type {WideLine[]} @ignore */
     _lines = [];
 
-    /** @type {Layer} */
+    /** @type {Layer} @ignore */
     _layer;
 
     _depthTest = true;
@@ -570,10 +570,10 @@ class WideLineRenderer {
 
     _destroyed = false;
 
-    /** @type {VertexBuffer|null} */
+    /** @type {VertexBuffer|null} @ignore */
     _vertexBuffer = null;
 
-    /** @type {Float32Array|null} */
+    /** @type {Float32Array|null} @ignore */
     _instanceData = null;
 
     /**
