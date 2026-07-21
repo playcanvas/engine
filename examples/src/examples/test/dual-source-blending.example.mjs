@@ -101,14 +101,20 @@ if (device.supportsDualSourceBlending) {
     const blendMaterial = new StandardMaterial();
     blendMaterial.useLighting = false;
     blendMaterial.useTonemap = false;
-    blendMaterial.getShaderChunks(SHADERLANGUAGE_GLSL).set('outputPS', /* glsl */ `
+    blendMaterial.getShaderChunks(SHADERLANGUAGE_GLSL).set(
+        'outputPS',
+        /* glsl */ `
         gl_FragColor = vec4(0.45, 0.02, 0.02, 0.0);
         pcFragColorSecondary = vec4(0.0, 0.85, 0.18, 1.0);
-    `);
-    blendMaterial.getShaderChunks(SHADERLANGUAGE_WGSL).set('outputPS', /* wgsl */ `
+    `
+    );
+    blendMaterial.getShaderChunks(SHADERLANGUAGE_WGSL).set(
+        'outputPS',
+        /* wgsl */ `
         output.color = vec4f(0.45, 0.02, 0.02, 0.0);
         output.colorSecondary = vec4f(0.0, 0.85, 0.18, 1.0);
-    `);
+    `
+    );
     blendMaterial.blendState = new BlendState(
         true,
         BLENDEQUATION_ADD,
