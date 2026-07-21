@@ -181,6 +181,7 @@ camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create a directional light casting soft shadows
+const { soft: softShadows, ...lightSettings } = data.get('settings.light');
 const dirLight = new Entity('MainLight');
 dirLight.addComponent('light', {
     ...{
@@ -192,10 +193,10 @@ dirLight.addComponent('light', {
 
         // Enable shadow casting
         castShadows: true,
-        shadowType: data.get('settings.light.soft') ? SHADOW_PCSS_32F : SHADOW_PCF3_32F,
+        shadowType: softShadows ? SHADOW_PCSS_32F : SHADOW_PCF3_32F,
         shadowDistance: 1000
     },
-    ...data.get('settings.light')
+    ...lightSettings
 });
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(75, 120, 20);
