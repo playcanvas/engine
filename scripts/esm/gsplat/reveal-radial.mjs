@@ -274,7 +274,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * entity.addComponent('script');
  * entity.script.create(GSplatRevealRadial, {
  *     attributes: {
- *         center: new pc.Vec3(0, 0, 0),
+ *         center: new Vec3(0, 0, 0),
  *         speed: 2,
  *         delay: 1,
  *         oscillationIntensity: 0.2

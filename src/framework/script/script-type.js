@@ -7,7 +7,7 @@ import { Script } from './script.js';
  */
 
 /**
- * This is the legacy format for creating a PlayCanvas script returned when calling `pc.createScript()`.
+ * This is the legacy format for creating a PlayCanvas script returned when calling `createScript()`.
  * Do not inherit from this class directly.
  *
  * @deprecated Use {@link Script} instead.
@@ -37,7 +37,7 @@ class ScriptType extends Script {
      *
      * @type {ScriptAttributes}
      * @example
-     * var PlayerController = pc.createScript('playerController');
+     * var PlayerController = createScript('playerController');
      *
      * PlayerController.attributes.add('speed', {
      *     type: 'number',
@@ -101,7 +101,7 @@ class ScriptType extends Script {
      *
      * @param {object} methods - Object with methods, where key - is name of method, and value - is function.
      * @example
-     * var PlayerController = pc.createScript('playerController');
+     * var PlayerController = createScript('playerController');
      *
      * PlayerController.extend({
      *     initialize: function () {

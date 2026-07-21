@@ -4,11 +4,13 @@
 // Zstandard project (https://github.com/facebook/zstd, BSD-3-Clause), compiled to WebAssembly
 // by the zstddec project (https://github.com/donmccurdy/zstddec, MIT).
 //
-// This script conforms to the pc.WasmModule contract: it exposes a global factory function
+// This script conforms to the WasmModule contract: it exposes a global factory function
 // which is passed a config object with locateFile() and returns a promise of the module
 // instance. Register it like this:
 //
-//     pc.WasmModule.setConfig('ZstdDecoderModule', {
+//     import { WasmModule } from 'playcanvas';
+//
+//     WasmModule.setConfig('ZstdDecoderModule', {
 //         glueUrl: 'zstd.wasm.js',
 //         wasmUrl: 'zstd.wasm.wasm'
 //     });

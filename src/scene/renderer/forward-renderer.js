@@ -611,7 +611,6 @@ class ForwardRenderer extends Renderer {
     renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
         const device = this.device;
         const scene = this.scene;
-        const passFlag = 1 << pass;
         const flipFactor = flipFaces ? -1 : 1;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
@@ -673,7 +672,7 @@ class ForwardRenderer extends Renderer {
             device.setStencilState(stencilFront, stencilBack);
 
             // Uniforms II: meshInstance overrides
-            drawCall.setParameters(device, passFlag);
+            drawCall.setParameters(device);
 
             // mesh ID - used by the picker
             device.scope.resolve('meshInstanceId').setValue(drawCall.id);

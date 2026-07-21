@@ -16,7 +16,9 @@ import { GSplatFormat, GSplatResourceBase, Http, PIXELFORMAT_RGBA8, PIXELFORMAT_
  * registered:
  *
  * ```javascript
- * pc.WasmModule.setConfig('ZstdDecoderModule', {
+ * import { WasmModule } from 'playcanvas';
+ *
+ * WasmModule.setConfig('ZstdDecoderModule', {
  *     glueUrl: 'zstd.wasm.js',
  *     wasmUrl: 'zstd.wasm.wasm'
  * });
@@ -31,7 +33,9 @@ import { GSplatFormat, GSplatResourceBase, Http, PIXELFORMAT_RGBA8, PIXELFORMAT_
  * and then load spz files as gsplat assets:
  *
  * ```javascript
- * const asset = new pc.Asset('gsplat', 'gsplat', { url: 'scene.spz' });
+ * import { Asset } from 'playcanvas';
+ *
+ * const asset = new Asset('gsplat', 'gsplat', { url: 'scene.spz' });
  * app.assets.add(asset);
  * app.assets.load(asset);
  * ```
@@ -522,7 +526,7 @@ class SpzParser {
      */
     load(url, callback, asset) {
         if (!WasmModule.getConfig('ZstdDecoderModule')) {
-            callback('SpzParser: ZSTD decoder module is not registered. Use pc.WasmModule.setConfig(\'ZstdDecoderModule\', { glueUrl, wasmUrl }) before loading spz files.');
+            callback('SpzParser: ZSTD decoder module is not registered. Use WasmModule.setConfig(\'ZstdDecoderModule\', { glueUrl, wasmUrl }) before loading spz files.');
             return;
         }
 

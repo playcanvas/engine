@@ -82,15 +82,15 @@ function setVec3(target, value) {
  * ```javascript
  * // Create a door hinge: the joint entity's position is the hinge point and its
  * // local X axis (rotated here to point up) is the hinge axis
- * const hinge = new pc.Entity('hinge');
+ * const hinge = new Entity('hinge');
  * hinge.setPosition(1, 1, 0);
  * hinge.setEulerAngles(0, 0, 90);
  * hinge.addComponent('joint', {
- *     type: pc.JOINTTYPE_HINGE,
+ *     type: JOINTTYPE_HINGE,
  *     entityA: door,
  *     entityB: doorFrame,
  *     enableLimits: true,
- *     limits: new pc.Vec2(0, 110)
+ *     limits: new Vec2(0, 110)
  * });
  * app.root.addChild(hinge);
  * ```

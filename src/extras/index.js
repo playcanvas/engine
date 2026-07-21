@@ -8,6 +8,16 @@ export { MiniStats } from './mini-stats/mini-stats.js';
 
 // RENDERERS
 export { OutlineRenderer } from './renderers/outline-renderer.js';
+export {
+    LINECAP_BUTT,
+    LINECAP_ROUND,
+    LINECAP_SQUARE,
+    LINEJOIN_BEVEL,
+    LINEJOIN_MITER,
+    LINEJOIN_ROUND,
+    WideLine
+} from './renderers/wide-line.js';
+export { LINEWIDTH_SCREEN, LINEWIDTH_WORLD, WideLineRenderer } from './renderers/wide-line-renderer.js';
 
 // EXPORTERS
 export { UsdzExporter } from './exporters/usdz-exporter.js';

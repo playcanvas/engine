@@ -356,7 +356,7 @@ class AppBase extends EventHandler {
      *
      * @example
      * // Render the scene only while space key is pressed
-     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     * if (this.app.keyboard.isPressed(KEY_SPACE)) {
      *     this.app.renderNextFrame = true;
      * }
      */
@@ -385,7 +385,7 @@ class AppBase extends EventHandler {
      * @type {Scene}
      * @example
      * // Set the fog type property of the application's scene
-     * this.app.scene.fog.type = pc.FOG_LINEAR;
+     * this.app.scene.fog.type = FOG_LINEAR;
      */
     scene;
 
@@ -502,7 +502,7 @@ class AppBase extends EventHandler {
      * @type {XrManager|null}
      * @example
      * // check if VR is available
-     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     * if (app.xr.isAvailable(XRTYPE_VR)) {
      *     // VR is available
      * }
      */
@@ -513,7 +513,7 @@ class AppBase extends EventHandler {
      *
      * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @example
-     * const app = new pc.AppBase(canvas);
+     * const app = new AppBase(canvas);
      *
      * const options = new AppOptions();
      * app.init(options);
@@ -654,7 +654,7 @@ class AppBase extends EventHandler {
      * this id. Otherwise current application will be returned.
      * @returns {AppBase|undefined} The running application, if any.
      * @example
-     * const app = pc.AppBase.getApplication();
+     * const app = AppBase.getApplication();
      */
     static getApplication(id) {
         return id ? AppBase._applications[id] : getApplication();
@@ -1592,20 +1592,20 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
      * app.drawLine(start, end);
      * @example
      * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * app.drawLine(start, end, pc.Color.RED, false);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * app.drawLine(start, end, Color.RED, false);
      * @example
      * // Render a 1-unit long white line into the world layer
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * const worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
-     * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * const worldLayer = app.scene.layers.getLayerById(LAYERID_WORLD);
+     * app.drawLine(start, end, Color.WHITE, true, worldLayer);
      */
     drawLine(start, end, color, depthTest, layer) {
         this.scene.drawLine(start, end, color, depthTest, layer);
@@ -1628,26 +1628,26 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a single line, with unique colors for each point
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * app.drawLines([start, end], [Color.RED, Color.WHITE]);
      * @example
      * // Render 2 discrete line segments
      * const points = [
      *     // Line 1
-     *     new pc.Vec3(0, 0, 0),
-     *     new pc.Vec3(1, 0, 0),
+     *     new Vec3(0, 0, 0),
+     *     new Vec3(1, 0, 0),
      *     // Line 2
-     *     new pc.Vec3(1, 1, 0),
-     *     new pc.Vec3(1, 1, 1)
+     *     new Vec3(1, 1, 0),
+     *     new Vec3(1, 1, 1)
      * ];
      * const colors = [
      *     // Line 1
-     *     pc.Color.RED,
-     *     pc.Color.YELLOW,
+     *     Color.RED,
+     *     Color.YELLOW,
      *     // Line 2
-     *     pc.Color.CYAN,
-     *     pc.Color.BLUE
+     *     Color.CYAN,
+     *     Color.BLUE
      * ];
      * app.drawLines(points, colors);
      */
@@ -1705,8 +1705,8 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire sphere with radius of 1
-     * const center = new pc.Vec3(0, 0, 0);
-     * app.drawWireSphere(center, 1.0, pc.Color.RED);
+     * const center = new Vec3(0, 0, 0);
+     * app.drawWireSphere(center, 1.0, Color.RED);
      * @ignore
      */
     drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
@@ -1725,9 +1725,9 @@ class AppBase extends EventHandler {
      * @param {Mat4} [mat] - Matrix to transform the box before rendering.
      * @example
      * // Render a red wire aligned box
-     * const min = new pc.Vec3(-1, -1, -1);
-     * const max = new pc.Vec3(1, 1, 1);
-     * app.drawWireAlignedBox(min, max, pc.Color.RED);
+     * const min = new Vec3(-1, -1, -1);
+     * const max = new Vec3(1, 1, 1);
+     * app.drawWireAlignedBox(min, max, Color.RED);
      * @ignore
      */
     drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {

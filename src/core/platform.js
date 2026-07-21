@@ -54,7 +54,7 @@ const passiveEvents = detectPassiveEvents();
  *
  * @namespace
  * @example
- * if (pc.platform.touch) {
+ * if (platform.touch) {
  *     // touch is supported
  * }
  */

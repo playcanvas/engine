@@ -14,13 +14,13 @@ import { calculateTangents } from './geometry-utils.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.ConeGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new ConeGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -49,7 +49,7 @@ class ConeGeometry extends ConeBaseGeometry {
      * cone. Defaults to 18.
      * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
      * @example
-     * const geometry = new pc.ConeGeometry({
+     * const geometry = new ConeGeometry({
      *     baseRadius: 1,
      *     height: 2,
      *     heightSegments: 2,

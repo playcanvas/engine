@@ -4,6 +4,7 @@ import { Geometry, GraphNode, Http, Mesh, MeshInstance, Model, StandardMaterial 
 //
 // To use, first register the parser:
 //
+// import { Asset } from 'playcanvas';
 // import { ObjModelParser } from 'playcanvas/scripts/esm/parsers/obj-model.mjs';
 //
 // // add parser to model resource handler
@@ -12,7 +13,7 @@ import { Geometry, GraphNode, Http, Mesh, MeshInstance, Model, StandardMaterial 
 //
 // Then load obj as a model asset:
 //
-// const asset = new pc.Asset("MyObj", "model", {
+// const asset = new Asset("MyObj", "model", {
 //    url: "model.obj"
 // });
 // this.app.assets.add(asset);

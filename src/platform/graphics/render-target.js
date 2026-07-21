@@ -167,12 +167,12 @@ class RenderTarget {
      * depth resolve, as the depth cannot be sampled or copied out. Defaults to false.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
-     * const colorBuffer = new pc.Texture(graphicsDevice, {
+     * const colorBuffer = new Texture(graphicsDevice, {
      *     width: 512,
      *     height: 512,
-     *     format: pc.PIXELFORMAT_RGB8
+     *     format: PIXELFORMAT_RGB8
      * });
-     * const renderTarget = new pc.RenderTarget({
+     * const renderTarget = new RenderTarget({
      *     colorBuffer: colorBuffer,
      *     depth: true
      * });
@@ -187,7 +187,7 @@ class RenderTarget {
      * camera.renderTarget = null;
      */
     constructor(options = {}) {
-        Debug.assert(!(options instanceof GraphicsDevice), 'pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
+        Debug.assert(!(options instanceof GraphicsDevice), 'RenderTarget constructor no longer accepts GraphicsDevice parameter.');
         this.id = id++;
 
         // device, from one of the buffers
@@ -227,7 +227,7 @@ class RenderTarget {
                 this._depth = true;
                 this._stencil = false;
             } else {
-                Debug.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
+                Debug.warn('Incorrect depthBuffer format. Must be PIXELFORMAT_DEPTH or PIXELFORMAT_DEPTHSTENCIL');
                 this._depth = false;
                 this._stencil = false;
             }
@@ -642,6 +642,15 @@ class RenderTarget {
      */
     get height() {
         return this._height ?? this._device.height;
+    }
+
+    set _glFrameBuffer(value) {
+        Debug.removed('RenderTarget#_glFrameBuffer setter was removed. Use RenderTarget.impl#_glFrameBuffer instead.');
+    }
+
+    get _glFrameBuffer() {
+        Debug.deprecated('RenderTarget#_glFrameBuffer is deprecated. Use RenderTarget.impl#_glFrameBuffer instead.');
+        return this.impl._glFrameBuffer;
     }
 
     /**

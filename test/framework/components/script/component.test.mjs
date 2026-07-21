@@ -2905,7 +2905,7 @@ describe('ScriptComponent', function () {
         });
     });
 
-    it('pc.ScriptComponent#has', function () {
+    it('ScriptComponent#has', function () {
         const e = new Entity();
         e.addComponent('script', {
             enabled: true,

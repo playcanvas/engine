@@ -122,13 +122,13 @@ class Shader {
      *
      * const shaderDefinition = {
      *     attributes: {
-     *         aPosition: pc.SEMANTIC_POSITION
+     *         aPosition: SEMANTIC_POSITION
      *     },
      *     vshader,
      *     fshader
      * };
      *
-     * const shader = new pc.Shader(graphicsDevice, shaderDefinition);
+     * const shader = new Shader(graphicsDevice, shaderDefinition);
      */
     constructor(graphicsDevice, definition) {
         this.id = id++;

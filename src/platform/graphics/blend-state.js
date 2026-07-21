@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { BitPacking } from '../../core/math/bit-packing.js';
 import {
     BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
@@ -258,6 +259,11 @@ class BlendState {
      * @readonly
      */
     static NOBLEND = Object.freeze(new BlendState());
+
+    static get DEFAULT() {
+        Debug.deprecated('BlendState.DEFAULT is deprecated. Use BlendState.NOBLEND instead.');
+        return BlendState.NOBLEND;
+    }
 
     /**
      * A blend state that does not write to color channels.

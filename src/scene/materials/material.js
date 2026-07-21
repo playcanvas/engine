@@ -258,13 +258,13 @@ class Material {
      * WGSL to simply return a red color:
      *
      * ```javascript
-     * material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('emissivePS', `
+     * material.getShaderChunks(SHADERLANGUAGE_GLSL).set('emissivePS', `
      *     void getEmission() {
      *         dEmission = vec3(1.0, 0.0, 1.0);
      *     }
      * `);
      *
-     * material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('emissivePS', `
+     * material.getShaderChunks(SHADERLANGUAGE_WGSL).set('emissivePS', `
      *     fn getEmission() {
      *         dEmission = vec3f(1.0, 0.0, 1.0);
      *     }
@@ -308,12 +308,12 @@ class Material {
     }
 
     set chunks(value) {
-        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         this._oldChunks = value;
     }
 
     get chunks() {
-        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         Object.assign(this._oldChunks, Object.fromEntries(this.shaderChunks.glsl));
         return this._oldChunks;
     }
@@ -936,7 +936,7 @@ class Material {
                     meshInstance.material = defaultMaterial;
                 }
             } else {
-                Debug.warn('pc.Material: MeshInstance.mesh is null, default material cannot be assigned to the MeshInstance');
+                Debug.warn('Material: MeshInstance.mesh is null, default material cannot be assigned to the MeshInstance');
             }
         }
 

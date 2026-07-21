@@ -80,7 +80,7 @@ const FINGER_JOINTS = [
  *         menuItems: [ ... ],
  *         alwaysVisible: true,
  *         followDistance: 0.6,
- *         followOffset: new pc.Vec2(0.25, -0.15)
+ *         followOffset: new Vec2(0.25, -0.15)
  *     }
  * });
  * @category XR

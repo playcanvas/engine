@@ -1,6 +1,7 @@
 *.DS_Store
 .cursor
 .claude
+.codex/
 .idea/
 .vscode/
 .turbo

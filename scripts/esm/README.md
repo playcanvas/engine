@@ -5,12 +5,13 @@ A collection of ready-to-use [`Script`](https://api.playcanvas.com/engine/classe
 These scripts ship inside the `playcanvas` npm package but are **not** part of the core engine bundle — each one is imported directly from its module:
 
 ```javascript
+import { Vec3 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 entity.addComponent('script');
 entity.script.create(CameraControls, {
     properties: {
-        focusPoint: new pc.Vec3(0, 1, 0)
+        focusPoint: new Vec3(0, 1, 0)
     }
 });
 ```

@@ -41,14 +41,14 @@ class ScriptComponentSystem extends ComponentSystem {
         this.extraDataProperties = ['order'];
 
         // list of all entities script components
-        // we are using pc.SortedLoopArray because it is
+        // we are using SortedLoopArray because it is
         // safe to modify while looping through it
         this._components = new SortedLoopArray({
             sortBy: '_executionOrder'
         });
 
         // holds all the enabled script components
-        // (whose entities are also enabled). We are using pc.SortedLoopArray
+        // (whose entities are also enabled). We are using SortedLoopArray
         // because it is safe to modify while looping through it. This array often
         // change during update and postUpdate loops as entities and components get
         // enabled or disabled

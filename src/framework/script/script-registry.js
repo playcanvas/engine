@@ -94,12 +94,12 @@ class ScriptRegistry extends EventHandler {
      * @returns {boolean} True if the script was added for the first time. False if a script with
      * the same name already exists, or if the script has no resolvable name.
      * @example
-     * var PlayerController = pc.createScript('playerController');
-     * // playerController Script Type will be added to pc.ScriptRegistry automatically
+     * var PlayerController = createScript('playerController');
+     * // playerController Script Type will be added to ScriptRegistry automatically
      * console.log(app.scripts.has('playerController')); // outputs true
      * @example
      * // engine-only: register an ESM Script class manually
-     * class Rotator extends pc.Script {
+     * class Rotator extends Script {
      *     static scriptName = 'rotator';
      * }
      * app.scripts.add(Rotator);
@@ -283,7 +283,7 @@ class ScriptRegistry extends EventHandler {
      * @returns {boolean} True if {@link ScriptType} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {
-     *     // playerController is in pc.ScriptRegistry
+     *     // playerController is in ScriptRegistry
      * }
      */
     has(nameOrType) {

@@ -308,7 +308,7 @@ class GlbContainerResource {
         return root;
     }
 
-    // create a pc.Model from the parsed GLB data structures
+    // create a Model from the parsed GLB data structures
     static createModel(glb, defaultMaterial) {
 
         const createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {

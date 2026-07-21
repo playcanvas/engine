@@ -29,9 +29,9 @@ const _transform = new Mat4();
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('screen', {
- *     referenceResolution: new pc.Vec2(1280, 720),
+ *     referenceResolution: new Vec2(1280, 720),
  *     screenSpace: false
  * });
  * ```

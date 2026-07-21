@@ -36,19 +36,19 @@ const _clipNormal = new Vec3();
  * Note: Objects that use the resulting texture should not be in the layers this camera renders.
  *
  * @example
- * const reflectionCamera = new pc.Entity('ReflectionCamera');
+ * const reflectionCamera = new Entity('ReflectionCamera');
  * reflectionCamera.addComponent('camera', {
  *     layers: [worldLayer.id, skyboxLayer.id],
  *     priority: -1,
- *     toneMapping: pc.TONEMAP_ACES
+ *     toneMapping: TONEMAP_ACES
  * });
  * reflectionCamera.addComponent('script');
  * const planarRenderer = reflectionCamera.script.create(PlanarRenderer, {
  *     properties: {
  *         sceneCameraEntity: cameraEntity,
  *         mode: 'reflection',
- *         planePoint: new pc.Vec3(0, 0, 0),
- *         planeNormal: new pc.Vec3(0, 1, 0)
+ *         planePoint: new Vec3(0, 0, 0),
+ *         planeNormal: new Vec3(0, 1, 0)
  *     }
  * });
  * app.root.addChild(reflectionCamera);

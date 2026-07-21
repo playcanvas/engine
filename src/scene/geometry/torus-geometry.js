@@ -15,13 +15,13 @@ import { Geometry } from './geometry.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.TorusGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new TorusGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -52,7 +52,7 @@ class TorusGeometry extends Geometry {
      * Defaults to 30.
      * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
      * @example
-     * const geometry = new pc.TorusGeometry({
+     * const geometry = new TorusGeometry({
      *     tubeRadius: 1,
      *     ringRadius: 2,
      *     sectorAngle: 360,
