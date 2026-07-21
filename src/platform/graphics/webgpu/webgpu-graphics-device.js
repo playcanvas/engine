@@ -1019,6 +1019,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setBlendState(blendState) {
+        Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
+            'Dual-source blending is not supported by this graphics device.');
+
         this.blendState.copy(blendState);
     }
 

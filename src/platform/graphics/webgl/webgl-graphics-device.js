@@ -2539,6 +2539,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     setBlendState(blendState) {
+        Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
+            'Dual-source blending is not supported by this graphics device.');
+
         const currentBlendState = this.blendState;
         if (!currentBlendState.equals(blendState)) {
             const gl = this.gl;
