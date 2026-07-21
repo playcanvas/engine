@@ -90,7 +90,7 @@ const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
     color: new Color(1, 1, 1),
-    radius: 10
+    range: 10
 });
 light.translate(0, 1, 0);
 
