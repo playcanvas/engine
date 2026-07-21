@@ -33,6 +33,10 @@ import { DebugGraphics } from '../debug-graphics.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
+import { WebglUniformBuffer } from './webgl-uniform-buffer.js';
+import { WebglBindGroup } from './webgl-bind-group.js';
+import { WebglBindGroupFormat } from './webgl-bind-group-format.js';
+import { WebglDynamicBuffers } from './webgl-dynamic-buffers.js';
 import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
@@ -47,6 +51,7 @@ import { TextureUtils } from '../texture-utils.js';
 import { getBuiltInTexture } from '../built-in-textures.js';
 
 /**
+ * @import { BindGroup } from '../bind-group.js'
  * @import { RenderPass } from '../render-pass.js'
  * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
@@ -234,6 +239,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeContextCaches();
 
         this.createBackbuffer(null);
+
+        // dynamic uniform buffer support (whole-buffer pool, see WebglDynamicBuffers)
+        this.dynamicBuffers = new WebglDynamicBuffers(this);
 
         // only enable ImageBitmap on chrome
         this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
@@ -707,6 +715,47 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new WebglShader(shader);
     }
 
+    createUniformBufferImpl(uniformBuffer) {
+        return new WebglUniformBuffer();
+    }
+
+    createBindGroupFormatImpl(bindGroupFormat) {
+        return new WebglBindGroupFormat();
+    }
+
+    createBindGroupImpl(bindGroup) {
+        return new WebglBindGroup();
+    }
+
+    /**
+     * @param {number} index - Index of the bind group slot
+     * @param {BindGroup} bindGroup - Bind group to attach
+     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group. Unused
+     * on WebGL: every uniform buffer is bound as a whole buffer from offset zero (see below).
+     */
+    setBindGroup(index, bindGroup, offsets) {
+
+        // WebGL2 has no bind group object, so we bind each of the bind group's uniform buffers to a
+        // uniform buffer binding point directly. The bind group index is used as the binding point,
+        // matching the uniform block linking done in WebglShader, and relies on a single uniform
+        // buffer per bind group (the case in the engine's view / mesh bind group layout). Each
+        // uniform buffer is a whole buffer - persistent, or a whole dynamic buffer from the pool -
+        // so it is always bound from offset zero with bindBufferBase, and the offsets are not used.
+        // The buffers were captured by WebglBindGroup.update (not read from the uniform buffer's
+        // live allocation here), so a uniform buffer re-allocated several times in a frame (e.g. the
+        // shared view UB across XR multiview eyes) binds the buffer this bind group was built for.
+        const gl = this.gl;
+        const buffers = bindGroup.impl.buffers;
+
+        // all uniform buffers in the group would bind to the same point (index), so only a single
+        // uniform buffer per bind group is supported (matches the uniform block linking in WebglShader)
+        Debug.assert(buffers.length <= 1, `Bind group at index ${index} has ${buffers.length} uniform buffers, but WebGL2 supports a single uniform buffer per bind group.`, bindGroup);
+
+        for (let i = 0; i < buffers.length; i++) {
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, index, buffers[i].bufferId);
+        }
+    }
+
     createDrawCommandImpl(drawCommands) {
         return new WebglDrawCommands(drawCommands.indexSizeBytes);
     }
@@ -1041,6 +1090,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             shader.loseContext();
         }
 
+        // release dynamic uniform buffers (their GL buffers are gone with the context)
+        this.dynamicBuffers.loseContext();
+
         this.fire('devicelost');
     }
 
@@ -1211,6 +1263,73 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return true;
     }
 
+    /**
+     * Copies a region of a source texture into a destination texture. The destination is written
+     * via `copyTexSubImage2D` as a bound texture, so only the source needs a framebuffer. This is
+     * the WebGL texture-copy primitive used by {@link Texture#copy}.
+     *
+     * @param {Texture} source - The source texture.
+     * @param {Texture} dest - The destination texture.
+     * @param {object} [options] - The copy options (see {@link Texture#copy}).
+     * @returns {boolean} True if the copy was successful.
+     * @ignore
+     */
+    copyTextureToTexture(source, dest, options = {}) {
+        const gl = this.gl;
+
+        const sourceMipLevel = options.sourceMipLevel ?? 0;
+        const destMipLevel = options.destMipLevel ?? 0;
+        const face = options.face ?? 0;
+
+        const sx = options.sourceX ?? 0;
+        const sy = options.sourceY ?? 0;
+        const dx = options.destX ?? 0;
+        const dy = options.destY ?? 0;
+        const w = options.width ?? Math.max(1, source.width >> sourceMipLevel);
+        const h = options.height ?? Math.max(1, source.height >> sourceMipLevel);
+
+        DebugGraphics.pushGpuMarker(this, 'COPY-TEX');
+
+        // wrap the source in a render target so it can be read from a framebuffer (mip level and
+        // face are selected by the render target). Reuse a caller-supplied one if provided, as an
+        // optimization for high-frequency copies.
+        const sourceRenderTarget = options.sourceRenderTarget ?? new RenderTarget({
+            name: 'TextureCopySource',
+            colorBuffer: source,
+            depth: false,
+            face: face,
+            mipLevel: sourceMipLevel
+        });
+
+        const prevRt = this.renderTarget;
+
+        this.setRenderTarget(sourceRenderTarget);
+        this.initRenderTarget(sourceRenderTarget);
+        this.setFramebuffer(sourceRenderTarget.impl._glFrameBuffer);
+
+        // ensure the destination texture is created / uploaded and bound on a texture unit
+        this.setTexture(dest, 0);
+
+        // destination face / target (cubemap face selected explicitly, otherwise 2D)
+        const destTarget = dest.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + face : gl.TEXTURE_2D;
+
+        // copy the source framebuffer region into the bound destination texture
+        gl.copyTexSubImage2D(destTarget, destMipLevel, dx, dy, sx, sy, w, h);
+
+        // destroy the temporary render target if we created it
+        if (!options.sourceRenderTarget) {
+            sourceRenderTarget.destroy();
+        }
+
+        // restore the previous render target binding
+        this.setRenderTarget(prevRt);
+        this.setFramebuffer(prevRt ? prevRt.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer);
+
+        DebugGraphics.popGpuMarker(this);
+
+        return true;
+    }
+
     frameStart() {
         super.frameStart();
 
@@ -1223,6 +1342,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         super.frameEnd();
         this.gpuProfiler.frameEnd();
         this.gpuProfiler.request();
+
+        // recycle dynamic uniform buffers used this frame back to the free pool
+        this.dynamicBuffers.onFrameEnd();
     }
 
     /**
@@ -2008,14 +2130,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * // Clear just the color buffer to red
      * device.clear({
      *     color: [1, 0, 0, 1],
-     *     flags: pc.CLEARFLAG_COLOR
+     *     flags: CLEARFLAG_COLOR
      * });
      *
      * // Clear color buffer to yellow and depth to 1.0
      * device.clear({
      *     color: [1, 1, 0, 1],
      *     depth: 1,
-     *     flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+     *     flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
      * });
      */
     clear(options) {

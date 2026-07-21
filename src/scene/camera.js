@@ -6,7 +6,7 @@ import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
 import {
-    ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
+    VIEW_CENTER, ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
@@ -18,6 +18,7 @@ import { CameraShaderParams } from './camera-shader-params.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { FogParams } from './fog-params.js'
+ * @import { Layer } from './layer.js'
  * @import { RenderView } from './render-view.js'
  * @import { ShaderPassInfo } from './shader-pass.js'
  */
@@ -29,6 +30,9 @@ const _point = new Vec3();
 const _invViewProjMat = new Mat4();
 const _xrViewProjMat = new Mat4();
 const _xrViewFrustum = new Frustum();
+const _frustumViewInvMat = new Mat4();
+const _frustumViewMat = new Mat4();
+const _frustumViewProjMat = new Mat4();
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 /**
@@ -118,8 +122,9 @@ class Camera {
     framePasses = [];
 
     /**
-     * Frame passes that execute before this camera's main scene rendering. Entries are picked up
-     * by the RenderPassForward that renders this camera's layers.
+     * Frame passes that execute before this camera's main scene rendering, after the camera's
+     * directional shadow passes. Entries are picked up by the RenderPassForward that renders
+     * this camera's layers.
      *
      * @type {FramePass[]}
      */
@@ -191,6 +196,12 @@ class Camera {
 
         this.frustum = new Frustum();
 
+        // Reusable set of layers to cull for this camera in the current frame. Populated through
+        // requestMeshInstanceCull and drained by executeMeshInstanceCull on the renderer's culler;
+        // kept on the camera so the per-camera cull state needs no per-frame allocation.
+        /** @type {Set<Layer>} */
+        this._cullLayers = new Set();
+
         // Set by XrManager when an XR session takes over this camera: a reference to the manager's
         // live per-view array (matrices, viewports, updated each frame), or null when not in XR.
         // `xrActive` is derived from it. This replaces the previous back-pointer to the XrManager,
@@ -215,6 +226,7 @@ class Camera {
         this.renderPassDepthGrab = null;
 
         this.framePasses.length = 0;
+        this.beforePasses.length = 0;
     }
 
     /**
@@ -555,6 +567,43 @@ class Camera {
     }
 
     /**
+     * Registers a layer to be culled for this camera in the current frame. Used by the renderer's
+     * request/execute mesh-instance culling.
+     *
+     * @param {Layer} layer - The layer to cull for this camera.
+     * @returns {boolean} True if this is the first layer registered for this camera this frame,
+     * letting the caller track the camera exactly once.
+     * @ignore
+     */
+    addCullLayer(layer) {
+        const first = this._cullLayers.size === 0;
+        this._cullLayers.add(layer);
+        return first;
+    }
+
+    /**
+     * Gets the set of layers registered to be culled for this camera in the current frame. For
+     * read-only iteration; use {@link Camera#addCullLayer} and {@link Camera#clearCullLayers} to
+     * mutate it.
+     *
+     * @type {Set<Layer>}
+     * @ignore
+     */
+    get cullLayers() {
+        return this._cullLayers;
+    }
+
+    /**
+     * Clears the set of layers registered to be culled for this camera, called once the camera's
+     * culling has been performed.
+     *
+     * @ignore
+     */
+    clearCullLayers() {
+        this._cullLayers.clear();
+    }
+
+    /**
      * Calculates the aspect ratio that should be used for the camera, based on the size of the
      * given render target (or the backbuffer if no render target is given), and the camera's
      * `rect`. The `rect` is included so that a camera rendering into a sub-region of a render
@@ -713,6 +762,39 @@ class Camera {
             this.frustum.add(_xrViewFrustum);
         }
         return true;
+    }
+
+    /**
+     * Updates {@link Camera#frustum} for the camera's current transform and projection, for
+     * visibility culling. Uses the combined (VIEW_CENTER) view; XR cameras delegate to
+     * {@link Camera#updateXrFrustum}. Honors the {@link Camera#calculateProjection} and
+     * {@link Camera#calculateTransform} overrides.
+     *
+     * @ignore
+     */
+    updateFrustum() {
+
+        // XR: combined frustum from all views (avoids culling objects visible in only one eye)
+        if (this.updateXrFrustum()) {
+            return;
+        }
+
+        const projMat = this.projectionMatrix;
+        if (this.calculateProjection) {
+            this.calculateProjection(projMat, VIEW_CENTER);
+        }
+
+        if (this.calculateTransform) {
+            this.calculateTransform(_frustumViewInvMat, VIEW_CENTER);
+        } else {
+            const pos = this._node.getPosition();
+            const rot = this._node.getRotation();
+            _frustumViewInvMat.setTRS(pos, rot, Vec3.ONE);
+        }
+        _frustumViewMat.copy(_frustumViewInvMat).invert();
+
+        _frustumViewProjMat.mul2(projMat, _frustumViewMat);
+        this.frustum.setFromMat4(_frustumViewProjMat);
     }
 
     /**

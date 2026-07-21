@@ -24,7 +24,6 @@ import { array } from '../core/array-utils.js';
 import { PickerId } from './picker-id.js';
 
 /**
- * @import { BindGroupFormat } from '../platform/graphics/bind-group-format.js'
  * @import { Camera } from './camera.js'
  * @import { GSplatInstance } from './gsplat/gsplat-instance.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
@@ -299,10 +298,10 @@ class MeshInstance {
      * @example
      * // clear the forward (color) pass bit, leaving all other pass bits set: the mesh is no longer
      * // drawn in the color image, but still takes part in the other passes (such as the prepass)
-     * meshInstance.shaderPassMask &= ~(1 << pc.SHADER_FORWARD);
+     * meshInstance.shaderPassMask &= ~(1 << SHADER_FORWARD);
      * @example
      * // set the forward (color) pass bit, leaving all other pass bits unchanged
-     * meshInstance.shaderPassMask |= (1 << pc.SHADER_FORWARD);
+     * meshInstance.shaderPassMask |= (1 << SHADER_FORWARD);
      * @example
      * // exclude the mesh from a custom shader pass set up on the camera (see
      * // CameraComponent#setShaderPass), leaving all other pass bits set
@@ -310,7 +309,7 @@ class MeshInstance {
      * meshInstance.shaderPassMask &= ~(1 << customPass);
      * @example
      * // test whether the forward (color) pass bit is set
-     * const forwardBitSet = (meshInstance.shaderPassMask & (1 << pc.SHADER_FORWARD)) !== 0;
+     * const forwardBitSet = (meshInstance.shaderPassMask & (1 << SHADER_FORWARD)) !== 0;
      * @example
      * // set every pass bit (the default value)
      * meshInstance.shaderPassMask = 0xFFFFFFFF;
@@ -377,7 +376,7 @@ class MeshInstance {
     meshMetaData = null;
 
     /**
-     * @type {Record<string, {scopeId: ScopeId|null, data: any, passFlags: number}>}
+     * @type {Record<string, {scopeId: ScopeId|null, data: any}>}
      * @ignore
      */
     parameters = {};
@@ -496,7 +495,7 @@ class MeshInstance {
     _shaderCache = new Map();
 
     /**
-     * 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
+     * 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = MASK_AFFECT_DYNAMIC
      *
      * @private
      */
@@ -518,12 +517,12 @@ class MeshInstance {
      * component is attached to.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.BoxGeometry());
-     * const material = new pc.StandardMaterial();
+     * const mesh = Mesh.fromGeometry(app.graphicsDevice, new BoxGeometry());
+     * const material = new StandardMaterial();
      *
-     * const meshInstance = new pc.MeshInstance(mesh, material);
+     * const meshInstance = new MeshInstance(mesh, material);
      *
-     * const entity = new pc.Entity();
+     * const entity = new Entity();
      * entity.addComponent('render', {
      *     meshInstances: [meshInstance]
      * });
@@ -752,12 +751,11 @@ class MeshInstance {
      * @param {Scene} scene - The scene.
      * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
      * @param {UniformBufferFormat} [viewUniformFormat] - The format of the view uniform buffer.
-     * @param {BindGroupFormat} [viewBindGroupFormat] - The format of the view bind group.
      * @param {any} [sortedLights] - Array of arrays of lights.
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, viewBindGroupFormat, sortedLights) {
+    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, sortedLights) {
 
         const shaderDefs = this._shaderDefs;
 
@@ -795,7 +793,6 @@ class MeshInstance {
                     pass: shaderPass,
                     sortedLights: sortedLights,
                     viewUniformFormat: viewUniformFormat,
-                    viewBindGroupFormat: viewBindGroupFormat,
                     vertexFormat: this.mesh.vertexBuffer?.format
                 });
 
@@ -1330,20 +1327,22 @@ class MeshInstance {
      *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
-     * @param {number} [passFlags] - Mask describing which passes the material should be included
-     * in. Defaults to 0xFFFFFFFF (all passes).
      */
-    setParameter(name, data, passFlags = 0xFFFFFFFF) {
+    setParameter(name, data) {
+
+        Debug.call(() => {
+            if (arguments[2] !== undefined) {
+                Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');
+            }
+        });
 
         const param = this.parameters[name];
         if (param) {
             param.data = data;
-            param.passFlags = passFlags;
         } else {
             this.parameters[name] = {
                 scopeId: null,
-                data: data,
-                passFlags: passFlags
+                data: data
             };
         }
     }
@@ -1393,19 +1392,16 @@ class MeshInstance {
      * by forward-renderer.
      *
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {number} passFlag - The pass flag for the current render pass.
      * @ignore
      */
-    setParameters(device, passFlag) {
+    setParameters(device) {
         const parameters = this.parameters;
         for (const paramName in parameters) {
             const parameter = parameters[paramName];
-            if (parameter.passFlags & passFlag) {
-                if (!parameter.scopeId) {
-                    parameter.scopeId = device.scope.resolve(paramName);
-                }
-                parameter.scopeId.setValue(parameter.data);
+            if (!parameter.scopeId) {
+                parameter.scopeId = device.scope.resolve(paramName);
             }
+            parameter.scopeId.setValue(parameter.data);
         }
     }
 

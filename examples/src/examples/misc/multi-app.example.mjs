@@ -4,36 +4,63 @@
 // @flag WEBGPU_DISABLED
 // @flag WEBGL_DISABLED
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_NONE,
+    FontHandler,
+    LightComponentSystem,
+    NullGraphicsDevice,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SCALEMODE_BLEND,
+    ScreenComponentSystem,
+    TextureHandler,
+    Vec2,
+    Vec4,
+    WebglGraphicsDevice,
+    WebgpuGraphicsDevice
+} from 'playcanvas';
 
 import { data } from 'examples/context';
+
+/**
+ * @import { GraphicsDevice } from 'playcanvas'
+ */
 
 // Use custom createGraphicsDevice function to not automatically include fall backs
 /**
  * @param {HTMLCanvasElement} canvas - The canvas element.
  * @param {string} deviceType - The device type.
- * @returns {Promise<pc.GraphicsDevice>} The graphics device.
+ * @returns {Promise<GraphicsDevice>} The graphics device.
  */
 async function createGraphicsDevice(canvas, deviceType) {
     let device;
     if (deviceType === 'webgpu') {
-        device = new pc.WebgpuGraphicsDevice(canvas, {});
+        device = new WebgpuGraphicsDevice(canvas, {});
         await device.initWebGpu('./assets/wasm/glslang/glslang.js', './assets/wasm/twgsl/twgsl.js');
     } else if (deviceType === 'webgl2') {
-        device = new pc.WebglGraphicsDevice(canvas);
+        device = new WebglGraphicsDevice(canvas);
     } else {
-        device = new pc.NullGraphicsDevice(canvas, {});
+        device = new NullGraphicsDevice(canvas, {});
     }
     return device;
 }
 
 /**
  * @param {string} deviceType - The device type.
- * @returns {Promise<pc.AppBase>} The example application.
+ * @returns {Promise<AppBase>} The example application.
  */
 async function createApp(deviceType) {
     const assets = {
-        font: new pc.Asset('font', 'font', { url: './assets/fonts/courier.json' })
+        font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
     };
 
     const canvas = document.createElement('canvas');
@@ -42,25 +69,22 @@ async function createApp(deviceType) {
 
     const device = await createGraphicsDevice(canvas, deviceType);
 
-    const createOptions = new pc.AppOptions();
+    const createOptions = new AppOptions();
     createOptions.graphicsDevice = device;
     createOptions.componentSystems = [
-        pc.RenderComponentSystem,
-        pc.CameraComponentSystem,
-        pc.LightComponentSystem,
-        pc.ScreenComponentSystem,
-        pc.ElementComponentSystem
+        RenderComponentSystem,
+        CameraComponentSystem,
+        LightComponentSystem,
+        ScreenComponentSystem,
+        ElementComponentSystem
     ];
-    createOptions.resourceHandlers = [
-        pc.TextureHandler,
-        pc.FontHandler
-    ];
+    createOptions.resourceHandlers = [TextureHandler, FontHandler];
 
-    const app = new pc.AppBase(canvas);
+    const app = new AppBase(canvas);
     app.init(createOptions);
 
-    app.setCanvasFillMode(pc.FILLMODE_NONE);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+    app.setCanvasFillMode(FILLMODE_NONE);
+    app.setCanvasResolution(RESOLUTION_AUTO);
 
     // Ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
@@ -70,58 +94,58 @@ async function createApp(deviceType) {
     });
 
     await new Promise((resolve) => {
-        new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+        new AssetListLoader(Object.values(assets), app.assets).load(resolve);
     });
 
-    // create box entity
-    const box = new pc.Entity('cube', app);
+    // Create box entity
+    const box = new Entity('cube', app);
     box.addComponent('render', {
         type: 'box'
     });
     app.root.addChild(box);
 
-    // create camera entity
+    // Create camera entity
     const clearValue = 0.3 + Math.random() * 0.3;
-    const camera = new pc.Entity('camera', app);
+    const camera = new Entity('camera', app);
     camera.addComponent('camera', {
-        clearColor: new pc.Color(clearValue, clearValue, clearValue)
+        clearColor: new Color(clearValue, clearValue, clearValue)
     });
     app.root.addChild(camera);
     camera.setPosition(0, -0.4, 3);
 
-    // create directional light entity
-    const light = new pc.Entity('light', app);
+    // Create directional light entity
+    const light = new Entity('light', app);
     light.addComponent('light');
     app.root.addChild(light);
     light.setEulerAngles(45, 0, 0);
 
     // Create a 2D screen
-    const screen = new pc.Entity('screen', app);
+    const screen = new Entity('screen', app);
     screen.addComponent('screen', {
-        referenceResolution: new pc.Vec2(1280, 720),
+        referenceResolution: new Vec2(1280, 720),
         scaleBlend: 0.5,
-        scaleMode: pc.SCALEMODE_BLEND,
+        scaleMode: SCALEMODE_BLEND,
         screenSpace: true
     });
     app.root.addChild(screen);
 
     // Text with outline to identify the platform
-    const text = new pc.Entity('text', app);
+    const text = new Entity('text', app);
     text.setLocalPosition(0, -100, 0);
     text.addComponent('element', {
-        pivot: new pc.Vec2(0.5, 0.5),
-        anchor: new pc.Vec4(0.5, -0.2, 0.5, 0.5),
+        pivot: new Vec2(0.5, 0.5),
+        anchor: new Vec4(0.5, -0.2, 0.5, 0.5),
         fontAsset: assets.font.id,
         fontSize: 130,
         text: app.graphicsDevice.isWebGL2 ? 'WebGL 2' : 'WebGPU',
-        color: new pc.Color(0.9, 0.9, 0.9),
-        outlineColor: new pc.Color(0, 0, 0),
+        color: new Color(0.9, 0.9, 0.9),
+        outlineColor: new Color(0, 0, 0),
         outlineThickness: 1,
-        type: pc.ELEMENTTYPE_TEXT
+        type: ELEMENTTYPE_TEXT
     });
     screen.addChild(text);
 
-    // rotate the box according to the delta time since the last frame
+    // Rotate the box according to the delta time since the last frame
     app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
 
     app.start();
@@ -130,7 +154,7 @@ async function createApp(deviceType) {
 }
 
 /**
- * @type {Record<string, pc.AppBase[]>}
+ * @type {Record<string, AppBase[]>}
  */
 const apps = {
     webgpu: [],

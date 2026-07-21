@@ -20,14 +20,15 @@ import {
  * catcher. If you don't provide one, the script will create a plane geometry.
  *
  * @example
- * const shadowCatcher = new pc.Entity('ShadowCatcher');
+ * const shadowCatcher = new Entity('ShadowCatcher');
  * shadowCatcher.addComponent('script').create(ShadowCatcher, {
  *     properties: {
- *         scale: new pc.Vec3(50, 50, 50)
+ *         scale: new Vec3(50, 50, 50)
  *         // geometry: geometryEntity // optionally provide a geometry entity
  *     }
  * });
  * app.root.addChild(shadowCatcher);
+ * @category Rendering
  */
 class ShadowCatcher extends Script {
     static scriptName = 'shadowCatcher';

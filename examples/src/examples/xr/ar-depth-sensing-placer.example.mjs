@@ -1,4 +1,27 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    XRDEPTHSENSINGFORMAT_F32,
+    XRDEPTHSENSINGUSAGE_GPU,
+    XRSPACE_LOCALFLOOR,
+    XRTYPE_AR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -8,7 +31,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -31,31 +54,24 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -66,16 +82,16 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera
-const camera = new pc.Entity();
+// Create camera
+const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0, 0, 0, 0),
+    clearColor: new Color(0, 0, 0, 0),
     farClip: 10000
 });
 app.root.addChild(camera);
 
-// light
-const l = new pc.Entity();
+// Light
+const l = new Entity();
 l.addComponent('light', {
     type: 'spot',
     range: 30
@@ -83,26 +99,26 @@ l.addComponent('light', {
 l.translate(0, 10, 0);
 app.root.addChild(l);
 
-// placeable cone
-const cone = new pc.Entity();
+// Placeable cone
+const cone = new Entity();
 cone.addComponent('render', {
     type: 'cone'
 });
 cone.setLocalScale(0.1, 0.1, 0.1);
 app.root.addChild(cone);
 
-const tmpVec3A = new pc.Vec3();
+const tmpVec3A = new Vec3();
 
 if (app.xr.supported) {
-    const activate = function () {
-        if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-            camera.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+    const activate = () => {
+        if (app.xr.isAvailable(XRTYPE_AR)) {
+            camera.camera.startXr(XRTYPE_AR, XRSPACE_LOCALFLOOR, {
                 depthSensing: {
-                    // request access to camera depth
-                    usagePreference: pc.XRDEPTHSENSINGUSAGE_GPU,
-                    dataFormatPreference: pc.XRDEPTHSENSINGFORMAT_F32
+                    // Request access to camera depth
+                    usagePreference: XRDEPTHSENSINGUSAGE_GPU,
+                    dataFormatPreference: XRDEPTHSENSINGFORMAT_F32
                 },
-                callback: function (err) {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -118,10 +134,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 camera.camera.endXr();
             }
 
@@ -130,9 +146,9 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
@@ -145,7 +161,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_AR}`, (available) => {
         if (available) {
             if (!app.xr.views.supportedDepth) {
                 message('AR Camera Depth is not supported');
@@ -167,7 +183,7 @@ if (app.xr.supported) {
     });
 
     app.on('update', () => {
-        // if camera depth is available
+        // If camera depth is available
         if (app.xr.views.availableDepth) {
             const view = app.xr.views.list[0];
             const depth = view.getDepth(0.5, 0.5);
@@ -176,7 +192,7 @@ if (app.xr.supported) {
                 tmpVec3A.copy(camera.forward);
                 tmpVec3A.mulScalar(depth);
                 tmpVec3A.add(camera.getPosition());
-                tmpVec3A.y += 0.05; // offset based on cone scale
+                tmpVec3A.y += 0.05; // Offset based on cone scale
 
                 cone.enabled = true;
                 cone.setLocalPosition(tmpVec3A);
@@ -194,7 +210,7 @@ if (app.xr.supported) {
         }
     });
 
-    if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
+    if (!app.xr.isAvailable(XRTYPE_AR)) {
         message('Immersive AR is not available');
     } else if (!app.xr.views.supportedDepth) {
         message('AR Camera Depth is not supported');

@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { ASPECT_AUTO, LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
+import { LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
 import { Component } from '../component.js';
@@ -43,7 +43,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('camera', {
  *     nearClip: 1,
  *     farClip: 100,
@@ -1261,20 +1261,6 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Prepare the camera for frame rendering.
-     *
-     * @param {RenderTarget|null} [rt] - Render
-     * target to which rendering will be performed. Will affect camera's aspect ratio, if
-     * aspectRatioMode is {@link ASPECT_AUTO}.
-     * @ignore
-     */
-    frameUpdate(rt) {
-        if (this.aspectRatioMode === ASPECT_AUTO) {
-            this.aspectRatio = this.calculateAspectRatio(rt);
-        }
-    }
-
-    /**
      * Attempt to start XR session with this camera.
      *
      * @param {string} type - The type of session. Can be one of the following:
@@ -1323,7 +1309,7 @@ class CameraComponent extends Component {
      * depth sensing system.
      * @example
      * // On an entity with a camera component
-     * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
+     * this.entity.camera.startXr(XRTYPE_VR, XRSPACE_LOCAL, {
      *     callback: (err) => {
      *         if (err) {
      *             // failed to start XR session

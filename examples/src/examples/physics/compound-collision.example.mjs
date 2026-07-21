@@ -1,54 +1,75 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    Color,
+    ContainerHandler,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    JsonHandler,
+    Keyboard,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TextureHandler,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent, RigidBodyComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve());
+    WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.keyboard = new pc.Keyboard(document.body);
+createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem,
-    pc.ElementComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem,
+    ElementComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler,
-    pc.JsonHandler,
-    pc.FontHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler, FontHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -57,21 +78,21 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 /**
- * @param {pc.Color} color - The diffuse color.
- * @returns {pc.StandardMaterial} The standard material.
+ * @param {Color} color - The diffuse color.
+ * @returns {StandardMaterial} The standard material.
  */
 function createMaterial(color) {
-    const material = new pc.StandardMaterial();
+    const material = new StandardMaterial();
     material.diffuse = color;
     material.update();
     return material;
 }
 
 // Create a couple of materials for our objects
-const red = createMaterial(new pc.Color(0.7, 0.3, 0.3));
-const gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
+const red = createMaterial(new Color(0.7, 0.3, 0.3));
+const gray = createMaterial(new Color(0.7, 0.7, 0.7));
 
 // Define a scene hierarchy in JSON format. This is loaded/parsed in
 // the parseScene function below
@@ -343,13 +364,13 @@ const scene = [
 ];
 
 /**
- * Convert an entity definition in the structure above to a pc.Entity object
+ * Convert an entity definition in the structure above to a Entity object
  *
  * @param {typeof scene} e - The scene definition.
- * @returns {pc.Entity} The entity.
+ * @returns {Entity} The entity.
  */
 function parseEntity(e) {
-    const entity = new pc.Entity(e.name);
+    const entity = new Entity(e.name);
 
     if (e.pos) {
         entity.setLocalPosition(e.pos[0], e.pos[1], e.pos[2]);
@@ -389,7 +410,7 @@ let numChairs = 0;
 
 // Clone the chair entity hierarchy and add it to the scene root
 function spawnChair() {
-    /** @type {pc.Entity} */
+    /** @type {Entity} */
     const chair = app.root.findByName('Chair');
     const clone = chair.clone();
     clone.setLocalPosition(Math.random() * 1 - 0.5, Math.random() * 2 + 1, Math.random() * 1 - 0.5);
@@ -408,8 +429,8 @@ app.on('update', (dt) => {
     }
 
     // Show active bodies in red and frozen bodies in gray
-    app.root.findComponents('rigidbody').forEach((/** @type {pc.RigidBodyComponent} */ body) => {
-        body.entity.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+    app.root.findComponents('rigidbody').forEach((/** @type {RigidBodyComponent} */ body) => {
+        body.entity.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
             render.material = body.isActive() ? red : gray;
         });
     });

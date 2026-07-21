@@ -25,6 +25,10 @@ class AnimComponentSystem extends ComponentSystem {
 
         this.ComponentType = AnimComponent;
 
+        // 'layers' is read-only (managed via addLayer) and 'masks' is not a component property; both
+        // are consumed directly in initializeComponentData
+        this.extraDataProperties = ['layers', 'masks'];
+
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('animationUpdate', this.onAnimationUpdate, this);
     }

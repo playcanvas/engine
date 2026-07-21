@@ -40,7 +40,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * SpriteComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('sprite', {
  *     spriteAsset: spriteAsset
  * });
@@ -50,7 +50,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * {@link Entity#sprite} property:
  *
  * ```javascript
- * entity.sprite.color = pc.Color.RED; // Tint the sprite red
+ * entity.sprite.color = Color.RED; // Tint the sprite red
  *
  * console.log(entity.sprite.color);   // Get the sprite tint and print it
  * ```
@@ -393,7 +393,7 @@ class SpriteComponent extends Component {
         return this._currentClip.sprite;
     }
 
-    // (private) {pc.Material} material The material used to render a sprite.
+    // (private) {Material} material The material used to render a sprite.
     set material(value) {
         this._material = value;
         if (this._meshInstance) {

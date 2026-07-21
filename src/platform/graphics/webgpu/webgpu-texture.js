@@ -679,6 +679,43 @@ class WebgpuTexture {
             return data ?? new ArrayType(targetBuffer);
         });
     }
+
+    /**
+     * Copies a region of a source texture into this texture. See {@link Texture#copy}.
+     *
+     * @param {Texture} source - The source texture.
+     * @param {object} options - The copy options.
+     * @returns {boolean} True if the copy was successful.
+     */
+    copy(source, options) {
+
+        /** @type {WebgpuGraphicsDevice} */
+        const device = this.texture.device;
+
+        const sourceMipLevel = options.sourceMipLevel ?? 0;
+        const destMipLevel = options.destMipLevel ?? 0;
+        const face = options.face ?? 0;
+
+        const sx = options.sourceX ?? 0;
+        const sy = options.sourceY ?? 0;
+        const dx = options.destX ?? 0;
+        const dy = options.destY ?? 0;
+        const w = options.width ?? Math.max(1, source.width >> sourceMipLevel);
+        const h = options.height ?? Math.max(1, source.height >> sourceMipLevel);
+
+        // ensure any deferred texture uploads are flushed before recording the copy, as this
+        // copy is recorded outside of a render / compute pass (which would otherwise flush them)
+        device._uploadDirtyTextures();
+
+        const commandEncoder = device.getCommandEncoder();
+        commandEncoder.copyTextureToTexture(
+            { texture: source.impl.gpuTexture, mipLevel: sourceMipLevel, origin: [sx, sy, face] },
+            { texture: this.gpuTexture, mipLevel: destMipLevel, origin: [dx, dy, face] },
+            { width: w, height: h, depthOrArrayLayers: 1 }
+        );
+
+        return true;
+    }
 }
 
 export { WebgpuTexture };

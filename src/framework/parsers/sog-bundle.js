@@ -148,12 +148,26 @@ class SogBundleParser {
     /** @type {AppBase} */
     app;
 
-    /** @type {number} */
-    maxRetries;
-
-    constructor(app, maxRetries = 3) {
+    constructor(app) {
         this.app = app;
-        this.maxRetries = maxRetries;
+    }
+
+    canParse(context) {
+        return context.ext === 'sog';
+    }
+
+    /**
+     * Checks if loading should be aborted due to asset unload or invalid device.
+     *
+     * @param {Asset} asset - The asset being loaded.
+     * @param {boolean} unloaded - Whether the asset was unloaded during async loading.
+     * @returns {boolean} True if loading should be aborted.
+     * @private
+     */
+    _shouldAbort(asset, unloaded) {
+        if (unloaded || !this.app.assets.get(asset.id)) return true;
+        if (!this.app?.graphicsDevice || this.app.graphicsDevice._destroyed) return true;
+        return false;
     }
 
     /**

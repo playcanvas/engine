@@ -34,7 +34,7 @@ const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unifi
  * GSplatComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('gsplat', {
  *     asset: asset
  * });
@@ -44,7 +44,7 @@ const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unifi
  * property:
  *
  * ```javascript
- * entity.gsplat.customAabb = new pc.BoundingBox(new pc.Vec3(), new pc.Vec3(10, 10, 10));
+ * entity.gsplat.customAabb = new BoundingBox(new Vec3(), new Vec3(10, 10, 10));
  *
  * console.log(entity.gsplat.customAabb);
  * ```
@@ -923,7 +923,7 @@ class GSplatComponent extends Component {
     setParameter(name, data) {
         const scopeId = this.system.app.graphicsDevice.scope.resolve(name);
         this._parameters.set(name, { scopeId, data });
-        if (this._placement) this._placement.renderDirty = true;
+        if (this._placement) this._placement.markDirty();
     }
 
     /**
@@ -943,7 +943,7 @@ class GSplatComponent extends Component {
      */
     deleteParameter(name) {
         this._parameters.delete(name);
-        if (this._placement) this._placement.renderDirty = true;
+        if (this._placement) this._placement.markDirty();
     }
 
     /**
@@ -955,7 +955,7 @@ class GSplatComponent extends Component {
      * @example
      * // Add an instance stream to the resource format
      * resource.format.addExtraStreams([
-     *     { name: 'instanceTint', format: pc.PIXELFORMAT_RGBA8, storage: pc.GSPLAT_STREAM_INSTANCE }
+     *     { name: 'instanceTint', format: PIXELFORMAT_RGBA8, storage: GSPLAT_STREAM_INSTANCE }
      * ]);
      *
      * // Get the instance texture and fill it with data

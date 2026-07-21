@@ -6,7 +6,6 @@
     "build.mjs",
     "package-lock.json",
     "package.json",
-    "rollup.config.mjs",
     "tsconfig*.json",
     "utils/esbuild-*.mjs",
     "utils/types-*.mjs",

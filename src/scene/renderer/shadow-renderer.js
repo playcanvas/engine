@@ -5,8 +5,8 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import {
-    SEMANTIC_POSITION, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
-    UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
+    SEMANTIC_POSITION,
+    UNIFORMTYPE_MAT4
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
@@ -15,16 +15,14 @@ import {
     EVENT_POSTCULL,
     EVENT_PRECULL,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
-    SHADER_SHADOW,
     SHADOWCAMERA_NAME,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
+    SHADOWUPDATE_NONE,
     shadowTypeInfo
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 
 /**
@@ -102,9 +100,8 @@ class ShadowRenderer {
         // uniforms
         this.shadowMapLightRadiusId = scope.resolve('light_radius');
 
-        // view bind group format with its uniform buffer format
+        // format of the view uniform buffer
         this.viewUniformFormat = null;
-        this.viewBindGroupFormat = null;
 
         // blend states
         this.blendStateWrite = new BlendState();
@@ -166,8 +163,9 @@ class ShadowRenderer {
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
 
-        // event before the camera is culling
-        this.renderer.scene?.fire(EVENT_PRECULL, camera);
+        // event before culling - the camera is null as this is internal (shadow) culling rather
+        // than culling for a user camera
+        this.renderer.scene?.fire(EVENT_PRECULL, null);
 
         visible.length = 0;
 
@@ -200,8 +198,9 @@ class ShadowRenderer {
         // this sorts the shadow casters by the shader id
         visible.sort(this.sortCompareShader);
 
-        // event after the camera is done with culling
-        this.renderer.scene?.fire(EVENT_POSTCULL, camera);
+        // event after culling - the camera is null as this is internal (shadow) culling rather
+        // than culling for a user camera
+        this.renderer.scene?.fire(EVENT_POSTCULL, null);
     }
 
     sortCompareShader(drawCallA, drawCallB) {
@@ -296,7 +295,6 @@ class ShadowRenderer {
         const device = this.device;
         const renderer = this.renderer;
         const scene = renderer.scene;
-        const passFlags = 1 << SHADER_SHADOW;
         const shadowPass = this.getShadowPass(light);
         const cameraShaderParams = camera.shaderParams;
 
@@ -335,9 +333,9 @@ class ShadowRenderer {
             material.setParameters(device);
 
             // Uniforms II (shadow): meshInstance overrides
-            meshInstance.setParameters(device, passFlags);
+            meshInstance.setParameters(device);
 
-            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat, this.viewBindGroupFormat);
+            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat);
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
@@ -375,19 +373,12 @@ class ShadowRenderer {
         }
     }
 
+    // Pure predicate - whether the light needs its shadow rendered this frame. Has no side effects:
+    // the SHADOWUPDATE_THISFRAME -> SHADOWUPDATE_NONE consume and the shadow-map-update stat are
+    // applied once per frame in Renderer#consumeOneShotShadows, after the frame graph is built and
+    // shadow casters are culled (so build and cull can both read shadowUpdateMode before it changes).
     needsShadowRendering(light) {
-
-        const needs = light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
-
-        if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
-            light.shadowUpdateMode = SHADOWUPDATE_NONE;
-        }
-
-        if (needs) {
-            this.renderer._shadowMapUpdates += light.numShadowFaces;
-        }
-
-        return needs;
+        return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
     }
 
     getLightRenderData(light, camera, face) {
@@ -451,9 +442,9 @@ class ShadowRenderer {
         const rt = shadowCam.renderTarget;
         const renderer = this.renderer;
         renderer.setCameraUniforms(shadowCam, rt);
-        if (device.supportsUniformBuffers) {
-            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, null);
-        }
+
+        // view uniforms always go through a uniform buffer (on all backends)
+        renderer.setupViewUniformBuffers(this.viewUniformFormat, null);
 
         renderer.setupViewport(shadowCam, rt);
 
@@ -559,24 +550,20 @@ class ShadowRenderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    initViewBindGroupFormat() {
+    initViewUniformFormat() {
 
-        if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
+        // view uniforms always go through a uniform buffer (on all backends)
+        if (!this.viewUniformFormat) {
 
             // format of the view uniform buffer
             this.viewUniformFormat = new UniformBufferFormat(this.device, [
                 new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4)
             ]);
-
-            // format of the view bind group - contains single uniform buffer, and no textures
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, [
-                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ]);
         }
     }
 
     frameUpdate() {
-        this.initViewBindGroupFormat();
+        this.initViewUniformFormat();
     }
 }
 

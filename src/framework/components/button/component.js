@@ -51,9 +51,9 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * ButtonComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('element', {
- *     type: pc.ELEMENTTYPE_IMAGE,
+ *     type: ELEMENTTYPE_IMAGE,
  *     useInput: true
  * });
  * entity.addComponent('button');
@@ -63,7 +63,7 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * {@link Entity#button} property:
  *
  * ```javascript
- * entity.button.hoverTint = pc.Color.YELLOW; // Set the hover tint color
+ * entity.button.hoverTint = Color.YELLOW; // Set the hover tint color
  *
  * console.log(entity.button.hoverTint);      // Get the hover tint color and print it
  * ```

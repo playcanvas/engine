@@ -26,7 +26,6 @@ import { FloatPacking } from '../core/math/float-packing.js';
  */
 
 /**
- * @import { BindGroup } from '../platform/graphics/bind-group.js'
  * @import { Layer } from './layer.js'
  */
 
@@ -102,19 +101,6 @@ class LightRenderData {
 
         // visible shadow casters
         this.visibleCasters = [];
-
-        // an array of view bind groups, single entry is used for shadows
-        /** @type {BindGroup[]} */
-        this.viewBindGroups = [];
-    }
-
-    // releases GPU resources
-    destroy() {
-        this.viewBindGroups.forEach((bg) => {
-            bg.defaultUniformBuffer.destroy();
-            bg.destroy();
-        });
-        this.viewBindGroups.length = 0;
     }
 
     // returns shadow buffer currently attached to the shadow camera
@@ -331,10 +317,6 @@ class Light {
     releaseRenderData() {
 
         if (this._renderData) {
-            for (let i = 0; i < this._renderData.length; i++) {
-                this._renderData[i].destroy();
-            }
-
             this._renderData.length = 0;
         }
     }

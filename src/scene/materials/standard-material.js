@@ -573,7 +573,7 @@ class StandardMaterial extends Material {
      *
      * @example
      * // Create a new Standard material
-     * const material = new pc.StandardMaterial();
+     * const material = new StandardMaterial();
      *
      * // Update the material's diffuse and specular properties
      * material.diffuse.set(1, 0, 0);
@@ -583,7 +583,7 @@ class StandardMaterial extends Material {
      * material.update();
      * @example
      * // Create a new Standard material
-     * const material = new pc.StandardMaterial();
+     * const material = new StandardMaterial();
      *
      * // Assign a texture to the diffuse slot
      * material.diffuseMap = texture;
@@ -650,8 +650,8 @@ class StandardMaterial extends Material {
      * @param {string} semantic - Semantic to map the vertex data. Must match with the semantic set
      * on vertex stream of the mesh.
      * @example
-     * mesh.setVertexStream(pc.SEMANTIC_ATTR15, offset, 3);
-     * material.setAttribute('offset', pc.SEMANTIC_ATTR15);
+     * mesh.setVertexStream(SEMANTIC_ATTR15, offset, 3);
+     * material.setAttribute('offset', SEMANTIC_ATTR15);
      */
     setAttribute(name, semantic) {
         this.userAttributes.set(semantic, name);
@@ -868,6 +868,7 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
+    /** @ignore */
     getShaderVariant(params) {
 
         const { device, scene, pass, objDefs, sortedLights, cameraShaderParams } = params;
@@ -898,7 +899,7 @@ class StandardMaterial extends Material {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);

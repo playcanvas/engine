@@ -22,7 +22,7 @@ import { AnimTrack } from '../../anim/evaluator/anim-track.js';
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('anim', {
  *     activate: true,
  *     speed: 1
@@ -378,7 +378,7 @@ class AnimComponent extends Component {
      * @param {object[]} [mask] - A list of paths to bones in the model which should be animated in
      * this layer. If omitted the full model is used. Defaults to null.
      * @param {string} [blendType] - Defines how properties animated by this layer blend with
-     * animations of those properties in previous layers. Defaults to pc.ANIM_LAYER_OVERWRITE.
+     * animations of those properties in previous layers. Defaults to ANIM_LAYER_OVERWRITE.
      * @returns {AnimComponentLayer} The created anim component layer.
      */
     addLayer(name, weight, mask, blendType) {

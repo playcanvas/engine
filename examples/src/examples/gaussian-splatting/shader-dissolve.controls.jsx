@@ -106,7 +106,10 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
                 <LabelGroup text='Edge Color'>
-                    <ColorPicker binding={new BindingTwoWay()} link={{ observer, path: 'edgeColor' }} />
+                    <ColorPicker
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'edgeColor' }}
+                    />
                 </LabelGroup>
                 <LabelGroup text='Glow'>
                     <SliderInput

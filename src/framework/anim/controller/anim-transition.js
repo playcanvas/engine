@@ -31,7 +31,7 @@ class AnimTransition {
      * and must be between 0 and 1. Defaults to null.
      * @param {string} [options.interruptionSource] - Defines whether another transition can
      * interrupt this one and which of the current or previous states transitions can do so. One of
-     * pc.ANIM_INTERRUPTION_*. Defaults to pc.ANIM_INTERRUPTION_NONE.
+     * ANIM_INTERRUPTION_*. Defaults to ANIM_INTERRUPTION_NONE.
      */
     constructor({ from, to, time = 0, priority = 0, conditions = [], exitTime = null, transitionOffset = null, interruptionSource = ANIM_INTERRUPTION_NONE }) {
         this._from = from;

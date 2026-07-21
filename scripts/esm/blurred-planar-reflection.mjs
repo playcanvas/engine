@@ -322,7 +322,7 @@ const _tempVec3b = new Vec3();
  * The entity's position defines the reflection plane, and its up vector (Y-axis) defines the plane normal.
  *
  * @example
- * const reflector = new pc.Entity('GroundReflection');
+ * const reflector = new Entity('GroundReflection');
  * reflector.addComponent('render', {
  *     type: 'plane',
  *     castShadows: false
@@ -339,6 +339,7 @@ const _tempVec3b = new Vec3();
  *     }
  * });
  * app.root.addChild(reflector);
+ * @category Rendering
  */
 class BlurredPlanarReflection extends Script {
     static scriptName = 'blurredPlanarReflection';

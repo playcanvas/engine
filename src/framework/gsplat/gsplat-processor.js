@@ -58,7 +58,7 @@ import wgslGsplatProcess from '../../scene/shader-lib/wgsl/chunks/gsplat/frag/gs
  *
  * @example
  * // Create a processor that reads splat positions and writes to a customColor texture
- * const processor = new pc.GSplatProcessor(
+ * const processor = new GSplatProcessor(
  *     app.graphicsDevice,
  *     { component: entity.gsplat },  // source: all streams auto-bound
  *     { component: entity.gsplat, streams: ['customColor'] }, // destination: customColor stream only

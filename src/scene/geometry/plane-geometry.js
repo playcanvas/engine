@@ -15,13 +15,13 @@ import { Geometry } from './geometry.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.PlaneGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new PlaneGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -49,8 +49,8 @@ class PlaneGeometry extends Geometry {
      * Defaults to 5.
      * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
      * @example
-     * const geometry = new pc.PlaneGeometry({
-     *     halfExtents: new pc.Vec2(1, 1),
+     * const geometry = new PlaneGeometry({
+     *     halfExtents: new Vec2(1, 1),
      *     widthSegments: 10,
      *     lengthSegments: 10
      * });

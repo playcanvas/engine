@@ -1,5 +1,5 @@
 import { Vec3, Color } from 'playcanvas';
-import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
+import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform float uTime;
@@ -263,11 +263,12 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * @example
  * // Add the script to a gsplat entity
  * entity.addComponent('script');
- * const gridScript = entity.script.create(GsplatRevealGridEruption);
+ * const gridScript = entity.script.create(GSplatRevealGridEruption);
  * gridScript.center.set(0, 0, 0);
  * gridScript.blockCount = 10;
+ * @category Gaussian Splatting
  */
-class GsplatRevealGridEruption extends GsplatShaderEffect {
+class GSplatRevealGridEruption extends GSplatShaderEffect {
     static scriptName = 'gsplatRevealGridEruption';
 
     // Reusable arrays for uniform updates
@@ -409,4 +410,4 @@ class GsplatRevealGridEruption extends GsplatShaderEffect {
     }
 }
 
-export { GsplatRevealGridEruption };
+export { GSplatRevealGridEruption };

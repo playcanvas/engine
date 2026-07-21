@@ -4,6 +4,7 @@ export default /* wgsl */`
 #include "varyingsPS"
 #include "litUserDeclarationPS"
 #include "frontendDeclPS"
+#include "outlineDeclarationPS"
 
 #if defined(PICK_PASS) || defined(PREPASS_PASS)
 

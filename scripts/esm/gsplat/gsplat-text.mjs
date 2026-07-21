@@ -8,12 +8,13 @@ import { Script, BoundingBox, GSplatFormat, GSplatContainer, FloatPacking } from
  * @example
  * // Add the script to an entity
  * entity.addComponent('script');
- * const textSplat = entity.script.create(GsplatText);
+ * const textSplat = entity.script.create(GSplatText);
  * textSplat.text = 'Hello World';
  * textSplat.fontSize = 64;
  * textSplat.fillStyle = '#ffffff';
+ * @category Gaussian Splatting
  */
-class GsplatText extends Script {
+class GSplatText extends Script {
     static scriptName = 'gsplatText';
 
     /**
@@ -146,7 +147,7 @@ class GsplatText extends Script {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-            console.warn('GsplatText: Failed to create canvas context');
+            console.warn('GSplatText: Failed to create canvas context');
             return;
         }
 
@@ -298,4 +299,4 @@ class GsplatText extends Script {
     }
 }
 
-export { GsplatText };
+export { GSplatText };

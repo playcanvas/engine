@@ -21,6 +21,7 @@ const SH_C0 = 0.28209479177387814;
 // iterator for accessing uncompressed splat data
 class SplatIterator {
     constructor(gsplatData, p, r, s, c) {
+        const activated = gsplatData.activated;
         const x = gsplatData.getProp('x');
         const y = gsplatData.getProp('y');
         const z = gsplatData.getProp('z');
@@ -66,7 +67,11 @@ class SplatIterator {
             }
 
             if (s) {
-                s.set(Math.exp(sx[i]), Math.exp(sy[i]), Math.exp(sz[i]));
+                if (activated) {
+                    s.set(sx[i], sy[i], sz[i]);
+                } else {
+                    s.set(Math.exp(sx[i]), Math.exp(sy[i]), Math.exp(sz[i]));
+                }
             }
 
             if (c) {
@@ -74,7 +79,7 @@ class SplatIterator {
                     0.5 + cr[i] * SH_C0,
                     0.5 + cg[i] * SH_C0,
                     0.5 + cb[i] * SH_C0,
-                    sigmoid(ca[i])
+                    activated ? ca[i] : sigmoid(ca[i])
                 );
             }
         };
@@ -104,6 +109,15 @@ class GSplatData {
      * @type { string[] }
      */
     comments;
+
+    /**
+     * True when the splat data stores activated values: linear scale and post-sigmoid opacity
+     * (e.g. data sourced from the glTF KHR_gaussian_splatting extension). False when the data
+     * uses PLY conventions: log-space scale and pre-sigmoid opacity.
+     *
+     * @type {boolean}
+     */
+    activated = false;
 
     /**
      * @param {PlyElement[]} elements - The elements.
@@ -194,7 +208,7 @@ class GSplatData {
                 continue;
             }
 
-            const scaleVal = 2.0 * Math.exp(scale);
+            const scaleVal = 2.0 * (this.activated ? scale : Math.exp(scale));
 
             if (first) {
                 first = false;
@@ -306,7 +320,8 @@ class GSplatData {
                 continue;
             }
 
-            const weight = 1.0 / (1.0 + Math.exp(Math.max(sx[i], sy[i], sz[i])));
+            const maxScale = Math.max(sx[i], sy[i], sz[i]);
+            const weight = 1.0 / (1.0 + (this.activated ? maxScale : Math.exp(maxScale)));
             result.x += px * weight;
             result.y += py * weight;
             result.z += pz * weight;

@@ -86,7 +86,7 @@ class GeometryVertexStream {
     constructor(data, componentCount, dataType, dataTypeNormalize, asInt) {
         this.data = data;                           // array of data
         this.componentCount = componentCount;       // number of components
-        this.dataType = dataType;                   // format of elements (pc.TYPE_FLOAT32 ..)
+        this.dataType = dataType;                   // format of elements (TYPE_FLOAT32 ..)
         this.dataTypeNormalize = dataTypeNormalize; // normalize element (divide by 255)
         this.asInt = asInt;                         // treat data as integer (WebGL2 and WebGPU only)
     }
@@ -109,7 +109,7 @@ class GeometryVertexStream {
  * form a single triangle.
  *
  * ```javascript
- * const mesh = new pc.Mesh(device);
+ * const mesh = new Mesh(device);
  * const positions = [
  *     0, 0, 0, // pos 0
  *     1, 0, 0, // pos 1
@@ -123,7 +123,7 @@ class GeometryVertexStream {
  * channel 0, and an index buffer to form two triangles. Float32Array is used for positions and uvs.
  *
  * ```javascript
- * const mesh = new pc.Mesh(device);
+ * const mesh = new Mesh(device);
  * const positions = new Float32Array([
  *     0, 0, 0, // pos 0
  *     1, 0, 0, // pos 1
@@ -141,7 +141,7 @@ class GeometryVertexStream {
  *     0, 2, 3  // triangle 1
  * ];
  * mesh.setPositions(positions);
- * mesh.setNormals(pc.calculateNormals(positions, indices));
+ * mesh.setNormals(calculateNormals(positions, indices));
  * mesh.setUvs(0, uvs);
  * mesh.setIndices(indices);
  * mesh.update();

@@ -33,9 +33,9 @@ import { Material } from './material.js';
  * GLSL format:
  *
  * ```javascript
- * const material = new pc.ShaderMaterial({
+ * const material = new ShaderMaterial({
  *     uniqueName: 'MyShader',
- *     attributes: { aPosition: pc.SEMANTIC_POSITION },
+ *     attributes: { aPosition: SEMANTIC_POSITION },
  *     vertexGLSL: `
  *         attribute vec3 aPosition;
  *         uniform mat4 matrix_viewProjection;
@@ -128,6 +128,7 @@ class ShaderMaterial extends Material {
         return this;
     }
 
+    /** @ignore */
     getShaderVariant(params) {
 
         const { objDefs } = params;
@@ -147,7 +148,7 @@ class ShaderMaterial extends Material {
             shaderChunks: this.shaderChunks // override chunks from the material
         };
 
-        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
 
         const library = getProgramLibrary(params.device);
         library.register('shader-material', shaderGeneratorShader);

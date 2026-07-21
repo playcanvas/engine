@@ -266,6 +266,13 @@ class CubemapHandler extends ResourceHandler {
 
         // process the texture asset
         const processTexAsset = function (index, texAsset) {
+            // the cubemap can share the resource of a dependent texture asset (the env atlas), in
+            // which case unloading the cubemap destroys that resource while the dependent asset
+            // stays marked as loaded - unload it to force a reload of valid data
+            if (texAsset.loaded && texAsset.resource && !texAsset.resource.device) {
+                texAsset.unload();
+            }
+
             if (texAsset.loaded) {
                 // asset already exists
                 onLoad(index, texAsset);

@@ -1,4 +1,29 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    TextureHandler,
+    TouchDevice,
+    XRSPACE_LOCALFLOOR,
+    XRTARGETRAY_POINTER,
+    XRTARGETRAY_SCREEN,
+    XRTRACKABLE_MESH,
+    XRTRACKABLE_PLANE,
+    XRTRACKABLE_POINT,
+    XRTYPE_AR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -8,7 +33,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -24,31 +49,24 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -59,15 +77,15 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera
-const c = new pc.Entity();
+// Create camera
+const c = new Entity();
 c.addComponent('camera', {
-    clearColor: new pc.Color(0, 0, 0, 0),
+    clearColor: new Color(0, 0, 0, 0),
     farClip: 10000
 });
 app.root.addChild(c);
 
-const l = new pc.Entity();
+const l = new Entity();
 l.addComponent('light', {
     type: 'spot',
     range: 30
@@ -75,14 +93,14 @@ l.addComponent('light', {
 l.translate(0, 10, 0);
 app.root.addChild(l);
 
-const target = new pc.Entity();
+const target = new Entity();
 target.addComponent('render', {
     type: 'cylinder'
 });
 target.setLocalScale(0.1, 0.01, 0.1);
 app.root.addChild(target);
 
-const cone = new pc.Entity();
+const cone = new Entity();
 cone.addComponent('render', {
     type: 'cone'
 });
@@ -113,11 +131,11 @@ const createAnchor = (hitTestResult) => {
 };
 
 if (app.xr.supported) {
-    const activate = function () {
-        if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-            c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+    const activate = () => {
+        if (app.xr.isAvailable(XRTYPE_AR)) {
+            c.camera.startXr(XRTYPE_AR, XRSPACE_LOCALFLOOR, {
                 anchors: true,
-                callback: function (err) {
+                callback: (err) => {
                     if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
@@ -133,10 +151,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 c.camera.endXr();
             }
 
@@ -145,9 +163,9 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
@@ -155,13 +173,13 @@ if (app.xr.supported) {
     app.xr.hitTest.on('available', () => {
         if (!app.xr.hitTest.supported || !app.xr.anchors.supported) return;
 
-        // provide gaze-like way to create anchors
-        // best for mobile phones
+        // Provide gaze-like way to create anchors
+        // Best for mobile phones
         let lastHitTestResult = null;
 
         app.xr.hitTest.start({
-            entityTypes: [pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE, pc.XRTRACKABLE_MESH],
-            callback: function (err, hitTestSource) {
+            entityTypes: [XRTRACKABLE_POINT, XRTRACKABLE_PLANE, XRTRACKABLE_MESH],
+            callback: (err, hitTestSource) => {
                 if (err) {
                     message('Failed to start AR hit test');
                     return;
@@ -176,7 +194,7 @@ if (app.xr.supported) {
         });
 
         app.xr.input.on('select', (inputSource) => {
-            if (inputSource.targetRayMode !== pc.XRTARGETRAY_SCREEN) return;
+            if (inputSource.targetRayMode !== XRTARGETRAY_SCREEN) return;
 
             if (!lastHitTestResult) return;
 
@@ -190,7 +208,7 @@ if (app.xr.supported) {
     app.xr.on('end', () => {
         message('Immersive AR session has ended');
     });
-    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
+    app.xr.on(`available:${XRTYPE_AR}`, (available) => {
         if (available) {
             if (!app.xr.hitTest.supported) {
                 message('AR Hit Test is not supported');
@@ -204,15 +222,15 @@ if (app.xr.supported) {
         }
     });
 
-    // create hit test sources for all input sources
+    // Create hit test sources for all input sources
     if (app.xr.hitTest.supported && app.xr.anchors.supported) {
         app.xr.input.on('add', (inputSource) => {
             inputSource.hitTestStart({
-                entityTypes: [pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE],
+                entityTypes: [XRTRACKABLE_POINT, XRTRACKABLE_PLANE],
                 callback: (err, hitTestSource) => {
                     if (err) return;
 
-                    let target = new pc.Entity();
+                    let target = new Entity();
                     target.addComponent('render', {
                         type: 'cylinder'
                     });
@@ -221,8 +239,8 @@ if (app.xr.supported) {
 
                     let lastHitTestResult = null;
 
-                    // persistent input sources
-                    if (inputSource.targetRayMode === pc.XRTARGETRAY_POINTER) {
+                    // Persistent input sources
+                    if (inputSource.targetRayMode === XRTARGETRAY_POINTER) {
                         inputSource.on('select', () => {
                             if (lastHitTestResult) createAnchor(lastHitTestResult);
                         });
@@ -238,8 +256,8 @@ if (app.xr.supported) {
                         target.destroy();
                         target = null;
 
-                        // mobile screen input source
-                        if (inputSource.targetRayMode === pc.XRTARGETRAY_SCREEN && lastHitTestResult) {
+                        // Mobile screen input source
+                        if (inputSource.targetRayMode === XRTARGETRAY_SCREEN && lastHitTestResult) {
                             createAnchor(lastHitTestResult);
                         }
 
@@ -250,7 +268,7 @@ if (app.xr.supported) {
         });
     }
 
-    if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
+    if (!app.xr.isAvailable(XRTYPE_AR)) {
         message('Immersive AR is not available');
     } else if (!app.xr.hitTest.supported) {
         message('AR Hit Test is not supported');

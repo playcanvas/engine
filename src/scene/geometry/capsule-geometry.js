@@ -14,13 +14,13 @@ import { calculateTangents } from './geometry-utils.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.CapsuleGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new CapsuleGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -50,7 +50,7 @@ class CapsuleGeometry extends ConeBaseGeometry {
      * Defaults to 20.
      * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
      * @example
-     * const geometry = new pc.CapsuleGeometry({
+     * const geometry = new CapsuleGeometry({
      *     radius: 1,
      *     height: 2,
      *     heightSegments: 2,

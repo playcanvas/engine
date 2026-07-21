@@ -1,4 +1,29 @@
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    KEY_ESCAPE,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    StandardMaterial,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    XRHAND_LEFT,
+    XRHAND_RIGHT,
+    XRSPACE_LOCAL,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { deviceType } from 'examples/context';
 
@@ -8,7 +33,7 @@ window.focus();
 /**
  * @param {string} msg - The message.
  */
-const message = function (msg) {
+const message = (msg) => {
     /** @type {HTMLDivElement} */
     let el = document.querySelector('.message');
     if (!el) {
@@ -24,31 +49,24 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = window.devicePixelRatio;
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -59,19 +77,19 @@ app.on('destroy', () => {
 
 app.start();
 
-// create camera parent
-const cameraParent = new pc.Entity();
+// Create camera parent
+const cameraParent = new Entity();
 app.root.addChild(cameraParent);
 
-// create camera
-const c = new pc.Entity();
+// Create camera
+const c = new Entity();
 c.addComponent('camera', {
-    clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
+    clearColor: new Color(44 / 255, 62 / 255, 80 / 255),
     farClip: 10000
 });
 cameraParent.addChild(c);
 
-const l = new pc.Entity();
+const l = new Entity();
 l.addComponent('light', {
     type: 'spot',
     range: 30
@@ -84,11 +102,11 @@ app.root.addChild(l);
  * @param {number} y - The y coordinate.
  * @param {number} z - The z coordinate.
  */
-const createCube = function (x, y, z) {
-    const cube = new pc.Entity();
+const createCube = (x, y, z) => {
+    const cube = new Entity();
     cube.addComponent('render', {
         type: 'box',
-        material: new pc.StandardMaterial()
+        material: new StandardMaterial()
     });
     cube.setLocalScale(1, 1, 1);
     cube.translate(x, y, z);
@@ -96,9 +114,9 @@ const createCube = function (x, y, z) {
 };
 
 const controllers = [];
-// create controller box
-const createController = function (inputSource) {
-    const entity = new pc.Entity();
+// Create controller box
+const createController = (inputSource) => {
+    const entity = new Entity();
     entity.addComponent('render', {
         type: 'box'
     });
@@ -108,15 +126,15 @@ const createController = function (inputSource) {
     entity.inputSource = inputSource;
     controllers.push(entity);
 
-    // destroy input source related entity
-    // when input source is removed
+    // Destroy input source related entity
+    // When input source is removed
     inputSource.on('remove', () => {
         controllers.splice(controllers.indexOf(entity), 1);
         entity.destroy();
     });
 };
 
-// create a grid of cubes
+// Create a grid of cubes
 const SIZE = 4;
 for (let x = 0; x <= SIZE; x++) {
     for (let y = 0; y <= SIZE; y++) {
@@ -125,10 +143,10 @@ for (let x = 0; x <= SIZE; x++) {
 }
 
 if (app.xr.supported) {
-    const activate = function () {
-        if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-                callback: function (err) {
+    const activate = () => {
+        if (app.xr.isAvailable(XRTYPE_VR)) {
+            c.camera.startXr(XRTYPE_VR, XRSPACE_LOCAL, {
+                callback: (err) => {
                     if (err) message(`Immersive VR failed to start: ${err.message}`);
                 }
             });
@@ -144,10 +162,10 @@ if (app.xr.supported) {
     if (app.touch) {
         app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
-                // if not in VR, activate
+                // If not in VR, activate
                 activate();
             } else {
-                // otherwise reset camera
+                // Otherwise reset camera
                 c.camera.endXr();
             }
 
@@ -156,14 +174,14 @@ if (app.xr.supported) {
         });
     }
 
-    // end session by keyboard ESC
+    // End session by keyboard ESC
     app.keyboard.on('keydown', (evt) => {
-        if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+        if (evt.key === KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
-    // when new input source added
+    // When new input source added
     app.xr.input.on('add', (inputSource) => {
         createController(inputSource);
     });
@@ -176,56 +194,56 @@ if (app.xr.supported) {
     const rotateResetThreshold = 0.25;
     let lastRotateValue = 0;
 
-    const tmpVec2A = new pc.Vec2();
-    const tmpVec2B = new pc.Vec2();
-    const tmpVec3A = new pc.Vec3();
-    const tmpVec3B = new pc.Vec3();
-    const lineColor = new pc.Color(1, 1, 1);
+    const tmpVec2A = new Vec2();
+    const tmpVec2B = new Vec2();
+    const tmpVec3A = new Vec3();
+    const tmpVec3B = new Vec3();
+    const lineColor = new Color(1, 1, 1);
 
-    // update position and rotation for each controller
+    // Update position and rotation for each controller
     app.on('update', (dt) => {
         let i, inputSource;
 
-        // first we update movement
+        // First we update movement
         for (i = 0; i < controllers.length; i++) {
             inputSource = controllers[i].inputSource;
 
-            // should have gamepad
+            // Should have gamepad
             if (!inputSource.gamepad) continue;
 
-            // left controller - for movement
-            if (inputSource.handedness === pc.XRHAND_LEFT) {
-                // set vector based on gamepad thumbstick axes values
+            // Left controller - for movement
+            if (inputSource.handedness === XRHAND_LEFT) {
+                // Set vector based on gamepad thumbstick axes values
                 tmpVec2A.set(inputSource.gamepad.axes[2], inputSource.gamepad.axes[3]);
 
-                // if there is input
+                // If there is input
                 if (tmpVec2A.length()) {
                     tmpVec2A.normalize();
 
-                    // we need to take in account camera facing
-                    // so we figure out Yaw of camera
+                    // We need to take in account camera facing
+                    // So we figure out Yaw of camera
                     tmpVec2B.x = c.forward.x;
                     tmpVec2B.y = c.forward.z;
                     tmpVec2B.normalize();
 
                     const rad = Math.atan2(tmpVec2B.x, tmpVec2B.y) - Math.PI / 2;
-                    // and rotate our movement vector based on camera yaw
+                    // And rotate our movement vector based on camera yaw
                     const t = tmpVec2A.x * Math.sin(rad) - tmpVec2A.y * Math.cos(rad);
                     tmpVec2A.y = tmpVec2A.y * Math.sin(rad) + tmpVec2A.x * Math.cos(rad);
                     tmpVec2A.x = t;
 
-                    // set movement speed
+                    // Set movement speed
                     tmpVec2A.mulScalar(movementSpeed * dt);
-                    // move camera parent based on calculated movement vector
+                    // Move camera parent based on calculated movement vector
                     cameraParent.translate(tmpVec2A.x, 0, tmpVec2A.y);
                 }
 
-                // right controller - for rotation
-            } else if (inputSource.handedness === pc.XRHAND_RIGHT) {
-                // get rotation from thumbsitck
+                // Right controller - for rotation
+            } else if (inputSource.handedness === XRHAND_RIGHT) {
+                // Get rotation from thumbstick
                 const rotate = -inputSource.gamepad.axes[2];
 
-                // each rotate should be done by moving thumbstick to the side enough
+                // Each rotate should be done by moving thumbstick to the side enough
                 // then thumbstick should be moved back close to neutral position
                 // before it can be used again to rotate
                 if (lastRotateValue > 0 && rotate < rotateResetThreshold) {
@@ -234,11 +252,11 @@ if (app.xr.supported) {
                     lastRotateValue = 0;
                 }
 
-                // if thumbstick is reset and moved enough to the side
+                // If thumbstick is reset and moved enough to the side
                 if (lastRotateValue === 0 && Math.abs(rotate) > rotateThreshold) {
                     lastRotateValue = Math.sign(rotate);
 
-                    // we want to rotate relative to camera position
+                    // We want to rotate relative to camera position
                     tmpVec3A.copy(c.getLocalPosition());
                     cameraParent.translateLocal(tmpVec3A);
                     cameraParent.rotateLocal(0, Math.sign(rotate) * rotateSpeed, 0);
@@ -247,25 +265,25 @@ if (app.xr.supported) {
             }
         }
 
-        // after movement and rotation is done
-        // we update/render controllers
+        // After movement and rotation is done
+        // We update/render controllers
         for (i = 0; i < controllers.length; i++) {
             inputSource = controllers[i].inputSource;
 
-            // render controller ray
+            // Render controller ray
             tmpVec3A.copy(inputSource.getOrigin());
             tmpVec3B.copy(inputSource.getDirection());
             tmpVec3B.mulScalar(100).add(tmpVec3A);
             app.drawLine(tmpVec3A, tmpVec3B, lineColor);
 
-            // render controller
+            // Render controller
             if (inputSource.grip) {
-                // some controllers can be gripped
+                // Some controllers can be gripped
                 controllers[i].render.enabled = true;
                 controllers[i].setLocalPosition(inputSource.getLocalPosition());
                 controllers[i].setLocalRotation(inputSource.getLocalRotation());
             } else {
-                // some controllers cannot be gripped
+                // Some controllers cannot be gripped
                 controllers[i].render.enabled = false;
             }
         }

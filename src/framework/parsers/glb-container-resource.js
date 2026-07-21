@@ -39,6 +39,21 @@ class GlbContainerResource {
             animations.push(createAsset('animation', data.animations[i], i));
         }
 
+        // create gsplat assets - flat list of assets, and per gltf-mesh lists used at
+        // instantiation time
+        const gsplats = [];
+        const meshGSplats = [];
+        if (data.gsplats) {
+            for (let i = 0; i < data.gsplats.length; ++i) {
+                const resources = data.gsplats[i];
+                meshGSplats.push(resources ? resources.map((resource) => {
+                    const gsplatAsset = createAsset('gsplat', resource, gsplats.length);
+                    gsplats.push(gsplatAsset);
+                    return gsplatAsset;
+                }) : null);
+            }
+        }
+
         this.data = data;
         this._model = null;
         this._assetName = asset.name;
@@ -48,6 +63,8 @@ class GlbContainerResource {
         this.materials = materials;
         this.textures = data.textures; // texture assets are created directly
         this.animations = animations;
+        this.gsplats = gsplats;
+        this._meshGSplats = meshGSplats;
     }
 
     get model() {
@@ -151,6 +168,22 @@ class GlbContainerResource {
                                     attachedMi = [];
                                 }
                                 attachedMi.push(cloneMi);
+                            }
+                        }
+                    }
+
+                    // gaussian splats - the first one is added to the entity, additional splat
+                    // primitives get child entities
+                    if (gltfNode.hasOwnProperty('mesh')) {
+                        const splatAssets = this._meshGSplats[gltfNode.mesh];
+                        if (splatAssets) {
+                            for (let sa = 0; sa < splatAssets.length; sa++) {
+                                let target = entity;
+                                if (sa > 0) {
+                                    target = new Entity(`${entity.name}_gsplat_${sa}`, this._assets._loader._app);
+                                    entity.addChild(target);
+                                }
+                                target.addComponent('gsplat', { asset: splatAssets[sa] });
                             }
                         }
                     }
@@ -275,7 +308,7 @@ class GlbContainerResource {
         return root;
     }
 
-    // create a pc.Model from the parsed GLB data structures
+    // create a Model from the parsed GLB data structures
     static createModel(glb, defaultMaterial) {
 
         const createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
@@ -368,6 +401,12 @@ class GlbContainerResource {
         if (this.renders) {
             destroyAssets(this.renders);
             this.renders = null;
+        }
+
+        if (this.gsplats) {
+            destroyAssets(this.gsplats);
+            this.gsplats = null;
+            this._meshGSplats = null;
         }
 
         if (this._model) {

@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+.[0-9]+"
       - "v[0-9]+.[0-9]+.[0-9]+-preview.[0-9]+"
       - "v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
 
@@ -20,7 +21,7 @@ jobs:
         uses: actions/checkout@v7.0.0
 
       - name: Set up Node.js 24.x
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24.x
           cache: "npm"
@@ -32,18 +33,38 @@ jobs:
           echo "TAG=${TAG_NAME}" >> $GITHUB_ENV
           echo "VERSION=${TAG_NAME/v/}" >> $GITHUB_ENV
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install dependencies
+        run: npm clean-install --progress=false --no-fund
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build API reference manual
+        run: npm run docs
 
       - name: Build PlayCanvas
         run: npm run build
+
+      - name: Build Scripts API reference manual
+        run: npm run docs:scripts
+
+      - name: Run Post-build tests
+        run: npm run test:build
+
+      - name: Compile TypeScript declarations
+        run: npm run test:types
 
       - name: Run Publint
         run: npm run publint
 
       - name: Publish to npm
         run: |
-          if [[ "${{ env.TAG }}" =~ "preview" ]]; then
+          if [[ "${{ env.TAG }}" =~ "alpha" ]]; then
+            tag=alpha
+          elif [[ "${{ env.TAG }}" =~ "preview" ]]; then
             tag=preview
           elif [[ "${{ env.TAG }}" =~ "beta" ]]; then
             tag=beta

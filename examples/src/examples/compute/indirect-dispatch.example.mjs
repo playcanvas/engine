@@ -12,7 +12,59 @@
 // source: https://polyhaven.com/a/wide_street_02
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BUFFERUSAGE_COPY_DST,
+    BindGroupFormat,
+    BindStorageBufferFormat,
+    BindStorageTextureFormat,
+    BindTextureFormat,
+    BindUniformBufferFormat,
+    CameraComponentSystem,
+    Color,
+    Compute,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
+    FILTER_NEAREST,
+    GAMMA_SRGB,
+    Layer,
+    LightComponentSystem,
+    Mouse,
+    PIXELFORMAT_DEPTH,
+    PIXELFORMAT_RGBA8,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RenderTarget,
+    SAMPLETYPE_DEPTH,
+    SAMPLETYPE_FLOAT,
+    SHADERLANGUAGE_WGSL,
+    SHADERSTAGE_COMPUTE,
+    SKYTYPE_DOME,
+    ScriptComponentSystem,
+    ScriptHandler,
+    Shader,
+    StorageBuffer,
+    TEXTUREDIMENSION_2D,
+    TONEMAP_ACES,
+    Texture,
+    TextureHandler,
+    TouchDevice,
+    UNIFORMTYPE_FLOAT,
+    UNIFORMTYPE_UINT,
+    UNIFORMTYPE_VEC3,
+    UniformBufferFormat,
+    UniformFormat,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
 
@@ -23,46 +75,41 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    hdri: new pc.Asset(
-        'hdri',
-        'texture',
-        { url: './assets/hdri/wide-street.hdr' },
-        { mipmaps: false }
-    ),
-    orbit: new pc.Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
+    hdri: new Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false }),
+    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Create a layer for the render target
-const rtLayer = new pc.Layer({ name: 'RTLayer' });
+const rtLayer = new Layer({ name: 'RTLayer' });
 app.scene.layers.push(rtLayer);
 
 // Get skybox layer for the RT camera
@@ -115,32 +162,32 @@ const createResources = () => {
     outputTexture?.destroy();
 
     // Create render target texture (source for compute)
-    const colorBuffer = new pc.Texture(device, {
+    const colorBuffer = new Texture(device, {
         name: 'RT-ColorBuffer',
         width: rtWidth,
         height: rtHeight,
-        format: pc.PIXELFORMAT_RGBA8,
+        format: PIXELFORMAT_RGBA8,
         mipmaps: false,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE
     });
 
     // Create explicit depth texture for compute shader access
-    depthTexture = new pc.Texture(device, {
+    depthTexture = new Texture(device, {
         name: 'RT-DepthBuffer',
         width: rtWidth,
         height: rtHeight,
-        format: pc.PIXELFORMAT_DEPTH,
+        format: PIXELFORMAT_DEPTH,
         mipmaps: false,
-        minFilter: pc.FILTER_NEAREST,
-        magFilter: pc.FILTER_NEAREST,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+        minFilter: FILTER_NEAREST,
+        magFilter: FILTER_NEAREST,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE
     });
 
-    renderTarget = new pc.RenderTarget({
+    renderTarget = new RenderTarget({
         name: 'SceneRT',
         colorBuffer: colorBuffer,
         depthBuffer: depthTexture,
@@ -148,27 +195,27 @@ const createResources = () => {
     });
 
     // Create output storage texture (write-only destination for compute)
-    outputTexture = new pc.Texture(device, {
+    outputTexture = new Texture(device, {
         name: 'OutputTexture',
         width: rtWidth,
         height: rtHeight,
-        format: pc.PIXELFORMAT_RGBA8,
+        format: PIXELFORMAT_RGBA8,
         mipmaps: false,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE,
         storage: true
     });
 
     // Create tile list buffers (stores indices of tiles)
-    edgeTileListBuffer = new pc.StorageBuffer(device, numTiles * 4);
-    smoothTileListBuffer = new pc.StorageBuffer(device, numTiles * 4);
+    edgeTileListBuffer = new StorageBuffer(device, numTiles * 4);
+    smoothTileListBuffer = new StorageBuffer(device, numTiles * 4);
 
     // Create counter buffers (atomic counters, cleared each frame)
-    edgeTileCounterBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_DST);
-    smoothTileCounterBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_DST);
-    completionCounterBuffer = new pc.StorageBuffer(device, 4, pc.BUFFERUSAGE_COPY_DST);
+    edgeTileCounterBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
+    smoothTileCounterBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
+    completionCounterBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
 
     // Update camera's render target
     if (rtCamera) {
@@ -188,157 +235,155 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
 
-    // Setup skydome from HDR texture
-    const hdriSource = assets.hdri.resource;
+// Setup skydome from HDR texture
+const hdriSource = assets.hdri.resource;
 
-    // Convert to high resolution cubemap for the skybox
-    const skybox = pc.EnvLighting.generateSkyboxCubemap(hdriSource);
-    app.scene.skybox = skybox;
+// Convert to high resolution cubemap for the skybox
+const skybox = EnvLighting.generateSkyboxCubemap(hdriSource);
+app.scene.skybox = skybox;
 
-    // Generate env-atlas texture for the lighting
-    const lighting = pc.EnvLighting.generateLightingSource(hdriSource);
-    const envAtlas = pc.EnvLighting.generateAtlas(lighting);
-    lighting.destroy();
-    app.scene.envAtlas = envAtlas;
+// Generate env-atlas texture for the lighting
+const lighting = EnvLighting.generateLightingSource(hdriSource);
+const envAtlas = EnvLighting.generateAtlas(lighting);
+lighting.destroy();
+app.scene.envAtlas = envAtlas;
 
-    // Configure projected skydome
-    app.scene.sky.type = pc.SKYTYPE_DOME;
-    app.scene.sky.node.setLocalScale(new pc.Vec3(200, 200, 200));
-    app.scene.sky.node.setLocalPosition(new pc.Vec3(0, 0, 0));
-    app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
-    app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 0, 0);
-    app.scene.exposure = 0.7;
+// Configure projected skydome
+app.scene.sky.type = SKYTYPE_DOME;
+app.scene.sky.node.setLocalScale(new Vec3(200, 200, 200));
+app.scene.sky.node.setLocalPosition(new Vec3(0, 0, 0));
+app.scene.sky.center = new Vec3(0, 0.05, 0);
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, 0, 0);
+app.scene.exposure = 0.7;
 
-    // Add an instance of the statue
-    const statueEntity = assets.statue.resource.instantiateRenderEntity({
-        layers: [rtLayer.id]
-    });
-    app.root.addChild(statueEntity);
+// Add an instance of the statue
+const statueEntity = assets.statue.resource.instantiateRenderEntity({
+    layers: [rtLayer.id]
+});
+app.root.addChild(statueEntity);
 
-    // Initialize resources
-    if (device.supportsCompute) {
-        createResources();
+// Initialize resources
+if (device.supportsCompute) {
+    createResources();
+}
+
+// Create camera that renders to the render target
+rtCamera = new Entity('rtCamera');
+rtCamera.addComponent('camera', {
+    nearClip: CAMERA_NEAR,
+    farClip: CAMERA_FAR,
+    fov: 70,
+    toneMapping: TONEMAP_ACES,
+    gammaCorrection: GAMMA_SRGB,
+    layers: [rtLayer.id, skyboxLayer.id],
+    renderTarget: renderTarget
+});
+
+// Add orbit camera script
+rtCamera.addComponent('script');
+rtCamera.script.create('orbitCamera', {
+    attributes: {
+        inertiaFactor: 0.2,
+        focusEntity: statueEntity,
+        distanceMax: 500,
+        frameOnStart: false
     }
+});
+rtCamera.script.create('orbitCameraInputMouse');
+rtCamera.script.create('orbitCameraInputTouch');
 
-    // Create camera that renders to the render target
-    rtCamera = new pc.Entity('rtCamera');
-    rtCamera.addComponent('camera', {
-        nearClip: CAMERA_NEAR,
-        farClip: CAMERA_FAR,
-        fov: 70,
-        toneMapping: pc.TONEMAP_ACES,
-        gammaCorrection: pc.GAMMA_SRGB,
-        layers: [rtLayer.id, skyboxLayer.id],
-        renderTarget: renderTarget
-    });
+rtCamera.setLocalPosition(-4, 5, 22);
+rtCamera.lookAt(0, 0, 1);
+app.root.addChild(rtCamera);
 
-    // Add orbit camera script
-    rtCamera.addComponent('script');
-    rtCamera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: statueEntity,
-            distanceMax: 500,
-            frameOnStart: false
-        }
-    });
-    rtCamera.script.create('orbitCameraInputMouse');
-    rtCamera.script.create('orbitCameraInputTouch');
+// Create main camera (for final view - only immediate layer for drawTexture)
+const immediateLayer = app.scene.layers.getLayerByName('Immediate');
+const mainCamera = new Entity('mainCamera');
+mainCamera.addComponent('camera', {
+    clearColor: new Color(0.1, 0.1, 0.1),
+    layers: [immediateLayer.id]
+});
+mainCamera.setPosition(0, 0, 0);
+app.root.addChild(mainCamera);
 
-    rtCamera.setLocalPosition(-4, 5, 22);
-    rtCamera.lookAt(0, 0, 1);
-    app.root.addChild(rtCamera);
-
-    // Create main camera (for final view - only immediate layer for drawTexture)
-    const immediateLayer = app.scene.layers.getLayerByName('Immediate');
-    const mainCamera = new pc.Entity('mainCamera');
-    mainCamera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1),
-        layers: [immediateLayer.id]
-    });
-    mainCamera.setPosition(0, 0, 0);
-    app.root.addChild(mainCamera);
-
-    if (!device.supportsCompute) {
-        return;
-    }
-
+if (device.supportsCompute) {
     // Shader defines - TILE_SIZE is used in both shaders
     const shaderDefines = new Map([['{TILE_SIZE}', `${TILE_SIZE}`]]);
 
     // Create scan shader (analyzes depth discontinuities and populates edge/smooth tile lists)
-    const scanShader = new pc.Shader(device, {
+    const scanShader = new Shader(device, {
         name: 'ScanShader',
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+        shaderLanguage: SHADERLANGUAGE_WGSL,
         cshader: scanShaderWgsl,
         cdefines: shaderDefines,
 
         computeUniformBufferFormats: {
-            ub: new pc.UniformBufferFormat(device, [
-                new pc.UniformFormat('threshold', pc.UNIFORMTYPE_FLOAT),
-                new pc.UniformFormat('cameraNear', pc.UNIFORMTYPE_FLOAT),
-                new pc.UniformFormat('cameraFar', pc.UNIFORMTYPE_FLOAT),
-                new pc.UniformFormat('numTilesX', pc.UNIFORMTYPE_UINT),
-                new pc.UniformFormat('numTilesY', pc.UNIFORMTYPE_UINT),
+            ub: new UniformBufferFormat(device, [
+                new UniformFormat('threshold', UNIFORMTYPE_FLOAT),
+                new UniformFormat('cameraNear', UNIFORMTYPE_FLOAT),
+                new UniformFormat('cameraFar', UNIFORMTYPE_FLOAT),
+                new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
+                new UniformFormat('numTilesY', UNIFORMTYPE_UINT),
                 // Slot indices into the indirect dispatch buffer where scan shader writes dispatch args
-                new pc.UniformFormat('edgeIndirectSlot', pc.UNIFORMTYPE_UINT),
-                new pc.UniformFormat('smoothIndirectSlot', pc.UNIFORMTYPE_UINT)
+                new UniformFormat('edgeIndirectSlot', UNIFORMTYPE_UINT),
+                new UniformFormat('smoothIndirectSlot', UNIFORMTYPE_UINT)
             ])
         },
 
-        computeBindGroupFormat: new pc.BindGroupFormat(device, [
-            new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-            new pc.BindTextureFormat('depthTexture', pc.SHADERSTAGE_COMPUTE, pc.TEXTUREDIMENSION_2D, pc.SAMPLETYPE_DEPTH, false), // depth texture, no sampler
+        computeBindGroupFormat: new BindGroupFormat(device, [
+            new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
+            new BindTextureFormat('depthTexture', SHADERSTAGE_COMPUTE, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH, false), // depth texture, no sampler
             // Tile lists populated by scan shader, consumed by effect shaders
-            new pc.BindStorageBufferFormat('edgeTileList', pc.SHADERSTAGE_COMPUTE),
-            new pc.BindStorageBufferFormat('smoothTileList', pc.SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('edgeTileList', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('smoothTileList', SHADERSTAGE_COMPUTE),
             // Atomic counters for tile classification
-            new pc.BindStorageBufferFormat('edgeTileCounter', pc.SHADERSTAGE_COMPUTE),
-            new pc.BindStorageBufferFormat('smoothTileCounter', pc.SHADERSTAGE_COMPUTE),
-            new pc.BindStorageBufferFormat('completionCounter', pc.SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('edgeTileCounter', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('smoothTileCounter', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('completionCounter', SHADERSTAGE_COMPUTE),
             // Indirect dispatch buffer - scan shader writes dispatch args here
-            new pc.BindStorageBufferFormat('indirectDispatchBuffer', pc.SHADERSTAGE_COMPUTE)
+            new BindStorageBufferFormat('indirectDispatchBuffer', SHADERSTAGE_COMPUTE)
         ])
     });
 
     // Create effect shader (reads from input, writes to output with tint)
-    const effectShader = new pc.Shader(device, {
+    const effectShader = new Shader(device, {
         name: 'EffectShader',
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+        shaderLanguage: SHADERLANGUAGE_WGSL,
         cshader: effectShaderWgsl,
         cdefines: shaderDefines,
 
         computeUniformBufferFormats: {
-            ub: new pc.UniformBufferFormat(device, [
-                new pc.UniformFormat('numTilesX', pc.UNIFORMTYPE_UINT),
-                new pc.UniformFormat('numTilesY', pc.UNIFORMTYPE_UINT),
-                new pc.UniformFormat('tintColor', pc.UNIFORMTYPE_VEC3)
+            ub: new UniformBufferFormat(device, [
+                new UniformFormat('numTilesX', UNIFORMTYPE_UINT),
+                new UniformFormat('numTilesY', UNIFORMTYPE_UINT),
+                new UniformFormat('tintColor', UNIFORMTYPE_VEC3)
             ])
         },
 
-        computeBindGroupFormat: new pc.BindGroupFormat(device, [
-            new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-            new pc.BindStorageBufferFormat('tileList', pc.SHADERSTAGE_COMPUTE, true), // read-only
-            new pc.BindTextureFormat('inputTexture', pc.SHADERSTAGE_COMPUTE, pc.TEXTUREDIMENSION_2D, pc.SAMPLETYPE_FLOAT, false), // no sampler, using textureLoad
-            new pc.BindStorageTextureFormat('outputTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
+        computeBindGroupFormat: new BindGroupFormat(device, [
+            new BindUniformBufferFormat('ub', SHADERSTAGE_COMPUTE),
+            new BindStorageBufferFormat('tileList', SHADERSTAGE_COMPUTE, true), // read-only
+            new BindTextureFormat('inputTexture', SHADERSTAGE_COMPUTE, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, false), // no sampler, using textureLoad
+            new BindStorageTextureFormat('outputTexture', PIXELFORMAT_RGBA8, TEXTUREDIMENSION_2D)
         ])
     });
 
     // Create compute instances
-    scanCompute = new pc.Compute(device, scanShader, 'ScanCompute');
-    effectComputeEdge = new pc.Compute(device, effectShader, 'EffectComputeEdge');
-    effectComputeSmooth = new pc.Compute(device, effectShader, 'EffectComputeSmooth');
+    scanCompute = new Compute(device, scanShader, 'ScanCompute');
+    effectComputeEdge = new Compute(device, effectShader, 'EffectComputeEdge');
+    effectComputeSmooth = new Compute(device, effectShader, 'EffectComputeSmooth');
 
     // Set initial data values
     data.set('data', {
-        threshold: 15     // threshold is in world units - depth range within tile that triggers edge detection
+        threshold: 15 // threshold is in world units - depth range within tile that triggers edge detection
     });
 
     // Update loop
-    app.on('update', (/** @type {number} */ dt) => {
+    app.on('update', (/** @type {number} */ _dt) => {
         if (!device.supportsCompute || !scanCompute || !effectComputeEdge || !effectComputeSmooth) {
             return;
         }
@@ -405,4 +450,4 @@ assetListLoader.load(() => {
         // Bottom half: compute-processed texture (red edge tiles, blue smooth tiles)
         app.drawTexture(0, -0.5 + gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, outputTexture);
     });
-});
+}

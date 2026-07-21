@@ -1,6 +1,6 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 import { InputSource } from '../input.js';
-import { movementState } from '../utils.js';
+import { isTouchPointer, movementState } from '../utils.js';
 
 const tmpVa = new Vec2();
 
@@ -56,7 +56,7 @@ class MultiTouchSource extends InputSource {
         const { pointerId, pointerType } = event;
         this._movementState.down(event);
 
-        if (pointerType !== 'touch') {
+        if (!isTouchPointer(pointerType)) {
             return;
         }
         this._element?.setPointerCapture(pointerId);
@@ -81,7 +81,7 @@ class MultiTouchSource extends InputSource {
         const { pointerType, target, pointerId } = event;
         const [movementX, movementY] = this._movementState.move(event);
 
-        if (pointerType !== 'touch') {
+        if (!isTouchPointer(pointerType)) {
             return;
         }
         if (target !== this._element) {
@@ -117,7 +117,7 @@ class MultiTouchSource extends InputSource {
         const { pointerType, pointerId } = event;
         this._movementState.up(event);
 
-        if (pointerType !== 'touch') {
+        if (!isTouchPointer(pointerType)) {
             return;
         }
         this._element?.releasePointerCapture(pointerId);

@@ -75,6 +75,10 @@ class Shader {
      * WebGPU platform.
      * @param {string} [definition.computeEntryPoint] - The entry point function name for the compute
      * shader. Defaults to 'main'.
+     * @param {BindGroupFormat} [definition.computeBindGroupFormat] - The bind group format for
+     * caller-provided compute resources in group 0. Only used on WebGPU.
+     * @param {Object<string, UniformBufferFormat>} [definition.computeUniformBufferFormats] - The
+     * uniform buffer formats keyed by bind group entry name. Requires computeBindGroupFormat.
      * @param {Map<string, string>} [definition.vincludes] - A map containing key-value pairs of
      * include names and their content. These are used for resolving #include directives in the
      * vertex shader source.
@@ -116,13 +120,13 @@ class Shader {
      *
      * const shaderDefinition = {
      *     attributes: {
-     *         aPosition: pc.SEMANTIC_POSITION
+     *         aPosition: SEMANTIC_POSITION
      *     },
      *     vshader,
      *     fshader
      * };
      *
-     * const shader = new pc.Shader(graphicsDevice, shaderDefinition);
+     * const shader = new Shader(graphicsDevice, shaderDefinition);
      */
     constructor(graphicsDevice, definition) {
         this.id = id++;

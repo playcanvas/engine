@@ -11,7 +11,7 @@ import {
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
@@ -183,6 +183,9 @@ class Texture {
      * - {@link PIXELFORMAT_ATC_RGBA}
      *
      * Defaults to {@link PIXELFORMAT_RGBA8}.
+     * @param {boolean} [options.srgb] - When true, the texture is created in the sRGB variant of
+     * the requested format, if one exists, and is automatically converted to linear space when
+     * sampled. When the format has no sRGB variant, this option is ignored. Defaults to false.
      * @param {string} [options.projection] - The projection type of the texture, used when the
      * texture represents an environment. Can be:
      *
@@ -254,10 +257,10 @@ class Texture {
      * a compute shader. Defaults to false.
      * @example
      * // Create a 8x8x24-bit texture
-     * const texture = new pc.Texture(graphicsDevice, {
+     * const texture = new Texture(graphicsDevice, {
      *     width: 8,
      *     height: 8,
-     *     format: pc.PIXELFORMAT_RGB8
+     *     format: PIXELFORMAT_RGB8
      * });
      *
      * // Fill the texture with a gradient
@@ -284,7 +287,10 @@ class Texture {
         this._width = Math.floor(options.width ?? 4);
         this._height = Math.floor(options.height ?? 4);
 
-        this._format = options.format ?? PIXELFORMAT_RGBA8;
+        // when srgb is requested, the texture is created in the sRGB variant of the format, if
+        // one exists - this avoids an expensive runtime format switch when it is first used as such
+        const format = options.format ?? PIXELFORMAT_RGBA8;
+        this._format = options.srgb ? pixelFormatLinearToGamma(format) : format;
         this._compressed = isCompressedPixelFormat(this._format);
         this._integerFormat = isIntegerPixelFormat(this._format);
         if (this._integerFormat) {
@@ -663,7 +669,7 @@ class Texture {
      */
     set addressW(addressW) {
         if (!this._volume) {
-            Debug.warn('pc.Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
+            Debug.warn('Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
             return;
         }
         if (addressW !== this._addressW) {
@@ -756,16 +762,17 @@ class Texture {
     }
 
     /**
-     * Sets whether the texture should generate/upload mipmaps.
+     * Sets whether the texture should generate/upload mipmaps. Note that changing this property
+     * on an array texture, or on any texture on WebGPU, re-creates the texture on the GPU, which
+     * is an expensive operation, so it is preferable to create the texture with the correct
+     * mipmaps setting from the start.
      *
      * @type {boolean}
      */
     set mipmaps(v) {
         if (this._mipmaps !== v) {
 
-            if (this.device.isWebGPU) {
-                Debug.warn('Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.', this);
-            } else if (isIntegerPixelFormat(this._format)) {
+            if (isIntegerPixelFormat(this._format)) {
                 Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
             } else {
                 const oldMipmaps = this._mipmaps;
@@ -774,8 +781,10 @@ class Texture {
                 this._mipmaps = v;
                 this._updateNumLevels();
 
-                // Changing mip count on array textures requires re-creating immutable storage.
-                if (this.array && this._numLevels !== oldNumLevels) {
+                // Array textures (and all textures on WebGPU) use immutable storage, so changing
+                // the mip count requires re-creating the texture.
+                if ((this.array || this.device.isWebGPU) && this._numLevels !== oldNumLevels) {
+                    Debug.warn(`Changing mipmaps of texture '${this.name}' requires it to be re-created. This is an expensive operation, and the texture should be created with the desired mipmaps setting to avoid this.`, this);
                     this.recreateImpl();
                 } else if (this._mipmaps !== oldMipmaps) {
                     this.propertyChanged(TEXPROPERTY_MIN_FILTER);
@@ -942,6 +951,31 @@ class Texture {
      */
     get type() {
         return this._type;
+    }
+
+    set rgbm(value) {
+        Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
+        this.type = value ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+    }
+
+    get rgbm() {
+        Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
+        return this.type === TEXTURETYPE_RGBM;
+    }
+
+    set swizzleGGGR(value) {
+        Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
+        this.type = value ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
+    }
+
+    get swizzleGGGR() {
+        Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
+        return this.type === TEXTURETYPE_SWIZZLEGGGR;
+    }
+
+    get _glTexture() {
+        Debug.deprecated('Texture#_glTexture is no longer available. Use Texture.impl._glTexture instead.');
+        return this.impl._glTexture;
     }
 
     /**
@@ -1258,7 +1292,7 @@ class Texture {
      */
     unlock() {
         if (this._lockedMode === TEXTURELOCK_NONE) {
-            Debug.warn('pc.Texture#unlock: Attempting to unlock a texture that is not locked.', this);
+            Debug.warn('Texture#unlock: Attempting to unlock a texture that is not locked.', this);
         }
 
         // Upload the new pixel data if locked in write mode (default)
@@ -1340,6 +1374,105 @@ class Texture {
      */
     write(x, y, width, height, data) {
         return this.impl.write?.(x, y, width, height, data);
+    }
+
+    /**
+     * Validates the parameters of a {@link Texture#copy} operation.
+     *
+     * @param {Texture} source - The source texture.
+     * @param {object} options - The copy options (see {@link Texture#copy}).
+     * @returns {boolean} True if the copy parameters are valid.
+     * @private
+     */
+    _validateCopy(source, options) {
+        // #if _DEBUG
+        if (!source) {
+            Debug.error('Texture#copy: a source texture must be provided.');
+            return false;
+        }
+        if (source._format !== this._format) {
+            Debug.error(`Texture#copy: source and destination formats must match (source '${source.name}', destination '${this.name}').`);
+            return false;
+        }
+        if (source._compressed || this._compressed) {
+            Debug.error('Texture#copy: copying compressed textures is not supported.');
+            return false;
+        }
+        if (source._volume || this._volume) {
+            Debug.error('Texture#copy: copying 3D (volume) textures is not supported.');
+            return false;
+        }
+
+        const sourceMipLevel = options.sourceMipLevel ?? 0;
+        const destMipLevel = options.destMipLevel ?? 0;
+        if (sourceMipLevel < 0 || sourceMipLevel >= source.numLevels) {
+            Debug.error(`Texture#copy: sourceMipLevel ${sourceMipLevel} is out of range (source has ${source.numLevels} levels).`);
+            return false;
+        }
+        if (destMipLevel < 0 || destMipLevel >= this.numLevels) {
+            Debug.error(`Texture#copy: destMipLevel ${destMipLevel} is out of range (destination has ${this.numLevels} levels).`);
+            return false;
+        }
+
+        // number of array layers / cubemap faces
+        const sourceLayers = source.cubemap ? 6 : Math.max(1, source.arrayLength);
+        const destLayers = this.cubemap ? 6 : Math.max(1, this.arrayLength);
+        const face = options.face ?? 0;
+        if (face < 0 || face >= sourceLayers || face >= destLayers) {
+            Debug.error(`Texture#copy: face ${face} is out of range.`);
+            return false;
+        }
+
+        // region bounds, evaluated at the chosen mip levels
+        const sw = Math.max(1, source.width >> sourceMipLevel);
+        const sh = Math.max(1, source.height >> sourceMipLevel);
+        const dw = Math.max(1, this.width >> destMipLevel);
+        const dh = Math.max(1, this.height >> destMipLevel);
+        const sx = options.sourceX ?? 0;
+        const sy = options.sourceY ?? 0;
+        const dx = options.destX ?? 0;
+        const dy = options.destY ?? 0;
+        const w = options.width ?? (sw - sx);
+        const h = options.height ?? (sh - sy);
+        if (w <= 0 || h <= 0 || sx < 0 || sy < 0 || dx < 0 || dy < 0 ||
+            sx + w > sw || sy + h > sh || dx + w > dw || dy + h > dh) {
+            Debug.error(`Texture#copy: copy region is out of bounds (source ${sw}x${sh}, destination ${dw}x${dh}).`);
+            return false;
+        }
+        // #endif
+        return true;
+    }
+
+    /**
+     * Copies a region of a source texture into this texture. Both textures must have the same
+     * pixel format. The copied region sizes must match (no scaling), and must lie within the
+     * chosen mip levels of both textures.
+     *
+     * @param {Texture} source - The source texture to copy from.
+     * @param {object} [options] - Optional arguments.
+     * @param {number} [options.sourceMipLevel] - The source mip level to copy from. Defaults to 0.
+     * @param {number} [options.destMipLevel] - The destination mip level to copy to. Defaults to 0.
+     * @param {number} [options.face] - The cubemap face or array layer to copy (applies to both
+     * source and destination). Defaults to 0.
+     * @param {number} [options.sourceX] - The left edge of the source region. Defaults to 0.
+     * @param {number} [options.sourceY] - The top edge of the source region. Defaults to 0.
+     * @param {number} [options.width] - The width of the copied region. Defaults to the full width
+     * of the source mip level (minus sourceX).
+     * @param {number} [options.height] - The height of the copied region. Defaults to the full
+     * height of the source mip level (minus sourceY).
+     * @param {number} [options.destX] - The left edge of the destination region. Defaults to 0.
+     * @param {number} [options.destY] - The top edge of the destination region. Defaults to 0.
+     * @param {RenderTarget} [options.sourceRenderTarget] - A render target wrapping the source
+     * texture as its color buffer, at the matching face / mip level. Provide as an optimization to
+     * avoid allocating a temporary one when copying with high frequency (per frame). Note that this
+     * is only utilized on the WebGL platform, and ignored on WebGPU.
+     * @returns {boolean} True if the copy was successful, false otherwise.
+     */
+    copy(source, options = {}) {
+        if (!this._validateCopy(source, options)) {
+            return false;
+        }
+        return this.impl.copy?.(source, options) ?? true;
     }
 
     /**

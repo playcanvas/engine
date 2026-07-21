@@ -1,6 +1,8 @@
 name: Beta
 
 on:
+  schedule:
+    - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       force:
@@ -29,6 +31,12 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
+      - name: Set up Node.js 24.x
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: "npm"
+
       - name: Configure Git User
         run: |
           git config --global user.email "playcanvas[bot]@users.noreply.github.com"
@@ -36,21 +44,32 @@ jobs:
         shell: bash
 
       - name: Check for changes
-        if: github.event.inputs.force == 'false'
+        id: changes
         run: |
-          last_tag=$(git describe --tags --abbrev=0)
-          if ! git diff --quiet --exit-code $last_tag; then
-            echo "Changes found since v$last_tag"
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          last_tag=$(git describe --tags --match "v*-beta.*" --abbrev=0 2>/dev/null || true)
+          if [[ -z "$last_tag" ]]; then
+            echo "No beta tag found"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          elif ! git diff --quiet --exit-code "$last_tag"..HEAD; then
+            echo "Changes found since $last_tag"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No changes detected since v$last_tag"
-            exit 1
+            echo "No changes detected since $last_tag"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Bump version
+        if: steps.changes.outputs.has_changes == 'true'
         run: |
           npm version prerelease --preid=beta
 
       - name: Push version
+        if: steps.changes.outputs.has_changes == 'true'
         run: |
           git push origin HEAD:${{ github.ref_name }}
           git push origin --tags

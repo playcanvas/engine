@@ -10,6 +10,10 @@ import { NullShader } from './null-shader.js';
 import { NullTexture } from './null-texture.js';
 import { NullVertexBuffer } from './null-vertex-buffer.js';
 import { NullDrawCommands } from './null-draw-commands.js';
+import { NullUniformBuffer } from './null-uniform-buffer.js';
+import { NullBindGroup } from './null-bind-group.js';
+import { NullBindGroupFormat } from './null-bind-group-format.js';
+import { NullDynamicBuffers } from './null-dynamic-buffers.js';
 
 class NullGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
@@ -29,6 +33,9 @@ class NullGraphicsDevice extends GraphicsDevice {
         });
 
         this.initDeviceCaps();
+
+        // no-op dynamic buffers so the (unconditional) view uniform buffer path runs harmlessly
+        this.dynamicBuffers = new NullDynamicBuffers(this);
     }
 
     destroy() {
@@ -87,6 +94,21 @@ class NullGraphicsDevice extends GraphicsDevice {
 
     createShaderImpl(shader) {
         return new NullShader(shader);
+    }
+
+    createUniformBufferImpl(uniformBuffer) {
+        return new NullUniformBuffer();
+    }
+
+    createBindGroupImpl(bindGroup) {
+        return new NullBindGroup();
+    }
+
+    createBindGroupFormatImpl(bindGroupFormat) {
+        return new NullBindGroupFormat();
+    }
+
+    setBindGroup(index, bindGroup, offsets) {
     }
 
     createTextureImpl(texture) {

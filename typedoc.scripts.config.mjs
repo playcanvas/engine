@@ -1,0 +1,147 @@
+/* eslint-disable-next-line import/no-unresolved */
+import { OptionDefaults } from 'typedoc';
+
+/**
+ * TypeDoc configuration for the reusable scripts in scripts/esm, published at
+ * https://api.playcanvas.com/scripts/. Run via `npm run docs:scripts` (requires the engine
+ * types to be built first, which the npm script takes care of).
+ */
+
+const ENGINE_DOCS = 'https://api.playcanvas.com/engine';
+
+// Script attribute tags (parsed by the Editor's attribute parser). Registered so TypeDoc
+// accepts them; all but @description are UI metadata and are excluded from the output.
+const ATTRIBUTE_TAGS = [
+    '@attribute',
+    '@title',
+    '@description',
+    '@range',
+    '@precision',
+    '@step',
+    '@visibleif',
+    '@enabledif',
+    '@resource'
+];
+
+/**
+ * Engine symbols referenced by the scripts' JSDoc (including comments inherited from base
+ * classes like Script and EventHandler via the d.ts), grouped by the page type they have in the
+ * engine API reference. TypeDoc warns about any referenced symbol missing from these lists
+ * ("...resolved but is not included in the documentation") — harvest such warnings into the
+ * matching list.
+ */
+const engineSymbols = {
+    classes: [
+        'AppBase',
+        'Asset',
+        'BoundingBox',
+        'CameraComponent',
+        'CameraFrame',
+        'Color',
+        'Entity',
+        'EventHandle',
+        'EventHandler',
+        'GraphicsDevice',
+        'GSplatContainer',
+        'GSplatFormat',
+        'Layer',
+        'Material',
+        'Mesh',
+        'MeshInstance',
+        'Quat',
+        'RenderTarget',
+        'Script',
+        'ScriptComponent',
+        'Shader',
+        'ShaderMaterial',
+        'StandardMaterial',
+        'Texture',
+        'Vec2',
+        'Vec3',
+        'XrInputSource'
+    ],
+    interfaces: [],
+    types: [
+        'HandleEventCallback'
+    ],
+    variables: [],
+    functions: [],
+    // Class.member references, mapped to lowercased anchors on the class page
+    members: [
+        'EventHandle.off'
+    ]
+};
+
+const playcanvasLinks = {};
+for (const [group, dir] of [
+    ['classes', 'classes'],
+    ['interfaces', 'interfaces'],
+    ['types', 'types'],
+    ['variables', 'variables'],
+    ['functions', 'functions']
+]) {
+    for (const name of engineSymbols[group]) {
+        playcanvasLinks[name] = `${ENGINE_DOCS}/${dir}/${name}.html`;
+    }
+}
+for (const ref of engineSymbols.members) {
+    const [cls, member] = ref.split('.');
+    playcanvasLinks[ref] = `${ENGINE_DOCS}/classes/${cls}.html#${member.toLowerCase()}`;
+}
+
+export default {
+    blockTags: [...OptionDefaults.blockTags, ...ATTRIBUTE_TAGS],
+    // Categories sort alphabetically, with the catch-all pinned last
+    categoryOrder: ['*', 'Supporting Types'],
+    // @category is not supported on @typedef comments, so the state/resources typedefs (and
+    // anything untagged) fall back to this category
+    defaultCategory: 'Supporting Types',
+    compilerOptions: {
+        allowSyntheticDefaultImports: true,
+        checkJs: false
+    },
+    excludeTags: [...OptionDefaults.excludeTags, ...ATTRIBUTE_TAGS.filter(t => t !== '@description')],
+    entryPoints: [
+        './scripts/esm'
+    ],
+    entryPointStrategy: 'expand',
+    exclude: [
+        '**/node_modules/**',
+        // resource-handler parsers, not scripts
+        '**/scripts/esm/parsers/**'
+    ],
+    excludeNotDocumented: true,
+    externalSymbolLinkMappings: {
+        playcanvas: playcanvasLinks
+    },
+    favicon: 'utils/typedoc/favicon.ico',
+    hostedBaseUrl: 'https://api.playcanvas.com/scripts/',
+    includeVersion: true,
+    // Most scripts export a single class, so collapse the per-file modules into one flat
+    // project (classes listed directly, like the engine reference)
+    mergeModulesMergeMode: 'project',
+    name: 'Engine Scripts API Reference',
+    // Group the sidebar by the @category tags on the script classes
+    navigation: {
+        includeCategories: true
+    },
+    navigationLinks: {
+        'Developer Site': 'https://developer.playcanvas.com/',
+        'Blog': 'https://blog.playcanvas.com/',
+        'Discord': 'https://discord.gg/RSaMRzg',
+        'Forum': 'https://forum.playcanvas.com/',
+        'GitHub': 'https://github.com/playcanvas/engine'
+    },
+    out: 'docs-scripts',
+    plugin: [
+        'typedoc-plugin-mdn-links',
+        'typedoc-plugin-merge-modules'
+    ],
+    readme: 'scripts/esm/README.md',
+    sidebarLinks: {
+        'Home': '/'
+    },
+    searchGroupBoosts: {
+        'Classes': 2
+    }
+};

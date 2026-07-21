@@ -1,10 +1,11 @@
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { UNIFORMTYPE_MAT4 } from '../../platform/graphics/constants.js';
+import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
 
 /**
- * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  * @import { CameraComponent } from '../components/camera/component.js'
  * @import { Scene } from '../../scene/scene.js'
  * @import { Layer } from '../../scene/layer.js'
@@ -14,7 +15,6 @@ import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
 
 const tempMeshInstances = [];
 const lights = [[], [], []];
-const defaultShadowAtlasParams = new Float32Array(2);
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
@@ -22,9 +22,6 @@ const defaultShadowAtlasParams = new Float32Array(2);
  * @ignore
  */
 class RenderPassPicker extends RenderPass {
-    /** @type {BindGroup[]} */
-    viewBindGroups = [];
-
     /** @type {BlendState} */
     blendState = BlendState.NOBLEND;
 
@@ -49,17 +46,30 @@ class RenderPassPicker extends RenderPass {
     /** @type {Map<number, MeshInstance|null>} */
     _pickMeshInstances = new Map();
 
+    /**
+     * Minimal view uniform format used by the picker. The pick shaders only need the view
+     * projection (and the view matrix for depth picking); any other view uniform a shader happens
+     * to reference falls back to the per-mesh uniform buffer automatically. This avoids pulling in
+     * the full forward view format (and its lighting / shadow uniforms) which the picker does not
+     * need.
+     *
+     * @type {UniformBufferFormat|null}
+     */
+    _viewUniformFormat = null;
+
     constructor(device, renderer) {
         super(device);
         this.renderer = renderer;
     }
 
-    destroy() {
-        this.viewBindGroups.forEach((bg) => {
-            bg.defaultUniformBuffer.destroy();
-            bg.destroy();
-        });
-        this.viewBindGroups.length = 0;
+    getViewUniformFormat() {
+        if (!this._viewUniformFormat) {
+            this._viewUniformFormat = new UniformBufferFormat(this.device, [
+                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                new UniformFormat('matrix_view', UNIFORMTYPE_MAT4)
+            ]);
+        }
+        return this._viewUniformFormat;
     }
 
     /**
@@ -87,22 +97,24 @@ class RenderPassPicker extends RenderPass {
         this._qualifiedLayerIndices.length = 0;
         this._pickMeshInstances.clear();
 
-        const { camera, scene, layers } = this;
+        const { camera, scene, layers, renderer } = this;
         const srcLayers = scene.layers.layerList;
-        const subLayerEnabled = scene.layers.subLayerEnabled;
 
-        const gsplatDirector = this.renderer.gsplatDirector;
+        const gsplatDirector = renderer.gsplatDirector;
         const pickerWidth = this.renderTarget?.width ?? 1;
         const pickerHeight = this.renderTarget?.height ?? 1;
 
         for (let i = 0; i < srcLayers.length; i++) {
             const srcLayer = srcLayers[i];
             if (layers && layers.indexOf(srcLayer) < 0) continue;
-            if (!srcLayer.enabled || !subLayerEnabled[i]) continue;
-            if (!srcLayer.camerasSet.has(camera.camera)) continue;
+            if (!scene.layers.isSubLayerRenderedByCamera(i, camera.camera)) continue;
 
             // store the index of the layers we need to render
             this._qualifiedLayerIndices.push(i);
+
+            // request culling of this layer for the picking camera, so execute() can read the
+            // camera-visible instances instead of the whole layer
+            renderer.culler.requestMeshInstanceCull(camera.camera, srcLayer);
 
             // kick off a compute tiled renderer for the gsplat manager on this layer, and store the mesh instance
             // which copies the results to the pick buffer
@@ -113,6 +125,10 @@ class RenderPassPicker extends RenderPass {
                 }
             }
         }
+
+        // perform the requested culls now (the picker renders standalone, outside the main
+        // cullComposition), so the culled instance lists are ready for execute()
+        renderer.culler.executeMeshInstanceCull();
     }
 
     execute() {
@@ -132,15 +148,15 @@ class RenderPassPicker extends RenderPass {
                 renderer.clear(camera.camera, false, true, false);
             }
 
-            // Use mesh instances from the layer. Ideally we'd just pick culled instances for the camera,
-            // but we have no way of knowing if culling has been performed since changes to the layer.
-            // Disadvantage here is that we render all mesh instances, even those not visible by the camera.
-            const meshInstances = srcLayer.meshInstances;
+            // use the camera-visible instances for this layer (culling was requested in before()),
+            // taking the bucket that matches this sub-layer's transparency
+            const culledInstances = srcLayer.getCulledInstances(camera.camera);
+            const meshInstances = transparent ? culledInstances.transparent : culledInstances.opaque;
 
-            // only need mesh instances with a pick flag
+            // only need mesh instances with a pick flag (the bucket already matches transparency)
             for (let j = 0; j < meshInstances.length; j++) {
                 const meshInstance = meshInstances[j];
-                if (meshInstance.pick && meshInstance.transparent === transparent) {
+                if (meshInstance.pick) {
                     tempMeshInstances.push(meshInstance);
 
                     // keep the index -> meshInstance index mapping
@@ -170,30 +186,16 @@ class RenderPassPicker extends RenderPass {
 
             if (tempMeshInstances.length > 0) {
 
-                // upload clustered lights uniforms
-                const clusteredLightingEnabled = scene.clusteredLightingEnabled;
-                if (clusteredLightingEnabled) {
-                    const lightClusters = this.emptyWorldClusters;
-                    lightClusters.activate();
-                }
-
-                renderer.setCameraUniforms(camera.camera, renderTarget);
-
-                // TODO: These uniforms are not required by the picker pass, but it uses the
-                // forward view format which includes them. Ideally, each pass should be able
-                // to specify its own view format to avoid setting unnecessary uniforms.
-                renderer.dispatchGlobalLights(scene);
-                device.scope.resolve('shadowAtlasParams').setValue(defaultShadowAtlasParams);
-
-                if (device.supportsUniformBuffers) {
-                    // Initialize view bind group format if not already done
-                    renderer.initViewBindGroupFormat(clusteredLightingEnabled);
-                    renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, null);
-                }
-
+                // render the mesh instances through the standard forward layer path, using the
+                // picker's own minimal view uniform format; it sets up the camera and view uniforms,
+                // and the callback forces the picker blend state per mesh
                 const shaderPass = this.depth ? SHADER_DEPTH_PICK : SHADER_PICK;
-                renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, shaderPass, (meshInstance) => {
-                    device.setBlendState(this.blendState);
+                renderer.renderForwardLayer(camera.camera, renderTarget, null, undefined, shaderPass, {
+                    meshInstances: tempMeshInstances,
+                    splitLights: lights,
+                    lightClusters: this.emptyWorldClusters,
+                    viewUniformFormat: this.getViewUniformFormat(),
+                    drawCallback: () => device.setBlendState(this.blendState)
                 });
 
                 tempMeshInstances.length = 0;

@@ -6,32 +6,75 @@
 // source: https://sketchfab.com/3d-models/vr-gallery-1e087aa25dc742e680accb15249bd6be
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    AudioHandler,
+    AudioListenerComponentSystem,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    ContainerHandler,
+    ElementComponentSystem,
+    ElementInput,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    KEY_B,
+    KEY_R,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScreenComponentSystem,
+    ScriptComponentSystem,
+    SoundComponentSystem,
+    SoundManager,
+    TEXTURETYPE_RGBP,
+    TONEMAP_NEUTRAL,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    XRTYPE_AR,
+    XRTYPE_VR,
+    XrManager,
+    createGraphicsDevice
+} from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { XrControllers } from 'playcanvas/scripts/esm/xr-controllers.mjs';
-import { XrMenu } from 'playcanvas/scripts/esm/xr-menu.mjs';
-import { XrNavigation } from 'playcanvas/scripts/esm/xr-navigation.mjs';
-import { XrSession } from 'playcanvas/scripts/esm/xr-session.mjs';
+import { XrControllers } from 'playcanvas/scripts/esm/xr/xr-controllers.mjs';
+import { XrManipulation } from 'playcanvas/scripts/esm/xr/xr-manipulation.mjs';
+import { XrMenu } from 'playcanvas/scripts/esm/xr/xr-menu.mjs';
+import { XrNavigation } from 'playcanvas/scripts/esm/xr/xr-navigation.mjs';
+import { XrSession } from 'playcanvas/scripts/esm/xr/xr-session.mjs';
 
 import { deviceType } from 'examples/context';
 
 import uiCss from './ui.css';
 import uiHtml from './ui.html';
 
+/**
+ * @import { ContainerResource, RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // Load Ammo.js physics engine
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve());
+    WasmModule.getInstance('Ammo', () => resolve());
 });
 
-// create UI
+// Create UI
 // html
 const div = document.createElement('div');
 div.innerHTML = uiHtml;
@@ -54,17 +97,17 @@ const message = (msg) => {
 
 // Assets
 const assets = {
-    buttonTexture: new pc.Asset('buttonTexture', 'texture', { url: './assets/textures/blue-button.png' }),
-    click: new pc.Asset('click', 'audio', { url: './assets/sounds/click.mp3' }),
-    cube: new pc.Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
-    envAtlas: new pc.Asset(
+    buttonTexture: new Asset('buttonTexture', 'texture', { url: './assets/textures/blue-button.png' }),
+    click: new Asset('click', 'audio', { url: './assets/sounds/click.mp3' }),
+    cube: new Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
+    envAtlas: new Asset(
         'env-atlas',
         'texture',
         { url: './assets/cubemaps/morning-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: './assets/fonts/roboto-extralight.json' }),
-    gallery: new pc.Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-extralight.json' }),
+    gallery: new Asset('gallery', 'container', { url: './assets/models/vr-gallery.glb' })
 };
 
 // Create graphics device
@@ -73,39 +116,39 @@ const gfxOptions = {
     alpha: true
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // AppBase with minimal component systems for UI, scripts, audio, and physics
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(canvas);
-createOptions.touch = new pc.TouchDevice(canvas);
-createOptions.keyboard = new pc.Keyboard(window);
-createOptions.xr = pc.XrManager;
-createOptions.elementInput = new pc.ElementInput(canvas);
-createOptions.soundManager = new pc.SoundManager();
+createOptions.mouse = new Mouse(canvas);
+createOptions.touch = new TouchDevice(canvas);
+createOptions.keyboard = new Keyboard(window);
+createOptions.xr = XrManager;
+createOptions.elementInput = new ElementInput(canvas);
+createOptions.soundManager = new SoundManager();
 
 createOptions.componentSystems = [
-    pc.AudioListenerComponentSystem,
-    pc.ButtonComponentSystem,
-    pc.CameraComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.ElementComponentSystem,
-    pc.LightComponentSystem,
-    pc.RenderComponentSystem,
-    pc.RigidBodyComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.SoundComponentSystem
+    AudioListenerComponentSystem,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    ElementComponentSystem,
+    LightComponentSystem,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScreenComponentSystem,
+    ScriptComponentSystem,
+    SoundComponentSystem
 ];
-createOptions.resourceHandlers = [pc.AudioHandler, pc.ContainerHandler, pc.FontHandler, pc.TextureHandler];
+createOptions.resourceHandlers = [AudioHandler, ContainerHandler, FontHandler, TextureHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -118,7 +161,7 @@ app.on('destroy', () => {
 
 // Load assets
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -127,21 +170,21 @@ app.start();
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxMip = 0;
 
-// create camera parent for locomotion (XrSession attaches to this)
-const cameraParent = new pc.Entity('CameraParent');
+// Create camera parent for locomotion (XrSession attaches to this)
+const cameraParent = new Entity('CameraParent');
 app.root.addChild(cameraParent);
 
-// create camera
-const cameraEntity = new pc.Entity('Camera');
+// Create camera
+const cameraEntity = new Entity('Camera');
 cameraEntity.addComponent('camera', {
-    toneMapping: pc.TONEMAP_NEUTRAL
+    toneMapping: TONEMAP_NEUTRAL
 });
 cameraEntity.addComponent('audiolistener');
 cameraEntity.setLocalPosition(0, 1.7, -2);
 cameraEntity.addComponent('script');
 cameraEntity.script.create(CameraControls, {
     properties: {
-        focusPoint: new pc.Vec3(0, 1.75, 0)
+        focusPoint: new Vec3(0, 1.75, 0)
     }
 });
 cameraParent.addChild(cameraEntity);
@@ -162,8 +205,8 @@ cameraParent.script.create(XrControllers);
 // Add XrNavigation script - handles teleportation and smooth locomotion
 cameraParent.script.create(XrNavigation);
 
-// add directional light
-const light = new pc.Entity('Light');
+// Add directional light
+const light = new Entity('Light');
 light.addComponent('light', {
     type: 'directional',
     castShadows: true,
@@ -175,8 +218,8 @@ light.setEulerAngles(45, 135, 0);
 app.root.addChild(light);
 
 // Add VR gallery environment with physics
-const galleryEntity = /** @type {pc.ContainerResource} */ (assets.gallery.resource).instantiateRenderEntity();
-galleryEntity.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+const galleryEntity = /** @type {ContainerResource} */ (assets.gallery.resource).instantiateRenderEntity();
+galleryEntity.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     const entity = render.entity;
     entity.addComponent('rigidbody', {
         type: 'static',
@@ -187,17 +230,28 @@ galleryEntity.findComponents('render').forEach((/** @type {pc.RenderComponent} *
         renderAsset: render.asset
     });
 });
-app.root.addChild(galleryEntity);
+// World root - the entity XrManipulation drags, rotates and scales. Scene content to manipulate
+// (the gallery) is parented under it; the camera rig is never modified
+const worldRoot = new Entity('WorldRoot');
+app.root.addChild(worldRoot);
+worldRoot.addChild(galleryEntity);
+
+// Add XrManipulation script - squeeze both grips (or make two fists) to drag/rotate/scale the world
+cameraParent.script.create(XrManipulation, {
+    properties: {
+        target: worldRoot
+    }
+});
 
 // Array to track spawned objects for reset
-/** @type {pc.Entity[]} */
+/** @type {Entity[]} */
 const spawnedObjects = [];
 
 /**
  * Spawns a PlayCanvas cube at position (0, 5, 0).
  */
 const spawnCube = () => {
-    const entity = /** @type {pc.ContainerResource} */ (assets.cube.resource).instantiateRenderEntity();
+    const entity = /** @type {ContainerResource} */ (assets.cube.resource).instantiateRenderEntity();
     entity.setLocalScale(0.5, 0.5, 0.5);
     entity.addComponent('rigidbody', {
         type: 'dynamic',
@@ -205,7 +259,7 @@ const spawnCube = () => {
     });
     entity.addComponent('collision', {
         type: 'box',
-        halfExtents: new pc.Vec3(0.25, 0.25, 0.25)
+        halfExtents: new Vec3(0.25, 0.25, 0.25)
     });
     app.root.addChild(entity);
     entity.rigidbody.teleport(0, 5, 0);
@@ -223,13 +277,14 @@ const resetScene = () => {
 };
 
 // XR Menu Script Entity
-const menuEntity = new pc.Entity('XrMenu');
+const menuEntity = new Entity('XrMenu');
 menuEntity.addComponent('script');
 menuEntity.script.create(XrMenu, {
     properties: {
         menuItems: [
             { label: 'SPAWN CUBE', eventName: 'menu:spawnCube' },
             { label: 'RESET', eventName: 'menu:reset' },
+            { label: 'RESET VIEW', eventName: 'xr:manipulation:reset' },
             { label: 'EXIT XR', eventName: 'xr:end' }
         ],
         clickSound: assets.click,
@@ -245,9 +300,9 @@ app.on('menu:reset', resetScene);
 
 // Keyboard shortcuts
 app.keyboard.on('keydown', (e) => {
-    if (e.key === pc.KEY_B) {
+    if (e.key === KEY_B) {
         spawnCube();
-    } else if (e.key === pc.KEY_R) {
+    } else if (e.key === KEY_R) {
         resetScene();
     }
 });
@@ -255,11 +310,11 @@ app.keyboard.on('keydown', (e) => {
 if (app.xr.supported) {
     // XR availability
     document
-    .querySelector('.container > .button[data-xr="immersive-ar"]')
-    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+        .querySelector('.container > .button[data-xr="immersive-ar"]')
+        ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_AR));
     document
-    .querySelector('.container > .button[data-xr="immersive-vr"]')
-    ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+        .querySelector('.container > .button[data-xr="immersive-vr"]')
+        ?.classList.toggle('active', app.xr.isAvailable(XRTYPE_VR));
 
     // XR availability events
     app.xr.on('available', (type, available) => {
@@ -273,7 +328,7 @@ if (app.xr.supported) {
         if (!button.classList.contains('active')) return;
 
         const type = button.getAttribute('data-xr');
-        if (type === pc.XRTYPE_AR) {
+        if (type === XRTYPE_AR) {
             app.fire('ar:start');
         } else {
             app.fire('vr:start');
@@ -285,7 +340,9 @@ if (app.xr.supported) {
         button.addEventListener('click', onXrButtonClick);
     });
 
-    message('In XR, open your left palm toward your face to show the menu');
+    message(
+        'In XR, open your left palm toward your face to show the menu. Squeeze both grips to drag, rotate and scale the world'
+    );
 } else {
     message('WebXR is not supported');
 }

@@ -39,6 +39,8 @@ import { StorageBuffer } from './storage-buffer.js';
  */
 
 const _tempSet = new Set();
+const _tempBlendState = new BlendState();
+const _tempDepthState = new DepthState();
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -827,7 +829,7 @@ class GraphicsDevice extends EventHandler {
      */
     loseContext() {
 
-        Debug.log('pc.GraphicsDevice: Graphics context lost.');
+        Debug.log('GraphicsDevice: Graphics context lost.');
 
         this.contextLost = true;
 
@@ -861,7 +863,7 @@ class GraphicsDevice extends EventHandler {
      */
     restoreContext() {
 
-        Debug.log('pc.GraphicsDevice: Graphics context restored.');
+        Debug.log('GraphicsDevice: Graphics context restored.');
 
         this.contextLost = false;
 
@@ -902,6 +904,155 @@ class GraphicsDevice extends EventHandler {
 
         this.blendColor = new Color(0, 0, 0, 0);
     }
+
+    // ---- deprecated block start ----
+
+    get boneLimit() {
+        Debug.deprecated('GraphicsDevice#boneLimit is deprecated and the limit has been removed.');
+        return 1024;
+    }
+
+    get webgl2() {
+        Debug.deprecated('GraphicsDevice#webgl2 is deprecated, use GraphicsDevice#isWebGL2 instead.');
+        return this.isWebGL2;
+    }
+
+    get textureFloatHighPrecision() {
+        Debug.deprecated('GraphicsDevice#textureFloatHighPrecision is deprecated and always returns true.');
+        return true;
+    }
+
+    get extBlendMinmax() {
+        Debug.deprecated('GraphicsDevice#extBlendMinmax is deprecated as it is always true.');
+        return true;
+    }
+
+    get extTextureHalfFloat() {
+        Debug.deprecated('GraphicsDevice#extTextureHalfFloat is deprecated as it is always true.');
+        return true;
+    }
+
+    get extTextureLod() {
+        Debug.deprecated('GraphicsDevice#extTextureLod is deprecated as it is always true.');
+        return true;
+    }
+
+    get textureHalfFloatFilterable() {
+        Debug.deprecated('GraphicsDevice#textureHalfFloatFilterable is deprecated as it is always true.');
+        return true;
+    }
+
+    get supportsMrt() {
+        Debug.deprecated('GraphicsDevice#supportsMrt is deprecated as it is always true.');
+        return true;
+    }
+
+    get supportsVolumeTextures() {
+        Debug.deprecated('GraphicsDevice#supportsVolumeTextures is deprecated as it is always true.');
+        return true;
+    }
+
+    get supportsInstancing() {
+        Debug.deprecated('GraphicsDevice#supportsInstancing is deprecated as it is always true.');
+        return true;
+    }
+
+    get textureHalfFloatUpdatable() {
+        Debug.deprecated('GraphicsDevice#textureHalfFloatUpdatable is deprecated as it is always true.');
+        return true;
+    }
+
+    get extTextureFloat() {
+        Debug.deprecated('GraphicsDevice#extTextureFloat is deprecated as it is always true');
+        return true;
+    }
+
+    get extStandardDerivatives() {
+        Debug.deprecated('GraphicsDevice#extStandardDerivatives is deprecated as it is always true.');
+        return true;
+    }
+
+    setBlendFunction(blendSrc, blendDst) {
+        Debug.deprecated('GraphicsDevice#setBlendFunction is deprecated, use GraphicsDevice.setBlendState instead.');
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
+        _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, blendSrc, blendDst);
+        this.setBlendState(_tempBlendState);
+    }
+
+    setBlendFunctionSeparate(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
+        Debug.deprecated('GraphicsDevice#setBlendFunctionSeparate is deprecated, use GraphicsDevice.setBlendState instead.');
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
+        _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, blendSrcAlpha, blendDstAlpha);
+        this.setBlendState(_tempBlendState);
+    }
+
+    setBlendEquation(blendEquation) {
+        Debug.deprecated('GraphicsDevice#setBlendEquation is deprecated, use GraphicsDevice.setBlendState instead.');
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
+        _tempBlendState.setAlphaBlend(blendEquation, currentBlendState.alphaSrcFactor, currentBlendState.alphaDstFactor);
+        this.setBlendState(_tempBlendState);
+    }
+
+    setBlendEquationSeparate(blendEquation, blendAlphaEquation) {
+        Debug.deprecated('GraphicsDevice#setBlendEquationSeparate is deprecated, use GraphicsDevice.setBlendState instead.');
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
+        _tempBlendState.setAlphaBlend(blendAlphaEquation, currentBlendState.alphaSrcFactor, currentBlendState.alphaDstFactor);
+        this.setBlendState(_tempBlendState);
+    }
+
+    setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite) {
+        Debug.deprecated('GraphicsDevice#setColorWrite is deprecated, use GraphicsDevice.setBlendState instead.');
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite);
+        this.setBlendState(_tempBlendState);
+    }
+
+    getBlending() {
+        return this.blendState.blend;
+    }
+
+    setBlending(blending) {
+        Debug.deprecated('GraphicsDevice#setBlending is deprecated, use GraphicsDevice.setBlendState instead.');
+        _tempBlendState.copy(this.blendState);
+        _tempBlendState.blend = blending;
+        this.setBlendState(_tempBlendState);
+    }
+
+    setDepthWrite(write) {
+        Debug.deprecated('GraphicsDevice#setDepthWrite is deprecated, use GraphicsDevice.setDepthState instead.');
+        _tempDepthState.copy(this.depthState);
+        _tempDepthState.write = write;
+        this.setDepthState(_tempDepthState);
+    }
+
+    setDepthFunc(func) {
+        Debug.deprecated('GraphicsDevice#setDepthFunc is deprecated, use GraphicsDevice.setDepthState instead.');
+        _tempDepthState.copy(this.depthState);
+        _tempDepthState.func = func;
+        this.setDepthState(_tempDepthState);
+    }
+
+    setDepthTest(test) {
+        Debug.deprecated('GraphicsDevice#setDepthTest is deprecated, use GraphicsDevice.setDepthState instead.');
+        _tempDepthState.copy(this.depthState);
+        _tempDepthState.test = test;
+        this.setDepthState(_tempDepthState);
+    }
+
+    getCullMode() {
+        return this.cullMode;
+    }
+
+    // ---- deprecated block end ----
 
     /**
      * Sets the specified stencil state. If both stencilFront and stencilBack are null, stencil
@@ -1163,7 +1314,7 @@ class GraphicsDevice extends EventHandler {
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
-     *     type: pc.PRIMITIVE_TRIANGLES,
+     *     type: PRIMITIVE_TRIANGLES,
      *     base: 0,
      *     count: 3,
      *     indexed: false

@@ -14,6 +14,7 @@ import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../../platform/graphics/vertex-iterator.js';
+import { Http } from '../../platform/net/http.js';
 
 import { GraphNode } from '../../scene/graph-node.js';
 import { Mesh } from '../../scene/mesh.js';
@@ -45,11 +46,25 @@ const JSON_VERTEX_ELEMENT_TYPE = {
     'float32': TYPE_FLOAT32
 };
 
-// Take PlayCanvas JSON model data and create pc.Model
+// Take PlayCanvas JSON model data and create Model
 class JsonModelParser {
     constructor(modelHandler) {
         this._device = modelHandler.device;
         this._defaultMaterial = modelHandler.defaultMaterial;
+    }
+
+    canParse(context) {
+        return context.ext === 'json';
+    }
+
+    load(url, callback, asset) {
+        this.handler.fetch(url, Http.ResponseType.JSON, (err, response) => {
+            if (err) {
+                callback(err);
+            } else {
+                this.parse(response, callback);
+            }
+        }, asset);
     }
 
     parse(data, callback) {

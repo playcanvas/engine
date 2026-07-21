@@ -8,22 +8,54 @@
 // source: https://sketchfab.com/3d-models/de-dust-2-with-real-light-4ce74cd95c584ce9b12b5ed9dc418db5
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
-import * as pc from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    CollisionComponentSystem,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GamePads,
+    Keyboard,
+    LightComponentSystem,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES2,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-pc.WasmModule.setConfig('Ammo', {
+WasmModule.setConfig('Ammo', {
     glueUrl: './assets/wasm/ammo/ammo.wasm.js',
     wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
     fallbackUrl: './assets/wasm/ammo/ammo.js'
 });
 
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve(true));
+    WasmModule.getInstance('Ammo', () => resolve(true));
 });
 
 const gfxOptions = {
@@ -31,39 +63,39 @@ const gfxOptions = {
 };
 
 const assets = {
-    map: new pc.Asset('map', 'container', { url: './assets/models/fps-map.glb' }),
-    helipad: new pc.Asset(
+    map: new Asset('map', 'container', { url: './assets/models/fps-map.glb' }),
+    helipad: new Asset(
         'helipad-env-atlas',
         'texture',
         { url: './assets/cubemaps/morning-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
-const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, gfxOptions);
 
-const createOptions = new pc.AppOptions();
+const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.touch = new pc.TouchDevice(document.body);
-createOptions.gamepads = new pc.GamePads();
-createOptions.keyboard = new pc.Keyboard(window);
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.gamepads = new GamePads();
+createOptions.keyboard = new Keyboard(window);
 createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.CollisionComponentSystem,
-    pc.RigidBodyComponentSystem
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
-const app = new pc.AppBase(canvas);
+const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
@@ -73,7 +105,7 @@ app.on('destroy', () => {
 });
 
 await new Promise((resolve) => {
-    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
@@ -81,15 +113,15 @@ app.start();
 // Skybox
 app.scene.skyboxMip = 0;
 app.scene.exposure = 0.4;
-app.scene.skyboxHighlightMultiplier = 50;   // extra brightness for the clipped sun in the skybox to make it bloom more
+app.scene.skyboxHighlightMultiplier = 50; // extra brightness for the clipped sun in the skybox to make it bloom more
 app.scene.envAtlas = assets.helipad.resource;
-app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 10, 0);
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, 10, 0);
 
 // Gravity (increase for more realistic jumping)
 app.systems.rigidbody?.gravity.set(0, -18, 0);
 
 // Camera
-const camera = new pc.Entity();
+const camera = new Entity();
 camera.addComponent('camera', {
     farClip: 100,
     fov: 90
@@ -97,9 +129,9 @@ camera.addComponent('camera', {
 camera.setLocalPosition(0, 0.5, 0);
 
 // Custom render passes
-const cameraFrame = new pc.CameraFrame(app, camera.camera);
+const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.samples = 4;
-cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
+cameraFrame.rendering.toneMapping = TONEMAP_ACES2;
 cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.update();
@@ -108,7 +140,7 @@ cameraFrame.update();
 const map = assets.map.resource.instantiateRenderEntity();
 map.setLocalScale(2, 2, 2);
 map.setLocalEulerAngles(-90, 0, 0);
-map.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+map.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
     const entity = render.entity;
     entity.addComponent('rigidbody', {
         type: 'static'
@@ -118,12 +150,12 @@ map.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) 
         renderAsset: render.asset
     });
 });
-const level = new pc.Entity();
+const level = new Entity();
 level.addChild(map);
 app.root.addChild(level);
 
 // Character controller
-const characterController = new pc.Entity('cc');
+const characterController = new Entity('cc');
 characterController.setPosition(5, 2, 10);
 characterController.addChild(camera);
 characterController.addComponent('collision', {
@@ -136,18 +168,20 @@ characterController.addComponent('rigidbody', {
     mass: 100,
     linearDamping: 0,
     angularDamping: 0,
-    linearFactor: pc.Vec3.ONE,
-    angularFactor: pc.Vec3.ZERO,
+    linearFactor: Vec3.ONE,
+    angularFactor: Vec3.ZERO,
     friction: 0.5,
     restitution: 0
 });
 characterController.addComponent('script');
-const fpc = /** @type {FirstPersonController} */ (characterController.script.create(FirstPersonController, {
-    properties: {
-        camera,
-        jumpForce: 850
-    }
-}));
+const fpc = /** @type {FirstPersonController} */ (
+    characterController.script.create(FirstPersonController, {
+        properties: {
+            camera,
+            jumpForce: 850
+        }
+    })
+);
 app.root.addChild(characterController);
 
 /**

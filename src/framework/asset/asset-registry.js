@@ -252,7 +252,7 @@ class AssetRegistry extends EventHandler {
      *
      * @param {Asset} asset - The asset to add.
      * @example
-     * const asset = new pc.Asset("My Asset", "texture", {
+     * const asset = new Asset("My Asset", "texture", {
      *     url: "../path/to/image.jpg"
      * });
      * app.assets.add(asset);

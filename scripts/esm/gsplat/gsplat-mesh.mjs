@@ -222,15 +222,16 @@ function collectRenderComponents(entity, recursive, results) {
  * @example
  * // Add the script to an entity
  * entity.addComponent('script');
- * const meshSplat = entity.script.create(GsplatMesh);
+ * const meshSplat = entity.script.create(GSplatMesh);
  *
  * // Build splats from another entity's mesh hierarchy
  * meshSplat.buildFromEntity(sourceEntity, {
  *     splatSize: 0.02,
  *     recursive: true
  * });
+ * @category Gaussian Splatting
  */
-class GsplatMesh extends Script {
+class GSplatMesh extends Script {
     static scriptName = 'gsplatMesh';
 
     /**
@@ -495,4 +496,4 @@ class GsplatMesh extends Script {
     }
 }
 
-export { GsplatMesh };
+export { GSplatMesh };

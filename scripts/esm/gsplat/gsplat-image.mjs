@@ -12,13 +12,14 @@ import { Script, BoundingBox, GSplatFormat, GSplatContainer, FloatPacking } from
  * @example
  * // Add the script to an entity
  * entity.addComponent('script');
- * const image = entity.script.create(GsplatImage, {
+ * const image = entity.script.create(GSplatImage, {
  *     attributes: {
  *         imageAsset: myTextureAsset
  *     }
  * });
+ * @category Gaussian Splatting
  */
-class GsplatImage extends Script {
+class GSplatImage extends Script {
     static scriptName = 'gsplatImage';
 
     /**
@@ -99,7 +100,7 @@ class GsplatImage extends Script {
         // Get the source image element from the texture
         const source = texture.getSource();
         if (!source) {
-            console.warn('GsplatImage: Texture has no source image');
+            console.warn('GSplatImage: Texture has no source image');
             return;
         }
 
@@ -112,7 +113,7 @@ class GsplatImage extends Script {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-            console.warn('GsplatImage: Failed to create canvas context');
+            console.warn('GSplatImage: Failed to create canvas context');
             return;
         }
         ctx.drawImage(source, 0, 0);
@@ -230,4 +231,4 @@ class GsplatImage extends Script {
     }
 }
 
-export { GsplatImage };
+export { GSplatImage };

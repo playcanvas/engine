@@ -1,5 +1,5 @@
 import { Vec3 } from 'playcanvas';
-import { GsplatShaderEffect } from './gsplat-shader-effect.mjs';
+import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
 const shaderGLSL = /* glsl */`
 uniform vec3 uAabbMin;
@@ -107,7 +107,7 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * @example
  * // Add the script to a gsplat entity
  * entity.addComponent('script');
- * const cropScript = entity.script.create(GsplatCropShaderEffect);
+ * const cropScript = entity.script.create(GSplatCropShaderEffect);
  * cropScript.aabbMin.set(-1, -1, -1);
  * cropScript.aabbMax.set(1, 1, 1);
  * cropScript.edgeScaleFactor = 0.5; // Default value
@@ -115,8 +115,9 @@ fn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {
  * // Enable precise cropping
  * material.setDefine('GSPLAT_PRECISE_CROP', '');
  * material.update();
+ * @category Gaussian Splatting
  */
-class GsplatCropShaderEffect extends GsplatShaderEffect {
+class GSplatCropShaderEffect extends GSplatShaderEffect {
     static scriptName = 'gsplatCropShaderEffect';
 
     // Reusable arrays for uniform updates
@@ -167,4 +168,4 @@ class GsplatCropShaderEffect extends GsplatShaderEffect {
     }
 }
 
-export { GsplatCropShaderEffect };
+export { GSplatCropShaderEffect };

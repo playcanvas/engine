@@ -15,19 +15,21 @@ import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
+import { LayerRenderStep } from './layer-render-step.js';
 import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 
 /**
- * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  * @import { Camera } from '../camera.js'
  * @import { FrameGraph } from '../frame-graph.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { RenderAction } from '../composition/render-action.js'
  * @import { Layer } from '../layer.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
+ * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js'
  * @import { WorldClusters } from '../lighting/world-clusters.js'
  */
 
@@ -513,7 +515,7 @@ class ForwardRenderer extends Renderer {
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass) {
+    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass, viewUniformFormat) {
 
         // fog params from the scene, or overridden by the camera
         const fogParams = camera.fogParams ?? this.scene.fog;
@@ -594,7 +596,7 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
+            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, viewUniformFormat, sortedLights);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -606,10 +608,9 @@ class ForwardRenderer extends Renderer {
         return _drawCallList;
     }
 
-    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups) {
+    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
         const device = this.device;
         const scene = this.scene;
-        const passFlag = 1 << pass;
         const flipFactor = flipFaces ? -1 : 1;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
@@ -671,7 +672,7 @@ class ForwardRenderer extends Renderer {
             device.setStencilState(stencilFront, stencilBack);
 
             // Uniforms II: meshInstance overrides
-            drawCall.setParameters(device, passFlag);
+            drawCall.setParameters(device);
 
             // mesh ID - used by the picker
             device.scope.resolve('meshInstanceId').setValue(drawCall.id);
@@ -704,15 +705,10 @@ class ForwardRenderer extends Renderer {
 
                     device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
-                    if (device.supportsUniformBuffers) {
-
-                        const viewBindGroup = viewBindGroups[v];
-                        device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
-
-                    } else {
-
-                        this.setupViewUniforms(view, v);
-                    }
+                    // per-view dynamic bind group + offset captured during setupViewUniformBuffers
+                    // (the per-view scope values were set there too)
+                    this._viewOffsetScratch[0] = this._viewBindGroupOffsets[v];
+                    device.setBindGroup(BINDGROUP_VIEW, this._viewBindGroups[v], this._viewOffsetScratch);
 
                     const first = v === viewListStart;
                     const last = v === viewListEnd - 1;
@@ -741,17 +737,17 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewBindGroups) {
+    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewUniformFormat) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass, viewUniformFormat);
 
         // render mesh instances
-        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces, viewBindGroups);
+        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
 
         _drawCallList.clear();
 
@@ -770,8 +766,6 @@ class ForwardRenderer extends Renderer {
      * @param {boolean} transparent - True if transparent sublayer should be rendered, opaque
      * otherwise.
      * @param {number} shaderPass - A type of shader to use during rendering.
-     * @param {BindGroup[]} viewBindGroups - An array storing the view level bing groups (can be
-     * empty array, and this function populates if per view).
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.clearColor] - True if the color buffer should be cleared.
      * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
@@ -781,10 +775,16 @@ class ForwardRenderer extends Renderer {
      * @param {MeshInstance[]} [options.meshInstances] - The mesh instances to be rendered. Use
      * when layer is not provided.
      * @param {object} [options.splitLights] - The split lights to be used for clustered lighting.
+     * @param {Function} [options.drawCallback] - Function called before each mesh instance is
+     * rendered, with the mesh instance as the argument.
+     * @param {UniformBufferFormat} [options.viewUniformFormat] - A custom view uniform buffer
+     * format to use for this layer. When not provided, the renderer's default view uniform format
+     * is used. The shaders are processed and the view uniform buffer is set up using the same
+     * format, so they always match.
      */
-    renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, viewBindGroups, options = {}) {
+    renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, options = {}) {
 
-        const { scene, device } = this;
+        const { scene } = this;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
         this.setupViewport(camera, renderTarget);
@@ -843,9 +843,16 @@ class ForwardRenderer extends Renderer {
         this.setFogConstants(fogParams);
 
         const viewList = this.setCameraUniforms(camera, renderTarget);
-        if (device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewList);
-        }
+
+        // ensure the default view uniform format exists - renderForwardLayer can run outside
+        // the main frame update (e.g. the picker and lightmapper passes)
+        this.initViewUniformFormat(scene.clusteredLightingEnabled);
+
+        // callers may supply a custom view uniform format, otherwise the renderer default is used
+        const viewUniformFormat = options.viewUniformFormat ?? this.viewUniformFormat;
+
+        // view uniforms always go through a uniform buffer (on all backends)
+        this.setupViewUniformBuffers(viewUniformFormat, viewList);
 
         // clearing - do it after the view bind groups are set up, to avoid overriding those
         const clearColor = options.clearColor ?? false;
@@ -864,10 +871,10 @@ class ForwardRenderer extends Renderer {
             visible,
             splitLights,
             shaderPass,
-            null,
+            options.drawCallback ?? null,
             layer,
             flipFaces,
-            viewBindGroups);
+            viewUniformFormat);
 
         if (layer) {
             layer._forwardDrawCalls += this._forwardDrawCalls - forwardDrawCalls;
@@ -983,7 +990,7 @@ class ForwardRenderer extends Renderer {
                 const nextRenderAction = renderActions[i + 1];
                 const isNextLayerDepth = nextRenderAction ? (!nextRenderAction.useCameraPasses && nextRenderAction.layer.id === LAYERID_DEPTH) : false;
                 const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
-                const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
+                const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.culler.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
 
                 // end of the block using the same render target if the next render action uses a different render target,
                 // a different camera, or needs directional shadows rendered before it or similar.
@@ -1058,10 +1065,29 @@ class ForwardRenderer extends Renderer {
 
         const renderActions = layerComposition._renderActions;
         for (let i = startIndex; i <= endIndex; i++) {
-            renderPass.addRenderAction(renderActions[i]);
+            renderPass.addLayerRenderStep(this._layerRenderStepFromRenderAction(renderActions[i]));
         }
 
         frameGraph.addRenderPass(renderPass);
+    }
+
+    /**
+     * Build a {@link LayerRenderStep} from a composition {@link RenderAction}. This is the only
+     * place that bridges the internal RenderAction scheduling type to the render pass's own
+     * LayerRenderStep, so neither RenderPassForward nor LayerRenderStep reference RenderAction.
+     *
+     * @param {RenderAction} renderAction - The composition render action.
+     * @returns {LayerRenderStep} The layer render step.
+     * @private
+     */
+    _layerRenderStepFromRenderAction(renderAction) {
+        const step = new LayerRenderStep(renderAction.camera, renderAction.layer, renderAction.transparent, renderAction.renderTarget);
+        step.clearColor = renderAction.clearColor;
+        step.clearDepth = renderAction.clearDepth;
+        step.clearStencil = renderAction.clearStencil;
+        step.firstCameraUse = renderAction.firstCameraUse;
+        step.lastCameraUse = renderAction.lastCameraUse;
+        return step;
     }
 
     /**
@@ -1087,9 +1113,24 @@ class ForwardRenderer extends Renderer {
         // update gsplat director
         this.gsplatDirector?.update(comp);
 
-        // visibility culling of lights, meshInstances, shadows casters
+        // light visibility culling, light atlas allocation and directional shadow light collection
+        // (mesh-independent, so it can run before the frame graph is built in a later refactor)
+        this.culler.updateLightVisibility(comp);
+    }
+
+    /**
+     * Visibility culling of mesh instances and shadow casters, followed by GPU data updates for the
+     * resulting visible objects, and consuming one-shot shadow updates. Runs after the frame graph
+     * has been built (which is itself after {@link ForwardRenderer#update}), so shadow-pass building
+     * and shadow-caster culling have both read the shadow update mode before it is consumed here.
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
+    cull(comp) {
+
+        // visibility culling of meshInstances and shadow casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
-        this.cullComposition(comp);
+        this.culler.cullComposition(comp);
 
         // Dispatch gsplat directional shadow culls. Runs after cullComposition so each directional
         // light's shadow-camera frustum has been fitted, and before the frame graph renders the
@@ -1097,7 +1138,11 @@ class ForwardRenderer extends Renderer {
         this.gsplatDirector?.updateShadows();
 
         // GPU update for visible objects requiring one
-        this.gpuUpdate(this.processingMeshInstances);
+        this.gpuUpdate(this.culler.processingMeshInstances);
+
+        // consume one-shot (THISFRAME) shadow updates - the frame graph has been built and shadow
+        // casters culled, so both have read the shadow update mode before it is changed here
+        this.culler.consumeOneShotShadows();
     }
 }
 

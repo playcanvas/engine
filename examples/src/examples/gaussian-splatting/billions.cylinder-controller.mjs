@@ -1,11 +1,4 @@
-import {
-    math,
-    Vec3,
-    Quat,
-    Mat4,
-    KeyboardMouseSource,
-    DualGestureSource
-} from 'playcanvas';
+import { math, Vec3, Quat, Mat4, KeyboardMouseSource, DualGestureSource } from 'playcanvas';
 
 // Frame-rate independent damping: fraction of the remaining distance to cover this frame.
 const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
@@ -106,19 +99,19 @@ class CylinderController {
         const R = this.radius;
 
         // accumulate currently-held keyboard state from per-frame deltas
-        this._axis.x += (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]);
-        this._axis.y += (key[keyCode.E] - key[keyCode.Q]) + (key[keyCode.SPACE] - key[keyCode.CTRL]);
-        this._axis.z += (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN]);
+        this._axis.x += key[keyCode.D] - key[keyCode.A] + (key[keyCode.RIGHT] - key[keyCode.LEFT]);
+        this._axis.y += key[keyCode.E] - key[keyCode.Q] + (key[keyCode.SPACE] - key[keyCode.CTRL]);
+        this._axis.z += key[keyCode.W] - key[keyCode.S] + (key[keyCode.UP] - key[keyCode.DOWN]);
         this._shift += key[keyCode.SHIFT];
 
         // combined move input (keyboard + left joystick), clamped to unit range per axis
-        const moveX = math.clamp(this._axis.x + leftInput[0], -1, 1);   // strafe
-        const moveY = math.clamp(this._axis.y, -1, 1);                  // up (camera up)
-        const moveZ = math.clamp(this._axis.z - leftInput[1], -1, 1);   // forward
+        const moveX = math.clamp(this._axis.x + leftInput[0], -1, 1); // strafe
+        const moveY = math.clamp(this._axis.y, -1, 1); // up (camera up)
+        const moveZ = math.clamp(this._axis.z - leftInput[1], -1, 1); // forward
 
         // --- look: apply yaw about the camera's up and pitch about its right (free 6-DOF) ---
-        const yawIn = (mouse[0] * this.lookSpeed) + (rightInput[0] * this.touchLookSpeed * dt);
-        const pitchIn = (mouse[1] * this.lookSpeed) + (rightInput[1] * this.touchLookSpeed * dt);
+        const yawIn = mouse[0] * this.lookSpeed + rightInput[0] * this.touchLookSpeed * dt;
+        const pitchIn = mouse[1] * this.lookSpeed + rightInput[1] * this.touchLookSpeed * dt;
         if (yawIn || pitchIn) {
             this._rotT.transformVector(Vec3.UP, up);
             this._rotT.transformVector(Vec3.RIGHT, right);
@@ -156,7 +149,7 @@ class CylinderController {
         if (rlen > R * 1e-3) {
             this._rotT.transformVector(Vec3.FORWARD, fwd);
             this._rotT.transformVector(Vec3.UP, up);
-            radial.mulScalar(-1 / rlen);                         // radial up (toward axis)
+            radial.mulScalar(-1 / rlen); // radial up (toward axis)
             // component of radial-up perpendicular to the view direction = the level up we want
             levelUp.copy(radial).sub(tmp.copy(fwd).mulScalar(radial.dot(fwd)));
             const llen = levelUp.length();
@@ -165,7 +158,7 @@ class CylinderController {
                 const cosA = math.clamp(up.dot(levelUp), -1, 1);
                 cross.cross(up, levelUp);
                 const rollDeg = Math.atan2(cross.dot(fwd), cosA) * math.RAD_TO_DEG;
-                const closeness = math.clamp(rlen / R, 0, 1);    // 1 at surface, 0 at axis
+                const closeness = math.clamp(rlen / R, 0, 1); // 1 at surface, 0 at axis
                 const frac = math.clamp(this.levelSpeed * dt, 0, 1) * closeness;
                 if (frac > 0 && Math.abs(rollDeg) > 1e-3) {
                     // Apply the level correction to BOTH the target and the smoothed current

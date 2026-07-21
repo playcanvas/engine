@@ -23,7 +23,7 @@ import { getScriptName, getScriptRegistryName, toLowerCamelCase } from '../../sc
  * ScriptComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('script');
  * ```
  *

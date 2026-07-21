@@ -8,7 +8,7 @@ import { Vec3 } from '../../core/math/vec3.js';
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex normals.
  * @example
- * const normals = pc.calculateNormals(positions, indices);
+ * const normals = calculateNormals(positions, indices);
  * @category Graphics
  */
 const calculateNormals = (positions, indices) => {
@@ -77,7 +77,7 @@ const calculateNormals = (positions, indices) => {
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex tangents.
  * @example
- * const tangents = pc.calculateTangents(positions, normals, uvs, indices);
+ * const tangents = calculateTangents(positions, normals, uvs, indices);
  * @category Graphics
  */
 const calculateTangents = (positions, normals, uvs, indices) => {

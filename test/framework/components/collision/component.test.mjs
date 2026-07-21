@@ -4,6 +4,7 @@ import { Quat } from '../../../../src/core/math/quat.js';
 import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { NullPhysicsWorld } from '../../../../src/framework/physics/null/null-physics-world.js';
 import { Model } from '../../../../src/scene/model.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
@@ -131,7 +132,6 @@ describe('CollisionComponent', function () {
             e.addComponent('collision', { type: null });
 
             expect(e.collision.type).to.equal('box');
-            expect(app.systems.collision.implementations.box).to.exist;
         });
 
         it('copies Vec3 inputs so caller mutations do not leak into component state', function () {
@@ -237,14 +237,13 @@ describe('CollisionComponent', function () {
 
     describe('#type', function () {
 
-        it('changes type and creates the new implementation', function () {
+        it('changes type', function () {
             const e = new Entity();
             e.addComponent('collision');
 
             e.collision.type = 'sphere';
 
             expect(e.collision.type).to.equal('sphere');
-            expect(app.systems.collision.implementations.sphere).to.exist;
         });
 
         it('is a no-op when the type is unchanged', function () {
@@ -338,16 +337,16 @@ describe('CollisionComponent', function () {
             expect(counter.count()).to.equal(3);
         });
 
-        it('routes model, render and convexHull changes to the mesh implementation', function () {
+        it('routes model, render and convexHull changes to the mesh rebuild', function () {
             const box = new Entity();
             box.addComponent('collision');
 
             const mesh = new Entity();
             mesh.addComponent('collision', { type: 'mesh' });
 
-            const impl = app.systems.collision.implementations.mesh;
+            const system = app.systems.collision;
             let calls = 0;
-            impl.doRecreatePhysicalShape = function () {
+            system.doRecreatePhysicalShape = function () {
                 calls++;
             };
 
@@ -359,6 +358,42 @@ describe('CollisionComponent', function () {
             mesh.collision.model = new Model();
             mesh.collision.render = null;
             expect(calls).to.equal(3);
+        });
+
+    });
+
+    describe('compound children', function () {
+
+        beforeEach(function () {
+            // install the no-op physics backend so the shape lifecycle runs
+            app.systems.rigidbody.setPhysicsWorld(new NullPhysicsWorld());
+        });
+
+        it('wires a plain collision child to an ancestor compound', function () {
+            const parent = new Entity();
+            app.root.addChild(parent);
+            parent.addComponent('rigidbody');
+            parent.addComponent('collision', { type: 'compound' });
+
+            const child = new Entity();
+            parent.addChild(child);
+            child.addComponent('collision', { type: 'box' });
+
+            expect(child.collision._compoundParent).to.equal(parent.collision);
+        });
+
+        it('keeps a child with its own rigidbody independent of an ancestor compound', function () {
+            const parent = new Entity();
+            app.root.addChild(parent);
+            parent.addComponent('rigidbody');
+            parent.addComponent('collision', { type: 'compound' });
+
+            const child = new Entity();
+            parent.addChild(child);
+            child.addComponent('rigidbody');
+            child.addComponent('collision', { type: 'box' });
+
+            expect(child.collision._compoundParent).to.equal(null);
         });
 
     });

@@ -894,6 +894,10 @@ class WebglTexture {
         device.setTexture(texture, 0);
         return device.writeTextureAsync(texture, x, y, width, height, data);
     }
+
+    copy(source, options) {
+        return this.texture.device.copyTextureToTexture(source, this.texture, options);
+    }
 }
 
 export { WebglTexture };

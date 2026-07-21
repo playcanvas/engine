@@ -1,0 +1,46 @@
+name: Alpha
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  alpha:
+    runs-on: ubuntu-latest
+    if: github.repository == 'playcanvas/engine' && github.ref_name != 'main'
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_KEY }}
+
+      - name: Check out code
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Node.js 24.x
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: "npm"
+
+      - name: Configure Git User
+        run: |
+          git config --global user.email "playcanvas[bot]@users.noreply.github.com"
+          git config --global user.name "PlayCanvas [bot]"
+        shell: bash
+
+      - name: Tag alpha
+        run: |
+          base=$(npm pkg get version | sed 's/"//g' | sed 's/-.*//')
+          version="$base-alpha.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          npm version "$version" --no-git-tag-version
+          git commit -m "Alpha $version" -- package.json package-lock.json
+          git tag "v$version"
+          git push origin "v$version"

@@ -1,4 +1,3 @@
-import { path } from '../../core/path.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
@@ -128,23 +127,20 @@ class TextureHandler extends ResourceHandler {
     constructor(app) {
         super(app, 'texture');
 
-        const assets = app.assets;
         const device = app.graphicsDevice;
-
         this._device = device;
-        this._assets = assets;
 
-        // img parser handles all browser-supported image formats, this
-        // parser will be used when other more specific parsers are not found.
-        this.imgParser = new ImgParser(assets, device);
+        // img parser handles all browser-supported image formats and acts as the catch-all. It is
+        // registered first so the format-specific parsers below - and any user-registered parsers -
+        // take precedence during newest-first selection.
+        this.imgParser = new ImgParser(app.assets, device);
+        this.addParser(this.imgParser);
 
-        this.parsers = {
-            dds: new DdsParser(assets),
-            ktx: new KtxParser(assets),
-            ktx2: new Ktx2Parser(assets, device),
-            basis: new BasisParser(assets, device),
-            hdr: new HdrParser(assets)
-        };
+        this.addParser(new DdsParser());
+        this.addParser(new KtxParser());
+        this.addParser(new Ktx2Parser(device));
+        this.addParser(new BasisParser(device));
+        this.addParser(new HdrParser());
     }
 
     set crossOrigin(value) {
@@ -153,28 +149,6 @@ class TextureHandler extends ResourceHandler {
 
     get crossOrigin() {
         return this.imgParser.crossOrigin;
-    }
-
-    set maxRetries(value) {
-        this.imgParser.maxRetries = value;
-        for (const parser in this.parsers) {
-            if (this.parsers.hasOwnProperty(parser)) {
-                this.parsers[parser].maxRetries = value;
-            }
-        }
-    }
-
-    get maxRetries() {
-        return this.imgParser.maxRetries;
-    }
-
-    _getUrlWithoutParams(url) {
-        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-    }
-
-    _getParser(url) {
-        const ext = path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '');
-        return this.parsers[ext] || this.imgParser;
     }
 
     _getTextureOptions(asset) {
@@ -234,29 +208,34 @@ class TextureHandler extends ResourceHandler {
                 // basis normalmaps flag the variant as swizzled
                 options.type = TEXTURETYPE_SWIZZLEGGGR;
             }
+
+            // per-load creation options (raw Texture constructor options, for example
+            // { mipmaps: false, minFilter: FILTER_LINEAR }) override the asset-derived options
+            if (asset.options?.texture) {
+                Object.assign(options, asset.options.texture);
+            }
         }
 
         return options;
     }
 
-    load(url, callback, asset) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        this._getParser(url.original).load(url, callback, asset);
-    }
-
     open(url, data, asset) {
+        // no url means no parser can be selected (the loader.open path) - not supported for textures
         if (!url) {
             return undefined;
         }
 
+        // texture parsers use an extended open(url, data, device, textureOptions) signature, so the
+        // handler drives the delegation (and the shared post-processing below) instead of the base open
+        const parser = this._selectParser(this._makeContext(url, asset));
+
+        // the img catch-all normally guarantees a parser - guard against a user-modified registry
+        // (for example with the img parser removed to reject unknown formats)
+        if (!parser) {
+            return undefined;
+        }
         const textureOptions = this._getTextureOptions(asset);
-        let texture = this._getParser(url).open(url, data, this._device, textureOptions);
+        let texture = parser.open(url, data, this._device, textureOptions);
 
         if (texture === null) {
             texture = new Texture(this._device, {

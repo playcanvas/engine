@@ -7,12 +7,10 @@ import {
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
     PIXELFORMAT_111110F, PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F,
-    TEXHINT_ASSET,
-    pixelFormatLinearToGamma
+    TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-
-import { Asset } from '../../asset/asset.js';
+import { Http } from '../../../platform/net/http.js';
 
 import { TextureParser } from './texture.js';
 
@@ -52,13 +50,12 @@ function createContainer(pixelFormat, buffer, byteOffset, byteSize) {
  * Texture parser for ktx files.
  */
 class KtxParser extends TextureParser {
-    constructor(registry) {
-        super();
-        this.maxRetries = 0;
+    canParse(context) {
+        return context.ext === 'ktx';
     }
 
     load(url, callback, asset) {
-        Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
+        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, callback, asset);
     }
 
     open(url, data, device, textureOptions = {}) {
@@ -68,7 +65,6 @@ class KtxParser extends TextureParser {
             return null;
         }
 
-        const format = textureOptions.srgb ? pixelFormatLinearToGamma(textureData.format) : textureData.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -78,9 +74,13 @@ class KtxParser extends TextureParser {
             addressV: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: textureData.width,
             height: textureData.height,
-            format: format,
+            format: textureData.format,
             cubemap: textureData.cubemap,
             levels: textureData.levels,
+
+            // derive mipmaps from the actual level count, so a single-level file isn't treated as an
+            // incomplete mip chain (which renders black); matches the dds parser
+            mipmaps: textureData.levels.length > 1,
 
             ...textureOptions
         });

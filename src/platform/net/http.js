@@ -69,6 +69,21 @@ class Http {
     static retryDelay = 100;
 
     /**
+     * The default `withCredentials` value used by requests that don't specify it explicitly in
+     * their options. When true, cross-origin requests are sent with credentials (cookies, client
+     * TLS certificates and HTTP authentication). Individual requests can still override this via
+     * `options.withCredentials`. Defaults to false.
+     *
+     * This is a process-global default on the shared {@link http} instance and applies to all
+     * XHR-based requests (most asset loads). Prefer setting it via
+     * {@link ResourceLoader#withCredentials}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    withCredentials = false;
+
+    /**
      * The configured concurrency limit. See {@link Http#maxConcurrentRequests}.
      *
      * @type {number}
@@ -154,7 +169,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     * pc.http.get("http://example.com/", {
+     * http.get("http://example.com/", {
      *     "retry": true,
      *     "maxRetries": 5
      * }, (err, response) => {
@@ -215,7 +230,7 @@ class Http {
      * Passed (err, data) where data is the response (format depends on response type: text,
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
-     * pc.http.post("http://example.com/", {
+     * http.post("http://example.com/", {
      *     "name": "Alex"
      * }, {
      *     "retry": true,
@@ -259,7 +274,7 @@ class Http {
      * Passed (err, data) where data is the response (format depends on response type: text,
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
-     * pc.http.put("http://example.com/", {
+     * http.put("http://example.com/", {
      *     "name": "Alex"
      * }, {
      *     "retry": true,
@@ -303,7 +318,7 @@ class Http {
      * Passed (err, data) where data is the response (format depends on response type: text,
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
-     * pc.http.del("http://example.com/", {
+     * http.del("http://example.com/", {
      *     "retry": true,
      *     "maxRetries": 5
      * }, (err, response) => {
@@ -345,7 +360,7 @@ class Http {
      * Passed (err, data) where data is the response (format depends on response type: text,
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
-     * pc.http.request("get", "http://example.com/", {
+     * http.request("get", "http://example.com/", {
      *     "retry": true,
      *     "maxRetries": 5
      * }, (err, response) => {
@@ -456,7 +471,7 @@ class Http {
 
         const xhr = new XMLHttpRequest();
         xhr.open(method, url, options.async);
-        xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : false;
+        xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : this.withCredentials;
         xhr.responseType = options.responseType || this._guessResponseType(url);
 
         // Set the http headers

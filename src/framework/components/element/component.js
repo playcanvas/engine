@@ -52,7 +52,7 @@ const tmpCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
  * ElementComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('element'); // This defaults to a 'group' element
  * ```
  *
@@ -60,12 +60,12 @@ const tmpCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
  *
  * ```javascript
  * entity.addComponent('element', {
- *     anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5), // centered anchor
+ *     anchor: new Vec4(0.5, 0.5, 0.5, 0.5), // centered anchor
  *     fontAsset: fontAsset,
  *     fontSize: 128,
- *     pivot: new pc.Vec2(0.5, 0.5),            // centered pivot
+ *     pivot: new Vec2(0.5, 0.5),            // centered pivot
  *     text: 'Hello World!',
- *     type: pc.ELEMENTTYPE_TEXT
+ *     type: ELEMENTTYPE_TEXT
  * });
  * ```
  *
@@ -73,7 +73,7 @@ const tmpCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
  * {@link Entity#element} property:
  *
  * ```javascript
- * entity.element.color = pc.Color.RED; // Set the element's color to red
+ * entity.element.color = Color.RED; // Set the element's color to red
  *
  * console.log(entity.element.color);   // Get the element's color and print it
  * ```
@@ -405,7 +405,7 @@ class ElementComponent extends Component {
      * will make the component resize exactly as its parent.
      *
      * @example
-     * this.entity.element.anchor = new pc.Vec4(Math.random() * 0.1, 0, 1, 0);
+     * this.entity.element.anchor = new Vec4(Math.random() * 0.1, 0, 1, 0);
      * @example
      * this.entity.element.anchor = [Math.random() * 0.1, 0, 1, 0];
      *
@@ -745,7 +745,7 @@ class ElementComponent extends Component {
      * @example
      * this.entity.element.pivot = [Math.random() * 0.1, Math.random() * 0.1];
      * @example
-     * this.entity.element.pivot = new pc.Vec2(Math.random() * 0.1, Math.random() * 0.1);
+     * this.entity.element.pivot = new Vec2(Math.random() * 0.1, Math.random() * 0.1);
      *
      * @type {Vec2 | number[]}
      */
@@ -1937,7 +1937,7 @@ class ElementComponent extends Component {
      * @type {Vec2}
      * @example
      * // drop shadow, down and to the right of the text
-     * this.entity.element.shadowOffset = new pc.Vec2(0.25, -0.25);
+     * this.entity.element.shadowOffset = new Vec2(0.25, -0.25);
      */
     set shadowOffset(arg) {
         this._setValue('shadowOffset', arg);

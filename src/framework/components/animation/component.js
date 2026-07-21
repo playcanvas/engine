@@ -21,7 +21,7 @@ import { Component } from '../component.js';
  * AnimationComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('animation', {
  *     assets: [animationAsset.id],
  *     speed: 1
@@ -337,7 +337,9 @@ class AnimationComponent extends Component {
                     this.animEvaluator.removeClips();
                 }
 
-                const clip = new AnimClip(this.animations[this.currAnim], 0, 1.0, true, this.loop);
+                // pass the component as the event handler so any events embedded in the track
+                // fire on this component (consistent with AnimComponent)
+                const clip = new AnimClip(this.animations[this.currAnim], 0, 1.0, true, this.loop, this);
                 clip.name = this.currAnim;
                 clip.blendWeight = this.blending ? 0 : 1;
                 clip.reset();
@@ -650,7 +652,7 @@ class AnimationComponent extends Component {
     onBeforeRemove() {
         for (let i = 0; i < this.assets.length; i++) {
 
-            // this.assets can be an array of pc.Assets or an array of numbers (assetIds)
+            // this.assets can be an array of Asset objects or an array of numbers (assetIds)
             let asset = this.assets[i];
             if (typeof asset ===  'number') {
                 asset = this.system.app.assets.get(asset);

@@ -14,13 +14,13 @@ import { Geometry } from './geometry.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.SphereGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new SphereGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -47,7 +47,7 @@ class SphereGeometry extends Geometry {
      * the sphere. Defaults to 16.
      * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
      * @example
-     * const geometry = new pc.SphereGeometry({
+     * const geometry = new SphereGeometry({
      *     radius: 1,
      *     latitudeBands: 32,
      *     longitudeBands: 32

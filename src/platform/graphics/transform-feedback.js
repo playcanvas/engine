@@ -45,7 +45,7 @@ import { ShaderDefinitionUtils } from './shader-definition-utils.js';
  *
  * ```javascript
  * // *** script asset ***
- * var TransformExample = pc.createScript('transformExample');
+ * var TransformExample = createScript('transformExample');
  *
  * // attribute that references shader asset and material
  * TransformExample.attributes.add('shaderCode', { type: 'asset', assetType: 'shader' });
@@ -53,9 +53,9 @@ import { ShaderDefinitionUtils } from './shader-definition-utils.js';
  *
  * TransformExample.prototype.initialize = function() {
  *     const device = this.app.graphicsDevice;
- *     const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.TorusGeometry({ tubeRadius: 0.01, ringRadius: 3 }));
- *     const meshInstance = new pc.MeshInstance(mesh, this.material.resource);
- *     const entity = new pc.Entity();
+ *     const mesh = Mesh.fromGeometry(app.graphicsDevice, new TorusGeometry({ tubeRadius: 0.01, ringRadius: 3 }));
+ *     const meshInstance = new MeshInstance(mesh, this.material.resource);
+ *     const entity = new Entity();
  *     entity.addComponent('render', {
  *         type: 'asset',
  *         meshInstances: [meshInstance]
@@ -65,8 +65,8 @@ import { ShaderDefinitionUtils } from './shader-definition-utils.js';
  *     // if webgl2 is not supported, transform-feedback is not available
  *     if (!device.isWebGL2) return;
  *     const inputBuffer = mesh.vertexBuffer;
- *     this.tf = new pc.TransformFeedback(inputBuffer);
- *     this.shader = pc.TransformFeedback.createShader(device, this.shaderCode.resource, "tfMoveUp");
+ *     this.tf = new TransformFeedback(inputBuffer);
+ *     this.shader = TransformFeedback.createShader(device, this.shaderCode.resource, "tfMoveUp");
  * };
  *
  * TransformExample.prototype.update = function(dt) {

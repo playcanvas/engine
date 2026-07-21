@@ -28,13 +28,13 @@ function isEnabledAndHasEnabledElement(entity) {
  * LayoutGroupComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('element', {
- *     type: pc.ELEMENTTYPE_GROUP
+ *     type: ELEMENTTYPE_GROUP
  * });
  * entity.addComponent('layoutgroup', {
- *     orientation: pc.ORIENTATION_HORIZONTAL,
- *     spacing: new pc.Vec2(10, 0)
+ *     orientation: ORIENTATION_HORIZONTAL,
+ *     spacing: new Vec2(10, 0)
  * });
  * ```
  *
@@ -42,7 +42,7 @@ function isEnabledAndHasEnabledElement(entity) {
  * {@link Entity#layoutgroup} property:
  *
  * ```javascript
- * entity.layoutgroup.spacing = new pc.Vec2(20, 0); // Increase spacing between children
+ * entity.layoutgroup.spacing = new Vec2(20, 0); // Increase spacing between children
  *
  * console.log(entity.layoutgroup.spacing);         // Get the spacing and print it
  * ```

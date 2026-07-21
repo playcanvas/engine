@@ -225,6 +225,100 @@ describe('CurveSet', function () {
 
     });
 
+    describe('#add()', function () {
+
+        it('appends a new curve and returns it', function () {
+            const curveSet = new CurveSet([[0, 0, 1, 1]]);
+            const curve = curveSet.add([0, 0, 1, 0.5]);
+
+            expect(curveSet.length).to.equal(2);
+            expect(curveSet.get(1)).to.equal(curve);
+            expect(curve.get(0)).to.deep.equal([0, 0]);
+            expect(curve.get(1)).to.deep.equal([1, 0.5]);
+        });
+
+        it('appends an empty curve when no data is supplied', function () {
+            const curveSet = new CurveSet();
+            const curve = curveSet.add();
+
+            expect(curveSet.length).to.equal(2);
+            expect(curve.length).to.equal(0);
+        });
+
+        it('makes the new curve adopt the curve set type', function () {
+            const curveSet = new CurveSet();
+            curveSet.type = CURVE_LINEAR;
+
+            const curve = curveSet.add();
+
+            expect(curve.type).to.equal(CURVE_LINEAR);
+        });
+
+    });
+
+    describe('#remove()', function () {
+
+        it('removes and returns the curve at the given index', function () {
+            const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+            const first = curveSet.get(0);
+            const removed = curveSet.remove(0);
+
+            expect(removed).to.equal(first);
+            expect(curveSet.length).to.equal(1);
+        });
+
+        it('removes a curve by reference', function () {
+            const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+            const second = curveSet.get(1);
+            const removed = curveSet.remove(second);
+
+            expect(removed).to.equal(second);
+            expect(curveSet.length).to.equal(1);
+            expect(curveSet.get(0)).to.not.equal(second);
+        });
+
+        it('returns null when the index is out of range', function () {
+            const curveSet = new CurveSet([[0, 0, 1, 1]]);
+            expect(curveSet.remove(1)).to.equal(null);
+            expect(curveSet.remove(-1)).to.equal(null);
+            expect(curveSet.length).to.equal(1);
+        });
+
+        it('returns null when the curve is not in the set', function () {
+            const curveSet = new CurveSet([[0, 0, 1, 1]]);
+            const other = new CurveSet().get(0);
+            expect(curveSet.remove(other)).to.equal(null);
+            expect(curveSet.length).to.equal(1);
+        });
+
+    });
+
+    describe('#clearKeys()', function () {
+
+        it('clears the keys of every curve but keeps the curves', function () {
+            const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+            const result = curveSet.clearKeys();
+
+            expect(result).to.equal(curveSet);
+            expect(curveSet.length).to.equal(2);
+            expect(curveSet.get(0).length).to.equal(0);
+            expect(curveSet.get(1).length).to.equal(0);
+        });
+
+    });
+
+    describe('#clear()', function () {
+
+        it('removes all curves from the set', function () {
+            const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
+            const result = curveSet.clear();
+
+            expect(result).to.equal(curveSet);
+            expect(curveSet.length).to.equal(0);
+        });
+
+    });
+
     describe('#value()', function () {
 
         it('returns the optional array parameter', function () {

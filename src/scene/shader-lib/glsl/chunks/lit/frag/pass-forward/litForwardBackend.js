@@ -238,5 +238,7 @@ void evaluateBackend() {
         // output when the shadow catcher is enabled - accumulated shadows
         gl_FragColor.rgb = vec3(dShadowCatcher);
     #endif
+
+    #include "outlineOutputPS"
 }
 `;

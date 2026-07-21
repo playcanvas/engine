@@ -6,7 +6,7 @@ PRE_ID_BETA="beta"
 PRE_ID_PREVIEW="preview"
 
 RELEASE_PREFIX="release-"
-RELEASE_REGEX="^$RELEASE_PREFIX[0-9]+.[0-9]+$"
+RELEASE_REGEX="^${RELEASE_PREFIX}[0-9]+\\.[0-9]+$"
 
 # Help
 HELP=$1
@@ -35,6 +35,16 @@ fi
 
 BRANCH=$(git branch --show-current)
 VERSION=$(npm pkg get version | sed 's/"//g')
+
+if [[ "$BRANCH" == "$MAIN_BRANCH" || $BRANCH =~ $RELEASE_REGEX ]]; then
+    git fetch origin --tags
+    LOCAL=$(git rev-parse HEAD)
+    REMOTE=$(git rev-parse "origin/$BRANCH")
+    if [[ "$LOCAL" != "$REMOTE" ]]; then
+        echo "Local '$BRANCH' is not up to date with 'origin/$BRANCH'. Please pull before running this script."
+        exit 1
+    fi
+fi
 
 PARTS=(${VERSION//./ })
 MAJOR=${PARTS[0]}
@@ -94,9 +104,6 @@ if [[ $BRANCH =~ $RELEASE_REGEX ]]; then
     fi
 
     echo "Finalize release [BRANCH=$BRANCH, VERSION=$VERSION, TYPE=$TYPE]"
-
-    # Fetch all remote tags
-    git fetch --tags
 
     # Calculate the next version
     npm version $TYPE --preid=$PRE_ID_PREVIEW --no-git-tag-version >> /dev/null

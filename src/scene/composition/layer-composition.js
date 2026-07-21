@@ -123,15 +123,6 @@ class LayerComposition extends EventHandler {
         this._transparentOrder = {};
     }
 
-    destroy() {
-        this.destroyRenderActions();
-    }
-
-    destroyRenderActions() {
-        this._renderActions.forEach(ra => ra.destroy());
-        this._renderActions.length = 0;
-    }
-
     markDirty() {
         this._dirty = true;
     }
@@ -180,7 +171,7 @@ class LayerComposition extends EventHandler {
 
             // render in order of cameras sorted by priority
             let renderActionCount = 0;
-            this.destroyRenderActions();
+            this._renderActions.length = 0;
 
             for (let i = 0; i < this.cameras.length; i++) {
                 const camera = this.cameras[i];
@@ -384,8 +375,6 @@ class LayerComposition extends EventHandler {
                         (enabled ? ' ENABLED ' : ' DISABLED') +
                         (` RT: ${ra.renderTarget ? ra.renderTarget.name : '-'}`).padEnd(30, ' ')
                     } Clear: ${clear
-                    }${ra.firstCameraUse ? ' CAM-FIRST' : ''
-                    }${ra.lastCameraUse ? ' CAM-LAST' : ''
                     }${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`
                     );
                 }
@@ -647,6 +636,21 @@ class LayerComposition extends EventHandler {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns true if the sub-layer at the given flat {@link LayerComposition#layerList} index is
+     * enabled and rendered by the given camera. Combines the per-layer enabled flag, the per
+     * sub-layer enabled flag and the layer's set of cameras.
+     *
+     * @param {number} index - The index of the sub-layer in {@link LayerComposition#layerList}.
+     * @param {Camera} camera - The camera to test.
+     * @returns {boolean} True if the sub-layer is enabled and the camera renders it.
+     * @ignore
+     */
+    isSubLayerRenderedByCamera(index, camera) {
+        const layer = this.layerList[index];
+        return layer.enabled && this.subLayerEnabled[index] && layer.camerasSet.has(camera);
     }
 
     /**

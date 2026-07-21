@@ -1,10 +1,11 @@
 import { Debug } from '../../../core/debug.js';
 import { ReadStream } from '../../../core/read-stream.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET, pixelFormatLinearToGamma } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
-import { Asset } from '../../asset/asset.js';
+import { Http } from '../../../platform/net/http.js';
+
 import { basisTranscode } from '../../handlers/basis.js';
 
 import { TextureParser } from './texture.js';
@@ -18,24 +19,26 @@ const KHRConstants = {
  * Texture parser for ktx2 files.
  */
 class Ktx2Parser extends TextureParser {
-    constructor(registry, device) {
+    constructor(device) {
         super();
-        this.maxRetries = 0;
         this.device = device;
     }
 
+    canParse(context) {
+        return context.ext === 'ktx2';
+    }
+
     load(url, callback, asset) {
-        Asset.fetchArrayBuffer(url.load, (err, result) => {
+        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, result) => {
             if (err) {
                 callback(err, result);
             } else {
                 this.parse(result, url, callback, asset);
             }
-        }, asset, this.maxRetries);
+        }, asset);
     }
 
     open(url, data, device, textureOptions = {}) {
-        const format = textureOptions.srgb ? pixelFormatLinearToGamma(data.format) : data.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -45,9 +48,13 @@ class Ktx2Parser extends TextureParser {
             addressV: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: data.width,
             height: data.height,
-            format: format,
+            format: data.format,
             cubemap: data.cubemap,
             levels: data.levels,
+
+            // derive mipmaps from the actual level count, so a single-level file isn't treated as an
+            // incomplete mip chain (which renders black); matches the dds parser
+            mipmaps: data.levels.length > 1,
 
             ...textureOptions
         });
@@ -123,7 +130,9 @@ class Ktx2Parser extends TextureParser {
                 callback,
                 {
                     isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0,
-                    isKTX2: true
+                    isKTX2: true,
+                    // a six-face ktx2 file is a cubemap
+                    isCubemap: header.faceCount === 6
                 }
             );
 

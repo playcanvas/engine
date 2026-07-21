@@ -13,10 +13,6 @@ import {
 import { Color } from '../../core/math/color.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 
-/**
- * @import { BindGroup } from '../../platform/graphics/bind-group.js'
- */
-
 const tempMeshInstances = [];
 
 // uniform name of the depth texture
@@ -31,14 +27,19 @@ const DEPTH_UNIFORM_NAME = 'uSceneDepthMap';
  * @ignore
  */
 class RenderPassPrepass extends RenderPass {
-    /** @type {BindGroup[]} */
-    viewBindGroups = [];
-
     /** @type {Texture} */
     linearDepthTexture;
 
     /** @type {Color} */
     linearDepthClearValue = new Color(0, 0, 0, 0);
+
+    /**
+     * The layerList indices of the sub-layers this prepass renders. Rebuilt each frame in
+     * frameUpdate (where culling is also requested) and consumed by execute.
+     *
+     * @type {number[]}
+     */
+    _qualifiedLayerIndices = [];
 
     constructor(device, scene, renderer, camera, options) {
         super(device);
@@ -56,12 +57,6 @@ class RenderPassPrepass extends RenderPass {
         this.renderTarget = null;
         this.linearDepthTexture?.destroy();
         this.linearDepthTexture = null;
-
-        this.viewBindGroups.forEach((bg) => {
-            bg.defaultUniformBuffer.destroy();
-            bg.destroy();
-        });
-        this.viewBindGroups.length = 0;
     }
 
     setupRenderTarget(options) {
@@ -98,41 +93,29 @@ class RenderPassPrepass extends RenderPass {
         const { renderer, scene, renderTarget } = this;
         const camera = this.camera.camera;
         const layers = scene.layers.layerList;
-        const subLayerEnabled = scene.layers.subLayerEnabled;
         const isTransparent = scene.layers.subLayerList;
 
-        for (let i = 0; i < layers.length; i++) {
+        // render the sub-layers collected (and culled) in frameUpdate
+        for (const i of this._qualifiedLayerIndices) {
             const layer = layers[i];
 
-            // only render the layers before the depth layer
-            if (layer.id === LAYERID_DEPTH) {
-                break;
-            }
+            const culledInstances = layer.getCulledInstances(camera);
+            const meshInstances = isTransparent[i] ? culledInstances.transparent : culledInstances.opaque;
 
-            if (layer.enabled && subLayerEnabled[i]) {
+            for (let j = 0; j < meshInstances.length; j++) {
+                const meshInstance = meshInstances[j];
 
-                // if the layer is rendered by the camera
-                if (layer.camerasSet.has(camera)) {
-
-                    const culledInstances = layer.getCulledInstances(camera);
-                    const meshInstances = isTransparent[i] ? culledInstances.transparent : culledInstances.opaque;
-
-                    for (let j = 0; j < meshInstances.length; j++) {
-                        const meshInstance = meshInstances[j];
-
-                        // only collect meshes that update the depth
-                        if (meshInstance.material?.depthWrite) {
-                            tempMeshInstances.push(meshInstance);
-                        }
-                    }
-
-                    renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_PREPASS, this.viewBindGroups, {
-                        meshInstances: tempMeshInstances
-                    });
-
-                    tempMeshInstances.length = 0;
+                // only collect meshes that update the depth
+                if (meshInstance.material?.depthWrite) {
+                    tempMeshInstances.push(meshInstance);
                 }
             }
+
+            renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_PREPASS, {
+                meshInstances: tempMeshInstances
+            });
+
+            tempMeshInstances.length = 0;
         }
     }
 
@@ -156,6 +139,23 @@ class RenderPassPrepass extends RenderPass {
             }
         }
         this.setClearColor(clearValue);
+
+        // collect the sub-layers this prepass will render and request culling of each, so their
+        // culled lists are ready when execute() reads them (execute() reuses these indices)
+        const { renderer, scene } = this;
+        const cullCamera = this.camera.camera;
+        const composition = scene.layers;
+        const layerList = composition.layerList;
+        const qualified = this._qualifiedLayerIndices;
+        qualified.length = 0;
+        for (let i = 0; i < layerList.length; i++) {
+            // only render the layers before the depth layer
+            if (layerList[i].id === LAYERID_DEPTH) break;
+            if (composition.isSubLayerRenderedByCamera(i, cullCamera)) {
+                qualified.push(i);
+                renderer.culler.requestMeshInstanceCull(cullCamera, layerList[i]);
+            }
+        }
     }
 }
 

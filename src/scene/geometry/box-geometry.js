@@ -18,13 +18,13 @@ const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.BoxGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new BoxGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -56,8 +56,8 @@ class BoxGeometry extends Geometry {
      * @param {number} [opts.yOffset] - Move the box vertically by given offset in local space. Pass
      * 0.5 to generate the box with pivot point at the bottom face. Defaults to 0.
      * @example
-     * const geometry = new pc.BoxGeometry({
-     *     halfExtents: new pc.Vec3(1, 1, 1),
+     * const geometry = new BoxGeometry({
+     *     halfExtents: new Vec3(1, 1, 1),
      *     widthSegments: 2,
      *     lengthSegments: 2,
      *     heightSegments: 2

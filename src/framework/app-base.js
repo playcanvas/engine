@@ -356,7 +356,7 @@ class AppBase extends EventHandler {
      *
      * @example
      * // Render the scene only while space key is pressed
-     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     * if (this.app.keyboard.isPressed(KEY_SPACE)) {
      *     this.app.renderNextFrame = true;
      * }
      */
@@ -385,7 +385,7 @@ class AppBase extends EventHandler {
      * @type {Scene}
      * @example
      * // Set the fog type property of the application's scene
-     * this.app.scene.fog.type = pc.FOG_LINEAR;
+     * this.app.scene.fog.type = FOG_LINEAR;
      */
     scene;
 
@@ -502,7 +502,7 @@ class AppBase extends EventHandler {
      * @type {XrManager|null}
      * @example
      * // check if VR is available
-     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     * if (app.xr.isAvailable(XRTYPE_VR)) {
      *     // VR is available
      * }
      */
@@ -513,7 +513,7 @@ class AppBase extends EventHandler {
      *
      * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @example
-     * const app = new pc.AppBase(canvas);
+     * const app = new AppBase(canvas);
      *
      * const options = new AppOptions();
      * app.init(options);
@@ -654,7 +654,7 @@ class AppBase extends EventHandler {
      * this id. Otherwise current application will be returned.
      * @returns {AppBase|undefined} The running application, if any.
      * @example
-     * const app = pc.AppBase.getApplication();
+     * const app = AppBase.getApplication();
      */
     static getApplication(id) {
         return id ? AppBase._applications[id] : getApplication();
@@ -807,6 +807,11 @@ class AppBase extends EventHandler {
         // configure the concurrent request limit - overrides the default (0 is valid, meaning unlimited)
         if (typeof props.maxConcurrentRequests === 'number' && props.maxConcurrentRequests >= 0) {
             this.loader.maxConcurrentRequests = props.maxConcurrentRequests;
+        }
+
+        // send asset requests with credentials - applied before preloading so preloaded assets pick it up
+        if (typeof props.withCredentials === 'boolean') {
+            this.loader.withCredentials = props.withCredentials;
         }
 
         // TODO: remove this temporary block after migrating properties
@@ -1156,10 +1161,15 @@ class AppBase extends EventHandler {
     renderComposition(layerComposition) {
         DebugGraphics.clearGpuMarkers();
 
-        // update composition, cull everything, assign atlas slots for clustered lighting
+        // update composition + light visibility, assign atlas slots for clustered lighting
         this.renderer.update(layerComposition);
 
+        // build the frame graph from the (not-yet-culled) composition
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
+
+        // cull mesh instances and shadow casters - this fills what the passes read at render time
+        this.renderer.cull(layerComposition);
+
         this.frameGraph.render(this.graphicsDevice);
     }
 
@@ -1469,7 +1479,8 @@ class AppBase extends EventHandler {
     applySceneSettings(settings) {
         let asset;
 
-        if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
+        // gravity is engine state - the physics backend applies it when present
+        if (this.systems.rigidbody) {
             const [x, y, z] = settings.physics.gravity;
             this.systems.rigidbody.gravity.set(x, y, z);
         }
@@ -1513,27 +1524,19 @@ class AppBase extends EventHandler {
      */
     setSkybox(asset) {
         if (asset !== this._skyboxAsset) {
-            const onSkyboxRemoved = () => {
-                this.setSkybox(null);
-            };
-
-            const onSkyboxChanged = () => {
-                this.scene.setSkybox(this._skyboxAsset ? this._skyboxAsset.resources : null);
-            };
-
             // cleanup previous asset
             if (this._skyboxAsset) {
-                this.assets.off(`load:${this._skyboxAsset.id}`, onSkyboxChanged, this);
-                this.assets.off(`remove:${this._skyboxAsset.id}`, onSkyboxRemoved, this);
-                this._skyboxAsset.off('change', onSkyboxChanged, this);
+                this.assets.off(`load:${this._skyboxAsset.id}`, this._onSkyboxChanged, this);
+                this.assets.off(`remove:${this._skyboxAsset.id}`, this._onSkyboxRemoved, this);
+                this._skyboxAsset.off('change', this._onSkyboxChanged, this);
             }
 
             // set new asset
             this._skyboxAsset = asset;
             if (this._skyboxAsset) {
-                this.assets.on(`load:${this._skyboxAsset.id}`, onSkyboxChanged, this);
-                this.assets.once(`remove:${this._skyboxAsset.id}`, onSkyboxRemoved, this);
-                this._skyboxAsset.on('change', onSkyboxChanged, this);
+                this.assets.on(`load:${this._skyboxAsset.id}`, this._onSkyboxChanged, this);
+                this.assets.once(`remove:${this._skyboxAsset.id}`, this._onSkyboxRemoved, this);
+                this._skyboxAsset.on('change', this._onSkyboxChanged, this);
 
                 if (this.scene.skyboxMip === 0 && !this._skyboxAsset.loadFaces) {
                     this._skyboxAsset.loadFaces = true;
@@ -1542,8 +1545,18 @@ class AppBase extends EventHandler {
                 this.assets.load(this._skyboxAsset);
             }
 
-            onSkyboxChanged();
+            this._onSkyboxChanged();
         }
+    }
+
+    /** @private */
+    _onSkyboxRemoved() {
+        this.setSkybox(null);
+    }
+
+    /** @private */
+    _onSkyboxChanged() {
+        this.scene.setSkybox(this._skyboxAsset ? this._skyboxAsset.resources : null);
     }
 
     /** @private */
@@ -1579,20 +1592,20 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
      * app.drawLine(start, end);
      * @example
      * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * app.drawLine(start, end, pc.Color.RED, false);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * app.drawLine(start, end, Color.RED, false);
      * @example
      * // Render a 1-unit long white line into the world layer
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * const worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
-     * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * const worldLayer = app.scene.layers.getLayerById(LAYERID_WORLD);
+     * app.drawLine(start, end, Color.WHITE, true, worldLayer);
      */
     drawLine(start, end, color, depthTest, layer) {
         this.scene.drawLine(start, end, color, depthTest, layer);
@@ -1615,26 +1628,26 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a single line, with unique colors for each point
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * app.drawLines([start, end], [Color.RED, Color.WHITE]);
      * @example
      * // Render 2 discrete line segments
      * const points = [
      *     // Line 1
-     *     new pc.Vec3(0, 0, 0),
-     *     new pc.Vec3(1, 0, 0),
+     *     new Vec3(0, 0, 0),
+     *     new Vec3(1, 0, 0),
      *     // Line 2
-     *     new pc.Vec3(1, 1, 0),
-     *     new pc.Vec3(1, 1, 1)
+     *     new Vec3(1, 1, 0),
+     *     new Vec3(1, 1, 1)
      * ];
      * const colors = [
      *     // Line 1
-     *     pc.Color.RED,
-     *     pc.Color.YELLOW,
+     *     Color.RED,
+     *     Color.YELLOW,
      *     // Line 2
-     *     pc.Color.CYAN,
-     *     pc.Color.BLUE
+     *     Color.CYAN,
+     *     Color.BLUE
      * ];
      * app.drawLines(points, colors);
      */
@@ -1692,8 +1705,8 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire sphere with radius of 1
-     * const center = new pc.Vec3(0, 0, 0);
-     * app.drawWireSphere(center, 1.0, pc.Color.RED);
+     * const center = new Vec3(0, 0, 0);
+     * app.drawWireSphere(center, 1.0, Color.RED);
      * @ignore
      */
     drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
@@ -1712,9 +1725,9 @@ class AppBase extends EventHandler {
      * @param {Mat4} [mat] - Matrix to transform the box before rendering.
      * @example
      * // Render a red wire aligned box
-     * const min = new pc.Vec3(-1, -1, -1);
-     * const max = new pc.Vec3(1, 1, 1);
-     * app.drawWireAlignedBox(min, max, pc.Color.RED);
+     * const min = new Vec3(-1, -1, -1);
+     * const max = new Vec3(1, 1, 1);
+     * app.drawWireAlignedBox(min, max, Color.RED);
      * @ignore
      */
     drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {
@@ -1886,11 +1899,6 @@ class AppBase extends EventHandler {
         }
 
         this.systems.destroy();
-
-        // layer composition
-        if (this.scene.layers) {
-            this.scene.layers.destroy();
-        }
 
         // destroy bundle registry
         this.bundles.destroy();

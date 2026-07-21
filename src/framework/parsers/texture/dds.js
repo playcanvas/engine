@@ -10,8 +10,7 @@ import {
     TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-
-import { Asset } from '../../asset/asset.js';
+import { Http } from '../../../platform/net/http.js';
 
 import { TextureParser } from './texture.js';
 
@@ -19,13 +18,12 @@ import { TextureParser } from './texture.js';
  * Legacy texture parser for dds files.
  */
 class DdsParser extends TextureParser {
-    constructor(registry) {
-        super();
-        this.maxRetries = 0;
+    canParse(context) {
+        return context.ext === 'dds';
     }
 
     load(url, callback, asset) {
-        Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
+        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, callback, asset);
     }
 
     open(url, data, device, textureOptions = {}) {

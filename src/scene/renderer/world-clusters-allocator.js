@@ -4,7 +4,7 @@ import { FramePassMultiView } from './frame-pass-multi-view.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { RenderAction } from '../composition/render-action.js'
+ * @import { LayerRenderStep } from './layer-render-step.js'
  */
 
 const tempClusterArray = [];
@@ -31,10 +31,10 @@ class WorldClustersAllocator {
     _allocated = [];
 
     /**
-     * Render actions with all unique light clusters. The key is the hash of lights on a layer, the
-     * value is a render action with unique light clusters.
+     * Layer render steps with all unique light clusters. The key is the hash of lights on a layer,
+     * the value is a layer render step with unique light clusters.
      *
-     * @type {Map<number, RenderAction>}
+     * @type {Map<number, LayerRenderStep>}
      */
     _clusters = new Map();
 
@@ -83,32 +83,32 @@ class WorldClustersAllocator {
     }
 
     /**
-     * Assign clusters for one frame pass that owns {@link RenderPass#renderActions}.
-     * No-op when the pass has no render actions.
+     * Assign clusters for one frame pass that owns {@link RenderPassForward#layerRenderSteps}.
+     * No-op when the pass has no layer render steps.
      *
      * @param {import('../../platform/graphics/frame-pass.js').FramePass} renderPass - Render pass
      * (not a {@link FramePassMultiView} wrapper; those are unwrapped in {@link WorldClustersAllocator#assign}).
      * @private
      */
     _assignClustersForPass(renderPass) {
-        const renderActions = renderPass.renderActions;
-        if (!renderActions) {
+        const layerRenderSteps = renderPass.layerRenderSteps;
+        if (!layerRenderSteps) {
             return;
         }
 
-        const count = renderActions.length;
+        const count = layerRenderSteps.length;
         for (let i = 0; i < count; i++) {
-            const ra = renderActions[i];
-            ra.lightClusters = null;
+            const step = layerRenderSteps[i];
+            step.lightClusters = null;
 
             // if the layer has lights used by clusters, and meshes
-            const layer = ra.layer;
+            const layer = step.layer;
             if (layer.hasClusteredLights && layer.meshInstances.length) {
 
                 // use existing clusters if the lights on the layer are the same
                 const hash = layer.getLightIdHash();
-                const existingRenderAction = this._clusters.get(hash);
-                let clusters = existingRenderAction?.lightClusters;
+                const existingStep = this._clusters.get(hash);
+                let clusters = existingStep?.lightClusters;
 
                 // no match, needs new clusters
                 if (!clusters) {
@@ -118,20 +118,20 @@ class WorldClustersAllocator {
                     DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
 
                     this._allocated.push(clusters);
-                    this._clusters.set(hash, ra);
+                    this._clusters.set(hash, step);
                 }
 
-                ra.lightClusters = clusters;
+                step.lightClusters = clusters;
             }
 
             // no clustered lights, use the cluster with no lights
-            if (!ra.lightClusters) {
-                ra.lightClusters = this.empty;
+            if (!step.lightClusters) {
+                step.lightClusters = this.empty;
             }
         }
     }
 
-    // assign light clusters to render actions that need it
+    // assign light clusters to layer render steps that need it
     assign(renderPasses) {
 
         // reuse previously allocated clusters
@@ -140,7 +140,7 @@ class WorldClustersAllocator {
         this._clusters.clear();
 
         // FramePassMultiView children are not on the frame graph list (merge safety); still assign
-        // clusters to their render actions before those passes run.
+        // clusters to their layer render steps before those passes run.
         const passCount = renderPasses.length;
         for (let p = 0; p < passCount; p++) {
             const pass = renderPasses[p];
@@ -161,13 +161,13 @@ class WorldClustersAllocator {
 
     update(renderPasses, lighting) {
 
-        // assign clusters to render actions
+        // assign clusters to layer render steps
         this.assign(renderPasses);
 
         // update all unique clusters
-        this._clusters.forEach((renderAction) => {
-            const layer = renderAction.layer;
-            const cluster = renderAction.lightClusters;
+        this._clusters.forEach((step) => {
+            const layer = step.layer;
+            const cluster = step.lightClusters;
             cluster.update(layer.clusteredLightsSet, lighting);
         });
     }

@@ -13,7 +13,7 @@ import { platform } from '../../core/platform.js';
  *
  * ```javascript
  * app.xr.domOverlay.root = element;
- * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);
+ * app.xr.start(camera, XRTYPE_AR, XRSPACE_LOCALFLOOR);
  * ```
  *
  * ```javascript
@@ -102,7 +102,7 @@ class XrDomOverlay {
      * @type {Element|null}
      * @example
      * app.xr.domOverlay.root = element;
-     * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);
+     * app.xr.start(camera, XRTYPE_AR, XRSPACE_LOCALFLOOR);
      */
     set root(value) {
         if (!this._supported || this._manager.active) {

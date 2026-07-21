@@ -44,7 +44,7 @@ const _int32View = new Int32Array(_floatView.buffer);
  *
  * @example
  * // Create a picker with depth picking enabled at quarter resolution
- * const picker = new pc.Picker(app, canvas.width * 0.25, canvas.height * 0.25, true);
+ * const picker = new Picker(app, canvas.width * 0.25, canvas.height * 0.25, true);
  *
  * // In your update loop, prepare the picker
  * picker.resize(canvas.width * 0.25, canvas.height * 0.25);
@@ -202,7 +202,7 @@ class Picker {
     getSelection(x, y, width = 1, height = 1) {
         const device = this.device;
         if (device.isWebGPU) {
-            Debug.errorOnce('pc.Picker#getSelection is not supported on WebGPU, use pc.Picker#getSelectionAsync instead.');
+            Debug.errorOnce('Picker#getSelection is not supported on WebGPU, use Picker#getSelectionAsync instead.');
             return [];
         }
 

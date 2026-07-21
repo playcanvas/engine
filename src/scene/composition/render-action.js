@@ -1,5 +1,4 @@
 /**
- * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  * @import { Layer } from '../layer.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  */
@@ -30,9 +29,6 @@ class RenderAction {
          */
         this.renderTarget = null;
 
-        // light clusters (type WorldClusters)
-        this.lightClusters = null;
-
         // clear flags
         this.clearColor = false;
         this.clearDepth = false;
@@ -47,21 +43,8 @@ class RenderAction {
         // true if this is the last render action using this camera
         this.lastCameraUse = false;
 
-        // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
-        /** @type {BindGroup[]} */
-        this.viewBindGroups = [];
-
         // true if the camera should render using render passes it specifies
         this.useCameraPasses = false;
-    }
-
-    // releases GPU resources
-    destroy() {
-        this.viewBindGroups.forEach((bg) => {
-            bg.defaultUniformBuffer.destroy();
-            bg.destroy();
-        });
-        this.viewBindGroups.length = 0;
     }
 
     setupClears(camera, layer) {

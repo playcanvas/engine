@@ -1,4 +1,3 @@
-import { path } from '../../core/path.js';
 import { GlbContainerParser } from '../parsers/glb-container-parser.js';
 import { ResourceHandler } from './handler.js';
 
@@ -7,16 +6,17 @@ import { ResourceHandler } from './handler.js';
  * @import { Asset } from '../asset/asset.js'
  * @import { Entity } from '../entity.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { ResourceHandlerCallback } from './handler.js'
  */
 
 /**
- * Container for a list of animations, textures, materials, renders and a model.
+ * Container for a list of animations, textures, materials, renders, gsplats and a model.
  *
  * @property {Asset[]} renders An array of the Render assets.
  * @property {Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
  * @property {Asset[]} textures An array of the {@link Texture} assets.
  * @property {Asset[]} animations An array of the {@link Animation} assets.
+ * @property {Asset[]} gsplats An array of the gsplat assets, created for meshes using the
+ * KHR_gaussian_splatting glTF extension.
  * @interface
  * @category Graphics
  */
@@ -60,7 +60,7 @@ class ContainerResource {
      *     const renders = entity.findComponents("render");
      *     renders.forEach((render) => {
      *         render.meshInstances.forEach((meshInstance) => {
-     *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
+     *             meshInstance.material.blendType = BLEND_MULTIPLICATIVE;
      *             meshInstance.material.update();
      *         });
      *     });
@@ -151,13 +151,13 @@ class ContainerResource {
  * [options.morphPreferHighPrecision] - When true, high precision storage for morph targets should
  * be preferred. This is faster to create and allows higher precision, but takes more memory and
  * might be slower to render. Defaults to false.
- * [options.skipMeshes] - When true, the meshes from the container are not created. This can be
- * useful if you only need access to textures or animations and similar.
+ * [options.skipMeshes] - When true, the meshes and gaussian splats from the container are not
+ * created. This can be useful if you only need access to textures or animations and similar.
  *
  * For example, to receive a texture preprocess callback:
  *
  * ```javascript
- * const containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ * const containerAsset = new Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
  *         preprocess: (gltfTexture) => {
  *             console.log("texture preprocess");
@@ -178,70 +178,9 @@ class ContainerHandler extends ResourceHandler {
     constructor(app) {
         super(app, 'container');
 
-        this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
-        this.parsers = { };
-    }
-
-    set maxRetries(value) {
-        this.glbContainerParser.maxRetries = value;
-        for (const parser in this.parsers) {
-            if (this.parsers.hasOwnProperty(parser)) {
-                this.parsers[parser].maxRetries = value;
-            }
-        }
-    }
-
-    get maxRetries() {
-        return this.glbContainerParser.maxRetries;
-    }
-
-    /**
-     * @param {string} url - The resource URL.
-     * @returns {string} The URL with query parameters removed.
-     * @private
-     */
-    _getUrlWithoutParams(url) {
-        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-    }
-
-    /**
-     * @param {string} url - The resource URL.
-     * @returns {*} A suitable parser to parse the resource.
-     * @private
-     */
-    _getParser(url) {
-        const ext = url ? path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '') : null;
-        return this.parsers[ext] || this.glbContainerParser;
-    }
-
-    /**
-     * @param {string | {load: string, original: string}} url - Either the URL of the resource to
-     * load or a structure containing the load URL (used for loading the resource) and the original
-     * URL (used for identifying the resource format; necessary when loading, for example, from
-     * a blob URL).
-     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
-     * an error occurs.
-     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
-     */
-    load(url, callback, asset) {
-        if (typeof url === 'string') {
-            url = {
-                load: url,
-                original: url
-            };
-        }
-
-        this._getParser(url.original).load(url, callback, asset);
-    }
-
-    /**
-     * @param {string} url - The URL of the resource to open.
-     * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
-     * @returns {*} The parsed resource data.
-     */
-    open(url, data, asset) {
-        return this._getParser(url).open(url, data, asset);
+        // GLB is the only built-in container format and acts as the catch-all; users can register
+        // more specific parsers (for example usdz), which are consulted first (newest-first).
+        this.addParser(new GlbContainerParser(app.graphicsDevice, app.assets));
     }
 }
 
