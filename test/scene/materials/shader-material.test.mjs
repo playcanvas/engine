@@ -1,8 +1,13 @@
 import { expect } from 'chai';
 
-import { CULLFACE_BACK, FUNC_LESSEQUAL, FRONTFACE_CCW } from '../../../src/platform/graphics/constants.js';
+import { BlendState } from '../../../src/platform/graphics/blend-state.js';
+import {
+    BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR, BLENDMODE_ZERO,
+    CULLFACE_BACK, FUNC_LESSEQUAL, FRONTFACE_CCW
+} from '../../../src/platform/graphics/constants.js';
 import { BLEND_NONE } from '../../../src/scene/constants.js';
 import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
+import { shaderGeneratorShader } from '../../../src/scene/shader-lib/programs/shader-generator-shader.js';
 
 describe('Material', function () {
 
@@ -53,6 +58,44 @@ describe('Material', function () {
             const dst = new ShaderMaterial();
             dst.copy(src);
             checkDefaultMaterial(dst);
+        });
+
+    });
+
+    describe('#blendState', function () {
+
+        it('clears shader variants when dual-source blending usage changes', function () {
+            const material = new ShaderMaterial();
+            const dualSource = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR);
+
+            material.variants.set(1, null);
+            material.blendState = dualSource;
+            expect(material.variants.size).to.equal(0);
+
+            material.variants.set(1, null);
+            material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ZERO, BLENDMODE_SRC1_COLOR);
+            expect(material.variants.size).to.equal(1);
+
+            material.blendState = BlendState.NOBLEND;
+            expect(material.variants.size).to.equal(0);
+        });
+
+    });
+
+    describe('shader generation', function () {
+
+        it('includes dual-source blending usage in the shader key', function () {
+            const shaderDesc = { uniqueName: 'DualSource' };
+            const options = {
+                defines: new Map(),
+                shaderDesc
+            };
+            const regularKey = shaderGeneratorShader.generateKey(options);
+
+            options.useDualSourceBlending = true;
+            const dualSourceKey = shaderGeneratorShader.generateKey(options);
+
+            expect(dualSourceKey).to.not.equal(regularKey);
         });
 
     });

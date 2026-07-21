@@ -112,6 +112,38 @@ export const BLENDMODE_CONSTANT = 11;
 export const BLENDMODE_ONE_MINUS_CONSTANT = 12;
 
 /**
+ * Multiply all fragment components by the components of the secondary source fragment. This can
+ * only be used when {@link GraphicsDevice#supportsDualSourceBlending} is true.
+ *
+ * @category Graphics
+ */
+export const BLENDMODE_SRC1_COLOR = 13;
+
+/**
+ * Multiply all fragment components by one minus the components of the secondary source fragment.
+ * This can only be used when {@link GraphicsDevice#supportsDualSourceBlending} is true.
+ *
+ * @category Graphics
+ */
+export const BLENDMODE_ONE_MINUS_SRC1_COLOR = 14;
+
+/**
+ * Multiply all fragment components by the alpha value of the secondary source fragment. This can
+ * only be used when {@link GraphicsDevice#supportsDualSourceBlending} is true.
+ *
+ * @category Graphics
+ */
+export const BLENDMODE_SRC1_ALPHA = 15;
+
+/**
+ * Multiply all fragment components by one minus the alpha value of the secondary source fragment.
+ * This can only be used when {@link GraphicsDevice#supportsDualSourceBlending} is true.
+ *
+ * @category Graphics
+ */
+export const BLENDMODE_ONE_MINUS_SRC1_ALPHA = 16;
+
+/**
  * Add the results of the source and destination fragment multiplies.
  *
  * @category Graphics

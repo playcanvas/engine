@@ -888,6 +888,9 @@ class StandardMaterial extends Material {
             this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights);
         }
 
+        const useDualSourceBlending = shaderPassInfo.isForward && this.blendState.usesDualSourceBlending;
+        options.useDualSourceBlending = useDualSourceBlending;
+
         // standard material can overwrite camera's fog setting
         if (!this.useFog) options.defines.set('FOG', 'NONE');
 
@@ -898,6 +901,9 @@ class StandardMaterial extends Material {
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
         }
+
+        // this is derived from the blend state and cannot be overridden by onUpdateShader
+        options.useDualSourceBlending = useDualSourceBlending;
 
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
 

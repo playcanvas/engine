@@ -4,7 +4,9 @@ import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
 import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
+import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
+import { standard } from '../../../src/scene/shader-lib/programs/standard.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
 
 describe('StandardMaterial', function () {
@@ -320,6 +322,20 @@ describe('StandardMaterial', function () {
             const dst = new StandardMaterial();
             dst.copy(src);
             checkDefaultMaterial(dst);
+        });
+
+    });
+
+    describe('shader generation', function () {
+
+        it('includes dual-source blending usage in the shader key', function () {
+            const options = new StandardMaterialOptions();
+            const regularKey = standard.generateKey(options);
+
+            options.useDualSourceBlending = true;
+            const dualSourceKey = standard.generateKey(options);
+
+            expect(dualSourceKey).to.not.equal(regularKey);
         });
 
     });

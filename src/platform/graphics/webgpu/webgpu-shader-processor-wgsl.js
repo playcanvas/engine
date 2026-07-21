@@ -437,7 +437,11 @@ class WebgpuShaderProcessorWGSL {
         const resourcesData = WebgpuShaderProcessorWGSL.processResources(device, parsedResources, shaderDefinition.processingOptions, shader);
 
         // generate fragment output struct
-        const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(fragmentExtracted.src, device.maxColorAttachments);
+        const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(
+            fragmentExtracted.src,
+            device.maxColorAttachments,
+            shaderDefinition.useDualSourceBlending
+        );
 
         // inject the call to the function which copies the shader input globals
         vertexExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(vertexExtracted.src, shader);
@@ -576,6 +580,13 @@ class WebgpuShaderProcessorWGSL {
             src = WebgpuShaderProcessorWGSL.cutOut(src, match.index, KEYWORD_RESOURCE.lastIndex, replacement);
             KEYWORD_RESOURCE.lastIndex = match.index + replacement.length;
             replacement = '';
+        }
+
+        // Shaders without reflected declarations still need an insertion marker. Place it after
+        // any WGSL directives, which are required to precede all generated global declarations.
+        if (replacement) {
+            const directives = src.match(/^(?:\s*(?:enable|requires)\s+\w+\s*;)*/)?.[0] ?? '';
+            src = `${directives}\n${replacement}${src.slice(directives.length)}`;
         }
 
         return {
@@ -956,15 +967,22 @@ class WebgpuShaderProcessorWGSL {
         `;
     }
 
-    static generateFragmentOutputStruct(src, numRenderTargets) {
+    static generateFragmentOutputStruct(src, numRenderTargets, useDualSourceBlending = false) {
         let structCode = 'struct FragmentOutput {\n';
 
-        // only include color outputs that the shader actually writes to
-        const colorName = i => `color${i > 0 ? i : ''}`;
-        for (let i = 0; i < numRenderTargets; i++) {
-            const name = colorName(i);
-            if (src.search(new RegExp(`\\.${name}\\s*=`)) !== -1) {
-                structCode += `    @location(${i}) ${name} : pcOutType${i},\n`;
+        if (useDualSourceBlending) {
+            Debug.assert(/\.color\s*=/.test(src), 'Dual-source blending shader must write output.color.');
+            Debug.assert(/\.colorSecondary\s*=/.test(src), 'Dual-source blending shader must write output.colorSecondary.');
+            structCode += '    @location(0) @blend_src(0) color : pcOutType0,\n';
+            structCode += '    @location(0) @blend_src(1) colorSecondary : pcOutType0,\n';
+        } else {
+            // only include color outputs that the shader actually writes to
+            const colorName = i => `color${i > 0 ? i : ''}`;
+            for (let i = 0; i < numRenderTargets; i++) {
+                const name = colorName(i);
+                if (src.search(new RegExp(`\\.${name}\\s*=`)) !== -1) {
+                    structCode += `    @location(${i}) ${name} : pcOutType${i},\n`;
+                }
             }
         }
 

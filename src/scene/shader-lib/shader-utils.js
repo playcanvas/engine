@@ -85,6 +85,8 @@ class ShaderUtils {
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
      * which default to vec4. Passing a string will set the output type for all color attachments.
      * Passing an array will set the output type for each color attachment.
+     * @param {boolean} [options.useDualSourceBlending] - Whether the fragment shader outputs a
+     * secondary color for dual-source blending. Defaults to false.
      * @returns {Shader} The newly created shader.
      */
     static createShader(device, options) {
@@ -122,7 +124,8 @@ class ShaderUtils {
                 vertexDefines: options.vertexDefines,
                 fragmentIncludes: fragmentIncludes,
                 fragmentDefines: options.fragmentDefines,
-                fragmentOutputTypes: options.fragmentOutputTypes
+                fragmentOutputTypes: options.fragmentOutputTypes,
+                useDualSourceBlending: options.useDualSourceBlending
             }));
             programLibrary.setCachedShader(options.uniqueName, shader);
         }

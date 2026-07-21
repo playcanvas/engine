@@ -289,7 +289,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.DST_ALPHA,
             gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_COLOR,
-            gl.ONE_MINUS_CONSTANT_COLOR
+            gl.ONE_MINUS_CONSTANT_COLOR,
+            this.extBlendFuncExtended?.SRC1_COLOR_WEBGL,
+            this.extBlendFuncExtended?.ONE_MINUS_SRC1_COLOR_WEBGL,
+            this.extBlendFuncExtended?.SRC1_ALPHA_WEBGL,
+            this.extBlendFuncExtended?.ONE_MINUS_SRC1_ALPHA_WEBGL
         ];
 
         this.glBlendFunctionAlpha = [
@@ -305,7 +309,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.DST_ALPHA,
             gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_ALPHA,
-            gl.ONE_MINUS_CONSTANT_ALPHA
+            gl.ONE_MINUS_CONSTANT_ALPHA,
+            this.extBlendFuncExtended?.SRC1_COLOR_WEBGL,
+            this.extBlendFuncExtended?.ONE_MINUS_SRC1_COLOR_WEBGL,
+            this.extBlendFuncExtended?.SRC1_ALPHA_WEBGL,
+            this.extBlendFuncExtended?.ONE_MINUS_SRC1_ALPHA_WEBGL
         ];
 
         this.glComparison = [
@@ -882,6 +890,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.textureFloatFilterable = !!this.extTextureFloatLinear;
 
         this.extFloatBlend = this.getExtension('EXT_float_blend');
+        this.extBlendFuncExtended = this.getExtension('WEBGL_blend_func_extended');
+        this.supportsDualSourceBlending = !!this.extBlendFuncExtended;
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
@@ -1931,6 +1941,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 // vertex buffers
                 if (first) {
+                    Debug.call(() => {
+                        if (this.blendState.usesDualSourceBlending) {
+                            const isBackbuffer = !this.renderTarget || this.renderTarget === this.backBuffer;
+                            const colorAttachmentCount = isBackbuffer ? 1 : (this.renderTarget._colorBuffers?.length ?? 0);
+                            Debug.assert(shader.definition.useDualSourceBlending,
+                                'A BlendState using secondary source factors requires a dual-source blending shader.');
+                            Debug.assert(colorAttachmentCount === 1,
+                                'Dual-source blending requires exactly one color attachment.');
+                        }
+                    });
+
                     Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
 
                     this.setBuffers(indexBuffer);
