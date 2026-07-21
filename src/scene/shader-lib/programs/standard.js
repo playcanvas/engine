@@ -461,7 +461,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             vertexIncludes: includes,
             fragmentIncludes: includes,
             fragmentDefines: fDefines,
-            vertexDefines: vDefines
+            vertexDefines: vDefines,
+            useDualSourceBlending: options.useDualSourceBlending
         });
 
         if (litShader.shaderPassInfo.isForward) {

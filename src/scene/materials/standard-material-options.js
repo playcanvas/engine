@@ -14,6 +14,9 @@ class StandardMaterialOptions {
      */
     defines = new Map();
 
+    /** @ignore */
+    useDualSourceBlending = false;
+
     /**
      * If UV1 (second set of texture coordinates) is required in the shader. Will be declared as
      * "vUv1" and passed to the fragment shader.

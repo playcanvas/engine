@@ -1,9 +1,17 @@
 export default /* glsl */`
 
+#ifdef DUAL_SOURCE_BLENDING
+#extension GL_EXT_blend_func_extended : require
+#endif
+
 #ifndef outType_0
 #define outType_0 vec4
 #endif
 
+#ifdef DUAL_SOURCE_BLENDING
+layout(location = 0, index = 0) out highp outType_0 pcFragColor0;
+layout(location = 0, index = 1) out highp outType_0 pcFragColorSecondary;
+#else
 layout(location = 0) out highp outType_0 pcFragColor0;
 
 #if COLOR_ATTACHMENT_1
@@ -32,6 +40,7 @@ layout(location = 6) out highp outType_6 pcFragColor6;
 
 #if COLOR_ATTACHMENT_7
 layout(location = 7) out highp outType_7 pcFragColor7;
+#endif
 #endif
 
 #define gl_FragColor pcFragColor0

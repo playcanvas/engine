@@ -1,27 +1,32 @@
 import { Debug } from '../../core/debug.js';
 import { BitPacking } from '../../core/math/bit-packing.js';
-import { BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA } from '../../platform/graphics/constants.js';
+import {
+    BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+    BLENDMODE_SRC1_COLOR, BLENDMODE_ONE_MINUS_SRC1_ALPHA
+} from '../../platform/graphics/constants.js';
 
 // masks (to only keep relevant bits)
 const opMask = 0b111;
-const factorMask = 0b1111;
+const factorMask = 0b11111;
 
 // shifts values to where individual parts are stored
 const colorOpShift = 0;             // 00 - 02 (3bits)
-const colorSrcFactorShift = 3;      // 03 - 06 (4bits)
-const colorDstFactorShift = 7;      // 07 - 10 (4bits)
-const alphaOpShift = 11;            // 11 - 13 (3bits)
-const alphaSrcFactorShift = 14;     // 14 - 17 (4bits)
-const alphaDstFactorShift = 18;     // 18 - 21 (4bits)
-const redWriteShift = 22;           // 22 (1 bit)
-const greenWriteShift = 23;         // 23 (1 bit)
-const blueWriteShift = 24;          // 24 (1 bit)
-const alphaWriteShift = 25;         // 25 (1 bit)
-const blendShift = 26;              // 26 (1 bit)
+const colorSrcFactorShift = 3;      // 03 - 07 (5bits)
+const colorDstFactorShift = 8;      // 08 - 12 (5bits)
+const alphaOpShift = 13;            // 13 - 15 (3bits)
+const alphaSrcFactorShift = 16;     // 16 - 20 (5bits)
+const alphaDstFactorShift = 21;     // 21 - 25 (5bits)
+const redWriteShift = 26;           // 26 (1 bit)
+const greenWriteShift = 27;         // 27 (1 bit)
+const blueWriteShift = 28;          // 28 (1 bit)
+const alphaWriteShift = 29;         // 29 (1 bit)
+const blendShift = 30;              // 30 (1 bit)
 
 // combined values access
 const allWriteMasks = 0b1111;
 const allWriteShift = redWriteShift;
+
+const usesSecondarySource = factor => factor >= BLENDMODE_SRC1_COLOR && factor <= BLENDMODE_ONE_MINUS_SRC1_ALPHA;
 
 /**
  * BlendState is a descriptor that defines how output of fragment shader is written and blended
@@ -59,6 +64,10 @@ class BlendState {
      * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
      * - {@link BLENDMODE_CONSTANT}
      * - {@link BLENDMODE_ONE_MINUS_CONSTANT}
+     * - {@link BLENDMODE_SRC1_COLOR}
+     * - {@link BLENDMODE_ONE_MINUS_SRC1_COLOR}
+     * - {@link BLENDMODE_SRC1_ALPHA}
+     * - {@link BLENDMODE_ONE_MINUS_SRC1_ALPHA}
      *
      * All op parameters can take the following values:
      *
@@ -195,6 +204,17 @@ class BlendState {
     get allWrite() {
         // return a number with all 4 bits, for fast compare
         return BitPacking.get(this.target0, allWriteShift, allWriteMasks);
+    }
+
+    /**
+     * True if any blend factor uses the secondary fragment output.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get usesDualSourceBlending() {
+        return usesSecondarySource(this.colorSrcFactor) || usesSecondarySource(this.colorDstFactor) ||
+            usesSecondarySource(this.alphaSrcFactor) || usesSecondarySource(this.alphaDstFactor);
     }
 
     /**

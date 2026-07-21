@@ -467,8 +467,13 @@ class Material {
      * @type {BlendState}
      */
     set blendState(value) {
+        const wasDualSource = this._blendState.usesDualSourceBlending;
         this._blendState.copy(value);
         this._updateTransparency();
+
+        if (wasDualSource !== this._blendState.usesDualSourceBlending) {
+            this.clearVariants();
+        }
     }
 
     /**
@@ -509,6 +514,7 @@ class Material {
      */
     set blendType(type) {
 
+        const wasDualSource = this._blendState.usesDualSourceBlending;
         const blendMode = blendModes[type];
         Debug.assert(blendMode, `Unknown blend mode ${type}`);
         this._blendState.setColorBlend(blendMode.op, blendMode.src, blendMode.dst);
@@ -520,6 +526,10 @@ class Material {
             this._updateTransparency();
         }
         this._updateMeshInstanceKeys();
+
+        if (wasDualSource !== this._blendState.usesDualSourceBlending) {
+            this.clearVariants();
+        }
     }
 
     /**

@@ -52,7 +52,11 @@ const _blendFactor = [
     'dst-alpha',            // BLENDMODE_DST_ALPHA
     'one-minus-dst-alpha',  // BLENDMODE_ONE_MINUS_DST_ALPHA
     'constant',             // BLENDMODE_CONSTANT
-    'one-minus-constant'    // BLENDMODE_ONE_MINUS_CONSTANT
+    'one-minus-constant',   // BLENDMODE_ONE_MINUS_CONSTANT
+    'src1',                 // BLENDMODE_SRC1_COLOR
+    'one-minus-src1',       // BLENDMODE_ONE_MINUS_SRC1_COLOR
+    'src1-alpha',           // BLENDMODE_SRC1_ALPHA
+    'one-minus-src1-alpha'  // BLENDMODE_ONE_MINUS_SRC1_ALPHA
 ];
 
 const _compareFunction = [
@@ -362,6 +366,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         };
 
         const colorAttachments = renderTarget.impl.colorAttachments;
+        if (blendState.usesDualSourceBlending) {
+            Debug.assert(shader.definition.useDualSourceBlending,
+                'A BlendState using secondary source factors requires a dual-source blending shader.');
+            Debug.assert(colorAttachments.length === 1,
+                'Dual-source blending requires exactly one color attachment.');
+        }
         if (colorAttachments.length > 0) {
 
             // the same write mask is used by all color buffers, to match the WebGL behavior

@@ -483,6 +483,15 @@ class GraphicsDevice extends EventHandler {
     supportsPrimitiveIndex = false;
 
     /**
+     * True if the device supports dual-source blending, which allows a fragment shader to output a
+     * secondary color used by the source 1 blend factors.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsDualSourceBlending = false;
+
+    /**
      * True if the device supports 16-bit floating-point types in shaders (WebGPU only). When
      * supported, shaders can use native WGSL types: `f16`, `vec2h`, `vec3h`, `vec4h`, `mat2x2h`,
      * `mat3x3h`, `mat4x4h`. For convenience, PlayCanvas also provides type aliases (`half`,
@@ -754,6 +763,7 @@ class GraphicsDevice extends EventHandler {
         if (this.textureFloatFilterable) capsDefines.set('CAPS_TEXTURE_FLOAT_FILTERABLE', '');
         if (this.textureFloatRenderable) capsDefines.set('CAPS_TEXTURE_FLOAT_RENDERABLE', '');
         if (this.supportsMultiDraw) capsDefines.set('CAPS_MULTI_DRAW', '');
+        if (this.supportsDualSourceBlending) capsDefines.set('CAPS_DUAL_SOURCE_BLENDING', '');
         if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
         if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
         if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');

@@ -75,6 +75,8 @@ class ShaderDefinitionUtils {
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
      * which default to vec4. Passing a string will set the output type for all color attachments.
      * Passing an array will set the output type for each color attachment.
+     * @param {boolean} [options.useDualSourceBlending] - Whether the fragment shader outputs a
+     * secondary color for dual-source blending. Defaults to false.
      * @returns {object} Returns the created shader definition.
      */
     static createDefinition(device, options) {
@@ -83,6 +85,8 @@ class ShaderDefinitionUtils {
         Debug.assert(!options.vertexIncludes || options.vertexIncludes instanceof Map);
         Debug.assert(!options.fragmentDefines || options.fragmentDefines instanceof Map);
         Debug.assert(!options.fragmentIncludes || options.fragmentIncludes instanceof Map);
+        Debug.assert(!options.useDualSourceBlending || device.supportsDualSourceBlending,
+            'Dual-source blending is not supported by this graphics device.');
 
         // Normalize fragmentOutputTypes to an array
         const normalizedOutputTypes = (options) => {
@@ -102,6 +106,10 @@ class ShaderDefinitionUtils {
 
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {
+                if (options.useDualSourceBlending) {
+                    attachmentsDefine += '#define DUAL_SOURCE_BLENDING\n';
+                }
+
                 const fragmentOutputTypes = normalizedOutputTypes(options);
 
                 for (let i = 0; i < device.maxColorAttachments; i++) {
@@ -117,7 +125,11 @@ class ShaderDefinitionUtils {
         const getDefinesWgsl = (isVertex, options) => {
 
             // Enable directives must come before all global declarations
-            let code = ShaderDefinitionUtils.getWGSLEnables(device, isVertex ? 'vertex' : 'fragment');
+            let code = ShaderDefinitionUtils.getWGSLEnables(
+                device,
+                isVertex ? 'vertex' : 'fragment',
+                !isVertex && options.useDualSourceBlending
+            );
 
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {
@@ -200,7 +212,8 @@ class ShaderDefinitionUtils {
             feedbackVaryings: options.feedbackVaryings,
             useTransformFeedback: options.useTransformFeedback,
             meshUniformBufferFormat: options.meshUniformBufferFormat,
-            meshBindGroupFormat: options.meshBindGroupFormat
+            meshBindGroupFormat: options.meshBindGroupFormat,
+            useDualSourceBlending: !!options.useDualSourceBlending
         };
     }
 
@@ -210,16 +223,20 @@ class ShaderDefinitionUtils {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {'vertex'|'fragment'|'compute'} shaderType - The type of shader.
+     * @param {boolean} [useDualSourceBlending] - Whether to enable dual-source blending.
      * @returns {string} The WGSL enable directives code.
      * @ignore
      */
-    static getWGSLEnables(device, shaderType) {
+    static getWGSLEnables(device, shaderType, useDualSourceBlending = false) {
         let code = '';
         if (device.supportsShaderF16) {
             code += 'enable f16;\n';
         }
         if (shaderType === 'fragment' && device.supportsPrimitiveIndex) {
             code += 'enable primitive_index;\n';
+        }
+        if (shaderType === 'fragment' && useDualSourceBlending) {
+            code += 'enable dual_source_blending;\n';
         }
         if (device.supportsSubgroups) {
             code += 'enable subgroups;\n';

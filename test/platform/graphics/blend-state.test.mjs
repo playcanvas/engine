@@ -3,7 +3,8 @@ import { expect } from 'chai';
 import { BlendState } from '../../../src/platform/graphics/blend-state.js';
 import {
     BLENDEQUATION_ADD, BLENDEQUATION_MAX, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO,
-    BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE
+    BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE, BLENDMODE_SRC1_COLOR,
+    BLENDMODE_ONE_MINUS_SRC1_ALPHA
 } from '../../../src/platform/graphics/constants.js';
 
 describe('BlendState', function () {
@@ -55,6 +56,15 @@ describe('BlendState', function () {
             expect(bs.greenWrite).to.equal(false);
             expect(bs.blueWrite).to.equal(false);
             expect(bs.alphaWrite).to.equal(false);
+        });
+
+        it('dual-source factors', function () {
+            const bs = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR,
+                BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE_MINUS_SRC1_ALPHA);
+
+            expect(bs.colorDstFactor).to.equal(BLENDMODE_SRC1_COLOR);
+            expect(bs.alphaDstFactor).to.equal(BLENDMODE_ONE_MINUS_SRC1_ALPHA);
+            expect(bs.usesDualSourceBlending).to.equal(true);
         });
 
     });
