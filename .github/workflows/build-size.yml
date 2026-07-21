@@ -35,13 +35,13 @@ jobs:
       ENGINE_BUILD_REVISION: ci-build-size
     steps:
       - name: Check out base
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: base
 
       - name: Check out PR
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7.0.1
         with:
           path: pr
 
