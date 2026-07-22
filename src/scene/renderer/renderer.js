@@ -363,15 +363,15 @@ class Renderer {
                 jitterX = jitter * (offset.x * 2 - 1) / targetWidth;
                 jitterY = jitter * (offset.y * 2 - 1) / targetHeight;
 
-                // apply offset to projection matrix
+                // apply jitter to projection matrix, on top of any off-center projection offset
                 projMat = _tempProjMat4.copy(projMat);
-                projMat.data[8] = jitterX;
-                projMat.data[9] = jitterY;
+                projMat.data[8] += jitterX;
+                projMat.data[9] += jitterY;
 
-                // apply offset to skybox projection matrix
+                // apply jitter to skybox projection matrix
                 projMatSkybox = _tempProjMat5.copy(projMatSkybox);
-                projMatSkybox.data[8] = jitterX;
-                projMatSkybox.data[9] = jitterY;
+                projMatSkybox.data[8] += jitterX;
+                projMatSkybox.data[9] += jitterY;
 
                 // blue noise vec4 - only use when jitter is enabled
                 if (this.blueNoiseJitterVersion !== this.device.renderVersion) {

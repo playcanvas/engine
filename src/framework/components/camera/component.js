@@ -17,6 +17,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { FramePass } from '../../../platform/graphics/frame-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
  * @import { FogParams } from '../../../scene/fog-params.js'
+ * @import { Vec2 } from '../../../core/math/vec2.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'
  * @import { Vec4 } from '../../../core/math/vec4.js'
  * @import { XrErrorCallback } from '../../xr/xr-manager.js'
@@ -877,6 +878,36 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets the offset of the projection window from the view direction, creating an off-center
+     * (asymmetric) projection. The offset is expressed in half-frustum units - an offset of
+     * `(0, 1)` moves the projection window up by half of the frustum height. Applies to both
+     * perspective and orthographic projections and is ignored in XR, where the projection is
+     * supplied by the XR system. Defaults to `(0, 0)`.
+     *
+     * A typical use case is perspective correction (shift lens): keep the camera level and use
+     * a vertical offset to frame a tall object, so its vertical lines stay parallel:
+     *
+     * @example
+     * // frame content that is `pitch` degrees above the horizon, without tilting the camera
+     * const fovY = entity.camera.fov * pc.math.DEG_TO_RAD;
+     * const shift = Math.tan(pitch * pc.math.DEG_TO_RAD) / Math.tan(fovY / 2);
+     * entity.camera.projectionOffset = new pc.Vec2(0, shift);
+     * @type {Vec2}
+     */
+    set projectionOffset(value) {
+        this._camera.projectionOffset = value;
+    }
+
+    /**
+     * Gets the offset of the projection window.
+     *
+     * @type {Vec2}
+     */
+    get projectionOffset() {
+        return this._camera.projectionOffset;
+    }
+
+    /**
      * Sets the rendering rectangle for the camera. This controls where on the screen the camera
      * will render in normalized screen coordinates. Defaults to `[0, 0, 1, 1]`.
      *
@@ -1373,6 +1404,7 @@ class CameraComponent extends Component {
         this.orthoHeight = source.orthoHeight;
         this.priority = source.priority;
         this.projection = source.projection;
+        this.projectionOffset = source.projectionOffset;
         this.rect = source.rect;
         this.renderTarget = source.renderTarget;
         this.scissorRect = source.scissorRect;

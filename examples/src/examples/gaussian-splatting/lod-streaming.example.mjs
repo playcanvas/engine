@@ -49,6 +49,7 @@ import {
     createGraphicsDevice,
     platform
 } from 'playcanvas';
+import { PerspectiveCorrection } from 'playcanvas/scripts/esm/camera/perspective-correction.mjs';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
@@ -300,6 +301,13 @@ Object.assign(cc, {
     enableOrbit: false,
     enablePan: false,
     focusPoint: focusPoint
+});
+
+// Perspective correction (shift lens): keeps vertical lines parallel when looking up or down
+data.set('verticalCorrection', 0);
+const correction = /** @type {PerspectiveCorrection} */ (camera.script.create(PerspectiveCorrection));
+data.on('verticalCorrection:set', () => {
+    correction.verticalCorrection = data.get('verticalCorrection');
 });
 
 // CameraFrame for HDR linear rendering (created lazily on first enable)

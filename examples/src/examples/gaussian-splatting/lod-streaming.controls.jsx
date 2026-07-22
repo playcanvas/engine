@@ -102,6 +102,16 @@ export function Controls({ observer }) {
                         step={0.0001}
                     />
                 </LabelGroup>
+                <LabelGroup text='Vertical Correction'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'verticalCorrection' }}
+                        min={0}
+                        max={1}
+                        precision={2}
+                        step={0.01}
+                    />
+                </LabelGroup>
                 <LabelGroup text='High Res'>
                     <BooleanInput
                         type='toggle'
