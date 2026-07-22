@@ -56,6 +56,9 @@ class PerspectiveCorrection extends Script {
     /** @private */
     _applied = false;
 
+    /** @private */
+    _offsetSet = false;
+
     initialize() {
         if (!this.entity.camera) {
             console.error('PerspectiveCorrection: the script requires a camera component on its entity.');
@@ -81,6 +84,10 @@ class PerspectiveCorrection extends Script {
     _apply() {
         const camera = this.entity.camera;
         if (!this.enabled || !camera || camera.projection !== PROJECTION_PERSPECTIVE || this.app.xr?.active) {
+            // clear a previously applied offset (e.g. after a switch to orthographic projection)
+            if (this._offsetSet) {
+                this._reset();
+            }
             return;
         }
 
@@ -105,6 +112,7 @@ class PerspectiveCorrection extends Script {
         this._offset.set(0, Math.tan(shiftPitch * math.DEG_TO_RAD) / tanHalfFovY);
         camera.projectionOffset = this._offset;
 
+        this._offsetSet = true;
         this._applied = true;
     }
 
@@ -118,6 +126,11 @@ class PerspectiveCorrection extends Script {
 
     /** @private */
     _reset() {
+        // restore the entity rotation in case the render was interrupted between the prerender
+        // and postrender events
+        this._restore();
+
+        this._offsetSet = false;
         if (this.entity.camera) {
             this.entity.camera.projectionOffset = Vec2.ZERO;
         }
