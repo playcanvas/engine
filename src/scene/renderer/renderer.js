@@ -423,7 +423,11 @@ class Renderer {
             camera.frustum.setFromMat4(viewProjMat);
         }
 
-        this.tbnBasis.setValue(flipY ? -1 : 1);
+        // Sign for the derivative-based TBN (see TBN.js). It compensates for the Y flip applied to
+        // the projection matrix when rendering with flipY. On WebGPU there is an additional inherent
+        // flip because screen-space dpdy has the opposite sign to WebGL's dFdy (framebuffer space is
+        // Y-down), so the backend is XORed into the sign to keep normal mapping consistent (#5735).
+        this.tbnBasis.setValue((this.device.isWebGPU !== !!flipY) ? -1 : 1);
 
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
