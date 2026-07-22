@@ -54,11 +54,13 @@ fn applyMsdf(color_in: vec4f) -> vec4f {
 
     // Width of the distance-field transition in screen pixels, from the uv magnification (both
     // axes) and the atlas spread. Stable under motion and minification, unlike the distance-field
-    // gradient whose noise on undersampled glyphs makes small text shimmer. Floored at 1px so
-    // minified text keeps a soft ~1px edge rather than a razor one.
+    // gradient whose noise on undersampled glyphs makes small text shimmer. Floored at 2.5 so the
+    // minified coverage ramp spans at most 0.4 of the field's range ([edge - 0.2, edge + 0.2]):
+    // a lower floor lets the ramp (and its outline/shadow-shifted copies) reach the field's far
+    // tail, which washes translucent outline across the whole glyph quad and hazes distant text.
     let unitRange: vec2f = vec2f(uniform.font_pxrange) / vec2f(textureDimensions(texture_msdfMap, 0));
     let uvDeriv: vec2f = max(abs(dpdx(vUv0)) + abs(dpdy(vUv0)), vec2f(1e-6));
-    let screenPxRange: f32 = max(0.5 * dot(unitRange, vec2f(1.0) / uvDeriv), 1.0);
+    let screenPxRange: f32 = max(0.5 * dot(unitRange, vec2f(1.0) / uvDeriv), 2.5);
 
     let inside: f32 = clamp(screenPxRange * (sigDist - edge) + 0.5, 0.0, 1.0);
     let outline: f32 = clamp(screenPxRange * (sigDist + outline_thicknessValue - edge) + 0.5, 0.0, 1.0);
