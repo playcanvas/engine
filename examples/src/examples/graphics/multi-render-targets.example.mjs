@@ -24,6 +24,7 @@ import {
     Layer,
     LightComponentSystem,
     PIXELFORMAT_RGBA8,
+    RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RenderTarget,
@@ -156,7 +157,7 @@ const renderTarget = new RenderTarget({
     name: 'MRT',
     colorBuffers: colorBuffers,
     depth: true,
-    flipY: !app.graphicsDevice.isWebGPU,
+    origin: RENDERTARGET_ORIGIN_TOP,
     samples: 2
 });
 
