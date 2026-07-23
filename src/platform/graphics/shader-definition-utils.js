@@ -18,6 +18,7 @@ import sharedWGSL from './shader-chunks/frag/shared-wgsl.js';
 import halfTypes from './shader-chunks/frag/half-types.js';
 
 /**
+ * @import { TRANSFORM_FEEDBACK_BUFFER_MODE_INTERLEAVED, TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE } from './constants.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  */
 
