@@ -58,11 +58,11 @@ class ShaderDefinitionUtils {
      * @param {string[]} [options.feedbackVaryings] - A list of shader output variable
      * names that will be captured when using transform feedback. This setting is only effective
      * if the useTransformFeedback property is enabled.
-     * @param {"interleaved"|"separate"} [options.feedbackVaryingsMode] - Specifies how
-     * transform feedback varyings are written into GPU buffers. Use `"interleaved"` to pack all
-     * captured varyings into a single buffer, or `"separate"` to store each varying in its own
-     * buffer. This setting is only effective when useTransformFeedback property is enabled.
-     * Defaults to "interleaved".
+     * @param {number} [options.feedbackVaryingsMode] - Specifies how transform feedback varyings
+     * are written into GPU buffers. Use {@link TRANSFORM_FEEDBACK_BUFFER_MODE_INTERLEAVED} to pack all captured
+     * varyings into a single buffer, or {@link TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE} to store each varying
+     * in its own buffer. This setting is only effective when useTransformFeedback property is enabled.
+     * Defaults to {@link TRANSFORM_FEEDBACK_BUFFER_MODE_INTERLEAVED}.
      * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
      * to false.
      * @param {Map<string, string>} [options.vertexIncludes] - A map containing key-value pairs of
