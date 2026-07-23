@@ -25,6 +25,8 @@ import {
     Layer,
     PIXELFORMAT_RGBA8,
     PROJECTION_ORTHOGRAPHIC,
+    RENDERTARGET_ORIGIN_BOTTOM,
+    RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RenderTarget,
@@ -51,9 +53,9 @@ import { deviceType } from 'examples/context';
 // LEFT GROUP - must render identically on WebGL2 and WebGPU:
 //
 // upload                    | upright (the control)
-// camera RT origin top      | upright (flipY: !isWebGPU - image convention storage)
-// camera RT origin bottom   | flipped (flipY: isWebGPU - consistent WebGL-layout storage)
-// cube face +X origin top   | upright (cubemap-renderer idiom)
+// camera RT origin top      | upright (origin: 'top' - image convention storage)
+// camera RT origin bottom   | flipped (origin: 'bottom' - consistent WebGL-layout storage)
+// cube face +X origin top   | upright (origin: 'top' on a cube face - cubemap-renderer idiom)
 // quad copy engine quadVS   | upright (engine quadVS compensates per API via getImageEffectUV)
 // rect blit flipY on        | cell at bottom (flipY keeps raw texel-row viewport rects)
 // uv-space write wgpu flip  | upright (applies the UV1LAYOUT-style WebGPU flip)
@@ -268,11 +270,16 @@ const rtNative = new RenderTarget({ name: 'RT-native', colorBuffer: texNative, d
 createRTCamera('CameraNative', rtNative);
 
 const texTop = createRTTexture('RT-top', RT_SIZE);
-const rtTop = new RenderTarget({ name: 'RT-top', colorBuffer: texTop, depth: true, flipY: !isWebGPU });
+const rtTop = new RenderTarget({ name: 'RT-top', colorBuffer: texTop, depth: true, origin: RENDERTARGET_ORIGIN_TOP });
 createRTCamera('CameraTop', rtTop);
 
 const texBottom = createRTTexture('RT-bottom', RT_SIZE);
-const rtBottom = new RenderTarget({ name: 'RT-bottom', colorBuffer: texBottom, depth: true, flipY: isWebGPU });
+const rtBottom = new RenderTarget({
+    name: 'RT-bottom',
+    colorBuffer: texBottom,
+    depth: true,
+    origin: RENDERTARGET_ORIGIN_BOTTOM
+});
 createRTCamera('CameraBottom', rtBottom);
 
 // cube map +X face render target, using the origin-top idiom (matches scripts/utils/cubemap-renderer.js)
@@ -282,7 +289,7 @@ const rtCube = new RenderTarget({
     colorBuffer: texCube,
     face: CUBEFACE_POSX,
     depth: true,
-    flipY: !isWebGPU
+    origin: RENDERTARGET_ORIGIN_TOP
 });
 createRTCamera('CameraCube', rtCube, true);
 
@@ -580,15 +587,15 @@ readbackTopMaterial.update();
  * @param {RenderTarget} renderTarget - The render target the texture belongs to.
  * @param {StandardMaterial} material - The material to update with the read color.
  */
-const readbackPixel = (texture, renderTarget, material) => {
-    // texel (32, 32) is where the yellow marker lands when the stored image has top-left origin
-    texture
-    .read(32, 32, 1, 1, { renderTarget: renderTarget, immediate: true })
-    .then((/** @type {Uint8Array} */ data) => {
+const readbackPixel = async (texture, renderTarget, material) => {
+    try {
+        // texel (32, 32) is where the yellow marker lands when the stored image has top-left origin
+        const data = await texture.read(32, 32, 1, 1, { renderTarget: renderTarget, immediate: true });
         material.emissive.set(data[0] / 255, data[1] / 255, data[2] / 255);
         material.update();
-    })
-    .catch((/** @type {Error} */ err) => console.error('readback failed', err));
+    } catch (err) {
+        console.error('readback failed', err);
+    }
 };
 
 // ---------- the grid of result tiles ----------

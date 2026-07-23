@@ -22,6 +22,7 @@ import {
     LightComponentSystem,
     Mouse,
     PIXELFORMAT_RGBA8,
+    RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RenderTarget,
@@ -263,7 +264,7 @@ const sceneRt = new RenderTarget({
     name: 'TaaAlphaReproRT',
     colorBuffer: sceneColorTex,
     depth: true,
-    flipY: !device.isWebGPU,
+    origin: RENDERTARGET_ORIGIN_TOP,
     samples: 1
 });
 

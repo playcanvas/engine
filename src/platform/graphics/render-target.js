@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, isSrgbPixelFormat } from './constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP, isSrgbPixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { TextureUtils } from './texture-utils.js';
@@ -114,8 +114,11 @@ class RenderTarget {
      */
     _height;
 
-    /** @type {boolean} */
-    flipY;
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _flipY;
 
     /**
      * Creates a new RenderTarget instance. A color buffer or a depth buffer must be set.
@@ -146,9 +149,32 @@ class RenderTarget {
      * - {@link CUBEFACE_NEGZ}
      *
      * Defaults to {@link CUBEFACE_POSX}.
-     * @param {boolean} [options.flipY] - When set to true the image will be flipped in Y. Default
-     * is false.
      * @param {string} [options.name] - The name of the render target.
+     * @param {string} [options.origin] - Controls the vertical orientation of the image stored
+     * in the render target. Choose based on how the texture is sampled. Can be:
+     *
+     * - {@link RENDERTARGET_ORIGIN_TOP}: row 0 of the stored image is the top row of the
+     * rendered image, on all graphics APIs - the same layout image textures use. Use for
+     * anything treated as a picture: sampling with mesh UVs, cube map faces, or pixel readback
+     * saved as an image. Recommended for all new content - write the sampling code as if the
+     * texture was a loaded image. Internally the image is rendered upside-down on WebGL2.
+     * - {@link RENDERTARGET_ORIGIN_BOTTOM}: row 0 of the stored image is the bottom row of the
+     * rendered image, on all graphics APIs - replicating WebGL2's native layout. Use to keep
+     * consuming code written against WebGL conventions working unchanged on all APIs: shaders
+     * deriving UVs from projected (NDC) coordinates or a projection scale-bias matrix, and
+     * texture atlases addressing cells by viewport rectangles (on WebGPU this also switches
+     * viewport / scissor rectangles to raw texel-row addressing). If a render target that worked
+     * on WebGL2 appears upside-down on WebGPU, this is the drop-in fix; migrating the sampling
+     * code to image orientation and {@link RENDERTARGET_ORIGIN_TOP} is the better long-term
+     * choice. Internally the image is rendered upside-down on WebGPU.
+     * - {@link RENDERTARGET_ORIGIN_NATIVE}: the image is stored in the native orientation of the
+     * graphics API and the row order differs between WebGL2 (bottom-up) and WebGPU (top-down).
+     * No flipping takes place. Only appropriate for orientation-agnostic consumers: UVs derived
+     * from gl_FragCoord, sampling via the same matrix the target was rendered with (shadow
+     * maps), or integer texel fetch.
+     *
+     * Takes precedence over the deprecated `flipY` option. Defaults to
+     * {@link RENDERTARGET_ORIGIN_NATIVE}.
      * @param {number} [options.samples] - Number of hardware anti-aliasing samples. Default is 1.
      * @param {boolean} [options.stencil] - If set to true, depth buffer will include stencil.
      * Defaults to false. Ignored if depthBuffer is defined or depth is false.
@@ -276,8 +302,27 @@ class RenderTarget {
             Debug.warnOnce(`RenderTarget '${this.name}' was created with both transientDepth and a depthBuffer. Transient depth applies to the engine-allocated depth buffer only and cannot be used with a provided depthBuffer; the transientDepth flag is ignored.`);
         }
 
-        // render image flipped in Y
-        this.flipY = options.flipY ?? false;
+        // resolve the origin option to a per-API flipY value: 'top' stores standard image row
+        // order (flips on WebGL), 'bottom' replicates the WebGL layout on all APIs (flips on
+        // WebGPU), 'native' (the default) stores the API-native orientation without flipping
+        Debug.call(() => {
+            if (options.origin !== undefined) {
+                Debug.assert(options.origin === RENDERTARGET_ORIGIN_TOP || options.origin === RENDERTARGET_ORIGIN_BOTTOM || options.origin === RENDERTARGET_ORIGIN_NATIVE, `RenderTarget '${this.name}': invalid origin option '${options.origin}'.`);
+                if (options.flipY !== undefined) {
+                    Debug.warnOnce(`RenderTarget '${this.name}': both 'origin' and 'flipY' options are specified, 'origin' takes precedence.`);
+                }
+            }
+        });
+        if (options.origin === RENDERTARGET_ORIGIN_TOP) {
+            this._flipY = !device.isWebGPU;
+        } else if (options.origin === RENDERTARGET_ORIGIN_BOTTOM) {
+            this._flipY = device.isWebGPU;
+        } else if (options.origin === RENDERTARGET_ORIGIN_NATIVE) {
+            this._flipY = false;
+        } else {
+            // origin not specified - honor the deprecated flipY option
+            this._flipY = options.flipY ?? false;
+        }
 
         this._mipLevel = options.mipLevel ?? 0;
         if (this._mipLevel > 0 && this._depth) {
@@ -512,6 +557,21 @@ class RenderTarget {
         DebugGraphics.popGpuMarker(this._device);
 
         return success;
+    }
+
+    set flipY(value) {
+        Debug.deprecated('RenderTarget#flipY is deprecated, use the "origin" option of the RenderTarget constructor instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.');
+        this._flipY = value;
+    }
+
+    /**
+     * Gets whether the rendered image is flipped in Y.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get flipY() {
+        return this._flipY;
     }
 
     /**

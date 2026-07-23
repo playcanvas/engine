@@ -18,6 +18,7 @@ import {
     PROJECTION_ORTHOGRAPHIC,
     PROJECTION_PERSPECTIVE,
     ParticleSystemComponentSystem,
+    RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RenderTarget,
@@ -194,7 +195,7 @@ const renderTarget = new RenderTarget({
     name: 'RT',
     colorBuffer: texture,
     depth: true,
-    flipY: !app.graphicsDevice.isWebGPU,
+    origin: RENDERTARGET_ORIGIN_TOP,
     samples: 2,
 
     // Allocate this render target's MSAA color and depth attachments as transient

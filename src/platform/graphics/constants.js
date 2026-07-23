@@ -347,6 +347,34 @@ export const CUBEFACE_POSZ = 4;
 export const CUBEFACE_NEGZ = 5;
 
 /**
+ * The render target stores the image with row 0 being the top row of the rendered image, on all
+ * graphics APIs - the same layout image textures use. See the `origin` option of the
+ * {@link RenderTarget} constructor for guidance on which origin to use.
+ *
+ * @category Graphics
+ */
+export const RENDERTARGET_ORIGIN_TOP = 'top';
+
+/**
+ * The render target stores the image with row 0 being the bottom row of the rendered image, on
+ * all graphics APIs - replicating WebGL2's native layout. See the `origin` option of the
+ * {@link RenderTarget} constructor for guidance on which origin to use.
+ *
+ * @category Graphics
+ */
+export const RENDERTARGET_ORIGIN_BOTTOM = 'bottom';
+
+/**
+ * The render target stores the image in the native orientation of the graphics API - bottom-up
+ * on WebGL2, top-down on WebGPU - so the stored row order differs between the APIs. This is the
+ * default. See the `origin` option of the {@link RenderTarget} constructor for guidance on which
+ * origin to use.
+ *
+ * @category Graphics
+ */
+export const RENDERTARGET_ORIGIN_NATIVE = 'native';
+
+/**
  * No triangles are culled.
  *
  * @category Graphics
