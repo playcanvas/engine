@@ -322,10 +322,7 @@ class ShadowRenderer {
             renderer.setBaseConstants(device, material);
             renderer.setSkinning(device, meshInstance);
 
-            if (material.dirty) {
-                material.updateUniforms(device, scene);
-                material.dirty = false;
-            }
+            material.prepareForRender(device, scene);
 
             renderer.setupCullModeAndFrontFace(true, flipFactor, meshInstance);
 

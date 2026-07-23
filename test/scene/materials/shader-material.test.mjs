@@ -1,5 +1,7 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { BlendState } from '../../../src/platform/graphics/blend-state.js';
 import {
     BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR, BLENDMODE_ZERO,
@@ -10,6 +12,10 @@ import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js'
 import { shaderGeneratorShader } from '../../../src/scene/shader-lib/programs/shader-generator-shader.js';
 
 describe('Material', function () {
+
+    afterEach(function () {
+        restore();
+    });
 
     function checkDefaultMaterial(material) {
         expect(material).to.be.an.instanceof(ShaderMaterial);
@@ -78,6 +84,92 @@ describe('Material', function () {
 
             material.blendState = BlendState.NOBLEND;
             expect(material.variants.size).to.equal(0);
+        });
+
+    });
+
+    describe('#update()', function () {
+
+        it('increments the update version', function () {
+            const material = new ShaderMaterial();
+
+            expect(material.updateVersion).to.equal(0);
+            material.update();
+            expect(material.updateVersion).to.equal(1);
+        });
+
+        it('reports the removed dirty property', function () {
+            const removed = stub(Debug, 'removed');
+            const material = new ShaderMaterial();
+
+            expect(material.dirty).to.equal(undefined);
+            expect(removed.calledOnceWithExactly(
+                'Material#dirty has been removed. Call Material#update() after modifying material properties.'
+            )).to.equal(true);
+        });
+
+        it('clears dirty shader variants immediately', function () {
+            const material = new ShaderMaterial();
+            material.variants.set(1, {});
+
+            material.update();
+
+            expect(material.variants.size).to.equal(0);
+            expect(material._dirtyShader).to.equal(false);
+        });
+
+        it('clears variants only once when shader state and defines are dirty', function () {
+            const material = new ShaderMaterial();
+            let clearCount = 0;
+            material.meshInstances.add({
+                clearShaders: () => {
+                    clearCount++;
+                }
+            });
+            material.setDefine('TEST_DEFINE', true);
+
+            material.update();
+            material.prepareForRender();
+
+            expect(clearCount).to.equal(1);
+        });
+
+        it('retains preparation as a compatibility fallback', function () {
+            const material = new ShaderMaterial();
+            material.variants.set(1, {});
+
+            material.prepareForRender();
+
+            expect(material.variants.size).to.equal(0);
+            expect(material._dirtyShader).to.equal(false);
+        });
+
+        it('does not clear variants during preparation after update processed them', function () {
+            const material = new ShaderMaterial();
+            material.update();
+            material.variants.set(1, {});
+
+            material.prepareForRender();
+
+            expect(material.variants.size).to.equal(1);
+        });
+
+        it('prepares once for each material update', function () {
+            const material = new ShaderMaterial();
+            const updateUniforms = material.updateUniforms.bind(material);
+            let prepareCount = 0;
+            material.updateUniforms = (...args) => {
+                prepareCount++;
+                updateUniforms(...args);
+            };
+
+            material.prepareForRender();
+            material.prepareForRender();
+            expect(prepareCount).to.equal(1);
+
+            material.update();
+            material.prepareForRender();
+            expect(prepareCount).to.equal(2);
         });
 
     });

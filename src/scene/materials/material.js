@@ -362,7 +362,38 @@ class Material {
 
     _scene = null;
 
-    dirty = true;
+    /**
+     * Incremented by {@link Material#update} so internal consumers can detect material changes
+     * without consuming shared dirty state.
+     *
+     * @type {number}
+     * @private
+     */
+    _updateVersion = 0;
+
+    /**
+     * The update version most recently processed by {@link Material#prepareForRender}.
+     *
+     * @type {number}
+     * @private
+     */
+    _preparedVersion = -1;
+
+    /**
+     * The version incremented each time {@link Material#update} is called.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get updateVersion() {
+        return this._updateVersion;
+    }
+
+    /** @ignore */
+    get dirty() {
+        Debug.removed('Material#dirty has been removed. Call Material#update() after modifying material properties.');
+        return undefined;
+    }
 
     /**
      * Sets whether the red channel is written to the color buffer. If true, the red component of
@@ -705,10 +736,31 @@ class Material {
         }
     }
 
-    updateUniforms(device, scene) {
+    /** @private */
+    _clearVariantsIfDirty() {
         if (this._dirtyShader) {
             this.clearVariants();
             this._dirtyShader = false;
+        }
+    }
+
+    updateUniforms(device, scene) {
+        // Compatibility fallback for materials rendered without calling update().
+        this._clearVariantsIfDirty();
+    }
+
+    /**
+     * Prepares the material for rendering when it has been updated since the previous preparation.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Scene} scene - The scene.
+     * @ignore
+     */
+    prepareForRender(device, scene) {
+        const version = this._updateVersion;
+        if (this._preparedVersion !== version) {
+            this.updateUniforms(device, scene);
+            this._preparedVersion = version;
         }
     }
 
@@ -752,11 +804,11 @@ class Material {
         if (this._definesDirty || this._shaderChunks?.isDirty()) {
             this._definesDirty = false;
             this._shaderChunks?.resetDirty();
-
-            this.clearVariants();
+            this._dirtyShader = true;
         }
 
-        this.dirty = true;
+        this._clearVariantsIfDirty();
+        this._updateVersion++;
     }
 
     // Parameter management

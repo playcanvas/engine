@@ -967,12 +967,11 @@ class GSplatParams {
     }
 
     /**
-     * Called at the end of the frame to clear dirty flags.
+     * Called at the end of the frame to clear the parameter dirty flag.
      *
      * @ignore
      */
     frameEnd() {
-        this._material.dirty = false;
         this.dirty = false;
     }
 
