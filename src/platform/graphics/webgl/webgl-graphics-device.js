@@ -1082,7 +1082,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.feedback = null;
 
         this.transformFeedbackNumSlots = 0;
-        /** @type (VertexBuffer | null)[] */
+        /** @type {(VertexBuffer | null)[]} */
         this.transformFeedbackBuffers = [];
 
         this.textureUnit = 0;
@@ -2052,8 +2052,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     const tfb = this.transformFeedbackBuffers;
                     for (let i = 0; i < tfbNumSlots; i++) {
                         const buf = tfb[i];
-                        Debug.assert(buf, 'Transform feedback buffer slot value is null.');
-                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, buf.impl.bufferId);
+                        const bufId = buf?.impl.bufferId ?? null;
+                        Debug.assert(bufId, 'Transform feedback buffer slot value is null.');
+                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, bufId);
                     }
                     // Enable TF, start writing to out buffer
                     gl.beginTransformFeedback(gl.POINTS);
@@ -2428,7 +2429,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Sets the output vertex buffer. It will be written to by a shader with transform feedback
      * varyings.
      *
-     * @param {VertexBuffer} tf - The output vertex buffer.
+     * @param {VertexBuffer|null} tf - The output vertex buffer.
      * @param {number} [slot] - The buffer slot index.
      * @ignore
      */
@@ -2439,6 +2440,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         const buffers = this.transformFeedbackBuffers;
 
+        let numSlots = 0;
         let len = buffers.length;
 
         // Let's expand the array up to the slot index.
@@ -2449,10 +2451,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
             len = slot + 1;
         }
 
+        // Set buffer to slot
         buffers[slot] = tf;
 
         // Let's take the last slot available in the array.
-        let numSlots = 0;
         for (let i = len - 1; i >= 0; i--) {
             if (buffers[i]) {
                 numSlots = i + 1;
