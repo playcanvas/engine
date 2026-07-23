@@ -930,36 +930,8 @@ class BatchManager {
         // #endif
     }
 
-    /**
-     * Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and
-     * batch objects, linked to different source mesh instances.
-     *
-     * @param {Batch} batch - A batch object.
-     * @param {MeshInstance[]} clonedMeshInstances - New mesh instances.
-     * @returns {Batch} New batch object.
-     */
     clone(batch, clonedMeshInstances) {
-        const batch2 = new Batch(clonedMeshInstances, batch.dynamic, batch.batchGroupId);
-        this._batchList.push(batch2);
-
-        const nodes = [];
-        for (let i = 0; i < clonedMeshInstances.length; i++) {
-            nodes.push(clonedMeshInstances[i].node);
-        }
-
-        batch2.meshInstance = new MeshInstance(batch.meshInstance.mesh, batch.meshInstance.material, batch.meshInstance.node);
-        batch2.meshInstance._updateAabb = false;
-        batch2.meshInstance.parameters = clonedMeshInstances[0].parameters;
-        batch2.meshInstance.cull = clonedMeshInstances[0].cull;
-        batch2.meshInstance.layer = clonedMeshInstances[0].layer;
-
-        if (batch.dynamic) {
-            batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
-        }
-
-        batch2.meshInstance.castShadow = batch.meshInstance.castShadow;
-
-        return batch2;
+        Debug.removed('BatchManager#clone was removed. There is no replacement, as the method was unused and had no supported use case.');
     }
 
     /**
