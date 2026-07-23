@@ -190,7 +190,7 @@ class WebglShader {
 
             /** @type number */
             let bufferMode = gl.INTERLEAVED_ATTRIBS;
-            if (definition.feedbackVaryingsMode === "separate") {
+            if (definition.feedbackVaryingsMode === 'separate') {
                 bufferMode = gl.SEPARATE_ATTRIBS;
             }
 

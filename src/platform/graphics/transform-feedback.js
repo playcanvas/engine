@@ -172,7 +172,6 @@ class TransformFeedback {
             const separateMode = shader.definition.feedbackVaryingsMode === 'separate';
             if (separateMode) {
                 Debug.warnOnce('TransformFeedback does not support separate transform feedback varyings mode.');
-                return;
             }
         });
 

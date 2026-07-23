@@ -2113,7 +2113,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     // disable TF
                     gl.endTransformFeedback();
                     for (let i = 0; i < tfbNumSlots; i++) {
-                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, null);   
+                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, null);
                     }
                 }
 
@@ -2466,8 +2466,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 this.feedback = gl.createTransformFeedback();
             }
             gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
-        }
-        else {
+        } else {
             gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
         }
     }
