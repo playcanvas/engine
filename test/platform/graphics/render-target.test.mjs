@@ -91,4 +91,35 @@ describe('RenderTarget', function () {
             destroyRenderTarget(rt);
         });
     });
+
+    // origin resolution on a non-WebGPU device: flipY true is equivalent to origin top
+    describe('#origin', function () {
+
+        it('defaults to native', function () {
+            const rt = createRenderTarget();
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_NATIVE);
+            destroyRenderTarget(rt);
+        });
+
+        it('returns the origin the render target was constructed with', function () {
+            const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_TOP });
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_TOP);
+            destroyRenderTarget(rt);
+        });
+
+        it('is derived from the deprecated flipY option', function () {
+            const rt = createRenderTarget({ flipY: true });
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_TOP);
+            destroyRenderTarget(rt);
+        });
+
+        it('is derived from the deprecated flipY setter', function () {
+            const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_BOTTOM });
+            rt.flipY = true;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_TOP);
+            rt.flipY = false;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_NATIVE);
+            destroyRenderTarget(rt);
+        });
+    });
 });

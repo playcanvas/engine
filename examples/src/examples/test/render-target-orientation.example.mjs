@@ -57,7 +57,7 @@ import { deviceType } from 'examples/context';
 // camera RT origin bottom   | flipped (origin: 'bottom' - consistent WebGL-layout storage)
 // cube face +X origin top   | upright (origin: 'top' on a cube face - cubemap-renderer idiom)
 // quad copy engine quadVS   | upright (engine quadVS compensates per API via getImageEffectUV)
-// rect blit flipY on        | cell at bottom (flipY keeps raw texel-row viewport rects)
+// rect blit origin bottom   | cell at bottom (origin bottom keeps raw texel-row viewport rects)
 // uv-space write wgpu flip  | upright (applies the UV1LAYOUT-style WebGPU flip)
 // readback top RT           | yellow (identical storage makes readback coordinates portable)
 //
@@ -66,7 +66,7 @@ import { deviceType } from 'examples/context';
 // upload flipY on           | WebGL2: flipped         | WebGPU: upright - flipY upload ignored
 // camera RT default         | WebGL2: flipped         | WebGPU: upright - the default divergence
 // quad copy raw uv          | WebGL2: upright         | WebGPU: flipped - raw uv quads invert
-// rect blit flipY off       | WebGL2: cell at bottom  | WebGPU: cell at top - viewport conversion
+// rect blit default         | WebGL2: cell at bottom  | WebGPU: cell at top - viewport conversion
 // uv-space write raw        | WebGL2: upright         | WebGPU: flipped - needs the WebGPU flip
 // readback default RT       | WebGL2: black           | WebGPU: yellow - rows follow storage
 
@@ -390,7 +390,12 @@ const texRectOff = createRTTexture('RT-rect-off', RT_SIZE);
 const rtRectOff = new RenderTarget({ name: 'RT-rect-off', colorBuffer: texRectOff, depth: false });
 
 const texRectOn = createRTTexture('RT-rect-on', RT_SIZE);
-const rtRectOn = new RenderTarget({ name: 'RT-rect-on', colorBuffer: texRectOn, depth: false, flipY: true });
+const rtRectOn = new RenderTarget({
+    name: 'RT-rect-on',
+    colorBuffer: texRectOn,
+    depth: false,
+    origin: RENDERTARGET_ORIGIN_BOTTOM
+});
 
 // blit destination rect in pixels - the same numbers on both render targets and both APIs
 const blitRect = new Vec4(64, 128, 128, 128);
@@ -610,7 +615,7 @@ addTile(1, 0, createTileMaterial(texTop), 'camera RT origin top', 'upright');
 addTile(0, 1, createTileMaterial(texBottom), 'camera RT origin bottom', 'flipped');
 addTile(1, 1, cubeDisplayMaterial, 'cube face +X origin top', 'upright');
 addTile(0, 2, createTileMaterial(texCopyEngine), 'quad copy engine quadVS', 'upright');
-addTile(1, 2, createTileMaterial(texRectOn), 'rect blit flipY on', 'cell at bottom');
+addTile(1, 2, createTileMaterial(texRectOn), 'rect blit origin bottom', 'cell at bottom');
 addTile(0, 3, createTileMaterial(texUvFix), 'uv-space write wgpu flip', 'upright');
 addTile(1, 3, readbackTopMaterial, 'readback top RT', 'yellow');
 
@@ -619,7 +624,7 @@ addTile(1, 3, readbackTopMaterial, 'readback top RT', 'yellow');
 addTile(2, 0, createTileMaterial(texUploadFlip), 'upload flipY on', isWebGPU ? 'upright (flipY ignored)' : 'flipped');
 addTile(3, 0, createTileMaterial(texNative), 'camera RT default', isWebGPU ? 'upright' : 'flipped');
 addTile(2, 1, createTileMaterial(texCopyRaw), 'quad copy raw uv', isWebGPU ? 'flipped' : 'upright');
-addTile(3, 1, createTileMaterial(texRectOff), 'rect blit flipY off', isWebGPU ? 'cell at top' : 'cell at bottom');
+addTile(3, 1, createTileMaterial(texRectOff), 'rect blit default', isWebGPU ? 'cell at top' : 'cell at bottom');
 addTile(2, 2, createTileMaterial(texUvRaw), 'uv-space write raw', isWebGPU ? 'flipped' : 'upright');
 addTile(3, 2, readbackNativeMaterial, 'readback default RT', isWebGPU ? 'yellow' : 'black');
 

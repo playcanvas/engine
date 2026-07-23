@@ -415,13 +415,15 @@ class Renderer {
             // store matrices needed by TAA
             camera._storeShaderMatrices(viewProjMat, jitterX, jitterY, this.device.renderVersion);
 
-            this.flipYId.setValue(flipY ? -1 : 1);
-
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
 
             camera.frustum.setFromMat4(viewProjMat);
         }
+
+        // set for all passes including XR, to keep the uniform fresh per render pass - it is
+        // consumed by shaders of any pass (e.g. screen-space UI, gsplat rasterization)
+        this.flipYId.setValue(flipY ? -1 : 1);
 
         // Sign for the derivative-based TBN (see TBN.js). It compensates for the Y flip applied to
         // the projection matrix when rendering with flipY. On WebGPU there is an additional inherent

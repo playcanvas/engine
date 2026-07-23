@@ -6,6 +6,7 @@ export default /* wgsl */`
     var sceneTexture: texture_2d<f32>;
     var sceneTextureSampler: sampler;
     uniform sceneTextureInvRes: vec2f;
+    uniform composeTargetFlipY: f32;
 
     #include "composeBloomPS"
     #include "composeDofPS"
@@ -25,7 +26,10 @@ export default /* wgsl */`
         #include "composeMainStartPS"
 
         var output: FragmentOutput;
-        var uv = uv0;
+
+        // flip the sampling vertically when the target render target stores a flipped image, so
+        // that the natively-oriented output of the scene pass chain lands in the requested row order
+        var uv = vec2f(uv0.x, mix(uv0.y, 1.0 - uv0.y, uniform.composeTargetFlipY));
 
         let scene = textureSampleLevel(sceneTexture, sceneTextureSampler, uv, 0.0);
         var result = scene.rgb;
@@ -37,12 +41,12 @@ export default /* wgsl */`
 
         // Apply DOF
         #ifdef DOF
-            result = applyDof(result, uv0);
+            result = applyDof(result, uv);
         #endif
 
         // Apply SSAO
         #ifdef SSAO_TEXTURE
-            result = applySsao(result, uv0);
+            result = applySsao(result, uv);
         #endif
 
         // Apply Fringing
@@ -52,7 +56,7 @@ export default /* wgsl */`
 
         // Apply Bloom
         #ifdef BLOOM
-            result = applyBloom(result, uv0);
+            result = applyBloom(result, uv);
         #endif
 
         // Apply Color Enhancement (shadows, highlights, vibrance)

@@ -456,7 +456,6 @@ class GSplatHybridRenderer extends GSplatRenderer {
             foveationCenter: params.foveationCenter,
             viewportWidth,
             viewportHeight,
-            flipY: !!cameraNode.camera.renderTarget?.flipY,
             pickMode,
             fisheyeProj,
             antiAlias: params.antiAlias,
@@ -716,8 +715,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @private
      */
     _computeClipToViewZ(cameraNode, dst) {
-        const camComp = cameraNode.camera;
-        const cam = camComp.camera;
+        const cam = cameraNode.camera.camera;
         if (this.fisheyeProj.enabled) {
             const near = cam.nearClip;
             const far = cam.farClip;
@@ -727,8 +725,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
             dst[3] = near;
             return;
         }
-        const flipY = !!camComp.renderTarget?.flipY;
-        _invProjMat.copy(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, this.device.isWebGPU)).invert();
+        // canonical (unflipped) projection - matches the projector cache; the raster-time flip
+        // (projectionFlipY) is applied to the output position only and does not affect depth
+        _invProjMat.copy(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, false, this.device.isWebGPU)).invert();
         const d = _invProjMat.data;
         dst[0] = -d[2];
         dst[1] = -d[6];
