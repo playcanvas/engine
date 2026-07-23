@@ -67,6 +67,11 @@ class Shader {
      * @param {string[]} [definition.feedbackVaryings] - A list of shader output variable
      * names that will be captured when using transform feedback. This setting is only effective
      * if the useTransformFeedback property is enabled.
+     * @param {"interleaved"|"separate"} [definition.feedbackVaryingsMode] - Specifies how
+     * transform feedback varyings are written into GPU buffers. Use `"interleaved"` to pack all
+     * captured varyings into a single buffer, or `"separate"` to store each varying in its own
+     * buffer. This setting is only effective when useTransformFeedback property is enabled.
+     * Defaults to "interleaved".
      * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
      * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when

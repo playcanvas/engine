@@ -188,7 +188,13 @@ class WebglShader {
                 }
             }
 
-            gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
+            /** @type number */
+            let bufferMode = gl.INTERLEAVED_ATTRIBS;
+            if (definition.feedbackVaryingsMode === "separate") {
+                bufferMode = gl.SEPARATE_ATTRIBS;
+            }
+
+            gl.transformFeedbackVaryings(glProgram, outNames, bufferMode);
         }
 
         // map all vertex input attributes to fixed locations

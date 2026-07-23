@@ -168,6 +168,13 @@ class TransformFeedback {
         const device = this.device;
 
         DebugGraphics.pushGpuMarker(device, 'TransformFeedback');
+        Debug.call(() => {
+            const separateMode = shader.definition.feedbackVaryingsMode === 'separate';
+            if (separateMode) {
+                Debug.warnOnce('TransformFeedback does not support separate transform feedback varyings mode.');
+                return;
+            }
+        });
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
