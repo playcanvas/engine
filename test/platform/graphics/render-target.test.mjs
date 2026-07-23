@@ -81,6 +81,52 @@ describe('RenderTarget', function () {
         });
     });
 
+    // On a WebGPU device the native orientation is top-down, so origin resolution is mirrored
+    // relative to WebGL: 'top' does not flip, 'bottom' flips, and the deprecated flipY option /
+    // property derives origin bottom (not top). isWebGPU is stubbed on the null device, which is
+    // sufficient as the origin resolution only reads that flag.
+    describe('#constructor: origin option (WebGPU)', function () {
+
+        beforeEach(function () {
+            device.isWebGPU = true;
+        });
+
+        it('origin top does not flip on a WebGPU device', function () {
+            const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_TOP });
+            expect(rt.flipY).to.be.false;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_TOP);
+            destroyRenderTarget(rt);
+        });
+
+        it('origin bottom flips on a WebGPU device', function () {
+            const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_BOTTOM });
+            expect(rt.flipY).to.be.true;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_BOTTOM);
+            destroyRenderTarget(rt);
+        });
+
+        it('origin native does not flip on a WebGPU device', function () {
+            const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_NATIVE });
+            expect(rt.flipY).to.be.false;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_NATIVE);
+            destroyRenderTarget(rt);
+        });
+
+        it('derives origin bottom from the deprecated flipY option', function () {
+            const rt = createRenderTarget({ flipY: true });
+            expect(rt.flipY).to.be.true;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_BOTTOM);
+            destroyRenderTarget(rt);
+        });
+
+        it('derives origin bottom from the deprecated flipY setter', function () {
+            const rt = createRenderTarget();
+            rt.flipY = true;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_BOTTOM);
+            destroyRenderTarget(rt);
+        });
+    });
+
     describe('#flipY', function () {
 
         it('deprecated setter still updates the value', function () {
@@ -88,6 +134,37 @@ describe('RenderTarget', function () {
             expect(rt.flipY).to.be.false;
             rt.flipY = true;
             expect(rt.flipY).to.be.true;
+            destroyRenderTarget(rt);
+        });
+    });
+
+    // origin resolution on a non-WebGPU device: flipY true is equivalent to origin top
+    describe('#origin', function () {
+
+        it('defaults to native', function () {
+            const rt = createRenderTarget();
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_NATIVE);
+            destroyRenderTarget(rt);
+        });
+
+        it('returns the origin the render target was constructed with', function () {
+            const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_TOP });
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_TOP);
+            destroyRenderTarget(rt);
+        });
+
+        it('is derived from the deprecated flipY option', function () {
+            const rt = createRenderTarget({ flipY: true });
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_TOP);
+            destroyRenderTarget(rt);
+        });
+
+        it('is derived from the deprecated flipY setter', function () {
+            const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_BOTTOM });
+            rt.flipY = true;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_TOP);
+            rt.flipY = false;
+            expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_NATIVE);
             destroyRenderTarget(rt);
         });
     });

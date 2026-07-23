@@ -32,6 +32,12 @@ attribute vertex_position: vec3f;
 
 uniform viewport_size: vec4f;
 
+// The cache stores canonical (unflipped) clip positions - this per-pass +-1 uniform, set by the
+// renderer from the render target's flipY, applies the target's vertical orientation to the
+// final position only. This keeps the projector cache valid for any raster target (forward,
+// prepass, pick), with the flip resolved at rasterization time.
+uniform projectionFlipY: f32;
+
 // -inverse(matrix_projection)[row 2]; lets the VS reconstruct linear view
 // depth from clipPos via dot(clipToViewZ, clip). Set per-camera by the
 // renderer (see GSplatHybridRenderer).
@@ -166,7 +172,10 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     let pixelOffset = cornerClipped.x * v1 + cornerClipped.y * v2;
     let clipOffset = pixelOffset * c;
 
-    output.position = proj + vec4f(clipOffset, 0.0, 0.0);
+    // flipping the final position (center + offset together) vertically mirrors the whole splat,
+    // which is the correct application of the target orientation to the canonical cached data
+    let pos = proj + vec4f(clipOffset, 0.0, 0.0);
+    output.position = vec4f(pos.x, pos.y * uniform.projectionFlipY, pos.z, pos.w);
     output.gaussianUV = half2(cornerClipped);
 
     // read user varying values from the projection cache and pass them to the outputs

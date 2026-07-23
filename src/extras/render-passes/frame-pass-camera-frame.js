@@ -240,7 +240,7 @@ class FramePassCameraFrame extends FramePass {
         }
     }
 
-    createRenderTarget(name, depth, stencil, samples, flipY) {
+    createRenderTarget(name, depth, stencil, samples) {
 
         const texture = new Texture(this.device, {
             name: name,
@@ -258,8 +258,7 @@ class FramePassCameraFrame extends FramePass {
             colorBuffer: texture,
             depth: depth,
             stencil: stencil,
-            samples: samples,
-            flipY: flipY
+            samples: samples
         });
     }
 
@@ -280,14 +279,15 @@ class FramePassCameraFrame extends FramePass {
         // set up internal rendering parameters - this affect the shader generation to apply SSAO during forward pass
         cameraComponent.shaderParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
 
-        // create a render target to render the scene into
-        const flipY = !!targetRenderTarget?.flipY; // flipY is inherited from the target renderTarget
-        this.rt = this.createRenderTarget('SceneColor', true, options.stencil, options.samples, flipY);
+        // create a render target to render the scene into. This uses the API-native orientation
+        // regardless of the orientation of the target render target - the compose pass flips its
+        // sampling when needed to store the requested orientation in the target render target.
+        this.rt = this.createRenderTarget('SceneColor', true, options.stencil, options.samples);
         this.sceneTexture = this.rt.colorBuffer;
 
         // when half size scene color buffer is used
         if (this._sceneHalfEnabled) {
-            this.rtHalf = this.createRenderTarget('SceneColorHalf', false, false, 1, flipY);
+            this.rtHalf = this.createRenderTarget('SceneColorHalf', false, false, 1);
             this.sceneTextureHalf = this.rtHalf.colorBuffer;
         }
 

@@ -121,6 +121,12 @@ class RenderTarget {
     _flipY;
 
     /**
+     * @type {string}
+     * @private
+     */
+    _origin;
+
+    /**
      * Creates a new RenderTarget instance. A color buffer or a depth buffer must be set.
      *
      * @param {object} [options] - Object for passing optional arguments.
@@ -315,13 +321,21 @@ class RenderTarget {
         });
         if (options.origin === RENDERTARGET_ORIGIN_TOP) {
             this._flipY = !device.isWebGPU;
+            this._origin = RENDERTARGET_ORIGIN_TOP;
         } else if (options.origin === RENDERTARGET_ORIGIN_BOTTOM) {
             this._flipY = device.isWebGPU;
+            this._origin = RENDERTARGET_ORIGIN_BOTTOM;
         } else if (options.origin === RENDERTARGET_ORIGIN_NATIVE) {
             this._flipY = false;
+            this._origin = RENDERTARGET_ORIGIN_NATIVE;
         } else {
-            // origin not specified - honor the deprecated flipY option
+            // origin not specified - honor the deprecated flipY option, and derive the
+            // equivalent origin from it
+            if (options.flipY !== undefined) {
+                Debug.deprecated('RenderTarget "flipY" option is deprecated, use the "origin" option instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.');
+            }
             this._flipY = options.flipY ?? false;
+            this._origin = this._flipY ? (device.isWebGPU ? RENDERTARGET_ORIGIN_BOTTOM : RENDERTARGET_ORIGIN_TOP) : RENDERTARGET_ORIGIN_NATIVE;
         }
 
         this._mipLevel = options.mipLevel ?? 0;
@@ -562,6 +576,7 @@ class RenderTarget {
     set flipY(value) {
         Debug.deprecated('RenderTarget#flipY is deprecated, use the "origin" option of the RenderTarget constructor instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.');
         this._flipY = value;
+        this._origin = value ? (this._device.isWebGPU ? RENDERTARGET_ORIGIN_BOTTOM : RENDERTARGET_ORIGIN_TOP) : RENDERTARGET_ORIGIN_NATIVE;
     }
 
     /**
@@ -572,6 +587,19 @@ class RenderTarget {
      */
     get flipY() {
         return this._flipY;
+    }
+
+    /**
+     * Gets the vertical orientation of the image stored in this render target, as resolved at
+     * construction from the `origin` option, or derived from the deprecated flipY option or
+     * property. Can be {@link RENDERTARGET_ORIGIN_TOP}, {@link RENDERTARGET_ORIGIN_BOTTOM} or
+     * {@link RENDERTARGET_ORIGIN_NATIVE}. See the `origin` option of the constructor for
+     * details.
+     *
+     * @type {string}
+     */
+    get origin() {
+        return this._origin;
     }
 
     /**

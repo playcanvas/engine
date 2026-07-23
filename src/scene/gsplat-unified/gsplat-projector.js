@@ -627,8 +627,6 @@ class GSplatProjector {
      * foveated culling has no effect.
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
-     * @param {boolean} params.flipY - Whether the active render target uses `flipY` (must match
-     * {@link Renderer#setCameraUniforms}).
      * @param {boolean} [params.pickMode] - Whether to write picking IDs into the cache.
      * @param {import('../graphics/fisheye-projection.js').FisheyeProjection} [params.fisheyeProj] -
      * Fisheye projection state. When `fisheyeProj.enabled` is true the projector picks the
@@ -646,7 +644,7 @@ class GSplatProjector {
             totalCapacity, radialSort, numBits, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
             foveationStrength = 0, foveationCenter = 0.3,
-            viewportWidth, viewportHeight, flipY,
+            viewportWidth, viewportHeight,
             pickMode = false,
             fisheyeProj,
             antiAlias = false,
@@ -737,8 +735,10 @@ class GSplatProjector {
             // raw eye-0 projection x-scale; both eyes share it in standard stereo.
             focal = viewportWidth * views[0].projMat.data[0];
         } else {
+            // canonical (unflipped) projection - the cache stores canonical clip positions, and
+            // the raster VS applies the per-pass target flip using the projectionFlipY uniform
             const view = cam.viewMatrix;
-            _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, webgpu), view);
+            _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, false, webgpu), view);
             _viewProjData.set(_viewProjMat.data);
             _viewData.set(view.data);
             focal = viewportWidth * _shaderProjMat.data[0];

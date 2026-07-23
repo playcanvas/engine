@@ -3,6 +3,7 @@ import { random } from '../../core/math/random.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import {
     FILTER_NEAREST,
+    RENDERTARGET_ORIGIN_BOTTOM,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
@@ -494,7 +495,7 @@ function reprojectTexture(source, target, options = {}) {
                 colorBuffer: target,
                 face: f,
                 depth: false,
-                flipY: device.isWebGPU
+                origin: RENDERTARGET_ORIGIN_BOTTOM
             });
             params[0] = f;
             constantParams.setValue(params);

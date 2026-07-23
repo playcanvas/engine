@@ -143,6 +143,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.colorLUTParamsId = scope.resolve('colorLUTParams');
         this.colorEnhanceParamsId = scope.resolve('colorEnhanceParams');
         this.colorEnhanceMidtonesId = scope.resolve('colorEnhanceMidtones');
+        this.composeTargetFlipYId = scope.resolve('composeTargetFlipY');
     }
 
     set debug(value) {
@@ -423,6 +424,11 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.sceneTextureInvResValue[0] = 1.0 / sceneTex.width;
         this.sceneTextureInvResValue[1] = 1.0 / sceneTex.height;
         this.sceneTextureInvResId.setValue(this.sceneTextureInvResValue);
+
+        // the scene chain renders with the API-native orientation - when the target render
+        // target stores a flipped image, flip the sampling vertically so the composed result
+        // lands in the requested row order
+        this.composeTargetFlipYId.setValue(this.renderTarget?.flipY ? 1 : 0);
 
         if (this._bloomTexture) {
             this.bloomTextureId.setValue(this._bloomTexture);
