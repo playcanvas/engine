@@ -2439,6 +2439,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const gl = this.gl;
         const buffers = this.transformFeedbackBuffers;
+        const prevNumSlots = this.transformFeedbackNumSlots;
 
         let numSlots = 0;
         let len = buffers.length;
@@ -2463,13 +2464,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.transformFeedbackNumSlots = numSlots;
+
         if (numSlots > 0) {
-            if (!this.feedback) {
-                this.feedback = gl.createTransformFeedback();
+            if (prevNumSlots === 0) {
+                if (!this.feedback) {
+                    this.feedback = gl.createTransformFeedback();
+                }
+                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
             }
-            gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
         } else {
-            gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+            if (prevNumSlots > 0) {
+                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+            }
         }
     }
 
