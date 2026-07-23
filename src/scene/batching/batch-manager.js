@@ -891,6 +891,7 @@ class BatchManager {
             meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
             meshInstance.flipFacesFactor = getScaleSign(batch.origMeshInstances[0]);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
+            meshInstance.shadowCascadeMask = batch.origMeshInstances[0].shadowCascadeMask;
 
             batch.meshInstance = meshInstance;
             batch.updateBoundingBox();
