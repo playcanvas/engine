@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
+import { assert, stub } from 'sinon';
 
 import { BUFFER_GPUDYNAMIC, SEMANTIC_POSITION } from '../../../../src/platform/graphics/constants.js';
 import { VertexBuffer } from '../../../../src/platform/graphics/vertex-buffer.js';
@@ -157,28 +157,28 @@ describe('WebglGraphicsDevice#transformFeedback', function () {
         const mockFeedback = {};
         const gl = device.gl;
 
-        gl.createTransformFeedback = sinon.stub().returns(mockFeedback);
-        gl.bindTransformFeedback = sinon.stub();
+        gl.createTransformFeedback = stub().returns(mockFeedback);
+        gl.bindTransformFeedback = stub();
 
         const buffer = createMockSimpleBuffer();
 
         device.setTransformFeedbackBuffer(buffer, 0);
 
         expect(device.feedback).to.equal(mockFeedback);
-        sinon.assert.calledOnce(gl.createTransformFeedback);
-        sinon.assert.calledWith(gl.bindTransformFeedback, gl.TRANSFORM_FEEDBACK, mockFeedback);
+        assert.calledOnce(gl.createTransformFeedback);
+        assert.calledWith(gl.bindTransformFeedback, gl.TRANSFORM_FEEDBACK, mockFeedback);
 
         device.setTransformFeedbackBuffer(null, 0);
 
         expect(device.transformFeedbackNumSlots).to.equal(0);
-        sinon.assert.calledWith(gl.bindTransformFeedback, gl.TRANSFORM_FEEDBACK, null);
+        assert.calledWith(gl.bindTransformFeedback, gl.TRANSFORM_FEEDBACK, null);
 
         gl.createTransformFeedback.resetHistory();
 
         device.setTransformFeedbackBuffer(buffer, 0);
 
-        sinon.assert.notCalled(gl.createTransformFeedback);
-        sinon.assert.calledWith(gl.bindTransformFeedback, gl.TRANSFORM_FEEDBACK, mockFeedback);
+        assert.notCalled(gl.createTransformFeedback);
+        assert.calledWith(gl.bindTransformFeedback, gl.TRANSFORM_FEEDBACK, mockFeedback);
 
         buffer.destroy();
     });
@@ -196,12 +196,12 @@ describe('WebglGraphicsDevice#transformFeedback', function () {
         device.setTransformFeedbackBuffer(null, 0);
 
         expect(device.transformFeedbackNumSlots).to.equal(2);
-        sinon.assert.notCalled(gl.bindTransformFeedback);
+        assert.notCalled(gl.bindTransformFeedback);
 
         device.setTransformFeedbackBuffer(null, 1);
 
         expect(device.transformFeedbackNumSlots).to.equal(0);
-        sinon.assert.calledWith(gl.bindTransformFeedback, gl.TRANSFORM_FEEDBACK, null);
+        assert.calledWith(gl.bindTransformFeedback, gl.TRANSFORM_FEEDBACK, null);
 
         buffer0.destroy();
         buffer1.destroy();
@@ -295,10 +295,10 @@ describe('WebglGraphicsDevice#transformFeedback', function () {
             label: 'mockShader'
         };
         device.shaderValid = true;
-        device.activateShader = sinon.stub();
-        device.validateAttributes = sinon.stub();
-        device.setBuffers = sinon.stub();
-        device.setTexture = sinon.stub();
+        device.activateShader = stub();
+        device.validateAttributes = stub();
+        device.setBuffers = stub();
+        device.setTexture = stub();
         device.commitFunction = {};
         device.glPrimitive = [gl.TRIANGLES];
         device.vertexBuffers = [];
@@ -306,16 +306,16 @@ describe('WebglGraphicsDevice#transformFeedback', function () {
 
         device.draw(primitive, null, 0, null, true, true);
 
-        sinon.assert.calledWith(gl.bindBufferBase, gl.TRANSFORM_FEEDBACK_BUFFER, 0, tfbBuffer0);
-        sinon.assert.calledWith(gl.bindBufferBase, gl.TRANSFORM_FEEDBACK_BUFFER, 1, tfbBuffer1);
-        sinon.assert.calledOnce(gl.beginTransformFeedback);
-        sinon.assert.calledOnce(gl.drawArrays);
-        sinon.assert.calledOnce(gl.endTransformFeedback);
+        assert.calledWith(gl.bindBufferBase, gl.TRANSFORM_FEEDBACK_BUFFER, 0, tfbBuffer0);
+        assert.calledWith(gl.bindBufferBase, gl.TRANSFORM_FEEDBACK_BUFFER, 1, tfbBuffer1);
+        assert.calledOnce(gl.beginTransformFeedback);
+        assert.calledOnce(gl.drawArrays);
+        assert.calledOnce(gl.endTransformFeedback);
 
-        sinon.assert.calledWith(gl.bindBufferBase, gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
-        sinon.assert.calledWith(gl.bindBufferBase, gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
+        assert.calledWith(gl.bindBufferBase, gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+        assert.calledWith(gl.bindBufferBase, gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
 
-        sinon.assert.callOrder(
+        assert.callOrder(
             gl.bindBufferBase,
             gl.beginTransformFeedback,
             gl.drawArrays,

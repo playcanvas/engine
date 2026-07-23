@@ -1,18 +1,20 @@
-import sinon from "sinon";
+import { createSandbox } from 'sinon';
 
 export function createMockWebGL2Context(options = {}) {
-    const sandbox = options.sandbox || sinon.createSandbox();
+    const sandbox = options.sandbox || createSandbox();
 
     const gl = {};
     const spies = {};
     const stubs = {};
 
+    /*
     const defineSpy = (name) => {
         const fn = options[name] || sandbox.spy();
         gl[name] = fn;
         spies[name] = fn;
         return fn;
     };
+    */
 
     const defineStub = (name, defaultValue) => {
         const fn = options[name] || sandbox.stub().returns(defaultValue);
@@ -28,56 +30,56 @@ export function createMockWebGL2Context(options = {}) {
         return fn;
     };
 
-    defineNoReturnSpy("hint");
-    defineNoReturnSpy("enable");
-    defineNoReturnSpy("disable");
-    defineNoReturnSpy("cullFace");
-    defineNoReturnSpy("depthMask");
-    defineNoReturnSpy("depthFunc");
-    defineNoReturnSpy("blendFunc");
-    defineNoReturnSpy("blendEquation");
-    defineNoReturnSpy("clearColor");
-    defineNoReturnSpy("clearDepth");
-    defineNoReturnSpy("clearStencil");
-    defineNoReturnSpy("colorMask");
-    defineNoReturnSpy("blendColor");
-    defineNoReturnSpy("stencilFunc");
-    defineNoReturnSpy("stencilOp");
-    defineNoReturnSpy("stencilMask");
-    defineNoReturnSpy("activeTexture");
-    defineNoReturnSpy("pixelStorei");
-    defineNoReturnSpy("bufferData");
-    defineNoReturnSpy("bindBuffer");
-    defineNoReturnSpy("bindBufferBase");
-    defineNoReturnSpy("bindVertexArray");
-    defineNoReturnSpy("bindTransformFeedback");
-    defineNoReturnSpy("bindFramebuffer");
-    defineNoReturnSpy("beginTransformFeedback");
-    defineNoReturnSpy("endTransformFeedback");
-    defineNoReturnSpy("deleteTransformFeedback");
+    defineNoReturnSpy('hint');
+    defineNoReturnSpy('enable');
+    defineNoReturnSpy('disable');
+    defineNoReturnSpy('cullFace');
+    defineNoReturnSpy('depthMask');
+    defineNoReturnSpy('depthFunc');
+    defineNoReturnSpy('blendFunc');
+    defineNoReturnSpy('blendEquation');
+    defineNoReturnSpy('clearColor');
+    defineNoReturnSpy('clearDepth');
+    defineNoReturnSpy('clearStencil');
+    defineNoReturnSpy('colorMask');
+    defineNoReturnSpy('blendColor');
+    defineNoReturnSpy('stencilFunc');
+    defineNoReturnSpy('stencilOp');
+    defineNoReturnSpy('stencilMask');
+    defineNoReturnSpy('activeTexture');
+    defineNoReturnSpy('pixelStorei');
+    defineNoReturnSpy('bufferData');
+    defineNoReturnSpy('bindBuffer');
+    defineNoReturnSpy('bindBufferBase');
+    defineNoReturnSpy('bindVertexArray');
+    defineNoReturnSpy('bindTransformFeedback');
+    defineNoReturnSpy('bindFramebuffer');
+    defineNoReturnSpy('beginTransformFeedback');
+    defineNoReturnSpy('endTransformFeedback');
+    defineNoReturnSpy('deleteTransformFeedback');
 
-    defineStub("getContextAttributes", null);
-    defineStub("getSupportedExtensions", []);
-    defineStub("getParameter", undefined);
-    defineStub("createBuffer", { __mockType: "WebGLBuffer" });
-    defineStub("createTransformFeedback", { __mockType: "WebGLTransformFeedback" });
+    defineStub('getContextAttributes', null);
+    defineStub('getSupportedExtensions', []);
+    defineStub('getParameter', undefined);
+    defineStub('createBuffer', { __mockType: 'WebGLBuffer' });
+    defineStub('createTransformFeedback', { __mockType: 'WebGLTransformFeedback' });
 
     gl.deleteBuffer = options.deleteBuffer || sandbox.spy();
-    gl.createVertexArray = options.createVertexArray || sandbox.stub().returns({ __mockType: "WebGLVertexArrayObject" });
+    gl.createVertexArray = options.createVertexArray || sandbox.stub().returns({ __mockType: 'WebGLVertexArrayObject' });
     gl.deleteVertexArray = options.deleteVertexArray || sandbox.spy();
-    gl.createFramebuffer = options.createFramebuffer || sandbox.stub().returns({ __mockType: "WebGLFramebuffer" });
+    gl.createFramebuffer = options.createFramebuffer || sandbox.stub().returns({ __mockType: 'WebGLFramebuffer' });
     gl.deleteFramebuffer = options.deleteFramebuffer || sandbox.spy();
-    gl.createProgram = options.createProgram || sandbox.stub().returns({ __mockType: "WebGLProgram" });
+    gl.createProgram = options.createProgram || sandbox.stub().returns({ __mockType: 'WebGLProgram' });
     gl.deleteProgram = options.deleteProgram || sandbox.spy();
-    gl.createShader = options.createShader || sandbox.stub().returns({ __mockType: "WebGLShader" });
+    gl.createShader = options.createShader || sandbox.stub().returns({ __mockType: 'WebGLShader' });
     gl.shaderSource = options.shaderSource || sandbox.spy();
     gl.compileShader = options.compileShader || sandbox.spy();
     gl.getShaderParameter = options.getShaderParameter || sandbox.stub().returns(true);
-    gl.getShaderInfoLog = options.getShaderInfoLog || sandbox.stub().returns("");
+    gl.getShaderInfoLog = options.getShaderInfoLog || sandbox.stub().returns('');
     gl.attachShader = options.attachShader || sandbox.spy();
     gl.linkProgram = options.linkProgram || sandbox.spy();
     gl.getProgramParameter = options.getProgramParameter || sandbox.stub().returns(true);
-    gl.getProgramInfoLog = options.getProgramInfoLog || sandbox.stub().returns("");
+    gl.getProgramInfoLog = options.getProgramInfoLog || sandbox.stub().returns('');
     gl.useProgram = options.useProgram || sandbox.spy();
     gl.uniform1i = options.uniform1i || sandbox.spy();
     gl.uniform1f = options.uniform1f || sandbox.spy();
@@ -170,7 +172,7 @@ export function mockWebgl2Canvas(options = {}, canvasOptions = {}) {
         clientHeight: canvasOptions.clientHeight ?? 600,
 
         getContext: canvasOptions.getContext || sandbox.stub().callsFake((type, contextOptions) => {
-            if (type === "webgl2") return gl;
+            if (type === 'webgl2') return gl;
             return null;
         }),
 
@@ -192,6 +194,5 @@ export function mockWebgl2Canvas(options = {}, canvasOptions = {}) {
     canvas.restore = () => sandbox.restore();
     canvas.resetHistory = () => sandbox.resetHistory();
     canvas.resetBehavior = () => sandbox.resetBehavior();
-
     return canvas;
 }
