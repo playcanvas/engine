@@ -343,7 +343,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.precision = 'highp';
         this.maxPrecision = 'highp';
         this.maxSamples = 4;
-        this.maxTextures = 16;
+        this.maxTextures = limits.maxSampledTexturesPerShaderStage;
         this.maxTextureSize = limits.maxTextureDimension2D;
         this.maxCubeMapSize = limits.maxTextureDimension2D;
         this.maxVolumeSize = limits.maxTextureDimension3D;
