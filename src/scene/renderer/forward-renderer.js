@@ -587,13 +587,7 @@ class ForwardRenderer extends Renderer {
             if (material !== prevMaterial) {
                 this._materialSwitches++;
                 material._scene = scene;
-
-                if (material.dirty) {
-                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
-                    material.updateUniforms(device, scene);
-                    material.dirty = false;
-                    DebugGraphics.popGpuMarker(device);
-                }
+                material.prepareForRender(device, scene);
             }
 
             const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, viewUniformFormat, sortedLights);

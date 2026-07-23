@@ -86,11 +86,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
     /** @type {Set<string>} */
     _internalDefines = new Set();
 
-    /** @type {boolean} */
-    forceCopyMaterial = true;
-
     /** @type {string} */
     _lastSourceChunksKey = '';
+
+    /** @type {number} */
+    _sourceMaterialVersion = -1;
 
     /**
      * The projection cache stride in u32 words: the base layout plus user varying stream words.
@@ -779,10 +779,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
             }
         }
 
-        // Copy material settings from params.material if dirty or on first update
-        if (this.forceCopyMaterial || params.material.dirty) {
+        // Copy material settings when the source material has been updated
+        const sourceMaterialVersion = params.material.updateVersion;
+        if (this._sourceMaterialVersion !== sourceMaterialVersion) {
             this.copyMaterialSettings(params.material);
-            this.forceCopyMaterial = false;
+            this._sourceMaterialVersion = sourceMaterialVersion;
         }
     }
 

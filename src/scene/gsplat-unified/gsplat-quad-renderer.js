@@ -34,14 +34,14 @@ class GSplatQuadRenderer extends GSplatRenderer {
     /** @type {Set<string>} */
     _internalDefines = new Set();
 
-    /** @type {boolean} */
-    forceCopyMaterial = true;
-
     /** @private */
     _lastFisheyeEnabled = false;
 
     /** @private */
     _lastSourceChunksKey = '';
+
+    /** @private */
+    _sourceMaterialVersion = -1;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -319,10 +319,11 @@ class GSplatQuadRenderer extends GSplatRenderer {
         // Check if work buffer format has changed (extra streams added)
         this._syncWithWorkBufferFormat();
 
-        // Copy material settings from params.material if dirty or on first update
-        if (this.forceCopyMaterial || params.material.dirty) {
+        // Copy material settings when the source material has been updated
+        const sourceMaterialVersion = params.material.updateVersion;
+        if (this._sourceMaterialVersion !== sourceMaterialVersion) {
             this.copyMaterialSettings(params.material);
-            this.forceCopyMaterial = false;
+            this._sourceMaterialVersion = sourceMaterialVersion;
         }
     }
 
