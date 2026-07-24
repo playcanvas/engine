@@ -658,6 +658,9 @@ class StandardMaterial extends Material {
         const specularIsBlack = isBlack(this._specular);
         if (this._specularIsBlack !== specularIsBlack) {
             this._specularIsBlack = specularIsBlack;
+            // This is intentionally conservative: another material property might already force
+            // specular shading, in which case this transition only changes a uniform. We can avoid
+            // that redundant variant clear later by tracking the derived useSpecular state here.
             this._dirtyShader = true;
         }
 
