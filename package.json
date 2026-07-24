@@ -1,7 +1,7 @@
 {
   "name": "playcanvas",
   "version": "2.22.0-beta.3",
-  "packageManager": "npm@11.18.0",
+  "packageManager": "npm@12.0.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "Open-source WebGL/WebGPU 3D engine for the web",
@@ -91,7 +91,7 @@
     "@rollup/plugin-strip": "3.0.4",
     "@types/node": "24.13.3",
     "acorn": "8.17.0",
-    "c8": "11.0.0",
+    "c8": "12.0.0",
     "canvas": "3.2.3",
     "chai": "6.2.2",
     "esbuild": "0.28.1",
