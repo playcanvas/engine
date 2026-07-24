@@ -526,7 +526,6 @@ const createMaterial = (gltfMaterial, textures) => {
     material.occludeSpecular = SPECOCC_AO;
 
     material.diffuseVertexColor = true;
-    material.specularTint = true;
     material.specularVertexColor = true;
 
     // Set glTF spec defaults
