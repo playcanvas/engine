@@ -18,6 +18,7 @@ import { EnvLighting } from '../graphics/env-lighting.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
+import { StandardMaterialMapTransforms } from './standard-material-map-transforms.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
@@ -560,6 +561,14 @@ class StandardMaterial extends Material {
     _specularIsBlack;
 
     /**
+     * Texture transform grouping state.
+     *
+     * @type {StandardMaterialMapTransforms}
+     * @private
+     */
+    _mapTransforms = new StandardMaterialMapTransforms();
+
+    /**
      * A custom function that will be called after all shader generator properties are collected
      * and before shader code is generated. This function will receive an object with shader
      * generator settings (based on current material and scene properties), that you can change and
@@ -624,6 +633,7 @@ class StandardMaterial extends Material {
         });
 
         this._uniformCache = { };
+        this._mapTransforms.reset();
     }
 
     /**
@@ -655,6 +665,10 @@ class StandardMaterial extends Material {
      * @override
      */
     update() {
+        if (this._mapTransforms.update(this)) {
+            this._dirtyShader = true;
+        }
+
         const specularIsBlack = isBlack(this._specular);
         if (this._specularIsBlack !== specularIsBlack) {
             this._specularIsBlack = specularIsBlack;
@@ -665,6 +679,17 @@ class StandardMaterial extends Material {
         }
 
         super.update();
+    }
+
+    /**
+     * Returns the transform group assigned to a texture map.
+     *
+     * @param {string} name - Texture map base name.
+     * @returns {number} The transform group, or zero when no transform is needed.
+     * @private
+     */
+    _getMapTransformId(name) {
+        return this._mapTransforms.getId(name);
     }
 
     /**
@@ -734,6 +759,11 @@ class StandardMaterial extends Material {
     }
 
     updateUniforms(device, scene) {
+        // Compatibility fallback for materials rendered without calling update().
+        if (this._mapTransforms.update(this)) {
+            this._dirtyShader = true;
+        }
+
         const getUniform = (name) => {
             return this.getUniform(name, device, scene);
         };
@@ -962,37 +992,61 @@ const definePropInternal = (name, constructorFunc, setterFunc, getterFunc) => {
 const defineValueProp = (prop) => {
     const internalName = `_${prop.name}`;
     const dirtyShaderFunc = prop.dirtyShaderFunc || (() => true);
+    const onGet = prop.onGet;
+    const onSet = prop.onSet;
 
     const setterFunc = function (value) {
         const oldValue = this[internalName];
         if (oldValue !== value) {
             this._dirtyShader = this._dirtyShader || dirtyShaderFunc(oldValue, value);
             this[internalName] = value;
+            onSet?.call(this);
         }
     };
 
-    definePropInternal(prop.name, () => prop.defaultValue, setterFunc, prop.getterFunc);
+    const getterFunc = prop.getterFunc || (onGet && function () {
+        onGet.call(this);
+        return this[internalName];
+    });
+
+    definePropInternal(prop.name, () => prop.defaultValue, setterFunc, getterFunc);
 };
 
 // define an aggregate property (color, vec3 etc)
 const defineAggProp = (prop) => {
     const internalName = `_${prop.name}`;
     const dirtyShaderFunc = prop.dirtyShaderFunc || (() => true);
+    const onGet = prop.onGet;
+    const onSet = prop.onSet;
 
     const setterFunc = function (value) {
         const oldValue = this[internalName];
         if (!oldValue.equals(value)) {
             this._dirtyShader = this._dirtyShader || dirtyShaderFunc(oldValue, value);
             this[internalName] = oldValue.copy(value);
+            onSet?.call(this);
         }
     };
 
-    definePropInternal(prop.name, () => prop.defaultValue.clone(), setterFunc, prop.getterFunc);
+    const getterFunc = prop.getterFunc || (onGet && function () {
+        onGet.call(this);
+        return this[internalName];
+    });
+
+    definePropInternal(prop.name, () => prop.defaultValue.clone(), setterFunc, getterFunc);
 };
 
 // define either a value or aggregate property
 const defineProp = (prop) => {
     return prop.defaultValue && prop.defaultValue.clone ? defineAggProp(prop) : defineValueProp(prop);
+};
+
+const markMapTransformsDirty = function () {
+    this._mapTransforms.markDirty();
+};
+
+const markMapTransformsMutable = function () {
+    this._mapTransforms.markMutable();
 };
 
 function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
@@ -1005,27 +1059,37 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
         dirtyShaderFunc: (oldValue, newValue) => {
             return !!oldValue !== !!newValue ||
                 oldValue && (oldValue.type !== newValue.type || oldValue.format !== newValue.format);
-        }
+        },
+        onSet: markMapTransformsDirty
     });
 
     defineProp({
         name: `${name}MapTiling`,
-        defaultValue: new Vec2(1, 1)
+        defaultValue: new Vec2(1, 1),
+        dirtyShaderFunc: () => false,
+        onSet: markMapTransformsDirty,
+        onGet: markMapTransformsMutable
     });
 
     defineProp({
         name: `${name}MapOffset`,
-        defaultValue: new Vec2(0, 0)
+        defaultValue: new Vec2(0, 0),
+        dirtyShaderFunc: () => false,
+        onSet: markMapTransformsDirty,
+        onGet: markMapTransformsMutable
     });
 
     defineProp({
         name: `${name}MapRotation`,
-        defaultValue: 0
+        defaultValue: 0,
+        dirtyShaderFunc: () => false,
+        onSet: markMapTransformsDirty
     });
 
     defineProp({
         name: `${name}MapUv`,
-        defaultValue: uv
+        defaultValue: uv,
+        onSet: markMapTransformsDirty
     });
 
     if (channel) {
@@ -1053,9 +1117,9 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     const mapRotation = `${name}MapRotation`;
     const mapTransform = `${name}MapTransform`;
     defineUniform(mapTransform, (material, device, scene) => {
-        const tiling = material[mapTiling];
-        const offset = material[mapOffset];
-        const rotation = material[mapRotation];
+        const tiling = material[`_${mapTiling}`];
+        const offset = material[`_${mapOffset}`];
+        const rotation = material[`_${mapRotation}`];
 
         if (tiling.x === 1 && tiling.y === 1 &&
             offset.x === 0 && offset.y === 0 &&

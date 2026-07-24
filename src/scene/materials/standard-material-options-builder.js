@@ -19,27 +19,11 @@ import {
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
 
-const arraysEqual = (a, b) => {
-    if (a.length !== b.length) {
-        return false;
-    }
-    for (let i = 0; i < a.length; ++i) {
-        if (a[i] !== b[i]) {
-            return false;
-        }
-    }
-    return true;
-};
-
 const notBlack = (color) => {
     return color.r !== 0 || color.g !== 0 || color.b !== 0;
 };
 
 class StandardMaterialOptionsBuilder {
-    constructor() {
-        this._mapXForms = null;
-    }
-
     // Minimal options for Depth and Shadow passes
     updateMinRef(options, scene, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
@@ -105,13 +89,11 @@ class StandardMaterialOptionsBuilder {
         }
 
         options.litOptions.vertexColors = false;
-        this._mapXForms = [];
 
         const uniqueTextureMap = {};
         for (const p in _matTex2D) {
             this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap);
         }
-        this._mapXForms = null;
 
         // true if ssao is applied directly in the lit shaders. Also ensure the AO part is generated in the front end
         options.litOptions.ssao = cameraShaderParams?.ssaoEnabled;
@@ -179,7 +161,7 @@ class StandardMaterialOptionsBuilder {
 
                     options[mname] = !!stdMat[mname];
                     options[iname] = identifier;
-                    options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
+                    options[tname] = stdMat._getMapTransformId(p);
                     options[cname] = stdMat[cname];
                     options[uname] = stdMat[uname];
                 }
@@ -397,25 +379,6 @@ class StandardMaterialOptionsBuilder {
         if (options.litOptions.lights.length === 0 && !scene.clusteredLightingEnabled) {
             options.litOptions.noShadow = true;
         }
-    }
-
-    _getMapTransformID(xform, uv) {
-        if (!xform) return 0;
-
-        let xforms = this._mapXForms[uv];
-        if (!xforms) {
-            xforms = [];
-            this._mapXForms[uv] = xforms;
-        }
-
-        for (let i = 0; i < xforms.length; i++) {
-            if (arraysEqual(xforms[i][0].value, xform[0].value) &&
-                arraysEqual(xforms[i][1].value, xform[1].value)) {
-                return i + 1;
-            }
-        }
-
-        return xforms.push(xform);
     }
 }
 

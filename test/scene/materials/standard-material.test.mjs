@@ -416,6 +416,99 @@ describe('StandardMaterial', function () {
             expect(material.variants.get(1)).to.equal(variant);
         });
 
+        it('groups equal texture transforms', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = {};
+            material.opacityMap = {};
+            material.diffuseMapOffset.set(0.25, 0.5);
+            material.opacityMapOffset.set(0.25, 0.5);
+
+            material.update();
+
+            const diffuseId = material._getMapTransformId('diffuse');
+            expect(diffuseId).to.not.equal(0);
+            expect(material._getMapTransformId('opacity')).to.equal(diffuseId);
+        });
+
+        it('keeps subpixel-distinct texture transforms separate', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = {};
+            material.opacityMap = {};
+            material.diffuseMapOffset.set(0.25, 0.5);
+            material.opacityMapOffset.set(0.2501, 0.5);
+
+            material.update();
+
+            const diffuseId = material._getMapTransformId('diffuse');
+            const opacityId = material._getMapTransformId('opacity');
+            expect(diffuseId).to.not.equal(0);
+            expect(opacityId).to.not.equal(0);
+            expect(opacityId).to.not.equal(diffuseId);
+        });
+
+        it('does not invalidate shaders when shared texture transforms animate together', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = {};
+            material.opacityMap = {};
+            const diffuseOffset = material.diffuseMapOffset;
+            const opacityOffset = material.opacityMapOffset;
+            diffuseOffset.set(0.25, 0.5);
+            opacityOffset.set(0.25, 0.5);
+            material.update();
+            const variant = addVariant(material);
+            const transformId = material._getMapTransformId('diffuse');
+
+            diffuseOffset.set(0.5, 0.25);
+            opacityOffset.set(0.5, 0.25);
+            material.update();
+
+            expect(material._getMapTransformId('diffuse')).to.equal(transformId);
+            expect(material._getMapTransformId('opacity')).to.equal(transformId);
+            expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('invalidates shaders when a shared texture transform separates', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = {};
+            material.opacityMap = {};
+            const opacityOffset = material.opacityMapOffset;
+            material.diffuseMapOffset.set(0.25, 0.5);
+            opacityOffset.set(0.25, 0.5);
+            material.update();
+            addVariant(material);
+
+            opacityOffset.x += 0.0001;
+            material.update();
+
+            expect(material._getMapTransformId('opacity')).to.not.equal(material._getMapTransformId('diffuse'));
+            expect(material.variants.size).to.equal(0);
+        });
+
+        it('invalidates shaders when a texture transform becomes non-identity', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = {};
+            material.update();
+            addVariant(material);
+
+            expect(material._getMapTransformId('diffuse')).to.equal(0);
+
+            material.diffuseMapTiling.set(2, 2);
+            material.update();
+
+            expect(material._getMapTransformId('diffuse')).to.not.equal(0);
+            expect(material.variants.size).to.equal(0);
+        });
+
+        it('prepares texture transform groups without an explicit update', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = {};
+            material.diffuseMapOffset.set(0.25, 0.5);
+
+            material.updateUniforms();
+
+            expect(material._getMapTransformId('diffuse')).to.not.equal(0);
+        });
+
     });
 
     describe('shader generation', function () {
