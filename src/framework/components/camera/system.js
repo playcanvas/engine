@@ -16,6 +16,7 @@ const _properties = [
     'calculateTransform',
     'clearColor',
     'clearColorBuffer',
+    'clearColorTonemapped',
     'clearDepth',
     'clearDepthBuffer',
     'clearStencilBuffer',

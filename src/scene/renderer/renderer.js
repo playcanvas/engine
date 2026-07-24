@@ -476,7 +476,9 @@ class Renderer {
             const device = this.device;
             DebugGraphics.pushGpuMarker(device, 'CLEAR');
 
-            const c = camera._clearColor;
+            // this runs during pass execution, when the pass's gamma / tone mapping overrides are
+            // already applied to the camera's shader params, so those defaults are used here
+            const c = camera.getRenderPassClearColor(this.scene);
             _tempClearColor[0] = c.r;
             _tempClearColor[1] = c.g;
             _tempClearColor[2] = c.b;

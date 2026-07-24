@@ -8,8 +8,10 @@ import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
 import {
     VIEW_CENTER, ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
-    LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
+    LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE,
+    GAMMA_SRGB, TONEMAP_NONE
 } from './constants.js';
+import { toneMapColor } from './tonemapping.js';
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
 import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
@@ -21,6 +23,7 @@ import { CameraShaderParams } from './camera-shader-params.js';
  * @import { FogParams } from './fog-params.js'
  * @import { Layer } from './layer.js'
  * @import { RenderView } from './render-view.js'
+ * @import { Scene } from './scene.js'
  * @import { ShaderPassInfo } from './shader-pass.js'
  */
 
@@ -35,6 +38,7 @@ const _frustumViewInvMat = new Mat4();
 const _frustumViewMat = new Mat4();
 const _frustumViewProjMat = new Mat4();
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+const _tonemappedClearColor = new Color();
 
 /**
  * A camera.
@@ -156,6 +160,7 @@ class Camera {
         this._calculateTransform = null;
         this._clearColor = new Color(0.75, 0.75, 0.75, 1);
         this._clearColorBuffer = true;
+        this._clearColorTonemapped = false;
         this._clearDepth = 1;
         this._clearDepthBuffer = true;
         this._clearStencil = 0;
@@ -322,6 +327,14 @@ class Camera {
 
     get clearColorBuffer() {
         return this._clearColorBuffer;
+    }
+
+    set clearColorTonemapped(newValue) {
+        this._clearColorTonemapped = newValue;
+    }
+
+    get clearColorTonemapped() {
+        return this._clearColorTonemapped;
     }
 
     set clearDepth(newValue) {
@@ -669,6 +682,7 @@ class Camera {
         this.calculateTransform = other.calculateTransform;
         this.clearColor = other.clearColor;
         this.clearColorBuffer = other.clearColorBuffer;
+        this.clearColorTonemapped = other.clearColorTonemapped;
         this.clearDepth = other.clearDepth;
         this.clearDepthBuffer = other.clearDepthBuffer;
         this.clearStencil = other.clearStencil;
@@ -940,6 +954,46 @@ class Camera {
     getExposure() {
         const ev100 = Math.log2((this._aperture * this._aperture) / this._shutter * 100.0 / this._sensitivity);
         return 1.0 / (Math.pow(2.0, ev100) * 1.2);
+    }
+
+    /**
+     * Returns the color to clear the render target with. When {@link clearColorTonemapped} is
+     * false, this is the clear color exactly as specified. When true, the clear color is treated
+     * as a scene color instead of a raw framebuffer value: it is converted to linear space, then
+     * exposure and tone mapping are applied, and the result is encoded to the pass's output gamma
+     * - the same processing shaded pixels receive. This makes the cleared background match scene
+     * colors such as the fog color, and makes it render identically with and without HDR
+     * post-processing.
+     *
+     * @param {Scene} scene - The scene, supplying exposure settings.
+     * @param {number} [toneMapping] - The tone mapping used by the render pass. Defaults to the
+     * camera's tone mapping.
+     * @param {number} [gammaCorrection] - The gamma correction used by the render pass. Defaults
+     * to the camera's gamma correction.
+     * @returns {Color} The clear color. The returned color is temporary storage when
+     * {@link clearColorTonemapped} is true, use it immediately.
+     * @ignore
+     */
+    getRenderPassClearColor(scene, toneMapping = this.shaderParams.toneMapping, gammaCorrection = this.shaderParams.gammaCorrection) {
+
+        const clearColor = this._clearColor;
+        if (!this._clearColorTonemapped) {
+            return clearColor;
+        }
+
+        const dst = _tonemappedClearColor.linear(clearColor);
+
+        // TONEMAP_NONE applies neither tone mapping nor exposure, matching the shaders
+        if (toneMapping !== TONEMAP_NONE) {
+            const exposure = scene.physicalUnits ? this.getExposure() : scene.exposure;
+            toneMapColor(dst, toneMapping, exposure);
+        }
+
+        if (gammaCorrection === GAMMA_SRGB) {
+            dst.gamma();
+        }
+
+        return dst;
     }
 
     // returns estimated size of the sphere on the screen in range of [0..1]

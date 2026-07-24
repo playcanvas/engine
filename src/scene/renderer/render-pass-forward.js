@@ -179,7 +179,10 @@ class RenderPassForward extends RenderPass {
             const camera = cameraComponent.camera;
             const fullSizeClearRect = camera.fullSizeClearRect;
 
-            this.setClearColor(fullSizeClearRect && step.clearColor ? camera.clearColor : undefined);
+            // when clearColorTonemapped is enabled, the clear color goes through the same color
+            // pipeline as shaded pixels, using this pass's gamma / tone mapping overrides if set
+            const clearColor = camera.getRenderPassClearColor(this.scene, this.toneMapping, this.gammaCorrection);
+            this.setClearColor(fullSizeClearRect && step.clearColor ? clearColor : undefined);
             this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && step.clearStencil ? camera.clearStencil : undefined);
         }

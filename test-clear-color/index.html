@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>clearColorTonemapped test</title>
+    <style>
+        body { font-family: monospace; margin: 10px; }
+        canvas#app { width: 800px; height: 600px; border: 1px solid #888; display: block; }
+        table { border-collapse: collapse; margin-top: 10px; }
+        td, th { border: 1px solid #aaa; padding: 3px 8px; }
+        .pass { background: #cfc; }
+        .fail { background: #fcc; }
+    </style>
+</head>
+<body>
+    <div id="info"></div>
+    <canvas id="app" width="800" height="600"></canvas>
+    <table id="results"><tr><th>tonemap</th><th>fogged (left)</th><th>background (right)</th><th>maxDelta</th><th>result</th></tr></table>
+    <script>
+        window.addEventListener('error', e => { window.lastError = String(e.error && e.error.stack || e.message); });
+        window.addEventListener('unhandledrejection', e => { window.lastError = String(e.reason && e.reason.stack || e.reason); });
+    </script>
+    <script type="module">
+        import * as pc from '/build/playcanvas.dbg.mjs';
+
+        const params = new URLSearchParams(location.search);
+        const deviceType = params.get('device') || 'webgl2';       // webgl2 | webgpu
+        const tonemapped = params.get('tonemapped') !== '0';       // clearColorTonemapped flag
+        const useCF = params.get('cf') === '1';                    // CameraFrame post-processing
+        const exposure = parseFloat(params.get('exposure') || '1.5');
+
+        document.getElementById('info').textContent =
+            `device=${deviceType} clearColorTonemapped=${tonemapped} cameraFrame=${useCF} exposure=${exposure}`;
+
+        const canvas = document.getElementById('app');
+        const device = await pc.createGraphicsDevice(canvas, {
+            deviceTypes: [deviceType],
+            antialias: false,
+            preserveDrawingBuffer: true
+        });
+
+        const app = new pc.AppBase(canvas);
+        const createOptions = new pc.AppOptions();
+        createOptions.graphicsDevice = device;
+        createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
+        app.init(createOptions);
+        app.start();
+
+        const color = new pc.Color(0.5, 0.3, 0.2, 1);
+
+        app.scene.exposure = exposure;
+        app.scene.fog.type = pc.FOG_LINEAR;
+        app.scene.fog.start = 0;
+        app.scene.fog.end = 1;
+        app.scene.fog.color = color;
+
+        const cameraEntity = new pc.Entity('camera');
+        cameraEntity.addComponent('camera', {
+            clearColor: color,
+            clearColorTonemapped: tonemapped,
+            farClip: 100
+        });
+        app.root.addChild(cameraEntity);
+
+        // box beyond fog end, covering the left half of the screen
+        const box = new pc.Entity('box');
+        box.addComponent('render', { type: 'box' });
+        box.setLocalPosition(-15, 0, -50);
+        box.setLocalScale(30, 50, 1);
+        app.root.addChild(box);
+
+        let cameraFrame = null;
+        if (useCF) {
+            cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+            cameraFrame.rendering.samples = 1;
+            cameraFrame.update();
+        }
+
+        const modes = [
+            ['LINEAR', pc.TONEMAP_LINEAR],
+            ['FILMIC', pc.TONEMAP_FILMIC],
+            ['HEJL', pc.TONEMAP_HEJL],
+            ['ACES', pc.TONEMAP_ACES],
+            ['ACES2', pc.TONEMAP_ACES2],
+            ['NEUTRAL', pc.TONEMAP_NEUTRAL],
+            ['NONE', pc.TONEMAP_NONE]
+        ];
+
+        const ctx2d = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+        ctx2d.canvas.width = canvas.width;
+        ctx2d.canvas.height = canvas.height;
+
+        const raf = () => new Promise(resolve => requestAnimationFrame(resolve));
+
+        const sample = (x, y) => {
+            const d = ctx2d.getImageData(x, y, 1, 1).data;
+            return [d[0], d[1], d[2]];
+        };
+
+        window.checkpoint = 'app started';
+        const results = [];
+        for (const [name, mode] of modes) {
+            window.checkpoint = `mode ${name}`;
+            if (cameraFrame) {
+                cameraFrame.rendering.toneMapping = mode;
+                cameraFrame.update();
+            } else {
+                cameraEntity.camera.toneMapping = mode;
+            }
+
+            // let a few frames render, then grab the presented canvas. Drive frames manually
+            // with app.tick() as rAF may be frozen in a hidden tab
+            for (let i = 0; i < 5; i++) {
+                app.tick();
+                await new Promise(r => setTimeout(r, 30));
+            }
+            window.checkpoint = `mode ${name} rendered`;
+            ctx2d.drawImage(canvas, 0, 0);
+            window.checkpoint = `mode ${name} captured`;
+
+            const fogged = sample(200, 300);     // fully fogged box
+            const background = sample(600, 300); // clear color
+            const maxDelta = Math.max(...fogged.map((v, i) => Math.abs(v - background[i])));
+            const pass = maxDelta <= 2;
+            results.push({ mode: name, fogged, background, maxDelta, pass });
+
+            const row = document.getElementById('results').insertRow();
+            row.className = pass ? 'pass' : 'fail';
+            row.innerHTML = `<td>${name}</td><td>${fogged}</td><td>${background}</td><td>${maxDelta}</td><td>${pass ? 'MATCH' : 'MISMATCH'}</td>`;
+        }
+
+        console.log(`RESULTS ${deviceType} tonemapped=${tonemapped} cf=${useCF}: ${JSON.stringify(results)}`);
+        window.testResults = results;
+    </script>
+</body>
+</html>

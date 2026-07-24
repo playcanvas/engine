@@ -502,6 +502,32 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets whether the clear color is tone mapped. When false, the clear color is written to the
+     * render target exactly as specified, so it is not affected by the camera's exposure, tone
+     * mapping or gamma correction. When true, the clear color is treated as a scene color: it is
+     * converted to linear space and processed by the camera's exposure, tone mapping and gamma
+     * correction, the same way shaded pixels are. Enable this to make the cleared background
+     * match other scene colors - most notably {@link FogParams#color}, which otherwise only
+     * matches the clear color when tone mapping is disabled. This also makes the background
+     * appear identical whether or not HDR post-processing (e.g. `CameraFrame`) is used. Defaults
+     * to false.
+     *
+     * @type {boolean}
+     */
+    set clearColorTonemapped(value) {
+        this._camera.clearColorTonemapped = value;
+    }
+
+    /**
+     * Gets whether the clear color is tone mapped.
+     *
+     * @type {boolean}
+     */
+    get clearColorTonemapped() {
+        return this._camera.clearColorTonemapped;
+    }
+
+    /**
      * Sets the depth value to clear the depth buffer to. Defaults to 1.
      *
      * @type {number}
@@ -1390,6 +1416,7 @@ class CameraComponent extends Component {
         this.calculateTransform = source.calculateTransform;
         this.clearColor = source.clearColor;
         this.clearColorBuffer = source.clearColorBuffer;
+        this.clearColorTonemapped = source.clearColorTonemapped;
         this.clearDepthBuffer = source.clearDepthBuffer;
         this.clearStencilBuffer = source.clearStencilBuffer;
         this.cullFaces = source.cullFaces;
