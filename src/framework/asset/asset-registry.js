@@ -179,7 +179,7 @@ class AssetRegistry extends EventHandler {
     _idToAsset = new Map();
 
     /**
-     * @type {Map<string, Asset>}
+     * @type {Map<string, Set<Asset>>}
      * @private
      */
     _urlToAsset = new Map();
@@ -264,8 +264,12 @@ class AssetRegistry extends EventHandler {
 
         this._idToAsset.set(asset.id, asset);
 
-        if (asset.file?.url) {
-            this._urlToAsset.set(asset.file.url, asset);
+        const url = asset.file?.url;
+        if (url) {
+            if (!this._urlToAsset.has(url)) {
+                this._urlToAsset.set(url, new Set());
+            }
+            this._urlToAsset.get(url).add(asset);
         }
 
         if (!this._nameToAsset.has(asset.name)) {
@@ -310,8 +314,13 @@ class AssetRegistry extends EventHandler {
 
         this._idToAsset.delete(asset.id);
 
-        if (asset.file?.url) {
-            this._urlToAsset.delete(asset.file.url);
+        const url = asset.file?.url;
+        if (url) {
+            const assets = this._urlToAsset.get(url);
+            assets?.delete(asset);
+            if (assets?.size === 0) {
+                this._urlToAsset.delete(url);
+            }
         }
 
         asset.off('name', this._onNameChange, this);
@@ -356,12 +365,24 @@ class AssetRegistry extends EventHandler {
      * Retrieve an asset from the registry by its file's URL field.
      *
      * @param {string} url - The url of the asset to get.
+     * @param {string} [type] - The type of the asset to get.
      * @returns {Asset|undefined} The asset.
      * @example
      * const asset = app.assets.getByUrl("../path/to/image.jpg");
      */
-    getByUrl(url) {
-        return this._urlToAsset.get(url);
+    getByUrl(url, type) {
+        const assets = this._urlToAsset.get(url);
+        if (!assets) {
+            return undefined;
+        }
+
+        let result;
+        assets.forEach((asset) => {
+            if (!type || asset.type === type) {
+                result = asset;
+            }
+        });
+        return result;
     }
 
     /**
