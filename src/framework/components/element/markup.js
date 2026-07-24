@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 // markup scanner
 
 // list of scanner tokens
@@ -334,12 +336,19 @@ class Parser {
 // of assign)
 function merge(target, source) {
     for (const key in source) {
-        if (!source.hasOwnProperty(key)) {
+        if (!Object.prototype.hasOwnProperty.call(source, key)) {
             continue;
         }
+
+        const isForbidden = key === '__proto__' || key === 'constructor' || key === 'prototype';
+        Debug.assert(!isForbidden, `Ignoring forbidden property: ${key}`);
+        if (isForbidden) {
+            continue;
+        }
+
         const value = source[key];
         if (value instanceof Object) {
-            if (!target.hasOwnProperty(key)) {
+            if (!Object.prototype.hasOwnProperty.call(target, key)) {
                 target[key] = { };
             }
             merge(target[key], source[key]);
@@ -380,7 +389,7 @@ function resolveMarkupTags(tags, numSymbols) {
     const edges = { };
     for (let index = 0; index < tags.length; ++index) {
         const tag = tags[index];
-        if (!edges.hasOwnProperty(tag.start)) {
+        if (!Object.prototype.hasOwnProperty.call(edges, tag.start)) {
             edges[tag.start] = { open: [tag], close: null };
         } else {
             if (edges[tag.start].open === null) {
@@ -390,7 +399,7 @@ function resolveMarkupTags(tags, numSymbols) {
             }
         }
 
-        if (!edges.hasOwnProperty(tag.end)) {
+        if (!Object.prototype.hasOwnProperty.call(edges, tag.end)) {
             edges[tag.end] = { open: null, close: [tag] };
         } else {
             if (edges[tag.end].close === null) {
