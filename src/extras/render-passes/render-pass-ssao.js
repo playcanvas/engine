@@ -169,7 +169,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
     execute() {
 
-        const { device, sourceTexture, sampleCount, minAngle, scale } = this;
+        const { device, sampleCount, minAngle } = this;
         const { width, height } = this.renderTarget.colorBuffer;
         const scope = device.scope;
 
@@ -183,12 +183,18 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
         const spiralTurns = 10.0;
         const step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
-        const radius = this.radius / scale;
+
+        // world-space radius is independent of the render target scale, keeping the AO look
+        // consistent when rendering at lower resolution
+        const radius = this.radius;
 
         const bias = 0.001;
         const peak = 0.1 * radius;
         const intensity = 2 * (peak * 2.0 * 3.141) * this.intensity / sampleCount;
-        const projectionScale = 0.5 * sourceTexture.height;
+
+        // scale the projection based on the actual (possibly scaled) render target height, so the
+        // sampling disk covers the same screen area regardless of the scale
+        const projectionScale = 0.5 * height;
         scope.resolve('uSpiralTurns').setValue(spiralTurns);
         scope.resolve('uAngleIncCosSin').setValue([Math.cos(step), Math.sin(step)]);
         scope.resolve('uMaxLevel').setValue(0.0);
