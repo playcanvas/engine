@@ -122,8 +122,9 @@ class ScriptComponentSystem extends ComponentSystem {
         }
 
         for (const key in entity.script._scriptsIndex) {
-            if (key.awaiting) {
-                order.splice(key.ind, 0, key);
+            const scriptEntry = entity.script._scriptsIndex[key];
+            if (scriptEntry.awaiting) {
+                order.splice(scriptEntry.ind, 0, key);
             }
         }
 
