@@ -112,6 +112,7 @@ import reprojectPS from '../chunks/internal/frag/reproject.js';
 import reprojectVS from '../chunks/internal/vert/reproject.js';
 import screenDepthPS from '../chunks/common/frag/screenDepth.js';
 import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
+import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
 import shadowEVSMPS from '../chunks/lit/frag/lighting/shadowEVSM.js';
 import shadowPCF1PS from '../chunks/lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from '../chunks/lit/frag/lighting/shadowPCF3.js';
@@ -286,6 +287,7 @@ const shaderChunksWGSL = {
     reprojectVS,
     screenDepthPS,
     shadowCascadesPS,
+    shadowCasterPS,
     shadowEVSMPS,
     shadowPCF1PS,
     shadowPCF3PS,
