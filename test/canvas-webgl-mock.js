@@ -7,14 +7,12 @@ export function createMockWebGL2Context(options = {}) {
     const spies = {};
     const stubs = {};
 
-    /*
-    const defineSpy = (name) => {
-        const fn = options[name] || sandbox.spy();
-        gl[name] = fn;
-        spies[name] = fn;
-        return fn;
-    };
-    */
+    // const defineSpy = (name) => {
+    //      const fn = options[name] || sandbox.spy();
+    //      gl[name] = fn;
+    //      spies[name] = fn;
+    //      return fn;
+    // };
 
     const defineStub = (name, defaultValue) => {
         const fn = options[name] || sandbox.stub().returns(defaultValue);
@@ -61,9 +59,9 @@ export function createMockWebGL2Context(options = {}) {
     defineStub('getContextAttributes', null);
     defineStub('getSupportedExtensions', []);
     defineStub('getParameter', undefined);
-    defineStub('createBuffer', { __mockType: 'WebGLBuffer' });
-    defineStub('createTransformFeedback', { __mockType: 'WebGLTransformFeedback' });
 
+    gl.createBuffer = options.createBuffer || sandbox.stub().callsFake(() => ({ __mockType: 'WebGLBuffer' }));
+    gl.createTransformFeedback = options.createTransformFeedback || sandbox.stub().callsFake(() => ({ __mockType: 'WebGLTransformFeedback' }));
     gl.deleteBuffer = options.deleteBuffer || sandbox.spy();
     gl.createVertexArray = options.createVertexArray || sandbox.stub().returns({ __mockType: 'WebGLVertexArrayObject' });
     gl.deleteVertexArray = options.deleteVertexArray || sandbox.spy();
@@ -189,7 +187,7 @@ export function mockWebgl2Canvas(options = {}, canvasOptions = {}) {
         })
     };
 
-    canvas._mockGL = gl;
+    canvas.__mockGL = gl;
     canvas.__sandbox = sandbox;
     canvas.restore = () => sandbox.restore();
     canvas.resetHistory = () => sandbox.resetHistory();

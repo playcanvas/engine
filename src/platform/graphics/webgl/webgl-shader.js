@@ -2,7 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { TRACEID_SHADER_COMPILE } from '../../../core/constants.js';
 import { now } from '../../../core/time.js';
 import { WebglShaderInput } from './webgl-shader-input.js';
-import { bindGroupNames, TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE, SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
+import { bindGroupNames, TRANSFORM_FEEDBACK_SEPARATE, SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 import { DeviceCache } from '../device-cache.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { WebglShaderProcessorGLSL } from './webgl-shader-processor-glsl.js';
@@ -190,7 +190,7 @@ class WebglShader {
 
             /** @type {number} */
             let bufferMode = gl.INTERLEAVED_ATTRIBS;
-            if (definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE) {
+            if (definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_SEPARATE) {
                 bufferMode = gl.SEPARATE_ATTRIBS;
             }
 

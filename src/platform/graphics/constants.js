@@ -286,12 +286,12 @@ export const BUFFER_GPUDYNAMIC = 3;
 /**
  * Captures all varyings into one interleaved transform feedback buffer.
  */
-export const TRANSFORM_FEEDBACK_BUFFER_MODE_INTERLEAVED = 0;
+export const TRANSFORM_FEEDBACK_INTERLEAVED = 0;
 
 /**
  * Captures each varying into its own transform feedback buffer.
  */
-export const TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE = 1;
+export const TRANSFORM_FEEDBACK_SEPARATE = 1;
 
 /**
  * Clear the color buffer.

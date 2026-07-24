@@ -2434,6 +2434,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     setTransformFeedbackBuffer(tf, slot = 0) {
+        Debug.assert(slot >= 0, 'A negative buffer slot index was specified.');
 
         this.transformFeedbackBuffers ??= [];
 

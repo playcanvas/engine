@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { assert, stub } from 'sinon';
 
-import { BUFFER_GPUDYNAMIC, SEMANTIC_POSITION } from '../../../../src/platform/graphics/constants.js';
+import { BUFFER_GPUDYNAMIC, SEMANTIC_POSITION, TYPE_FLOAT32 } from '../../../../src/platform/graphics/constants.js';
 import { VertexBuffer } from '../../../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../../src/platform/graphics/vertex-format.js';
 import { WebglGraphicsDevice } from '../../../../src/platform/graphics/webgl/webgl-graphics-device.js';
@@ -13,12 +13,12 @@ describe('WebglGraphicsDevice#transformFeedback', function () {
     let device;
     let canvas;
 
-    let bufferIds = 0;
+    let bufferIds = 1;
     function createMockSimpleBuffer() {
 
         const buffer = new VertexBuffer(
             device,
-            new VertexFormat(device, [{ semantic: SEMANTIC_POSITION, components: 3, type: 'float' }]),
+            new VertexFormat(device, [{ semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }]),
             1,
             { usege: BUFFER_GPUDYNAMIC }
         );
@@ -286,6 +286,7 @@ describe('WebglGraphicsDevice#transformFeedback', function () {
         };
 
         device.shader = {
+            attributes: [],
             definition: { useDualSourceBlending: false },
             impl: {
                 samplers: [],
@@ -296,13 +297,8 @@ describe('WebglGraphicsDevice#transformFeedback', function () {
         };
         device.shaderValid = true;
         device.activateShader = stub();
-        device.validateAttributes = stub();
         device.setBuffers = stub();
         device.setTexture = stub();
-        device.commitFunction = {};
-        device.glPrimitive = [gl.TRIANGLES];
-        device.vertexBuffers = [];
-        device.blendState = { usesDualSourceBlending: false };
 
         device.draw(primitive, null, 0, null, true, true);
 

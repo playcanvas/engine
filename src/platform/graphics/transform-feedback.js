@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS, TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE } from './constants.js';
+import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
@@ -169,7 +169,7 @@ class TransformFeedback {
 
         DebugGraphics.pushGpuMarker(device, 'TransformFeedback');
         Debug.call(() => {
-            const separateMode = shader.definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE;
+            const separateMode = shader.definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_SEPARATE;
             if (separateMode) {
                 Debug.warnOnce(
                     'TransformFeedback helper supports only "interleaved" ' +

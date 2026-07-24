@@ -18,7 +18,7 @@ import sharedWGSL from './shader-chunks/frag/shared-wgsl.js';
 import halfTypes from './shader-chunks/frag/half-types.js';
 
 /**
- * @import { TRANSFORM_FEEDBACK_BUFFER_MODE_INTERLEAVED, TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE } from './constants.js'
+ * @import { TRANSFORM_FEEDBACK_INTERLEAVED, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  */
 
@@ -60,10 +60,10 @@ class ShaderDefinitionUtils {
      * names that will be captured when using transform feedback. This setting is only effective
      * if the useTransformFeedback property is enabled.
      * @param {number} [options.feedbackVaryingsMode] - Specifies how transform feedback varyings
-     * are written into GPU buffers. Use {@link TRANSFORM_FEEDBACK_BUFFER_MODE_INTERLEAVED} to pack all captured
-     * varyings into a single buffer, or {@link TRANSFORM_FEEDBACK_BUFFER_MODE_SEPARATE} to store each varying
+     * are written into GPU buffers. Use {@link TRANSFORM_FEEDBACK_INTERLEAVED} to pack all captured
+     * varyings into a single buffer, or {@link TRANSFORM_FEEDBACK_SEPARATE} to store each varying
      * in its own buffer. This setting is only effective when useTransformFeedback property is enabled.
-     * Defaults to {@link TRANSFORM_FEEDBACK_BUFFER_MODE_INTERLEAVED}.
+     * Defaults to {@link TRANSFORM_FEEDBACK_INTERLEAVED}.
      * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
      * to false.
      * @param {Map<string, string>} [options.vertexIncludes] - A map containing key-value pairs of
