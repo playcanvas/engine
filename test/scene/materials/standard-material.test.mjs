@@ -323,6 +323,88 @@ describe('StandardMaterial', function () {
             checkDefaultMaterial(dst);
         });
 
+        it('copies all properties', function () {
+            const material = new StandardMaterial();
+            const propertyNames = Object.getOwnPropertyNames(StandardMaterial.prototype).filter((name) => {
+                const descriptor = Object.getOwnPropertyDescriptor(StandardMaterial.prototype, name);
+                return descriptor?.get && descriptor?.set && Object.hasOwn(material, `_${name}`);
+            });
+
+            const createValue = (name, value) => {
+                if (value instanceof Color) {
+                    return new Color(0.25, 0.5, 0.75, 0.125);
+                }
+
+                if (value instanceof Vec2) {
+                    return new Vec2(0.25, 0.75);
+                }
+
+                if (Array.isArray(value)) {
+                    return [{ name: 'copy-test' }];
+                }
+
+                if (name === 'alphaDither') {
+                    return 0.375;
+                }
+
+                switch (typeof value) {
+                    case 'boolean':
+                        return !value;
+                    case 'number':
+                        return value + 1.25;
+                    case 'string':
+                        return `${value}-copy-test`;
+                    case 'undefined':
+                        return 'copy-test';
+                    default:
+                        return { name: 'copy-test' };
+                }
+            };
+
+            propertyNames.forEach((name) => {
+                const src = new StandardMaterial();
+                const dst = new StandardMaterial();
+                const value = createValue(name, src[`_${name}`]);
+                src[name] = value;
+
+                dst.copy(src);
+
+                const sourceValue = src[name];
+                const copiedValue = dst[name];
+                if (sourceValue instanceof Color || sourceValue instanceof Vec2) {
+                    expect(copiedValue, name).to.not.equal(sourceValue);
+                    expect(copiedValue.equals(sourceValue), name).to.equal(true);
+                } else if (Array.isArray(sourceValue)) {
+                    expect(copiedValue, name).to.not.equal(sourceValue);
+                    expect(copiedValue, name).to.deep.equal(sourceValue);
+                } else {
+                    expect(copiedValue, name).to.equal(sourceValue);
+                }
+            });
+        });
+
+        it('does not mark source map transforms as mutable', function () {
+            const src = new StandardMaterial();
+            const dst = new StandardMaterial();
+
+            expect(src._mapTransforms._mutable).to.equal(false);
+
+            dst.copy(src);
+
+            expect(src._mapTransforms._mutable).to.equal(false);
+        });
+
+        it('preserves the implicit alpha dither state', function () {
+            const src = new StandardMaterial();
+            const dst = new StandardMaterial();
+            src.opacity = 0.25;
+
+            dst.copy(src);
+
+            expect(dst._alphaDither).to.equal(null);
+            expect(dst.alphaDither).to.equal(0.25);
+        });
+
     });
 
     describe('#update()', function () {
@@ -507,6 +589,19 @@ describe('StandardMaterial', function () {
             material.updateUniforms();
 
             expect(material._getMapTransformId('diffuse')).to.not.equal(0);
+        });
+
+        it('clears variants when compatibility preparation changes transform grouping', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = {};
+            material.update();
+            addVariant(material);
+
+            material.diffuseMapOffset.set(0.25, 0.5);
+            material.updateUniforms();
+
+            expect(material._getMapTransformId('diffuse')).to.not.equal(0);
+            expect(material.variants.size).to.equal(0);
         });
 
     });

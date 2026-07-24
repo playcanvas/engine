@@ -645,9 +645,9 @@ class StandardMaterial extends Material {
     copy(source) {
         super.copy(source);
 
-        // set properties
-        Object.keys(_props).forEach((k) => {
-            this[k] = source[k];
+        // Avoid getters that track possible in-place mutations on the source.
+        Object.keys(_props).forEach((name) => {
+            this[name] = _props[name].copyFromBacking ? source[`_${name}`] : source[name];
         });
 
         // alphaDither uses a null sentinel for "implicit, mirror opacity"; the prop-loop above
@@ -889,6 +889,7 @@ class StandardMaterial extends Material {
         // remove unused params
         this._processParameters('_activeParams');
 
+        // Clear variants dirtied by compatibility processing above.
         super.updateUniforms(device, scene);
     }
 
@@ -975,7 +976,7 @@ const defineUniform = (name, getUniformFunc) => {
     _uniforms[name] = getUniformFunc;
 };
 
-const definePropInternal = (name, constructorFunc, setterFunc, getterFunc) => {
+const definePropInternal = (name, constructorFunc, setterFunc, getterFunc, copyFromBacking = false) => {
     Object.defineProperty(StandardMaterial.prototype, name, {
         get: getterFunc || function () {
             return this[`_${name}`];
@@ -984,7 +985,8 @@ const definePropInternal = (name, constructorFunc, setterFunc, getterFunc) => {
     });
 
     _props[name] = {
-        value: constructorFunc
+        value: constructorFunc,
+        copyFromBacking
     };
 };
 
@@ -1009,7 +1011,7 @@ const defineValueProp = (prop) => {
         return this[internalName];
     });
 
-    definePropInternal(prop.name, () => prop.defaultValue, setterFunc, getterFunc);
+    definePropInternal(prop.name, () => prop.defaultValue, setterFunc, getterFunc, !!onGet);
 };
 
 // define an aggregate property (color, vec3 etc)
@@ -1033,7 +1035,7 @@ const defineAggProp = (prop) => {
         return this[internalName];
     });
 
-    definePropInternal(prop.name, () => prop.defaultValue.clone(), setterFunc, getterFunc);
+    definePropInternal(prop.name, () => prop.defaultValue.clone(), setterFunc, getterFunc, !!onGet);
 };
 
 // define either a value or aggregate property
