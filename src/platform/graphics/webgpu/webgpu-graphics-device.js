@@ -1438,7 +1438,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Map a GPUBuffer for reading or writing, handling the rejection which happens when the
      * device is lost, or when the buffer is destroyed while the mapping is pending. In those
      * cases the buffer cannot be used, and the returned promise resolves with false instead of
-     * rejecting.
+     * rejecting. Any other rejection is unexpected and is asserted in debug builds.
      *
      * @param {GPUBuffer} buffer - The buffer to map.
      * @param {number} mode - GPUMapMode.READ or GPUMapMode.WRITE.
@@ -1453,7 +1453,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             return Promise.resolve(false);
         }
 
-        return buffer.mapAsync(mode).then(() => true, () => false);
+        return buffer.mapAsync(mode).then(() => true, (error) => {
+            // AbortError is expected when the device is lost or the buffer is destroyed while
+            // the mapping is pending; anything else indicates incorrect use of the mapping API
+            Debug.assert(error.name === 'AbortError', 'GPUBuffer.mapAsync failed', error);
+            return false;
+        });
     }
 
     /**
