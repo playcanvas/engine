@@ -36,7 +36,6 @@ const standardMaterialParameterTypes = {
     vertexColorGamma: 'boolean',
 
     specular: 'rgb',
-    specularTint: 'boolean',
     ..._textureParameter('specular'),
     occludeSpecular: 'enum:occludeSpecular',
     specularityFactor: 'number',
@@ -194,6 +193,7 @@ const standardMaterialRemovedParameters = {
     ambientTint: 'boolean',
     emissiveTint: 'boolean',
     diffuseTint: 'boolean',
+    specularTint: 'boolean',
     sheenTint: 'boolean',
     conserveEnergy: 'boolean',
     useGamma: 'boolean',
