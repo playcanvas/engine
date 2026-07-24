@@ -7,7 +7,10 @@ import {
     CameraComponentSystem,
     Color,
     DISPLAYFORMAT_LDR_SRGB,
+    DITHER_BAYER2,
+    DITHER_BAYER4,
     DITHER_BAYER8,
+    DITHER_BAYER16,
     DITHER_BLUENOISE,
     DITHER_IGNNOISE,
     DITHER_NONE,
@@ -86,14 +89,22 @@ camera.addComponent('camera', {
     clearColor: Color.BLACK,
     toneMapping: TONEMAP_LINEAR
 });
-camera.translate(0, -0.5, 14);
+camera.translate(0, -0.5, 16);
 camera.rotate(0, 0, 0);
 app.root.addChild(camera);
 
-const NUM_SPHERES_X = 4;
+const NUM_SPHERES_X = 7;
 const NUM_SPHERES_Z = 10;
 
-const ditherOptions = [DITHER_NONE, DITHER_BAYER8, DITHER_BLUENOISE, DITHER_IGNNOISE];
+const ditherOptions = [
+    DITHER_NONE,
+    DITHER_BAYER2,
+    DITHER_BAYER4,
+    DITHER_BAYER8,
+    DITHER_BAYER16,
+    DITHER_BLUENOISE,
+    DITHER_IGNNOISE
+];
 
 /**
  * @param {number} x - The x coordinate.
@@ -161,7 +172,15 @@ for (let i = 0; i < NUM_SPHERES_X; i++) {
 }
 
 const y = (NUM_SPHERES_Z + 1) * -0.5;
-createText(assets.font, 'Alpha\nBlend', NUM_SPHERES_X * -0.6, y);
-createText(assets.font, 'Bayer8\nDither', NUM_SPHERES_X * -0.2, y);
-createText(assets.font, 'Blue-noise\nDither', NUM_SPHERES_X * 0.2, y);
-createText(assets.font, 'IGN-noise\nDither', NUM_SPHERES_X * 0.6, y);
+const labels = [
+    'Alpha\nBlend',
+    'Bayer2\nDither',
+    'Bayer4\nDither',
+    'Bayer8\nDither',
+    'Bayer16\nDither',
+    'Blue-noise\nDither',
+    'IGN-noise\nDither'
+];
+labels.forEach((label, i) => {
+    createText(assets.font, label, 1.5 * (i - (NUM_SPHERES_X - 1) * 0.5), y);
+});
