@@ -1080,7 +1080,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.boundVao = null;
         this.activeFramebuffer = null;
         this.feedback = null;
-        this.transformFeedbackBuffer = null;
+
+        this.transformFeedbackNumSlots = 0;
+        /** @type {(VertexBuffer | null)[]} */
+        this.transformFeedbackBuffers = [];
 
         this.textureUnit = 0;
         this.initTextureUnits(this.maxCombinedTextures);
@@ -2044,9 +2047,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
 
-                if (this.transformFeedbackBuffer) {
+                const tfbNumSlots = this.transformFeedbackNumSlots;
+                if (tfbNumSlots > 0) {
+                    const tfb = this.transformFeedbackBuffers;
+                    for (let i = 0; i < tfbNumSlots; i++) {
+                        const buf = tfb[i];
+                        const bufId = buf?.impl.bufferId ?? null;
+                        Debug.assert(bufId, 'Transform feedback buffer slot value is null.');
+                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, bufId);
+                    }
                     // Enable TF, start writing to out buffer
-                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.impl.bufferId);
                     gl.beginTransformFeedback(gl.POINTS);
                 }
 
@@ -2100,10 +2110,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
 
-                if (this.transformFeedbackBuffer) {
+                if (tfbNumSlots > 0) {
                     // disable TF
                     gl.endTransformFeedback();
-                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+                    for (let i = 0; i < tfbNumSlots; i++) {
+                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, null);
+                    }
                 }
 
                 this._drawCallsPerFrame++;
@@ -2417,20 +2429,52 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Sets the output vertex buffer. It will be written to by a shader with transform feedback
      * varyings.
      *
-     * @param {VertexBuffer} tf - The output vertex buffer.
+     * @param {VertexBuffer|null} tf - The output vertex buffer.
+     * @param {number} [slot] - The buffer slot index.
      * @ignore
      */
-    setTransformFeedbackBuffer(tf) {
-        if (this.transformFeedbackBuffer !== tf) {
-            this.transformFeedbackBuffer = tf;
+    setTransformFeedbackBuffer(tf, slot = 0) {
+        Debug.assert(slot >= 0, 'A negative buffer slot index was specified.');
 
-            const gl = this.gl;
-            if (tf) {
+        this.transformFeedbackBuffers ??= [];
+
+        const gl = this.gl;
+        const buffers = this.transformFeedbackBuffers;
+        const prevNumSlots = this.transformFeedbackNumSlots;
+
+        let numSlots = 0;
+        let len = buffers.length;
+
+        // Let's expand the array up to the slot index.
+        if (len <= slot) {
+            for (let i = len; i <= slot; i++) {
+                buffers.push(null);
+            }
+            len = slot + 1;
+        }
+
+        // Set buffer to slot
+        buffers[slot] = tf;
+
+        // Let's take the last slot available in the array.
+        for (let i = len - 1; i >= 0; i--) {
+            if (buffers[i]) {
+                numSlots = i + 1;
+                break;
+            }
+        }
+
+        this.transformFeedbackNumSlots = numSlots;
+
+        if (numSlots > 0) {
+            if (prevNumSlots === 0) {
                 if (!this.feedback) {
                     this.feedback = gl.createTransformFeedback();
                 }
                 gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
-            } else {
+            }
+        } else {
+            if (prevNumSlots > 0) {
                 gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
             }
         }

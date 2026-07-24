@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
+import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
@@ -168,6 +168,16 @@ class TransformFeedback {
         const device = this.device;
 
         DebugGraphics.pushGpuMarker(device, 'TransformFeedback');
+        Debug.call(() => {
+            const separateMode = shader.definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_SEPARATE;
+            if (separateMode) {
+                Debug.warnOnce(
+                    'TransformFeedback helper supports only "interleaved" ' +
+                    'varyings mode (single output buffer). For "separate", bind one buffer per varying using ' +
+                    'GraphicsDevice.setTransformFeedbackBuffer(buffer, slot).'
+                );
+            }
+        });
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
