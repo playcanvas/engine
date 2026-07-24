@@ -380,7 +380,10 @@ const isBlack = (color) => {
  * transparency without alpha blending. Can be:
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
+ * - {@link DITHER_BAYER2}: Opacity is dithered using a Bayer 2 matrix.
+ * - {@link DITHER_BAYER4}: Opacity is dithered using a Bayer 4 matrix.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
+ * - {@link DITHER_BAYER16}: Opacity is dithered using a Bayer 16 matrix.
  * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise.
  * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
@@ -389,7 +392,10 @@ const isBlack = (color) => {
  * allows shadow transparency without alpha blending. Can be:
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
+ * - {@link DITHER_BAYER2}: Opacity is dithered using a Bayer 2 matrix.
+ * - {@link DITHER_BAYER4}: Opacity is dithered using a Bayer 4 matrix.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
+ * - {@link DITHER_BAYER16}: Opacity is dithered using a Bayer 16 matrix.
  * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise.
  * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
