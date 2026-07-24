@@ -1,7 +1,8 @@
 import { Debug } from '../core/debug.js';
 import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS, SHADER_DEPTH_PICK
+    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS, SHADER_DEPTH_PICK,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, lightTypeNames, shadowTypeInfo
 } from './constants.js';
 
 /**
@@ -56,6 +57,24 @@ class ShaderPassInfo {
         let keyword;
         if (this.isShadow) {
             keyword = 'SHADOW';
+
+            // shadow passes allocated by the shadow renderer describe the light and shadow types,
+            // and generate defines allowing shaders to handle the shadow rendering. These are used
+            // by the lit shaders, but also allow custom shaders (ShaderMaterial) to support shadow
+            // rendering using the shadowCasterPS chunk
+            if (this.lightType !== undefined) {
+                const shadowInfo = shadowTypeInfo.get(this.shadowType);
+                Debug.assert(shadowInfo);
+
+                // Use perspective depth for:
+                // - Directional: Always since light has no position
+                // - Spot: If not using VSM
+                // - Point: Never
+                const perspectiveDepth = this.lightType === LIGHTTYPE_DIRECTIONAL || (!shadowInfo.vsm && this.lightType === LIGHTTYPE_SPOT);
+                if (perspectiveDepth) this.defines.set('PERSPECTIVE_DEPTH', '');
+                this.defines.set('LIGHT_TYPE', `${lightTypeNames[this.lightType]}`);
+                this.defines.set('SHADOW_TYPE', `${shadowInfo.name}`);
+            }
         } else if (this.isForward) {
             keyword = 'FORWARD';
         } else if (this.index === SHADER_PICK) {
